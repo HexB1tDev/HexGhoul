@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.37 (HexGhoul): the Reaper's change: a real coat taken off, untouchable, a slower draw, the blade held point-down, his blows clashable (testing)
+
+See `.github/release-notes-4.1.37.md`. "whenever he's transforming, you can still grab him ... he should actually like take off an actual jacket ... The taking out the quinque from the case also should take a little longer": untouchable through his change and end (`AgentBrain.untouchable`: `LivingAttackEvent` cancelled, `EtoBrain.spared` so the original's target checks say no, `PlayerArms.mayHit`, `pin`/`free` every tick); the Formal Overcoat's model in white taken off and dropped (`ReaperCoatPose`, `ReaperCoatLayer`, `tools/reaper_coat.py`); the draw 62 ticks (was 36), lowered into a one-handed point-down guard (`ReaperBladePose.GUARD`, `HANG_X`, `bothHands`); blade and brawl blows on the clash board (`KaguneClash.swing`/`meets`); a change that waited for ever in water. Protocol 117.
+
 ## 4.1.36 (HexGhoul): the Small City in every world, the villages gone, humans in vanilla villages (testing)
 
 See `.github/release-notes-4.1.36.md`. "Delete all ids hexkagune:village_x ( and anything related) add Hexkagune:small_city ... (a bit rarer than a normal village), Humans can now however spawn in normal minecraft villages": `hexkagune:small_city` (`ControlStructures.City`, four quarters at the four start chunks offered together by the placement `hexkagune:city`, `CityPlacement`, a random spread of 48/36; turn and ground from the seed and the whole footprint: `CityPlan`), over rivers, never a sea, on the land's middle height (`City.ground`, `CityPlan.ground`); places kept out of built cities (`inCity`); `village_1`, `village_2`, `village` and their set, pools, pieces and tool deleted; `VillageHumans` brings humans to vanilla villagers. Protocol 117.

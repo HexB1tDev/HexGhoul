@@ -40,8 +40,9 @@ public final class AgentPose {
     /**
      * 4.1.28 (the owner: "he pulls out his jacket, he just removes his jacket, revealing a new skin"): the White Reaper taking his jacket
      * off, {@code age} ticks in ({@link AgentRules#REAPER_SHED_TICKS} long, his hands empty): his hands come together on his lapels, his
-     * head down to them; he pulls the coat open, his chest out; sweeps it back off his shoulders and down his arms behind him (his look
-     * switched there, {@link AgentRules#REAPER_SHED_SWAP}); lets it fall, rolls his neck one way and the other, and stands ready.
+     * head down to them; he pulls the coat open, his chest out; sweeps it back off his shoulders and down his arms behind him; lets it fall,
+     * rolls his neck one way and the other, and stands ready. 4.1.37: the coat itself is drawn coming off (ReaperCoatPose), his look bare
+     * under it from {@link AgentRules#REAPER_SHED_SWAP}; each move a little slower.
      * Straight arms (he is a mob on vanilla's model: no elbows), so each hand is put where the move reads from every side.
      */
     public static RigPose shed(double age) {
@@ -76,15 +77,15 @@ public final class AgentPose {
      */
     static final float[][] SHED_KEYS = {
         {0, 0, 0, 0, 0, 0, 0, 0},
-        {5, 0.32F, 0, 0.08F, -1.30F, -0.62F, 0.02F, 0.3F},
-        {8, 0.28F, 0, 0.08F, -1.38F, -0.50F, 0.02F, 0.3F},
-        {12, 0.02F, 0, -0.12F, -0.78F, 0.52F, 0.30F, 0.0F},
-        {16, -0.14F, 0, -0.18F, 0.62F, 0.18F, 0.34F, -0.5F},
-        {20, -0.10F, 0, -0.14F, 0.98F, 0.10F, 0.26F, -0.6F},
-        {24, 0.10F, 0, 0.04F, -0.12F, 0.0F, 0.08F, 0.0F},
-        {27, 0.16F, 0.30F, 0.02F, 0.04F, 0.0F, 0.06F, 0.0F},
-        {30, 0.12F, -0.24F, 0.0F, 0.0F, 0.0F, 0.05F, 0.0F},
-        {34, 0, 0, 0, 0, 0, 0, 0}};
+        {6, 0.32F, 0, 0.08F, -1.30F, -0.62F, 0.02F, 0.3F},
+        {10, 0.28F, 0, 0.08F, -1.38F, -0.50F, 0.02F, 0.3F},
+        {15, 0.02F, 0, -0.12F, -0.78F, 0.52F, 0.30F, 0.0F},
+        {21, -0.14F, 0, -0.18F, 0.62F, 0.18F, 0.34F, -0.5F},
+        {26, -0.10F, 0, -0.14F, 0.98F, 0.10F, 0.26F, -0.6F},
+        {31, 0.10F, 0, 0.04F, -0.12F, 0.0F, 0.08F, 0.0F},
+        {35, 0.16F, 0.30F, 0.02F, 0.04F, 0.0F, 0.06F, 0.0F},
+        {39, 0.12F, -0.24F, 0.0F, 0.0F, 0.0F, 0.05F, 0.0F},
+        {46, 0, 0, 0, 0, 0, 0, 0}};
 
     /** 4.1.28: {@code keys} (each row its tick, then its channels) at {@code age}, eased in and out between each pair. */
     static float[] keyed(float[][] keys, double age) {

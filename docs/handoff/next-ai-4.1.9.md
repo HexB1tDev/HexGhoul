@@ -1,4 +1,4 @@
-# Next AI: after 4.1.36 (4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.37 (4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -186,6 +186,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.37 | The Reaper's change: untouchable (`AgentBrain.untouchable`, `attacked` cancels `LivingAttackEvent`, `EtoBrain.spared` asks it so the original's `validSwipeTarget`/`isHostileTo` say no, `PlayerArms.mayHit`, `pin`/`free` each tick), `REAPER_SHED_WAIT`; a real coat (`ReaperCoatPose`, `ReaperCoatLayer`, the formal overcoat in white: `tools/reaper_coat.py`), shed 46 ticks, swap at 3; the draw 62 ticks; the one-handed point-down guard (`ReaperBladePose.GUARD`, `PRESENT`, `HANG_X`, `oneHand`, `bothHands`); blade and brawl on `KaguneClash`; `tools/ReaperBladePreview.java` | pushed, EXIT 0 |
 | 4.1.36 | The Small City in worlds: `hexkagune:small_city` (`ControlStructures.City`), placement `hexkagune:city` (`CityPlacement`, a `RandomSpreadStructurePlacement` offering a city's four start chunks), `CityPlan` (slots, turn, quarter per slot), `City.ground` (9 x 9, rivers allowed, no sea, FLAT 12, the median, >= 64), `inCity`/`holdsPlace` (places and cities never overlap), `DryLand.CITY_*`; villages and their files deleted; `VillageHumans`; `tools/city_render.py --placed`; `NpcTests.smallCity` | pushed, EXIT 0 |
 | 4.1.35 | The Small City cut for 1.20.1: `tools/city_structure.py` (the save to four quarter schematics), `tools/exploration_structures.py` sites `small_city_0..3` (maps 7-10, ground 6; swaps: pale oak wall sign, tuff bricks, wildflowers, infested stone; banner `Patterns`; `NO_ENTITY` shelves), `tools/city_render.py` (isometric from the tiles); `NpcTests.smallCity`; not placed in worlds yet | pushed, EXIT 0 |
 | 4.1.34 | The quest menu a compact box over the world: `QuestJournalView` (640 x 380, cards, checklist, badges, mastery bar, `roadmap`), `QuestStyle`, `QuestScreen` without the overlay; `tools/UiPreview` draws it over a stand-in world (`-Dmx -Dmy` for hover); `QuestTests.journal` | pushed, EXIT 0 |
@@ -539,6 +540,47 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.37, what and where (the Reaper's change: untouchable, a real coat, a slower draw, point-down, clashable)
+
+The owner (quoted exactly): "whenever he's transforming, you can still grab him, which should not be allowed. And I don't know, I feel like
+transformation needs to be a little more dramatic. I mean, like when he takes off his jacket, I feel like he should actually like take off an
+actual jacket, before switching to the other skin. The taking out the quinque from the case also should take a little longer. It's pretty too
+fast." Then: "[Arima] is actually holding the blade upside down, bro. The blade is facing up instead of down ... And he's still very
+hittable. Like, I told you to make him completely immortal while he's transforming." Then: "You should be holding that upper bone thing on the
+blade always. Mind you that, like, his moves are currently not clashable ... You gotta patch that ... You should take off an actual jacket.
+Like, you can use the armor that we got ... just make sure he takes it off, bro. And you can see him taking it off." And: "The briefcase
+should come after the jacket comes off". Of the case turning end-on in the draw: "Just saw the sheet. Now I understand. It's fine."
+
+- **Untouchable:** `AgentBrain.untouchable(entity)` (rank 10, `shedAt` or `endAt` set, not `finishing`). `attacked` (LivingAttackEvent)
+  cancels for it unless `GhoulTank.bypasses` (the old LivingHurtEvent cancel only stopped damage: knockback, flash, sound and every direct
+  push/bleed/grab still landed). `EtoBrain.spared` asks it first, and the patch already routes the original's `validSwipeTarget` and
+  `isHostileTo` through `spared`, so every grab/tail/swipe using them refuses him; `PlayerArms.mayHit`/`aim`/the Bind catch too. `pin` (each
+  tick in `shed` and `ending`): `free` (releases the original's `heldEntityIds` slots via `releaseHeldSlot`, Bikaku `heldId`/worms,
+  Pale `heldId`, Graft `heldId`, `PlayerArms.unbind`), velocity zeroed (falling kept), teleported back to `pinnedAt` if moved.
+  `REAPER_SHED_WAIT` (60): the change no longer waits for ever to land (in water he was unkillable at 90).
+- **The coat:** `client/animation/ReaperCoatPose` (pure): pieces BODY, sleeves, tails = the formal model's bones 1, 2/3 (6/7 slim before the
+  swap), 8/9, slots 1, 1, 2; worn = `RigPose.transform` of the part (as AgentModel), `PEEL` 14 (tipped back about its hem, back and down),
+  `SLEEVES` 17 (13 px down the arm), `OFF` 26.5, falls to `lying` (flat on its back behind him, `FLAT` 0.3, sleeves splayed) by `LANDS`,
+  `sunk` over the last `SINKS` 12 ticks of the change. `client/render/ReaperCoatLayer` draws it with `textures/entity/ccg/reaper_coat.png`
+  (armorCutoutNoCull), clamped above the ground, kept where it fell (`FELL`: his body yaw at `OFF`, turned back by the difference).
+  `REAPER_SHED_TICKS` 46 (keys retimed), `REAPER_SHED_SWAP` 3 (hidden under the coat).
+- **The draw:** `REAPER_DRAW_TICKS` 62, `CASE_FROM` 11, `CASE_OPENS` 32, `CASE_DROPS` 48; `LIFT_FROM` 22, `LIFTED` 30, `GRIP` 40-46,
+  `SPLITS` 6, `SLIDES` 10; `presented(lower)` from `PRESENT` (the 4.1.29 raised guard, both hands) to `GUARD` over `LOWER_FROM` 50 ..
+  `LOWERED` 58.
+- **The guard:** one-handed, point down along his right side (`HANG_X` -0.3, `HANG_Z` 0.12, `GUARD` pitch -0.3, yaw -0.18): `pose(k, legs,
+  both)` blends `oneHand` and `hands` keeping the blade on the key (the wrist solved again for the blended arm); `strike` uses
+  `bothHands(total, age)` (`TAKES` 2); `end` takes both hands as he lowers it. His fist is at u 0: on the bone grip (grip 0 .. -9, guard from
+  1.9).
+- **Clash:** `startBlade` and `beginStrike` put each blow on `KaguneClash.swing` (impact, reach + 0.5, aimed at the prey, `ClashPower.agent`
+  of its damage), live while that blow is on its way; `bladeLands`/`brawlLands` call `meets` first; `bladeMet`/`brawlMet` break the string.
+  The owner wrote "for some reason, you can clash with this form": read as "can't" (they weren't on the board). Confirm with the owner.
+- **Tests:** `AgentTests.reaperBlade` (guard point down below the fist, rod clear of him, left hand loose; hands on the grip whenever
+  `bothHands` is 1), `coat` (pieces in the model, worn on him at the swap, behind him when free, flat behind him through the draw, sunk at the
+  end, layer wired), `guarded` (the immunity, pin, free, wait, clash wiring).
+- **Previews:** `tools/ReaperBladePreview.java` (`guard`, `draw`, `string`, `shed` = the whole change, `case` = every tick of the case):
+  `docs/handoff/arima-change-4.1.37.png`, `arima-guard-4.1.37.png`, `arima-string-4.1.37.png`.
+- **Not tested in game.**
 
 ## 4.1.36, what and where (the Small City in worlds, the villages gone, humans in vanilla villages)
 

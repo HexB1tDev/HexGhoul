@@ -65,9 +65,15 @@ public final class AgentRules {
      * about 90 HP"): 90 of his 280, no longer half.
      */
     public static final float REAPER_SHED_HEALTH = 90.0F;
-    /** 4.1.28: the shedding move (ticks), and the tick it is off his shoulders (his look switched there). */
-    public static final int REAPER_SHED_TICKS = 34;
-    public static final int REAPER_SHED_SWAP = 15;
+    /**
+     * 4.1.28: the shedding move (ticks), and the tick his look turns bare. 4.1.37 (the owner: "he should actually like take off an actual
+     * jacket, before switching to the other skin"): a real coat on him from the start (client.animation.ReaperCoatPose), his look bare under
+     * it at once (hidden), the coat taken off and dropped as a thing of its own; longer (34 ticks then).
+     */
+    public static final int REAPER_SHED_TICKS = 46;
+    public static final int REAPER_SHED_SWAP = 3;
+    /** 4.1.37: the longest his change waits for him to land (ticks) before it begins wherever he is. */
+    public static final int REAPER_SHED_WAIT = 60;
     /** 4.1.28 (the owner: "During this next phase, he gets way faster"): his speed and the rest between blows, the jacket off. */
     public static final double REAPER_BARE_SPEED = 1.3;
     public static final double REAPER_BARE_PACE = 0.7;
@@ -76,11 +82,14 @@ public final class AgentRules {
      * after the jacket, the golden case drawn from behind his back and opened into his blade (ticks from the jacket's end): his hand behind
      * him, the case in it, swung out to his side and up before him, opened (the case gone into the grip, the blade grown out), in his guard.
      */
-    public static final int REAPER_DRAW_TICKS = 36;
-    public static final int REAPER_CASE_FROM = 7;
-    public static final int REAPER_CASE_OPENS = 18;
-    /** 4.1.29: the empty case dropped from his hand (ticks after the jacket), and how long it falls and lies before it sinks away. */
-    public static final int REAPER_CASE_DROPS = 25;
+    public static final int REAPER_DRAW_TICKS = 62;
+    public static final int REAPER_CASE_FROM = 11;
+    public static final int REAPER_CASE_OPENS = 32;
+    /**
+     * 4.1.29: the empty case dropped from his hand (ticks after the jacket), and how long it falls and lies before it sinks away. 4.1.37:
+     * the whole draw slower (the owner: "It's pretty too fast"), 36 ticks then, 62 now.
+     */
+    public static final int REAPER_CASE_DROPS = 48;
     /** 4.1.28 + 4.1.29: the whole change, nothing landing on him through it. */
     public static final int REAPER_CHANGE_TICKS = REAPER_SHED_TICKS + REAPER_DRAW_TICKS;
 

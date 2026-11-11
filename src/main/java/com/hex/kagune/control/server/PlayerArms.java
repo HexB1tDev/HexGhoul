@@ -484,7 +484,8 @@ public final class PlayerArms {
                 if (index == 0) {
                     // Thrown round them: caught if they are still within its length and in sight; a sting as it bites in.
                     double length = ability.farthest * edge + 1.5;
-                    if (target != null && target.m_20280_(player) <= length * length && player.m_142582_(target)) {
+                    if (target != null && !AgentBrain.untouchable(target) && target.m_20280_(player) <= length * length
+                        && player.m_142582_(target)) {
                         w.bound = true;
                         ControlNetwork.broadcast(player, new S2CArmSwing(player.m_19879_(), ArmRules.abilityCode(ability), w.moveAt, target.m_19879_()));
                         hit(player, w, target, dealt * 0.2F, Arm.Strike.SLASH, from, w.moveWay, 0.0, 0.0, level, now);
@@ -710,8 +711,16 @@ public final class PlayerArms {
      * ghouls, flesh creatures and anything going for them; never another player, a companion, a child, a villager or a tame animal they did
      * not aim at.
      */
+    /** 4.1.37: a Bind that holds {@code id} lets go of it (no drag, no slam; the move ends as one that missed). */
+    static void unbind(ServerPlayer player, int id) {
+        Wield w = WIELDS.isEmpty() ? null : WIELDS.get(player.m_20148_());
+        if (w != null && w.bound && w.moveTarget == id) {
+            w.bound = false;
+        }
+    }
+
     static boolean mayHit(ServerPlayer player, LivingEntity body, int aimed) {
-        if (body == player || !body.m_6084_()) {
+        if (body == player || !body.m_6084_() || AgentBrain.untouchable(body)) {
             return false;
         }
         if (aimed != 0 && body.m_19879_() == aimed) {
@@ -732,7 +741,7 @@ public final class PlayerArms {
      */
     static LivingEntity aim(ServerPlayer player, ServerLevel level, int crosshair, double range) {
         if (crosshair != 0 && level.m_6815_(crosshair) instanceof LivingEntity body && body.m_6084_() && body != player
-            && body.m_20280_(player) <= (range + 1.0) * (range + 1.0) && player.m_142582_(body)) {
+            && !AgentBrain.untouchable(body) && body.m_20280_(player) <= (range + 1.0) * (range + 1.0) && player.m_142582_(body)) {
             return body;
         }
         Vec3 eye = player.m_146892_();

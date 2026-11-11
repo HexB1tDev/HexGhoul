@@ -48,8 +48,15 @@ public final class ReaperBladePose {
     static final int LEFT_LEG = 11;
     static final int HEAD = 12;
 
-    /** His guard: both hands low before him, the blade up at an angle ahead, the right foot forward (the hand at the guard's side). */
-    static final float[] GUARD = {0, 0.0F, 0.08F, 0.0F, 0.6F, -0.45F, -0.22F, 0.55F, -0.3F, 0.0F, -0.22F, 0.26F, 0.06F};
+    /**
+     * His guard. 4.1.37 (the owner: "[Arima] is actually holding the blade upside down, bro. The blade is facing up instead of down"): as he
+     * holds it in the owner's picture (art/reaper/Reaper_Quinque1.jpg): his fist low at his right hip and the blade's point down toward the
+     * ground ahead of him along his side, its edge down, the rod and its prong back past his hip: in his right hand alone ({@link #HANG_X}),
+     * the left loose; the right foot forward. (4.1.29 had it raised, point up, both hands: now {@link #PRESENT}, as it leaves the case.)
+     */
+    static final float[] GUARD = {0, 0.08F, 0.02F, 0.0F, 0.6F, -0.78F, -0.42F, -0.3F, -0.18F, 0.0F, -0.22F, 0.26F, 0.1F};
+    /** 4.1.29's guard, kept for the draw: both hands before him, the blade up at an angle ahead, as it leaves the case. */
+    static final float[] PRESENT = {0, 0.0F, 0.08F, 0.0F, 0.6F, -0.45F, -0.22F, 0.55F, -0.3F, 0.0F, -0.22F, 0.26F, 0.06F};
 
     /** {@code key} at tick {@code t}. */
     static float[] at(float[] key, float t) {
@@ -88,21 +95,63 @@ public final class ReaperBladePose {
             {11, -0.15F, 0.3F, 6.0F, 2.0F, -0.04F, 0.0F, 0.22F, 0.0F, 1.5708F, -0.75F, 0.55F, 0.12F},
             at(GUARD, 18)}};
 
-    /** Blow {@code step} of his string, {@code age} ticks in. */
+    /**
+     * Blow {@code step} of his string, {@code age} ticks in. 4.1.37: his left hand comes onto the grip over the blow's first
+     * {@link #TAKES} ticks and lets go over its last (his guard is one-handed), the blade where the keys point it all through.
+     */
     public static RigPose strike(int step, double age) {
-        return pose(AgentPose.keyed(STRING[Math.floorMod(step, STRING.length)], age), 1.0F);
+        float[][] keys = STRING[Math.floorMod(step, STRING.length)];
+        return pose(AgentPose.keyed(keys, age), 1.0F, bothHands(keys[keys.length - 1][T], age));
     }
 
-    /** His guard (standing, or on top of his run: {@code run} 0..1 lowers the blade a little and leaves his legs to the run). */
+    /** 4.1.37: ticks his left hand takes to come onto the grip (and to let go of it). */
+    static final double TAKES = 2.0;
+
+    /** 4.1.37: how far onto the grip his left hand is, {@code age} ticks into a blow {@code total} long (1: both hands on it). */
+    public static float bothHands(double total, double age) {
+        return smooth(age / TAKES) * smooth((total - age) / TAKES);
+    }
+
+    /**
+     * His guard (standing, or on top of his run: {@code run} 0..1 trails the blade out wider at his side, its point kept off the ground,
+     * and leaves his legs to the run).
+     */
     public static RigPose guard(float run) {
         float[] k = GUARD.clone();
-        k[HIGH] -= 0.12F * run;
-        k[PITCH] -= 0.25F * run;
-        return pose(k, 1.0F - run);
+        k[PITCH] += 0.06F * run;
+        k[YAW] -= 0.06F * run;
+        return pose(k, 1.0F - run, 0.0F);
     }
 
-    /** {@code k}'s pose: his body, then his arms on the grip and his wrist; his legs {@code legs} of the key's. */
+    /**
+     * 4.1.37: the draw's end: the blade from where it left the case ({@link #PRESENT}, both hands on it) down into his guard (his right hand
+     * alone), {@code lower} 0..1 of the way.
+     */
+    static RigPose presented(float lower) {
+        float[] k = new float[GUARD.length];
+        for (int c = 0; c < k.length; c++) {
+            k[c] = PRESENT[c] + (GUARD[c] - PRESENT[c]) * lower;
+        }
+        return pose(k, 1.0F, 1.0F - lower);
+    }
+
+    /** {@code k}'s pose with both hands on the grip. */
     static RigPose pose(float[] k, float legs) {
+        return pose(k, legs, 1.0F);
+    }
+
+    /**
+     * 4.1.37: his right arm in his one-handed guard: hanging a little forward and out at his side (x - forward, z + out), so the blade
+     * runs ahead of him along his right side and its rod back past his hip, clear of him.
+     */
+    static final double HANG_X = -0.3;
+    static final double HANG_Z = 0.12;
+
+    /**
+     * {@code k}'s pose: his body, then his arms and his wrist, the blade along the key: {@code both} 1 with both hands on the grip, 0 in his
+     * right hand alone at his side (the left arm loose), between the two on the way; his legs {@code legs} of the key's.
+     */
+    static RigPose pose(float[] k, float legs, float both) {
         RigPose p = new RigPose();
         p.twist = k[TWIST];
         p.lean = k[LEAN];
@@ -116,8 +165,77 @@ public final class ReaperBladePose {
         p.rightLegZ = 0.06F * legs;
         p.leftLegZ = -0.06F * legs;
         p.legHold = legs;
-        hands(p, k[HIGH], k[ROUND], k[PITCH], k[YAW], k[ROLL]);
+        if (both >= 1.0F) {
+            hands(p, k[HIGH], k[ROUND], k[PITCH], k[YAW], k[ROLL]);
+            return p;
+        }
+        RigPose one = new RigPose();
+        oneHand(one, k[PITCH], k[YAW], k[ROLL]);
+        if (both > 0.0F) {
+            RigPose two = new RigPose();
+            hands(two, k[HIGH], k[ROUND], k[PITCH], k[YAW], k[ROLL]);
+            float[] r = QuinqueGrip.blendTurn(one.rightArmX, one.rightArmY, one.rightArmZ, two.rightArmX, two.rightArmY, two.rightArmZ, both);
+            float[] l = QuinqueGrip.blendTurn(one.leftArmX, one.leftArmY, one.leftArmZ, two.leftArmX, two.leftArmY, two.leftArmZ, both);
+            // The blade kept where the key points it: the wrist worked out again for the blended arm.
+            double[][] armR = RigPose.zyx(r[0], r[1], r[2]);
+            float[] wr = QuinqueGrip.angles(RigPose.multiply(QuinqueGrip.transpose(armR), RigPose.multiply(frame(k[PITCH], k[YAW], k[ROLL]),
+                QuinqueGrip.transpose(HELD))));
+            one.rightArmX = r[0];
+            one.rightArmY = r[1];
+            one.rightArmZ = r[2];
+            one.leftArmX = l[0];
+            one.leftArmY = l[1];
+            one.leftArmZ = l[2];
+            one.weaponX = wr[0];
+            one.weaponY = wr[1];
+            one.weaponZ = wr[2];
+        }
+        p.rightArmX = one.rightArmX;
+        p.rightArmY = one.rightArmY;
+        p.rightArmZ = one.rightArmZ;
+        p.leftArmX = one.leftArmX;
+        p.leftArmY = one.leftArmY;
+        p.leftArmZ = one.leftArmZ;
+        p.weaponX = one.weaponX;
+        p.weaponY = one.weaponY;
+        p.weaponZ = one.weaponZ;
+        p.armHold = 1.0F;
+        p.rightArmHold = 1.0F;
+        p.leftArmHold = 1.0F;
         return p;
+    }
+
+    /** 4.1.37: the blade's frame in the chest's (columns: along, toward its edge, through) for {@code pitch}, {@code yaw}, {@code roll}. */
+    static double[][] frame(double pitch, double yaw, double roll) {
+        double[] u = along(pitch, yaw);
+        double[] down = {0.0, 1.0, 0.0};
+        if (Math.abs(u[1]) > 0.97) {
+            down = new double[] {0.0, 0.0, -Math.signum(u[1])};
+        }
+        double[] v = norm(sub(down, scale(u, dot(down, u))));
+        v = norm(add(scale(v, Math.cos(roll)), scale(cross(u, v), Math.sin(roll))));
+        double[] w = cross(u, v);
+        return new double[][] {{u[0], v[0], w[0]}, {u[1], v[1], w[1]}, {u[2], v[2], w[2]}};
+    }
+
+    /** 4.1.37: the blade in his right hand alone, along {@code pitch} and {@code yaw}, edge rolled {@code roll}: his arm hanging, the left loose. */
+    static void oneHand(RigPose p, double pitch, double yaw, double roll) {
+        double[][] armR = RigPose.zyx((float)HANG_X, 0.0F, (float)HANG_Z);
+        float[] ra = QuinqueGrip.angles(armR);
+        float[] wr = QuinqueGrip.angles(RigPose.multiply(QuinqueGrip.transpose(armR), RigPose.multiply(frame(pitch, yaw, roll),
+            QuinqueGrip.transpose(HELD))));
+        p.rightArmX = ra[0];
+        p.rightArmY = ra[1];
+        p.rightArmZ = ra[2];
+        p.leftArmX = 0.06F;
+        p.leftArmY = 0.0F;
+        p.leftArmZ = -0.08F;
+        p.weaponX = wr[0];
+        p.weaponY = wr[1];
+        p.weaponZ = wr[2];
+        p.armHold = 1.0F;
+        p.rightArmHold = 1.0F;
+        p.leftArmHold = 1.0F;
     }
 
     /** The blade's way along (pitch + up, yaw + to his left): a unit vector in the chest's frame. */
@@ -296,7 +414,8 @@ public final class ReaperBladePose {
         if (lift <= 0.0F) {
             return p;
         }
-        RigPose guard = guard(0.0F);
+        // 4.1.37: lifted to the blade held up before him as it leaves the case; once both hands have it, lowered into his guard.
+        RigPose guard = presented(smooth((age - LOWER_FROM) / (LOWERED - LOWER_FROM)));
         RigPose out = new RigPose().add(p, 1.0F - lift).add(guard, lift);
         // His right arm and the turn in his fist his guard's once lifted; his left hand onto the grip once the blade is out.
         float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, guard.rightArmX, guard.rightArmY, guard.rightArmZ, lift);
@@ -316,16 +435,22 @@ public final class ReaperBladePose {
         return out;
     }
 
-    /** 4.1.29: the draw's own times (ticks after the jacket): the lift before him begins, ends; his left hand onto the grip. */
-    public static final double LIFT_FROM = 13.0;
-    public static final double LIFTED = 17.0;
-    static final double GRIP_FROM = 22.0;
-    static final double GRIP_AT = 26.0;
+    /**
+     * 4.1.29: the draw's own times (ticks after the jacket): the lift before him begins, ends; his left hand onto the grip. 4.1.37 (the
+     * owner: "The taking out the quinque from the case also should take a little longer. It's pretty too fast"): each part about half as
+     * slow again, and the blade lowered into his guard at the end ({@link #LOWER_FROM} .. {@link #LOWERED}).
+     */
+    public static final double LIFT_FROM = 22.0;
+    public static final double LIFTED = 30.0;
+    static final double GRIP_FROM = 40.0;
+    static final double GRIP_AT = 46.0;
+    public static final double LOWER_FROM = 50.0;
+    public static final double LOWERED = 58.0;
     /** 4.1.29: how far the case's halves swing open on their hinge (radians), how far the blade slides out over (ticks from the opening). */
     public static final double CASE_OPEN = Math.toRadians(112.0);
-    static final double SPLITS = 3.0;
-    static final double SLIDE_FROM = 2.0;
-    static final double SLIDES = 5.0;
+    static final double SPLITS = 6.0;
+    static final double SLIDE_FROM = 4.0;
+    static final double SLIDES = 10.0;
 
     static float smooth(double t) {
         t = Math.max(0.0, Math.min(1.0, t));
@@ -451,7 +576,7 @@ public final class ReaperBladePose {
         for (int c = 0; c < k.length; c++) {
             k[c] = GUARD[c] + (END_LOW[c] - GUARD[c]) * lower;
         }
-        RigPose p = pose(k, 1.0F - lower);
+        RigPose p = pose(k, 1.0F - lower, lower); // 4.1.37: from his one-handed guard, both hands on it as he lowers it
         float drop = smooth((age - AgentRules.REAPER_END_SHATTER) / 4.0);
         if (drop > 0.0F) {
             float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, -0.22F, 0.0F, 0.12F, drop);
@@ -545,7 +670,7 @@ public final class ReaperBladePose {
      */
     static final float[][] DRAW_KEYS = {
         {0, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F},
-        {6, 0.32F, 0.08F, 0.72F, 0.0F, -0.42F, -0.25F, 0.05F},
-        {8, 0.32F, 0.08F, 0.72F, 0.0F, -0.42F, -0.25F, 0.05F},
-        {13, -0.08F, 0.0F, -0.2F, 0.0F, 0.62F, 0.15F, 0.0F}};
+        {9, 0.32F, 0.08F, 0.72F, 0.0F, -0.42F, -0.25F, 0.05F},
+        {14, 0.34F, 0.08F, 0.74F, 0.0F, -0.44F, -0.28F, 0.05F},
+        {22, -0.08F, 0.0F, -0.2F, 0.0F, 0.62F, 0.15F, 0.0F}};
 }

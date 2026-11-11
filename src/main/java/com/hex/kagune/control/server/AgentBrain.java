@@ -200,6 +200,9 @@ public final class AgentBrain {
         boolean bare;
         long shedAt = Long.MIN_VALUE;
         boolean shedPending;
+        /** 4.1.37: since when his change has waited for him to land; where he stands while he changes (or ends), pinned there. */
+        long shedPendingAt = Long.MIN_VALUE;
+        Vec3 pinnedAt;
         /** 4.1.29: his blade: the blow of his string under way (when it began, which, whether it has landed). */
         long bladeAt = Long.MIN_VALUE;
         int bladeStep;
@@ -551,9 +554,7 @@ public final class AgentBrain {
             return false;
         }
         long age = ago(now, mind.endAt);
-        agent.m_21573_().m_26573_();
-        Vec3 velocity = agent.m_20184_();
-        agent.m_20256_(new Vec3(velocity.f_82479_ * 0.2, velocity.f_82480_, velocity.f_82481_ * 0.2));
+        pin(agent, mind, level);
         if (!mind.shattered && age >= AgentRules.REAPER_END_SHATTER) {
             mind.shattered = true;
             Vec3 at = agent.m_20182_().m_82520_(0.0, 1.0, 0.0);
@@ -588,11 +589,20 @@ public final class AgentBrain {
                 return false;
             }
             mind.shedPending = true;
-            if (!agent.m_20096_() || mind.soarAt != Long.MIN_VALUE || BikakuDevour.held(agent)) {
-                return false; // landing first (a soar, a flip, a dash play out)
+            if (mind.shedPendingAt == Long.MIN_VALUE) {
+                mind.shedPendingAt = now;
+            }
+            // 4.1.37: landing first (a soar, a flip, a dash play out), but never waited for forever: in water, on a ladder, held up
+            // by something, he never "lands", and with the jacket on he could never fall below half.
+            boolean waited = ago(now, mind.shedPendingAt) >= AgentRules.REAPER_SHED_WAIT;
+            if (BikakuDevour.held(agent) || !waited && (!agent.m_20096_() || mind.soarAt != Long.MIN_VALUE)) {
+                return false;
             }
             mind.shedPending = false;
+            mind.shedPendingAt = Long.MIN_VALUE;
+            mind.soarAt = Long.MIN_VALUE;
             mind.shedAt = now;
+            mind.pinnedAt = agent.m_20182_();
             cancelKick(agent, mind, now);
             cancelBrawl(agent, mind, now);
             cancelLightning(agent, mind, now);
@@ -606,9 +616,7 @@ public final class AgentBrain {
             return true;
         }
         long age = ago(now, mind.shedAt);
-        agent.m_21573_().m_26573_();
-        Vec3 velocity = agent.m_20184_();
-        agent.m_20256_(new Vec3(velocity.f_82479_ * 0.3, velocity.f_82480_, velocity.f_82481_ * 0.3));
+        pin(agent, mind, level);
         if (mind.prey != 0 && level.m_6815_(mind.prey) instanceof LivingEntity prey) {
             agent.m_21563_().m_24960_(prey, 30.0F, 30.0F);
         }
@@ -622,11 +630,83 @@ public final class AgentBrain {
         }
         if (age >= AgentRules.REAPER_CHANGE_TICKS || age < 0L) {
             mind.shedAt = Long.MIN_VALUE;
+            mind.pinnedAt = null;
             mind.readyAt = Math.max(mind.readyAt, now + 4L);
             agent.swing(-1, now);
             return false;
         }
         return true;
+    }
+
+    /**
+     * 4.1.37 (the owner: "whenever he's transforming, you can still grab him, which should not be allowed"; then: "he's still very hittable.
+     * Like, I told you to make him completely immortal while he's transforming"): the White Reaper while he changes (the jacket, the case,
+     * the blade) or in his end. Nothing lands on him then ({@link #attacked}: before vanilla's knockback, red flash and hurt sound, not only
+     * the damage), nothing targets him (the original kagune's checks ask {@link EtoBrain#spared}, which asks this; the quinque arms ask
+     * {@code PlayerArms.mayHit}), and nothing holds him ({@link #pin}).
+     */
+    public static boolean untouchable(Entity body) {
+        if (!(body instanceof CcgAgent agent) || agent.mind == null) {
+            return false;
+        }
+        Mind mind = agent.mind;
+        return mind.rank == AgentRules.Rank.RANK_10 && !mind.finishing && (mind.shedAt != Long.MIN_VALUE || mind.endAt != Long.MIN_VALUE);
+    }
+
+    /**
+     * 4.1.37: held where he stood when it began, every tick of his change or his end: anything that held him let go of him, his own way
+     * and any push gone (he still falls), and put back if something moved him.
+     */
+    private static void pin(CcgAgent agent, Mind mind, ServerLevel level) {
+        agent.m_21573_().m_26573_();
+        if (mind.pinnedAt == null) {
+            mind.pinnedAt = agent.m_20182_();
+        }
+        free(agent, level);
+        Vec3 velocity = agent.m_20184_();
+        agent.m_20256_(new Vec3(0.0, Math.min(0.0, velocity.f_82480_), 0.0));
+        agent.f_19864_ = true;
+        Vec3 at = agent.m_20182_();
+        double dx = at.f_82479_ - mind.pinnedAt.f_82479_;
+        double dz = at.f_82481_ - mind.pinnedAt.f_82481_;
+        if (dx * dx + dz * dz > 0.01 || at.f_82480_ > mind.pinnedAt.f_82480_ + 0.3) {
+            agent.m_6021_(mind.pinnedAt.f_82479_, Math.min(at.f_82480_, mind.pinnedAt.f_82480_), mind.pinnedAt.f_82481_);
+        }
+    }
+
+    /** 4.1.37: every player's hold on him let go: the original kagune's tails, a Bikaku's, a Pale's flesh, a Graft's limbs, a bound arm. */
+    private static void free(CcgAgent agent, ServerLevel level) {
+        int id = agent.m_19879_();
+        for (ServerPlayer player : level.m_6907_()) {
+            if (player.m_20280_(agent) > 96.0 * 96.0) {
+                continue;
+            }
+            com.hex.kagune.gameplay.KaguneRuntime.State tails = com.hex.kagune.gameplay.KaguneRuntime.peek(player.m_20148_());
+            if (tails != null && tails.heldEntityIds != null) {
+                for (int slot = 0; slot < tails.heldEntityIds.length; slot++) {
+                    if (tails.heldEntityIds[slot] == id) {
+                        com.hex.kagune.gameplay.KaguneServerController.releaseHeldSlot(level, tails, slot);
+                    }
+                }
+            }
+            if (BikakuServer.isBikaku(player)) {
+                BikakuServer.State bikaku = BikakuServer.state(player);
+                boolean holds = bikaku.heldId == id;
+                for (int worm : bikaku.held) {
+                    holds |= worm == id;
+                }
+                if (holds) {
+                    BikakuMoves.release(player, bikaku, false);
+                }
+            }
+            if (PaleServer.isPale(player) && PaleServer.state(player).heldId == id) {
+                PaleFlesh.release(player, PaleServer.state(player));
+            }
+            if (GraftServer.isGraft(player) && GraftServer.state(player).heldId == id) {
+                GraftCombat.release(player, GraftServer.state(player), false);
+            }
+            PlayerArms.unbind(player, id);
+        }
     }
 
     /**
@@ -668,6 +748,9 @@ public final class AgentBrain {
             if (!mind.bladeLanded && age >= blow.impact()) {
                 mind.bladeLanded = true;
                 bladeLands(agent, mind, level, now);
+                if (mind.bladeAt == Long.MIN_VALUE) {
+                    return; // 4.1.37: it met a blow of theirs (KaguneClash): thrown apart, his string broken off
+                }
             }
             if (age >= blow.total() || age < 0L) {
                 mind.bladeAt = Long.MIN_VALUE;
@@ -788,6 +871,7 @@ public final class AgentBrain {
         if (mind.bladeAt != Long.MIN_VALUE) {
             mind.bladeAt = Long.MIN_VALUE; // a blow still in its chamber given up
             mind.bladeStep = 0;
+            KaguneClash.landed(agent);
         }
         mind.dodgeWay = way;
         mind.dodgeUntil = now + ReaperBladeRules.DODGE_TICKS;
@@ -802,7 +886,10 @@ public final class AgentBrain {
         return true;
     }
 
-    /** 4.1.29: blow {@code step} of his string begins. */
+    /**
+     * 4.1.29: blow {@code step} of his string begins. 4.1.37 (the owner: "his moves are currently not clashable ... You gotta patch that"):
+     * on its way it can be met ({@link KaguneClash#swing}), as hard as it would hit.
+     */
     private static void startBlade(CcgAgent agent, Mind mind, ServerLevel level, long now, int step) {
         mind.bladeAt = now;
         mind.bladeStep = step;
@@ -810,11 +897,35 @@ public final class AgentBrain {
         agent.m_21573_().m_26573_();
         agent.swing(CcgAgent.BLADE + step, now);
         UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.9F, 0.55F + 0.05F * step);
+        Entity seen = level.m_6815_(mind.prey);
+        Vec3 aim = seen != null ? UkakuFire.horizontal(seen.m_20182_().m_82546_(agent.m_20182_())) : null;
+        long began = now;
+        KaguneClash.swing(agent, now, ReaperBladeRules.blow(step).impact(), AgentRules.REAPER_BLADE_REACH + 0.5, aim, seen != null ? seen.m_19879_() : 0,
+            com.hex.kagune.control.ClashPower.agent(AgentRules.power(mind.rank, mind.superior), AgentRules.REAPER_BLADE_DAMAGE * AgentRules.REAPER_BLADE_WEIGHT[step]),
+            () -> mind.bladeAt == began && !mind.bladeLanded, () -> bladeMet(agent, mind, began));
+    }
+
+    /** 4.1.37: his blow met another (KaguneClash: both thrown apart): nothing of it lands, his string broken off, a beat before the next. */
+    private static void bladeMet(CcgAgent agent, Mind mind, long began) {
+        if (mind.bladeAt != began) {
+            return;
+        }
+        long now = agent.m_9236_().m_46467_();
+        mind.bladeAt = Long.MIN_VALUE;
+        mind.bladeLanded = true;
+        mind.bladeStep = 0;
+        mind.readyAt = Math.max(mind.readyAt, now + 10L);
+        agent.swing(-1, now);
     }
 
     /** 4.1.29: a blow of his blade lands on everything before him in its arc and reach: hurt, thrown, left bleeding. */
     private static void bladeLands(CcgAgent agent, Mind mind, ServerLevel level, long now) {
         int step = mind.bladeStep;
+        // 4.1.37: unless it meets a blow of his prey's coming back at him: then both are thrown apart and nothing lands.
+        if (level.m_6815_(mind.prey) instanceof LivingEntity prey && KaguneClash.meets(agent, prey, now)) {
+            return;
+        }
+        KaguneClash.landed(agent);
         double yaw = Math.toRadians(agent.f_20883_);
         Vec3 facing = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
         float damage = AgentRules.REAPER_BLADE_DAMAGE * AgentRules.REAPER_BLADE_WEIGHT[step] * AgentRules.power(mind.rank, mind.superior);
@@ -1791,6 +1902,9 @@ public final class AgentBrain {
             }
             if (age == strike.impact && target != null) {
                 brawlLands(agent, target, strike, level, now);
+                if (mind.brawlStrike < 0) {
+                    return true; // 4.1.37: it met a blow of theirs (KaguneClash): thrown apart, his string broken off
+                }
             }
             com.hex.kagune.control.pale.PaleStrike[] string = com.hex.kagune.control.pale.PaleStrike.of(mind.brawlStyle);
             boolean chain = age >= strike.chain && target != null && !strike.finisher() && mind.brawlIndex + 1 < string.length
@@ -1824,6 +1938,27 @@ public final class AgentBrain {
         mind.brawlStrike = strike.ordinal();
         mind.brawlAt = now;
         agent.swing(CcgAgent.STRIKE + strike.ordinal(), now);
+        // 4.1.37: on its way it can be met (KaguneClash), as hard as it would hit.
+        Entity seen = agent.m_9236_().m_6815_(mind.brawlTarget);
+        Vec3 aim = seen != null ? UkakuFire.horizontal(seen.m_20182_().m_82546_(agent.m_20182_())) : null;
+        long began = now;
+        int ordinal = strike.ordinal();
+        KaguneClash.swing(agent, now, strike.impact, (strike.kick() ? AgentRules.REAPER_BRAWL_KICK_LANDS : AgentRules.REAPER_BRAWL_LANDS) + 0.5, aim,
+            mind.brawlTarget, com.hex.kagune.control.ClashPower.agent(AgentRules.power(mind.rank, mind.superior), AgentRules.REAPER_BRAWL_DAMAGE * strike.damage),
+            () -> mind.brawlAt == began && mind.brawlStrike == ordinal && ago(agent.m_9236_().m_46467_(), began) < strike.impact,
+            () -> brawlMet(agent, mind, began));
+    }
+
+    /** 4.1.37: a strike of his met another (KaguneClash: both thrown apart): nothing of it lands, his string over, a rest before the next. */
+    private static void brawlMet(CcgAgent agent, Mind mind, long began) {
+        if (mind.brawlAt != began) {
+            return;
+        }
+        long now = agent.m_9236_().m_46467_();
+        mind.brawlStrike = -1;
+        mind.brawlAt = Long.MIN_VALUE;
+        mind.brawlReadyAt = now + AgentRules.REAPER_BRAWL_REST;
+        agent.swing(-1, now);
     }
 
     /** 4.1.25: he vanishes and is at its side ({@code SIDE}) or square in front of it ({@code FRONT}), already striking. */
@@ -1845,6 +1980,11 @@ public final class AgentBrain {
 
     /** 4.1.25: a strike of his lands if its quarry is still in its reach: hurt, thrown back, to a side and up as the strike throws it. */
     private static void brawlLands(CcgAgent agent, LivingEntity target, com.hex.kagune.control.pale.PaleStrike strike, ServerLevel level, long now) {
+        // 4.1.37: unless it meets a blow of theirs coming back at him: then both are thrown apart and nothing lands.
+        if (KaguneClash.meets(agent, target, now)) {
+            return;
+        }
+        KaguneClash.landed(agent);
         double gap = Math.sqrt(target.m_20280_(agent)) - (target.m_20205_() + agent.m_20205_()) * 0.5;
         if (gap > (strike.kick() ? AgentRules.REAPER_BRAWL_KICK_LANDS : AgentRules.REAPER_BRAWL_LANDS)) {
             UkakuFire.sound(level, agent.m_20182_(), "entity.player.attack.sweep", 0.5F, 1.3F);
@@ -2580,10 +2720,18 @@ public final class AgentBrain {
         }
     }
 
-    /** Investigators never hurt each other (a stray shard, a finisher's sweep). */
+    /**
+     * Investigators never hurt each other (a stray shard, a finisher's sweep). 4.1.37: and nothing lands on the White Reaper while he
+     * changes or ends ({@link #untouchable}): cancelled here, before vanilla's hurt does anything (its knockback, red flash and sound come
+     * after the hurt event, which only stopped the damage); {@code /kill} and the void still take him.
+     */
     @SubscribeEvent
     public static void attacked(LivingAttackEvent event) {
         if (event.getEntity() instanceof CcgAgent && event.getSource().m_7639_() instanceof CcgAgent) {
+            event.setCanceled(true);
+            return;
+        }
+        if (untouchable(event.getEntity()) && !com.hex.kagune.control.GhoulTank.bypasses(event.getSource().m_19385_())) {
             event.setCanceled(true);
         }
     }

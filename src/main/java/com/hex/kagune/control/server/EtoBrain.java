@@ -862,6 +862,9 @@ public final class EtoBrain {
      */
     public static boolean spared(ServerPlayer player, LivingEntity body) {
         try {
+            if (AgentBrain.untouchable(body)) {
+                return true; // 4.1.37: the White Reaper changing or ending: nobody's target (no grab, no blow, no tail)
+            }
             if (player == null || !(body instanceof EtoNpc npc) || npc.mind == null) {
                 return false;
             }

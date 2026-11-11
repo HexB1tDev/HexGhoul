@@ -251,8 +251,15 @@ public final class AgentTests {
             double[] grip = {d[0][0] + d[1][0] * com.hex.kagune.control.quinque.ReaperBladeMesh.LEFT_HAND,
                 d[0][1] + d[1][1] * com.hex.kagune.control.quinque.ReaperBladeMesh.LEFT_HAND, d[0][2] + d[1][2] * com.hex.kagune.control.quinque.ReaperBladeMesh.LEFT_HAND};
             double miss = Math.sqrt(Math.pow(left[0] - grip[0], 2) + Math.pow(left[1] - grip[1], 2) + Math.pow(left[2] - grip[2], 2));
-            check(miss < 0.6, at + ": his left hand on the grip (" + miss + " px off)");
-            check(d[0][2] < -1.5, at + ": his hands before him (" + d[0][2] + ")");
+            // 4.1.37: his guard in his right hand alone, at his side (the owner's picture); both hands on the grip through each blow, the
+            // left coming on over its first ticks and letting go over its last.
+            float both = f[0] < 0 ? 0.0F : com.hex.kagune.control.client.animation.ReaperBladePose.bothHands(
+                com.hex.kagune.control.npc.ReaperBladeRules.blow((int)f[0]).total(), f[1]);
+            if (both >= 0.999F) {
+                check(miss < 0.6, at + ": his left hand on the grip (" + miss + " px off)");
+            }
+            check(d[0][2] < -1.5 || both < 0.999F && d[0][0] < -5.0, at + ": his hands before him, or his fist at his side (" + d[0][0] + ", "
+                + d[0][2] + ")");
             for (double u = 9.6; u <= com.hex.kagune.control.quinque.ReaperBladeMesh.TIP; u += 0.5) {
                 double[] c = {d[0][0] + d[1][0] * u, d[0][1] + d[1][1] * u, d[0][2] + d[1][2] * u};
                 boolean torso = Math.abs(c[0]) < 4.6 && c[1] > 0.0 && c[1] < 12.0 && c[2] > -2.6 && c[2] < 2.2;
@@ -282,6 +289,29 @@ public final class AgentTests {
             && AgentRules.REAPER_CHANGE_TICKS == AgentRules.REAPER_SHED_TICKS + AgentRules.REAPER_DRAW_TICKS, "the draw's times in order");
         RigPose end = com.hex.kagune.control.client.animation.ReaperBladePose.draw(AgentRules.REAPER_DRAW_TICKS);
         RigPose guard = com.hex.kagune.control.client.animation.ReaperBladePose.guard(0.0F);
+        // 4.1.37 (the owner: "The blade is facing up instead of down"; "You should be holding that upper bone thing on the blade always"):
+        // in his guard the point is well below his fist, his fist on the bone grip behind the guard, the rod rising back past his hip,
+        // clear of his side; standing and on his run.
+        for (float run : new float[] {0.0F, 1.0F}) {
+            RigPose g = com.hex.kagune.control.client.animation.ReaperBladePose.guard(run);
+            double[][] d = com.hex.kagune.control.client.animation.ReaperBladePose.drawn(g);
+            double[] tip = com.hex.kagune.control.client.animation.ReaperBladePose.toModel(g, new double[] {d[0][0] + d[1][0]
+                * com.hex.kagune.control.quinque.ReaperBladeMesh.TIP, d[0][1] + d[1][1] * com.hex.kagune.control.quinque.ReaperBladeMesh.TIP,
+                d[0][2] + d[1][2] * com.hex.kagune.control.quinque.ReaperBladeMesh.TIP});
+            double[] fist = com.hex.kagune.control.client.animation.ReaperBladePose.toModel(g, d[0]);
+            check(tip[1] > fist[1] + 8.0, "his guard (run " + run + "): the blade's point down, below his fist (" + tip[1] + " vs " + fist[1] + ")");
+            check(d[1][1] > 0.2 && d[1][2] < -0.7, "his guard (run " + run + "): the blade ahead of him and down: " + java.util.Arrays.toString(d[1]));
+            for (double u = com.hex.kagune.control.quinque.ReaperBladeMesh.BUTT; u <= 0.0; u += 0.5) {
+                double[] c = {d[0][0] + d[1][0] * u, d[0][1] + d[1][1] * u, d[0][2] + d[1][2] * u};
+                check(c[0] < -4.8 || c[2] > 2.4 || c[2] < -2.6, "his guard (run " + run + "): the rod clear of him at " + u + ": "
+                    + java.util.Arrays.toString(c));
+            }
+            double[] left = com.hex.kagune.control.client.animation.ReaperBladePose.leftFist(g);
+            check(left[0] > 5.0, "his guard: his left hand loose at his side, off the grip: " + java.util.Arrays.toString(left));
+        }
+        check(com.hex.kagune.control.client.animation.ReaperBladePose.bothHands(16.0, 0.0) == 0.0F
+            && com.hex.kagune.control.client.animation.ReaperBladePose.bothHands(16.0, 8.0) == 1.0F
+            && com.hex.kagune.control.client.animation.ReaperBladePose.bothHands(16.0, 16.0) == 0.0F, "each blow: the left hand on, then off");
         check(Math.abs(end.rightArmX - guard.rightArmX) < 1.0E-4 && Math.abs(end.leftArmX - guard.leftArmX) < 1.0E-4
             && Math.abs(end.weaponX - guard.weaponX) < 1.0E-4, "the draw ends in his guard (no jump into his fight)");
         // The string's timing is the server's; codes clear of the others.
@@ -318,6 +348,106 @@ public final class AgentTests {
      * 4.1.28 (the owner: "he pulls out his jacket, he just removes his jacket, revealing a new skin ... During this next phase, he gets way
      * faster"): at half health the White Reaper takes his jacket off, once, nothing landing on him while he does, and is faster after.
      */
+    /**
+     * 4.1.37: the coat he takes off (ReaperCoatPose): worn where his parts are; off his shoulders and arms, every piece behind him by the
+     * time it is free; never through the ground; flat on it behind him once landed, and kept there through his draw; gone (sunk) as his
+     * change ends; and the layer that draws it wired in.
+     */
+    static void coat() throws IOException {
+        com.hex.kagune.control.outfit.OutfitModels.Model model;
+        try (java.io.InputStream in = Files.newInputStream(Path.of("src/main/resources" + com.hex.kagune.control.outfit.OutfitModels.RESOURCE))) {
+            model = com.hex.kagune.control.outfit.OutfitModels.read(in).get("formal");
+        }
+        check(model != null, "the Formal Overcoat's model is there to draw his coat from");
+        int[] bones = com.hex.kagune.control.client.animation.ReaperCoatPose.BONE;
+        int[] slots = com.hex.kagune.control.client.animation.ReaperCoatPose.SLOT;
+        for (int piece = 0; piece < com.hex.kagune.control.client.animation.ReaperCoatPose.PIECES; piece++) {
+            check(!model.on(bones[piece], slots[piece]).isEmpty(), "coat piece " + piece + ": the overcoat has cubes for it");
+        }
+        // Worn at first: the body piece exactly on his torso (nothing shows where his look turned bare).
+        RigPose start = AgentPose.shed(AgentRules.REAPER_SHED_SWAP);
+        double[][][] worn = com.hex.kagune.control.client.animation.ReaperCoatPose.frame(
+            com.hex.kagune.control.client.animation.ReaperCoatPose.BODY, AgentRules.REAPER_SHED_SWAP, 24.0);
+        double[] collar = com.hex.kagune.control.client.animation.ReaperCoatPose.place(worn, new double[] {0.0, 0.0, 0.0});
+        float[] torso = start.transform("torso", RigPose.POSITION, 0.0F, 0.0F, 0.0F);
+        double[] neck = {torso[0], torso[1], torso[2]};
+        check(Math.abs(collar[0] - neck[0]) + Math.abs(collar[1] - neck[1]) + Math.abs(collar[2] - neck[2]) < 1.0E-6,
+            "the coat on him as his look turns bare under it: " + java.util.Arrays.toString(collar));
+        // Free of him: every piece's middle behind his back; landed: flat on the ground behind him, and never through it on the way.
+        double[][] middles = {{0.0, 6.0, 0.0}, {-1.0, 4.0, 0.0}, {1.0, 4.0, 0.0}, {0.0, 4.5, 0.0}, {0.0, 4.5, 0.0}};
+        for (int piece = 0; piece < com.hex.kagune.control.client.animation.ReaperCoatPose.PIECES; piece++) {
+            double[][][] off = com.hex.kagune.control.client.animation.ReaperCoatPose.frame(piece,
+                com.hex.kagune.control.client.animation.ReaperCoatPose.OFF, 24.0);
+            double[] mid = com.hex.kagune.control.client.animation.ReaperCoatPose.place(off, middles[piece]);
+            check(mid[2] > 2.5, "coat piece " + piece + " behind his back as it comes free: " + java.util.Arrays.toString(mid));
+            for (double age = com.hex.kagune.control.client.animation.ReaperCoatPose.LANDS + 0.5; age < AgentRules.REAPER_CHANGE_TICKS
+                - com.hex.kagune.control.client.animation.ReaperCoatPose.SINKS; age += 4.0) {
+                double[][][] lying = com.hex.kagune.control.client.animation.ReaperCoatPose.frame(piece, age, 24.0);
+                double[] at = com.hex.kagune.control.client.animation.ReaperCoatPose.place(lying, middles[piece]);
+                check(at[1] > 22.5 && at[1] < 24.0 && at[2] > 3.0, "tick " + age + ": coat piece " + piece + " lying on the ground behind him: "
+                    + java.util.Arrays.toString(at));
+                double depth = Math.sqrt(lying[0][0][2] * lying[0][0][2] + lying[0][1][2] * lying[0][1][2] + lying[0][2][2] * lying[0][2][2]);
+                check(Math.abs(depth - com.hex.kagune.control.client.animation.ReaperCoatPose.FLAT) < 1.0E-6, "an empty coat lies flat");
+            }
+        }
+        double end = AgentRules.REAPER_CHANGE_TICKS - 0.01;
+        check(com.hex.kagune.control.client.animation.ReaperCoatPose.sunk(end) > 6.0
+            && com.hex.kagune.control.client.animation.ReaperCoatPose.sunk(AgentRules.REAPER_SHED_TICKS + 20.0) == 0.0
+            && !com.hex.kagune.control.client.animation.ReaperCoatPose.drawn(AgentRules.REAPER_CHANGE_TICKS),
+            "it lies there through his draw and is sunk away as his change ends");
+        String renderer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java"));
+        String layer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperCoatLayer.java"));
+        check(renderer.contains("new ReaperCoatLayer(this)") && layer.contains("OutfitModels.get(\"formal\")")
+            && layer.contains("textures/entity/ccg/reaper_coat.png") && layer.contains("FELL")
+            && Files.exists(Path.of("src/main/resources/assets/hexkagune/textures/entity/ccg/reaper_coat.png")),
+            "drawn by its own layer, the overcoat's model in white, kept where it fell");
+    }
+
+    /**
+     * 4.1.37 (the owner: "whenever he's transforming, you can still grab him"; "he's still very hittable ... make him completely immortal
+     * while he's transforming"; "his moves are currently not clashable"): untouchable through his change and his end (the attack itself
+     * cancelled, not only its damage; nobody's target; held by nothing, pinned where he stands), his change never waiting for ever to land,
+     * and his blade's and his hands' blows on the clash board.
+     */
+    static void guarded() throws IOException {
+        String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+        int rule = brain.indexOf("public static boolean untouchable(Entity body) {");
+        check(rule > 0 && brain.indexOf("!mind.finishing && (mind.shedAt != Long.MIN_VALUE || mind.endAt != Long.MIN_VALUE)", rule) - rule < 400,
+            "untouchable while he changes or ends (his end's own last blow let through)");
+        int attacked = brain.indexOf("public static void attacked(LivingAttackEvent event) {");
+        check(attacked > 0 && brain.indexOf("if (untouchable(event.getEntity()) && !com.hex.kagune.control.GhoulTank.bypasses(", attacked) - attacked < 400,
+            "the attack itself cancelled (no knockback, red flash or sound), /kill and the void still taking him");
+        int shed = brain.indexOf("private static boolean shed(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
+        int end = brain.indexOf("private static boolean ending(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
+        check(brain.indexOf("pin(agent, mind, level);", shed) - shed < 2600 && brain.indexOf("pin(agent, mind, level);", end) - end < 400,
+            "pinned where he stands, every tick of his change and of his end");
+        int free = brain.indexOf("private static void free(CcgAgent agent, ServerLevel level) {");
+        check(free > 0 && brain.indexOf("KaguneServerController.releaseHeldSlot(level, tails, slot)", free) > 0
+            && brain.indexOf("BikakuMoves.release(player, bikaku, false)", free) > 0 && brain.indexOf("PaleFlesh.release(", free) > 0
+            && brain.indexOf("GraftCombat.release(", free) > 0 && brain.indexOf("PlayerArms.unbind(player, id)", free) > 0,
+            "let go by every hold: the kagune's tails, a Bikaku's, a Pale's flesh, a Graft's limbs, a bound arm");
+        check(brain.contains("ago(now, mind.shedPendingAt) >= AgentRules.REAPER_SHED_WAIT") && AgentRules.REAPER_SHED_WAIT <= 100,
+            "his change never waits for ever for him to land (in water he would never be bare, never below 90)");
+        String eto = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java"));
+        String arms = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/PlayerArms.java"));
+        String patch = Files.readString(Path.of("patch/KagunePatch.java"));
+        int spared = eto.indexOf("public static boolean spared(ServerPlayer player, LivingEntity body) {");
+        check(spared > 0 && eto.indexOf("if (AgentBrain.untouchable(body)) {", spared) - spared < 200
+            && patch.contains("patchSpared(controller, \"validSwipeTarget\");") && patch.contains("patchSpared(controller, \"isHostileTo\");"),
+            "nobody's target: the original kagune's own checks (every grab, tail and swipe that asks them) say no");
+        check(arms.contains("if (body == player || !body.m_6084_() || AgentBrain.untouchable(body)) {")
+            && arms.contains("!AgentBrain.untouchable(target) && target.m_20280_(player) <= length * length"), "nor the quinque arms' (a Bind)");
+        int blade = brain.indexOf("private static void startBlade(");
+        int lands = brain.indexOf("private static void bladeLands(");
+        int strike = brain.indexOf("private static void beginStrike(");
+        int brawl = brain.indexOf("private static void brawlLands(");
+        check(brain.indexOf("KaguneClash.swing(agent, now, ReaperBladeRules.blow(step).impact()", blade) - blade < 900
+            && brain.indexOf("KaguneClash.meets(agent, prey, now)", lands) - lands < 500
+            && brain.indexOf("KaguneClash.swing(agent, now, strike.impact", strike) - strike < 900
+            && brain.indexOf("KaguneClash.meets(agent, target, now)", brawl) - brawl < 400,
+            "his blade's blows and his hands' strikes can be met (KaguneClash): set out on the board, met at impact");
+    }
+
     static void shedding() throws IOException {
         check(AgentRules.reaperLook(AgentRules.REAPER_LOOK) && AgentRules.reaperLook(AgentRules.REAPER_BARE_LOOK) && !AgentRules.reaperLook(0)
             && !AgentRules.reaperLook(AgentRules.REGULAR_LOOKS - 1), "both of his looks are his, no investigator's");
@@ -327,8 +457,12 @@ public final class AgentTests {
             && AgentRules.shedClamp(90.0F, 30.0F) == 0.0F && AgentRules.shedClamp(110.0F, 30.0F) == 20.0F,
             "with the jacket on no blow takes him past 90, however big (the second phase always comes)");
         check(AgentRules.REAPER_BARE_SPEED > 1.2 && AgentRules.REAPER_BARE_PACE < 0.8, "faster with it off: his speed and the rest between blows");
-        check(AgentRules.REAPER_SHED_SWAP > 10 && AgentRules.REAPER_SHED_SWAP < AgentRules.REAPER_SHED_TICKS - 10,
-            "the look switches mid-move, with time to grip it before and to roll his neck after");
+        // 4.1.37 (the owner: "he should actually like take off an actual jacket, before switching to the other skin"): the look turns bare
+        // at once, under the real coat (worn exactly where his parts are then), which then comes off as a thing of its own.
+        check(AgentRules.REAPER_SHED_SWAP >= 1 && AgentRules.REAPER_SHED_SWAP < com.hex.kagune.control.client.animation.ReaperCoatPose.PEEL - 5,
+            "the look turns bare under the coat, well before it starts coming off");
+        coat();
+        guarded();
         check(com.hex.kagune.control.npc.CcgAgent.SHED > com.hex.kagune.control.npc.CcgAgent.GROUND
             && com.hex.kagune.control.npc.CcgAgent.SHED < com.hex.kagune.control.npc.ArmRules.STEP, "the shed's swing code is clear of every other");
         // The move: hands to his lapels in front of his chest, then swept back behind him by the time the look switches, back at rest at the end.
@@ -337,7 +471,8 @@ public final class AgentTests {
             double[] fist = com.hex.kagune.control.client.animation.QuinqueGrip.fist(grip, right, true);
             check(fist[2] < -3.0 && Math.abs(fist[0]) < 4.5 && fist[1] > -1.0 && fist[1] < 9.0,
                 (right ? "right" : "left") + " hand on his lapels: before his chest, near its middle, at its height: " + java.util.Arrays.toString(fist));
-            double[] off = com.hex.kagune.control.client.animation.QuinqueGrip.fist(AgentPose.shed(AgentRules.REAPER_SHED_SWAP + 1.0), right, false);
+            double[] off = com.hex.kagune.control.client.animation.QuinqueGrip.fist(
+                AgentPose.shed(com.hex.kagune.control.client.animation.ReaperCoatPose.OFF - 1.0), right, false);
             check(off[2] > 2.0, (right ? "right" : "left") + " hand behind his back as the coat comes off: " + java.util.Arrays.toString(off));
         }
         for (double age = 0.0; age < AgentRules.REAPER_SHED_TICKS; age += 0.5) {
