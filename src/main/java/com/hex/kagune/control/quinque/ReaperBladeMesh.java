@@ -46,7 +46,7 @@ public final class ReaperBladeMesh {
     /** 4.1.31 (the owner: "The blade shatters at the end, and it's just broken"): what is left in his hand: the hilt and a jagged stub. */
     public static synchronized ArmMesh.Mesh broken() {
         if (broken == null) {
-            ArmMesh.Builder b = new ArmMesh.Builder(p -> p.clone(), n -> n.clone());
+            ArmMesh.Builder b = new ArmMesh.Builder(ReaperBladeMesh::inverted, ReaperBladeMesh::inverted);
             blade(b, SNAPS);
             veins(b, SNAPS);
             guard(b);
@@ -59,13 +59,29 @@ public final class ReaperBladeMesh {
     /** Its mesh, built the first time it is asked for. */
     public static synchronized ArmMesh.Mesh of() {
         if (built == null) {
-            ArmMesh.Builder b = new ArmMesh.Builder(p -> p.clone(), n -> n.clone());
+            ArmMesh.Builder b = new ArmMesh.Builder(ReaperBladeMesh::inverted, ReaperBladeMesh::inverted);
             blade(b);
             guard(b);
             grip(b);
             built = b.done();
         }
         return built;
+    }
+
+    /**
+     * 4.1.41 (the owner, of 4.1.37's guard in game: "The blade is still inverted, bro. The blade is facing up"; then: "it's just fucking
+     * invert the fucking axis, bro. Just completely invert it and it's fine"): the blade, whole or broken, turned over about its length as it
+     * is built (v and w the other way: a half turn, nothing mirrored), so its back with the spines and the horn is under it and its clipped
+     * curve to the point below, in every pose. The golden case is left as it was. {@link #edge} and {@link #spine} stay in its own frame:
+     * where they are drawn is their negative v ({@link #drawnV}).
+     */
+    static double[] inverted(double[] p) {
+        return new double[] {p[0], -p[1], -p[2]};
+    }
+
+    /** 4.1.41: where a point {@code v} across the blade's own frame (edge, spine) is drawn, the blade being turned over ({@link #inverted}). */
+    public static double drawnV(double v) {
+        return -v;
     }
 
     /** A point of its frame (u, v, w). */

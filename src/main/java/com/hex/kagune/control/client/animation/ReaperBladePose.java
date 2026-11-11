@@ -627,7 +627,7 @@ public final class ReaperBladePose {
     public static double[][] shard(int i, double dt) {
         Shatter s = shatter();
         com.hex.kagune.control.npc.ReaperBladeRules.Shard d = com.hex.kagune.control.npc.ReaperBladeRules.shard(i);
-        double across = ReaperBladeMesh.edge(d.u()) * d.v() + ReaperBladeMesh.spine(d.u()) * (1.0 - d.v());
+        double across = ReaperBladeMesh.drawnV(ReaperBladeMesh.edge(d.u()) * d.v() + ReaperBladeMesh.spine(d.u()) * (1.0 - d.v()));
         double[] at = add(add(s.fist, scale(s.along, d.u())), scale(s.edge, across));
         double[] flat = cross(s.along, s.edge);
         double[] start = toModel(s.at, at);

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.41 (HexGhoul): the Reaper's blade turned over (testing)
+
+See `.github/release-notes-4.1.41.md`. "it's just fucking invert the fucking axis, bro. Just completely invert it and it's fine": `ReaperBladeMesh.inverted` (the blade built turned over about its length: v and w negated), `drawnV` for the shards. Protocol 118.
+
 ## 4.1.40 (HexGhoul): older worlds' townspeople find their streets again; "complete all" keeps later abilities open (testing)
 
 See `.github/release-notes-4.1.40.md`. "just look for bugs on your own": `RetiredSites` (maps 3 and 4 for the people of towns built before 4.1.36; `SiteMaps.byMap` falls back to it); `QuestServer.loggedIn` opens every gate for a log finished for good. Protocol 118.
