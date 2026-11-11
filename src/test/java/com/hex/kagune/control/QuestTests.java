@@ -41,6 +41,7 @@ public final class QuestTests {
         taughtAlready();
         romance();
         forGood();
+        forGoodLater();
         journal();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
@@ -136,6 +137,21 @@ public final class QuestTests {
      * you pick another kagune, this should still be finished because you finished all of them. You don't need to be typing it again."):
      * finished once, every path's and every ghoul's quest is done for good, at any mastery, kept through a save; nothing opens again.
      */
+    /**
+     * 4.1.40: a log finished for good counts every quest a later version adds as done; at login every gate is opened for it, so an ability
+     * a new quest gates is never out of reach.
+     */
+    static void forGoodLater() {
+        try {
+            String server = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/QuestServer.java"));
+            int login = server.indexOf("public static void loggedIn(PlayerEvent.PlayerLoggedInEvent event) {");
+            check(login > 0 && server.indexOf("if (cached.log.finished()) {", login) - login < 700
+                && server.indexOf("cached.log.grant(gate);", login) - login < 900, "finished for good: every gate opened at login, a later version's too");
+        } catch (java.io.IOException failure) {
+            check(false, "read the source: " + failure);
+        }
+    }
+
     static void forGood() {
         QuestLog log = new QuestLog();
         Quest anteiku = QuestBook.get("anteiku_way");

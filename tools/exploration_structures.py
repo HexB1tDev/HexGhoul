@@ -709,7 +709,7 @@ public final class SiteMaps {{
                 return site;
             }}
         }}
-        return null;
+        return RetiredSites.byMap(map); // 4.1.40: the old towns' people, in worlds made before 4.1.36
     }}
 
     /**

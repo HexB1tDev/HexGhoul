@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.40 (HexGhoul): older worlds' townspeople find their streets again; "complete all" keeps later abilities open (testing)
+
+See `.github/release-notes-4.1.40.md`. "just look for bugs on your own": `RetiredSites` (maps 3 and 4 for the people of towns built before 4.1.36; `SiteMaps.byMap` falls back to it); `QuestServer.loggedIn` opens every gate for a log finished for good. Protocol 118.
+
 ## 4.1.39 (HexGhoul): Small City fixes: humans stay in their village, the city's land worked out once, protocol bumped (testing)
 
 See `.github/release-notes-4.1.39.md`. "just look for bugs on your own ... That could be related to the city": `VillageHumans.HOME` (a brought human keeps within `HOME_RANGE` 24 of its villager's spot: `HumanBrain`'s homeless wander); `City.ground` cached per generator, noise, seed and corner (`GROUNDS`, `measure`); protocol 118 (the registries differ since 4.1.36).

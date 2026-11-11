@@ -2081,6 +2081,14 @@ public final class NpcTests {
      * time); the humans a villager brings keep about its village (a homeless random walk took them off for good while its young brought more).
      */
     static void cityFixes() {
+        // 4.1.40: the old towns' maps (3, 4) still found for their people in older worlds, never built.
+        check(com.hex.kagune.control.village.SiteMaps.byMap(3) != null && com.hex.kagune.control.village.SiteMaps.byMap(3).id().equals("village_1")
+            && com.hex.kagune.control.village.SiteMaps.byMap(4) != null && com.hex.kagune.control.village.SiteMaps.byMap(4).id().equals("village_2")
+            && com.hex.kagune.control.village.SiteMaps.of("village_1") == null
+            && java.util.Arrays.stream(com.hex.kagune.control.village.SiteMaps.ALL).noneMatch(site -> site.map() == 3 || site.map() == 4),
+            "an older world's townspeople keep their town's streets and patrol; the towns are never built again");
+        check(com.hex.kagune.control.village.SiteMaps.byMap(3).homes().length > 0 && com.hex.kagune.control.village.SiteMaps.byMap(4).route().length > 0,
+            "their homes and patrol are there");
         try {
             String structures = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java"));
             int ground = structures.indexOf("static int ground(Structure.GenerationContext context, int minX, int minZ) {");
@@ -2233,8 +2241,8 @@ public final class NpcTests {
             "the building is the owner's (39 x 39, 58 tall: the empty layers over its roof left off), one tile, its own map");
         check(com.hex.kagune.control.village.SiteMaps.ALL.length == 6 && com.hex.kagune.control.village.SiteMaps.of("aogiri_hideout").map() == 5
             && com.hex.kagune.control.village.SiteMaps.of("village_1") == null && com.hex.kagune.control.village.SiteMaps.of("village_2") == null
-            && com.hex.kagune.control.village.SiteMaps.byMap(3) == null && com.hex.kagune.control.village.SiteMaps.byMap(4) == null,
-            "the hideout keeps its map; the two towns are gone (4.1.36)");
+            && com.hex.kagune.control.village.SiteMaps.byMap(3) != null && com.hex.kagune.control.village.SiteMaps.byMap(4) != null,
+            "the hideout keeps its map; the two towns are gone (4.1.36), their maps kept for an older world's people (4.1.40)");
         // Its patrol: a loop round the L, a block or two out from its walls, all of it within its perimeter.
         int[][] route = site.route();
         boolean round = route.length >= 12;

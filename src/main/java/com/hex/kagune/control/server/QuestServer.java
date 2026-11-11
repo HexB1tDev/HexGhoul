@@ -731,6 +731,16 @@ public final class QuestServer {
         if (event.getEntity() instanceof ServerPlayer player) {
             Cached cached = cached(player);
             cached.open = null;
+            // 4.1.40: quests finished for good (4.1.33) count every quest a later version adds as done: what those open must be open too, or
+            // an ability gated by a new quest could never be had (nothing left to do for it). The command opened every gate there was then.
+            if (cached.log.finished()) {
+                for (Gate gate : Gate.values()) {
+                    if (!cached.log.open(gate)) {
+                        cached.log.grant(gate);
+                    }
+                }
+                write(player, cached);
+            }
             sync(player);
         }
     }
