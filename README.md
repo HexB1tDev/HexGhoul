@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.22 (HexGhoul): first person for the kagune-made weapons (testing)
+
+See `.github/release-notes-4.1.22.md`. "Just make the first person of the other weapons. Don't touch their looks": the bone greatsword, the flesh hammer and the crystal spear are drawn in first person on the posed right arm as their third person layer draws them (`ArmItemLayer.throughBody(..., false)` then `WeaponLayer.mesh`), seen from behind the head (`FirstPersonQuinque.arm` mirrors it for tests and previews). The launcher (aims down the crosshair) and the whip (its tendril's own path) keep theirs. `QuinqueTests.firstPersonArms`. Protocol 117.
+
 ## 4.1.21 (HexGhoul): the katana's five cuts, hands in front, a real diagonal (testing)
 
 See `.github/release-notes-4.1.21.md`. "Look at how it's pointed. Look at the hands, bro": the katana's cuts are solved hands first (each fist at the end of a full arm, out in front of him; `QuinqueAim.HAND` now outweighs the blade), with wrists that turn the blade in the fist a human amount (`QuinquePose.Key.wristX/wristZ`, `RigPose.weaponX/Z`; drawn by `QuinqueItemRenderer` through `client/QuinqueWrists` and `QuinqueGrip.wristInItem`, in third person, an investigator's hands and first person). Five cuts rewritten and checked on renders from the front, the side and above. `QuinqueTests.aimed` measures the arm's real turn between frames and the wrists' range. Protocol 117.

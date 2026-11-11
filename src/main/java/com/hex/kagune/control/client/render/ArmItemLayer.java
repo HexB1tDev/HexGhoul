@@ -87,6 +87,14 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
      * step here is one of FirstPersonQuinque.view's, in its order (QuinqueTests.firstPerson holds them to it).
      */
     static void throughBody(PoseStack pose, com.hex.kagune.control.client.animation.RigPose p, boolean slim) {
+        throughBody(pose, p, slim, true);
+    }
+
+    /**
+     * 4.1.22: as above; {@code hand} false stops on the right arm itself (its pivot, Rz Ry Rx: what a kagune-made weapon's mesh is drawn on
+     * in third person, WeaponLayer.mesh, a slim arm's half pixel in), not on into the hand as ItemInHandLayer places a held item.
+     */
+    static void throughBody(PoseStack pose, com.hex.kagune.control.client.animation.RigPose p, boolean slim, boolean hand) {
         com.hex.kagune.control.client.animation.RigPose still = com.hex.kagune.control.client.animation.FirstPersonQuinque.still(p);
         float[] eye = com.hex.kagune.control.client.animation.FirstPersonQuinque.EYE;
         float model = com.hex.kagune.control.client.animation.FirstPersonQuinque.MODEL;
@@ -107,6 +115,9 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
         // ItemInHandLayer: a slim arm's half pixel, Rx(-90), Ry(180), its offset into the fist.
         if (slim) {
             pose.m_85837_(0.5 / 16.0, 0.0, 0.0);
+        }
+        if (!hand) {
+            return;
         }
         pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(-90.0), 1, 0, 0).rotateAxis((float)Math.PI, 0, 1, 0));
         pose.m_85837_(1.0 / 16.0, 0.125, -0.625);
@@ -172,6 +183,19 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
                     // the blade, Dawn) is drawn in first person exactly as the body swings it in third person (the same arm, the same hand,
                     // the same model and transform, the body's step), seen from behind the head (FirstPersonQuinque), so each cut crosses
                     // the screen the way it goes. The launcher keeps its own (it aims along the crosshair).
+                    // 4.1.22 (the owner: "just make the first person of the other weapons. Don't touch their looks"): a kagune-made
+                    // weapon (the bone greatsword, the flesh hammer, the crystal spear) the same way, its mesh on the posed arm as its
+                    // third person layer draws it (WeaponLayer.mesh, its turn in the fist with it). The whip keeps its own: its tendril
+                    // is laid along a path of its own.
+                    com.hex.kagune.control.client.animation.RigPose posed = arm != null && arm != Arm.WHIP
+                        ? com.hex.kagune.control.client.animation.KaguneBodyAnimation.current(player, partial) : null;
+                    if (posed != null) {
+                        pose.m_85837_(0.0, -0.6 * equip, 0.0);
+                        throughBody(pose, posed, "slim".equals(player.m_108564_()), false);
+                        WeaponLayer.mesh(pose, event.getMultiBufferSource().m_6299_(SOLID), arm, ControlItems.masterwork(held), k,
+                            event.getPackedLight(), posed);
+                        return;
+                    }
                     com.hex.kagune.control.client.animation.RigPose body = legacy != null && arm == null && !legacy.ranged
                         && com.hex.kagune.control.client.animation.QuinqueHolds.of(legacy) != null
                         ? com.hex.kagune.control.client.QuinqueClient.pose(player, partial) : null;

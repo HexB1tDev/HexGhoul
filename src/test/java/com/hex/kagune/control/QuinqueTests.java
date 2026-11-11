@@ -154,6 +154,7 @@ public final class QuinqueTests {
         turning();
         aimed();
         firstPerson();
+        firstPersonArms();
         meshes();
         kinds();
         files();
@@ -178,6 +179,49 @@ public final class QuinqueTests {
      * is, and no part of it comes nearer the camera than {@link #FIRST_PERSON_NEAR}. The draw out of the case is in view all the way.
      */
     static final double FIRST_PERSON_NEAR = 1.0;
+
+    /**
+     * 4.1.22: the kagune-made weapons (the whip's tendril aside) drawn in first person through the posed body, as their third person layer
+     * draws them: in the stance and through every blow some of the mesh is on the screen, none of it nearer the camera than
+     * {@link #FIRST_PERSON_NEAR}; and the game does it that way (source).
+     */
+    static void firstPersonArms() throws IOException {
+        String layer = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/render/ArmItemLayer.java"));
+        check(layer.contains("throughBody(pose, posed, \"slim\".equals(player.m_108564_()), false)") && layer.contains("WeaponLayer.mesh(pose,"),
+            "first person: a kagune-made weapon drawn on the posed arm as in third person");
+        for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+            if (arm == com.hex.kagune.control.quinque.Arm.WHIP) {
+                continue;
+            }
+            com.hex.kagune.control.quinque.ArmMesh.Mesh mesh = com.hex.kagune.control.quinque.ArmMesh.of(arm, false);
+            java.util.List<com.hex.kagune.control.client.animation.RigPose> poses = new java.util.ArrayList<>();
+            java.util.List<String> names = new java.util.ArrayList<>();
+            poses.add(com.hex.kagune.control.client.animation.WeaponPose.stance(arm));
+            names.add("stance");
+            for (int s = 0; s < arm.length(); s++) {
+                com.hex.kagune.control.quinque.Arm.Strike strike = arm.strike(s);
+                for (double age = 0.0; age <= strike.total(); age += 0.5) {
+                    poses.add(com.hex.kagune.control.client.animation.WeaponPose.strike(arm, s, age));
+                    names.add("blow " + (s + 1) + " at " + age);
+                }
+            }
+            for (int i = 0; i < poses.size(); i++) {
+                boolean seen = false;
+                double nearest = Double.MAX_VALUE;
+                for (int v = 0; v < mesh.quads * 4; v += 3) {
+                    double[] c = com.hex.kagune.control.client.animation.FirstPersonQuinque.arm(poses.get(i), arm,
+                        new double[] {mesh.pos[v * 3], mesh.pos[v * 3 + 1], mesh.pos[v * 3 + 2]});
+                    seen |= com.hex.kagune.control.client.animation.FirstPersonQuinque.seen(c);
+                    nearest = Math.min(nearest, Math.sqrt(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]));
+                }
+                check(seen, arm + " " + names.get(i) + ": some of it on the screen in first person");
+                // The crystal spear's third blow is stabbed down reversed, its butt toward the eye (seen on renders: larger, low right,
+                // the view clear).
+                double near = arm == com.hex.kagune.control.quinque.Arm.CRYSTAL_SPEAR && names.get(i).startsWith("blow 3") ? 0.6 : FIRST_PERSON_NEAR;
+                check(nearest >= near, arm + " " + names.get(i) + ": never nearer the camera than a block (" + nearest + ")");
+            }
+        }
+    }
 
     static void firstPerson() throws IOException {
         // ArmItemLayer.throughBody: FirstPersonQuinque.view's steps, in its order, then the third person chain.

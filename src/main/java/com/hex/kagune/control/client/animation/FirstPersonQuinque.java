@@ -58,6 +58,18 @@ public final class FirstPersonQuinque {
         return view(body, QuinqueGrip.held(still(body), h, slim, point));
     }
 
+    /**
+     * 4.1.22: a point of a kagune-made weapon's mesh ({@code point}: its hand frame, blocks) as first person draws it for {@code body}: on
+     * the posed right arm as WeaponLayer.mesh draws it in third person (its turn in the fist with it), then {@link #view}.
+     */
+    public static double[] arm(RigPose body, com.hex.kagune.control.quinque.Arm arm, double[] point) {
+        RigPose s = still(body);
+        double[] on = WeaponPose.wristed(s, arm, WeaponPose.onArm(WeaponPose.meshToArm(arm), point));
+        double[] t = QuinqueGrip.apply(QuinqueGrip.armTurn(s, true), on);
+        double[] o = QuinqueGrip.pivot(s, true);
+        return view(body, new double[] {o[0] + 16.0 * t[0], o[1] + 16.0 * t[1], o[2] + 16.0 * t[2]});
+    }
+
     /** Whether a camera point is on the screen (in front, inside the hand's view). */
     public static boolean seen(double[] c) {
         if (!(c[2] < -0.05)) {
