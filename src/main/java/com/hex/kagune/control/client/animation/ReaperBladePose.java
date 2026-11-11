@@ -439,6 +439,107 @@ public final class ReaperBladePose {
     }
 
     /**
+     * 4.1.31 (the owner: "he breaks the weapon. The blade shatters at the end, and it's just broken. And he accepts his death a little before he
+     * dies actually, and then he just falls on his knees and dies after the weapon shatters"): {@code age} ticks into his end: both hands
+     * lower the blade, its point to the ground before him ({@link #END_LOW}); it shatters ({@link AgentRules#REAPER_END_SHATTER}), his arms
+     * fall to his sides, the broken hilt in his right hand; he goes down on his knees ({@link AgentRules#REAPER_END_KNEELS}: his legs folded
+     * back, his hips sunk till his feet are on the ground: he has no knees to bend), leans forward, bows his head; held as he dies.
+     */
+    public static RigPose end(double age) {
+        float lower = smooth(age / (AgentRules.REAPER_END_SHATTER - 1.0));
+        float[] k = new float[GUARD.length];
+        for (int c = 0; c < k.length; c++) {
+            k[c] = GUARD[c] + (END_LOW[c] - GUARD[c]) * lower;
+        }
+        RigPose p = pose(k, 1.0F - lower);
+        float drop = smooth((age - AgentRules.REAPER_END_SHATTER) / 4.0);
+        if (drop > 0.0F) {
+            float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, -0.22F, 0.0F, 0.12F, drop);
+            float[] left = QuinqueGrip.blendTurn(p.leftArmX, p.leftArmY, p.leftArmZ, 0.08F, 0.0F, -0.1F, drop);
+            p.rightArmX = right[0];
+            p.rightArmY = right[1];
+            p.rightArmZ = right[2];
+            p.leftArmX = left[0];
+            p.leftArmY = left[1];
+            p.leftArmZ = left[2];
+            // The broken hilt held slack in his hanging hand, its stub ahead of it.
+            p.weaponX = p.weaponX * (1.0F - drop);
+            p.weaponY = p.weaponY * (1.0F - drop);
+            p.weaponZ = p.weaponZ * (1.0F - drop);
+        }
+        float kneel = smooth((age - AgentRules.REAPER_END_KNEELS) / 9.0);
+        float bow = smooth((age - AgentRules.REAPER_END_KNEELS - 7.0) / 14.0);
+        p.rightLegX = p.rightLegX * (1.0F - kneel) + KNEEL * kneel;
+        p.leftLegX = p.leftLegX * (1.0F - kneel) + KNEEL * kneel;
+        p.rightLegZ *= 1.0F - kneel;
+        p.leftLegZ *= 1.0F - kneel;
+        p.rightLegZ += 0.08F * kneel;
+        p.leftLegZ -= 0.08F * kneel;
+        p.legHold = Math.max(p.legHold, kneel);
+        p.drop = p.drop * (1.0F - kneel) + KNEEL_DROP * kneel;
+        p.lunge *= 1.0F - kneel;
+        p.twist *= 1.0F - kneel;
+        p.lean = p.lean * (1.0F - kneel) + 0.2F * kneel + 0.1F * bow;
+        p.headX = p.headX * (1.0F - kneel) + 0.25F * kneel + 0.45F * bow;
+        p.headY *= 1.0F - kneel;
+        p.headHold = Math.max(p.headHold, 0.8F * kneel);
+        return p;
+    }
+
+    /**
+     * 4.1.31: on his knees: his legs swung back (radians) and his hips sunk (pixels): his thighs seen going down and back from the front, the
+     * rest of each leg (his shins, folded under him) below the ground; and the blade lowered before the end, its point resting on the
+     * ground ahead (a key).
+     */
+    public static final float KNEEL = 0.55F;
+    public static final float KNEEL_DROP = 6.0F;
+    static final float[] END_LOW = {0, 0.0F, 0.12F, 0.0F, 0.4F, -0.85F, -0.05F, -0.32F, -0.1F, 0.0F, -0.05F, 0.1F, 0.4F};
+
+    /**
+     * 4.1.31: shard {@code i} of the shattered blade, {@code dt} ticks after it broke, in the model's frame (pixels, before its fall to the
+     * ground: the renderer's): {centre, along its length, across it} where the blade was as it broke, flown out and spun.
+     */
+    public static double[][] shard(int i, double dt) {
+        Shatter s = shatter();
+        com.hex.kagune.control.npc.ReaperBladeRules.Shard d = com.hex.kagune.control.npc.ReaperBladeRules.shard(i);
+        double across = ReaperBladeMesh.edge(d.u()) * d.v() + ReaperBladeMesh.spine(d.u()) * (1.0 - d.v());
+        double[] at = add(add(s.fist, scale(s.along, d.u())), scale(s.edge, across));
+        double[] flat = cross(s.along, s.edge);
+        double[] start = toModel(s.at, at);
+        double[] modelFlat = sub(toModel(s.at, add(at, flat)), start);
+        double[] modelAlong = sub(toModel(s.at, add(at, s.along)), start);
+        double t = Math.max(0.0, dt);
+        double[] fly = add(add(scale(modelFlat, d.out() * t), scale(modelAlong, d.along() * t)), new double[] {0.0, -d.up() * t, 0.0});
+        double spin = d.spin() * t;
+        double[] length = norm(add(scale(modelAlong, Math.cos(spin)), scale(modelFlat, Math.sin(spin))));
+        double[] width = norm(cross(length, norm(add(modelFlat, new double[] {0.0, 0.3 * Math.sin(spin * 1.7), 0.0}))));
+        return new double[][] {add(start, fly), scale(length, d.size()), scale(width, d.size() * 0.38)};
+    }
+
+    /** 4.1.31: the unit normal of a sliver laid along {@code l} and {@code w}. */
+    public static double[] normal(double[] l, double[] w) {
+        return norm(cross(l, w));
+    }
+
+    /** 4.1.31: his pose as the blade breaks (worked out once): the blade's fist, its way along and to its edge (the chest's frame). */
+    static final class Shatter {
+        final RigPose at = end(AgentRules.REAPER_END_SHATTER);
+        final double[][] drawn = drawn(this.at);
+        final double[] fist = this.drawn[0];
+        final double[] along = this.drawn[1];
+        final double[] edge = this.drawn[2];
+    }
+
+    private static Shatter shattered;
+
+    static synchronized Shatter shatter() {
+        if (shattered == null) {
+            shattered = new Shatter();
+        }
+        return shattered;
+    }
+
+    /**
      * The draw's keys: tick; twist (+ to his right), lean; the right arm's x (- forward), y, z (+ out); the head's turn and pitch. His hand
      * goes round behind his back at his waist and comes out at his side with the case.
      */

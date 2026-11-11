@@ -39,7 +39,7 @@ the next AI now."
    five minutes. **4.1.24:** his mansion (the owner's schematic, `art/reaper/arima_mansion.schem`), one per world, him in its garden.
    **4.1.25:** both fighting styles (Kick Master's string and the Speed Blitz, up close). **4.1.26:** Dawn smooth, opening like a reverse
    umbrella. **4.1.27:** the ground strike grows Dawn's blades, not a tentacle. **4.1.28:** the jacket comes off (part 1 below is done). **4.1.29:** at 90 HP (not half), the golden case and the blade (part 2 done;
-   the owner: keep it his alone, no player version). **4.1.30:** close combat, rushes, dodges (part 3 done). **Next for Arima: phase 2**, one version each, renders judged before
+   the owner: keep it his alone, no player version). **4.1.30:** close combat, rushes, dodges (part 3 done). **4.1.31:** the end (part 4 done): **Arima's phase 2 is finished.** **Next for Arima: phase 2**, one version each, renders judged before
    each push:
    1. **The jacket comes off** at half health (once): a shedding move (both hands to the collar, the coat swept off the shoulders, a new
       swing code), his look switched to a new appended look `ccg_reaper_bare` (from `art/reaper/Reaper_Phase2.png`, copied; slim arms
@@ -147,6 +147,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.31 | Arima phase 2 part 4: his end at 6 HP (`REAPER_END_HEALTH`, `endClamp`, `AgentBrain.ending`, `CcgAgent.END` 12): the blade lowered, shattered (`ReaperBladeMesh.broken`, shards), on his knees (`ReaperBladePose.end`, `KNEEL`, `KNEEL_DROP`), dead by the blow that brought it | pushed, EXIT 0 |
 | 4.1.30 | Arima phase 2 part 3: the rush in, stopping at blade reach (`AgentBrain.rush`, `ReaperBladeRules.RUSH_*`), sidesteps of shots and blows (`AgentBrain.dodge`, `ReaperBladeRules.dodge`/`committed`), close combat only | pushed, EXIT 0 |
 | 4.1.29 | Arima phase 2 part 2: the change at 90 HP (`REAPER_SHED_HEALTH`), the golden case drawn from his back and split open on its hinge, the blade slid out, the case dropped and sunk (`ReaperBladePose.draw`, `ReaperBladeLayer`); his blade (`ReaperBladeMesh`, NPC only) and heavy string (`ReaperBladePose.STRING`, `ReaperBladeRules`, `AgentBrain.blade`), 2 bleed stacks a hit (`UkakuCrystalCombat.agentBleed`) | pushed, EXIT 0 |
 | 4.1.28 | Arima phase 2 part 1: the jacket off at half health, once (`AgentBrain.shed`, `CcgAgent.SHED` 7, `AgentPose.shed` keyed by `SHED_KEYS`), the look `ccg_reaper_bare` (`AgentRules.REAPER_BARE_LOOK` 10, `reaperLook(index)`), faster; `shedClamp`; invulnerable while shedding; saved as `HexCcgAgentBare` | pushed, EXIT 0 |
@@ -494,6 +495,27 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.31, what and where (Arima phase 2 part 4: the end)
+
+The owner (quoted exactly): "After the fight is done, he breaks the weapon. The blade shatters at the end, and it's just broken. And he
+accepts his death a little before he dies actually, and then he just falls on his knees and dies after the weapon shatters." Later: "Keep
+like the shattering animation going."
+
+- **Server:** `hurt`: bare and not ending, a blow that would leave him at `REAPER_END_HEALTH` (6) or less is clamped to leave 1
+  (`endClamp`), stores `Mind.endSource`, `endAt`, swing `CcgAgent.END`; blows cancelled after (`finishing` lets his own last one through).
+  `act` runs `ending` first: he stands still; at `REAPER_END_SHATTER` (9) the glass and heavy-blade sounds; at `REAPER_END_TICKS` (70)
+  `m_6469_(endSource, MAX)`: dies by that blow, so `slain`/`reaperSlain` (Slain Reaper, mastery) and `drop` (Dawn) run as before.
+- **Client:** `AgentClient` returns `ReaperBladePose.end(age)` for `END` (no upper bound: held as vanilla's death tips him over):
+  `END_LOW` (the point to the ground ahead), the arms falling slack after the shatter (hilt in the right hand), `KNEEL` 0.55 rad back and
+  `KNEEL_DROP` 6 px (thighs seen from the front, the rest of each leg under the ground: mobs have no knees), lean and head bowed.
+  `ReaperBladeLayer.ended`: the whole blade, then `ReaperBladeMesh.broken()` (blade to `SNAPS`, jagged, capped) and `shards` (each
+  `ReaperBladeRules.shard(i)`: where on the blade, its flight and spin; placed by `ReaperBladePose.shard(i, dt)` from the cached `Shatter`
+  pose; falling at `SHARD_FALL`, lying flat on the ground).
+- **Tests:** `AgentTests.reaperEnd` (the clamp, the timings, the lowered blade to the ground and never into it, the stub, the shards fly
+  and land near, the kneel and its hold, the wiring).
+- **Preview:** `docs/handoff/arima-end-4.1.31.png`.
+- **Not tested in game.**
 
 ## 4.1.30, what and where (Arima phase 2 part 3: close combat)
 

@@ -55,6 +55,10 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
             }
         }
         VertexConsumer out = buffers.m_6299_(SOLID);
+        if (agent.swing() == CcgAgent.END) {
+            ended(pose, out, agent, posed, CcgAgent.since(agent.m_9236_().m_46467_(), agent.swingAt()) + partial, light);
+            return;
+        }
         boolean drawing = !Double.isNaN(after);
         if (drawing && after < AgentRules.REAPER_CASE_FROM) {
             return; // still taking the jacket off, or reaching behind his back
@@ -80,6 +84,64 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
             emit(pose, out, ReaperBladeMesh.of(), inArm, fist, drawing ? ReaperBladePose.extended(after) : 1.0F, light);
         }
         pose.m_85849_();
+    }
+
+    /**
+     * 4.1.31: his end ({@code age} ticks in): the whole blade until it shatters, then the broken hilt in his hand and its shards flown out
+     * from where the blade was, falling to the ground about him and lying there.
+     */
+    private void ended(PoseStack pose, VertexConsumer out, CcgAgent agent, RigPose posed, double age, int light) {
+        double[] fist = {-1.0, 9.0, 0.0};
+        boolean broke = age >= AgentRules.REAPER_END_SHATTER;
+        if (broke) {
+            shards(pose, out, age - AgentRules.REAPER_END_SHATTER, posed, light);
+        }
+        pose.m_85836_();
+        this.m_117386_().f_102811_.m_104299_(pose);
+        double[][] inArm = posed == null ? ReaperBladePose.HELD : ReaperBladePose.inArm(posed);
+        emit(pose, out, broke ? ReaperBladeMesh.broken() : ReaperBladeMesh.of(), inArm, fist, 1.0F, light);
+        pose.m_85849_();
+    }
+
+    /** 4.1.31: the shattered blade's shards, {@code dt} ticks after it broke (the model's frame): each a thin sliver, both sides drawn. */
+    static void shards(PoseStack pose, VertexConsumer out, double dt, RigPose now, int light) {
+        Matrix4f at = pose.m_85850_().m_252922_();
+        Matrix3f normals = pose.m_85850_().m_252943_();
+        double ground = 24.0 - (now == null ? 0.0 : now.drop) - 0.05;
+        for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
+            double[][] s = ReaperBladePose.shard(i, dt);
+            double fall = 0.5 * com.hex.kagune.control.npc.ReaperBladeRules.SHARD_FALL * dt * dt;
+            double[] c = s[0];
+            double[] l = s[1];
+            double[] w = s[2];
+            double low = c[1] + fall + Math.abs(l[1]) * 0.5 + Math.abs(w[1]) * 0.5;
+            double y = c[1] + fall;
+            if (low > ground) {
+                // Down: lying flat where it fell.
+                y = ground - 0.1;
+                l = new double[] {l[0], 0.0, l[2]};
+                w = new double[] {w[0], 0.0, w[2]};
+                if (Math.hypot(l[0], l[2]) < 1.0E-3) {
+                    l = new double[] {0.6, 0.0, 0.0};
+                }
+                if (Math.hypot(w[0], w[2]) < 1.0E-3) {
+                    w = new double[] {0.0, 0.0, 0.3};
+                }
+            }
+            double[][] q = {{c[0] - l[0] * 0.5, y - l[1] * 0.5, c[2] - l[2] * 0.5}, {c[0] + w[0], y + w[1], c[2] + w[2]},
+                {c[0] + l[0] * 0.5, y + l[1] * 0.5, c[2] + l[2] * 0.5}, {c[0] - w[0], y - w[1], c[2] - w[2]}};
+            double[] n = ReaperBladePose.normal(l, w);
+            int silver = i % 4 == 0 ? 0xFF9A0C16 : i % 3 == 0 ? 0xFFE8E9EB : 0xFFC9CBCE;
+            for (int side = 0; side < 2; side++) {
+                for (int k = 0; k < 4; k++) {
+                    double[] v = q[side == 0 ? k : 3 - k];
+                    float sign = side == 0 ? 1.0F : -1.0F;
+                    out.m_252986_(at, (float)(v[0] / 16.0), (float)(v[1] / 16.0), (float)(v[2] / 16.0))
+                        .m_6122_(silver >> 16 & 255, silver >> 8 & 255, silver & 255, 255).m_7421_(0.5F, 0.5F).m_86008_(OverlayTexture.f_118083_)
+                        .m_85969_(light).m_252939_(normals, sign * (float)n[0], sign * (float)n[1], sign * (float)n[2]).m_5752_();
+                }
+            }
+        }
     }
 
     /** A half of the case (or its handle), swung {@code angle} open on its hinge, turned into the arm's frame by {@code turn}, in his fist. */

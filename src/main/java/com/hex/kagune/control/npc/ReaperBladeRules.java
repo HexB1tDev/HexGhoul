@@ -63,6 +63,23 @@ public final class ReaperBladeRules {
         return side >= 0.0 ? new double[] {sx, sz} : new double[] {-sx, -sz};
     }
 
+    /**
+     * 4.1.31: the shards his blade shatters into, each the same every time (by its number): where along the blade it was (u, and across: v
+     * 0 its back .. 1 its edge), its flight (pixels a tick: out from the blade's flat, along it, up), its spin (radians a tick), its length.
+     */
+    public static final int SHARDS = 30;
+    public static final double SHARD_FALL = 1.5;
+
+    public record Shard(double u, double v, double out, double along, double up, double spin, double size) {
+    }
+
+    public static Shard shard(int i) {
+        java.util.Random r = new java.util.Random(0x5A4DL * 31L + i);
+        double u = 11.0 + 24.0 * (i + r.nextDouble()) / SHARDS;
+        return new Shard(u, r.nextDouble(), (r.nextBoolean() ? 1.0 : -1.0) * (1.2 + 2.2 * r.nextDouble()), (r.nextDouble() - 0.3) * 1.6,
+            1.0 + 2.6 * r.nextDouble(), (r.nextDouble() - 0.5) * 0.9, 1.3 + 2.2 * r.nextDouble());
+    }
+
     /** Blow {@code step} (wrapped onto the string). */
     public static Blow blow(int step) {
         return STRING[Math.floorMod(step, STEPS)];

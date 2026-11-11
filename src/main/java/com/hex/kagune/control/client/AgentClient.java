@@ -55,6 +55,10 @@ public final class AgentClient {
                 return com.hex.kagune.control.client.animation.ReaperBladePose.draw(shedAge - AgentRules.REAPER_SHED_TICKS);
             }
         }
+        // 4.1.31: his end: the blade lowered and shattered, on his knees, held as he dies.
+        if (agent.lookIndex() == AgentRules.REAPER_BARE_LOOK && agent.swing() == CcgAgent.END) {
+            return com.hex.kagune.control.client.animation.ReaperBladePose.end(Math.max(0.0, CcgAgent.since(now, agent.swingAt()) + partial));
+        }
         // 4.1.29: his second phase: his blade's string, or his guard (on his run).
         if (agent.lookIndex() == AgentRules.REAPER_BARE_LOOK) {
             return bladed(agent, limbSwing, partial, now);

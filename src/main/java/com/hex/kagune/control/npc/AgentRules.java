@@ -94,6 +94,22 @@ public final class AgentRules {
     public static final double REAPER_BLADE_ARC = 0.2;
     public static final int REAPER_BLADE_BLEED = 2;
     public static final int REAPER_BLADE_REST = 10;
+    /**
+     * 4.1.31 (the owner: "After the fight is done, he breaks the weapon. The blade shatters at the end, and it's just broken. And he accepts his
+     * death a little before he dies actually, and then he just falls on his knees and dies after the weapon shatters"): with his blade, a blow
+     * that would take him to this health or below leaves him at 1 and his end begins, nothing landing after it: he lowers the blade, it
+     * shatters ({@link #REAPER_END_SHATTER}), he goes down on his knees, bows his head, and dies ({@link #REAPER_END_TICKS}).
+     */
+    public static final float REAPER_END_HEALTH = 6.0F;
+    public static final int REAPER_END_SHATTER = 9;
+    public static final int REAPER_END_KNEELS = 14;
+    public static final int REAPER_END_TICKS = 70;
+
+    /** 4.1.31: a blow of {@code amount} on him at {@code health} with his blade: never below 1 (his end takes him, not the blow). */
+    public static float endClamp(float health, float amount) {
+        return Math.max(0.0F, Math.min(amount, health - 1.0F));
+    }
+
     /** 4.1.29: how hard each blow of his string lands (the thrust the hardest), and how far it throws. */
     public static final float[] REAPER_BLADE_WEIGHT = {1.0F, 0.9F, 0.95F, 1.3F};
     public static final double[] REAPER_BLADE_KNOCK = {0.35, 0.45, 0.6, 0.9};

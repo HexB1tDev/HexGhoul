@@ -211,6 +211,11 @@ public final class AgentBrain {
         long dodgeUntil = Long.MIN_VALUE;
         Vec3 dodgeWay = Vec3.f_82478_;
         long dodgeReadyAt = Long.MIN_VALUE;
+        /** 4.1.31: his end (when it began, the blow that brought it, whether the blade has shattered; the last blow let through). */
+        long endAt = Long.MIN_VALUE;
+        net.minecraft.world.damagesource.DamageSource endSource;
+        boolean shattered;
+        boolean finishing;
     }
 
     /** Its partner's id in its saved data (who it is: {@link CcgAgent#KEY}, packed). */
@@ -469,6 +474,9 @@ public final class AgentBrain {
     }
 
     private static void act(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (ending(agent, mind, level, now)) {
+            return; // 4.1.31: the White Reaper's end: nothing else ever again
+        }
         if (shed(agent, mind, level, now)) {
             return; // 4.1.28: the White Reaper taking his jacket off: nothing else until it is off
         }
@@ -528,6 +536,40 @@ public final class AgentBrain {
         } else {
             patrol(agent, mind, partner, level, now);
         }
+    }
+
+    /**
+     * 4.1.31 (the owner: "After the fight is done, he breaks the weapon. The blade shatters at the end, and it's just broken. And he accepts his
+     * death a little before he dies actually, and then he just falls on his knees and dies after the weapon shatters"): his end, begun by the
+     * blow that would have brought him to {@link AgentRules#REAPER_END_HEALTH} (hurt): he stands where he is and lowers his blade; it
+     * shatters ({@link AgentRules#REAPER_END_SHATTER}: shards, the sound of it); he goes down on his knees and bows his head; at
+     * {@link AgentRules#REAPER_END_TICKS} he dies by that blow (its striker his killer: Slain Reaper, his mastery and Dawn as 4.1.23). True
+     * while it plays.
+     */
+    private static boolean ending(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (mind.endAt == Long.MIN_VALUE) {
+            return false;
+        }
+        long age = ago(now, mind.endAt);
+        agent.m_21573_().m_26573_();
+        Vec3 velocity = agent.m_20184_();
+        agent.m_20256_(new Vec3(velocity.f_82479_ * 0.2, velocity.f_82480_, velocity.f_82481_ * 0.2));
+        if (!mind.shattered && age >= AgentRules.REAPER_END_SHATTER) {
+            mind.shattered = true;
+            Vec3 at = agent.m_20182_().m_82520_(0.0, 1.0, 0.0);
+            UkakuFire.sound(level, at, "block.glass.break", 1.2F, 0.6F);
+            UkakuFire.sound(level, at, "hexkagune:sfx.blade_heavy", 1.0F, 0.5F);
+        }
+        if (age >= AgentRules.REAPER_END_TICKS && agent.m_6084_()) {
+            mind.finishing = true;
+            try {
+                agent.f_19802_ = 0;
+                agent.m_6469_(mind.endSource != null ? mind.endSource : agent.m_269291_().m_269333_(agent), Float.MAX_VALUE);
+            } finally {
+                mind.finishing = false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -2490,8 +2532,11 @@ public final class AgentBrain {
         long now = level.m_46467_();
         agent.mind.hurtAt = now;
         if (agent.mind.rank == AgentRules.Rank.RANK_10 && !com.hex.kagune.control.GhoulTank.bypasses(event.getSource().m_19385_())) {
-            if (agent.mind.shedAt != Long.MIN_VALUE) {
-                event.setCanceled(true); // 4.1.28: taking his jacket off: nothing lands on him
+            if (agent.mind.finishing) {
+                return; // 4.1.31: his end's own last blow
+            }
+            if (agent.mind.shedAt != Long.MIN_VALUE || agent.mind.endAt != Long.MIN_VALUE) {
+                event.setCanceled(true); // 4.1.28: taking his jacket off: nothing lands on him; 4.1.31: nor in his end
                 return;
             }
             event.setAmount(event.getAmount() * AgentRules.REAPER_TAKEN);
@@ -2502,6 +2547,15 @@ public final class AgentBrain {
                 if (health - event.getAmount() <= AgentRules.REAPER_SHED_HEALTH + 1.0E-3F) {
                     agent.mind.shedPending = true;
                 }
+            } else if (agent.m_21223_() - event.getAmount() <= AgentRules.REAPER_END_HEALTH) {
+                // 4.1.31: with his blade, the blow that would bring him this low begins his end (he is left at 1; his end takes him).
+                event.setAmount(AgentRules.endClamp(agent.m_21223_(), event.getAmount()));
+                agent.mind.endAt = now;
+                agent.mind.endSource = event.getSource();
+                agent.mind.bladeAt = Long.MIN_VALUE;
+                agent.mind.rushUntil = Long.MIN_VALUE;
+                agent.mind.dodgeUntil = Long.MIN_VALUE;
+                agent.swing(CcgAgent.END, now);
             }
         }
         if (!(event.getSource().m_7639_() instanceof LivingEntity attacker) || attacker instanceof CcgAgent || attacker == agent) {

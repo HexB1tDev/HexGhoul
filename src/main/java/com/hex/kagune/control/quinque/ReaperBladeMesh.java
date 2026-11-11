@@ -38,6 +38,24 @@ public final class ReaperBladeMesh {
 
     private static ArmMesh.Mesh built;
 
+    /** 4.1.31: where the blade snaps (u): a hand's width past the guard. */
+    public static final double SNAPS = BLADE_FROM + 3.6;
+
+    private static ArmMesh.Mesh broken;
+
+    /** 4.1.31 (the owner: "The blade shatters at the end, and it's just broken"): what is left in his hand: the hilt and a jagged stub. */
+    public static synchronized ArmMesh.Mesh broken() {
+        if (broken == null) {
+            ArmMesh.Builder b = new ArmMesh.Builder(p -> p.clone(), n -> n.clone());
+            blade(b, SNAPS);
+            veins(b, SNAPS);
+            guard(b);
+            grip(b);
+            broken = b.done();
+        }
+        return broken;
+    }
+
     /** Its mesh, built the first time it is asked for. */
     public static synchronized ArmMesh.Mesh of() {
         if (built == null) {
@@ -58,12 +76,12 @@ public final class ReaperBladeMesh {
     // ---------------------------------------------------------------- the blade
 
     /** The edge's side (v) at {@code u}: a straight line to the point. */
-    static double edge(double u) {
+    public static double edge(double u) {
         return 2.2 - 0.55 * (u - BLADE_FROM) / (TIP - BLADE_FROM);
     }
 
     /** The back's side (v, negative) at {@code u}: straight, then curving down onto the edge's line at the point. */
-    static double spine(double u) {
+    public static double spine(double u) {
         double straight = -2.5 + 0.75 * (u - BLADE_FROM) / (TIP - BLADE_FROM);
         double from = TIP - 6.5;
         if (u <= from) {
@@ -86,7 +104,17 @@ public final class ReaperBladeMesh {
      * along the bevel. Then its red veins over both faces.
      */
     static void blade(ArmMesh.Builder b) {
-        int rows = 72;
+        blade(b, TIP);
+        veins(b, TIP);
+    }
+
+    /**
+     * The blade up to {@code end} (its point: {@link #TIP}; less: broken off there, its end jagged across and closed, 4.1.31). Its veins
+     * separately ({@link #veins}).
+     */
+    static void blade(ArmMesh.Builder b, double end) {
+        boolean broken = end < TIP - 0.5;
+        int rows = broken ? 20 : 72;
         // Round the section: back (two corners), face down to the ridge, the bevel to the edge, the other side back.
         double[][] section = {{0.0, 1.0}, {0.18, 1.0}, {0.36, 1.0}, {0.52, 0.86}, {0.68, 0.6}, {0.84, 0.32}, {1.0, 0.0}, {0.84, -0.32},
             {0.68, -0.6}, {0.52, -0.86}, {0.36, -1.0}, {0.18, -1.0}, {0.0, -1.0}, {0.0, 0.0}};
@@ -95,12 +123,15 @@ public final class ReaperBladeMesh {
         int[][] c = new int[rows][cols];
         for (int i = 0; i < rows; i++) {
             double t = i / (rows - 1.0);
-            double u = BLADE_FROM - 0.6 + (TIP - BLADE_FROM + 0.6) * t;
-            double s = spine(u);
-            double e = edge(u);
-            double h = thick(u) * (u > TIP - 0.4 ? Math.max(0.05, (TIP - u) / 0.4) : 1.0);
+            double u0 = BLADE_FROM - 0.6 + (end - BLADE_FROM + 0.6) * t;
+            double h0 = thick(u0) * (u0 > TIP - 0.4 ? Math.max(0.05, (TIP - u0) / 0.4) : 1.0);
             for (int j = 0; j < cols; j++) {
                 double f = section[j][0];
+                // Broken: its last row jagged across, as it snapped.
+                double u = broken && i == rows - 1 ? u0 + 0.9 * Math.sin(f * 9.0 + 0.7) - 0.6 * Math.cos(f * 23.0) : u0;
+                double s = spine(u);
+                double e = edge(u);
+                double h = broken ? thick(u) : h0;
                 double v = s + (e - s) * f;
                 double w = h * section[j][1] * (f >= 0.999 ? 0.0 : 1.0);
                 g[i][j] = at(u, v, j == cols - 1 ? 0.0 : w);
@@ -112,14 +143,16 @@ public final class ReaperBladeMesh {
             }
         }
         b.grid(g, c, true, false);
-        veins(b);
+        if (broken) {
+            b.cap(at(end, (spine(end) + edge(end)) * 0.5, 0.0), g[rows - 1], SILVER_DARK, false, false);
+        }
     }
 
     /**
      * Its red veins: cracks branching over both faces from its foot toward the point, thick near the guard and thinner and fewer toward the
      * point (a fixed seed: the same blade every time), laid a hair off the face.
      */
-    static void veins(ArmMesh.Builder b) {
+    static void veins(ArmMesh.Builder b, double end) {
         java.util.Random r = new java.util.Random(0x5EA9E1L);
         for (int side : new int[] {1, -1}) {
             for (int crack = 0; crack < 24; crack++) {
@@ -128,18 +161,19 @@ public final class ReaperBladeMesh {
                 double heading = (r.nextDouble() - 0.5) * 1.6;
                 int steps = 4 + r.nextInt(5);
                 double width = 0.15 * (1.0 - 0.5 * (u - BLADE_FROM) / (TIP - BLADE_FROM));
-                walk(b, r, side, u, f, heading, steps, width, 0);
+                walk(b, r, side, u, f, heading, steps, width, 0, end);
             }
         }
     }
 
     /** One crack: a walk of short steps across the face (f: 0 its back, 1 its edge), branching now and then. */
-    static void walk(ArmMesh.Builder b, java.util.Random r, int side, double u, double f, double heading, int steps, double width, int depth) {
+    static void walk(ArmMesh.Builder b, java.util.Random r, int side, double u, double f, double heading, int steps, double width, int depth,
+                     double end) {
         for (int k = 0; k < steps; k++) {
             double step = 0.7 + 0.6 * r.nextDouble();
             double nu = u + Math.cos(heading) * step;
             double nf = f + Math.sin(heading) * step / 4.2;
-            if (nu > TIP - 3.0 || nu < BLADE_FROM + 0.2 || nf < 0.04 || nf > 0.94) {
+            if (nu > Math.min(TIP - 3.0, end - 1.2) || nu < BLADE_FROM + 0.2 || nf < 0.04 || nf > 0.94) {
                 return;
             }
             double[] a = onFace(u, f, side, 0.025);
@@ -147,7 +181,7 @@ public final class ReaperBladeMesh {
             b.strip(a, e, width, new double[] {0.0, 0.0, side}, k % 3 == 0 ? VEIN_DARK : VEIN);
             if (depth < 2 && r.nextDouble() < 0.28) {
                 walk(b, r, side, nu, nf, heading + (r.nextBoolean() ? 1.0 : -1.0) * (0.6 + 0.5 * r.nextDouble()), 2 + r.nextInt(3), width * 0.7,
-                    depth + 1);
+                    depth + 1, end);
             }
             u = nu;
             f = nf;

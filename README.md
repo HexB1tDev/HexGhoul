@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.31 (HexGhoul): Arima, phase 2 part 4: the blade shatters, he falls to his knees (testing)
+
+See `.github/release-notes-4.1.31.md`. "The blade shatters at the end, and it's just broken ... he just falls on his knees and dies after the weapon shatters": the blow that would take him to `AgentRules.REAPER_END_HEALTH` leaves him at 1 (`endClamp`) and begins his end (`AgentBrain.ending`, `CcgAgent.END`): the blade lowered to the ground, shattered (`ReaperBladeMesh.broken`, shards `ReaperBladeRules.shard`/`ReaperBladePose.shard` drawn by `ReaperBladeLayer.shards`), on his knees, head bowed (`ReaperBladePose.end`), dead at `REAPER_END_TICKS` by that blow (Slain Reaper, mastery and Dawn as 4.1.23). Protocol 117.
+
 ## 4.1.30 (HexGhoul): Arima, phase 2 part 3: close combat, precise rushes, dodges (testing)
 
 See `.github/release-notes-4.1.30.md`. "He can dash more precisely ... He will always try to, get into range and kill you. He'll dodge moves": with his blade he rushes in from up to 12 blocks and stops exactly at his blade's reach (`AgentBrain.rush`, `ReaperBladeRules.rushStep`, `RUSH_STOP`), swinging as he arrives; he sidesteps shots (projectile entities via `TendrilShield.incoming`, Ukaku's simulated fire and crystal via `UkakuFire.shots`/`UkakuCrystalCombat.shots`) and kagune blows (`KaguneClash.threat`) square to their way (`ReaperBladeRules.dodge`), giving up a blow still in its chamber (`committed`). Protocol 117.
