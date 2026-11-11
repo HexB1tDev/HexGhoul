@@ -60,6 +60,42 @@ public final class QuinqueDawnMesh {
         return BUILT[step];
     }
 
+    private static ArmMesh.Mesh rising;
+
+    /**
+     * 4.1.27 (the owner: "The thing that he does when he shoves the Quinque on the ground and emerges like a tentacle, it shouldn't be a
+     * tentacle. It should be like a smooth part of the blade, as if the blade grew out of the ground"): one of Dawn's blades as it grows up
+     * out of the ground, in a unit frame (y 0 at the ground to 1 at its point, its foot 1 across: drawn scaled to its height and thickness):
+     * Dawn's spike's own profile, six faces each with a gold line down it, black, its foot swelling where it breaks out of the ground.
+     */
+    public static synchronized ArmMesh.Mesh risingBlade() {
+        if (rising == null) {
+            ArmMesh.Builder b = new ArmMesh.Builder(p -> p.clone(), n -> n.clone());
+            int sides = 48;
+            int rows = 40;
+            double[][][] g = new double[rows][sides][];
+            int[][] c = new int[rows][sides];
+            double base = spike(15.3);
+            for (int i = 0; i < rows; i++) {
+                double t = i / (rows - 1.0);
+                // From its foot's swell up Dawn's spike from its thickest to its point.
+                double r = t < 0.12 ? 0.5 * (1.0 + 0.35 * (1.0 - t / 0.12)) : 0.5 * spike(16.5 + (31.8 - 16.5) * (t - 0.12) / 0.88) / base;
+                for (int j = 0; j < sides; j++) {
+                    double a = Math.PI * 2.0 * j / sides;
+                    // Six faces: a little flat between six ridges (a blade's, not a pole's).
+                    double facet = 1.0 - 0.06 * Math.abs(Math.cos(a * 3.0));
+                    g[i][j] = new double[] {Math.cos(a) * r * facet, t, Math.sin(a) * r * facet};
+                    // A fine gold line down each face's ridge (one ring of points in eight).
+                    boolean line = j % 8 == 0 && t > 0.15 && t < 0.92;
+                    c[i][j] = line ? ArmMesh.mix(BLADE, GOLD, 0.75) : ArmMesh.mix(BLACK, BLADE, 0.4 + 0.5 * Math.abs(Math.cos(a * 3.0)));
+                }
+            }
+            b.grid(g, c, true, false);
+            rising = b.done();
+        }
+        return rising;
+    }
+
     /** The guard's radius at {@code x} (item pixels): its rim, the flare, the taper into the spike's foot (Dawn's 2.0.30 profile, smoothed). */
     static double guard(double x) {
         double[][] p = {{-2.8, 3.04}, {-2.2, 2.93}, {-1.1, 2.79}, {-0.25, 2.62}, {0.5, 2.48}, {1.5, 2.22}, {2.15, 2.10}, {3.45, 1.91},

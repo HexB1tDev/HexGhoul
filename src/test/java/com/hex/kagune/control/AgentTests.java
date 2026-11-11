@@ -710,6 +710,31 @@ public final class AgentTests {
             }
             check(lowest > 2.0, "the White Reaper's " + strike + ": Dawn carried clear of the ground (" + Math.round(lowest) + " pixels above it at its lowest)");
         }
+        // 4.1.27 (the owner: "it shouldn't be a tentacle. It should be like a smooth part of the blade, as if the blade grew out of the
+        // ground"): what his ground strike raises is Dawn's blades, the great one as tall as the strike reaches, the rest round it within what
+        // it catches, each breaking the ground in turn; drawn as Dawn's blade mesh, no tendril tube.
+        double[][] blades = com.hex.kagune.control.npc.ReaperTendril.blades(11);
+        boolean inside = true;
+        for (int i = 0; i < blades.length; i++) {
+            inside &= Math.hypot(blades[i][0], blades[i][1]) < com.hex.kagune.control.npc.ReaperTendril.RADIUS && blades[i][4] > 1.0
+                && blades[i][4] <= com.hex.kagune.control.npc.ReaperTendril.HEIGHT && (i == 0 || blades[i][6] > blades[i - 1][6]);
+        }
+        check(blades.length == 4 && blades[0][4] == com.hex.kagune.control.npc.ReaperTendril.HEIGHT && inside,
+            "the ground strike: Dawn's blades grow out of its mark, inside what it catches, one after another");
+        com.hex.kagune.control.quinque.ArmMesh.Mesh rising = com.hex.kagune.control.quinque.QuinqueDawnMesh.risingBlade();
+        float top = -Float.MAX_VALUE;
+        float bottom = Float.MAX_VALUE;
+        for (int i = 1; i < rising.pos.length; i += 3) {
+            top = Math.max(top, rising.pos[i]);
+            bottom = Math.min(bottom, rising.pos[i]);
+        }
+        check(rising.quads > 1000 && Math.abs(top - 1.0F) < 1.0E-4F && Math.abs(bottom) < 1.0E-4F, "Dawn's rising blade: smooth, ground to point in its unit frame");
+        try {
+            String drawn = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperTendrils.java"));
+            check(drawn.contains("QuinqueDawnMesh.risingBlade()") && !drawn.contains("emitTubeLegacy"), "the ground strike drawn as Dawn's blades, not a tendril");
+        } catch (java.io.IOException e) {
+            check(false, "ReaperTendrils.java can be read");
+        }
         // 4.1.23 (the owner: "he drops Dawn 100% guaranteed"): every time; everyone who struck him in the last five minutes shares his fall.
         check(com.hex.kagune.control.npc.AgentRules.dawnChance(0) == 1.0 && com.hex.kagune.control.npc.AgentRules.dawnChance(3) == 1.0,
             "Dawn: every time the White Reaper falls");

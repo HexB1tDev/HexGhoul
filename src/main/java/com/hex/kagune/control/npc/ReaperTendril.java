@@ -39,6 +39,27 @@ public final class ReaperTendril {
     public static final int COLOUR = 0x120E10;
     public static final int VEINS = 0x4E0A14;
 
+    /**
+     * 4.1.27 (the owner: "it shouldn't be a tentacle. It should be like a smooth part of the blade, as if the blade grew out of the
+     * ground"): what grows up out of the mark: Dawn's own blades, a great one at its middle and three smaller round it, each leaning out
+     * its own way (fixed by {@code seed}), breaking the ground a tick or so after the one before: each {dx, dz (blocks from the mark's
+     * middle), the way it leans (radians about the up), how far (radians from upright), its height, its foot across (blocks), its delay
+     * (ticks)}. They catch exactly what the tendril caught ({@link #hits}).
+     */
+    public static double[][] blades(int seed) {
+        java.util.Random random = new java.util.Random(seed * 131L + 17L);
+        double way = random.nextDouble() * Math.PI * 2.0;
+        double[][] out = new double[4][];
+        out[0] = new double[] {0.0, 0.0, way, 0.1, HEIGHT, THICKNESS, 0.0};
+        double[][] round = {{2.2, 0.55, 0.42, 0.62, 0.7, 1.0}, {-2.0, 0.6, 0.5, 0.48, 0.6, 1.6}, {0.7, 0.5, 0.62, 0.35, 0.5, 2.2}};
+        for (int i = 0; i < 3; i++) {
+            double a = way + round[i][0];
+            out[i + 1] = new double[] {Math.cos(a) * round[i][1], Math.sin(a) * round[i][1], a, round[i][2], HEIGHT * round[i][3],
+                THICKNESS * round[i][4], round[i][5]};
+        }
+        return out;
+    }
+
     /** When it rises (ticks from the start). */
     public static int erupts() {
         return PLANT + WARN;

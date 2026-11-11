@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.27 (HexGhoul): Arima, part 5: the ground strike grows Dawn's blades, not a tentacle (testing)
+
+See `.github/release-notes-4.1.27.md`. "It shouldn't be a tentacle. It should be like a smooth part of the blade, as if the blade grew out of the ground": the ground strike raises Dawn's blades (`ReaperTendril.blades`: a great one and three round it, leaning, staggered) drawn from `QuinqueDawnMesh.risingBlade` by `client/render/ReaperTendrils` in place of the Rinkaku tube; its gameplay unchanged. Protocol 117.
+
 ## 4.1.26 (HexGhoul): Arima, part 4: Dawn smooth, opening like a reverse umbrella (testing)
 
 See `.github/release-notes-4.1.26.md`. "Dawn needs a major rework in look so it's smooth and not cubic ... spread open ... Like a reverse umbrella": Dawn is a smooth mesh (`quinque/QuinqueDawnMesh`, built in its item pixels along x, cached at `STEPS` open steps) drawn by `client/QuinqueItemRenderer` (`QuinqueMesh.has/diagonal/drawn/caseBox/of(q, open)` per quinque); firing, its guard turns inside out into a cup opening forward round the spike, the lightning at its point, as open as its stack's shot says (`Quinque.dawnOpening`, `QuinqueClient.dawnOpening`; players' and Arima's shots set the same tags). Protocol 117.

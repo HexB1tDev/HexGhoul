@@ -26,10 +26,8 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 /**
- * 2.0.33: the White Reaper's black tendril ({@link ReaperTendril}) drawn where it burst up out of the ground: the original's own Rinkaku
- * tube (its taper, its surface, its veins and its point, {@code KaguneWorldRenderer.emitTubeLegacy}, as the ghoul children's tentacles are
- * drawn) along {@link ReaperTendril#line}, black with dark red veins, as thick as a man where it leaves the ground. Told by the server
- * ({@code S2CUkakuFx.REAPER_TENDRIL}); nothing it does is decided here.
+ * 2.0.33: what the White Reaper's ground strike ({@link ReaperTendril}) raises where it burst up out of the ground (4.1.27: Dawn's own
+ * blades growing up out of it, no longer a tendril). Told by the server ({@code S2CUkakuFx.REAPER_TENDRIL}); nothing it does is decided here.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class ReaperTendrils {
@@ -38,8 +36,8 @@ public final class ReaperTendrils {
     private static final int POINTS = 14;
     private static final int PATH = 28;
 
-    /** One rising out of the ground: where, its seed, when it burst up (the client's clock), its chain (the tube's own state). */
-    private record Rising(Vec3 at, int seed, double began, com.hex.kagune.client.render.TendrilChain chain) {
+    /** One rising out of the ground: where, its seed, when it burst up (the client's clock). */
+    private record Rising(Vec3 at, int seed, double began) {
     }
 
     private static final List<Rising> RISING = new ArrayList<>();
@@ -52,7 +50,7 @@ public final class ReaperTendrils {
         if (RISING.size() >= 8) {
             RISING.remove(0);
         }
-        RISING.add(new Rising(at, seed, PaleClient.clock(0.0F), new com.hex.kagune.client.render.TendrilChain(0)));
+        RISING.add(new Rising(at, seed, PaleClient.clock(0.0F)));
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
@@ -98,23 +96,60 @@ public final class ReaperTendrils {
         }
     }
 
+    /**
+     * 4.1.27 (the owner: "it shouldn't be a tentacle. It should be like a smooth part of the blade, as if the blade grew out of the
+     * ground"): Dawn's own blades growing up out of the mark ({@link ReaperTendril#blades}, each {@link com.hex.kagune.control.quinque
+     * .QuinqueDawnMesh#risingBlade} scaled to its height as far out as it is, leaning its own way), smooth, black, a gold line down each
+     * face; lit where they stand.
+     */
     private static void draw(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, Rising rising, double age, Vec3 camera,
                              double clock) {
-        double[][] line = ReaperTendril.line(age, rising.seed(), POINTS);
-        Vec3[] path = new Vec3[PATH];
-        for (int i = 0; i < PATH; i++) {
-            double[] p = com.hex.kagune.control.ukaku.CentipedeTail.catmullRom(line, i / (double)(PATH - 1));
-            path[i] = new Vec3(rising.at().f_82479_ + p[0] - camera.f_82479_, rising.at().f_82480_ + p[1] - camera.f_82480_,
-                rising.at().f_82481_ + p[2] - camera.f_82481_);
-        }
-        float length = (float)(ReaperTendril.HEIGHT * Math.max(0.03, ReaperTendril.out(age)));
-        com.hex.kagune.client.KaguneClientState.View look = new com.hex.kagune.client.KaguneClientState.View(true, true, 0, 100.0F,
-            ReaperTendril.COLOUR, ReaperTendril.VEINS, com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, 1, 0L, 1.0F, 1.0F, 1, 1, 0,
-            com.hex.kagune.gameplay.TendrilMode.IDLE, 0L, 0, 0, 0, 1, 1, Vec3.f_82478_, 0L, 0, -1, 0, Vec3.f_82478_,
-            com.hex.kagune.gameplay.CentipedeTechnique.STRIKE, 0L, 0, -1, Vec3.f_82478_, new int[6], length, ReaperTendril.THICKNESS, 0.46F, 6.0F,
-            10.0F, 8.5F, 5.0F, false, false, 0, 0, 0);
+        com.hex.kagune.control.quinque.ArmMesh.Mesh mesh = com.hex.kagune.control.quinque.QuinqueDawnMesh.risingBlade();
         int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(rising.at().f_82479_, rising.at().f_82480_ + 1.0, rising.at().f_82481_));
-        com.hex.kagune.client.render.KaguneWorldRenderer.emitTubeLegacy(out, matrix, normals, rising.chain(), path, look, 0, light, clock, rising.seed());
+        for (double[] blade : ReaperTendril.blades(rising.seed())) {
+            double shown = ReaperTendril.out(age - blade[6]);
+            if (shown <= 0.0) {
+                continue;
+            }
+            double[] place = new double[3];
+            double[] way = {Math.cos(blade[2]), 0.0, Math.sin(blade[2])};
+            double cos = Math.cos(blade[3]);
+            double sin = Math.sin(blade[3]);
+            double tall = blade[4] * shown;
+            double across = blade[5];
+            // Its foot a little under the ground (it breaks out of it, never stands on it).
+            double ox = rising.at().f_82479_ + blade[0] - camera.f_82479_;
+            double oy = rising.at().f_82480_ - 0.25 - camera.f_82480_;
+            double oz = rising.at().f_82481_ + blade[1] - camera.f_82481_;
+            for (int q = 0; q < mesh.quads; q++) {
+                for (int c = 0; c < 4; c++) {
+                    int v = q * 4 + c;
+                    lean(mesh.pos[v * 3] * across, mesh.pos[v * 3 + 1] * tall, mesh.pos[v * 3 + 2] * across, way, cos, sin, place);
+                    float x = (float)(ox + place[0]);
+                    float y = (float)(oy + place[1]);
+                    float z = (float)(oz + place[2]);
+                    lean(mesh.normal[v * 3], mesh.normal[v * 3 + 1], mesh.normal[v * 3 + 2], way, cos, sin, place);
+                    int argb = mesh.argb[v];
+                    out.m_252986_(matrix, x, y, z).m_6122_(argb >> 16 & 255, argb >> 8 & 255, argb & 255, 255).m_7421_(0.5F, 0.5F)
+                        .m_86008_(net.minecraft.client.renderer.texture.OverlayTexture.f_118083_).m_85969_(light)
+                        .m_252939_(normals, (float)place[0], (float)place[1], (float)place[2]).m_5752_();
+                }
+            }
+        }
+    }
+
+    /** {@code x, y, z} (up the blade's own y) leaned toward {@code way} by the angle whose cosine and sine are given: into {@code to}. */
+    static void lean(double x, double y, double z, double[] way, double cos, double sin, double[] to) {
+        // About the level line square to the lean (k = up x way): up goes to up cos + way sin.
+        double kx = way[2];
+        double kz = -way[0];
+        double dot = kx * x + kz * z;
+        double cx = -kz * y;
+        double cy = kz * x - kx * z;
+        double cz = kx * y;
+        to[0] = x * cos + cx * sin + kx * dot * (1.0 - cos);
+        to[1] = y * cos + cy * sin;
+        to[2] = z * cos + cz * sin + kz * dot * (1.0 - cos);
     }
 
     @SubscribeEvent
