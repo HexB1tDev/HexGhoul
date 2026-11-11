@@ -23,9 +23,13 @@ are you fucking kidding me? How do you have the balls to say before and after wh
 After 4.1.21 the owner said (quoted exactly): "mostly this is taking far too long. Just as soon as you finish the katana, just make the
 first person of the other weapons. Don't touch their looks. Dude, it's just, you're just feels like you're doing the same thing over and
 over and over again. I don't see much change. Like, it's already my second account that has been wasted time on this one thing.
-Considering the amount of stuff that we got to do, you're spending so much time into one"
+Considering the amount of stuff that we got to do, you're spending so much time into one". After 4.1.24: "Continue then, taking long as
+fuck". Of Dawn's opening (an umbrella opening back over the hand had been described): "It is not what I meant when I said an umbrella. I
+was being, I wasn't being literal, bro. It just meant open. Like a reverse umbrella, not like that, bro." Then: "handoff and prompt for
+the next AI now."
 
-1. **Branch:** fast-forward onto this session's branch (4.1.21, full build EXIT 0).
+1. **Branch:** `claude/sleepy-archimedes-mbiovy` (4.1.21 .. 4.1.27 and this handoff, each pushed after a full build with EXIT 0 on its
+   exact commit). A new session's branch usually starts at `main` (1.3.0): fast-forward onto this one first.
 2. **The katana is done (4.1.21):** hands first, wrists, five cuts checked on renders (see "4.1.21, what and where"). Don't reopen it
    unless the owner asks.
 3. **The first person of the other weapons is done (4.1.22):** the bone greatsword, flesh hammer and crystal spear through the body; the
@@ -34,8 +38,31 @@ Considering the amount of stuff that we got to do, you're spending so much time 
 4. **Arima, part 1 is done (4.1.23):** Dawn every time, the Slain Reaper advancement and his mastery for everyone who hit him in the last
    five minutes. **4.1.24:** his mansion (the owner's schematic, `art/reaper/arima_mansion.schem`), one per world, him in its garden.
    **4.1.25:** both fighting styles (Kick Master's string and the Speed Blitz, up close). **4.1.26:** Dawn smooth, opening like a reverse
-   umbrella. **4.1.27:** the ground strike grows Dawn's blades, not a tentacle. **Next for Arima:** phase 2 (jacket off: `art/reaper/Reaper_Phase2.png`; the heavy blade: `art/reaper/Reaper_Quinque1.jpg`, `Reaper_quinque2.jpg`;
-   bleed, faster, dodging; the blade shattering; on his knees). Then quests, then the Small City. One version at a time, short.
+   umbrella. **4.1.27:** the ground strike grows Dawn's blades, not a tentacle. **Next for Arima: phase 2**, one version each, renders judged before
+   each push:
+   1. **The jacket comes off** at half health (once): a shedding move (both hands to the collar, the coat swept off the shoulders, a new
+      swing code), his look switched to a new appended look `ccg_reaper_bare` (from `art/reaper/Reaper_Phase2.png`, copied; slim arms
+      like his first; make every `lookIndex() == REAPER_LOOK` test a `reaperLook(index)` that takes both), faster, Dawn put away (he "no
+      longer has the Dawn weapon"; it still drops on his death).
+   2. **The heavy blade** (`art/reaper/Reaper_Quinque1.jpg`, `Reaper_quinque2.jpg`: a long straight silver blade cracked with red veins, an
+      organic silver guard set with red RC gems, a long grip, a ring and a hooked prong with a red tip): a grown mesh like the katana's,
+      two-handed, its own heavy string by intent (`QuinqueAim`: hands first, wrists), bleed on every hit (the mod's bleeding effect), never
+      dropped. NPC-only: an Arm or a Quinque without a case item; weigh which touches less (both enums register items and are looped over
+      by tests).
+   3. **Close combat:** always closing in, precise dashes (`ReaperDashServer`), dodging what is thrown at him, no ranged moves.
+   4. **The end:** low on health he lowers the blade, it shatters (shards, a sound), he drops to his knees (a kneeling pose held), then
+      dies; Dawn and Slain Reaper as 4.1.23.
+
+   **Read already for phase 2 part 1 (nothing coded):** his skins are `AgentRules.LOOKS` (append only: sent by number; `REAPER_LOOK` 9,
+   `REGULAR_LOOKS` 9); the look is synced by `CcgAgent.dress(look, kind)` (entity data `LOOK`) and set in `AgentBrain.wake`
+   (`mind.look = AgentRules.REAPER_LOOK` for the Reaper: keep the bare look once shed, a persistent flag). Reaper-only checks on the
+   look: `AgentClient.pose` (his idle), `AgentRenderer` line 80 (`brawny`) and the `Build` layer (line 170). Movement speed
+   (`Attributes.f_22279_`) and `setItemSlot` (`m_8061_`) are already used (allowlisted). `AgentBrain.brawl` needs `mind.kind == DAWN`
+   and `AgentPose.brawl` carries Dawn at the shoulder: when the blade replaces Dawn, give both the blade (or no weapon). Keep Dawn in his
+   hand until the blade exists: an empty-handed Reaper runs code paths nobody has seen (`close`, `reach(mind)` by kind).
+   **Previews that worked:** scratch sheets over `PoseRender` and `QuinqueMeshPreview` (front, three-quarter, his right, above; the
+   Reaper's skin `art/white_reaper_skin.png`); write one per change, look at it, fix, send it.
+   Then quests, then the Small City. One version at a time, short.
 5. **Open question to the owner:** should daughters 07, 10, 11, 12, 21 and 22 get open eyes painted on? Ask before touching them.
 
 ## How to work (the owner asked the next AI to be "exactly like" the last one)
