@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.33 (HexGhoul): quests finished once, for good (testing)
+
+See `.github/release-notes-4.1.33.md`. "Once you did all of them /quest complete, all of them should be finished. Even if you pick another kagune": `/kagune quest complete all` now also calls `QuestLog.finishAll` (every PATH and GHOUL quest of `QuestBook` done, a saved `all=1` flag that `state` honours for any quest, later ones included); hunts and favours still come; `reset` clears it. Protocol 117.
+
 ## 4.1.32 (HexGhoul): a quinque's M1 comes first (testing)
 
 See `.github/release-notes-4.1.32.md`. "Whenever using a Quinque, I think that it should be prioritized over any combat": with a CCG quinque out, `WeaponClient.quinqueFirst` (HIGH priority) lands the hit itself (`MultiPlayerGameMode.attack`) and cancels the click, so the original's kagune listener (`KaguneKeys$ForgeBus.attackInput`, which cancels the game's attack while the kagune is out) never runs; `KaguneCombat.startSwipe` returns while a quinque or a kagune-made weapon is out. Protocol 117.

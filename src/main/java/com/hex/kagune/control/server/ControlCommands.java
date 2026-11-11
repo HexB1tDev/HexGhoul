@@ -258,8 +258,8 @@ final class ControlCommands {
         ServerPlayer player = context.getSource().m_81375_();
         if (id.equalsIgnoreCase("all")) {
             List<String> done = QuestServer.completeOpen(player);
-            String said = done.isEmpty() ? "No quests on right now." : "Completed " + done.size() + (done.size() == 1 ? " quest: " : " quests: ")
-                + String.join(", ", done) + ".";
+            String said = (done.isEmpty() ? "" : "Completed " + done.size() + (done.size() == 1 ? " quest: " : " quests: ") + String.join(", ", done)
+                + ". ") + "Every quest is finished for good, on every kagune: nothing to complete again.";
             context.getSource().m_288197_(() -> Component.m_237113_(said), false);
             // 2.2.8: and everything they open, those taught by a companion too (the Dragon, the kakujas): nobody to go and ask.
             List<String> opened = QuestServer.grantAll(player);

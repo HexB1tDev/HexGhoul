@@ -682,6 +682,8 @@ public final class QuestServer {
             complete(player, cached, quest);
             done.add(quest.title());
         }
+        // 4.1.33: and every other quest, every path's, for good: none comes back with another kagune or more mastery.
+        cached.log.finishAll();
         write(player, cached);
         sync(player);
         return done;

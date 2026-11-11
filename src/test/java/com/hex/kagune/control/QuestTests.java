@@ -40,12 +40,60 @@ public final class QuestTests {
         givers();
         taughtAlready();
         romance();
+        forGood();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Quest tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 4.1.33 (the owner: "Quests should only be done once ... once you did all of them /quest complete, all of them should be finished. Even if
+     * you pick another kagune, this should still be finished because you finished all of them. You don't need to be typing it again."):
+     * finished once, every path's and every ghoul's quest is done for good, at any mastery, kept through a save; nothing opens again.
+     */
+    static void forGood() {
+        QuestLog log = new QuestLog();
+        Quest anteiku = QuestBook.get("anteiku_way");
+        if (anteiku != null) {
+            log.complete(QuestBook.get("pack_way") != null ? QuestBook.get("pack_way") : anteiku);
+        }
+        log.finishAll();
+        QuestLog back = QuestLog.load(log.save());
+        check(back.finished(), "finished for good, through a save");
+        for (QuestLog l : new QuestLog[] {log, back}) {
+            for (com.hex.kagune.control.KagunePath path : com.hex.kagune.control.KagunePath.values()) {
+                for (int mastery : new int[] {0, 300, 750, 1000, 5000}) {
+                    for (Quest quest : QuestBook.all()) {
+                        if (quest.line() != Quest.Line.PATH && quest.line() != Quest.Line.GHOUL) {
+                            continue;
+                        }
+                        QuestLog.State state = l.state(quest, path, mastery);
+                        check(state == QuestLog.State.DONE || state == QuestLog.State.CLOSED,
+                            quest.id() + " on " + path + " at mastery " + mastery + ": never open again (" + state + ")");
+                    }
+                }
+            }
+        }
+        // A quest a later version adds is done as it comes: state() says so without a stored end.
+        Quest any = null;
+        for (Quest quest : QuestBook.all()) {
+            if (quest.line() == Quest.Line.PATH) {
+                any = quest;
+                break;
+            }
+        }
+        QuestLog fresh = QuestLog.load("v=" + QuestLog.VERSION + ";all=1");
+        check(any != null && fresh.state(any, any.path() == null ? com.hex.kagune.control.KagunePath.RINKAKU : any.path(), 0)
+            == QuestLog.State.DONE, "any quest, stored or not, is done once all are");
+        // The hunts and favours still come, a night at a time.
+        Hunts.Spec spec = new Hunts.Spec(0, 4, 3, Hunts.PAY_MEAT, 1);
+        Quest hunt = Hunts.quest(spec);
+        check(back.state(hunt, com.hex.kagune.control.KagunePath.RINKAKU, 500) != QuestLog.State.DONE, "a hunt is still its own night's work");
+        back.reset();
+        check(!back.finished(), "a reset (the command) starts them over");
     }
 
     /** Every quest is sound, every gate has a way in on its own path, and every path has its own line. */

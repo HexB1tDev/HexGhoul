@@ -147,6 +147,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.33 | Quests finished for good: `QuestLog.finishAll`/`finished` (saved `all=1`, `state` DONE for every PATH/GHOUL quest), called by `QuestServer.completeOpen`; hunts and favours unchanged; `QuestTests.forGood` | pushed, EXIT 0 |
 | 4.1.32 | A quinque's M1 first: `WeaponClient.quinqueFirst` (HIGH, lands the hit via `MultiPlayerGameMode.attack` m_105223_, `Minecraft.f_91072_`, cancels the click ahead of the original's kagune listener), `KaguneCombat.startSwipe`/`quinqueOut`; `QuinqueTests.first` | pushed, EXIT 0 |
 | 4.1.31 | Arima phase 2 part 4: his end at 6 HP (`REAPER_END_HEALTH`, `endClamp`, `AgentBrain.ending`, `CcgAgent.END` 12): the blade lowered, shattered (`ReaperBladeMesh.broken`, shards), on his knees (`ReaperBladePose.end`, `KNEEL`, `KNEEL_DROP`), dead by the blow that brought it | pushed, EXIT 0 |
 | 4.1.30 | Arima phase 2 part 3: the rush in, stopping at blade reach (`AgentBrain.rush`, `ReaperBladeRules.RUSH_*`), sidesteps of shots and blows (`AgentBrain.dodge`, `ReaperBladeRules.dodge`/`committed`), close combat only | pushed, EXIT 0 |
@@ -496,6 +497,21 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.33, what and where (quests finished once, for good)
+
+The owner (quoted exactly): "Quests should only be done once. You can spam /kagune quest complete all over and like, I mean, it's not that
+you can spam it. It's just once you did all of them /quest complete, all of them should be finished. Even if you pick another kagune, this
+should still be finished because you finished all of them. You don't need to be typing it again."
+
+- **Cause:** `QuestServer.completeOpen` finished only `State.OPEN` quests for the current path and mastery; other paths' quests are
+  `LOCKED` (not `on(path)`), so a new kagune (or more mastery) opened them later.
+- **Fix:** `QuestLog.finished` (saved `;all=1`, loaded, cleared by `reset`); `finishAll()` marks every `QuestBook.all()` quest of line
+  `PATH` or `GHOUL` DONE (closed ones stay closed) and sets the flag; `state` returns DONE for any PATH/GHOUL quest once finished (so a
+  quest a later version adds is done too). `completeOpen` calls it after paying the open ones; the command says so.
+- **Kept:** hunts and favours (lines `HUNT`, `FAVOUR`) still come (told to the owner, ask if they want them off too).
+- **Tests:** `QuestTests.forGood`.
+- **Not tested in game.**
 
 ## 4.1.32, what and where (a quinque's M1 comes first)
 

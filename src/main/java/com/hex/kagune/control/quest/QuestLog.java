@@ -83,6 +83,12 @@ public final class QuestLog {
     private final Map<String, Bond> bonds = new LinkedHashMap<>();
     private int points;
     private int migrated;
+    /**
+     * 4.1.33 (the owner: "once you did all of them /quest complete, all of them should be finished. Even if you pick another kagune, this
+     * should still be finished because you finished all of them"): every quest of the book done for good, on every path, at any mastery,
+     * those a later version adds too (the hunts and favours, taken one night at a time, still come).
+     */
+    private boolean finished;
     /** The game time the next hunt may be offered (0: as soon as it is dusk). */
     private long nextHuntAt;
 
@@ -95,6 +101,9 @@ public final class QuestLog {
         State stored = this.ended.get(quest.id());
         if (stored != null) {
             return stored;
+        }
+        if (this.finished && (quest.line() == Quest.Line.PATH || quest.line() == Quest.Line.GHOUL)) {
+            return State.DONE; // 4.1.33: all of them, for good
         }
         if (!quest.on(path) || mastery < quest.mastery()) {
             return State.LOCKED;
@@ -449,8 +458,28 @@ public final class QuestLog {
         this.gates.add(gate);
     }
 
+    /**
+     * 4.1.33: every quest of the book finished for good: each path's and every ghoul's, whatever path or mastery, marked done (those already
+     * closed stay closed), and any added later done as it comes. What they unlock is opened apart (the command's grantAll).
+     */
+    public void finishAll() {
+        this.finished = true;
+        for (Quest quest : QuestBook.all()) {
+            if ((quest.line() == Quest.Line.PATH || quest.line() == Quest.Line.GHOUL) && !this.ended.containsKey(quest.id())) {
+                this.ended.put(quest.id(), State.DONE);
+                this.progress.remove(quest.id());
+            }
+        }
+    }
+
+    /** 4.1.33: true once every quest has been finished for good ({@link #finishAll}). */
+    public boolean finished() {
+        return this.finished;
+    }
+
     /** Everything forgotten (a command; the save is migrated, so nothing is grandfathered back). */
     public void reset() {
+        this.finished = false;
         this.progress.clear();
         this.ended.clear();
         this.gates.clear();
@@ -486,6 +515,9 @@ public final class QuestLog {
         StringBuilder out = new StringBuilder();
         out.append("v=").append(this.migrated);
         out.append(";pts=").append(this.points);
+        if (this.finished) {
+            out.append(";all=1");
+        }
         out.append(";hunt@=").append(this.nextHuntAt);
         for (Map.Entry<String, Integer> side : this.sides.entrySet()) {
             out.append(";side.").append(side.getKey()).append('=').append(side.getValue());
@@ -539,6 +571,7 @@ public final class QuestLog {
         }
         log.migrated = parse(fields.get("v"), 0);
         log.points = Math.max(0, parse(fields.get("pts"), 0));
+        log.finished = parse(fields.get("all"), 0) == 1;
         log.nextHuntAt = parseLong(fields.get("hunt@"), 0L);
         // Hunts first: their progress is read below like any quest's.
         for (Map.Entry<String, String> field : fields.entrySet()) {
