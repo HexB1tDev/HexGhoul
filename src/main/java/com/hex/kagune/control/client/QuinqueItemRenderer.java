@@ -67,6 +67,20 @@ public final class QuinqueItemRenderer extends net.minecraft.client.renderer.Blo
             float out = QuinqueMesh.out(QuinqueClient.shown(stack, true));
             pose.m_85836_();
             try {
+                // 4.1.21: the wrists of whoever holds it (QuinqueWrists): the weapon turned in the fist about the right grip, as the body's
+                // swing bends them (QuinqueGrip.wristInItem: the arm's turn in the item's own frame).
+                float[] wrists = QuinqueWrists.of(stack, context);
+                if (wrists != null && (wrists[0] != 0.0F || wrists[1] != 0.0F || wrists[2] != 0.0F)) {
+                    com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
+                    if (h != null) {
+                        float[] turn = com.hex.kagune.control.client.animation.QuinqueGrip.wristInItem(h, wrists[0], wrists[1], wrists[2]);
+                        float[] g = h.rightGrip();
+                        pose.m_85837_(g[0] / 16.0, g[1] / 16.0, g[2] / 16.0);
+                        pose.m_252781_(new org.joml.Quaternionf().rotateAxis(turn[2], 0.0F, 0.0F, 1.0F).rotateAxis(turn[1], 0.0F, 1.0F, 0.0F)
+                            .rotateAxis(turn[0], 1.0F, 0.0F, 0.0F));
+                        pose.m_85837_(-g[0] / 16.0, -g[1] / 16.0, -g[2] / 16.0);
+                    }
+                }
                 // Turned onto the handheld diagonal about the model's middle, as the baker turns its boxes (QuinqueMesh.turned), then the
                 // model's own pixels (ItemRenderer has already moved the model's corner to the origin).
                 pose.m_85837_(0.5, 0.5, 0.5);

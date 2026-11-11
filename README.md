@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.21 (HexGhoul): the katana's five cuts, hands in front, a real diagonal (testing)
+
+See `.github/release-notes-4.1.21.md`. "Look at how it's pointed. Look at the hands, bro": the katana's cuts are solved hands first (each fist at the end of a full arm, out in front of him; `QuinqueAim.HAND` now outweighs the blade), with wrists that turn the blade in the fist a human amount (`QuinquePose.Key.wristX/wristZ`, `RigPose.weaponX/Z`; drawn by `QuinqueItemRenderer` through `client/QuinqueWrists` and `QuinqueGrip.wristInItem`, in third person, an investigator's hands and first person). Five cuts rewritten and checked on renders from the front, the side and above. `QuinqueTests.aimed` measures the arm's real turn between frames and the wrists' range. Protocol 117.
+
 ## 4.1.20 (HexGhoul): a katana grown out of kagune, smooth, no squares (testing)
 
 See `.github/release-notes-4.1.20.md`. "The katana should be like every weapon in the game should look like it's made from a kagune ... I don't want squares": the katana is a smooth mesh grown out of kagune (`quinque/QuinqueMesh`), drawn by its own item renderer everywhere it shows (`client/QuinqueItemRenderer`, Forge's client item extensions): a dark plated blade with a glowing wavy temper edge, a flesh collar with RC eyes, a veined kagune tsuba with two Rinkaku tendrils coiled over it, a ribbed hilt bound in crossing sinew, a flesh pommel with an eye. It grows out of the fist as its case shrinks; enchanted, it shimmers. Same place in the hand as before, so every grip, cut and first person view holds. Protocol 117.

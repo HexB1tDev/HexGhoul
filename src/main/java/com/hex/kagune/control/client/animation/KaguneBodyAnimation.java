@@ -542,6 +542,9 @@ public final class KaguneBodyAnimation implements IAnimation {
         if (quinque != null) {
             ChildMomentPose.blend(p, quinque, this.fade);
         }
+        // 4.1.21: its wrists, for the item drawn in this hand (QuinqueItemRenderer: the weapon turned in the fist as the arm is posed).
+        com.hex.kagune.control.client.QuinqueWrists.posed(this.player, quinque == null ? null
+            : new float[] {quinque.weaponX * this.fade, quinque.weaponY * this.fade, quinque.weaponZ * this.fade});
         // 3.6.2: The Walker: its tentacles carry him: his own legs hang still, and he is lifted a little off the ground.
         if (PathClient.get(this.player) == KagunePath.BIKAKU && com.hex.kagune.control.client.BikakuClient.walking(this.player, tickDelta)) {
             double walkerClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);

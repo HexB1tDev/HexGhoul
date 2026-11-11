@@ -114,27 +114,33 @@ public final class QuinqueTests {
                 if (aims == null) {
                     continue;
                 }
-                double lastPitch = Double.NaN;
-                double lastYaw = 0.0;
-                double lastRoll = 0.0;
+                // 4.1.21: how far the arm really turns between frames (the angle between the two turns), so an angle that wraps past half a
+                // turn (the same arm drawn the same) is not taken for a flip, and a roll whipped round about its own length is.
+                double[][] last = null;
                 for (double t = 0.0; t <= 1.0001; t += 0.02) {
                     com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, t);
-                    float[] arm = {p.rightArmX, p.rightArmY, p.rightArmZ};
-                    if (!Double.isNaN(lastPitch)) {
-                        double jump = Math.max(Math.abs(arm[0] - lastPitch), Math.max(Math.abs(arm[1] - lastYaw), Math.abs(arm[2] - lastRoll)));
+                    double[][] arm = com.hex.kagune.control.client.animation.RigPose.zyx(p.rightArmX, p.rightArmY, p.rightArmZ);
+                    if (last != null) {
+                        double trace = 0.0;
+                        for (int i = 0; i < 3; i++) {
+                            for (int j = 0; j < 3; j++) {
+                                trace += last[j][i] * arm[j][i];
+                            }
+                        }
+                        double jump = Math.acos(Math.max(-1.0, Math.min(1.0, (trace - 1.0) / 2.0)));
                         check(jump < 0.9, q + " " + step + " at " + String.format("%.2f", t) + ": the arm moves, never turns over (" + jump + ")");
                     }
-                    lastPitch = arm[0];
-                    lastYaw = arm[1];
-                    lastRoll = arm[2];
+                    last = arm;
+                    check(Math.abs(p.weaponX) <= 0.81F && Math.abs(p.weaponZ) <= 0.36F, q + " " + step + " at " + String.format("%.2f", t)
+                        + ": the wrists bend no further than a wrist does");
                 }
                 for (com.hex.kagune.control.client.animation.QuinqueAim.Aim aim : aims) {
                     if (aim.blade() == null) {
                         continue;
                     }
-                    com.hex.kagune.control.client.animation.RigPose p = new com.hex.kagune.control.client.animation.RigPose();
                     double[] at = com.hex.kagune.control.client.animation.QuinqueAim.solve(q, aim.blade(), aim.hand(), new double[] {-1.15, -0.75, 0.49});
-                    com.hex.kagune.control.client.animation.QuinqueGrip.aimRight(p, at[0], at[1], at[2]);
+                    // 4.1.21: the arm and the wrists as solved.
+                    com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.QuinqueAim.posed(at);
                     double[] dir = com.hex.kagune.control.client.animation.QuinqueAim.blade(p, q);
                     double[] want = com.hex.kagune.control.client.animation.QuinqueAim.unit(new double[] {-aim.blade()[0], -aim.blade()[1], -aim.blade()[2]});
                     double off = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dir[0] * want[0] + dir[1] * want[1] + dir[2] * want[2]))));

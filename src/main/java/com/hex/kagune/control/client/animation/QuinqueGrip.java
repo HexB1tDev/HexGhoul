@@ -114,6 +114,25 @@ public final class QuinqueGrip {
         return apply(RigPose.multiply(RigPose.zyx(Math.toRadians(-90.0), 0.0, 0.0), RigPose.zyx(0.0, Math.PI, 0.0)), local);
     }
 
+    /**
+     * 4.1.21: the wrists' turn of the weapon in the right fist ({@link RigPose#weaponX}, Y, Z: in the arm's own frame, about the right grip,
+     * as {@link #held} turns it) as a turn in the item's own frame (its model's pixels, about its right grip): {x, y, z} for Rz Ry Rx, the
+     * order a PoseStack takes them in. ItemInHandLayer and the item's display transform stand between the arm and the item, so the turn is
+     * theirs undone round it: what an item renderer drawing the item can apply itself.
+     */
+    public static float[] wristInItem(QuinqueHolds.Hold h, float wx, float wy, float wz) {
+        double[][] display = RigPose.multiply(RigPose.zyx(Math.toRadians(h.rotation()[0]), 0.0, 0.0),
+            RigPose.multiply(RigPose.zyx(0.0, Math.toRadians(h.rotation()[1]), 0.0), RigPose.zyx(0.0, 0.0, Math.toRadians(h.rotation()[2]))));
+        double[][] m = RigPose.multiply(RigPose.multiply(RigPose.zyx(Math.toRadians(-90.0), 0.0, 0.0), RigPose.zyx(0.0, Math.PI, 0.0)), display);
+        double[][] back = new double[3][3];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                back[i][j] = m[j][i];
+            }
+        }
+        return angles(RigPose.multiply(back, RigPose.multiply(RigPose.zyx(wx, wy, wz), m)));
+    }
+
     /** Where {@code q}'s left grip is drawn for {@code p} (pixels), or null (one-handed). */
     public static double[] leftGrip(RigPose p, Quinque q, boolean slim) {
         QuinqueHolds.Hold h = q == null ? null : QuinqueHolds.of(q);

@@ -178,9 +178,15 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
                     if (body != null) {
                         pose.m_85837_(0.0, -0.6 * equip, 0.0);
                         throughBody(pose, body, "slim".equals(player.m_108564_()));
-                        minecraft.m_91291_().m_269128_(held, net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
-                            event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.f_118083_, pose,
-                            event.getMultiBufferSource(), player.m_9236_(), player.m_19879_());
+                        // 4.1.21: drawn in this pose's wrists (a quinque drawn by code turns itself in the fist; QuinqueWrists).
+                        com.hex.kagune.control.client.QuinqueWrists.firstPerson(new float[] {body.weaponX, body.weaponY, body.weaponZ});
+                        try {
+                            minecraft.m_91291_().m_269128_(held, net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                                event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.f_118083_, pose,
+                                event.getMultiBufferSource(), player.m_9236_(), player.m_19879_());
+                        } finally {
+                            com.hex.kagune.control.client.QuinqueWrists.firstPersonDone();
+                        }
                         return;
                     } else {
                         pose.m_85837_(0.42 + motion[3], -0.43 + motion[4] - 0.6 * equip, -0.95 + motion[5]);

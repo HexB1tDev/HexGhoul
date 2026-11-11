@@ -401,7 +401,7 @@ public final class RigPose {
     }
 
     /** ModelPart's rotation as a matrix: Rz(z) Ry(y) Rx(x). */
-    static double[][] zyx(double x, double y, double z) {
+    public static double[][] zyx(double x, double y, double z) {
         double cx = Math.cos(x);
         double sx = Math.sin(x);
         double cy = Math.cos(y);

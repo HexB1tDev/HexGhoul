@@ -1,4 +1,4 @@
-# Next AI: after 4.1.20, 4.1.21 unfinished as a patch (4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.21 (4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -20,31 +20,16 @@ are you fucking kidding me? How do you have the balls to say before and after wh
 
 **This is taking way too long. Work fast, show the owner renders early, and never call something fixed that still looks wrong.**
 
-1. **Branch:** fast-forward onto `ccr-623accda-fz7zua` (4.1.20 at `a5246f25`, full build EXIT 0; this handoff on top).
-2. **The katana's cuts are still bad.** 4.1.18 put both hands behind the back on kesa-giri's follow-through, gyaku-kesa's wind-up and
-   yoko-giri's follow-through (the solver kept the blade's line and the rigid arm swung back through the body). The 4.1.21 attempt is in
-   `docs/handoff/wip-4.1.21-katana-wrists.patch` (unbuilt). It adds:
-   - wrists (`RigPose.weaponX/Z` per key; `QuinqueGrip.wristInItem`; `client/QuinqueWrists`; the renderer and first person apply them);
-   - a clearance cost (`QuinqueReach`);
-   - feasible hand targets and a solved chudan stance (`QuinquePose.stanceAim`, `QuinqueKeys.STANCES`);
-   - keys inserted where in-betweens clip (`QuinqueAim.keys`);
-   - a shorter hilt;
-   - `QuinqueTests.cutsClear` (no fist behind him; nothing in torso, head or legs).
+After 4.1.21 the owner said (quoted exactly): "mostly this is taking far too long. Just as soon as you finish the katana, just make the
+first person of the other weapons. Don't touch their looks. Dude, it's just, you're just feels like you're doing the same thing over and
+over and over again. I don't see much change. Like, it's already my second account that has been wasted time on this one thing.
+Considering the amount of stuff that we got to do, you're spending so much time into one"
 
-   Its tests passed (1650) one tweak before the end; the last re-bake is not re-tested. **The owner rejected how it looks:** the hands
-   bunch together at the chest, the wrists bend hard and the blade points oddly (see the "after" row). The numbers were clean; the look
-   is not.
-
-   **Do this:** apply the patch only if you can make it look right fast, judged on renders from the front, side and above, not on
-   numbers. Root cause: quinque arms are straight (no elbows) and 9 px long, so a two-handed katana can't reach low or far. Better
-   options:
-   - give the katana's swings elbows (players have bendy elbows; `RigPose.rightElbow/leftElbow`; `QuinqueGrip` assumes straight arms,
-     so the grip maths needs the bend);
-   - or hand-author arm angles for a few key poses and check them by eye.
-
-   Ask the owner before spending long on it. Full build, push, send renders.
-3. **Then move on quickly:** the other quinques (mace first: its old second swing winds up behind the head; each a kagune mesh like the
-   katana's, `quinque/QuinqueMesh`), then Arima, quests, the Small City (the owner's big list below). One version at a time, short.
+1. **Branch:** fast-forward onto this session's branch (4.1.21, full build EXIT 0).
+2. **The katana is done (4.1.21):** hands first, wrists, five cuts checked on renders (see "4.1.21, what and where"). Don't reopen it
+   unless the owner asks.
+3. **Next: the first person of the other weapons, nothing else.** Don't touch their looks or their third person cuts. Then Arima,
+   quests, the Small City (the owner's big list below). One version at a time, short.
 4. **Open question to the owner:** should daughters 07, 10, 11, 12, 21 and 22 get open eyes painted on? Ask before touching them.
 
 ## How to work (the owner asked the next AI to be "exactly like" the last one)
@@ -128,7 +113,7 @@ are you fucking kidding me? How do you have the balls to say before and after wh
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
-| 4.1.21 | Katana cuts with wrists and body clearance (rejected by the owner on looks) | `docs/handoff/wip-4.1.21-katana-wrists.patch`, unbuilt: see START HERE |
+| 4.1.21 | The katana's five cuts solved hands first (`QuinqueAim.HAND` 3 per pixel against `BLADE` 40), wrists turning the blade in the fist (`QuinquePose.Key.wristX/Z` within `QuinqueAim.WRIST_X/Z`, drawn by `QuinqueItemRenderer` via `client/QuinqueWrists`, `QuinqueGrip.wristInItem`), cuts rewritten on renders; `QuinqueTests.aimed` measures the arm's real turn | pushed, EXIT 0 |
 | 4.1.20 | The katana a smooth mesh grown out of kagune (`quinque/QuinqueMesh`, `ArmMesh.Builder`'s frame), drawn by its own item renderer (`client/QuinqueItemRenderer`, Forge's `IClientItemExtensions` given in `ControlItems.MeshQuinque.initializeClient` through DistExecutor), turned onto the handheld diagonal as the baker's boxes; its draw continuous; enchantment glint; `QuinqueTests.meshes`; `tools/QuinqueMeshPreview.java` | pushed, EXIT 0 |
 | 4.1.19 | Melee quinques (spear, katana, mace, blade, Dawn) drawn in first person through the third person chain, the body's step in, seen from behind the head looking down, zoomed (`client/animation/FirstPersonQuinque`, `ArmItemLayer.throughBody`); `QuinqueTests.firstPerson`; `tools/FirstPersonPreview.java` | pushed, EXIT 0 |
 | 4.1.18 | The katana model (`quinque_models.katana_parts`, its own texture patches); each quinque its own string (`Quinque.steps/finisher/swing(step)`, `Quinque.next(q, ...)`); the katana's five by intent (`QuinquePose.katanaAims`, solved by `QuinqueAim`, baked in `QuinqueKeys` by `tools/QuinqueAimBake.java`); seven draw frames (`OUT_STEPS`) | pushed, EXIT 0 |
@@ -466,6 +451,32 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.21, what and where (the katana's cuts, hands first)
+
+The owner (quoted exactly), of the rejected attempt: "Look at how it's pointed. Look at the hands, bro. Like, are you fucking kidding me?"
+
+- **Why it was bugged:** the katana sits in a stiff arm at a fixed 66 degrees to it (the hold), so the blade can only point on a cone
+  round the arm. 4.1.18's aims asked for blades off that cone and weighed the blade 1000x the hand, so the solver swung the arm back
+  through the body. A fixed grip also can't make a straight diagonal: at a cut's impact the blade must come near the line of the arms.
+- **Fix (`client/animation/QuinqueAim`):** hands first (`HAND` 3 per pixel squared, `BLADE` 40, `KEEP` 1), and two wrist angles solved
+  per key (`solve` returns pitch, yaw, roll, wrist x, wrist z; `WRIST` cost 6, range `WRIST_X` 0.8, `WRIST_Z` 0.35). Author each key's
+  hand as the end of a full arm: hand = right shoulder (5, -2, 0 right/up/forward from the neck) + 9 x the arm's direction, in front of him.
+- **Keys:** `QuinquePose.Key` gained `wristX`, `wristZ` (a 9-argument constructor keeps the old keys); `swing` adds them to
+  `RigPose.weaponX/Z`, clamped to the range (the curve overshoots between keys). Bake as before (`tools/QuinqueAimBake.java`).
+- **Drawn:** `client/QuinqueWrists` (each body's wrists as posed: players in `KaguneBodyAnimation`, investigators in `AgentClient`;
+  first person in `ArmItemLayer`), applied by `QuinqueItemRenderer` about the right grip through `QuinqueGrip.wristInItem` (the arm-frame
+  turn carried into the item's own frame). Only mesh quinques (the katana) turn; box models draw straight.
+- **The cuts** (`QuinquePose.katanaAims`), judged on front, side and above renders: kesa-giri down through the middle (a key at 0.49
+  points the blade at the target so the tip runs a straight diagonal from the front) to low left past the hip; gyaku-kesa rising low left
+  to high right; yoko-giri flat right to left; tsuki level down the line; kaiten level all the way round. The arm rolls one full turn in
+  kesa-giri (that is how the blade gets round): keep the roll spread out or `aimed` flags it.
+- **Tests:** `QuinqueTests.aimed` now measures the angle between consecutive frames' arm turns (an Euler wrap is not a flip, a whipped
+  roll is) and the wrists' range. `RigPose.zyx` is public for it.
+- **Previews:** `docs/handoff/katana-cuts-final-4.1.21.png`, `katana-kesa-4.1.21.png`, `katana-first-person-4.1.21.png`. The sheet tool
+  used (front, three-quarter, his right, above, columns through a swing) is a 60-line scratch class over `QuinqueMeshPreview.cell`-style
+  drawing: `PoseRender.orbit(yaw, pitch, ...)` with yaw 0 the face, -90 his right, pitch 80 from above; `PoseRender.skin` a ccg skin.
+- **Not tested in game.**
 
 ## 4.1.20, what and where (the katana grown out of kagune)
 

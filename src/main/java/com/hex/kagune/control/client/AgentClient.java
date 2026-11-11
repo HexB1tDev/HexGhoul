@@ -196,6 +196,8 @@ public final class AgentClient {
             AgentRules.Look look = agent.look();
             QuinqueGrip.reach(p, base, look.slim() || look.female());
         }
+        // 4.1.21: its wrists, for the quinque drawn in its hand (QuinqueItemRenderer).
+        QuinqueWrists.posed(agent, new float[] {p.weaponX, p.weaponY, p.weaponZ});
         return p;
     }
 

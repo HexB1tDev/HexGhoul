@@ -23,9 +23,9 @@ public final class QuinqueKeysBaker {
         out.append(" * tools/QuinqueAimBake.java: do not edit by hand; QuinqueTests checks these still match their aims).\n */\n");
         out.append("final class QuinqueKeys {\n    private QuinqueKeys() {\n    }\n\n");
         out.append("    private static QuinquePose.Key k(double t, double pitch, double yaw, double roll, double twist, double lean, double lunge, double drop,\n");
-        out.append("                                     double spin) {\n");
+        out.append("                                     double spin, double wristX, double wristZ) {\n");
         out.append("        return new QuinquePose.Key((float)t, (float)pitch, (float)yaw, (float)roll, (float)twist, (float)lean, (float)lunge, (float)drop,\n");
-        out.append("            (float)spin);\n    }\n\n");
+        out.append("            (float)spin, (float)wristX, (float)wristZ);\n    }\n\n");
         out.append("    /** By quinque (its ordinal) and blow; null where a quinque's swings are still written as arm angles. */\n");
         out.append("    static final QuinquePose.Key[][][] KEYS = {\n");
         for (Quinque q : Quinque.values()) {
@@ -40,8 +40,8 @@ public final class QuinqueKeysBaker {
                 for (int i = 0; i < keys.length; i++) {
                     QuinquePose.Key k = keys[i];
                     out.append(i == 0 ? "" : ",\n                ").append(String.format(java.util.Locale.ROOT,
-                        "k(%.3f, %.4f, %.4f, %.4f, %.3f, %.3f, %.3f, %.3f, %.5f)", k.t(), k.pitch(), k.yaw(), k.roll(), k.twist(), k.lean(),
-                        k.lunge(), k.drop(), k.spin()));
+                        "k(%.3f, %.4f, %.4f, %.4f, %.3f, %.3f, %.3f, %.3f, %.5f, %.4f, %.4f)", k.t(), k.pitch(), k.yaw(), k.roll(), k.twist(),
+                        k.lean(), k.lunge(), k.drop(), k.spin(), k.wristX(), k.wristZ()));
                 }
                 out.append("},\n");
             }
