@@ -274,6 +274,13 @@ public final class EtoBrain {
                     npc.m_146870_();
                     return;
                 }
+                // 4.1.43 (the owner: "they're also spawning doubled NPCS. eto spawned 2 of them"): her body is about (it answered for her in
+                // the last twenty seconds: loaded, ticking): she is there, so this one leaves at once (it waited, or took her place as a player
+                // came near, and both stayed). Only a body of hers lying unloaded far off is stood in for.
+                if (slot.alive && slot.body != null && !slot.body.equals(npc.m_20148_()) && slot.seen != Long.MIN_VALUE && now - slot.seen < 400L) {
+                    npc.m_146870_();
+                    return;
+                }
                 if (!someoneAbout(npc, level)) {
                     npc.m_21573_().m_26573_();
                     return;

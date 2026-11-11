@@ -1943,11 +1943,12 @@ public final class NpcTests {
                 "a place stands in any biome but a wet one (4.1.42: or a steep one)");
             // 4.1.14 (the owner: "Fix structures still not spawning at all or able to be located (still not spawning)"): no one chunk a world
             // any more: every spot of its set where it lays out on dry land may hold it, until the world makes one (PlaceClaims).
-            check(structures.contains("if (Site.onPurpose(context)) {\n                return this.here(context);")
+            check(structures.contains("if (Site.onPurpose(context)) {\n                // /place: where it is asked, but (4.1.43) only while the world has none yet")
+                && structures.contains("return claimed(id, context, () -> this.here(context));")
                 && structures.contains("return claimed(id, context, () -> {")
                 && structures.contains("if (!offered(context, placeSpread(context, id))) {")
                 && structures.contains("Optional<Structure.GenerationStub> stub = this.flattest(context);"),
-                "a jigsaw place stands at any spot of its set where it lays out on dry, flat land (4.1.42: the flattest), until one is built (/place builds it anywhere)");
+                "a jigsaw place stands at any spot of its set where it lays out on dry, flat land (4.1.42: the flattest), until one is built (4.1.43: /place too, never a second)");
             check(structures.contains("if (inCity(context, x, z) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)")
                 && structures.contains("x, z, DryLand.PLACE_APART)) {") && structures.contains("if (!other.equals(id) && DryLand.near(placeSpread(context, other), x, z, DryLand.PLACE_APART)) {"),
                 "kept clear of the hideout's, the CCG building's, the other places' spots and the Small City");
@@ -1958,10 +1959,15 @@ public final class NpcTests {
             // Taken as the world makes the chunk (its heights are the chunk being made), never as /locate only asks; a taken spot turns every
             // other away; the first to be made wins, under one lock.
             // 4.1.17: asking is only /locate's own (the level's heights); anything else makes (a mod's height wrapper never builds every spot).
-            check(structures.contains("return !(context.f_226629_() instanceof net.minecraft.world.level.Level);")
-                && structures.contains("if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {\n            return Optional.empty();")
-                && structures.contains("if (stub.isPresent() && making(context) && !PlaceClaims.claim(id, chunk.f_45578_, chunk.f_45579_)) {"),
-                "a spot is taken as the world makes it, and every other spot is turned away from then on");
+            // 4.1.43 (the owner: "Structures are still spawning doubles, they're not unique"; "eto spawned 2 of them"): no more guessing who asks:
+            // the spot is taken as its pieces are made (the world's making and /place always make them, /locate never does), and a spot that
+            // can't take it makes no pieces at all.
+            int only = structures.indexOf("static Structure.GenerationStub onlyIfClaimed(String id, ChunkPos chunk, Structure.GenerationStub stub) {");
+            check(!structures.contains("making(context)") && only > 0
+                && structures.indexOf("if (!PlaceClaims.claim(id, x, z)) {\n                return; // not this world's one: nothing of it here", only) - only < 400
+                && structures.contains("return stub.isEmpty() ? stub : Optional.of(onlyIfClaimed(id, chunk, stub.get()));")
+                && structures.contains("if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {\n            return Optional.empty();"),
+                "a spot is taken as the place is really built, by whatever builds it; every other spot builds nothing from then on");
             // 4.1.17 (the owner: "there's multiple structures of each, which cannot happen"): a place found standing is the world's one if
             // none is taken (a world from before the claims); a second is told in the log; every one-of-a-kind place is looked for.
             String adopt = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java")));
@@ -2169,6 +2175,9 @@ public final class NpcTests {
             check(purpose > 0 && structures.indexOf("if (!(context.f_226629_() instanceof net.minecraft.world.level.Level)) {", purpose) - purpose < 900,
                 "only /place (asking on the live world) builds outside the world's one: never the world's own making, whatever a mod does to the biome test");
             check(structures.split("foundation\\(level, box, pieces\\);").length - 1 == 3, "the city, the sites and the jigsaw places all on a foundation");
+            String eto = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java"));
+            check(eto.contains("if (slot.alive && slot.body != null && !slot.body.equals(npc.m_20148_()) && slot.seen != Long.MIN_VALUE && now - slot.seen < 400L) {"),
+                "4.1.43: a second body of Eto (or Touka, Ken, Ayato, Noro) leaves at once while hers is loaded: never two of her");
             String claims = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java"));
             check(claims.contains("data.taken.takeApart(id, x, z, APART)") && structures.contains("PlaceClaims.crowded(id, chunk.f_45578_, chunk.f_45579_)"),
                 "a spot too near another place is never taken, nor pointed at by /locate");
@@ -2620,8 +2629,9 @@ public final class NpcTests {
             check(structures.contains("return claimed(HIDEOUT, context, () -> {") && structures.contains("if (!offered(context, hideoutSpread(context)) || inCity(context, chunk.f_45578_, chunk.f_45579_)) {")
                 && structures.contains("int middle = dryGround(context, ground(context), minX + sizeX / 2 - span / 2, minZ + sizeZ / 2 - span / 2, span);")
                 && structures.contains("if ((CCG.equals(this.site.id()) || unique(this.site)) && onPurpose(context)) {")
+                && structures.contains("return claimed(CCG.equals(this.site.id()) ? CCG : HIDEOUT, context, () -> Optional.of(this.stub(")
                 && structures.contains("return context.f_226630_().test(null);"),
-                "the world's one hideout, at the first of its set's spots on dry land the world makes (/place builds it anywhere)");
+                "the world's one hideout, at the first of its set's spots on dry land the world makes (4.1.43: /place only while there is none)");
         } catch (java.io.IOException failure) {
             check(false, "read the sources: " + failure);
         }

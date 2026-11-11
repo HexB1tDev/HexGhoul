@@ -505,11 +505,12 @@ public final class ControlStructures {
             int sizeZ = across ? this.site.width() : this.site.depth();
             if ((CCG.equals(this.site.id()) || unique(this.site)) && onPurpose(context)) {
                 // 4.1.6 (the owner: "I cant get the aogiri hideout to spawn or the ccg building at all"): /place structure builds the
-                // world's one hideout or CCG building where it is asked (its footprint round this chunk, on the middle of its ground), as
-                // well as where the world put its own: an old world's own may lie in ground made before it could.
+                // world's one hideout or CCG building where it is asked (its footprint round this chunk, on the middle of its ground).
+                // 4.1.43: only while the world has none yet (it is then the world's one): never a second.
                 int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
                 int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
-                return Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, standing(ground(context), minX, minZ, sizeX, sizeZ)));
+                return claimed(CCG.equals(this.site.id()) ? CCG : HIDEOUT, context, () -> Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ,
+                    standing(ground(context), minX, minZ, sizeX, sizeZ))));
             }
             if (CCG.equals(this.site.id())) {
                 // 4.1.4 (the owner: "CCG building ... like the others only 1 of them spawns"): the world's one. 4.1.14: at whichever of its
@@ -850,21 +851,28 @@ public final class ControlStructures {
             return Optional.empty(); // 4.1.42: another place is too near: not here (nor does /locate point here)
         }
         Optional<Structure.GenerationStub> stub = here.get();
-        if (stub.isPresent() && making(context) && !PlaceClaims.claim(id, chunk.f_45578_, chunk.f_45579_)) {
-            return Optional.empty(); // another spot was taken while this one was laid out
-        }
-        return stub;
+        return stub.isEmpty() ? stub : Optional.of(onlyIfClaimed(id, chunk, stub.get()));
     }
 
     /**
-     * 4.1.14: true if the world is making this start chunk (its context's heights are the chunk being made), false if /locate (or the
-     * structure check behind it) only asks whether a start could be here (its heights are the level's).
+     * 4.1.43 (the owner, of 4.1.42 in a new world: "Structures are still spawning doubles, they're not unique"; "and they're also spawning
+     * doubled NPCS. eto spawned 2 of them"): the spot taken as the place is really built: when its pieces are asked for, which the world's
+     * making (and /place) always does and /locate never does, however the making is driven or wrapped by any mod. Before, the claim was taken
+     * only when the asker looked like the world's making (its heights not the level's) and the place was built either way: a mod making
+     * chunks through the level built one at every spot, each with its people (Eto in every library). Now a spot that cannot take the
+     * place (another holds it, or another place is too near) builds nothing: no pieces, no start.
      */
-    static boolean making(Structure.GenerationContext context) {
-        // 4.1.17 (the owner: "there's multiple structures of each, which cannot happen"): only /locate's own ask (the level's heights)
-        // counts as asking. Before, only a chunk's own heights counted as making: a mod that makes chunks through another height accessor
-        // (a wrapper) built every spot without one taking the place.
-        return !(context.f_226629_() instanceof net.minecraft.world.level.Level);
+    static Structure.GenerationStub onlyIfClaimed(String id, ChunkPos chunk, Structure.GenerationStub stub) {
+        int x = chunk.f_45578_;
+        int z = chunk.f_45579_;
+        return new Structure.GenerationStub(stub.f_226669_(), builder -> {
+            if (!PlaceClaims.claim(id, x, z)) {
+                return; // not this world's one: nothing of it here
+            }
+            for (StructurePiece piece : stub.m_226677_().m_192780_().f_192741_()) {
+                builder.m_142679_(piece);
+            }
+        });
     }
 
     /** 4.1.14: true if this start chunk is one of {@code spread}'s spots (the game asks only there; a stray ask is turned away). */
@@ -1026,15 +1034,16 @@ public final class ControlStructures {
          * asked.
          */
         private Optional<Structure.GenerationStub> place(Structure.GenerationContext context) {
-            if (Site.onPurpose(context)) {
-                return this.here(context);
-            }
             String id = this.id(context);
             if (id == null) {
                 return Optional.empty(); // its name could not be read: never one of many where the world's one belongs (asked again later)
             }
             if (DryLand.placeSalt(id) < 0) {
                 return this.here(context); // a jigsaw place of someone else's on this type: wherever its own set offers it
+            }
+            if (Site.onPurpose(context)) {
+                // /place: where it is asked, but (4.1.43) only while the world has none yet: it is then the world's one, never a second.
+                return claimed(id, context, () -> this.here(context));
             }
             return claimed(id, context, () -> {
                 if (!offered(context, placeSpread(context, id))) {
