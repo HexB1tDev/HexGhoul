@@ -39,7 +39,7 @@ the next AI now."
    five minutes. **4.1.24:** his mansion (the owner's schematic, `art/reaper/arima_mansion.schem`), one per world, him in its garden.
    **4.1.25:** both fighting styles (Kick Master's string and the Speed Blitz, up close). **4.1.26:** Dawn smooth, opening like a reverse
    umbrella. **4.1.27:** the ground strike grows Dawn's blades, not a tentacle. **4.1.28:** the jacket comes off (part 1 below is done). **4.1.29:** at 90 HP (not half), the golden case and the blade (part 2 done;
-   the owner: keep it his alone, no player version). **Next for Arima: phase 2**, one version each, renders judged before
+   the owner: keep it his alone, no player version). **4.1.30:** close combat, rushes, dodges (part 3 done). **Next for Arima: phase 2**, one version each, renders judged before
    each push:
    1. **The jacket comes off** at half health (once): a shedding move (both hands to the collar, the coat swept off the shoulders, a new
       swing code), his look switched to a new appended look `ccg_reaper_bare` (from `art/reaper/Reaper_Phase2.png`, copied; slim arms
@@ -147,6 +147,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.30 | Arima phase 2 part 3: the rush in, stopping at blade reach (`AgentBrain.rush`, `ReaperBladeRules.RUSH_*`), sidesteps of shots and blows (`AgentBrain.dodge`, `ReaperBladeRules.dodge`/`committed`), close combat only | pushed, EXIT 0 |
 | 4.1.29 | Arima phase 2 part 2: the change at 90 HP (`REAPER_SHED_HEALTH`), the golden case drawn from his back and split open on its hinge, the blade slid out, the case dropped and sunk (`ReaperBladePose.draw`, `ReaperBladeLayer`); his blade (`ReaperBladeMesh`, NPC only) and heavy string (`ReaperBladePose.STRING`, `ReaperBladeRules`, `AgentBrain.blade`), 2 bleed stacks a hit (`UkakuCrystalCombat.agentBleed`) | pushed, EXIT 0 |
 | 4.1.28 | Arima phase 2 part 1: the jacket off at half health, once (`AgentBrain.shed`, `CcgAgent.SHED` 7, `AgentPose.shed` keyed by `SHED_KEYS`), the look `ccg_reaper_bare` (`AgentRules.REAPER_BARE_LOOK` 10, `reaperLook(index)`), faster; `shedClamp`; invulnerable while shedding; saved as `HexCcgAgentBare` | pushed, EXIT 0 |
 | 4.1.27 | Arima part 5: the ground strike's tendril replaced by Dawn's blades growing out of the mark (`ReaperTendril.blades`, `QuinqueDawnMesh.risingBlade`, `client/render/ReaperTendrils` draws them leaned and grown by `out(age - delay)`); gameplay unchanged | pushed, EXIT 0 |
@@ -493,6 +494,25 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.30, what and where (Arima phase 2 part 3: close combat)
+
+The owner (quoted exactly): "He can dash more precisely. He's way more precise. His entire moveset changes because he no longer has the Dawn
+weapon. So he's more into a melee close combat type ... He will always try to, get into range and kill you. He'll dodge moves."
+
+- **Rush:** `AgentBrain.blade` starts one when his prey is out of reach (`REAPER_BLADE_REACH` + 0.5) within `ReaperBladeRules.RUSH_FROM`
+  (12), in sight, the way clear (`clear`), every `RUSH_EVERY` (36) ticks; `rush` pushes him at `rushStep(left)` (never past the stop point,
+  `RUSH_STOP` 2.4 short edge to edge, re-aimed every tick), `face`s the prey, and at the stop (or `RUSH_LONGEST` 10) `startBlade` at once.
+  Drawn as the forward dash (`agent.dash(0)`, AgentPose.dash over his guard in `AgentClient.bladed`).
+- **Dodge:** `AgentBrain.dodge` (each tick he is ready, not `committed`: a blow two ticks from landing): projectile entities near
+  (`TendrilShield.incoming` with gravity/drag as the tendril shield), Ukaku's simulated shots (`UkakuFire.shots`, `UkakuCrystalCombat.shots`
+  through `TendrilShieldServer.Shots`), else `KaguneClash.threat` at `DODGE_BLOW` (0.65); sidestep `ReaperBladeRules.dodge` (square to it,
+  his side of its line; the other if not clear) at `DODGE_SPEED` for `DODGE_TICKS`, every `DODGE_EVERY`; a blow in its chamber dropped;
+  ready to strike and rush again right after. Drawn as the side dash (`agent.dash(2|3)`).
+- **Tests:** `AgentTests.reaperClose` (the rush never overshoots and ends in reach in time, the sidestep leaves the line every time, commit
+  rule, wiring, none of Dawn's ranged moves in `blade`).
+- **Preview:** `docs/handoff/arima-close-4.1.30.png`.
+- **Not tested in game.**
 
 ## 4.1.29, what and where (Arima phase 2 part 2: the golden case and his blade)
 

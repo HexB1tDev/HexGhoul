@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.30 (HexGhoul): Arima, phase 2 part 3: close combat, precise rushes, dodges (testing)
+
+See `.github/release-notes-4.1.30.md`. "He can dash more precisely ... He will always try to, get into range and kill you. He'll dodge moves": with his blade he rushes in from up to 12 blocks and stops exactly at his blade's reach (`AgentBrain.rush`, `ReaperBladeRules.rushStep`, `RUSH_STOP`), swinging as he arrives; he sidesteps shots (projectile entities via `TendrilShield.incoming`, Ukaku's simulated fire and crystal via `UkakuFire.shots`/`UkakuCrystalCombat.shots`) and kagune blows (`KaguneClash.threat`) square to their way (`ReaperBladeRules.dodge`), giving up a blow still in its chamber (`committed`). Protocol 117.
+
 ## 4.1.29 (HexGhoul): Arima, phase 2 part 2: the golden case and his heavy blade (testing)
 
 See `.github/release-notes-4.1.29.md`. "Trigger when he reaches about 90 HP ... pulls out a random briefcase from his back like a golden looking briefcase", "the briefcase just splits apart open like a normal fucking briefcase and releases the weapon", "keep it only for himself": the change starts at 90 HP (`AgentRules.REAPER_SHED_HEALTH`, `shedClamp`), immortal through the jacket and the draw (`REAPER_CHANGE_TICKS`); the golden case (`ReaperBladeMesh.goldHalf`/`goldHandle`, split on its hinge by `opened`, the blade slid out by `slid`) drawn by `ReaperBladePose.draw`/`caseTurn`/`dropped` and `client/render/ReaperBladeLayer`; his blade (`quinque/ReaperBladeMesh`, NPC only, no item) and its string (`ReaperBladePose.STRING`, hands first: both straight arms solved onto the grip, the wrist turning the blade; `npc/ReaperBladeRules` timing; `AgentBrain.blade`/`bladeLands`, bleeding via `UkakuCrystalCombat.agentBleed`). Protocol 117.

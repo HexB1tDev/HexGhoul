@@ -86,12 +86,59 @@ public final class AgentTests {
         headquarters();
         shedding();
         reaperBlade();
+        reaperClose();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Agent tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 4.1.30 (the owner: "He can dash more precisely. He's way more precise ... he's more into a melee close combat type ... He will always try
+     * to, get into range and kill you. He'll dodge moves"): his rush stops where his blade reaches, never past it; his sidestep leaves the line
+     * of what is coming; nothing of Dawn's ranged moves with his blade.
+     */
+    static void reaperClose() throws IOException {
+        // A rush: never further a tick than its speed, never past where it stops.
+        check(com.hex.kagune.control.npc.ReaperBladeRules.rushStep(10.0) == com.hex.kagune.control.npc.ReaperBladeRules.RUSH_SPEED
+            && com.hex.kagune.control.npc.ReaperBladeRules.rushStep(0.4) == 0.4 && com.hex.kagune.control.npc.ReaperBladeRules.rushStep(-1.0) == 0.0,
+            "his rush never overshoots where it stops");
+        check(com.hex.kagune.control.npc.ReaperBladeRules.RUSH_STOP < AgentRules.REAPER_BLADE_REACH
+            && com.hex.kagune.control.npc.ReaperBladeRules.RUSH_SPEED * com.hex.kagune.control.npc.ReaperBladeRules.RUSH_LONGEST
+            >= com.hex.kagune.control.npc.ReaperBladeRules.RUSH_FROM - com.hex.kagune.control.npc.ReaperBladeRules.RUSH_STOP,
+            "a rush from as far as he starts one ends in his blade's reach, in time");
+        // A sidestep: square to the way it comes, to the side of its line he already stands on.
+        java.util.Random r = new java.util.Random(77);
+        for (int i = 0; i < 500; i++) {
+            double vx = r.nextGaussian();
+            double vz = r.nextGaussian();
+            double dx = r.nextGaussian() * 3.0;
+            double dz = r.nextGaussian() * 3.0;
+            double[] w = com.hex.kagune.control.npc.ReaperBladeRules.dodge(vx, vz, dx, dz);
+            double n = Math.hypot(vx, vz);
+            double ux = vx / n;
+            double uz = vz / n;
+            double across = ux * dz - uz * dx;
+            double after = ux * (dz + w[1]) - uz * (dx + w[0]);
+            check(Math.abs(Math.hypot(w[0], w[1]) - 1.0) < 1.0E-9 && Math.abs(w[0] * ux + w[1] * uz) < 1.0E-9
+                && Math.abs(after) > Math.abs(across) + 0.99, "a sidestep leaves the line of what comes (" + i + ")");
+        }
+        check(com.hex.kagune.control.npc.ReaperBladeRules.committed(0, com.hex.kagune.control.npc.ReaperBladeRules.blow(0).impact() - 2)
+            && !com.hex.kagune.control.npc.ReaperBladeRules.committed(0, 2), "a blow in its chamber can be given up for a dodge; one about to land cannot");
+        check(com.hex.kagune.control.npc.ReaperBladeRules.DODGE_SPEED * com.hex.kagune.control.npc.ReaperBladeRules.DODGE_TICKS > 3.0
+            && com.hex.kagune.control.npc.ReaperBladeRules.DODGE_EVERY > com.hex.kagune.control.npc.ReaperBladeRules.DODGE_TICKS * 3,
+            "a sidestep clears a body's width and more, and not every tick");
+        String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+        int blade = brain.indexOf("private static void blade(");
+        int end = brain.indexOf("private static void startBlade(", blade);
+        String body = brain.substring(blade, end);
+        check(body.contains("rush(agent, mind, prey, level, now);") && body.contains("dodge(agent, mind, prey, level, now)")
+            && brain.contains("UkakuFire.shots(shots);") && brain.contains("UkakuCrystalCombat.shots(shots);") && brain.contains("KaguneClash.threat(agent, now)"),
+            "he rushes in and sidesteps arrows, thrown things, Ukaku's fire and crystal, and blows");
+        check(!body.contains("lightning(") && !body.contains("soar") && !body.contains("ground(") && !body.contains("shoot("),
+            "close combat only: none of Dawn's ranged moves with his blade");
     }
 
     /**

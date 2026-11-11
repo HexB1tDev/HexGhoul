@@ -18,6 +18,7 @@ import com.hex.kagune.control.quinque.Arm;
 import com.hex.kagune.control.npc.ArmRules;
 import com.hex.kagune.control.quinque.Quinque;
 import com.hex.kagune.control.npc.ReaperTactics;
+import com.hex.kagune.control.npc.ReaperBladeRules;
 import com.hex.kagune.control.wound.WoundBook;
 import com.hex.kagune.data.KaguneProfile;
 import java.util.HashMap;
@@ -203,6 +204,13 @@ public final class AgentBrain {
         long bladeAt = Long.MIN_VALUE;
         int bladeStep;
         boolean bladeLanded;
+        /** 4.1.30: his rush in (until when, where it stops, when another may start) and his sidestep (until when, which way, when again). */
+        long rushUntil = Long.MIN_VALUE;
+        Vec3 rushTo = Vec3.f_82478_;
+        long rushReadyAt = Long.MIN_VALUE;
+        long dodgeUntil = Long.MIN_VALUE;
+        Vec3 dodgeWay = Vec3.f_82478_;
+        long dodgeReadyAt = Long.MIN_VALUE;
     }
 
     /** Its partner's id in its saved data (who it is: {@link CcgAgent#KEY}, packed). */
@@ -586,9 +594,26 @@ public final class AgentBrain {
      * thrown back, two stacks of bleeding), the next chained while his prey stays in reach, a rest after the last.
      */
     private static void blade(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        // 4.1.30: a sidestep under way, a rush under way; then, unless committed to a blow, whatever is coming at him dodged.
+        if (now < mind.dodgeUntil) {
+            Vec3 velocity = agent.m_20184_();
+            agent.m_20256_(new Vec3(mind.dodgeWay.f_82479_ * ReaperBladeRules.DODGE_SPEED, Math.max(velocity.f_82480_, 0.0),
+                mind.dodgeWay.f_82481_ * ReaperBladeRules.DODGE_SPEED));
+            agent.f_19864_ = true;
+            agent.m_21573_().m_26573_();
+            return;
+        }
+        if (now < mind.rushUntil) {
+            rush(agent, mind, prey, level, now);
+            return;
+        }
+        boolean committed = mind.bladeAt != Long.MIN_VALUE && ReaperBladeRules.committed(mind.bladeStep, ago(now, mind.bladeAt));
+        if (!committed && agent.m_20096_() && now >= mind.dodgeReadyAt && dodge(agent, mind, prey, level, now)) {
+            return;
+        }
         if (mind.bladeAt != Long.MIN_VALUE) {
             long age = ago(now, mind.bladeAt);
-            com.hex.kagune.control.npc.ReaperBladeRules.Blow blow = com.hex.kagune.control.npc.ReaperBladeRules.blow(mind.bladeStep);
+            ReaperBladeRules.Blow blow = ReaperBladeRules.blow(mind.bladeStep);
             agent.m_21573_().m_26573_();
             Vec3 velocity = agent.m_20184_();
             if (age >= blow.impact() - 2 && age <= blow.impact() && agent.m_20096_()) {
@@ -605,7 +630,7 @@ public final class AgentBrain {
             if (age >= blow.total() || age < 0L) {
                 mind.bladeAt = Long.MIN_VALUE;
                 agent.swing(-1, now);
-                boolean last = mind.bladeStep >= com.hex.kagune.control.npc.ReaperBladeRules.STEPS - 1;
+                boolean last = mind.bladeStep >= ReaperBladeRules.STEPS - 1;
                 double gap = Math.sqrt(prey.m_20280_(agent)) - (prey.m_20205_() + agent.m_20205_()) * 0.5;
                 if (!last && gap <= AgentRules.REAPER_BLADE_REACH) {
                     startBlade(agent, mind, level, now, mind.bladeStep + 1);
@@ -617,6 +642,19 @@ public final class AgentBrain {
             return;
         }
         double gap = Math.sqrt(prey.m_20280_(agent)) - (prey.m_20205_() + agent.m_20205_()) * 0.5;
+        // 4.1.30: out of reach and not too far, in sight: a rush straight in, stopping where his blade reaches, swinging as it stops.
+        if (gap > AgentRules.REAPER_BLADE_REACH + 0.5 && gap < ReaperBladeRules.RUSH_FROM && now >= mind.rushReadyAt && agent.m_20096_()
+            && agent.m_142582_(prey) && clear(agent, level, UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_())))) {
+            Vec3 way = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
+            double stop = (prey.m_20205_() + agent.m_20205_()) * 0.5 + ReaperBladeRules.RUSH_STOP;
+            mind.rushTo = prey.m_20182_().m_82546_(way.m_82490_(stop));
+            mind.rushUntil = now + ReaperBladeRules.RUSH_LONGEST;
+            mind.rushReadyAt = now + ReaperBladeRules.RUSH_EVERY;
+            agent.dash(0, now);
+            UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.dash", 0.9F, 0.9F);
+            rush(agent, mind, prey, level, now);
+            return;
+        }
         if (gap > AgentRules.REAPER_BLADE_REACH - 0.4 || now < mind.readyAt) {
             if (gap > 1.2) {
                 agent.m_21573_().m_26519_(prey.m_20185_(), prey.m_20186_(), prey.m_20189_(), 1.35);
@@ -626,6 +664,100 @@ public final class AgentBrain {
             return;
         }
         startBlade(agent, mind, level, now, 0);
+    }
+
+    /**
+     * 4.1.30: his rush in: straight at where it stops (kept on his prey as they move), as fast as {@link ReaperBladeRules#RUSH_SPEED} and never
+     * past it; there (or out of time) it ends and his string begins at once.
+     */
+    private static void rush(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        Vec3 way = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
+        double stop = (prey.m_20205_() + agent.m_20205_()) * 0.5 + ReaperBladeRules.RUSH_STOP;
+        mind.rushTo = prey.m_20182_().m_82546_(way.m_82490_(stop));
+        Vec3 left = new Vec3(mind.rushTo.f_82479_ - agent.m_20185_(), 0.0, mind.rushTo.f_82481_ - agent.m_20189_());
+        double far = left.m_82553_();
+        double step = ReaperBladeRules.rushStep(far);
+        agent.m_21573_().m_26573_();
+        face(agent, prey);
+        Vec3 velocity = agent.m_20184_();
+        if (step < 0.05 || now + 1 >= mind.rushUntil) {
+            mind.rushUntil = Long.MIN_VALUE;
+            agent.m_20256_(new Vec3(0.0, velocity.f_82480_, 0.0));
+            agent.f_19864_ = true;
+            if (mind.bladeAt == Long.MIN_VALUE) {
+                startBlade(agent, mind, level, now, 0);
+            }
+            return;
+        }
+        Vec3 push = left.m_82490_(step / Math.max(1.0E-6, far));
+        agent.m_20256_(new Vec3(push.f_82479_, Math.max(velocity.f_82480_, 0.0), push.f_82481_));
+        agent.f_19864_ = true;
+    }
+
+    /**
+     * 4.1.30 (the owner: "He'll dodge moves"): a shot coming at him (an arrow, a thrown thing, Ukaku's fire or crystal: as Rinkaku's tendril
+     * shield sees them) or a blow (KaguneClash) sidestepped, square to its way, to the side of its line he stands on, if that side is clear;
+     * a blow in its chamber given up for it. True if he stepped.
+     */
+    private static boolean dodge(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        Vec3 middle = GhoulNpcBrain.centre(agent);
+        double[] centre = {middle.f_82479_, middle.f_82480_, middle.f_82481_};
+        Vec3[] seen = {null, null};
+        for (net.minecraft.world.entity.projectile.Projectile shot : level.m_6443_(net.minecraft.world.entity.projectile.Projectile.class,
+            agent.m_20191_().m_82400_(24.0), shot -> shot.m_6084_() && shot.m_19749_() != agent)) {
+            boolean straight = shot instanceof net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
+            double gravity = straight ? 0.0 : shot instanceof net.minecraft.world.entity.projectile.AbstractArrow ? com.hex.kagune.control.TendrilShield.ARROW_GRAVITY
+                : com.hex.kagune.control.TendrilShield.THROWN_GRAVITY;
+            Vec3 v = shot.m_20184_();
+            if (com.hex.kagune.control.TendrilShield.incoming(new double[] {shot.m_20185_(), shot.m_20186_(), shot.m_20189_()},
+                new double[] {v.f_82479_, v.f_82480_, v.f_82481_}, gravity, straight ? 1.0 : com.hex.kagune.control.TendrilShield.AIR_DRAG, centre,
+                new double[3], 12, 1.2)) {
+                seen[0] = shot.m_20182_();
+                seen[1] = v;
+            }
+        }
+        java.util.UUID own = agent.m_20148_();
+        TendrilShieldServer.Shots shots = (owner, world, position, velocity, radius) -> {
+            if (seen[0] == null && !owner.equals(own) && world == level && position.m_82557_(middle) < 24.0 * 24.0
+                && com.hex.kagune.control.TendrilShield.incoming(new double[] {position.f_82479_, position.f_82480_, position.f_82481_},
+                    new double[] {velocity.f_82479_, velocity.f_82480_, velocity.f_82481_}, centre, 8.0, 1.2 + radius)) {
+                seen[0] = position;
+                seen[1] = velocity;
+            }
+        };
+        UkakuFire.shots(shots);
+        UkakuCrystalCombat.shots(shots);
+        if (seen[0] == null) {
+            KaguneClash.Threat threat = KaguneClash.threat(agent, now);
+            if (threat == null || agent.m_217043_().m_188500_() >= ReaperBladeRules.DODGE_BLOW) {
+                return false;
+            }
+            seen[0] = threat.who().m_20182_();
+            seen[1] = agent.m_20182_().m_82546_(threat.who().m_20182_());
+        }
+        double[] side = ReaperBladeRules.dodge(seen[1].f_82479_, seen[1].f_82481_, agent.m_20185_() - seen[0].f_82479_, agent.m_20189_() - seen[0].f_82481_);
+        Vec3 way = new Vec3(side[0], 0.0, side[1]);
+        if (!clear(agent, level, way)) {
+            way = way.m_82490_(-1.0);
+            if (!clear(agent, level, way)) {
+                return false;
+            }
+        }
+        if (mind.bladeAt != Long.MIN_VALUE) {
+            mind.bladeAt = Long.MIN_VALUE; // a blow still in its chamber given up
+            mind.bladeStep = 0;
+        }
+        mind.dodgeWay = way;
+        mind.dodgeUntil = now + ReaperBladeRules.DODGE_TICKS;
+        mind.dodgeReadyAt = now + ReaperBladeRules.DODGE_EVERY;
+        mind.readyAt = Math.min(mind.readyAt, now + ReaperBladeRules.DODGE_TICKS); // and straight back at them
+        mind.rushReadyAt = Math.min(mind.rushReadyAt, now + ReaperBladeRules.DODGE_TICKS);
+        Vec3 facing = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
+        boolean left = way.f_82479_ * -facing.f_82481_ + way.f_82481_ * facing.f_82479_ > 0.0;
+        agent.dash(left ? 2 : 3, now);
+        agent.swing(-1, now);
+        UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.dash", 0.7F, 1.25F);
+        return true;
     }
 
     /** 4.1.29: blow {@code step} of his string begins. */
