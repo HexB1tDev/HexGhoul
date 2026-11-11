@@ -48,9 +48,26 @@ public final class UkakuModel {
      * the root curls toward {@code toward} on a circular arc, through {@code angle} radians over the next
      * {@code length - start} blocks (a beam bend: the centre line follows the arc and every point keeps its offset from it,
      * so the tongues curve with it instead of shearing).
+     *
+     * <p>4.1.13: and a SHOULDER ({@code base} non-null, a unit direction): the wing's first {@code shoulderStart} blocks run along
+     * {@code base} instead of {@code axis}, then it turns onto {@code axis} on an arc by {@code shoulderEnd} blocks, and on from there
+     * exactly as without it (the hand's curl and all), only moved to where the turn left it: an arm that comes out of his back
+     * sideways, behind his own shoulder, and only then swings forward (straight out forward it would go through his shoulder).
      */
-    public record Bend(double fold, double centre, double[] axis, double[] toward, double start, double angle, double length) {
+    public record Bend(double fold, double centre, double[] axis, double[] toward, double start, double angle, double length, double[] base,
+                       double shoulderStart, double shoulderEnd) {
+        public Bend(double fold, double centre, double[] axis, double[] toward, double start, double angle, double length) {
+            this(fold, centre, axis, toward, start, angle, length, null, 0.0, 0.0);
+        }
+
         double[] place(Frame frame, double u, double v, double w) {
+            double[] o = frame.origin();
+            double[] r = this.bent(frame, u, v, w);
+            return new double[] {o[0] + r[0], o[1] + r[1], o[2] + r[2]};
+        }
+
+        /** 4.1.13: {@link #place} from the origin: the hand's curl, then the shoulder's turn. */
+        private double[] bent(Frame frame, double u, double v, double w) {
             double radius = Math.sqrt(u * u + v * v);
             double polar = Math.atan2(v, u);
             double folded = this.centre + (polar - this.centre) * (1.0 - this.fold);
@@ -62,12 +79,15 @@ public final class UkakuModel {
                 (frame.out()[1] * fu + frame.up()[1] * fv + frame.back()[1] * fw) * frame.scale(),
                 (frame.out()[2] * fu + frame.up()[2] * fv + frame.back()[2] * fw) * frame.scale()};
             double[] a = this.axis;
-            double[] b = this.toward;
             double s = p[0] * a[0] + p[1] * a[1] + p[2] * a[2];
-            double[] o = frame.origin();
-            if (s <= this.start || Math.abs(this.angle) < 1.0E-4) {
-                return new double[] {o[0] + p[0], o[1] + p[1], o[2] + p[2]};
-            }
+            double[] r = s <= this.start || Math.abs(this.angle) < 1.0E-4 ? p : curl(p, s);
+            return this.base == null ? r : this.shoulder(r, s);
+        }
+
+        /** The hand: everything beyond {@link #start} along the axis curled toward {@link #toward} (a beam bend). */
+        private double[] curl(double[] p, double s) {
+            double[] a = this.axis;
+            double[] b = this.toward;
             double[] c = {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
             double[] q = {p[0] - s * a[0], p[1] - s * a[1], p[2] - s * a[2]};
             double qb = q[0] * b[0] + q[1] * b[1] + q[2] * b[2];
@@ -79,9 +99,54 @@ public final class UkakuModel {
             double[] n = {-Math.sin(theta) * a[0] + Math.cos(theta) * b[0], -Math.sin(theta) * a[1] + Math.cos(theta) * b[1],
                 -Math.sin(theta) * a[2] + Math.cos(theta) * b[2]};
             return new double[] {
-                o[0] + along * a[0] + across * b[0] + qb * n[0] + qc * c[0],
-                o[1] + along * a[1] + across * b[1] + qb * n[1] + qc * c[1],
-                o[2] + along * a[2] + across * b[2] + qb * n[2] + qc * c[2]};
+                along * a[0] + across * b[0] + qb * n[0] + qc * c[0],
+                along * a[1] + across * b[1] + qb * n[1] + qc * c[1],
+                along * a[2] + across * b[2] + qb * n[2] + qc * c[2]};
+        }
+
+        /**
+         * 4.1.13: the shoulder: {@code r} (the wing as if it ran straight along its axis from the root, hand curled) with its first
+         * {@link #shoulderStart} blocks ({@code s}: how far along the straight wing the point was) along {@link #base} instead, the turn
+         * onto the axis on an arc to {@link #shoulderEnd}, and the rest carried on unturned from the arc's end.
+         */
+        private double[] shoulder(double[] r, double s) {
+            double[] a = this.axis;
+            double[] d = this.base;
+            double cos = Math.max(-1.0, Math.min(1.0, d[0] * a[0] + d[1] * a[1] + d[2] * a[2]));
+            double phi = Math.acos(cos);
+            double span = this.shoulderEnd - this.shoulderStart;
+            if (phi < 1.0E-4 || span <= 1.0E-6) {
+                return r;
+            }
+            double[] t = {a[0] - d[0] * cos, a[1] - d[1] * cos, a[2] - d[2] * cos};
+            double tl = Math.sqrt(t[0] * t[0] + t[1] * t[1] + t[2] * t[2]);
+            t = new double[] {t[0] / tl, t[1] / tl, t[2] / tl};
+            double[] c = {d[1] * t[2] - d[2] * t[1], d[2] * t[0] - d[0] * t[2], d[0] * t[1] - d[1] * t[0]};
+            if (s <= this.shoulderStart) {
+                return turn(r, c, -phi);
+            }
+            double k = phi / span;
+            if (s < this.shoulderEnd) {
+                double theta = k * (s - this.shoulderStart);
+                double[] q = turn(new double[] {r[0] - s * a[0], r[1] - s * a[1], r[2] - s * a[2]}, c, theta - phi);
+                double along = this.shoulderStart + Math.sin(theta) / k;
+                double across = (1.0 - Math.cos(theta)) / k;
+                return new double[] {along * d[0] + across * t[0] + q[0], along * d[1] + across * t[1] + q[1], along * d[2] + across * t[2] + q[2]};
+            }
+            double along = this.shoulderStart + Math.sin(phi) / k;
+            double across = (1.0 - Math.cos(phi)) / k;
+            return new double[] {along * d[0] + across * t[0] + r[0] - this.shoulderEnd * a[0], along * d[1] + across * t[1] + r[1] - this.shoulderEnd * a[1],
+                along * d[2] + across * t[2] + r[2] - this.shoulderEnd * a[2]};
+        }
+
+        /** {@code v} turned {@code angle} radians about the unit axis {@code k} (Rodrigues). */
+        private static double[] turn(double[] v, double[] k, double angle) {
+            double cos = Math.cos(angle);
+            double sin = Math.sin(angle);
+            double kv = k[0] * v[0] + k[1] * v[1] + k[2] * v[2];
+            double[] kx = {k[1] * v[2] - k[2] * v[1], k[2] * v[0] - k[0] * v[2], k[0] * v[1] - k[1] * v[0]};
+            return new double[] {v[0] * cos + kx[0] * sin + k[0] * kv * (1.0 - cos), v[1] * cos + kx[1] * sin + k[1] * kv * (1.0 - cos),
+                v[2] * cos + kx[2] * sin + k[2] * kv * (1.0 - cos)};
         }
     }
 

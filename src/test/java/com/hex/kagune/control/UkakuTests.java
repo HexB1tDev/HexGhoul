@@ -1,5 +1,7 @@
 package com.hex.kagune.control;
 
+import com.hex.kagune.control.client.animation.BodyFrame;
+import com.hex.kagune.control.client.animation.RigPose;
 import com.hex.kagune.control.ukaku.UkakuBody;
 import com.hex.kagune.control.ukaku.CrystalSpike;
 import com.hex.kagune.control.ukaku.KakujaMotion;
@@ -66,6 +68,8 @@ public final class UkakuTests {
         crystalMode();
         wingSlams();
         slamBeats();
+        slamsClearOfHim();
+        slamsAligned();
         slamBody();
         sweep();
         spikes();
@@ -1424,57 +1428,64 @@ public final class UkakuTests {
             WingRig.WingAngles end = WingRig.slam(motion, 1.0F, impact);
             check(Math.abs(start.sweep() - 22.0F) < 0.01F && Math.abs(start.roll()) < 0.01F && Math.abs(end.sweep() - 22.0F) < 0.01F
                 && Math.abs(end.roll()) < 0.01F, motion + ": from rest, back to rest");
-            check(close(WingRig.slam(motion, at[0], impact), blow.chamber()) && close(WingRig.slam(motion, impact, impact), blow.impact())
-                && close(WingRig.slam(motion, at[3], impact), blow.over()) && close(WingRig.slam(motion, at[4], impact), blow.recoil()),
-                motion + ": through each of its keys on its beat");
-            // Speed (degrees per share of the move), sampled finely: the fastest moment is the instant before the impact.
+            // 4.1.13: the hand (its curl) lands on the server's tick; the arm (the wing's root) a beat ahead of it (ARM_LEAD of the drive), as
+            // an arm swings ahead of the hand it whips round.
+            float lead = WingRig.ARM_LEAD * blow.drive();
+            check(Math.abs(WingRig.hand(motion, at[0], impact) - blow.chamber()[2]) < 0.05F && Math.abs(WingRig.hand(motion, impact, impact) - blow.impact()[2]) < 0.05F
+                && Math.abs(WingRig.hand(motion, at[3], impact) - blow.over()[2]) < 0.05F && Math.abs(WingRig.hand(motion, at[4], impact) - blow.recoil()[2]) < 0.05F
+                && WingRig.hand(motion, 0.0F, impact) == 0.0F && WingRig.hand(motion, 1.0F, impact) == 0.0F,
+                motion + ": the hand from straight, through each of its keys on its beat, back to straight");
+            check(close(WingRig.slam(motion, impact - lead, impact), blow.impact()) && close(WingRig.slam(motion, at[3] - lead, impact), blow.over())
+                && close(WingRig.slam(motion, at[4] - lead, impact), blow.recoil()), motion + ": the arm through its keys a beat ahead of the hand");
+            // Speed (degrees per share of the move), sampled finely: the hand is fastest the instant before the impact, the arm a beat before it.
             float dp = 0.0025F;
             float fastest = 0.0F;
             float fastestAt = -1.0F;
+            float armFastest = 0.0F;
+            float armAt = -1.0F;
             for (float p = dp; p <= 1.0F; p += dp) {
-                float v = speed(motion, p - dp, p, impact);
+                float v = curlSpeed(motion, p - dp, p, impact);
                 if (v > fastest) {
                     fastest = v;
                     fastestAt = p;
                 }
+                float a = speed(motion, p - dp, p, impact);
+                if (a > armFastest) {
+                    armFastest = a;
+                    armAt = p;
+                }
             }
-            check(fastestAt > impact - 0.02F && fastestAt <= impact + dp, motion + ": fastest as it lands (at " + fastestAt + ", the impact " + impact + ")");
-            float landing = speed(motion, impact - dp, impact, impact);
-            float braking = speed(motion, impact - 0.06F - dp, impact - 0.06F, impact);
+            check(fastestAt > impact - 0.02F && fastestAt <= impact + dp, motion + ": the hand fastest as it lands (at " + fastestAt + ", the impact " + impact + ")");
+            check(armAt < fastestAt - 0.02F && armAt > impact - lead - 0.03F, motion + ": the arm fastest a beat before the hand (" + armAt + " vs " + fastestAt + ")");
+            float landing = curlSpeed(motion, impact - dp, impact, impact);
+            float braking = curlSpeed(motion, impact - 0.06F - dp, impact - 0.06F, impact);
             check(landing > 1.1F * braking, motion + ": still speeding up into the impact, never braking into it (" + landing + " vs " + braking + ")");
             // 4.1.12 (the owner: "insanely fast wing slap animation that you can barely fucking see"): the swing itself (the drive) lasts long
             // enough to be seen even at full control (the server's shortest: 0.9 of the stage's ticks), and the stage is the blow's own length.
             ComboStage stage = ComboStyle.UKAKU_WINGS.stage(stages[m]);
             check(Math.abs(blow.ticks() - stage.baseDuration()) < 0.01F && blow.drive() * stage.baseDuration() * 0.9F >= 3.5F && stage.baseDuration() >= 16,
                 motion + ": a swing you can see (" + blow.drive() * stage.baseDuration() * 0.9F + " ticks at the quickest; the stage " + stage.baseDuration() + ")");
-            check(speed(motion, impact, impact + dp, impact) > 0.35F * landing, motion + ": carried on past the hit, not stopped dead on it ("
-                + speed(motion, impact, impact + dp, impact) / landing + " of its speed)");
+            check(curlSpeed(motion, impact, impact + dp, impact) > 0.35F * landing, motion + ": carried on past the hit, not stopped dead on it ("
+                + curlSpeed(motion, impact, impact + dp, impact) / landing + " of its speed)");
             // The overshoot goes beyond the impact, away from the chamber; the recoil comes back toward it.
             float toImpact = dist(blow.impact(), blow.chamber());
             check(dist(blow.over(), blow.chamber()) > toImpact + 5.0F && dist(blow.recoil(), blow.over()) > 4.0F
-                && dist(blow.recoil(), blow.impact()) < dist(blow.over(), blow.impact()), motion + ": overshoots, then rebounds toward the impact");
-            // The whip: the tip trails the root on the drive, then passes it after the hit.
-            WingRig.WingAngles root = WingRig.slam(motion, impact - 0.03F, impact);
-            float[] tip = WingRig.tip(motion, impact - 0.03F, impact);
-            check(dist(tip, blow.chamber()) < dist(new float[] {root.sweep(), root.roll()}, blow.chamber()) - 3.0F,
-                motion + ": the tip trails the root as it drives");
-            float past = -Float.MAX_VALUE;
-            for (float p = impact; p <= at[4]; p += 0.01F) {
-                WingRig.WingAngles r = WingRig.slam(motion, p, impact);
-                float[] tp = WingRig.tip(motion, p, impact);
-                past = Math.max(past, dist(tp, blow.chamber()) - dist(new float[] {r.sweep(), r.roll()}, blow.chamber()));
-            }
-            check(past > 2.0F, motion + ": the tip whips on past the root after the hit (" + past + ")");
-            float[] again = WingRig.tip(motion, 0.37F, impact);
-            float[] once = WingRig.tip(motion, 0.37F, impact);
-            check(again[0] == once[0] && again[1] == once[1], motion + ": the same frame from the same moment (no state)");
+                && dist(blow.recoil(), blow.impact()) < dist(blow.over(), blow.impact()) && blow.over()[2] > blow.impact()[2]
+                && blow.recoil()[2] < blow.over()[2], motion + ": overshoots, then rebounds toward the impact (arm and hand)");
+            // The whip: half way through the drive the hand is still further back (a share of its way) than the arm.
+            float mid = (at[1] + at[2]) * 0.5F;
+            float armShare = share(WingRig.slam(motion, mid, impact).sweep(), blow.chamber()[0], blow.impact()[0]);
+            float handShare = share(WingRig.hand(motion, mid, impact), blow.chamber()[2], blow.impact()[2]);
+            check(handShare < armShare - 0.1F, motion + ": the hand trails the arm through the drive (" + handShare + " vs " + armShare + ")");
+            check(WingRig.hand(motion, 0.37F, impact) == WingRig.hand(motion, 0.37F, impact)
+                && WingRig.slam(motion, 0.37F, impact).equals(WingRig.slam(motion, 0.37F, impact)), motion + ": the same frame from the same moment (no state)");
             // The feathers: tucked on the drive, flared on the hit, flat at rest.
             check(WingRig.slamFold(motion, (at[1] + at[2]) * 0.5F, impact) > 0.2F && WingRig.slamFold(motion, impact + 0.005F, impact) < -0.15F
                 && WingRig.slamFold(motion, 0.0F, impact) == 0.0F && WingRig.slamFold(motion, 1.0F, impact) == 0.0F,
                 motion + ": feathers tucked on the drive, thrown open on the hit");
             // Never into the ground, at any moment, in any form that slams.
             for (WingForm form : new WingForm[] {WingForm.TWIN, WingForm.RABBIT}) {
-                for (int mastery : new int[] {50, 300, 800}) {
+                for (int mastery : new int[] {50, 150, 300, 800, 1000}) {
                     float lowest = Float.MAX_VALUE;
                     for (float p = 0.0F; p <= 1.0F; p += 0.01F) {
                         lowest = Math.min(lowest, extent(WingRig.build(input(form, mastery, 0.5F, motion, p, 0.0F)))[1]);
@@ -1485,37 +1496,23 @@ public final class UkakuTests {
             }
         }
         // 4.1.11 (the owner: "it currently just feels like a little chicken wings ... You don't have to be limited by such small range"): a
-        // slamming wing stretches out as far as the slam hits, its tip there at the impact (never past it), and is its own size again at rest.
-        for (WingRig.Motion motion : new WingRig.Motion[] {WingRig.Motion.SLAP_RIGHT, WingRig.Motion.SWING_RIGHT, WingRig.Motion.SLAM_RIGHT}) {
+        // striking wing grows bigger and longer as it lands (4.1.13: a hand, up to GROW_MOST its size; one slapped down onto the ground, up
+        // to GROW_MOST_DOWN), and is its own size again before and after.
+        for (WingRig.Motion motion : new WingRig.Motion[] {WingRig.Motion.SLAP_RIGHT, WingRig.Motion.SWING_RIGHT, WingRig.Motion.SLAM_RIGHT, WingRig.Motion.TWIN_SLAM}) {
+            boolean down = motion == WingRig.Motion.SLAM_RIGHT || motion == WingRig.Motion.TWIN_SLAM;
             for (int mastery : new int[] {300, 500, 1000}) {
                 double reach = UkakuRules.slamReach(mastery, WingRig.blow(motion).rangeMul());
                 float length = UkakuRules.wingLength(mastery, WingForm.TWIN);
-                check(WingRig.stretchMost(motion, mastery, length) > 1.5F && WingRig.stretchMost(motion, mastery, length) <= WingRig.STRETCH_MOST,
-                    motion + " at " + mastery + ": stretched well past its own " + length + " blocks (to " + reach + ")");
-                double furthest = 0.0;
-                for (float p = 0.3F; p <= 0.6F; p += 0.01F) {
-                    furthest = Math.max(furthest, tipReach(WingRig.build(alone(motion, p, 1, mastery))));
-                }
-                check(furthest > 0.8 * reach && furthest < reach + 1.5, motion + " at " + mastery + ": the tip reaches as far as the slam hits ("
-                    + furthest + " of " + reach + ")");
+                float grow = WingRig.stretchMost(motion, mastery, length);
+                check(grow > 1.25F && grow <= (down ? WingRig.GROW_MOST_DOWN : WingRig.GROW_MOST) + 1.0E-6F && grow * length <= reach + 1.0E-6,
+                    motion + " at " + mastery + ": grown as it strikes (" + grow + " times its " + length + " blocks), never past the hit's reach (" + reach + ")");
                 check(Math.abs(tipReach(WingRig.build(alone(motion, 0.0F, 1, mastery))) - tipReach(WingRig.build(alone(WingRig.Motion.NONE, 0.0F, 1, mastery)))) < 0.05
                     && Math.abs(tipReach(WingRig.build(alone(motion, 1.0F, 1, mastery))) - tipReach(WingRig.build(alone(WingRig.Motion.NONE, 0.0F, 1, mastery)))) < 0.05,
                     motion + " at " + mastery + ": its own size before and after");
             }
         }
-        for (int mastery : new int[] {300, 1000}) {
-            float length = UkakuRules.wingLength(mastery, WingForm.TWIN);
-            double furthest = 0.0;
-            for (float p = 0.3F; p <= 0.6F; p += 0.01F) {
-                furthest = Math.max(furthest, tipReach(WingRig.build(alone(WingRig.Motion.SLAP_RIGHT, p, 1, mastery))));
-            }
-            double share = furthest / (length * WingRig.stretchMost(WingRig.Motion.SLAP_RIGHT, mastery, length));
-            check(Math.abs(share - WingRig.TIP_SHARE) < 0.15, "a lashed wing's furthest tip (its fire streaming) lies TIP_SHARE of its length out (" + share
-                + " at " + mastery + ")");
-        }
-        check(WingRig.stretchMost(WingRig.Motion.SLAP_RIGHT, 100, UkakuRules.wingLength(100, WingForm.TWIN)) > 2.5F
-            && WingRig.stretchMost(WingRig.Motion.SLAP_RIGHT, 0, 0.6F) == WingRig.STRETCH_MOST && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 0.0F, 0.4F) == 0.0F && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 0.4F, 0.4F) == 1.0F
-            && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 1.0F, 0.4F) == 0.0F, "the smallest wings stretch as far as they may; the lash is out at the impact only");
+        check(WingRig.lash(WingRig.Motion.SLAP_RIGHT, 0.0F, 0.4F) == 0.0F && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 0.4F, 0.4F) == 1.0F
+            && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 1.0F, 0.4F) == 0.0F, "the hand is grown at the impact only");
         check(Math.abs(UkakuRules.slamReach(300, 1.0F) - (7.5 + 0.0075 * 300) * UkakuRules.SLAM_REACH) < 1.0E-9 && UkakuRules.slamReach(5000, 1.05F) <= 15.0,
             "the reach the wings stretch to is the server's (Rinkaku's range, its share, at most 15)");
         // 4.1.12 (the owner: "these fuck ass red Minecraft dust particles in crit particles that you've added. No one ever asked for that"):
@@ -1576,6 +1573,205 @@ public final class UkakuTests {
         WingRig.WingAngles x = WingRig.slam(motion, a, impact);
         WingRig.WingAngles y = WingRig.slam(motion, b, impact);
         return (float)Math.hypot(y.sweep() - x.sweep(), y.roll() - x.roll()) / (b - a);
+    }
+
+    /** 4.1.13: each slam of the twin wings' string: its motion, its stage, whether the right side strikes, whether both do. */
+    private static final Object[][] STRING = {{WingRig.Motion.SLAP_RIGHT, 0, true, false}, {WingRig.Motion.SLAP_LEFT, 1, false, false},
+        {WingRig.Motion.SWING_RIGHT, 2, true, false}, {WingRig.Motion.RISE_LEFT, 3, false, false}, {WingRig.Motion.SLAM_RIGHT, 4, true, false},
+        {WingRig.Motion.SLAM_LEFT, 5, false, false}, {WingRig.Motion.TWIN_SLAM, 6, true, true}};
+
+    /** 4.1.13: how many more points of a wing may graze him than at rest (of thousands; a pixel's brush of a shoulder for a frame). */
+    private static final int GRAZE = 30;
+
+    /**
+     * 4.1.13 (the owner: "While being perfectly aligned as well, and it doesn't like clip to the body"): through every slam of the string and
+     * the guard, as the game draws them (his body posed by UkakuBody as KaguneBodyAnimation adds it; the wings riding his torso,
+     * BodyFrame.carry, as UkakuWingRenderer places them), no more of either wing sinks into his head, torso or arms than at rest (but where
+     * they grow out of his back). 4.1.2 to 4.1.12's slams went through his shoulder, his arms and the back of his head.
+     */
+    private static void slamsClearOfHim() {
+        for (float crystal : new float[] {0.0F, 1.0F}) {
+            slamsClearOfHim(crystal);
+        }
+    }
+
+    /** 4.1.13: {@link #slamsClearOfHim} with the wings as fire (0) or crystal (1: the crystal mode keeps them crystal as they strike). */
+    private static void slamsClearOfHim(float crystal) {
+        for (int mastery : new int[] {150, 300, 1000}) {
+            int rest = sunkIn(new RigPose(), WingRig.build(struck(WingForm.TWIN, mastery, WingRig.Motion.NONE, 0.0F, 0.5F, crystal)));
+            for (Object[] move : STRING) {
+                WingRig.Motion motion = (WingRig.Motion)move[0];
+                ComboStage stage = ComboStyle.UKAKU_WINGS.stage((Integer)move[1]);
+                int worst = 0;
+                float worstAt = 0.0F;
+                for (float p = 0.0F; p <= 1.0001F; p += 0.02F) {
+                    RigPose pose = posed(stage, (Boolean)move[2], (Boolean)move[3], p);
+                    int n = sunkIn(pose, WingRig.build(struck(WingForm.TWIN, mastery, motion, p, stage.impactFraction(), crystal))) - rest;
+                    if (n > worst) {
+                        worst = n;
+                        worstAt = p;
+                    }
+                }
+                check(worst <= GRAZE, motion + " (" + mastery + ", crystal " + crystal + "): never through his head, torso or arms (" + worst
+                    + " more points in him than at rest, at " + worstAt + ")");
+            }
+        }
+        // Rabbit Guise's one wing (the left), through its own string's slams.
+        int rabbitRest = sunkIn(new RigPose(), WingRig.build(struck(WingForm.RABBIT, 50, WingRig.Motion.NONE, 0.0F, 0.5F, crystal)));
+        for (int s = 0; s < ComboStyle.UKAKU_LEFT_WING.stageCount(); s++) {
+            ComboStage stage = ComboStyle.UKAKU_LEFT_WING.stage(s);
+            WingRig.Motion motion = switch (stage.pattern()) {
+                case WING_SLAP -> WingRig.Motion.SLAP_LEFT;
+                case WING_SWING -> WingRig.Motion.SWING_LEFT;
+                case WING_RISE -> WingRig.Motion.RISE_LEFT;
+                case WING_SLAM -> WingRig.Motion.SLAM_LEFT;
+                default -> null;
+            };
+            if (motion == null) {
+                continue;
+            }
+            int worst = 0;
+            for (float p = 0.0F; p <= 1.0001F; p += 0.02F) {
+                worst = Math.max(worst, sunkIn(posed(stage, false, false, p), WingRig.build(struck(WingForm.RABBIT, 50, motion, p, stage.impactFraction(), crystal)))
+                    - rabbitRest);
+            }
+            check(worst <= GRAZE, "Rabbit Guise's " + motion + " (crystal " + crystal + "): never through him (" + worst + ")");
+        }
+        // The guard, closing and held, his arms up in front of him as the game raises them for it (KaguneBodyAnimation: guarding).
+        for (int mastery : new int[] {50, 150, 300, 1000}) {
+            WingForm form = mastery < 100 ? WingForm.RABBIT : WingForm.TWIN;
+            RigPose guarding = new RigPose();
+            guarding.rightArmX -= 1.0F;
+            guarding.leftArmX -= 1.0F;
+            guarding.rightArmY -= 0.5F;
+            guarding.leftArmY += 0.5F;
+            guarding.lean += 0.1F;
+            int rest = sunkIn(new RigPose(), WingRig.build(struck(form, mastery, WingRig.Motion.NONE, 0.0F, 0.5F, crystal)));
+            int worst = 0;
+            for (float p = 0.0F; p <= 1.0001F; p += 0.05F) {
+                worst = Math.max(worst, sunkIn(guarding, WingRig.build(struck(form, mastery, WingRig.Motion.GUARD, p, 0.4F, crystal))) - rest);
+            }
+            check(worst <= GRAZE, "the guard (" + mastery + ", crystal " + crystal + "): clamped round him, never through him or his raised arms (" + worst + ")");
+        }
+    }
+
+    /**
+     * 4.1.13 (the owner: "that they actually bend like that, like hands ... While being perfectly aligned"): at the impact each blow lands
+     * where it aims, in front of him: the slap and the swing's hand whipped across his front, past his middle; the overhead slam's hand
+     * come down onto the ground in front on its own side; the twin slam's two together in front of him, low (4.1.12's fell out at his sides).
+     */
+    private static void slamsAligned() {
+        for (int mastery : new int[] {300, 1000}) {
+            for (Object[] move : STRING) {
+                WingRig.Motion motion = (WingRig.Motion)move[0];
+                ComboStage stage = ComboStyle.UKAKU_WINGS.stage((Integer)move[1]);
+                float impact = stage.impactFraction();
+                RigPose pose = posed(stage, (Boolean)move[2], (Boolean)move[3], impact);
+                int side = (Boolean)move[2] ? 1 : -1;
+                double[] tip = carried(pose, WingRig.slamTip(mastery, WingForm.TWIN, side, motion, impact, impact));
+                String at = " (" + mastery + "): " + java.util.Arrays.toString(tip);
+                switch (motion) {
+                    case SLAP_RIGHT, SLAP_LEFT, SWING_RIGHT -> check(tip[2] > 1.5 && tip[0] * side < 0.0 && tip[1] > 0.3 && tip[1] < 2.2,
+                        motion + ": the hand whipped across his front, past his middle" + at);
+                    case RISE_LEFT -> check(tip[2] > 1.0 && tip[1] > 2.2, motion + ": the hand scooped up high in front of him" + at);
+                    case SLAM_RIGHT, SLAM_LEFT -> check(tip[2] > 2.5 && tip[0] * side > -0.2 && tip[0] * side < 1.6 && tip[1] < 1.2,
+                        motion + ": the hand come down in front, on its own side" + at);
+                    default -> {
+                        double[] other = carried(pose, WingRig.slamTip(mastery, WingForm.TWIN, -1, motion, impact, impact));
+                        check(tip[2] > 2.5 && other[2] > 2.5 && tip[1] < 1.2 && other[1] < 1.2 && tip[0] - other[0] < 1.6 && tip[0] > -0.3 && other[0] < 0.3,
+                            "the twin slam: both hands come down together in front of him" + at + ", " + java.util.Arrays.toString(other));
+                    }
+                }
+            }
+        }
+    }
+
+    /** 4.1.13: his body as the game draws it through {@code stage} at {@code progress} (KaguneBodyAnimation.ukakuStrike and addUkaku). */
+    private static RigPose posed(ComboStage stage, boolean right, boolean both, float progress) {
+        UkakuBody.Pose pose = UkakuBody.pose(stage.pattern(), right, both, progress, stage.impactFraction());
+        float amp = 0.92F + 0.16F * stage.weight();
+        RigPose p = new RigPose();
+        p.twist = pose.twist * amp;
+        p.headX = pose.headX * amp - 0.6F * (pose.torsoX + pose.torsoBend) * amp;
+        p.headY = pose.headY * amp;
+        p.lean = (pose.torsoX + pose.torsoBend) * amp;
+        p.rightArmX = pose.rightArmX * amp;
+        p.rightArmY = pose.rightArmY * amp;
+        p.rightArmZ = pose.rightArmZ * amp;
+        p.rightElbow = pose.rightArmBend * amp;
+        p.leftArmX = pose.leftArmX * amp;
+        p.leftArmY = pose.leftArmY * amp;
+        p.leftArmZ = pose.leftArmZ * amp;
+        p.leftElbow = pose.leftArmBend * amp;
+        p.rightLegX = pose.rightLegX * amp;
+        p.rightLegZ = pose.rightLegZ * amp;
+        p.leftLegX = pose.leftLegX * amp;
+        p.leftLegZ = pose.leftLegZ * amp;
+        p.rightKnee = pose.rightKnee * amp;
+        p.leftKnee = pose.leftKnee * amp;
+        p.flip = pose.flip;
+        p.settle(1.0F);
+        return p;
+    }
+
+    /** 4.1.13: both wings at {@code progress} through {@code motion} with its real impact, fire (0) or crystal (1). */
+    private static WingRig.Input struck(WingForm form, int mastery, WingRig.Motion motion, float progress, float impact, float crystal) {
+        return new WingRig.Input(form, mastery, 1.0F, 2.0, crystal, crystal, motion, progress, impact, 0.0F, 0.0F, false, 1.0F, 1.0F, false);
+    }
+
+    /**
+     * 4.1.13: how many points of {@code quads} (each solid quad sampled 4 by 4) sink more than half a pixel into his head, torso or arms
+     * as {@code pose} draws him, the wings carried with his torso as the game carries them; but within 0.2 blocks of a shoulder blade,
+     * where they grow out of him.
+     */
+    private static int sunkIn(RigPose pose, List<WingRig.Quad> quads) {
+        double[] a = BodyFrame.carry(pose, "torso");
+        BodyFrame.Solid solid = new BodyFrame.Solid(pose);
+        int n = 0;
+        for (WingRig.Quad q : quads) {
+            if (q.alpha() < 0.5F) {
+                continue;
+            }
+            float[] v = q.xyz();
+            for (int i = 0; i <= 3; i++) {
+                for (int j = 0; j <= 3; j++) {
+                    double u = i / 3.0;
+                    double w = j / 3.0;
+                    double[] p = new double[3];
+                    for (int c = 0; c < 3; c++) {
+                        p[c] = (1 - u) * (1 - w) * v[c] + u * (1 - w) * v[3 + c] + u * w * v[6 + c] + (1 - u) * w * v[9 + c];
+                    }
+                    double fromRoot = Math.min(Math.hypot(Math.hypot(p[0] - WingRig.ROOT_X, p[1] - WingRig.ROOT_Y), p[2] - WingRig.ROOT_Z),
+                        Math.hypot(Math.hypot(p[0] + WingRig.ROOT_X, p[1] - WingRig.ROOT_Y), p[2] - WingRig.ROOT_Z));
+                    if (fromRoot < 0.2) {
+                        continue;
+                    }
+                    double[] c = {a[0] * p[0] + a[1] * p[1] + a[2] * p[2] + a[9], a[3] * p[0] + a[4] * p[1] + a[5] * p[2] + a[10],
+                        a[6] * p[0] + a[7] * p[1] + a[8] * p[2] + a[11]};
+                    if (solid.depth(c, 0.0) > 0.5) {
+                        n++;
+                    }
+                }
+            }
+        }
+        return n;
+    }
+
+    /** 4.1.13: a rig-space point carried with his torso as {@code pose} draws him (the wings ride it: UkakuWingRenderer). */
+    private static double[] carried(RigPose pose, double[] p) {
+        double[] a = BodyFrame.carry(pose, "torso");
+        return new double[] {a[0] * p[0] + a[1] * p[1] + a[2] * p[2] + a[9], a[3] * p[0] + a[4] * p[1] + a[5] * p[2] + a[10],
+            a[6] * p[0] + a[7] * p[1] + a[8] * p[2] + a[11]};
+    }
+
+    /** 4.1.13: how fast the hand curls (degrees per share of the move) between {@code a} and {@code b}. */
+    private static float curlSpeed(WingRig.Motion motion, float a, float b, float impact) {
+        return Math.abs(WingRig.hand(motion, b, impact) - WingRig.hand(motion, a, impact)) / (b - a);
+    }
+
+    /** 4.1.13: how far {@code value} is along the way from {@code from} to {@code to} (0 there, 1 arrived). */
+    private static float share(float value, float from, float to) {
+        return (value - from) / (to - from);
     }
 
     private static float dist(float[] a, float[] b) {

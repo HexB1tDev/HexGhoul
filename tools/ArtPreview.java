@@ -47,6 +47,9 @@ public final class ArtPreview {
         if (wanted.contains("slams")) {
             slams(new File(out, "ukaku-slams.png"));
         }
+        if (wanted.contains("impacts")) {
+            impactsSheet(new File(out, "ukaku-impacts.png"));
+        }
         if (wanted.contains("guard")) {
             guardSheet(new File(out, "ukaku-guard.png"));
         }
@@ -2248,6 +2251,21 @@ public final class ArtPreview {
         System.out.println("wrote " + file + " (" + frames.size() + " frames)");
     }
 
+    /** 4.1.13: every slam at its impact, from straight in front, from his side and from above (where a hand goes, plainly). */
+    static void impactsSheet(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[][] eyes = {{0.0, 2.0, 11.0}, {11.0, 2.0, 1.5}, {0.6, 13.0, 2.5}};
+        double[] target = {0.0, 1.3, 1.5};
+        String[] names = {"front", "side", "above"};
+        for (Slam slam : new Slam[] {SLAMS[0], SLAMS[2], SLAMS[3], SLAMS[4], SLAMS[6]}) {
+            for (int k = 0; k < eyes.length; k++) {
+                shots.add(new Shot(slam.name().substring(2) + ", " + names[k], body(slam.pattern(), slam.right(), slam.both(), slam.impact(), slam.impact(), 0.5F),
+                    slamWings(slam.motion(), slam.impact(), slam.impact(), slam.right() ? 1 : -1, false), eyes[k], target, new ArrayList<>()));
+            }
+        }
+        sheet(file, "Ukaku's slams at the impact: front, side, above", shots, 3, 380, 300);
+    }
+
     /** 4.1.13: the wing guard closed, from in front, three quarters, the side and above, and closing by its amount from in front. */
     static void guardSheet(File file) throws Exception {
         List<Shot> shots = new ArrayList<>();
@@ -2342,6 +2360,16 @@ public final class ArtPreview {
         return out;
     }
 
+    /** 4.1.13: {@code p} carried by {@code carry} (BodyFrame.carry's {A, b}; null: as it is), a point or (not {@code point}) a direction. */
+    static double[] carried(double[] carry, double[] p, boolean point) {
+        if (carry == null) {
+            return p;
+        }
+        double[] a = carry;
+        return new double[] {a[0] * p[0] + a[1] * p[1] + a[2] * p[2] + (point ? a[9] : 0.0), a[3] * p[0] + a[4] * p[1] + a[5] * p[2] + (point ? a[10] : 0.0),
+            a[6] * p[0] + a[7] * p[1] + a[8] * p[2] + (point ? a[11] : 0.0)};
+    }
+
     static BufferedImage render(Shot shot, int w, int h) {
         WingPreview.Panel panel = new WingPreview.Panel(w, h, shot.eye(), shot.target(), fov > 0.0 ? fov : shot.pose() == null ? 70.0 : 40.0, sky);
         panel.dim = dim;
@@ -2352,12 +2380,15 @@ public final class ArtPreview {
         PoseRender.skin = null;
         PoseRender.slim = false;
         PoseRender.stiff = false;
+        // 4.1.13: the wings ride his torso as the game draws them (UkakuWingRenderer: BodyFrame.carry), leaning and turning with it.
+        double[] carry = shot.pose() == null || shot.wings().form().kakuja() ? null
+            : com.hex.kagune.control.client.animation.BodyFrame.carry(shot.pose(), "torso");
         for (WingRig.Quad q : WingRig.build(shot.wings(), shot.eye())) {
             float[] v = q.xyz();
-            double[] n = {q.nx(), q.ny(), q.nz()};
+            double[] n = carried(carry, new double[] {q.nx(), q.ny(), q.nz()}, false);
             double[][] c = new double[4][];
             for (int k = 0; k < 4; k++) {
-                c[k] = new double[] {v[k * 3], v[k * 3 + 1], v[k * 3 + 2]};
+                c[k] = carried(carry, new double[] {v[k * 3], v[k * 3 + 1], v[k * 3 + 2]}, true);
             }
             int[] a = q.argb();
             tris.add(new WingPreview.Tri(new double[][] {c[0], c[1], c[2]}, new int[] {a[0], a[1], a[2]}, n, false));

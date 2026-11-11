@@ -216,7 +216,9 @@ public final class WingRig {
         double[] main = normalize(add(mul(out, Math.cos(FAN_CENTRE)), mul(up, Math.sin(FAN_CENTRE))));
         // Wrapped round toward the other side, level (the curl turns about the vertical, whatever the wing's own tilt: tied to its tilt, the
         // wrap rose over his head or dug into the ground): a curved shield round his front at the height its tilt sets, not a sail ahead.
-        double curl = Math.toRadians(GUARD_WRAP) * a;
+        // 4.1.13: never curled tighter than GUARD_RADIUS (a small wing's wrap is shorter: wound all the way round, it hooked back into his head).
+        double straight = Math.max(GUARD_STRAIGHT, SHOULDER_END + 0.05);
+        double curl = Math.min(Math.toRadians(GUARD_WRAP), Math.max(0.0, length - straight) / GUARD_RADIUS) * a;
         double flat = Math.sqrt(main[0] * main[0] + main[2] * main[2]);
         if (curl < 1.0E-3 || flat < 1.0E-6) {
             return new UkakuModel.Frame(origin, out, up, back, length);
@@ -229,13 +231,22 @@ public final class WingRig {
         // Its feathers folded by its length, so the shield spans GUARD_HALF either side of its line whatever the wing's size (knee to head).
         double spread = Math.toDegrees(Math.atan(GUARD_HALF / Math.max(0.3, length)));
         float fold = (float)Math.max(0.0, Math.min(GUARD_FOLD_MOST, 1.0 - spread / 45.0)) * a;
-        UkakuModel.Bend bend = new UkakuModel.Bend(fold, FAN_CENTRE, main, normalize(toward), GUARD_STRAIGHT, curl, length);
+        // As a striking wing's, its base comes out of his back behind his shoulder and turns forward outside his arm (he holds his arms up
+        // in front of him to guard: straight out forward from his shoulder blade, the wing went through them).
+        float behindSweep = shoulderSweep(angles.sweep());
+        double[] base = null;
+        if (behindSweep != angles.sweep() || angles.roll() > SHOULDER_ROLL) {
+            double[][] behind = twinAxes(side, behindSweep, Math.min(angles.roll(), SHOULDER_ROLL));
+            base = normalize(add(mul(behind[0], Math.cos(FAN_CENTRE)), mul(behind[1], Math.sin(FAN_CENTRE))));
+        }
+        UkakuModel.Bend bend = new UkakuModel.Bend(fold, FAN_CENTRE, main, normalize(toward), straight, curl, length, base, SHOULDER_START, SHOULDER_END);
         return new UkakuModel.Frame(origin, out, up, back, length, bend);
     }
 
     /** 4.1.13: how far round his front a guarding wing wraps (degrees), how far it runs straight first (blocks), how tight its feathers fold. */
     static final double GUARD_WRAP = 205.0;
     static final double GUARD_STRAIGHT = 0.35;
+    static final double GUARD_RADIUS = 0.55;
     /** 4.1.13: how far the closed shield reaches above and below its line (blocks), and the most its feathers fold. */
     static final double GUARD_HALF = 2.0;
     static final double GUARD_FOLD_MOST = 0.85;
@@ -267,25 +278,36 @@ public final class WingRig {
                        float rangeMul) {
     }
 
-    /** 4.1.10: each slam's blow ({@link Blow}). */
+    /**
+     * 4.1.10: each slam's blow ({@link Blow}). 4.1.13 (the owner: "that they actually bend like that, like hands ... While being perfectly
+     * aligned as well, and it doesn't like clip to the body"): each key is {arm sweep, arm roll, hand curl} (degrees). The arm (the wing past
+     * its shoulder, {@link #SHOULDER_SWEEP}: its base always comes out of his back sideways, behind his own shoulder) swings back to its
+     * chamber and forward of him; the hand (the wing past its forearm, {@link #hand}) is what reaches: curled across his front for a slap or
+     * a swing, over and down onto the target in front for an overhead slam, up for the rising wing ({@link #cupToward}); a negative curl
+     * is the hand cocked back the other way. Every key was found against his body as the game poses it through the whole move (UkakuBody,
+     * the wings riding his torso), so that no part of either wing goes through his head, torso or arms (4.1.2 to 4.1.12's went through his
+     * head and shoulder); UkakuTests holds them to it.
+     */
     public static Blow blow(Motion motion) {
         return switch (motion) {
-            // A slap: a short cock back, snapped flat across the chest, carried well past, a little rebound. Quick.
-            case SLAP_RIGHT, SLAP_LEFT -> new Blow(new float[] {50.0F, 12.0F}, new float[] {-70.0F, -4.0F}, new float[] {-110.0F, -9.0F},
-                new float[] {-90.0F, -3.0F}, 0.28F, 0.12F, 0.12F, 16.0F, 1.0F);
-            // The wide swing: wound far back and up, unwound all the way across the front, its weight carrying it round to the far side.
-            case SWING_RIGHT, SWING_LEFT -> new Blow(new float[] {88.0F, 36.0F}, new float[] {-74.0F, -10.0F}, new float[] {-134.0F, -16.0F},
-                new float[] {-116.0F, -9.0F}, 0.30F, 0.14F, 0.14F, 20.0F, 1.05F);
-            // The rising wing: low and forward, then up through the target and on up past the head.
-            case RISE_RIGHT, RISE_LEFT -> new Blow(new float[] {-18.0F, -32.0F}, new float[] {-46.0F, 54.0F}, new float[] {-38.0F, 82.0F},
-                new float[] {-43.0F, 64.0F}, 0.28F, 0.12F, 0.12F, 20.0F, 1.0F);
-            // Both raised higher still and held a beat longer (the drive is the same share of a longer move), then down together.
-            case TWIN_SLAM -> new Blow(new float[] {4.0F, 86.0F}, new float[] {-68.0F, -8.0F}, new float[] {-96.0F, -14.0F},
-                new float[] {-78.0F, -3.0F}, 0.28F, 0.08F, 0.10F, 28.0F, 1.05F);
-            // The overhead slam: high over the shoulder, then driven down in front, level with the waist (never into the ground), a short
-            // carry on, the bounce off what it hit.
-            default -> new Blow(new float[] {8.0F, 80.0F}, new float[] {-68.0F, -8.0F}, new float[] {-94.0F, -14.0F},
-                new float[] {-76.0F, -3.0F}, 0.28F, 0.10F, 0.12F, 22.0F, 1.0F);
+            // A slap: the arm cocked back, the hand bent back; the arm forward along his side as the hand whips flat across his chest.
+            case SLAP_RIGHT, SLAP_LEFT -> new Blow(new float[] {45.0F, 6.0F, -25.0F}, new float[] {-48.0F, -38.0F, 105.0F},
+                new float[] {-56.0F, -40.0F, 140.0F}, new float[] {-48.0F, -36.0F, 90.0F}, 0.28F, 0.12F, 0.12F, 16.0F, 1.0F);
+            // The wide swing: wound further back and up, the hand bent further back; then the widest wrap across his front.
+            case SWING_RIGHT, SWING_LEFT -> new Blow(new float[] {64.0F, 2.0F, -35.0F}, new float[] {-50.0F, -38.0F, 120.0F},
+                new float[] {-58.0F, -40.0F, 170.0F}, new float[] {-50.0F, -36.0F, 105.0F}, 0.30F, 0.14F, 0.14F, 20.0F, 1.05F);
+            // The rising wing: the arm low at his side, drawn back clear of his own arm, the hand bent down; then the arm swept low and
+            // forward of him as the hand scoops up through the target, ending high in front of him (4.1.12's ended up and behind him).
+            case RISE_RIGHT, RISE_LEFT -> new Blow(new float[] {10.0F, -20.0F, -10.0F}, new float[] {-99.0F, -58.0F, 90.0F},
+                new float[] {-105.0F, -62.0F, 105.0F}, new float[] {-99.0F, -56.0F, 75.0F}, 0.28F, 0.10F, 0.10F, 20.0F, 1.0F);
+            // Both raised high and drawn back behind him (behind his head, never over it), the hands cocked back; then both arms raised and
+            // forward, the hands curled down and in: they come down together in front of him, a two-handed slam.
+            case TWIN_SLAM -> new Blow(new float[] {70.0F, 25.0F, -20.0F}, new float[] {-98.0F, 22.5F, 88.0F},
+                new float[] {-104.0F, 18.5F, 103.0F}, new float[] {-98.0F, 24.5F, 73.0F}, 0.28F, 0.08F, 0.10F, 28.0F, 1.05F);
+            // The overhead slam: drawn back behind his shoulder (low enough that its top stays off his head as he leans back into it), the
+            // hand straight; then the arm raised high over his shoulder and forward, the hand curled over and down onto the target in front.
+            default -> new Blow(new float[] {44.0F, -8.0F, 0.0F}, new float[] {-83.0F, 6.5F, 75.0F},
+                new float[] {-89.0F, 2.5F, 90.0F}, new float[] {-83.0F, 8.5F, 60.0F}, 0.28F, 0.10F, 0.12F, 22.0F, 1.0F);
         };
     }
 
@@ -318,40 +340,54 @@ public final class WingRig {
     public static WingAngles slam(Motion motion, float progress, float impact) {
         Blow blow = blow(motion);
         float[] at = beats(blow, impact);
-        float p = Math.max(0.0F, Math.min(1.0F, progress));
-        float[] rest = {REST_SWEEP, 0.0F};
-        float[] chamber = blow.chamber();
-        float[] loaded = {chamber[0] + LOAD * (chamber[0] - blow.impact()[0]), chamber[1] + LOAD * (chamber[1] - blow.impact()[1])};
-        float[] from;
-        float[] to;
-        float k;
-        if (p < at[0]) {
-            from = rest;
-            to = chamber;
-            k = smooth(p / at[0]);
-        } else if (p < at[1]) {
-            from = chamber;
-            to = loaded;
-            k = smooth((p - at[0]) / (at[1] - at[0]));
-        } else if (p < at[2]) {
-            from = loaded;
-            to = blow.impact();
-            k = (float)Math.pow((p - at[1]) / (at[2] - at[1]), DRIVE_SNAP);
-        } else if (p < at[3]) {
-            from = blow.impact();
-            to = blow.over();
-            float s = (p - at[2]) / (at[3] - at[2]);
-            k = 1.0F - (1.0F - s) * (1.0F - s);
-        } else if (p < at[4]) {
-            from = blow.over();
-            to = blow.recoil();
-            k = smooth((p - at[3]) / (at[4] - at[3]));
-        } else {
-            from = blow.recoil();
-            to = rest;
-            k = smooth((p - at[4]) / (1.0F - at[4]));
+        // 4.1.13: the arm a beat ahead of the hand (the hand whipped round after it: it lands on the server's tick), the lead easing in from
+        // nothing as the move starts (at 0 the arm is at rest, as every move begins).
+        float q = Math.max(0.0F, Math.min(1.0F, progress));
+        float p = Math.min(1.0F, q + ARM_LEAD * blow.drive() * smooth(q / at[0]));
+        return new WingAngles(channel(blow, at, p, 0, REST_SWEEP), channel(blow, at, p, 1, 0.0F));
+    }
+
+    /** 4.1.13: how far ahead of the hand the arm runs (a share of the drive). */
+    public static final float ARM_LEAD = 0.18F;
+
+    /**
+     * 4.1.13: the hand's curl (degrees) at {@code progress}: through the same beats as the arm, a beat behind it, so it is still bent back
+     * as the arm starts forward and whips through as the arm slows, on the impact exactly.
+     */
+    public static float hand(Motion motion, float progress, float impact) {
+        Blow blow = blow(motion);
+        float[] at = beats(blow, impact);
+        return channel(blow, at, Math.max(0.0F, Math.min(1.0F, progress)), 2, 0.0F);
+    }
+
+    /**
+     * Channel {@code c} of {@code blow}'s keys at {@code p} (beats {@code at}): rest, eased into the chamber; loaded a touch further back;
+     * DRIVEN into the impact on an ease-in (fastest as it lands, never braking into the target); carried on past on an ease-out;
+     * rebounding; settled back to rest ({@code rest}).
+     */
+    static float channel(Blow blow, float[] at, float p, int c, float rest) {
+        float chamber = blow.chamber()[c];
+        float loaded = chamber + LOAD * (chamber - blow.impact()[c]);
+        if (p <= 0.0F || p >= 1.0F) {
+            return rest;
         }
-        return new WingAngles(lerp(from[0], to[0], k), lerp(from[1], to[1], k));
+        if (p < at[0]) {
+            return lerp(rest, chamber, smooth(p / at[0]));
+        }
+        if (p < at[1]) {
+            return lerp(chamber, loaded, smooth((p - at[0]) / (at[1] - at[0])));
+        }
+        if (p < at[2]) {
+            return lerp(loaded, blow.impact()[c], (float)Math.pow((p - at[1]) / (at[2] - at[1]), DRIVE_SNAP));
+        }
+        if (p < at[3]) {
+            float s = (p - at[2]) / (at[3] - at[2]);
+            return lerp(blow.impact()[c], blow.over()[c], 1.0F - (1.0F - s) * (1.0F - s));
+        }
+        if (p < at[4]) {
+            return lerp(blow.over()[c], blow.recoil()[c], smooth((p - at[3]) / (at[4] - at[3])));
+        }
+        return lerp(blow.recoil()[c], rest, smooth((p - at[4]) / (1.0F - at[4])));
     }
 
     /**
@@ -410,45 +446,7 @@ public final class WingRig {
     }
 
     static final float COUNTER_SWEEP = 20.0F;
-    static final float COUNTER_ROLL = 9.0F;
-
-    /**
-     * 4.1.10: the whip. The wing's tip follows its root through a damped spring (in ticks: {@link Blow#ticks}), so it trails as the drive
-     * speeds the root up, snaps on past it as the root is stopped by the impact, and settles: {sweep, roll} where the tip points. Worked out
-     * from the start of the move every time (no state: the same frame comes out of the same progress).
-     */
-    public static float[] tip(Motion motion, float progress, float impact) {
-        Blow blow = blow(motion);
-        double end = Math.max(0.0F, Math.min(1.0F, progress)) * blow.ticks();
-        int steps = Math.max(1, (int)Math.ceil(end / WHIP_STEP));
-        double dt = end / steps;
-        // 4.1.11: the spring as quick as the blow (a share of its drive's ticks): a slap's tip trails it by a beat, never a quarter turn.
-        double w = 2.0 * Math.PI / Math.max(WHIP_PERIOD_LEAST, WHIP_PER_DRIVE * blow.drive() * blow.ticks());
-        double sweep = REST_SWEEP;
-        double roll = 0.0;
-        double vSweep = 0.0;
-        double vRoll = 0.0;
-        for (int i = 1; i <= steps; i++) {
-            WingAngles root = slam(motion, (float)(i * dt / blow.ticks()), impact);
-            vSweep += (w * w * (root.sweep() - sweep) - 2.0 * WHIP_DAMPING * w * vSweep) * dt;
-            vRoll += (w * w * (root.roll() - roll) - 2.0 * WHIP_DAMPING * w * vRoll) * dt;
-            sweep += vSweep * dt;
-            roll += vRoll * dt;
-        }
-        return new float[] {(float)sweep, (float)roll};
-    }
-
-    /**
-     * 4.1.10: the whip's spring: its damping (1 none overshoots; less, a snap past and back), its step (ticks). 4.1.11: its period is
-     * {@link #WHIP_PER_DRIVE} of the blow's drive (ticks), at least {@link #WHIP_PERIOD_LEAST} (4.1.10's 3.2 ticks left a slap's tip a
-     * quarter turn behind at the impact).
-     */
-    static final double WHIP_PER_DRIVE = 1.4;
-    static final double WHIP_PERIOD_LEAST = 1.2;
-    static final double WHIP_DAMPING = 0.45;
-    static final double WHIP_STEP = 0.1;
-    /** 4.1.10: the most the wing bends root to tip in the whip (degrees). */
-    static final float WHIP_MOST = 55.0F;
+    static final float COUNTER_ROLL = -12.0F;
 
     /**
      * 4.1.11 (the owner: "You can make the wing stretch further forward, because it currently just feels like a little chicken wings, bro.
@@ -476,88 +474,125 @@ public final class WingRig {
     static final float LASH_BACK = 0.45F;
 
     /**
-     * 4.1.11: how many times its own length a slamming wing grows to at the impact: as far as the slam hits ({@link UkakuRules#slamReach}),
-     * its tip on it, at most {@link #STRETCH_MOST} (the smallest wings stop short of it, never a thread).
+     * 4.1.11: how many times its own length a slamming wing grows to at the impact. 4.1.13: a hand, bigger as it strikes, at most
+     * {@link #GROW_MOST} (4.1.11 stretched a straight tongue out to the hit's whole reach).
      */
     public static float stretchMost(Motion motion, int mastery, float length) {
         double reach = UkakuRules.slamReach(mastery, blow(motion).rangeMul());
-        return (float)Math.max(1.0, Math.min(STRETCH_MOST, reach / (TIP_SHARE * Math.max(0.5, length))));
-    }
-
-    public static final float STRETCH_MOST = 3.2F;
-    /** 4.1.11: how far from its shoulder blade a lashed wing's furthest flame tip lies (its fire streaming), in its lengths (measured: UkakuTests). */
-    public static final float TIP_SHARE = 1.4F;
-
-    /** 4.1.11: how much of the way the lashed tip points: level ahead (a little up), up through the target for the rising wing (degrees). */
-    static float lashElevation(Motion motion) {
-        return switch (motion) {
-            case RISE_RIGHT, RISE_LEFT -> 22.0F;
-            default -> 5.0F;
+        float most = switch (motion) {
+            case SLAM_RIGHT, SLAM_LEFT, TWIN_SLAM -> GROW_MOST_DOWN;
+            default -> GROW_MOST;
         };
+        return (float)Math.max(1.0, Math.min(most, reach / Math.max(0.5, length)));
     }
 
-    /** 4.1.11: the feathers of a lashed wing folded in tight (a long tongue of fire, not a sheet); of the turn to the lash, the share at the root. */
-    static final float LASH_FOLD = 0.78F;
-    /** 4.1.11: how much of the whip's trail the lash's heading keeps (the rest is where the blow is: its tip lands on the impact). */
-    static final float LASH_TRAIL = 0.3F;
-    static final float LASH_TURN = 0.4F;
-    /** 4.1.11: the most the lashed wing bends root to tip (degrees). */
-    static final float LASH_MOST = 120.0F;
+    public static final float GROW_MOST = 1.6F;
+    /** 4.1.13: how far forward ({@code _ON}) and inward ({@code _IN}) an overhead or the twin slam's hand curls, as shares of down. */
+    static final double SLAM_ON = 0.31;
+    static final double SLAM_IN = 0.0;
+    static final double TWIN_ON = 1.71;
+    static final double TWIN_IN = 0.25;
+    /** 4.1.13: an overhead slam's hand grows less (slapped down, a bigger one would be in the ground). */
+    public static final float GROW_MOST_DOWN = 1.3F;
+    /** 4.1.13: how open a striking hand's feathers are (a palm), how far above and below its line they reach at most (blocks: off the ground). */
+    static final float SLAM_PALM = 0.15F;
+    static final double PALM_HALF = 1.05;
 
     /**
-     * 4.1.10: a slamming twin wing's frame: placed at its root angles, its fan folded ({@link #slamFold}), and everything past the first
-     * {@link #AIM_STRAIGHT} blocks curled toward where its tip points ({@link #tip}), a smooth arc root to tip, as a whip bends. 4.1.11: and
-     * lashed out ({@link #lash}): grown to {@link #stretchMost} its length, its tip pulled level toward where it sweeps (or up, rising),
-     * turned part of the way at the root and curled the rest, its feathers folded in tight but for the flare of the hit.
+     * 4.1.13: which way a striking hand curls (a unit direction across the wing's own line {@code main}): a slap or a swing level toward the
+     * far side (where it sweeps, the palm leading), an overhead slam or the twin slam down, the rising wing up; null if there is none.
+     */
+    static double[] cupToward(int side, Motion motion, double[] main) {
+        double flat = Math.sqrt(main[0] * main[0] + main[2] * main[2]);
+        double[] inward = flat < 1.0E-6 ? null : rotateY(new double[] {main[0] / flat, 0.0, main[2] / flat}, -side * Math.PI * 0.5);
+        double[] want = switch (motion) {
+            // An overhead slam's hand curls down, forward and a little in: over onto the target in front of him (straight down from
+            // his raised arm it fell at his side). The twin slam's two come down further in: together in front of him.
+            case SLAM_RIGHT, SLAM_LEFT -> normalize(new double[] {-side * SLAM_IN, -1.0, SLAM_ON});
+            case TWIN_SLAM -> normalize(new double[] {-side * TWIN_IN, -1.0, TWIN_ON});
+            case RISE_RIGHT, RISE_LEFT -> new double[] {0.0, 1.0, 0.0};
+            default -> inward;
+        };
+        if (want == null) {
+            return null;
+        }
+        double[] across = sub(want, mul(main, dot(want, main)));
+        return dot(across, across) < 1.0E-8 ? null : normalize(across);
+    }
+
+    /**
+     * 4.1.13: a striking wing's frame: its arm placed at its root angles (its shoulder behind his own, {@link #SHOULDER_SWEEP}), its hand
+     * curled {@link #hand} degrees past its forearm ({@link #handStraight}) toward {@link #cupToward} (a negative curl the other way), grown
+     * toward {@link #stretchMost} through the blow ({@link #lash}), its feathers open as a palm but no further than keeps it off the ground
+     * ({@link #PALM_HALF}), tucked on the drive and flared on the hit.
      */
     static UkakuModel.Frame slamFrame(int side, double rootX, double rootY, double rootZ, double length, Motion motion, float progress, float impact,
                                       WingAngles root, int mastery) {
-        float[] tipAngles = tip(motion, progress, impact);
         float lash = lash(motion, progress, impact);
-        // 4.1.12: the whip fades out after the recoil, so a long move ends on the wing's own shape whatever the spring is still doing.
-        float[] beat = beats(blow(motion), impact);
-        float settled = 1.0F - smooth((Math.max(0.0F, Math.min(1.0F, progress)) - beat[4]) / (1.0F - beat[4]));
-        tipAngles = new float[] {root.sweep() + (tipAngles[0] - root.sweep()) * settled, root.roll() + (tipAngles[1] - root.roll()) * settled};
         double[][] axes = twinAxes(side, root.sweep(), root.roll());
         double[] out = axes[0];
         double[] up = axes[1];
         double[] back = mul(cross(axes[1], axes[0]), side);
+        double[] origin = {rootX, rootY, rootZ};
         double[] main = normalize(add(mul(out, Math.cos(FAN_CENTRE)), mul(up, Math.sin(FAN_CENTRE))));
-        double[][] tipAxes = twinAxes(side, tipAngles[0], tipAngles[1]);
-        double[] whip = normalize(add(mul(tipAxes[0], Math.cos(FAN_CENTRE)), mul(tipAxes[1], Math.sin(FAN_CENTRE))));
-        // The lash: level (or rising) along where the blow sweeps (the root's, trailed a little by the whip).
-        float sweepTo = root.sweep() + LASH_TRAIL * (tipAngles[0] - root.sweep());
-        double[] heading = twinAxes(side, sweepTo, 0.0F)[0];
-        double flat = Math.sqrt(heading[0] * heading[0] + heading[2] * heading[2]);
-        double[] target = whip;
-        if (lash > 0.0F && flat > 1.0E-6) {
-            double e = Math.toRadians(lashElevation(motion));
-            double[] level = {heading[0] / flat * Math.cos(e), Math.sin(e), heading[2] / flat * Math.cos(e)};
-            target = normalize(add(mul(whip, 1.0 - lash), mul(level, lash)));
-        }
-        double total = Math.acos(Math.max(-1.0, Math.min(1.0, dot(main, target))));
-        double[] turnAxis = cross(main, target);
-        if (lash > 0.0F && dot(turnAxis, turnAxis) > 1.0E-12) {
-            turnAxis = normalize(turnAxis);
-            double turn = total * LASH_TURN * lash;
-            out = rotate(out, turnAxis, turn);
-            up = rotate(up, turnAxis, turn);
-            back = rotate(back, turnAxis, turn);
-            main = normalize(rotate(main, turnAxis, turn));
-        }
-        double most = Math.toRadians(WHIP_MOST + (LASH_MOST - WHIP_MOST) * lash);
-        double curl = Math.min(most, Math.acos(Math.max(-1.0, Math.min(1.0, dot(main, target)))));
-        double[] toward = sub(target, mul(main, dot(target, main)));
-        float flare = slamFold(motion, progress, impact);
-        float fold = flare + (LASH_FOLD - flare) * lash + (flare < 0.0F ? flare * lash : 0.0F);
-        if (dot(toward, toward) < 1.0E-8 || curl < 1.0E-3) {
-            toward = up;
-            curl = 0.0;
-        }
         double scale = length * (1.0 + (stretchMost(motion, mastery, (float)length) - 1.0) * lash);
-        UkakuModel.Bend bend = new UkakuModel.Bend(fold, FAN_CENTRE, main, normalize(toward), AIM_STRAIGHT, curl, scale);
-        return new UkakuModel.Frame(new double[] {rootX, rootY, rootZ}, out, up, back, scale, bend);
+        float flare = slamFold(motion, progress, impact);
+        float palm = (float)Math.max(SLAM_PALM, Math.min(0.85, 1.0 - Math.toDegrees(Math.atan(PALM_HALF / Math.max(0.3, scale))) / 45.0));
+        float fold = Math.max(flare, palm * lash) + (flare < 0.0F ? flare * (1.0F - lash) : 0.0F);
+        double curl = Math.toRadians(hand(motion, progress, impact));
+        double[] cup = cupToward(side, motion, main);
+        // 4.1.13: swung forward of his side, the wing's base still comes out of his back sideways, behind his own shoulder, and turns
+        // forward there (SHOULDER_*): straight out forward from his shoulder blade it would go through his shoulder.
+        // Raised higher than at rest, it rises at his side, never up beside his head.
+        double[] base = null;
+        float behindSweep = shoulderSweep(root.sweep());
+        if (behindSweep != root.sweep() || root.roll() > SHOULDER_ROLL) {
+            double[][] behind = twinAxes(side, behindSweep, Math.min(root.roll(), SHOULDER_ROLL));
+            base = normalize(add(mul(behind[0], Math.cos(FAN_CENTRE)), mul(behind[1], Math.sin(FAN_CENTRE))));
+        }
+        double straight = Math.max(SHOULDER_END + 0.05, handStraight(motion) * scale);
+        boolean curled = cup != null && Math.abs(curl) >= 1.0E-3;
+        double[] toward = !curled ? up : curl >= 0.0 ? cup : mul(cup, -1.0);
+        return new UkakuModel.Frame(origin, out, up, back, scale, new UkakuModel.Bend(fold, FAN_CENTRE, main, toward, straight, curled ? Math.abs(curl) : 0.0,
+            scale, base, SHOULDER_START, SHOULDER_END));
     }
+
+    /**
+     * 4.1.13: how far back (degrees of sweep) the wing's base comes out of his back at most while its arm swings forward ({@link #slamFrame},
+     * {@link #shoulderSweep}: well behind his shoulder, even crystallized and solid, even with his own arm thrown up and back past it); and
+     * how far along the wing (blocks) the shoulder's turn starts and ends (outside his arm).
+     */
+    static final float SHOULDER_SWEEP = 40.0F;
+
+    /**
+     * 4.1.13: the sweep (degrees) the wing's base comes out of his back at while its arm is at {@code sweep}: the arm's own at rest or drawn
+     * back; swung forward of rest, drawn back the other way by half as much (no turn at all at rest: nothing jumps as a blow starts), to
+     * {@link #SHOULDER_SWEEP} at most.
+     */
+    static float shoulderSweep(float sweep) {
+        return sweep >= REST_SWEEP ? sweep : Math.min(SHOULDER_SWEEP, REST_SWEEP + (REST_SWEEP - sweep) * SHOULDER_DRAW);
+    }
+
+    static final float SHOULDER_DRAW = 0.5F;
+    /** 4.1.13: and the highest it rises out of his back (its roll, degrees: as high as at rest), higher only past the shoulder's turn. */
+    static final float SHOULDER_ROLL = 0.0F;
+    static final double SHOULDER_START = 0.25;
+    static final double SHOULDER_END = 0.85;
+
+    /**
+     * 4.1.13: how much of a striking wing (a share of its length) runs straight before the hand curls: the overhead slams' a long
+     * forearm raised over the target, the hand coming down onto it; the rest a short one, the hand doing the reaching.
+     */
+    static double handStraight(Motion motion) {
+        return switch (motion) {
+            case SLAM_RIGHT, SLAM_LEFT -> SLAM_FOREARM;
+            case TWIN_SLAM -> TWIN_FOREARM;
+            default -> 0.0;
+        };
+    }
+
+    static final double SLAM_FOREARM = 0.5;
+    static final double TWIN_FOREARM = 0.4;
 
     /** Twin-wing angles for one side (+1 right, -1 left). */
     static WingAngles twinAngles(Input in, int side) {
@@ -905,6 +940,19 @@ public final class WingRig {
         UkakuModel.Frame frame = aimFrame(s, ROOT_X * s, rootY, rootZ, UkakuRules.wingLength(clamped, usable), REST_SWEEP, 0.0F, aim, 1.0F,
             0.0F);
         return frame.at(MUZZLE * Math.cos(FAN_CENTRE), MUZZLE * Math.sin(FAN_CENTRE), 0.0);
+    }
+
+    /**
+     * 4.1.13: where the {@code side} wing's hand ends (the far end of its centre line, rig space) at {@code progress} through the slam
+     * {@code motion} landing at {@code impact}: where the blow lands, free of the fire's flicker.
+     */
+    public static double[] slamTip(int mastery, WingForm form, int side, Motion motion, float progress, float impact) {
+        int clamped = Math.max(0, mastery);
+        WingForm usable = form.usable(clamped);
+        Input in = new Input(usable, clamped, 1.0F, 0.0, 0.0F, 0.0F, motion, progress, impact, 0.0F, 0.0F, false, 1.0F, 1.0F, false);
+        UkakuModel.Frame frame = slamFrame(side, ROOT_X * side, ROOT_Y, ROOT_Z, UkakuRules.wingLength(clamped, usable), motion, progress, impact,
+            twinAngles(in, side), clamped);
+        return frame.at(Math.cos(FAN_CENTRE), Math.sin(FAN_CENTRE), 0.0);
     }
 
     /** Axes of a twin wing: {outward, up} after roll, the backward tilt and the sweep about the vertical. */

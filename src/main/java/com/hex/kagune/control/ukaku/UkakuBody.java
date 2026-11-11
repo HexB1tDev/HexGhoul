@@ -108,10 +108,11 @@ public final class UkakuBody {
                 side.leg(pose, false, keys.at(0.0F, 0.25F, 0.2F), keys.at(0.0F, 0.0F, 0.0F));
             }
             case TWIN_SLAM -> {
-                // Both arms thrown up high as both wings rise, chest open; then everything comes down together into a deep bend.
+                // Both arms thrown up high as both wings rise, chest open; then everything comes down together into a deep bend. 4.1.13: his
+                // eyes stay on the target through the wind-up (his head thrown back went into the wings rising behind it).
                 pose.torsoX = keys.at(-0.35F, 0.55F, 0.5F);
                 pose.torsoBend = keys.at(0.0F, 0.3F, 0.25F);
-                pose.headX = keys.at(-0.3F, 0.2F, 0.15F);
+                pose.headX = keys.at(0.15F, 0.2F, 0.15F);
                 for (boolean main : new boolean[] {true, false}) {
                     side.arm(pose, main, keys.at(-2.6F, -0.7F, -0.6F), keys.at(0.0F, 0.0F, 0.0F), keys.at(0.35F, 0.25F, 0.2F), keys.at(0.3F, 0.3F, 0.25F));
                     side.leg(pose, main, keys.at(0.1F, -0.2F, -0.18F), keys.at(0.05F, 0.12F, 0.1F));
