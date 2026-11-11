@@ -55,6 +55,13 @@ public final class AgentClient {
                 return com.hex.kagune.control.client.animation.ReaperBladePose.draw(shedAge - AgentRules.REAPER_SHED_TICKS);
             }
         }
+        // 4.1.38: putting his jacket back on, the fight long over: the blade back in its case, the case away, the coat on (ReaperDressPose).
+        if (agent.swing() == CcgAgent.DRESS && AgentRules.reaperLook(agent.lookIndex())) {
+            double dressAge = CcgAgent.since(now, agent.swingAt()) + partial;
+            if (dressAge >= 0.0 && dressAge < AgentRules.REAPER_DRESS_TICKS) {
+                return com.hex.kagune.control.client.animation.ReaperDressPose.pose(dressAge);
+            }
+        }
         // 4.1.31: his end: the blade lowered and shattered, on his knees, held as he dies.
         if (agent.lookIndex() == AgentRules.REAPER_BARE_LOOK && agent.swing() == CcgAgent.END) {
             return com.hex.kagune.control.client.animation.ReaperBladePose.end(Math.max(0.0, CcgAgent.since(now, agent.swingAt()) + partial));

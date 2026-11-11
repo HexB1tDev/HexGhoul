@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.38 (HexGhoul): two minutes after a fight, the Reaper puts his jacket back on (testing)
+
+See `.github/release-notes-4.1.38.md`. "after the fight ends, I should note, let's say 2 minutes without fighting, Arima puts back his jacket in his normal" (reversed, in place): `AgentBrain.dress` (`REAPER_REDRESS_CALM` 2400, `CcgAgent.DRESS` 13, untouchable and pinned), `ReaperDressPose` (the case fetched by his left hand and set at his right fist, the blade back in, the draw backwards, then the coat's taking off backwards), his first phase back and healed at `REAPER_DRESS_SWAP`. Protocol 117.
+
 ## 4.1.37 (HexGhoul): the Reaper's change: a real coat taken off, untouchable, a slower draw, the blade held point-down, his blows clashable (testing)
 
 See `.github/release-notes-4.1.37.md`. "whenever he's transforming, you can still grab him ... he should actually like take off an actual jacket ... The taking out the quinque from the case also should take a little longer": untouchable through his change and end (`AgentBrain.untouchable`: `LivingAttackEvent` cancelled, `EtoBrain.spared` so the original's target checks say no, `PlayerArms.mayHit`, `pin`/`free` every tick); the Formal Overcoat's model in white taken off and dropped (`ReaperCoatPose`, `ReaperCoatLayer`, `tools/reaper_coat.py`); the draw 62 ticks (was 36), lowered into a one-handed point-down guard (`ReaperBladePose.GUARD`, `HANG_X`, `bothHands`); blade and brawl blows on the clash board (`KaguneClash.swing`/`meets`); a change that waited for ever in water. Protocol 117.

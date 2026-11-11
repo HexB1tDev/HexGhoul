@@ -40,12 +40,20 @@ public final class ReaperCoatLayer extends RenderLayer<CcgAgent, PlayerModel<Ccg
     public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, CcgAgent agent, float limbSwing, float limbSwingAmount, float partial,
                         float ageInTicks, float netHeadYaw, float headPitch) {
         try {
-            if (agent.m_20145_() || agent.m_9236_() == null || !AgentRules.reaperLook(agent.lookIndex()) || agent.swing() != CcgAgent.SHED) {
+            if (agent.m_20145_() || agent.m_9236_() == null || !AgentRules.reaperLook(agent.lookIndex())
+                || agent.swing() != CcgAgent.SHED && agent.swing() != CcgAgent.DRESS) {
                 FELL.remove(agent);
                 return;
             }
             double age = CcgAgent.since(agent.m_9236_().m_46467_(), agent.swingAt()) + partial;
-            if (!ReaperCoatPose.drawn(age)) {
+            if (agent.swing() == CcgAgent.DRESS) {
+                // 4.1.38: putting it back on: his taking it off, backwards (ReaperDressPose.coatAge), from when his hands have it.
+                FELL.remove(agent);
+                age = age < AgentRules.REAPER_DRESS_TICKS ? com.hex.kagune.control.client.animation.ReaperDressPose.coatAge(age) : -1.0;
+                if (age < 0.0) {
+                    return;
+                }
+            } else if (!ReaperCoatPose.drawn(age)) {
                 return;
             }
             draw(pose, buffers.m_6299_(TYPE), light, agent, age, partial);

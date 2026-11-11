@@ -65,6 +65,8 @@ public class CcgAgent extends PathfinderMob {
     public static final int BLADE = 8;
     /** 4.1.31: the White Reaper's end: his blade shattered, on his knees (AgentRules.REAPER_END_TICKS), held as he dies. */
     public static final int END = 12;
+    /** 4.1.38: the White Reaper putting his jacket back on, his blade back in its case (AgentRules.REAPER_DRESS_TICKS). */
+    public static final int DRESS = 13;
     /**
      * 4.1.25: the White Reaper's hand-to-hand: a strike of either string (Kick Master's or the Speed Blitz), its code this plus the
      * strike's ordinal ({@link com.hex.kagune.control.pale.PaleStrike}).

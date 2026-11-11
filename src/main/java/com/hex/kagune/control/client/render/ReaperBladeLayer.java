@@ -55,6 +55,10 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
             }
         }
         VertexConsumer out = buffers.m_6299_(SOLID);
+        if (agent.swing() == CcgAgent.DRESS) {
+            stowed(pose, out, CcgAgent.since(agent.m_9236_().m_46467_(), agent.swingAt()) + partial, posed, light);
+            return;
+        }
         if (agent.swing() == CcgAgent.END) {
             ended(pose, out, agent, posed, CcgAgent.since(agent.m_9236_().m_46467_(), agent.swingAt()) + partial, light);
             return;
@@ -82,6 +86,33 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
         if (!drawing || after >= AgentRules.REAPER_CASE_OPENS) {
             double[][] inArm = posed == null ? ReaperBladePose.HELD : ReaperBladePose.inArm(posed);
             emit(pose, out, ReaperBladeMesh.of(), inArm, fist, drawing ? ReaperBladePose.extended(after) : 1.0F, light);
+        }
+        pose.m_85849_();
+    }
+
+    /**
+     * 4.1.38: putting his jacket back on ({@code t} ticks in: ReaperDressPose): the blade until it is back in the golden case, sliding into it;
+     * the case in his left hand, carried to his right fist and opened about the blade, shut, then hung from his right hand and put away.
+     */
+    private void stowed(PoseStack pose, VertexConsumer out, double t, RigPose posed, int light) {
+        if (posed == null || t >= AgentRules.REAPER_STOW_TICKS) {
+            return;
+        }
+        pose.m_85836_();
+        this.m_117386_().f_102811_.m_104299_(pose);
+        double[] fist = {-1.0, 9.0, 0.0};
+        com.hex.kagune.control.client.animation.ReaperDressPose.Held held = com.hex.kagune.control.client.animation.ReaperDressPose.held(posed, t);
+        if (held != null) {
+            for (int side : new int[] {1, -1}) {
+                emitCase(pose, out, ReaperBladeMesh.goldHalf(side), held.turn(), held.origin(), side, held.open(), light);
+            }
+            if (held.handle()) {
+                emitCase(pose, out, ReaperBladeMesh.goldHandle(), held.turn(), held.origin(), 1, 0.0, light);
+            }
+        }
+        float k = com.hex.kagune.control.client.animation.ReaperDressPose.bladeOut(t);
+        if (k >= 0.0F) {
+            emit(pose, out, ReaperBladeMesh.of(), ReaperBladePose.inArm(posed), fist, k, light);
         }
         pose.m_85849_();
     }

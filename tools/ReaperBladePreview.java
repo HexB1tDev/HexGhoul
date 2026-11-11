@@ -19,7 +19,7 @@ import javax.imageio.ImageIO;
  *
  * <pre>
  * javac -nowarn -cp build/quick/classes:build/quick/base.jar -d build/reaper-preview tools/PoseRender.java tools/ReaperPreview.java tools/ReaperBladePreview.java
- * java -Djava.awt.headless=true -cp build/reaper-preview:build/quick/classes:build/quick/base.jar:src/main/resources ReaperBladePreview &lt;bare skin.png&gt; &lt;out.png&gt; guard|draw|string|shed
+ * java -Djava.awt.headless=true -cp build/reaper-preview:build/quick/classes:build/quick/base.jar:src/main/resources ReaperBladePreview &lt;bare skin.png&gt; &lt;out.png&gt; guard|draw|string|shed|case|dress
  * </pre>
  */
 public final class ReaperBladePreview {
@@ -88,6 +88,18 @@ public final class ReaperBladePreview {
                     frames.add(frame(ReaperBladePose.draw(t), t, yaw, 8, "case, tick " + (int)t));
                 }
             }
+            case "dress" -> {
+                cols = 6;
+                bare = PoseRender.skin;
+                coatSkin = ImageIO.read(new File(new File(args[0]).getParentFile(), "ccg_reaper.png"));
+                coatTexture = ImageIO.read(new File(new File(args[0]).getParentFile(), "reaper_coat.png"));
+                for (double t : new double[] {0, 3, 6, 9, 12, 14, 16, 18, 19, 21, 23, 26, 28, 30, 33, 36, 39, 42, 44, 47, 50, 54, 58, 62, 66, 70}) {
+                    frames.add(dress(t, 30, 8, "dress, tick " + (int)t));
+                }
+                for (double t : new double[] {9, 16, 23, 47, 54, 62}) {
+                    frames.add(dress(t, 150, 10, "behind, tick " + (int)t));
+                }
+            }
             default -> throw new IllegalArgumentException(mode);
         }
         sheet(out, frames, cols);
@@ -110,8 +122,36 @@ public final class ReaperBladePreview {
         List<PoseRender.Tri> tris = new ArrayList<>(PoseRender.model(pose));
         ReaperPreview.chest(tris, pose, coatLook);
         double ground = 24.0 - pose.drop;
-        com.hex.kagune.control.outfit.OutfitModels.Model model = com.hex.kagune.control.outfit.OutfitModels.get("formal");
         if (com.hex.kagune.control.client.animation.ReaperCoatPose.drawn(age)) {
+            coat(tris, pose, age, coatLook, ground);
+        }
+        PoseRender.Camera cam = PoseRender.orbit(yaw, pitch, 6.4, 1.0);
+        PoseRender.Canvas canvas = new PoseRender.Canvas(W, H, 2, cam, 0x3A4450);
+        canvas.floor(6, 0x58626C, 0x4E5862);
+        for (PoseRender.Tri t : tris) {
+            canvas.tri(t, true);
+        }
+        if (age >= AgentRules.REAPER_SHED_TICKS) {
+            // His draw after the jacket: the case from behind his back, opened, the blade out of it, the case dropped (as ReaperBladeLayer).
+            List<PoseRender.Tri> lit = new ArrayList<>();
+            List<Boolean> glows = new ArrayList<>();
+            bladeAndCase(pose, age - AgentRules.REAPER_SHED_TICKS, lit, glows);
+            QuinqueMeshPreview.draw(canvas, lit, glows, cam.eye());
+        }
+        BufferedImage img = canvas.image();
+        Graphics2D g = img.createGraphics();
+        g.setColor(Color.WHITE);
+        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        g.drawString(text, 6, 16);
+        g.dispose();
+        PoseRender.skin = bare;
+        PoseRender.slim = false;
+        return img;
+    }
+
+    /** 4.1.37: the coat's pieces ({@code age}: the tick of his taking it off they are drawn at), as ReaperCoatLayer draws them. */
+    static void coat(List<PoseRender.Tri> tris, RigPose pose, double age, boolean coatLook, double ground) {
+        com.hex.kagune.control.outfit.OutfitModels.Model model = com.hex.kagune.control.outfit.OutfitModels.get("formal");
             for (int piece = 0; piece < com.hex.kagune.control.client.animation.ReaperCoatPose.PIECES; piece++) {
                 double[][][] frame = com.hex.kagune.control.client.animation.ReaperCoatPose.frame(piece, age, ground);
                 int bone = com.hex.kagune.control.client.animation.ReaperCoatPose.BONE[piece];
@@ -147,20 +187,50 @@ public final class ReaperBladePreview {
                     }
                 }
             }
+    }
+
+    /**
+     * 4.1.38: {@code t} ticks into putting his jacket back on: the blade back into the golden case and the case put away, then the coat
+     * back on (his look his coat's again under it at the swap).
+     */
+    static BufferedImage dress(double t, double yaw, double pitch, String text) {
+        boolean coatLook = t >= AgentRules.REAPER_DRESS_SWAP;
+        PoseRender.skin = coatLook ? coatSkin : bare;
+        PoseRender.slim = coatLook;
+        RigPose pose = com.hex.kagune.control.client.animation.ReaperDressPose.pose(t);
+        List<PoseRender.Tri> tris = new ArrayList<>(PoseRender.model(pose));
+        ReaperPreview.chest(tris, pose, coatLook);
+        double ground = 24.0 - pose.drop;
+        double coatAge = com.hex.kagune.control.client.animation.ReaperDressPose.coatAge(t);
+        if (coatAge >= 0.0) {
+            coat(tris, pose, coatAge, coatLook, ground);
+        }
+        List<PoseRender.Tri> lit = new ArrayList<>();
+        List<Boolean> glows = new ArrayList<>();
+        double[] fist = {-1.0, 9.0, 0.0};
+        com.hex.kagune.control.client.animation.ReaperDressPose.Held held = com.hex.kagune.control.client.animation.ReaperDressPose.held(pose, t);
+        if (held != null) {
+            for (int side : new int[] {1, -1}) {
+                add(lit, glows, ReaperBladeMesh.goldHalf(side), v -> PoseRender.point(pose, "rightArm", plus(held.origin(), apply(held.turn(),
+                    ReaperBladeMesh.opened(v, side, held.open())))));
+            }
+            if (held.handle()) {
+                add(lit, glows, ReaperBladeMesh.goldHandle(), v -> PoseRender.point(pose, "rightArm", plus(held.origin(), apply(held.turn(), v))));
+            }
+        }
+        float k = com.hex.kagune.control.client.animation.ReaperDressPose.bladeOut(t);
+        if (k >= 0.0F) {
+            double[][] inArm = ReaperBladePose.inArm(pose);
+            add(lit, glows, ReaperBladeMesh.of(), v -> PoseRender.point(pose, "rightArm", plus(fist, apply(inArm,
+                new double[] {k >= 1.0F ? v[0] : ReaperBladeMesh.slid(v[0], k), v[1], v[2]}))));
         }
         PoseRender.Camera cam = PoseRender.orbit(yaw, pitch, 6.4, 1.0);
         PoseRender.Canvas canvas = new PoseRender.Canvas(W, H, 2, cam, 0x3A4450);
         canvas.floor(6, 0x58626C, 0x4E5862);
-        for (PoseRender.Tri t : tris) {
-            canvas.tri(t, true);
+        for (PoseRender.Tri tri : tris) {
+            canvas.tri(tri, true);
         }
-        if (age >= AgentRules.REAPER_SHED_TICKS) {
-            // His draw after the jacket: the case from behind his back, opened, the blade out of it, the case dropped (as ReaperBladeLayer).
-            List<PoseRender.Tri> lit = new ArrayList<>();
-            List<Boolean> glows = new ArrayList<>();
-            bladeAndCase(pose, age - AgentRules.REAPER_SHED_TICKS, lit, glows);
-            QuinqueMeshPreview.draw(canvas, lit, glows, cam.eye());
-        }
+        QuinqueMeshPreview.draw(canvas, lit, glows, cam.eye());
         BufferedImage img = canvas.image();
         Graphics2D g = img.createGraphics();
         g.setColor(Color.WHITE);

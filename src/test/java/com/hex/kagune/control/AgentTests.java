@@ -335,7 +335,7 @@ public final class AgentTests {
         check(brain.indexOf("blade(agent, mind, prey, level, now);", fight) > 0
             && brain.indexOf("blade(agent, mind, prey, level, now);", fight) < brain.indexOf("tactics(agent, mind, prey, level, now)", fight),
             "his blade before any of Dawn's moves");
-        check(brain.contains("if (mind.shedAt != Long.MIN_VALUE || mind.bare) {") && brain.contains("UkakuCrystalCombat.agentBleed(body, agent, AgentRules.REAPER_BLADE_BLEED, now);"),
+        check(brain.contains("if (mind.shedAt != Long.MIN_VALUE || mind.bare || mind.dressAt != Long.MIN_VALUE) {") && brain.contains("UkakuCrystalCombat.agentBleed(body, agent, AgentRules.REAPER_BLADE_BLEED, now);"),
             "his hand empty in his second phase; every hit bleeds");
         check(brain.contains("if (age >= AgentRules.REAPER_CHANGE_TICKS || age < 0L) {"), "nothing lands on him through the jacket and the draw");
         String renderer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java"));
@@ -448,6 +448,69 @@ public final class AgentTests {
             "his blade's blows and his hands' strikes can be met (KaguneClash): set out on the board, met at impact");
     }
 
+    /**
+     * 4.1.38 (the owner: "after the fight ends, I should note, let's say 2 minutes without fighting, Arima puts back his jacket in his
+     * normal"; they chose it reversed, in place): two minutes calm; from his guard with no jump, the case fetched and brought to his fist,
+     * the blade back in it, the case away, the coat back on (worn whole when his look turns back under it), at rest at the end; untouchable,
+     * pinned; his first phase back, whole.
+     */
+    static void dressing() throws IOException {
+        check(AgentRules.REAPER_REDRESS_CALM == 2400 && AgentRules.REAPER_DRESS_TICKS == AgentRules.REAPER_STOW_TICKS + AgentRules.REAPER_DON_TICKS
+            && AgentRules.REAPER_DRESS_SWAP < AgentRules.REAPER_DRESS_TICKS && AgentRules.REAPER_DRESS_SWAP > AgentRules.REAPER_STOW_TICKS,
+            "two minutes out of a fight; the look turns back near the end, under the coat");
+        check(com.hex.kagune.control.npc.CcgAgent.DRESS > com.hex.kagune.control.npc.CcgAgent.END
+            && com.hex.kagune.control.npc.CcgAgent.DRESS < com.hex.kagune.control.npc.ArmRules.STEP, "its swing code clear of every other");
+        RigPose start = com.hex.kagune.control.client.animation.ReaperDressPose.pose(0.0);
+        RigPose guard = com.hex.kagune.control.client.animation.ReaperBladePose.guard(0.0F);
+        check(Math.abs(start.rightArmX - guard.rightArmX) + Math.abs(start.weaponX - guard.weaponX) + Math.abs(start.leftArmX - guard.leftArmX) < 0.02,
+            "it starts from his guard, no jump");
+        // The case: in his left hand from behind his back, at his right fist (as the draw has it) once brought, shut, put away.
+        check(com.hex.kagune.control.client.animation.ReaperDressPose.held(start, 0.0) == null, "no case before he reaches for it");
+        double[] hand = com.hex.kagune.control.client.animation.QuinqueGrip.fist(
+            com.hex.kagune.control.client.animation.ReaperDressPose.pose(com.hex.kagune.control.client.animation.ReaperDressPose.REACH), false, false);
+        check(hand[2] > 1.5, "the case taken from behind his back with his left hand: " + java.util.Arrays.toString(hand));
+        double bring = com.hex.kagune.control.client.animation.ReaperDressPose.BRING;
+        com.hex.kagune.control.client.animation.ReaperDressPose.Held before = com.hex.kagune.control.client.animation.ReaperDressPose.held(
+            com.hex.kagune.control.client.animation.ReaperDressPose.pose(bring - 0.01), bring - 0.01);
+        com.hex.kagune.control.client.animation.ReaperDressPose.Held after = com.hex.kagune.control.client.animation.ReaperDressPose.held(
+            com.hex.kagune.control.client.animation.ReaperDressPose.pose(bring), bring);
+        double jump = Math.abs(before.origin()[0] - after.origin()[0]) + Math.abs(before.origin()[1] - after.origin()[1])
+            + Math.abs(before.origin()[2] - after.origin()[2]);
+        double turn = 0.0;
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 3; c++) {
+                turn += Math.abs(before.turn()[r][c] - after.turn()[r][c]);
+            }
+        }
+        check(jump < 0.2 && turn < 0.05 && Math.abs(after.open() - com.hex.kagune.control.client.animation.ReaperBladePose.CASE_OPEN) < 1.0E-6,
+            "carried to his right fist open, and set there with no jump (" + jump + ", " + turn + ")");
+        check(com.hex.kagune.control.client.animation.ReaperDressPose.bladeOut(bring) == 1.0F
+            && com.hex.kagune.control.client.animation.ReaperDressPose.bladeOut(com.hex.kagune.control.client.animation.ReaperDressPose.IN) < 0.0F
+            && com.hex.kagune.control.client.animation.ReaperDressPose.held(com.hex.kagune.control.client.animation.ReaperDressPose.pose(
+                AgentRules.REAPER_STOW_TICKS - 0.5), AgentRules.REAPER_STOW_TICKS - 0.5) == null,
+            "the blade back in the case, and the case put away before the coat");
+        // The coat: not on him until his hands have it, worn whole by the time his look turns back under it.
+        check(com.hex.kagune.control.client.animation.ReaperDressPose.coatAge(AgentRules.REAPER_STOW_TICKS) < 0.0
+            && com.hex.kagune.control.client.animation.ReaperDressPose.coatAge(AgentRules.REAPER_DRESS_SWAP)
+            < com.hex.kagune.control.client.animation.ReaperCoatPose.PEEL - 3.0, "the coat on him whole before his look turns back");
+        RigPose end = com.hex.kagune.control.client.animation.ReaperDressPose.pose(AgentRules.REAPER_DRESS_TICKS - 0.01);
+        check(Math.abs(end.rightArmX) < 0.02 && Math.abs(end.leftArmX) < 0.02 && end.armHold < 0.05, "at rest at the end, into his first phase");
+        String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+        int dress = brain.indexOf("private static boolean dress(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
+        check(dress > 0 && brain.indexOf("ago(now, mind.foughtAt) < AgentRules.REAPER_REDRESS_CALM", dress) - dress < 600
+            && brain.indexOf("ago(now, mind.hurtAt) < AgentRules.REAPER_REDRESS_CALM", dress) - dress < 700
+            && brain.indexOf("mind.prey != 0", dress) - dress < 500 && brain.indexOf("pin(agent, mind, level);", dress) - dress < 1300
+            && brain.indexOf("agent.getPersistentData().m_128473_(BARE);", dress) - dress < 1700
+            && brain.indexOf("agent.m_21153_(agent.m_21233_());", dress) - dress < 2100
+            && brain.contains("if (dress(agent, mind, level, now)) {")
+            && brain.contains("|| mind.dressAt != Long.MIN_VALUE);"), "calm two minutes, pinned and untouchable, his first phase back and whole");
+        String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
+        String blade = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperBladeLayer.java"));
+        String coatLayer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperCoatLayer.java"));
+        check(client.contains("ReaperDressPose.pose(dressAge)") && blade.contains("agent.swing() == CcgAgent.DRESS")
+            && coatLayer.contains("ReaperDressPose.coatAge(age)"), "drawn: his pose, the blade and case, the coat");
+    }
+
     static void shedding() throws IOException {
         check(AgentRules.reaperLook(AgentRules.REAPER_LOOK) && AgentRules.reaperLook(AgentRules.REAPER_BARE_LOOK) && !AgentRules.reaperLook(0)
             && !AgentRules.reaperLook(AgentRules.REGULAR_LOOKS - 1), "both of his looks are his, no investigator's");
@@ -463,6 +526,7 @@ public final class AgentTests {
             "the look turns bare under the coat, well before it starts coming off");
         coat();
         guarded();
+        dressing();
         check(com.hex.kagune.control.npc.CcgAgent.SHED > com.hex.kagune.control.npc.CcgAgent.GROUND
             && com.hex.kagune.control.npc.CcgAgent.SHED < com.hex.kagune.control.npc.ArmRules.STEP, "the shed's swing code is clear of every other");
         // The move: hands to his lapels in front of his chest, then swept back behind him by the time the look switches, back at rest at the end.

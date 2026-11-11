@@ -72,6 +72,16 @@ public final class AgentRules {
      */
     public static final int REAPER_SHED_TICKS = 46;
     public static final int REAPER_SHED_SWAP = 3;
+    /**
+     * 4.1.38 (the owner: "after the fight ends, I should note, let's say 2 minutes without fighting, Arima puts back his jacket in his
+     * normal"): how long he has to be out of a fight (ticks) before he does; how long putting it back takes (the blade back in the golden case
+     * and the case put away, then the coat on: client.animation.ReaperDressPose), and the tick his look is his coat's again (under the coat).
+     */
+    public static final int REAPER_REDRESS_CALM = 2400;
+    public static final int REAPER_STOW_TICKS = 44;
+    public static final int REAPER_DON_TICKS = 28;
+    public static final int REAPER_DRESS_TICKS = REAPER_STOW_TICKS + REAPER_DON_TICKS;
+    public static final int REAPER_DRESS_SWAP = REAPER_DRESS_TICKS - 3;
     /** 4.1.37: the longest his change waits for him to land (ticks) before it begins wherever he is. */
     public static final int REAPER_SHED_WAIT = 60;
     /** 4.1.28 (the owner: "During this next phase, he gets way faster"): his speed and the rest between blows, the jacket off. */

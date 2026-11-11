@@ -203,6 +203,8 @@ public final class AgentBrain {
         /** 4.1.37: since when his change has waited for him to land; where he stands while he changes (or ends), pinned there. */
         long shedPendingAt = Long.MIN_VALUE;
         Vec3 pinnedAt;
+        /** 4.1.38: when he began putting his jacket back on (none: not now). */
+        long dressAt = Long.MIN_VALUE;
         /** 4.1.29: his blade: the blow of his string under way (when it began, which, whether it has landed). */
         long bladeAt = Long.MIN_VALUE;
         int bladeStep;
@@ -483,6 +485,9 @@ public final class AgentBrain {
         if (shed(agent, mind, level, now)) {
             return; // 4.1.28: the White Reaper taking his jacket off: nothing else until it is off
         }
+        if (dress(agent, mind, level, now)) {
+            return; // 4.1.38: putting it back on, the fight long over: nothing else until it is on
+        }
         if (BikakuDevour.held(agent)) {
             // 3.6.3: being devoured: whatever it was doing stops, its kagune-made weapon back in its case, nothing more.
             if (mind.armOut) {
@@ -639,6 +644,54 @@ public final class AgentBrain {
     }
 
     /**
+     * 4.1.38 (the owner: "after the fight ends, I should note, let's say 2 minutes without fighting, Arima puts back his jacket in his
+     * normal"; asked how, they chose it reversed in place): bare, on the ground, with nobody to fight, struck by nobody and fighting nobody for
+     * {@link AgentRules#REAPER_REDRESS_CALM}, he puts it back on where he stands ({@link CcgAgent#DRESS}: the blade back into the golden case
+     * and the case away behind his back, then the coat back up his arms and onto his shoulders), untouchable and pinned as when he took it
+     * off; under the coat ({@link AgentRules#REAPER_DRESS_SWAP}) his look, his speed and Dawn are his first phase's again and he is whole
+     * (healed: the fight is over). True while he does it.
+     */
+    private static boolean dress(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (mind.rank != AgentRules.Rank.RANK_10 || mind.endAt != Long.MIN_VALUE) {
+            return false;
+        }
+        if (mind.dressAt == Long.MIN_VALUE) {
+            if (!mind.bare || mind.prey != 0 || ago(now, mind.foughtAt) < AgentRules.REAPER_REDRESS_CALM
+                || ago(now, mind.hurtAt) < AgentRules.REAPER_REDRESS_CALM || !agent.m_20096_() || mind.bladeAt != Long.MIN_VALUE
+                || now < mind.dodgeUntil || now < mind.rushUntil) {
+                return false;
+            }
+            mind.dressAt = now;
+            mind.pinnedAt = agent.m_20182_();
+            agent.m_21573_().m_26573_();
+            agent.swing(CcgAgent.DRESS, now);
+            UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.5F, 0.7F);
+            return true;
+        }
+        long age = ago(now, mind.dressAt);
+        pin(agent, mind, level);
+        if (mind.bare && age >= AgentRules.REAPER_DRESS_SWAP) {
+            mind.bare = false;
+            mind.look = AgentRules.REAPER_LOOK;
+            agent.getPersistentData().m_128473_(BARE);
+            agent.dress(mind.look, mind.kind);
+            agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(speed(mind));
+            agent.m_21153_(agent.m_21233_());
+            mind.bladeStep = 0;
+            mind.shattered = false;
+            UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.8F, 0.85F);
+        }
+        if (age >= AgentRules.REAPER_DRESS_TICKS || age < 0L) {
+            mind.dressAt = Long.MIN_VALUE;
+            mind.pinnedAt = null;
+            mind.readyAt = Math.max(mind.readyAt, now + 4L);
+            agent.swing(-1, now);
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * 4.1.37 (the owner: "whenever he's transforming, you can still grab him, which should not be allowed"; then: "he's still very hittable.
      * Like, I told you to make him completely immortal while he's transforming"): the White Reaper while he changes (the jacket, the case,
      * the blade) or in his end. Nothing lands on him then ({@link #attacked}: before vanilla's knockback, red flash and hurt sound, not only
@@ -650,7 +703,8 @@ public final class AgentBrain {
             return false;
         }
         Mind mind = agent.mind;
-        return mind.rank == AgentRules.Rank.RANK_10 && !mind.finishing && (mind.shedAt != Long.MIN_VALUE || mind.endAt != Long.MIN_VALUE);
+        return mind.rank == AgentRules.Rank.RANK_10 && !mind.finishing
+            && (mind.shedAt != Long.MIN_VALUE || mind.endAt != Long.MIN_VALUE || mind.dressAt != Long.MIN_VALUE);
     }
 
     /**
@@ -961,7 +1015,7 @@ public final class AgentBrain {
      */
     private static void arm(CcgAgent agent, Mind mind, long now) {
         ItemStack held = agent.m_21205_();
-        if (mind.shedAt != Long.MIN_VALUE || mind.bare) {
+        if (mind.shedAt != Long.MIN_VALUE || mind.bare || mind.dressAt != Long.MIN_VALUE) {
             // 4.1.28: both hands on his jacket: Dawn put by while he takes it off; 4.1.29: and for good after (his blade is no item: drawn
             // by ReaperBladeLayer, never dropped). Dawn's case still falls with him (drop).
             if (!held.m_41619_()) {
