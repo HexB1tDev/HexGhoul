@@ -35,6 +35,10 @@ public final class CompanionPreview {
             kisses(out);
             return;
         }
+        if (args.length > 1 && args[1].equals("new-kisses")) {
+            newKisses(out);
+            return;
+        }
         if (args.length > 1 && args[1].equals("jealous")) {
             jealous(out);
             return;
@@ -242,6 +246,27 @@ public final class CompanionPreview {
             }
             g.dispose();
             ImageIO.write(sheet, "png", new File(folder, String.format("frame_%03d.png", frame)));
+        }
+    }
+
+    /**
+     * 4.1.15 (the owner: "add more kiss types"): the new kinds only (shy, the morning after, in the rain, a film's, nose to nose, a bow over
+     * their hand), waiting (three-quarter and side), held, pulled in, on Eto, Touka and Ken.
+     */
+    static void newKisses(File out) throws Exception {
+        String textures = "src/main/resources/assets/hexkagune/textures/entity/";
+        com.hex.kagune.control.npc.MoodKiss.Style[] styles = com.hex.kagune.control.npc.MoodKiss.Style.values();
+        for (Object[] who : new Object[][] {{"Eto", "eto/eto.png", true, 0}, {"Touka", "touka/touka.png", true, 2}, {"Ken", "ken/ken.png", false, 1}}) {
+            List<Shot> shots = new ArrayList<>();
+            for (int i = com.hex.kagune.control.npc.MoodKiss.Style.SHY.ordinal(); i < styles.length; i++) {
+                String name = styles[i].name().toLowerCase();
+                shots.add(new Shot(name + ": waiting", kiss(styles[i], EtoGesture.KISS, 12.0, (Integer)who[3]), 28.0));
+                shots.add(new Shot(name + ": waiting, side", kiss(styles[i], EtoGesture.KISS, 12.0, (Integer)who[3]), 85.0));
+                shots.add(new Shot(name + ": held", kiss(styles[i], EtoGesture.BLUSH, 30.0, (Integer)who[3]), 28.0));
+                shots.add(new Shot(name + ": pulled in, side", kiss(styles[i], EtoGesture.PULL, 30.0, (Integer)who[3]), 85.0));
+            }
+            sheet(new File(out, ((String)who[0]).toLowerCase() + "-new-kisses.png"), who[0] + ": the new kisses (4.1.15)", textures + who[1],
+                (Boolean)who[2], shots);
         }
     }
 

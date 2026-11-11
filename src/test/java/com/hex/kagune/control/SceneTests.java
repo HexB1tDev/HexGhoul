@@ -53,6 +53,7 @@ public final class SceneTests {
     public static void main(String[] args) throws IOException {
         parsing();
         Map<String, List<Scene>> books = scripts();
+        relations(books);
         companions(books);
         children(books.getOrDefault("child", List.of()));
         homecomings(books);
@@ -137,6 +138,30 @@ public final class SceneTests {
         check(childErrors.isEmpty(), "a child's words read: " + childErrors);
         check(!SceneBook.parse("child", "scene x\ntemper: grumpy\nsay: a\n> b\n  - c\n> d\n  - e").errors().isEmpty(), "a temperament no child has");
         check(!SceneBook.parse("eto", "scene x\nsay: a\n> b | gift:diamond\n  - c\n> d\n  - e").errors().isEmpty(), "a gift not on the list");
+    }
+
+    /**
+     * 4.1.15 (the owner: "Now add more interactions, like if you're married to touka ayato will respond, and more"): each companion comes up
+     * with something about each of the others the player is with (with_<tie>), her brother about her marriage, the uncle and aunt about the
+     * children, and every one of those flags is a word the scripts may use (and the black rabbit's never names him).
+     */
+    static void relations(Map<String, List<Scene>> books) {
+        java.util.Map<String, java.util.List<String>> expected = java.util.Map.of(
+            "touka", java.util.List.of("with_blackrabbit", "wed_blackrabbit", "kidswith_blackrabbit", "with_ken", "with_eto", "with_general"),
+            "ken", java.util.List.of("wed_touka", "with_touka", "kidswith_touka", "with_eto", "with_blackrabbit", "with_general"),
+            "eto", java.util.List.of("with_touka", "with_ken", "with_blackrabbit", "with_general", "wed_touka"));
+        for (java.util.Map.Entry<String, java.util.List<String>> entry : expected.entrySet()) {
+            for (String flag : entry.getValue()) {
+                boolean found = false;
+                for (Scene scene : books.get(entry.getKey())) {
+                    found |= scene.when().contains(flag) && scene.kind() == Scene.Kind.APPROACH;
+                }
+                check(found, entry.getKey() + " comes up with something when the player is " + flag);
+                check(SceneWords.flagsOf(entry.getKey()).contains(flag), flag + " is a word " + entry.getKey() + "'s script may use");
+            }
+        }
+        check(SceneWords.tieName("ayato").equals("blackrabbit") && SceneWords.tieName("touka").equals("touka")
+            && !FORBIDDEN.matcher(SceneWords.tieName("ayato")).find(), "the black rabbit's tie goes by his mask, never his name");
     }
 
     /** Every script read, with no mistake in it, and nothing in it that names anyone the mod never names. */
@@ -356,6 +381,18 @@ public final class SceneTests {
                             }
                         }
                         check(fits, "child." + scene.id() + ": '" + effect + "' fits one of its ages " + scene.who());
+                        // 4.1.15 (the owner: no son from his teens on dances with his dad or mom): a dance with a teen is a daughter's.
+                        if (moment == ChildMoment.DANCE && (scene.who().contains("teen") || scene.who().contains("adult"))) {
+                            check(scene.when().contains("girl"), "child." + scene.id() + ": a teen's dance is a daughter's");
+                        }
+                    }
+                    for (String reply : option.replies()) {
+                        // 4.1.15: a teen's reply never says it hugs them or leans on them (a son gets a fist bump there, not a hug).
+                        if ((scene.who().contains("teen") || scene.who().contains("adult")) && !scene.when().contains("girl")) {
+                            String r = reply.toLowerCase(java.util.Locale.ROOT);
+                            check(!r.contains("hugs you") && !r.contains("hugs back") && !r.contains("one hug") && !r.contains("leans on you"),
+                                "child." + scene.id() + ": a teen's reply that works for a son too (" + reply + ")");
+                        }
                     }
                 }
             }

@@ -976,15 +976,24 @@ public final class EtoServer {
         long now = level.m_46467_();
         TALKS.remove(player.m_20148_());
         EtoBrain.listen(npc, null, now);
-        NpcMemoryServer.of(player).add(npc.persona().key(), NpcMemory.NIGHTS, 1L).set(npc.persona().key(), NpcMemory.NIGHT_DAY, day(level));
+        // 4.1.15 (the owner: "improve the making love scene"): the night's own captions (NightWords): whoever it is with, their mood, the
+        // weather, a first night or a long marriage, the children asleep down the hall; read before this night is counted.
+        boolean first = NpcMemoryServer.of(player).get(npc.persona().key(), NpcMemory.NIGHTS, 0L) <= 0L;
+        com.hex.kagune.control.npc.scene.SceneContext moment = SceneServer.context(player, npc, c);
+        NpcMemoryServer.of(player).add(npc.persona().key(), NpcMemory.NIGHTS, 1L).set(npc.persona().key(), NpcMemory.NIGHT_DAY, day(level))
+            .set(npc.persona().key(), NpcMemory.NIGHT_AT, now);
         NpcMemoryServer.save(player);
         // 1.3.10: asked for a baby, married, not already carrying: tonight she conceives.
         boolean conceived = conceive(level, player, npc, c);
-        ControlNetwork.sendTo(player, new S2CCutscene(S2CCutscene.NIGHT, conceived ? npc.persona().script().conceived(c) : npc.persona().script().morning(c)));
+        java.util.List<String> captions = com.hex.kagune.control.npc.NightWords.captions(npc.persona().key(), npc.persona().female(), moment.mood(),
+            moment.flags(), first, c.married(), moment.seed());
+        ControlNetwork.sendTo(player, new S2CCutscene(S2CCutscene.NIGHT, com.hex.kagune.control.npc.NightWords.pack(captions,
+            conceived ? npc.persona().script().conceived(c) : npc.persona().script().morning(c))));
         player.m_7292_(new MobEffectInstance(MobEffects.f_19605_, 1200, 1, false, true, true));
         player.m_7292_(new MobEffectInstance(MobEffects.f_19606_, 2400, 0, false, true, true));
         EtoBrain.giddy(npc, player, now);
-        EtoBrain.gesture(npc.mind, EtoGesture.HUM, now);
+        // 4.1.15: waking together: a yawn, a stretch, a lean against them, by the mood they fell asleep in.
+        EtoBrain.gesture(npc.mind, EtoGesture.valueOf(com.hex.kagune.control.npc.NightWords.waking(moment.mood())), now);
         RomanceServer.romanced(player, npc.persona().key());
         EtoBrain.hearts(level, npc, player, 12);
         QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());

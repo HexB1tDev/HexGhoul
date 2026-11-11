@@ -82,7 +82,30 @@ public final class SceneWords {
         // the two of them came back from); "carrying" if the player carries a child of theirs (in arms, on shoulders, by the hand)
         "brought", "found", "carrying",
         // 3.3.8: and who that one is: its temper and its age (Homecoming.flags)
-        "sunnykid", "shykid", "boldkid", "curiouskid", "mischiefkid", "gentlekid", "seriouskid", "babykid", "littlekid", "bigkid"));
+        "sunnykid", "shykid", "boldkid", "curiouskid", "mischiefkid", "gentlekid", "seriouskid", "babykid", "littlekid", "bigkid",
+        // 4.1.15: who else the player is with (SceneServer.relations): dating or married to, married to, a parent with, each of the others;
+        // "taken" if with any of them
+        "taken"), relationFlags());
+    /**
+     * 4.1.15: the companions whose ties to the player every other one can see (with_, wed_, kidswith_ each), by persona key, and what their
+     * flags call them ({@link #tieName}: the black rabbit's by his mask, as the companions' scripts never name him).
+     */
+    public static final Set<String> RELATED = Set.of("eto", "touka", "ken", "ayato", "general", "noro");
+
+    /** 4.1.15: the word a tie to persona {@code key} goes by in the flags ({@code with_<word>}). */
+    public static String tieName(String key) {
+        return "ayato".equals(key) ? "blackrabbit" : key;
+    }
+
+    private static Set<String> relationFlags() {
+        Set<String> out = new java.util.HashSet<>();
+        for (String key : Set.of("eto", "touka", "ken", "ayato", "general", "noro")) {
+            out.add("with_" + tieName(key));
+            out.add("wed_" + tieName(key));
+            out.add("kidswith_" + tieName(key));
+        }
+        return out;
+    }
     /** A child's: a ghoul or not, a girl or a boy, which parent it talks to, the other parent a companion, brothers and sisters, carried. */
     public static final Set<String> CHILD_FLAGS = union(SHARED_FLAGS, Set.of("girl", "boy", "mother", "father", "siblings", "halfsib", "npcparent", "eto", "touka", "ken",
         "carried", "taught",
@@ -106,6 +129,7 @@ public final class SceneWords {
     public static final Set<String> TOGETHER_ONLY = Set.of("cling", "hand", "kiss", "peck", "steal", "sweet", "night");
     /** A child's moments (ChildMoment, lower case) and deeds: picked up, carried on shoulders, by the hand, following, staying, to bed. */
     public static final Set<String> CHILD_EFFECTS = Set.of("hug", "pat", "high_five", "tickle", "peekaboo", "toss", "spin", "arms_up", "wave", "clap",
+        "nuzzle", "boop", "fist_bump", "patty_cake", "dance", // 4.1.15: the new moments (ChildMoment)
         "flower", "up", "down", "shoulders", "hand", "follow", "stay", "bed", "home", "teach", "sad", "proud", "close", "play");
     /** An ally's deeds: following, waiting, done talking. */
     public static final Set<String> ALLY_EFFECTS = Set.of("follow", "stay", "close");
@@ -119,7 +143,8 @@ public final class SceneWords {
     // ---------------------------------------------------------------- what may be put in a line
 
     /** Names a companion's lines may hold: the player, a child of theirs, the children, who she belongs to. */
-    public static final Set<String> COMPANION_NAMES = Set.of("name", "kid", "kids", "partner", "she", "her", "self", "cowife");
+    public static final Set<String> COMPANION_NAMES = Set.of("name", "kid", "kids", "partner", "she", "her", "self", "cowife",
+        "kidwith"); // 4.1.15: a child the player has with another of them (SceneServer.relations)
     /** A child's: what it calls the one it talks to, the other parent (what it calls them, their name), its own name, a brother or sister. */
     public static final Set<String> CHILD_NAMES = Set.of("call", "other", "othername", "me", "sib", "name", "halfsib", "halfmom");
     /** An ally's: the player's name, its own. */
@@ -136,9 +161,12 @@ public final class SceneWords {
         };
     }
 
-    private static Set<String> union(Set<String> a, Set<String> b) {
+    @SafeVarargs
+    private static Set<String> union(Set<String> a, Set<String>... more) {
         java.util.HashSet<String> out = new java.util.HashSet<>(a);
-        out.addAll(b);
+        for (Set<String> b : more) {
+            out.addAll(b);
+        }
         return Set.copyOf(out);
     }
 

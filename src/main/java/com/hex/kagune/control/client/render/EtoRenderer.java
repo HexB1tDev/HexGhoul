@@ -149,6 +149,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
     }
 
+    /** 4.1.15: each companion's pose carried from one gesture into the next (by entity id). */
+    static final java.util.Map<Integer, com.hex.kagune.control.client.animation.PoseFade> FADES = new java.util.HashMap<>();
+
     /** Her pose this frame: her gesture, with her fight's move (1.3.4: a Pale player's, by its own animator) over it (null: none). */
     static RigPose pose(EtoNpc npc, EtoClient.View view, double clock, float partial) {
         if (view == null) {
@@ -165,6 +168,11 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             double age = view.gesture() == com.hex.kagune.control.npc.EtoGesture.PET ? view.gestureAge(clock) : Double.MAX_VALUE;
             own = EtoPose.cradle(age, view.gestureAge(clock));
         }
+        // 4.1.15 (the owner: "better the animation"): from one gesture into the next without dropping back upright in between.
+        if (FADES.size() > 256) {
+            FADES.clear();
+        }
+        own = FADES.computeIfAbsent(npc.m_19879_(), id -> new com.hex.kagune.control.client.animation.PoseFade()).through(own, view.gestureAt(), clock);
         return EtoFight.pose(npc, view.fight(), moment(npc, alive(npc, view, own, partial), clock), clock, partial);
     }
 

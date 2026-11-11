@@ -31,7 +31,8 @@ public final class ChildPage {
 
     /** Every key a parent's page may have (besides "s:", "t:", "m:"). */
     public static final Set<String> FAMILY = Set.of("up", "down", "play", "shoulders", "teach", "talk", "topics", "follow", "stay", "hand", "feed",
-        "bed", "home", "tuck", "stroke", "back");
+        "bed", "home", "tuck", "stroke", "back",
+        "more"); // 4.1.15: the play page's second page of games
 
     /** Romance, as a key or a scene effect: never on a child's page. */
     public static final Set<String> ROMANCE_KEYS = Set.of("kiss", "date", "confess", "marry", "propose", "ask_out", "flirt", "night", "sweet", "tease",
@@ -72,6 +73,11 @@ public final class ChildPage {
 
     /** A parent's main page. */
     public static List<Choice> parent(ChildStage stage, Parent p) {
+        return parent(stage, p, true);
+    }
+
+    /** 4.1.15: a parent's main page for a {@code girl} or a boy: no hand to hold for a son from his teens on ({@link ChildMoment#touched}). */
+    public static List<Choice> parent(ChildStage stage, Parent p, boolean girl) {
         List<Choice> out = new ArrayList<>();
         if (stage.carried() || p.carrying()) {
             add(out, p.carrying() ? "down" : "up", p.carrying() ? "Put you down." : "Pick up.");
@@ -92,7 +98,7 @@ public final class ChildPage {
         }
         // 1.3.21: hand in hand; fed; to bed; home.
         boolean handed = p.carrying() && p.ride() == ChildRules.RIDE_HAND;
-        if (ChildRules.hand(stage) && (!p.carrying() || handed)) {
+        if (ChildRules.hand(stage) && (!p.carrying() && ChildMoment.touched(stage, girl) || handed)) {
             add(out, handed ? "down" : "hand", handed ? "Let go." : "Hold my hand.");
         }
         if (p.food()) {
@@ -111,13 +117,45 @@ public final class ChildPage {
 
     /** A parent's play page: the moments its stage can have, its shoulders, back. */
     public static List<Choice> play(ChildStage stage, boolean carrying, int ride) {
-        List<Choice> out = new ArrayList<>();
+        return play(stage, carrying, ride, 1);
+    }
+
+    /**
+     * 4.1.15 (the owner: "add more kid interactions"): the play page {@code page} (1 or 2): when its stage has more games than one page holds
+     * with its shoulders and back, the first page's last game slot leads on to the rest ({@code more}), and the second page back to the first
+     * ({@code play}).
+     */
+    public static List<Choice> play(ChildStage stage, boolean carrying, int ride, int page) {
+        return play(stage, true, carrying, ride, page);
+    }
+
+    /** 4.1.15: the play page for a {@code girl} or a boy (a son from his teens on: no hugs, pats, nuzzles or dances, {@link ChildMoment#fits}). */
+    public static List<Choice> play(ChildStage stage, boolean girl, boolean carrying, int ride, int page) {
+        List<ChildMoment> games = new ArrayList<>();
         for (ChildMoment moment : ChildMoment.PLAY) {
-            if (moment.fits(stage)) {
-                add(out, "m:" + moment.name(), moment.label());
+            if (moment.fits(stage, girl)) {
+                games.add(moment);
             }
         }
-        if (ChildRules.shoulders(stage)) {
+        boolean shoulders = ChildRules.shoulders(stage);
+        int room = MOST - 1 - (shoulders ? 1 : 0);
+        boolean split = games.size() > room;
+        List<Choice> out = new ArrayList<>();
+        if (split && page >= 2) {
+            for (ChildMoment moment : games.subList(room - 1, games.size())) {
+                add(out, "m:" + moment.name(), moment.label());
+            }
+            add(out, "play", "...The other games.");
+            add(out, "back", "...");
+            return out;
+        }
+        for (ChildMoment moment : split ? games.subList(0, room - 1) : games) {
+            add(out, "m:" + moment.name(), moment.label());
+        }
+        if (split) {
+            add(out, "more", "More games...");
+        }
+        if (shoulders) {
             boolean riding = carrying && ride == ChildRules.RIDE_SHOULDERS;
             add(out, riding ? "down" : "shoulders", riding ? "Down you get." : "Up on my shoulders!");
         }
@@ -127,11 +165,16 @@ public final class ChildPage {
 
     /** A sleeping child's page: its parents may tuck it in ({@code free}: nothing else under way) and stroke its hair; anyone may hush it. */
     public static List<Choice> asleep(boolean parent, boolean free) {
+        return asleep(parent, free, true);
+    }
+
+    /** 4.1.15: the same, {@code touched} as {@link ChildMoment#touched} has it: a son from his teens on doesn't have his hair stroked. */
+    public static List<Choice> asleep(boolean parent, boolean free, boolean touched) {
         List<Choice> out = new ArrayList<>();
         if (parent && free) {
             add(out, "tuck", "*tuck them in*");
         }
-        if (parent) {
+        if (parent && touched) {
             add(out, "stroke", "*stroke their hair*");
         }
         add(out, "back", "Go back to sleep.");

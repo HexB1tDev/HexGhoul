@@ -2892,3 +2892,132 @@ say: A home. *she says it like it's a bit embarrassing* I had one. Once. A littl
 > I'm sorry you lost it. | +2 shy
   - Don't. *she looks at {kid}* Just... let's make another. That's all.
 ignored: *starts sketching a floor plan on the back of an old receipt*
+
+# =====================================================================================================================================
+# 4.1.15 (the owner: "Now add more interactions ... and more"): who else the player is with (SceneServer.relations: with_, wed_, kidswith_)
+# =====================================================================================================================================
+
+scene brother_and_me
+who: together
+when: with_blackrabbit
+weight: 2
+say: *She sets two cups down a little too hard.* So. You and my brother. My actual, idiot, little brother. ...I need a minute.
+say: My brother came by the cafe today. Ordered a coffee. Stared at me. I stared at him. Nobody said your name. It was the loudest silence of my life.
+> Is this okay with you? | +2 -> okay
+> He makes you crazy and so do I. | +1 -> crazy
+page okay
+say: Okay? *She laughs, short.* No. Yes. I don't know. ...He looks less angry lately. If that's you, then... I can't hate it. I want to. I can't.
+> I love you both. Differently. | +3 -> differently
+> I'll never put you two against each other. | +4 forgive hug
+  - ...You'd better not. We've done that enough on our own. *She holds on a little longer than usual.*
+page differently
+say: Differently. *She looks at you over her cup.* ...Fine. But if he gets pancakes, I get pancakes. And you NEVER tell me details. Ever.
+> Never. I promise. | +3 laugh
+  - *She points the coffee spoon at you.* I'm holding you to that. Idiot.
+page crazy
+say: Crazy is the right word. *She rubs her temple.* ...At least he's not alone. He's been alone so long. ...Just don't tell him I said that.
+> Your secret's safe. | +3 shy
+  - Good. Now drink your coffee before it gets cold. ...Thank you. For him.
+ignored: *She grinds the beans much harder than she needs to.*
+
+scene brother_worry
+who: friend
+when: with_blackrabbit
+say: *She grabs your arm the moment you walk in.* You're seeing my brother. Don't lie, he hums now. My brother. HUMS. ...Is he eating? Is he sleeping? Is he hurt?
+> He's eating. Sleeping, sometimes. | +3 -> eating
+> Ask him yourself. | +1 -> ask
+page eating
+say: *She lets go, and some of the fight goes out of her.* ...Good. Okay. Good. If he hurts you, I'll kick him. If you hurt him, I'll kick you harder. Clear?
+> Crystal clear. | +2 kicks
+  - *She nods once.* ...Bring him by the cafe. On a slow day. I won't throw anything. Probably.
+page ask
+say: Ask him? We'd just fight. We always fight. *She looks at the window.* ...Tell him the coffee's on me. He'll know what it means.
+> I'll tell him. | +3 shy
+  - ...Thanks. Now get out before I say something embarrassing.
+ignored: *She polishes the same cup for ten minutes.*
+
+scene sister_in_law
+who: friend
+when: wed_blackrabbit
+weight: 2
+say: *She looks you up and down like she's checking you for damage.* So you married my brother. Welcome to the family. ...I'm sorry. We're a lot.
+> He's worth it. | +3 -> worth
+> Do I call you sis now? | +2 -> sis
+page worth
+say: *She swallows.* ...He is. He always was. He just forgot. *She pushes a cup across the counter.* On the house. Forever. Don't argue.
+> Thank you, Touka. | +3 shy
+  - Don't. You'll make me cry into the espresso and then nobody gets coffee.
+page sis
+say: Call me that in front of him. I want to see his face. *She almost smiles.* ...Okay. You can call me that. Sometimes. Not at work.
+> Deal, sis. | +2 laugh
+  - ...Ugh. I already regret it. Go home to my idiot brother.
+ignored: *She writes "family discount" on a napkin and leaves it on your table.*
+
+scene auntie_touka
+who: anyone
+when: kidswith_blackrabbit
+weight: 3
+say: *She's crouched down eye to eye with {kidwith}.* You've got his scowl. Exactly his scowl. Do it again. ...Oh no. Oh, I love it.
+say: *{kidwith} is asleep on the cafe sofa under her apron. She's glaring at anyone who walks too loud.* Shh. Aunt duty. Whisper or leave.
+> Auntie Touka. It suits you. | +3 -> suits
+> They adore you. | +2 -> adore
+page suits
+say: *She goes pink.* ...It does not. *{kidwith} grabs her finger. She doesn't take it back.* ...Okay. Maybe a little. Don't tell my brother I'm soft.
+> He already knows. | +2 laugh
+  - ...Of course he does. Little rat.
+page adore
+say: They adore the cookies I sneak them. *She smooths {kidwith}'s hair.* ...I'll teach them the good things. How to make coffee. How to kick. In that order.
+> Perfect order. | +3 shy
+  - It is, isn't it? Somebody in this family has to raise them right.
+ignored: *She tucks the apron tighter around {kidwith} and keeps watch.*
+
+scene ken_old
+who: anyone
+when: with_ken
+say: *She's wiping the counter in slow circles.* So you and Ken. ...He still drinks his coffee too hot and pretends it doesn't burn?
+> Every single morning. | +2 -> morning
+> Is that strange for you? | +1 -> strange
+page morning
+say: *Something soft and old crosses her face.* ...Idiot. Some things never change. *She sets a bag of beans in front of you.* His favourite. Don't tell him it's from me.
+> Thank you, Touka. | +3 shy
+  - Just make sure he eats. He forgets. He always forgot.
+page strange
+say: Strange? *She shrugs, too fast.* He's a friend. He was always going to find someone. ...I'm glad it's someone who'll make him laugh. He doesn't laugh enough.
+> I'll make him laugh every day. | +3 -> laugh
+page laugh
+say: ...Good. *She turns to the coffee machine so you can't see her face.* Now order something. You're holding up the line.
+> One of whatever he drinks. | +2 laugh
+  - *She snorts.* Too sweet. Of course. Coming right up.
+ignored: *She watches the door all afternoon, as if someone with white hair might walk in.*
+
+scene owl_wary
+who: anyone
+when: with_eto
+say: *She sets your cup down and doesn't let go of it.* The owl. You're with the owl. ...She tried to kill me. Did she tell you that? She probably made it sound funny.
+> She's changed. | 0 -> changed
+> I'll be careful. | +2 -> careful
+page changed
+say: People like her don't change. They just get better at hiding it. *She lets go of the cup.* ...If I'm wrong, I'll eat my apron. Prove me wrong.
+> I will. | +1 cross
+  - *She crosses her arms.* We'll see. ...Come by after, okay? So I know you're alive.
+page careful
+say: Careful isn't enough with her. *She writes something on a napkin.* My number. If she ever looks at you the wrong way, you call. Day or night.
+> Thank you, Touka. | +3 shy
+  - Don't thank me. I just don't want to have to kick an owl. ...I would, though.
+ignored: *She checks the windows twice before locking up.*
+
+scene dove_general
+who: anyone
+when: with_general
+say: *She stares at you.* A Dove. You're with the GENERAL. The CCG's General. The man whose face is on half the warrants in the ward.
+> He's not what you think. | 0 -> not
+> I didn't plan it. | +1 -> plan
+page not
+say: *She exhales through her nose.* ...Maybe. He did let Anteiku stay open when he could have burned it. I noticed. ...Tell him the coffee's still bad for humans.
+> I'll tell him. | +2 laugh
+  - Tell him I said it nicely. I didn't.
+page plan
+say: Nobody plans these things. *She looks out the window.* ...Just keep your mask in your bag. Always. Promise me.
+> I promise. | +3 shy
+  - Good. ...You're an idiot. A brave one. But an idiot.
+ignored: Doves. Unbelievable. *She slams the register shut.*

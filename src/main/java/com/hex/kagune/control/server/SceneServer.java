@@ -342,6 +342,35 @@ public final class SceneServer {
         return true;
     }
 
+    /**
+     * 4.1.15: the player's ties to every one-of-a-kind companion but {@code speaker}: {@code with_<tie>} for each they are dating or married to,
+     * {@code wed_<tie>} for each married, {@code kidswith_<tie>} for each they have a child with ({kidwith}: that child's name, the first found;
+     * the tie is the persona's key, SceneWords.tieName), and {@code taken} if any of them is a partner at all.
+     */
+    static void relations(ServerLevel level, ServerPlayer player, String speaker, Set<String> flags, Map<String, String> names) {
+        Map<String, com.hex.kagune.control.npc.Romance.Stage> others = UniqueNpcs.partnersOf(level, player, speaker);
+        for (Map.Entry<String, com.hex.kagune.control.npc.Romance.Stage> entry : others.entrySet()) {
+            if (com.hex.kagune.control.npc.scene.SceneWords.RELATED.contains(entry.getKey())) {
+                String tie = com.hex.kagune.control.npc.scene.SceneWords.tieName(entry.getKey());
+                flags.add("with_" + tie);
+                if (entry.getValue() == com.hex.kagune.control.npc.Romance.Stage.MARRIED) {
+                    flags.add("wed_" + tie);
+                }
+            }
+        }
+        if (!others.isEmpty()) {
+            flags.add("taken");
+        }
+        for (Children.Child child : Children.of(level, Pregnancies.player(player.m_20148_()))) {
+            for (String key : com.hex.kagune.control.npc.scene.SceneWords.RELATED) {
+                if (!key.equals(speaker) && child.parent(Pregnancies.npc(key))) {
+                    flags.add("kidswith_" + com.hex.kagune.control.npc.scene.SceneWords.tieName(key));
+                    names.putIfAbsent("kidwith", child.name);
+                }
+            }
+        }
+    }
+
     /** What a scene of hers is picked and filled by: who they are to her, her mood, the hour and the weather, their family. */
     static SceneContext context(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
         ServerLevel level = player.m_284548_();
@@ -453,6 +482,10 @@ public final class SceneServer {
             com.hex.kagune.control.npc.Persona rival = com.hex.kagune.control.npc.Persona.of(others.keySet().iterator().next());
             names.put("cowife", rival == null ? "the other one" : rival.name());
         }
+        // 4.1.15 (the owner: "add more interactions, like if you're married to touka ayato will respond, and more"): who else the player is
+        // with, whatever the speaker is to them: dating ({@code with_<key>}), married ({@code wed_<key>}) or a parent with
+        // ({@code kidswith_<key>}, {kidwith}: one of those children) each of the others, so each can answer it (her brother, his rival...).
+        relations(level, player, npc.persona().key(), flags, names);
         names.put("name", c.name());
         if (c.claimedBy() != null) {
             names.put("partner", c.claimedBy());

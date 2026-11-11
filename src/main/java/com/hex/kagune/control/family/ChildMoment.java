@@ -33,7 +33,18 @@ public enum ChildMoment {
     /** 1.3.21: tucked into its bed: they lean over it, smooth its covers, a hand on its head. */
     TUCK(80, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.0),
     /** 1.3.21: fed from their hand: it eats, munching. */
-    FEED(60, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.85);
+    FEED(60, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.85),
+    // 4.1.15 (the owner: "add more kid interactions"): appended (sent by ordinal).
+    /** 4.1.15: bent down (or in) to nuzzle the top of its head; it ducks its head for it, then beams up at them. */
+    NUZZLE(48, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.62),
+    /** 4.1.15: a finger to the tip of its nose: boop. It jerks back, startled, then giggles and wobbles. */
+    BOOP(34, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD), false, false, 0.72),
+    /** 4.1.15: fists bumped, then both blown apart: a little explosion. */
+    FIST_BUMP(30, mask(ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.9),
+    /** 4.1.15: patty-cake: their own hands clapped, then each other's, four times over. */
+    PATTY_CAKE(80, mask(ChildStage.TODDLER, ChildStage.CHILD), false, false, 0.62),
+    /** 4.1.15: dancing together: both its hands in theirs, swaying side to side, stepping. */
+    DANCE(90, mask(ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN), false, false, 0.85);
 
     public final int ticks;
     private final int stages;
@@ -65,6 +76,26 @@ public enum ChildMoment {
         return this != NONE && (this.stages & 1 << stage.ordinal()) != 0;
     }
 
+    /**
+     * 4.1.15 (the owner: "there's no way a son, like starting from being a teen, there's no way he would dance with his fucking dad or mom.
+     * It's embarrassing ... stop the touching with your fucking son. Like, they don't like to be touched"): true if a child at {@code stage}
+     * can have this moment, {@code girl} or a boy: a son from his teens on has no hugs, pats on the head, nuzzles, dances or tickles (a fist
+     * bump, a high five, food handed over, a wave: all fine).
+     */
+    public boolean fits(ChildStage stage, boolean girl) {
+        return this.fits(stage) && (!this.touchy() || touched(stage, girl));
+    }
+
+    /** 4.1.15: true if this is the parent's hands on the child (a hug, a pat, a nuzzle, a boop, tickles, a dance): what a teenage son won't have. */
+    public boolean touchy() {
+        return this == HUG || this == PAT || this == NUZZLE || this == BOOP || this == TICKLE || this == DANCE;
+    }
+
+    /** 4.1.15: true if a child at {@code stage} ({@code girl}, or a boy) is hugged, patted, held by the hand: anyone but a son from his teens on. */
+    public static boolean touched(ChildStage stage, boolean girl) {
+        return girl || !stage.older();
+    }
+
     /** True while it runs ({@code age} ticks in). */
     public boolean running(double age) {
         return this != NONE && age >= 0.0 && age < this.ticks;
@@ -76,11 +107,11 @@ public enum ChildMoment {
     }
 
     /** What a parent may start from the child's play page, in the order shown. */
-    public static final ChildMoment[] PLAY = {HUG, PAT, HIGH_FIVE, TICKLE, PEEKABOO, TOSS, SPIN};
+    public static final ChildMoment[] PLAY = {HUG, PAT, HIGH_FIVE, TICKLE, PEEKABOO, TOSS, SPIN, NUZZLE, BOOP, FIST_BUMP, PATTY_CAKE, DANCE};
     /** What a child starts on its own, near a parent, now and then. */
     public static final ChildMoment[] OWN = {ARMS_UP, WAVE, CLAP, FLOWER, HUG};
     /** What an NPC parent starts with its child on its own (not in its arms: in its arms, it tosses it). */
-    public static final ChildMoment[] NPC = {HUG, PAT, TICKLE, PEEKABOO, SPIN, HIGH_FIVE, FEED};
+    public static final ChildMoment[] NPC = {HUG, PAT, TICKLE, PEEKABOO, SPIN, HIGH_FIVE, FEED, NUZZLE, BOOP, PATTY_CAKE, DANCE};
 
     /** The play page's words for it. */
     public String label() {
@@ -92,6 +123,11 @@ public enum ChildMoment {
             case PEEKABOO -> "Peekaboo!";
             case TOSS -> "Up you go! *toss them*";
             case SPIN -> "Airplane! *spin them round*";
+            case NUZZLE -> "*nuzzle the top of their head*";
+            case BOOP -> "Boop! *tap their nose*";
+            case FIST_BUMP -> "Fist bump!";
+            case PATTY_CAKE -> "Patty-cake!";
+            case DANCE -> "Dance with me!";
             default -> "";
         };
     }

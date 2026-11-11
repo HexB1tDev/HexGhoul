@@ -1607,7 +1607,7 @@ mood: sleepy sad
 when: night
 say: Can't sleep. ...Can I just sit here with you for a bit? You don't have to talk.
 > Sit with them. | +2 hug
-  - *leans on you a little, quiet* ...Thanks. This helps.
+  - *quiet for a while* ...Thanks. This helps.
 > What's keeping you up? | +2 -> up
 > Try to sleep. | bed
   - Yeah. Okay. ...Night.
@@ -1637,7 +1637,7 @@ who: teen
 mood: scared sad
 say: ...Can I admit something? I had a nightmare. About you not coming back. I know it's stupid.
 > It's not stupid. Come here. | +2 hug
-  - *hugs you, finally, properly* ...Don't tell anyone.
+  - *lets out a long breath* ...Okay. Don't tell anyone I said that.
 > I'll always come back. | +2 pat
   - You can't promise that. ...But thanks for saying it.
 > Just a dream. | sad
@@ -1650,7 +1650,7 @@ mood: missed
 say: Oh. Hey. You're back. ...Took you long enough. I wasn't worried or anything.
 say: You were gone a while. Whatever. ...I saved you some dinner.
 > I missed you too. | +2 hug
-  - Ugh. Fine. One hug. ...Okay, a long one.
+  - Ugh. Don't make it weird. ...Yeah. Me too.
 > You saved me dinner? | +2 pat
   - It's cold now. It's whatever. ...Eat it.
 > Just busy. | sad
@@ -1714,7 +1714,7 @@ mood: sad
 say: I'm fine. Really. ...I'm not fine. Can we not talk about it? Can we just... be here?
 say: *sits alone, hood up, not looking at anyone*
 > Just sit with them. | +2 hug
-  - *after a long while, leans on you* ...Thanks.
+  - *after a long while* ...Thanks. For not saying anything.
 > Want to talk about it? | +2 -> talk
 > Cheer up. | sad
   - Wow. Great advice. Thanks.
@@ -1979,7 +1979,7 @@ prompt: You know I'm proud of you, right?
 who: teen
 say: ...Why are you saying that? Out of nowhere? ...Yeah. I know. ...Thanks. Don't make it a thing.
 > I'll make it a thing. | +2 hug proud
-  - Ugh. Fine. One hug. ...Okay, two.
+  - Ugh. Don't make it weird. ...Okay, maybe a little weird.
 > It's not a thing. | +2 pat
   - Good. ...It's kind of a thing. Thanks.
 
@@ -2633,7 +2633,7 @@ say: We should do that every week. I'm serious. Put it on the calendar. In ink.
 > Every week. In ink. | +2 high_five
   - *grins and high-fives you* You're not getting out of it now.
 > I had fun too. | +2 hug
-  - *rolls its eyes, but hugs you back*
+  - *rolls its eyes, but it's grinning*
 > Don't tell your friends you had fun with me. | +1
   - Too late. I told them. You're cool now. Congratulations.
 ignored: *hums all the way up the stairs*
@@ -2735,7 +2735,7 @@ say: Sorry you had to come out. I'd have been fine! Probably! But it was nice th
 > Probably isn't good enough. | 0
   - *the grin fades a little* ...Yeah. Fair. Sorry.
 > I'll always come. | +2 pat
-  - *bumps its head against your shoulder* I know.
+  - *bumps your shoulder with its fist* I know.
 ignored: *goes off humming, a bit sheepish*
 
 scene teen_found_shy
@@ -2747,7 +2747,7 @@ say: *doesn't meet your eyes* Sorry. I'm bad at saying when things are too much.
 > Tell me next time. Even just a word. | +2 pat
   - ...A word. I can do a word.
 > I'll make you a quiet place here. | +3 hug
-  - *hugs you, fast and tight, before it can change its mind*
+  - *nods, fast, before it can change its mind* ...Okay.
 > You scared me. | 0
   - *flinches* ...I know. I'm sorry.
 ignored: *goes to its room, but leaves the door open a crack*
@@ -2946,7 +2946,7 @@ when: back !home found
 say: I couldn't find my way back. *quietly* Everything out there looks the same. There's no house to see from far away.
 say: Sorry. *kicks the dirt* I thought I knew the way. Without a house there's nothing to aim for.
 > I'll always come for you. | +2 hug
-  - *nods, and leans on you* ...Yeah. I know. Thanks.
+  - *nods, and stays close* ...Yeah. I know. Thanks.
 > We'll mark the way. | +2 proud
   - Like a trail? With stones? *perks up* I'll do it. I'll do the whole thing.
 ignored: *sits close to you by the fire and doesn't wander off again*
@@ -2961,3 +2961,167 @@ say: Other kids have houses. With rooms. I'd want one with a window. Just saying
 > Do you want one? | +1
   - ...Kind of. Somewhere to keep my stuff. Somewhere that's ours.
 ignored: *draws a house in the dirt with a stick: a door, a window, a room at the top*
+
+# =====================================================================================================================================
+# 4.1.15 (the owner: "add more kid interactions"): the new games (nuzzle, boop, fist_bump, patty_cake, dance), and more of their own
+# =====================================================================================================================================
+
+scene baby_boop
+who: baby
+mood: happy bored
+say: *stares cross-eyed at its own nose, very seriously, as if it's never seen it before*
+say: *grabs at your finger, misses, and blinks at you in outrage*
+> Boop its nose. | +1 boop
+  - *goes cross-eyed, sneezes, then shrieks with laughter*
+> Nuzzle its little head. | +1 nuzzle
+  - *sighs a tiny sigh and goes all soft against you*
+> Give it your finger to hold. | +1 pat
+  - *grips your finger with astonishing strength and won't let go*
+ignored: *boops its own nose, by accident, and is amazed*
+
+scene toddler_patty_cake
+who: toddler
+mood: happy bored proud
+say: *holds both hands up at you, palms out, very serious* Pat-cake. Do pat-cake.
+say: *claps its hands, misses, claps again, then looks at you expectantly*
+> Patty-cake, patty-cake! | +2 patty_cake
+  - *claps along wildly, always half a beat late, delighted*
+> Boop! *on its nose* | +1 boop
+  - *gasps, then boops your knee, which is as high as it reaches*
+> Later, sweetheart. | sad
+  - *claps once, sadly, by itself*
+ignored: *plays patty-cake with a stuffed toy, which loses*
+
+scene toddler_dance
+who: toddler
+mood: happy bored
+say: *bobs up and down to music only it can hear, then grabs your hands* Dance! {call}, DANCE!
+say: *stomps in a circle, arms out, singing something with no words*
+> Dance with it. | +2 dance
+  - *stomps all over your feet, shrieking happily, and refuses to stop*
+> Spin it round. | +2 spin
+  - *flies, arms out, laughing so hard it hiccups*
+> Clap along. | +1 clap
+  - *dances harder, for its audience*
+ignored: *keeps dancing anyway, for no one, with great dignity*
+
+scene toddler_nuzzle
+who: toddler
+mood: sleepy sad missed hurt
+say: *leans its whole head against your leg and stays there, not saying anything*
+say: *tugs your sleeve, then just presses its face into your side*
+> Nuzzle the top of its head. | +2 nuzzle
+  - *sighs, very small, and holds on to your leg*
+> Pick it up. | +2 up
+  - *tucks its head under your chin and goes quiet*
+> What's wrong, little one? | +1 -> wrong
+page wrong
+say: *thinks about it very hard* ...Just wanted you.
+> I'm right here. | +2 nuzzle
+  - *nods into your side, satisfied*
+> Want to go home? | +1 home
+  - *nods, and holds your hand the whole way*
+ignored: *holds on to your leg a while longer, then lets go*
+
+scene child_fist_bump
+who: child
+mood: happy proud
+say: I made up a handshake! It's very complicated. There's a fist bump. And an explosion. Do you want to learn it?
+say: *holds out a tiny fist, very solemn* Bump it. Then you have to explode. It's the law.
+> Bump it. Explode. | +2 fist_bump
+  - BOOM! *does the explosion with full sound effects* ...You're a natural, {call}.
+> Teach me the whole thing. | +2 -> whole
+> I'll learn it later. | sad
+  - *slowly lowers the fist* ...It's okay. It'll still be here.
+page whole
+say: Okay. Fist bump. Then elbows. Then you spin. Then... *forgets* ...then fist bump again! And explode!
+> *Do the whole thing.* | +3 fist_bump
+  - *beaming* That was PERFECT. We're the only two people in the world who know that.
+> We should add a dance. | +2 dance
+  - YES. Okay. Okay okay okay. *grabs your hands*
+ignored: *practises the handshake with a tree*
+
+scene child_patty_cake_challenge
+who: child
+mood: bored happy
+say: Patty-cake speed round. I bet you can't keep up. {other} couldn't.
+say: I'm the patty-cake champion of the house. You can challenge me. If you DARE.
+> Challenge accepted. | +2 patty_cake
+  - *faster, faster, faster, both of you laughing too hard to clap* ...Draw. It's a draw. Rematch.
+> I yield to the champion. | +1 -> yield
+page yield
+say: *bows deeply* Thank you. You may bow to the... no, wait. You may give the champion a high five.
+> High five! | +2 high_five
+  - *slaps it so hard you both say "ow"*
+> Boop the champion. | +1 boop
+  - HEY. Champions cannot be booped. ...Do it again.
+ignored: *declares itself champion by default*
+
+scene child_dance_lesson
+who: child
+mood: happy proud bored
+when: !night
+say: I learned a dance! I'm going to teach you. You're going to be bad at it. That's fine.
+say: *does a dance with a great deal of arm in it* Your turn. Copy me.
+> *Dance with them.* | +2 dance
+  - *giggling* No, the OTHER foot. ...Okay, your way is also good. Your way is funnier.
+> Show me again, slowly. | +1 -> again
+page again
+say: *does it again, very slowly and very seriously, narrating every step* ...And then you wiggle. That's the important part.
+> *Wiggle.* | +3 dance
+  - *laughs so hard it has to sit down* ...You're the best dancer. Don't tell anyone I said that.
+> *High five the teacher.* | +1 high_five
+  - *bows, then high-fives you* Thank you. Lessons are free for family.
+ignored: *keeps dancing, a little smaller, by itself*
+
+scene child_bedtime_nuzzle
+who: child
+mood: sleepy scared
+when: night
+say: *standing in the doorway in pyjamas* ...I'm not sleepy. ...I'm a bit sleepy. Can you come check under the bed? Just in case.
+say: *peeks round the door* {call}? ...What if the dark has ghouls in it? ...Nice ones like us. But still.
+> Check under the bed. | +2 -> checked
+> Nothing scary gets past me. | +2 nuzzle
+  - *leans into you, yawning* ...Okay. Okay. I believe you.
+page checked
+say: *watches you very carefully* ...Anything?
+> All clear. Only dust bunnies. | +2 bed
+  - *climbs into bed, satisfied* ...Good. Night night, {call}. Leave the door open a bit.
+> One monster. I ate it. | +3 bed
+  - *giggles into the pillow* ...You did not. ...Did you? ...Night, {call}.
+ignored: *goes back to bed, very fast, past the dark bit*
+
+scene teen_fist_bump
+who: teen
+mood: happy proud bored
+say: *walks past, holds out a fist without looking at you* ...Don't make it a thing.
+say: Hey. So. I passed the thing. The test. ...You can fist bump me. Once. Quietly.
+> *Bump it.* | +2 fist_bump
+  - *the tiniest grin* ...Pshhh. *does the explosion, very small, under the table*
+> I'm so proud of you! | +1 hug
+  - Oh my god. Don't. ...Okay. Thanks. Seriously.
+> What thing? Tell me everything. | +2 -> tell
+page tell
+say: *shrugs, then can't hold it in* ...Top of the class. TOP. Okay, second. But the first one cheated, probably.
+> That's amazing. | +3 fist_bump
+  - *bumps your fist, then looks away, smiling at nothing* ...Yeah. It's okay, I guess.
+ignored: *lowers the fist* ...Whatever. Cool.
+
+scene teen_dance_dare
+who: teen
+mood: bored happy
+# 4.1.15 (the owner: "there's no way a son, like starting from being a teen, there's no way he would dance with his fucking dad or mom"):
+# a daughter's.
+when: home girl
+say: *music blaring from somewhere* Don't. Don't come in here. Don't do the dad dance. Or the mom dance. Or any dance.
+say: I swear, if you dance right now, I'm moving out. ...Okay. One song. ONE.
+> *Do the most embarrassing dance possible.* | +2 dance
+  - *covers its face* NO. ...*laughing, dancing anyway* You're the worst. You're SO the worst.
+> I'll leave you to it. | +1 -> leave
+page leave
+say: *as you go* ...Wait. ...You can stay. If you dance normally. NORMALLY.
+> *Dance normally.* | +3 dance
+  - *rolls eyes, then grabs your hands* ...Okay, that was actually fun. Never tell anyone.
+> *Wave goodbye with a twirl.* | +1 wave
+  - *groans and throws a pillow at the door, grinning*
+ignored: *the music gets louder*

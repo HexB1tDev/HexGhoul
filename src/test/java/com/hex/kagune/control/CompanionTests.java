@@ -89,7 +89,59 @@ public final class CompanionTests {
         check(gap >= 40L && gap <= 200L, "the breath between two is a few seconds: " + gap);
     }
 
+    /**
+     * 4.1.15 (the owner: "improve the making love scene"): the night's captions are each companion's own, say "he" of a man and "she" of a
+     * woman (1.3.10's said "her" of everyone), follow the mood, the weather, a first night, the children down the hall, never run past
+     * NightWords.MOST nor past what a screen holds wrapped, and travel with the morning's words and come apart again whole.
+     */
+    static void nightWords() {
+        String[] keys = {"eto", "touka", "ken", "ayato", "general", "noro", "someone"};
+        boolean[] women = {true, true, false, false, false, false, true};
+        String[] moods = {"happy", "sulky", "jealous", "lonely", "sleepy", "giddy", "clingy", "affectionate", "hungry", "bored"};
+        java.util.List<java.util.Set<String>> moments = java.util.List.of(java.util.Set.of(), java.util.Set.of("rain"), java.util.Set.of("thunder", "rain"),
+            java.util.Set.of("kids"), java.util.Set.of("pregnant", "long"), java.util.Set.of("kids", "away"));
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (int k = 0; k < keys.length; k++) {
+            for (String mood : moods) {
+                for (java.util.Set<String> moment : moments) {
+                    for (int round = 0; round < 12; round++) {
+                        int seed = round * 1237 + round * round * 4099;
+                        for (boolean first : new boolean[] {true, false}) {
+                            java.util.List<String> captions = com.hex.kagune.control.npc.NightWords.captions(keys[k], women[k], mood, moment, first, !first, seed);
+                            check(captions.size() >= 3 && captions.size() <= com.hex.kagune.control.npc.NightWords.MOST, keys[k] + " " + mood + ": 3 to 5 captions");
+                            for (String caption : captions) {
+                                seen.add(caption);
+                                check(!caption.isBlank() && caption.length() <= 140, "a caption a screen holds: " + caption);
+                                if (!women[k]) {
+                                    check(!caption.matches(".*\\b(She|she|Her|her|hers|herself)\\b.*"), keys[k] + "'s night never says she: " + caption);
+                                } else if (!keys[k].equals("touka") && !keys[k].equals("eto")) {
+                                    check(!caption.matches(".*\\b(He|he|His|his|himself)\\b.*"), keys[k] + "'s night never says he: " + caption);
+                                }
+                            }
+                            check(!moment.contains("thunder") || captions.get(1).toLowerCase(java.util.Locale.ROOT).matches(".*(thunder|lightning).*"),
+                                "a stormy night has its thunder");
+                            check(!moment.contains("kids") || moment.contains("away") || captions.stream().anyMatch(c -> c.toLowerCase(java.util.Locale.ROOT).contains("down the hall")),
+                                "the children asleep down the hall");
+                            String packed = com.hex.kagune.control.npc.NightWords.pack(captions, "Morning.\nCoffee?");
+                            check(com.hex.kagune.control.npc.NightWords.captionsOf(packed).equals(captions)
+                                && com.hex.kagune.control.npc.NightWords.wordsOf(packed).equals("Morning.\nCoffee?"), "the captions and the morning travel whole");
+                        }
+                    }
+                }
+            }
+        }
+        check(seen.size() >= 50, "many ways to say it (" + seen.size() + ")");
+        check(com.hex.kagune.control.npc.NightWords.captionsOf("Just the morning.").isEmpty()
+            && com.hex.kagune.control.npc.NightWords.wordsOf("Just the morning.").equals("Just the morning."), "an old night's words are all morning");
+        check(com.hex.kagune.control.npc.NightWords.captions("ken", false, "happy", java.util.Set.of(), true, false, 64).stream()
+            .anyMatch(c -> c.contains("So are his")), "a first night with him: his hands shake too");
+        for (String mood : moods) {
+            check(com.hex.kagune.control.npc.EtoGesture.valueOf(com.hex.kagune.control.npc.NightWords.waking(mood)) != null, "a waking gesture for " + mood);
+        }
+    }
+
     public static void main(String[] args) {
+        nightWords();
         hands();
         turns();
         stranded();
@@ -103,6 +155,7 @@ public final class CompanionTests {
         tolerance();
         moods();
         moodKisses();
+        poseFade();
         wed();
         poses();
         ken();
@@ -966,7 +1019,8 @@ public final class CompanionTests {
     /** 2.2.4: a kiss for every mood: the same lean-in and hold, each mood its own words, wait, body and after. */
     static void moodKisses() {
         com.hex.kagune.control.npc.MoodKiss.Style[] styles = com.hex.kagune.control.npc.MoodKiss.Style.values();
-        check(styles[0] == com.hex.kagune.control.npc.MoodKiss.Style.SWEET && styles.length == 9, "the kinds of kiss (sent by ordinal: sweet first)");
+        check(styles[0] == com.hex.kagune.control.npc.MoodKiss.Style.SWEET && styles.length == 15
+            && styles[9] == com.hex.kagune.control.npc.MoodKiss.Style.SHY, "the kinds of kiss (sent by ordinal: sweet first; 4.1.15's appended)");
         check(com.hex.kagune.control.npc.MoodKiss.of(EtoMood.SULKY) == com.hex.kagune.control.npc.MoodKiss.Style.ANGRY
             && com.hex.kagune.control.npc.MoodKiss.of(EtoMood.JEALOUS) == com.hex.kagune.control.npc.MoodKiss.Style.POSSESSIVE
             && com.hex.kagune.control.npc.MoodKiss.of(EtoMood.HAPPY) == com.hex.kagune.control.npc.MoodKiss.Style.SWEET
@@ -976,7 +1030,39 @@ public final class CompanionTests {
         for (EtoMood mood : EtoMood.values()) {
             used.add(com.hex.kagune.control.npc.MoodKiss.of(mood));
         }
-        check(used.size() == styles.length, "every kind of kiss comes from some mood");
+        check(used.size() == 9, "every mood's kind of kiss comes from some mood");
+        // 4.1.15 (the owner: "add more kiss types and better the animation"): the moment's kisses, under a mood's own.
+        com.hex.kagune.control.npc.MoodKiss.Moment plain = new com.hex.kagune.control.npc.MoodKiss.Moment(false, false, 20L, true, 99);
+        for (EtoMood mood : EtoMood.values()) {
+            for (int roll = 0; roll < 100; roll++) {
+                for (int bits = 0; bits < 16; bits++) {
+                    com.hex.kagune.control.npc.MoodKiss.Moment m = new com.hex.kagune.control.npc.MoodKiss.Moment((bits & 1) != 0, (bits & 2) != 0,
+                        (bits & 4) != 0 ? 0L : 20L, (bits & 8) != 0, roll);
+                    com.hex.kagune.control.npc.MoodKiss.Style style = com.hex.kagune.control.npc.MoodKiss.of(mood, m);
+                    used.add(style);
+                    if (com.hex.kagune.control.npc.MoodKiss.of(mood) != com.hex.kagune.control.npc.MoodKiss.Style.SWEET) {
+                        check(style == com.hex.kagune.control.npc.MoodKiss.of(mood), mood + ": the mood's own kiss comes first, whatever the moment");
+                    } else if (m.morningAfter()) {
+                        check(style == com.hex.kagune.control.npc.MoodKiss.Style.MORNING, mood + ": the morning after");
+                    } else if (m.raining()) {
+                        check(style == com.hex.kagune.control.npc.MoodKiss.Style.RAIN, mood + ": in the rain");
+                    } else if (m.kisses() < com.hex.kagune.control.npc.MoodKiss.SHY_UNTIL && !m.married()) {
+                        check(style == com.hex.kagune.control.npc.MoodKiss.Style.SHY, mood + ": the first few are shy");
+                    }
+                }
+            }
+        }
+        check(used.size() == styles.length, "every kind of kiss comes from some mood or moment");
+        check(com.hex.kagune.control.npc.MoodKiss.of(EtoMood.HAPPY, plain) == com.hex.kagune.control.npc.MoodKiss.Style.SWEET
+            && com.hex.kagune.control.npc.MoodKiss.of(EtoMood.HAPPY, null) == com.hex.kagune.control.npc.MoodKiss.Style.SWEET, "most happy kisses are still the sweet one");
+        int sweet = 0;
+        for (int roll = 0; roll < 100; roll++) {
+            sweet += com.hex.kagune.control.npc.MoodKiss.of(EtoMood.HAPPY, new com.hex.kagune.control.npc.MoodKiss.Moment(false, false, 20L, true, roll))
+                == com.hex.kagune.control.npc.MoodKiss.Style.SWEET ? 1 : 0;
+        }
+        check(sweet >= 50 && sweet <= 70, "a happy kiss is the sweet one more often than not, the others now and then (" + sweet + "%)");
+        check(com.hex.kagune.control.npc.MoodKiss.of(EtoMood.HAPPY, new com.hex.kagune.control.npc.MoodKiss.Moment(false, false, 0L, true, 99))
+            != com.hex.kagune.control.npc.MoodKiss.Style.SHY, "married: never shy again");
         for (com.hex.kagune.control.npc.MoodKiss.Style style : styles) {
             int waits = com.hex.kagune.control.npc.MoodKiss.waits(style);
             check(waits >= 40 && waits <= 400, style + ": a sane wait");
@@ -1026,6 +1112,25 @@ public final class CompanionTests {
                     }
                 }
             }
+            if (style != com.hex.kagune.control.npc.MoodKiss.Style.SWEET) {
+                for (int persona = 0; persona < 3; persona++) {
+                    // 4.1.15 (the owner: "better the animation"): held, or pulled in, it goes on from the pose it was in: never back to
+                    // standing straight first (each phase's clock starts again at 0), and it never jumps more than a little in a tick.
+                    for (EtoGesture[] step : new EtoGesture[][] {{EtoGesture.KISS, EtoGesture.BLUSH}, {EtoGesture.BLUSH, EtoGesture.PULL}}) {
+                        RigPose was = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, style, step[0], 30.0, persona);
+                        RigPose then = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, style, step[1], 0.0, persona);
+                        check(then.lean > 0.25F && Math.abs(then.lean - was.lean) < 0.12F, style + " " + step[0] + " to " + step[1] + " (" + persona
+                            + "): from where it was (" + was.lean + " then " + then.lean + ")");
+                        RigPose last = then;
+                        for (double age = 0.5; age <= 16.0; age += 0.5) {
+                            RigPose next = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, style, step[1], age, persona);
+                            check(Math.abs(next.lean - last.lean) < 0.1F && Math.abs(next.rightArmX - last.rightArmX) < 0.45F
+                                && Math.abs(next.leftArmX - last.leftArmX) < 0.45F, style + " " + step[1] + " (" + persona + ") at " + age + ": smooth");
+                            last = next;
+                        }
+                    }
+                }
+            }
             RigPose other = EtoPose.gesture(EtoGesture.WAVE, 20.0, 0, 0);
             check(com.hex.kagune.control.client.animation.MoodKissPose.apply(other, style, EtoGesture.WAVE, 20.0, 0) == other, style + ": only the kiss is changed");
         }
@@ -1042,6 +1147,33 @@ public final class CompanionTests {
             "the angry won't wait long; the sleepy forget to stop");
         check(com.hex.kagune.control.npc.MoodKiss.after(com.hex.kagune.control.npc.MoodKiss.Style.ANGRY) == EtoGesture.ANGRY
             && com.hex.kagune.control.npc.MoodKiss.after(com.hex.kagune.control.npc.MoodKiss.Style.SWEET) == null, "after: arms crossed when angry; the usual when sweet");
+    }
+
+    /**
+     * 4.1.15 (the owner: "better the animation"): a companion goes from one gesture's pose into the next one's (the kiss into the blush
+     * after it; a gesture into none) without dropping back upright in between; the same gesture is drawn as it is.
+     */
+    static void poseFade() {
+        com.hex.kagune.control.client.animation.PoseFade fade = new com.hex.kagune.control.client.animation.PoseFade();
+        RigPose kiss = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, com.hex.kagune.control.npc.MoodKiss.Style.MOVIE, EtoGesture.KISS, 40.0, 0);
+        check(fade.through(kiss, 100L, 140.0) == kiss && fade.through(kiss, 100L, 141.0) == kiss, "the same gesture: drawn as it is");
+        RigPose after = EtoPose.gesture(EtoGesture.KISSED, 0.0, 0, 0);
+        RigPose first = fade.through(after, 141L, 141.0);
+        check(first != null && Math.abs(first.lean - kiss.lean) < 0.01F, "a new gesture begins from the pose before it (" + first.lean + ", was " + kiss.lean + ")");
+        float lastLean = first.lean;
+        for (double clock = 141.25; clock <= 141.0 + com.hex.kagune.control.client.animation.PoseFade.TICKS; clock += 0.25) {
+            RigPose now = fade.through(EtoPose.gesture(EtoGesture.KISSED, clock - 141.0, 0, 0), 141L, clock);
+            check(Math.abs(now.lean - lastLean) < 0.08F, "blended smoothly at " + clock);
+            lastLean = now.lean;
+        }
+        RigPose settled = EtoPose.gesture(EtoGesture.KISSED, 10.0, 0, 0);
+        check(fade.through(settled, 141L, 151.0) == settled, "once blended: the new gesture's own pose");
+        // Into no gesture: eased down to standing, then none at all.
+        RigPose down = fade.through(null, 200L, 200.0);
+        check(down != null && Math.abs(down.lean - settled.lean) < 0.01F, "into none: from where it was");
+        check(fade.through(null, 200L, 206.0) == null, "then none");
+        com.hex.kagune.control.client.animation.PoseFade fresh = new com.hex.kagune.control.client.animation.PoseFade();
+        check(fresh.through(null, 5L, 1.0) == null && fresh.through(kiss, 6L, 2.0) != null, "nothing before: nothing to blend from");
     }
 
     /** 2.2.0: a partner lets go of a first blow or a missed kiss; only more, close together, put them out; sorry always helps. */

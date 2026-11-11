@@ -57,7 +57,18 @@ public final class MomentPreview {
             new Shot("hand in hand (teen)", ChildMoment.NONE, ChildStage.TEEN, 0, ChildRules.RIDE_HAND, 20),
             new Shot("tucked in", ChildMoment.TUCK, ChildStage.CHILD, 24, -2, 70),
             new Shot("feeding (toddler)", ChildMoment.FEED, ChildStage.TODDLER, 12, -1, 60),
-            new Shot("feeding (teen, eating)", ChildMoment.FEED, ChildStage.TEEN, 34, -1, 60));
+            new Shot("feeding (teen, eating)", ChildMoment.FEED, ChildStage.TEEN, 34, -1, 60),
+            // 4.1.15: the new games
+            new Shot("nuzzle (toddler)", ChildMoment.NUZZLE, ChildStage.TODDLER, 22, -1, 65),
+            new Shot("nuzzle (child)", ChildMoment.NUZZLE, ChildStage.CHILD, 22, -1, 70),
+            new Shot("boop! (baby)", ChildMoment.BOOP, ChildStage.BABY, 12, -1, 60),
+            new Shot("boop: giggles (child)", ChildMoment.BOOP, ChildStage.CHILD, 20, -1, 65),
+            new Shot("fist bump (child)", ChildMoment.FIST_BUMP, ChildStage.CHILD, 10, -1, 70),
+            new Shot("fist bump: boom (teen)", ChildMoment.FIST_BUMP, ChildStage.TEEN, 17, -1, 70),
+            new Shot("patty-cake: own clap", ChildMoment.PATTY_CAKE, ChildStage.TODDLER, 22, -1, 60),
+            new Shot("patty-cake: palms", ChildMoment.PATTY_CAKE, ChildStage.CHILD, 31, -1, 60),
+            new Shot("dance (toddler)", ChildMoment.DANCE, ChildStage.TODDLER, 30, -1, 60),
+            new Shot("dance (child)", ChildMoment.DANCE, ChildStage.CHILD, 45, -1, 60));
         int w = 300;
         int h = 340;
         int columns = 5;

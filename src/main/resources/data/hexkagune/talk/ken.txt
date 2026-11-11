@@ -2736,3 +2736,116 @@ say: A house. *he says it quietly* With a room full of books. A table we all fit
 > Start with the books. | +2 laugh
   - *he laughs* I already have the books. Hundreds. They've just been waiting for shelves.
 ignored: *spends the evening drawing a little house in the margin of his book*
+
+# =====================================================================================================================================
+# 4.1.15 (the owner: "Now add more interactions ... and more"): who else the player is with (SceneServer.relations: with_, wed_, kidswith_)
+# =====================================================================================================================================
+
+scene touka_wed
+who: wary friend
+when: wed_touka
+weight: 2
+say: *He's holding a cup he isn't drinking.* You married Touka-chan. *He smiles, and only half of it reaches his eye.* ...I'm happy for her. Truly. She deserves someone who stays.
+> Are you okay, Ken? | +2 -> okay
+> You'll always be her friend. | +3 -> friend
+page okay
+say: I am. Mostly. *He looks into the coffee.* There's a version of me that might have stayed. He didn't. ...Make her laugh. She has a wonderful laugh when she forgets to hide it.
+> I promise. | +3 -> promise
+page promise
+say: *He sets the cup down at last.* Thank you. ...And if you ever need someone to watch the kids while you take her somewhere nice, I read very good bedtime stories.
+> I'll hold you to that. | +3 laugh
+  - Please do. I've been practising the voices.
+page friend
+say: *He nods slowly.* Her friend. Yes. That's a good thing to be. ...She once kicked me across a room for not eating. I'd like to return the favour someday. In spirit.
+> She'd kick you again. | +2 laugh
+  - *He laughs, a real one.* She would. She absolutely would.
+ignored: *He goes back to his book, but he doesn't turn a page for a long time.*
+
+scene touka_and_me
+who: together
+when: with_touka
+weight: 2
+say: *He's tidying the same shelf for the third time.* Touka-chan told me. About you and her. And... you and me. She said it like a weather report. Then she threw a dishcloth at me.
+> Does it bother you? | +2 -> bother
+> She threw it at me too. | +2 -> cloth
+page bother
+say: Bother? *He thinks about it honestly, the way he does.* ...No. It's strange. I keep waiting to be jealous and instead I'm... relieved. You're both looked after. By each other.
+> And you're looked after too. | +4 hug
+  - *He leans into you with a soft breath.* ...I am. I keep forgetting that. Thank you for reminding me.
+page cloth
+say: *He laughs into his sleeve.* She has excellent aim. ...I think that's her way of saying she approves. Or that she'll kill us both. With Touka-chan it's often both.
+> Probably both. | +3 laugh
+  - Probably both. *He takes your hand.* Let's be very, very nice to her this week.
+ignored: *He straightens the shelf again, smiling to himself.*
+
+scene uncle_ken
+who: anyone
+when: kidswith_touka
+weight: 2
+say: *{kidwith} is in his lap with a picture book. He's doing every voice. The dragon voice is genuinely frightening.* ...Oh. Hello. We're at the good part.
+say: *He's teaching {kidwith} to grind coffee beans. Most of the beans are on the floor.* ...We're learning. Touka-chan would be horrified. Don't tell her.
+> Can I listen too? | +2 -> listen
+> You're good with them. | +3 -> good
+page listen
+say: *He makes room on the sofa without stopping the story.* ...And the dragon said, "I am not hungry for gold. I am hungry for company." *{kidwith} gasps. So do you.*
+> That's a good dragon. | +3 -> dragon
+page dragon
+say: It's my favourite kind. *He closes the book softly; {kidwith} is asleep.* ...Thank you for letting me be part of this. I didn't think I'd ever get to.
+> You're family, Ken. | +4 shy
+  - *He presses his lips together and nods, very fast.* ...Okay. Okay. Excuse me. I'm fine.
+page good
+say: I had a lot of time to think about what kind of grown-up I'd want around if I'd been small. *He wipes bean dust off {kidwith}'s nose.* ...This kind. I hope.
+> You are. | +3 shy
+  - *He looks down, pleased and embarrassed.* ...Thank you. I'll take that.
+ignored: *The story goes on in the next room, voices and all.*
+
+scene the_author
+who: anyone
+when: with_eto
+say: *He closes his book on one finger.* You're with Eto. *He says the name carefully, like it might go off.* Do you know what she writes? Who she is, when she writes it?
+> I know. | +1 -> know
+> Tell me. | +2 -> tell
+page know
+say: Then you know more than most. *He looks at the cover in his hands.* ...Her books saved my life once. And she nearly ended it, once. Both of those are true at the same time.
+> People are complicated. | +2 -> complicated
+page complicated
+say: They are. She is especially. *He smiles a little.* ...If she ever writes about you, read it twice. The second time, read only what she left out.
+> That's good advice. | +2 read
+  - It's the only advice I have about her. Be safe.
+page tell
+say: It isn't mine to tell. *He hesitates.* ...Ask her about her pen name sometime. When she's in a good mood. And when you're standing near a door.
+> Now I'm nervous. | +2 laugh
+  - Good. Nervous is the right amount around her. ...She's never boring, at least.
+ignored: *He opens his book again, but he's reading the same line over and over.*
+
+scene rabbit_kun
+who: anyone
+when: with_blackrabbit
+say: *He looks up from his book, surprised and then fond.* Touka-chan's little brother? Really? ...He tried very hard to kill me once. I think he's softer than he looks.
+> He is. Don't tell him. | +3 -> soft
+> You two fought? | +1 -> fought
+page soft
+say: *He laughs quietly.* I wouldn't dare. ...Make sure he eats something that isn't spite. He runs on spite. It isn't a balanced diet.
+> I'll cook for him. | +2 laugh
+  - He'll complain the whole time and eat every bite. That's how you know it worked.
+page fought
+say: Many times. Mostly he won. Then I stopped losing. *He rubs the back of his neck.* ...We're fine now. He still glares at me. I think that's affection, for him.
+> It definitely is. | +2 laugh
+  - Then I'm very loved. Terrifyingly loved.
+ignored: *He smiles at the page, thinking about something else.*
+
+scene the_general
+who: anyone
+when: with_general
+say: *He sets his book down very carefully.* The General. Of the CCG. *He takes a breath.* ...I'm not judging. I'm only trying to imagine the two of you at a dinner table. I keep imagining handcuffs.
+> He's kinder than his uniform. | +2 -> kinder
+> We're very happy. | +2 -> happy
+page kinder
+say: Most people are kinder than what they wear. *He smiles faintly.* ...I've met him, once, across a street. He lowered his weapon first. I've never told anyone that.
+> I'll tell him you remember. | +3 shy
+  - *He hesitates.* ...Yes. Tell him. And tell him thank you.
+page happy
+say: Then I'm happy for you. Genuinely. *He picks the book back up.* ...If he ever needs a book recommendation that isn't a field manual, I'm available.
+> He'd love that. | +2 laugh
+  - He'd hate it. And then he'd read it twice. They always do.
+ignored: *He goes back to his book, still picturing handcuffs.*

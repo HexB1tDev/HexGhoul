@@ -26,10 +26,76 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class CutsceneOverlay {
     /** One script: how long it runs (seconds), when it is all black and when it starts to clear, its cues and its captions. */
-    record Script(double length, double dark, double wake, Object[][] cues, Object[][] captions, double wordsAt, double fade, double[] flashes) {
+    record Script(double length, double dark, double wake, Object[][] cues, Object[][] captions, double wordsAt, double fade, double[] flashes,
+                  boolean warm, int flashColour) {
         Script(double length, double dark, double wake, Object[][] cues, Object[][] captions, double wordsAt) {
             this(length, dark, wake, cues, captions, wordsAt, 0.8, new double[0]);
         }
+
+        Script(double length, double dark, double wake, Object[][] cues, Object[][] captions, double wordsAt, double fade, double[] flashes) {
+            this(length, dark, wake, cues, captions, wordsAt, fade, flashes, false, 0x8A0010);
+        }
+    }
+
+    /** 4.1.15: how long each of the night's captions shows (seconds), and when the first comes. */
+    static final double CAPTION_TIME = 2.7;
+    static final double FIRST_CAPTION = 2.2;
+
+    /**
+     * 4.1.15 (the owner: "improve the making love scene"): the night as its captions have it (NightWords, chosen on the server for whoever it
+     * is with): a candle's warm glow as the room goes dark and the candle goes out, the sheets, two heartbeats quickening and then slowing into
+     * step, the rain on the window or the thunder if the captions have them, each caption in turn, the morning's words, and the dawn coming back
+     * pale with the birds.
+     */
+    static Script night(java.util.List<String> captions) {
+        int n = captions.size();
+        double end = FIRST_CAPTION + n * CAPTION_TIME;
+        double wordsAt = end + 0.3;
+        double wake = wordsAt + 2.6;
+        double length = wake + 2.4;
+        java.util.List<Object[]> cues = new java.util.ArrayList<>();
+        cues.add(new Object[] {1.6, "minecraft", "block.candle.extinguish", 0.8F, 1.0F});
+        cues.add(new Object[] {2.6, "minecraft", "block.wool.step", 0.55F, 0.8F});
+        // Two heartbeats quickening through the second and third captions, then slowing into one.
+        double beat = FIRST_CAPTION + CAPTION_TIME;
+        double gap = 0.7;
+        for (int i = 0; i < 7 && beat < end - 0.4; i++) {
+            cues.add(new Object[] {beat, "minecraft", "entity.warden.heartbeat", 0.4F + 0.02F * i, 1.2F + 0.06F * i});
+            beat += gap;
+            gap = Math.max(0.42, gap - 0.06);
+        }
+        cues.add(new Object[] {Math.max(beat, end - 1.6), "minecraft", "block.wool.step", 0.45F, 0.7F});
+        cues.add(new Object[] {end - 0.6, "minecraft", "entity.warden.heartbeat", 0.3F, 0.95F});
+        boolean rain = false;
+        boolean thunder = false;
+        for (String caption : captions) {
+            String lower = caption.toLowerCase(java.util.Locale.ROOT);
+            rain |= lower.contains("rain");
+            thunder |= lower.contains("thunder") || lower.contains("lightning");
+        }
+        java.util.List<Double> flashes = new java.util.ArrayList<>();
+        if (rain || thunder) {
+            for (double at = 2.0; at < wake; at += 1.9) {
+                cues.add(new Object[] {at, "minecraft", "weather.rain", 0.18F, 0.9F});
+            }
+        }
+        if (thunder) {
+            double at = FIRST_CAPTION + CAPTION_TIME + 0.5;
+            flashes.add(at);
+            cues.add(new Object[] {at + 0.3, "minecraft", "entity.lightning_bolt.thunder", 0.25F, 0.7F});
+        }
+        // Dawn: the rooster the night has always had (a vanilla sound the owner's pack keeps: SfxTests.KEPT_VANILLA).
+        cues.add(new Object[] {wake + 0.2, "minecraft", "entity.chicken.ambient", 0.25F, 0.7F});
+        cues.sort(java.util.Comparator.comparingDouble(cue -> (Double)cue[0]));
+        Object[][] shown = new Object[n][];
+        for (int i = 0; i < n; i++) {
+            shown[i] = new Object[] {FIRST_CAPTION + i * CAPTION_TIME, FIRST_CAPTION + (i + 1) * CAPTION_TIME - 0.15, captions.get(i)};
+        }
+        double[] flashAt = new double[flashes.size()];
+        for (int i = 0; i < flashAt.length; i++) {
+            flashAt[i] = flashes.get(i);
+        }
+        return new Script(length, 1.6, wake, cues.toArray(new Object[0][]), shown, wordsAt, 0.7, flashAt, true, 0xDDE4FF);
     }
 
     static final Script SURGERY = new Script(10.0, 1.5, 8.5, new Object[][] {
@@ -206,6 +272,14 @@ public final class CutsceneOverlay {
         playing = script == S2CCutscene.NIGHT ? NIGHT : script == S2CCutscene.BIRTH ? BIRTH : script == S2CCutscene.TORTURE ? TORTURE
             : script == S2CCutscene.AYATO_KAKUJA ? AYATO_KAKUJA : script == S2CCutscene.NORO ? NORO : SURGERY;
         words = said == null ? "" : said;
+        if (script == S2CCutscene.NIGHT) {
+            // 4.1.15: the night's own captions, if the server chose them (NightWords); the morning's words after them.
+            java.util.List<String> captions = com.hex.kagune.control.npc.NightWords.captionsOf(said);
+            words = com.hex.kagune.control.npc.NightWords.wordsOf(said);
+            if (!captions.isEmpty()) {
+                playing = night(captions);
+            }
+        }
         began = System.nanoTime();
         played = 0;
         Minecraft.m_91087_().m_91152_(null);
@@ -271,25 +345,65 @@ public final class CutsceneOverlay {
         if (alpha > 0) {
             graphics.m_280509_(0, 0, width, height, alpha << 24);
         }
+        if (script.warm()) {
+            // 4.1.15: a candle's amber as the room goes dark, the dawn's pale gold as it comes back.
+            float glow = t < script.dark() ? (float)Math.sin(Math.PI * Math.min(1.0, t / script.dark())) : 0.0F;
+            float dawn = t > script.wake() ? 1.0F - dark(script, t) : 0.0F;
+            int amber = Math.round(80 * glow);
+            if (amber > 0) {
+                graphics.m_280509_(0, 0, width, height, amber << 24 | 0xFF9440);
+            }
+            int gold = Math.round(70 * (float)Math.sin(Math.PI * Math.min(1.0, dawn)));
+            if (gold > 0) {
+                graphics.m_280509_(0, 0, width, height, gold << 24 | 0xFFE2B8);
+            }
+        }
         int red = Math.round(150 * flash(script, t));
         if (red > 0) {
-            graphics.m_280509_(0, 0, width, height, red << 24 | (script == AYATO_KAKUJA ? 0xBFD4FF : 0x8A0010)); // 4.0.0: his crystal's white
+            graphics.m_280509_(0, 0, width, height, red << 24 | (script == AYATO_KAKUJA ? 0xBFD4FF : script.flashColour())); // 4.0.0: his crystal's white
         }
+        int room = Math.max(120, width - 60);
         for (Object[] caption : script.captions()) {
             float shown = clear(t, (Double)caption[0], (Double)caption[1], script.fade());
             if (shown > 0.02F) {
                 int a = Math.max(5, Math.round(255 * shown));
-                graphics.m_280137_(minecraft.f_91062_, (String)caption[2], width / 2, height / 2 - 4, a << 24 | 0xB8A8B0);
+                // 4.1.15: a long caption wrapped to the screen, centred.
+                java.util.List<String> lines = wrap(minecraft.f_91062_, (String)caption[2], room);
+                for (int i = 0; i < lines.size(); i++) {
+                    graphics.m_280137_(minecraft.f_91062_, lines.get(i), width / 2, height / 2 - 4 + (i * 2 - (lines.size() - 1)) * 6, a << 24 | 0xB8A8B0);
+                }
             }
         }
         float said = clear(t, script.wordsAt(), script.length() - 0.3);
         if (said > 0.02F && !words.isEmpty()) {
             int a = Math.max(5, Math.round(255 * said));
-            String[] lines = words.split("\n");
-            for (int i = 0; i < lines.length; i++) {
-                graphics.m_280137_(minecraft.f_91062_, lines[i], width / 2, height / 2 - 4 + (i - (lines.length - 1) / 2) * 12, a << 24 | 0xE8D8DC);
+            java.util.List<String> lines = new java.util.ArrayList<>();
+            for (String line : words.split("\n")) {
+                lines.addAll(wrap(minecraft.f_91062_, line, room));
+            }
+            for (int i = 0; i < lines.size(); i++) {
+                graphics.m_280137_(minecraft.f_91062_, lines.get(i), width / 2, height / 2 - 4 + (i * 2 - (lines.size() - 1)) * 6, a << 24 | 0xE8D8DC);
             }
         }
+    }
+
+    /** 4.1.15: {@code text} broken into lines no wider than {@code width} (at its spaces; a word longer than a line keeps its own). */
+    static java.util.List<String> wrap(net.minecraft.client.gui.Font font, String text, int width) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.split(" ")) {
+            String tried = line.length() == 0 ? word : line + " " + word;
+            if (line.length() > 0 && font.m_92895_(tried) > width) {
+                out.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = new StringBuilder(tried);
+            }
+        }
+        if (line.length() > 0) {
+            out.add(line.toString());
+        }
+        return out;
     }
 
     private static void sound(Minecraft minecraft, String namespace, String path, float volume, float pitch) {

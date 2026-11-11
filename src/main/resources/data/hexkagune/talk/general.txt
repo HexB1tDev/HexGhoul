@@ -125,3 +125,77 @@ page off
 say: *He considers this as if it were an order from above.* ...Off duty. *He takes his hand off the table edge and, after a moment's deliberation, puts it over yours.* ...Like this?
 > Exactly like this. | +4 hand
   - *He nods, satisfied, and doesn't move it for the rest of the evening.*
+
+# =====================================================================================================================================
+# 4.1.15 (the owner: "if you're married to touka ayato will respond, and more"): who else the player is with (SceneServer.relations)
+# =====================================================================================================================================
+
+scene rabbit_file
+who: anyone
+when: with_touka
+say: *He doesn't look up from the folder.* Kirishima. The Rabbit. Her file has been on my desk for six years. ...I'm told she's yours. Or you're hers.
+> Will that be a problem? | 0 -> problem
+> You never caught her. | +1 -> caught
+page problem
+say: *He closes the folder, slowly.* It would be. If I were still looking. *He slides it into a drawer and locks it.* ...I've misplaced it. Paperwork. Terrible thing.
+> Thank you, General. | +3 -> thanks
+page thanks
+say: *He clears his throat, reddening at the ears.* I haven't done anything. I've lost a file. ...Tell her the coffee in the 20th ward is still atrocious.
+> She'll say the same about yours. | +2 laugh
+  - *A very small smile.* ...She'd be right.
+page caught
+say: No. *He almost sounds proud.* She was always one step ahead of my best squad. ...Look after her. People that fast are usually running from something.
+> I will. | +2 bow
+  - Good. *He opens another report.* Dismissed.
+ignored: *The drawer stays locked.*
+
+scene owl_file
+who: anyone
+when: with_eto
+say: *He stops dead in the corridor.* The One-Eyed Owl. *He looks around, then lowers his voice.* I'm going to pretend I didn't hear that. I'm very good at pretending. It's half the job.
+> She's not what the reports say. | 0 -> reports
+> Are you going to arrest me? | +1 -> arrest
+page reports
+say: The reports say she levelled a ward. *He rubs his eyes.* ...The reports also say I'm a cold man. Reports aren't always the whole story. Be careful anyway.
+> I will. | +2 bow
+  - Good. And if you see her before I do, tell her I'm still waiting for her to turn herself in. Politely.
+page arrest
+say: Arrest you? *He looks almost offended.* For poor judgement? I'd have to arrest half my officers. ...Just don't bring her into my building.
+> No promises. | +2 laugh
+  - *He sighs, long-suffering.* ...Of course not.
+ignored: *He straightens his tie and walks on, very fast.*
+
+scene king_file
+who: anyone
+when: with_ken
+say: *He taps a photograph on his desk: white hair, an eyepatch.* The One-Eyed King. He spared four of my officers last winter. They talk about it. ...You're with him?
+> He's gentle, really. | +1 -> gentle
+> Does that change anything? | 0 -> change
+page gentle
+say: Gentle. *He looks at the photograph a long time.* ...I'd like to believe that. Tell him four families had their people home for the holidays. He should know that.
+> I'll tell him. | +3 -> tell
+page tell
+say: *He clears his throat.* Good. ...And tell him if he spares five next winter, I'll start to worry about my career.
+> He'll take that as a challenge. | +2 laugh
+  - *He very nearly laughs.* ...Heaven help me.
+page change
+say: It changes what I hope. Not what I'm allowed to do. *He turns the photo face down.* ...That's the honest answer. You deserve that much.
+> Thank you for honesty. | +2 bow
+  - It's the only thing in this office that isn't classified.
+ignored: *He turns the photograph face down, gently.*
+
+scene rabbit_brother_file
+who: anyone
+when: with_blackrabbit
+say: *He reads a report, then reads it again.* Kirishima Ayato. The Black Rabbit. Aogiri. He put three of my investigators in the hospital in March. ...And you're seeing him.
+> He's changed. | 0 -> changed
+> They'll heal. | -1 -> heal
+page changed
+say: Has he. *He sets the report aside.* ...There have been fewer reports this season. I assumed he was hurt. Perhaps he's simply... busy. With you.
+> Something like that. | +2 laugh
+  - *He goes faintly red.* ...I didn't need the details. Dismissed.
+page heal
+say: They will. *His jaw tightens.* ...That's not the point. Ask him to stop. For your sake as much as theirs. Men who hurt people don't stay safe to love.
+> I'll ask him. | +2 bow
+  - Thank you. I'd rather not meet him again. Neither would my investigators.
+ignored: *He files the report under "pending", which is where he files things he can't bring himself to act on.*

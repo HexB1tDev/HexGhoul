@@ -30,7 +30,52 @@ public final class MoodKiss {
         /** Starving: the eye open, a bite at the end. */
         HUNGRY,
         /** Bored: dodges the first try, laughing, then a real one, then off. */
-        TEASING
+        TEASING,
+        // 4.1.15 (the owner: "add more kiss types and better the animation"): appended (sent by ordinal). Not moods: moments, and the
+        // happy kiss's other ways; a mood's own kiss always comes first ({@link #of(EtoMood, Moment)}).
+        /** The first few, not yet married: careful, a cheek offered, hands that don't know where to go; then hiding their face. */
+        SHY,
+        /** The morning after a night together: slow, rumpled, a stretch in the middle of it. */
+        MORNING,
+        /** Rain falling on them: face tipped up into it, laughing, then a soaked kiss, then a twirl. */
+        RAIN,
+        /** Like the end of a film: on her toes, a foot popped up behind her; his, a dip. */
+        MOVIE,
+        /** Nose to nose, rubbing side to side, giggling. */
+        NOSE,
+        /** A bow over their hand, a kiss on the knuckles. */
+        GALLANT
+    }
+
+    /** 4.1.15: the moment a kiss comes in: rain where they stand, the morning after a night together, how many kisses so far, wed, a roll (0..99). */
+    public record Moment(boolean raining, boolean morningAfter, long kisses, boolean married, int roll) {
+    }
+
+    /** 4.1.15: kisses before this one that are still shy ones (not yet married). */
+    public static final long SHY_UNTIL = 3L;
+    /** 4.1.15: how long after a night together it is still the morning after (ticks: about five minutes). */
+    public static final long MORNING_AFTER = 6000L;
+
+    /**
+     * 4.1.15: the kiss for {@code mood} at {@code moment}: the mood's own if it has one (sulking is still an angry kiss in the rain); else the
+     * morning after, the rain, the first shy few; else now and then a film's, a nose rub or a bow over their hand; else the sweet one.
+     */
+    public static Style of(EtoMood mood, Moment moment) {
+        Style moody = of(mood);
+        if (moody != Style.SWEET || moment == null) {
+            return moody;
+        }
+        if (moment.morningAfter()) {
+            return Style.MORNING;
+        }
+        if (moment.raining()) {
+            return Style.RAIN;
+        }
+        if (moment.kisses() < SHY_UNTIL && !moment.married()) {
+            return Style.SHY;
+        }
+        int roll = Math.floorMod(moment.roll(), 100);
+        return roll < 14 ? Style.MOVIE : roll < 28 ? Style.NOSE : roll < 40 ? Style.GALLANT : Style.SWEET;
     }
 
     /** The kiss for {@code mood}. */
@@ -53,6 +98,7 @@ public final class MoodKiss {
         return switch (style) {
             case ANGRY -> 70;
             case SLEEPY -> 240;
+            case MORNING -> 200;
             case DESPERATE -> 220;
             default -> EtoRules.KISS_WAIT;
         };
@@ -72,6 +118,11 @@ public final class MoodKiss {
             case SLEEPY -> EtoGesture.LEAN;
             case HUNGRY -> EtoGesture.LICK;
             case TEASING -> EtoGesture.HOP;
+            case SHY -> EtoGesture.SHY;
+            case MORNING -> EtoGesture.STRETCH;
+            case RAIN -> EtoGesture.TWIRL;
+            case NOSE -> EtoGesture.GIGGLE;
+            case GALLANT -> EtoGesture.BOW;
             default -> null;
         };
     }
@@ -82,6 +133,9 @@ public final class MoodKiss {
             case ANGRY -> 0.4;
             case GIDDY, TENDER -> 1.6;
             case DESPERATE, POSSESSIVE -> 1.3;
+            case RAIN, MOVIE -> 1.5;
+            case NOSE -> 1.3;
+            case SHY, MORNING, GALLANT -> 1.2;
             default -> 1.0;
         };
     }
@@ -100,6 +154,12 @@ public final class MoodKiss {
             case SLEEPY -> name + " leans in, half asleep, swaying...";
             case HUNGRY -> name + " leans in, kakugan glowing, lips parted...";
             case TEASING -> name + " leans in with a sly little smile...";
+            case SHY -> name + " glances at you, away, back... and leans in, very carefully...";
+            case MORNING -> name + " leans in, hair a mess, still warm from sleep...";
+            case RAIN -> name + " tips " + pos + " face up into the rain, laughing, then leans in...";
+            case MOVIE -> name + " leans in like the last scene of a film...";
+            case NOSE -> name + " leans in until your noses touch, grinning...";
+            case GALLANT -> name + " takes your hand and bows over it...";
         };
     }
 
@@ -162,6 +222,61 @@ public final class MoodKiss {
                 case "general" -> new String[] {"*steps back, the corner of his mouth moving* Too slow, recruit.", "Hm. You telegraph. Again."};
                 case "ayato" -> new String[] {"*smirks and steps back* Too slow. Again.", "Ha. That all you've got?"};
                 default -> new String[] {"*laughs and steps back* You were faster than I thought.", "*grins* Okay, okay. You win. This time."};
+            };
+            case SHY -> switch (key) {
+                case "eto" -> new String[] {"*pulls back fast, pink to the ears* ...I've written a hundred of those. That was nothing like any of them.",
+                    "*hides behind her notebook* Don't look at me. I'm revising."};
+                case "touka" -> new String[] {"*bright red, staring at the floor* ...That didn't happen. ...Okay. It happened.",
+                    "*kisses your cheek and steps straight back* Shut up. Don't say anything."};
+                case "general" -> new String[] {"*clears his throat, ears red* ...That was unprofessional. ...Do it again sometime.",
+                    "*straightens his collar twice* I have commanded whole squads. This is harder."};
+                case "ayato" -> new String[] {"*looking anywhere but at you* ...Whatever. It was fine. It was- shut up.", "*ears going red* Don't tell my sister."};
+                default -> new String[] {"*rubs the back of his neck, smiling at the ground* ...Sorry. I'm not very good at this yet.",
+                    "*a shy little laugh* ...My heart's going really fast."};
+            };
+            case MORNING -> switch (key) {
+                case "eto" -> new String[] {"*mumbles against your mouth* Morning. You snore. Charmingly. Mostly.",
+                    "*stretches like a cat* Breakfast. Then more of that. Or the other way round."};
+                case "touka" -> new String[] {"*grumbling* Coffee first. ...Okay, that first. Then coffee.", "*hair everywhere* Don't laugh at my hair. ...Morning."};
+                case "general" -> new String[] {"*his voice still rough with sleep* ...Good morning. The bureau can wait an hour.",
+                    "*half a smile* I slept. Actually slept. ...Your fault."};
+                case "ayato" -> new String[] {"*yawns* ...Morning. Don't look at me, I look terrible.", "*not letting go* Five more minutes. Not a request."};
+                default -> new String[] {"*smiles, still half asleep* Good morning. ...I could get used to waking up like this.", "*yawns into it* Mm. Morning. Coffee's on me."};
+            };
+            case RAIN -> switch (key) {
+                case "eto" -> new String[] {"*laughing, soaked* Every romance novel ever written, and they were right about this one.",
+                    "*wringing out her bandages* Worth it. Completely worth it."};
+                case "touka" -> new String[] {"*pushing wet hair out of her face* ...Okay. That was actually kind of perfect. Don't make it weird.",
+                    "Idiot. We're soaked. ...Again?"};
+                case "general" -> new String[] {"*rain dripping off his cap* ...Thirty years of procedure, and not one manual covers this.",
+                    "*makes no move to get out of the rain* Stay a moment longer."};
+                case "ayato" -> new String[] {"*shakes the rain out of his hair, grinning* ...Don't tell anyone I liked that.", "We're soaked. ...Whatever. Worth it."};
+                default -> new String[] {"*laughing, rain running down his face* We should get inside. ...In a minute.", "*brushes wet hair off your forehead* I'll remember this one."};
+            };
+            case MOVIE -> switch (key) {
+                case "eto" -> new String[] {"*her foot pops up behind her* ...And scene. Roll the credits.", "*sighs, theatrically* Five stars. Six."};
+                case "touka" -> new String[] {"*her foot lifts before she can stop it* ...That was involuntary. It doesn't count.", "*mortified* Did my foot just- don't answer that."};
+                case "general" -> new String[] {"*straightens up slowly* ...I saw that in a film once. I always wanted to.", "*a rare, real smile* Was that adequate?"};
+                case "ayato" -> new String[] {"*smirks* What? I've seen movies.", "*pulls back, very pleased with himself* ...Yeah. I'm good at that."};
+                default -> new String[] {"*pulls back, a little breathless* I've wanted to do that since the first time I saw you.", "*laughs* Too much? ...Not too much."};
+            };
+            case NOSE -> switch (key) {
+                case "eto" -> new String[] {"*rubs her nose against yours, giggling* Nose kisses. I read about them. Research.", "*bumps your nose with hers* Boop. That's a word now."};
+                case "touka" -> new String[] {"*nose to nose, trying not to smile* ...This is stupid. ...Do it again.",
+                    "*rubs her nose against yours and looks away fast* Don't say it's cute."};
+                case "general" -> new String[] {"*nose against yours, startled into a laugh* ...Where did you learn that?", "*very solemn, nose to nose* Absurd. ...Again."};
+                case "ayato" -> new String[] {"*scrunches his nose against yours* ...What is this. ...Fine. It's nice.", "*nose to nose, scowling, failing* Stop smiling."};
+                default -> new String[] {"*rubs his nose against yours, laughing* That's my favourite kind.", "*grins, nose to nose* Hi."};
+            };
+            case GALLANT -> switch (key) {
+                case "eto" -> new String[] {"*kisses your knuckles with a flourish* My liege. ...I've always wanted to say that.",
+                    "*curtsies, terribly* Your hand, and your heart. In that order."};
+                case "touka" -> new String[] {"*kisses your hand quickly, glaring* ...If anyone saw that, you're dead.",
+                    "*mutters into your knuckles* ...You looked like you needed it. Shut up."};
+                case "general" -> new String[] {"*bows over your hand, every inch the officer* An honour. As always.", "*kisses your knuckles, very correct* At your service."};
+                case "ayato" -> new String[] {"*kisses your knuckles, then drops your hand fast* ...Don't make that face. People do that.",
+                    "*bows, sarcastic, then not sarcastic at all* ...Yours."};
+                default -> new String[] {"*bows over your hand and kisses your knuckles* Too old-fashioned? I liked it.", "*a little bow* May I have the rest of the evening too?"};
             };
         };
         if (lines == null) {

@@ -60,8 +60,19 @@ public final class MoodKissPose {
             return own;
         }
         float t = (float)age;
-        return pose(style, Math.floorMod(persona, 3), phase, t).scale(EtoPose.ease(t / 6.0F));
+        int who = Math.floorMod(persona, 3);
+        RigPose now = pose(style, who, phase, t);
+        if (phase == 0) {
+            return now.scale(EtoPose.ease(t / 6.0F));
+        }
+        // 4.1.15 (the owner: "better the animation"): held, or pulled in, from the pose they were already in, never from standing straight
+        // (each phase's clock starts again at 0: before, the body snapped upright and leant in all over again).
+        float k = EtoPose.ease(t / BLEND);
+        return k >= 1.0F ? now : pose(style, who, phase - 1, t).scale(1.0F - k).add(now, k);
     }
+
+    /** 4.1.15: ticks to go from one phase of a kiss to the next (waiting, held, pulled in). */
+    static final float BLEND = 8.0F;
 
     /** Eto's (2.2.4's callers). */
     public static RigPose apply(RigPose own, MoodKiss.Style style, EtoGesture gesture, double age) {
@@ -280,10 +291,232 @@ public final class MoodKissPose {
                     p.headX = -EtoPose.PULL_LEAN - 0.06F;
                 }
             }
+            case SHY -> shy(p, persona, phase, t);
+            case MORNING -> morning(p, persona, phase, t);
+            case RAIN -> rain(p, persona, phase, t);
+            case MOVIE -> movie(p, persona, phase, t);
+            case NOSE -> nose(p, persona, phase, t);
+            case GALLANT -> gallant(p, persona, phase, t);
             default -> {
             }
         }
         return p;
+    }
+
+    // ---------------------------------------------------------------- 4.1.15: the new ones (the owner: "add more kiss types")
+
+    /**
+     * Shy: Eto's, hands behind her back, rocking on her heels, her cheek turned to be kissed; Touka's, fists at her sides, her face turned
+     * hard away, trembling; Ken's, a hand behind his head, his head bowed. Held, a hand finds their shoulder (Ken's, their waist).
+     */
+    static void shy(RigPose p, int persona, int phase, float t) {
+        boolean blush = phase == 1;
+        boolean pull = phase == 2;
+        switch (persona) {
+            case TOUKA -> {
+                lean(p, pull ? 0.52F : blush ? 0.48F : 0.38F, -0.04F);
+                if (blush || pull) {
+                    right(p, pull ? AROUND : SHOULDER);
+                } else {
+                    right(p, FIST);
+                }
+                left(p, FIST);
+                p.headY = blush || pull ? -0.18F : -0.45F;
+                p.roll = 0.01F * (float)Math.sin(t * 2.0);
+            }
+            case KEN -> {
+                lean(p, pull ? 0.5F : blush ? 0.45F : 0.36F, -0.12F); // head bowed
+                if (blush || pull) {
+                    both(p, pull ? HOLD : WAIST);
+                } else {
+                    right(p, SHEEPISH);
+                    left(p, LIMP);
+                }
+                p.headZ = 0.1F;
+            }
+            default -> {
+                lean(p, pull ? EtoPose.PULL_LEAN : blush ? 0.5F : 0.42F, 0.04F);
+                if (pull) {
+                    both(p, AROUND);
+                } else {
+                    right(p, blush ? SHOULDER : BEHIND);
+                    left(p, BEHIND);
+                }
+                p.headY = blush || pull ? 0.12F : 0.3F; // the cheek offered
+                p.drop = -0.3F * (float)Math.abs(Math.sin(t * 0.12));
+                p.rightLegX = blush || pull ? 0.0F : -0.15F * (float)Math.sin(t * 0.12); // a toe scuffing the floor
+            }
+        }
+    }
+
+    /**
+     * The morning after: Eto's, a slow stretch with one arm up high at her side, swaying, her head heavy; Touka's, arms wrapped round
+     * herself (the blanket), grumpy; Ken's, a mug held at his chest, a hand at their waist.
+     */
+    static void morning(RigPose p, int persona, int phase, float t) {
+        boolean blush = phase == 1;
+        boolean pull = phase == 2;
+        float sway = (float)Math.sin(t * 0.05);
+        switch (persona) {
+            case TOUKA -> {
+                lean(p, pull ? 0.5F : blush ? 0.46F : 0.4F, -0.02F);
+                right(p, blush ? SHOULDER : pull ? AROUND : new float[] {-0.9F, 0.3F, -0.7F});
+                left(p, pull ? WAIST : new float[] {-0.9F, 0.3F, -0.7F}); // arms wrapped round herself (the blanket)
+                p.headZ = -0.1F;
+                p.roll = 0.02F * sway;
+            }
+            case KEN -> {
+                lean(p, pull ? 0.5F : blush ? 0.48F : 0.42F, 0.0F);
+                right(p, pull ? new float[] {-1.0F, 0.2F, 0.38F} : new float[] {-0.9F, -0.25F, 0.05F});
+                left(p, pull ? new float[] {-1.0F, 0.2F, 0.38F} : WAIST);
+                p.headZ = 0.14F + 0.04F * sway;
+                p.roll = 0.02F * sway;
+            }
+            default -> {
+                lean(p, (pull ? EtoPose.PULL_LEAN : blush ? 0.5F : 0.44F) + 0.03F * sway, -0.02F);
+                if (blush || pull) {
+                    both(p, pull ? AROUND : WAIST);
+                } else {
+                    float down = EtoPose.ease((t - 26.0F) / 18.0F); // the stretch, then the arm comes down
+                    right(p, -2.9F + (LIMP[0] + 2.9F) * down, 0.1F * (1.0F - down), 0.4F + (LIMP[2] - 0.4F) * down);
+                    left(p, LIMP);
+                }
+                p.headZ = 0.22F + 0.05F * sway;
+            }
+        }
+    }
+
+    /**
+     * In the rain: Eto's, arms out wide catching it, her face tipped up into it, then down to them; Ken's, his hands at their waist, his head
+     * back laughing at the sky, then in; Touka's, hands in her pockets, scowling at the rain, then giving up on it.
+     */
+    static void rain(RigPose p, int persona, int phase, float t) {
+        boolean blush = phase == 1;
+        boolean pull = phase == 2;
+        float up = 0.3F * (1.0F - EtoPose.ease((t - 18.0F) / 20.0F)); // the face up into the rain, then down to them
+        switch (persona) {
+            case TOUKA -> {
+                lean(p, pull ? 0.52F : blush ? 0.48F : 0.4F, 0.02F);
+                right(p, pull ? AROUND : blush ? SHOULDER : new float[] {0.2F, 0.0F, -0.02F});
+                left(p, pull ? WAIST : new float[] {0.2F, 0.0F, -0.02F});
+                p.headY = blush || pull ? 0.0F : -0.25F * (1.0F - EtoPose.ease((t - 10.0F) / 20.0F));
+                p.headZ = -0.08F;
+            }
+            case KEN -> {
+                lean(p, pull ? 0.52F : blush ? 0.46F : 0.4F, blush || pull ? 0.02F : up);
+                both(p, pull ? new float[] {-1.0F, 0.2F, 0.38F} : WAIST);
+                p.headZ = 0.12F;
+            }
+            default -> {
+                lean(p, pull ? EtoPose.PULL_LEAN : blush ? 0.52F : 0.46F, blush || pull ? 0.04F : up + 0.04F);
+                if (blush || pull) {
+                    both(p, pull ? AROUND : SHOULDER);
+                    p.drop = pull ? -0.5F : 0.0F;
+                } else {
+                    both(p, -0.55F, 0.0F, 0.95F); // out wide, palms to the rain
+                    p.headY = 0.1F * (float)Math.sin(t * 0.08);
+                }
+                p.headZ = 0.18F;
+            }
+        }
+    }
+
+    /**
+     * Like a film: Eto's, on her toes, her arms over their shoulders, a foot popped up behind her; Touka's the same, smaller, grudging, one
+     * hand on their shoulder; Ken's, the dip: leaning right over them, an arm low round their back, a step forward.
+     */
+    static void movie(RigPose p, int persona, int phase, float t) {
+        boolean blush = phase == 1;
+        boolean pull = phase == 2;
+        float pop = EtoPose.ease(t / 14.0F);
+        switch (persona) {
+            case TOUKA -> {
+                lean(p, pull ? 0.52F : blush ? 0.5F : 0.48F, 0.04F);
+                right(p, pull ? AROUND : SHOULDER);
+                left(p, LIMP);
+                p.rightLegX = (blush || pull ? 0.55F : 0.4F * pop);
+                p.drop = -0.3F;
+                p.headZ = -0.12F;
+            }
+            case KEN -> {
+                lean(p, pull ? 0.74F : blush ? 0.72F : 0.68F, -0.15F);
+                right(p, HOLD);
+                left(p, pull ? HOLD : WAIST);
+                p.rightLegX = -0.35F;
+                p.leftLegX = 0.3F;
+                p.headZ = 0.2F;
+            }
+            default -> {
+                lean(p, pull ? EtoPose.PULL_LEAN : blush ? 0.54F : 0.5F, 0.06F);
+                both(p, AROUND);
+                p.leftLegX = blush || pull ? 0.95F : 0.75F * pop; // the foot pop
+                p.drop = -0.6F;
+                p.headZ = 0.2F;
+            }
+        }
+    }
+
+    /**
+     * Nose to nose, rubbing side to side: Eto's, her hands in theirs low between them, bobbing, giggling; Ken's, his hands on their shoulders;
+     * Touka's, hands behind her back, quick little rubs. Held, slower.
+     */
+    static void nose(RigPose p, int persona, int phase, float t) {
+        boolean blush = phase == 1;
+        boolean pull = phase == 2;
+        float rub = (float)Math.sin(t * (blush || pull ? 0.25 : 0.45));
+        switch (persona) {
+            case TOUKA -> {
+                lean(p, pull ? 0.54F : 0.5F, 0.0F);
+                both(p, pull ? AROUND : BEHIND);
+                p.headY = 0.18F * (float)Math.sin(t * 0.55);
+                p.headZ = -0.1F;
+            }
+            case KEN -> {
+                lean(p, pull ? 0.54F : 0.5F, -0.04F);
+                both(p, pull ? WAIST : SHOULDER);
+                p.headY = 0.22F * rub;
+            }
+            default -> {
+                lean(p, pull ? EtoPose.PULL_LEAN : 0.56F, 0.0F);
+                if (pull) {
+                    both(p, AROUND);
+                } else {
+                    both(p, -0.75F, 0.0F, 0.08F); // her hands in theirs, low between them
+                }
+                p.headY = 0.28F * rub;
+                p.drop = -0.3F - 0.3F * (float)Math.abs(Math.sin(t * 0.3));
+            }
+        }
+    }
+
+    /**
+     * A bow over their hand: Eto's, a theatrical curtsy, one foot back, her other hand out at her side holding her skirt; Ken's, a deep bow,
+     * his other hand behind his back; Touka's, quick, grudging, glancing aside. Held, the face comes up to them; pulled in, up into it.
+     */
+    static void gallant(RigPose p, int persona, int phase, float t) {
+        boolean blush = phase == 1;
+        boolean pull = phase == 2;
+        float down = blush ? -0.1F : 0.0F; // held: looking up at them now, not at the hand
+        switch (persona) {
+            case TOUKA -> {
+                lean(p, 0.5F, pull ? 0.04F : blush ? down : -0.25F);
+                right(p, pull ? WAIST : new float[] {-1.05F, 0.05F, 0.06F});
+                left(p, pull ? SHOULDER : FIST);
+                p.headY = pull || blush ? 0.0F : -0.25F;
+            }
+            case KEN -> {
+                lean(p, pull ? 0.5F : 0.7F, pull ? 0.04F : blush ? down : -0.45F);
+                right(p, pull ? WAIST : new float[] {-1.0F, 0.0F, 0.06F});
+                left(p, pull ? WAIST : BEHIND);
+            }
+            default -> {
+                lean(p, pull ? EtoPose.PULL_LEAN : 0.62F, pull ? 0.06F : blush ? down : -0.35F);
+                right(p, pull ? WAIST : new float[] {-0.95F, 0.0F, 0.08F});
+                left(p, pull ? AROUND : new float[] {-0.25F, 0.0F, 0.75F}); // her skirt held out
+                p.leftLegX = pull ? 0.0F : 0.35F; // a foot back
+                p.drop = pull ? 0.0F : 0.8F; // the dip of a curtsy
+            }
+        }
     }
 
     /**

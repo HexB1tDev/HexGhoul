@@ -478,7 +478,7 @@ public final class ChildBrain {
      */
     public static boolean start(ChildNpc npc, ChildMoment moment, LivingEntity partner, long now) {
         Mind mind = npc.mind;
-        if (mind == null || mind.stage == null || !moment.fits(mind.stage) || mind.target != 0 || busy(mind, now) || !partner.m_6084_()) {
+        if (mind == null || mind.stage == null || !moment.fits(mind.stage, girl(npc)) || mind.target != 0 || busy(mind, now) || !partner.m_6084_()) {
             return false;
         }
         if (Conversation.in(npc) != null) {
@@ -721,10 +721,16 @@ public final class ChildBrain {
         if (npc.m_217043_().m_188500_() < 0.12) {
             ChildMoment[] own = ChildMoment.OWN;
             ChildMoment pick = own[npc.m_217043_().m_188503_(own.length)];
-            if (pick.fits(stage) && start(npc, pick, parent, now)) {
+            if (pick.fits(stage, girl(npc)) && start(npc, pick, parent, now)) {
                 mind.nextOwn = now + 1200L + npc.m_217043_().m_188503_(1800);
             }
         }
+    }
+
+    /** 4.1.15: true if {@code npc} is a girl (a son from his teens on has no hugs, pats, nuzzles, dances or hand held: ChildMoment.touched). */
+    static boolean girl(ChildNpc npc) {
+        Children.Child child = npc.m_9236_() instanceof ServerLevel level ? Children.get(level, npc.childId()) : null;
+        return child != null && child.genome().gender().female();
     }
 
     /** 1.3.20: back from far off: it runs to them and hugs them (a baby claps). */
@@ -732,8 +738,10 @@ public final class ChildBrain {
         if (mind.stage == null || busy(mind, now) || mind.carrier != null || Engaged.busy(parent, npc.m_19879_(), now)) { // 3.2.2: one at a time
             return;
         }
-        if (ChildMoment.HUG.fits(mind.stage)) {
+        if (ChildMoment.HUG.fits(mind.stage, girl(npc))) {
             start(npc, ChildMoment.HUG, parent, now);
+        } else if (ChildMoment.HUG.fits(mind.stage)) {
+            start(npc, ChildMoment.WAVE, parent, now); // 4.1.15: a son from his teens on: a wave, not a hug
         } else if (ChildMoment.CLAP.fits(mind.stage)) {
             start(npc, ChildMoment.CLAP, parent, now);
         }

@@ -148,6 +148,10 @@ final class ParentCare {
                 case HIGH_FIVE -> "*high-fives " + name + "*";
                 case TOSS -> "*tosses " + name + " up and catches them*";
                 case FEED -> "*feeds " + name + " a bite, wiping " + "their mouth after*";
+                case NUZZLE -> "*nuzzles the top of " + name + "'s head*";
+                case BOOP -> "*boops " + name + " on the nose* ...Got it.";
+                case PATTY_CAKE -> "*plays patty-cake with " + name + ", losing on purpose*";
+                case DANCE -> "*takes " + name + "'s hands and dances with them, badly*";
                 default -> "";
             };
             if (!line.isEmpty()) {
@@ -207,7 +211,7 @@ final class ParentCare {
             && !ChildBrain.carried(nearest)) {
             com.hex.kagune.control.family.ChildMoment[] all = com.hex.kagune.control.family.ChildMoment.NPC;
             com.hex.kagune.control.family.ChildMoment pick = all[npc.m_217043_().m_188503_(all.length)];
-            if (pick.fits(nearest.stage) && startMoment(npc, mind, nearest, pick, level, partner, now)) {
+            if (pick.fits(nearest.stage, ChildBrain.girl(nearest)) && startMoment(npc, mind, nearest, pick, level, partner, now)) {
                 return true;
             }
         }

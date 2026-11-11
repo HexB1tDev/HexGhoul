@@ -21,6 +21,8 @@ public final class NpcMemory {
     /** 1.3.10: how many children they have together. */
     public static final String CHILDREN = "children";
     public static final String NIGHT_DAY = "nightday";
+    /** 4.1.15: the game time of their last night together (the morning after's kiss: MoodKiss.MORNING_AFTER). */
+    public static final String NIGHT_AT = "nightat";
     public static final String JEALOUS = "jealous";
     public static final String PUPPY_DAY = "pupday";
     public static final String TRIAL = "trial";

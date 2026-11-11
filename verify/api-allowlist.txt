@@ -949,6 +949,7 @@ M net/minecraft/world/entity/Mob m_6785_ (D)Z                                   
 
 # --- 1.3.29: scenes (a child scared in a storm) ---------------------------------------------------------------------------------------
 M net/minecraft/world/level/Level m_46470_ ()Z  # [srg] isThundering: joined.tsrg cmm.Y ()Z m_46470_ (intermediary method_8546, yarn World.isThundering)
+M net/minecraft/world/level/Level m_46758_ (Lnet/minecraft/core/BlockPos;)Z  # [srg] isRainingAt: joined.tsrg cmm q (Lgu;)Z m_46758_ (intermediary method_8520, yarn World.hasRain): 4.1.15's kiss in the rain
 
 # --- 1.3.29: a spouse keeping house (HomeChores: chests sorted, the floor swept into a chest, crops watered); "Go home, please." ------------
 C net/minecraft/world/Container  # [srg] bdq C_464_ (intermediary class_1263, yarn Inventory): a chest's or a barrel's block entity

@@ -2937,3 +2937,95 @@ say: Of our own. *she says it like she's tasting it* I've never had one. Places 
 > Pick the spot. | +2 giggle
   - Somewhere dramatic. A cliff. A ruin. Somewhere with a view of the end of the world. ...Fine. Somewhere near water.
 ignored: *draws a little house in the dirt with a stick, and a door, and three stick people*
+
+# =====================================================================================================================================
+# 4.1.15 (the owner: "Now add more interactions ... and more"): who else the player is with (SceneServer.relations: with_, wed_, kidswith_)
+# =====================================================================================================================================
+
+scene rival_rabbit
+who: together
+when: with_touka
+weight: 2
+say: *She's sitting on your windowsill, swinging her feet.* So~ the bunny from the coffee shop. Her. And me. *She tilts her head.* Is it the apron? I could wear an apron.
+say: I saw Touka-chan today. She gave me a look that could curdle milk. I gave her a little wave. *She giggles.* We're going to be the BEST of friends.
+> Please don't start anything. | +1 -> behave
+> You're jealous. | +2 -> jealous
+page behave
+say: Start anything? Me? *She presses a hand to her heart.* I'm a FINISHER, darling. ...Fine. I'll be good. For you. Mostly. The occasional sentence.
+> Thank you, Eto. | +2 giggle
+  - Don't thank me yet. I haven't decided what "good" means.
+page jealous
+say: *Her smile doesn't move, but her eye does.* ...Jealous. Yes. Terribly. It's a new feeling. I'm writing it down so I can study it. *She grabs your collar.* Kiss me so I can compare notes.
+> *Kiss her.* | +3 mend kiss
+  - Mm. *She lets go, satisfied.* ...Notes: inconclusive. More research needed.
+> You're impossible. | +1 laugh
+  - Impossible things are the only interesting ones.
+ignored: *She leaves a single owl feather on your pillow. It's somehow threatening.*
+
+scene favourite_character
+who: anyone
+when: with_ken
+say: *She claps her hands.* Ken-kun! You and KEN-KUN! Oh, he's my favourite character. Do you know how many pages I've spent on him?
+> That's a little creepy. | +1 -> creepy
+> Is he in your books? | +2 -> books
+page creepy
+say: Only a little? I'll try harder. *She spins once.* ...Be gentle with him. He breaks beautifully, and I've decided I don't want to watch that chapter again.
+> That's almost sweet. | +2 giggle
+  - Almost. Don't tell anyone. I have a reputation.
+page books
+say: He's in every book, darling. Just under a different name. *She winks.* ...Ask him about the hospital someday. Then ask him if he forgives the author.
+> Does he? | +2 -> forgive
+page forgive
+say: *Her smile goes thin and odd.* ...I don't know. I never had the nerve to ask. Funny, isn't it? I'll write anything. I won't ask that.
+> Maybe I'll ask for you. | +3 shy
+  - ...Maybe. Tell me what he says. Don't tell me if it's no.
+ignored: *She scribbles something in her notebook, humming.*
+
+scene little_rabbit
+who: anyone
+when: with_blackrabbit
+say: *She lights up.* The little rabbit! You tamed my little rabbit? Oh, how wonderful. I tried for years. He bites, you know.
+> Only people he likes. | +2 -> likes
+> He talks about you, a little. | +1 -> talks
+page likes
+say: Then he must like me VERY much. *She laughs.* ...Look after him. He thinks being angry is the same as being strong. Someone should teach him the difference.
+> I'm working on it. | +2 giggle
+  - Good. Send me progress reports. I'll pay in first editions.
+page talks
+say: Does he? *She leans in, delighted.* What does he say? Something rude? It's always something rude. ...Tell him the owl says hello. Watch him jump.
+> You're terrible. | +2 laugh
+  - I know. It's my best quality.
+ignored: *She hops off the wall and is gone.*
+
+scene dove_romance
+who: anyone
+when: with_general
+weight: 2
+say: *She looks at you with such pure joy it's frightening.* The GENERAL? You're with the CCG's General? Oh. Oh, darling. Oh, I'm writing this. Volume one, chapter one.
+> Please don't write about us. | +1 -> please
+> What would the title be? | +2 -> title
+page please
+say: Too late. I already have three chapters. *She pats your cheek.* Don't worry. I'll change the names. Badly. Everyone will know.
+> Eto! | +2 laugh
+  - That's what my editor says too. In exactly that voice.
+page title
+say: *She thinks, finger on her lips.* "The Dove Who Forgot To Shoot." ...No. "Mercy Is A Clerical Error." *She beams.* I'll send you a signed copy. Under a pen name.
+> I'd read it. | +3 giggle
+  - You'd be the only one who knows it's true. That's the fun part.
+ignored: *She's already writing, very fast, giggling to herself.*
+
+scene married_elsewhere
+who: friend
+when: wed_touka
+say: *She sighs dramatically and drapes herself over a bench.* Married. To the bunny. How DULL of you. Rings, vows, a little cafe, matching aprons, I suppose?
+> We're happy, Eto. | +2 -> happy
+> Jealous? | +1 -> jealous
+page happy
+say: *The theatre drops off her face for a moment.* ...Happy. Yes. I can tell. It's in how you walk. *She sits up.* Fine. I'll allow it. I'll even send a gift. It won't explode.
+> Probably. | +2 laugh
+  - Probably! See, you're learning.
+page jealous
+say: Of a waitress? Please. *A pause.* ...A little. Not of her. Of the boring, lovely thing you have. I don't think I'm built for it. I'd like to be.
+> Maybe you are. | +3 shy
+  - ...Don't say nice things to me. I don't know where to put them.
+ignored: *She tosses a wedding bell in your direction. A real one. From somewhere.*

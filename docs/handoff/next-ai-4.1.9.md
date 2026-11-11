@@ -1,4 +1,4 @@
-# Next AI: after 4.1.14 (4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.15 (4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
@@ -15,6 +15,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.15 | Scenes that know who the player is with (`relation` flags); the night's captions (`NightWords`); five kid games, a two-page play menu, no touching sons from their teens on; six new kisses (`MoodKiss.of(mood, Moment)`), the phases blended, every gesture crossfaded (`PoseFade`) | pushed, EXIT 0 |
 
 Branch: `claude/hopeful-euler-dnx1ub` (fast-forwarded from `claude/next-ai-4-1-6-handoff-sqv9e4`, which stops at 4.1.8). A new session's own
 branch usually starts at `main` (still 1.3.0): fast-forward it first (`git merge --ff-only origin/claude/hopeful-euler-dnx1ub`).
@@ -213,8 +214,54 @@ attach to the leg properly. Fix structures still not spawning at all or able to 
   - Wing slam `damageMul` is 1.3x 4.1.13's, so `ControlTests`' pace window (0.7 to 1.5 of the original swipe) holds.
   - `UkakuTests` checks every stage at every duration.
 
+## 4.1.15, what and where
+
+The owner (quoted exactly): "Now add more interactions, like if you're married to touka ayato will respond, and more this is just an example,
+improve the making love scene, add more kid interactions, add more kiss types and better the animation". Then, mid-work: "I'm going to tell
+you right now, female, like daughters, can dance, but there's no way a son, like starting from being a teen, there's no way he would dance
+with his fucking dad or mom. It's embarrassing. They don't do that. No one does that. Like, stop the touching with your fucking son. Like,
+they don't like to be touched. I don't like to be touched like"
+
+- **Reactions** (`SceneServer.relations`, `SceneWords.RELATED`, `tieName`, `relationFlags`):
+  - Every companion scene's context gets `with_<tie>`, `wed_<tie>`, `kidswith_<tie>` and `taken`, and the name `{kidwith}`.
+  - Ayato's tie is spelled `blackrabbit` (`SceneWords.tieName`): `SceneTests.FORBIDDEN` bans his name in the eto, touka, ken, child and ally
+    scripts, flags and comments included.
+  - New scenes at the end of `ayato.txt`, `touka.txt`, `ken.txt`, `eto.txt`, `general.txt`. `SceneTests.relations` checks each of
+    them has its scenes.
+- **The night** (`npc/NightWords`, pure):
+  - Captions by persona, weather, mood, first night or a long marriage, kids or pregnant.
+  - Packed into S2CCutscene NIGHT's one string (`pack`: `\u0001` after each caption, `\u0002` before the morning words). An old string
+    (no `\u0002`) is all morning words.
+  - `CutsceneOverlay.night` builds the timeline from the captions (rain and thunder cues when a caption says so) and wraps text.
+  - `EtoServer.night` stores `NpcMemory.NIGHT_AT` (the morning-after kiss) and sends a waking gesture (`NightWords.waking`).
+  - Fade to black, never explicit: keep it so.
+- **Kid games** (`ChildMoment` NUZZLE, BOOP, FIST_BUMP, PATTY_CAKE, DANCE appended; `ChildMomentPose`; `ChildLines`; `ParentCare`):
+  - `ChildPage.play(stage, girl, carrying, ride, page)` splits onto two pages when the games don't fit (`more`, `play`).
+  - Ten new scenes in `child.txt`. `tools/MomentPreview` draws them (`docs/handoff/kid-games-4.1.15.png`).
+- **Sons from their teens on** (`ChildMoment.touchy`, `touched`, `fits(stage, girl)`):
+  - No HUG, PAT, NUZZLE, BOOP, TICKLE or DANCE. Gated in `ChildBrain.start` (every moment goes through it), its own moments and
+    `welcome` (a WAVE), `ParentCare`, the play page, the moment key, and scene effects (a touchy one becomes a FIST_BUMP).
+  - No hand to hold (`ChildPage.parent(..., girl)` and the `hand` key and effect) and no `stroke` while asleep.
+  - TUCK stays (bedtime: the covers smoothed).
+  - The teen replies that said "hugs you" or "leans on you" were rewritten. `teen_dance_dare` needs `girl`.
+  - `SceneTests` and `FamilyTests` check all of it.
+- **Kisses** (`MoodKiss` SHY, MORNING, RAIN, MOVIE, NOSE, GALLANT appended; `MoodKiss.of(mood, Moment)`; `EtoBrain.kissMoment`):
+  - A mood's kiss first. Otherwise:
+    - the morning after: `MORNING_AFTER` ticks after `NIGHT_AT`;
+    - rain falling on her: `Level.m_46758_` above her head, newly allowlisted;
+    - the first `SHY_UNTIL` kisses, unwed;
+    - else a roll of 100: under 14 MOVIE, under 28 NOSE, under 40 GALLANT.
+  - Poses per persona in `MoodKissPose` (all pass `clear`). Ken's MOVIE is a dip.
+  - `apply` now blends each phase from the one before over `BLEND` ticks, instead of easing in from upright.
+  - `CompanionPreview <dir> new-kisses` draws them (`docs/handoff/kisses-*-4.1.15.png`).
+- **Every gesture crossfaded** (`client/animation/PoseFade`, kept per companion in `EtoRenderer.FADES`): a new `gestureAt` blends from the
+  last drawn pose over `TICKS`. `CompanionTests.poseFade` checks it.
+- Protocol 117.
+
 ## Still open
 
+- **4.1.15's look:** the owner judges the new kisses, games and night in game. Kisses tune in `MoodKissPose` (keep `clear`); how often the
+  happy ones come up is `MoodKiss.of`'s roll.
 - **The places:** 4.1.14 builds them at any good spot and keeps the first. If the owner still finds none in a NEW world after a `/locate`,
   ask for the log lines `HexKagune: <id> is built at ...` and `... was stopped at chunk ...`, and for what `/kagune places` says.
 - **The look:** the owner judges the new slams in game. Likely asks:

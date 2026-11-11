@@ -1600,8 +1600,62 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
                     check(!m.label().isEmpty(), "every play choice has its words (" + m + ")");
                 }
             }
-            int page = play + (com.hex.kagune.control.family.ChildRules.shoulders(stage) ? 1 : 0) + 1;
-            check(play >= 3 && page <= com.hex.kagune.control.npc.NpcTalk.Choice.SAYS.length, "the play page fits the talk screen at " + stage + " (" + page + ")");
+            // 4.1.15: more games than one page holds go on a second (ChildPage.play's "more"): each page fits the talk screen, and the two
+            // together offer every game its stage can have, once.
+            java.util.List<String> offered = new java.util.ArrayList<>();
+            for (int page = 1; page <= 2; page++) {
+                java.util.List<com.hex.kagune.control.family.ChildPage.Choice> choices = com.hex.kagune.control.family.ChildPage.play(stage, false, 0, page);
+                check(choices.size() <= com.hex.kagune.control.npc.NpcTalk.Choice.SAYS.length, "play page " + page + " fits the talk screen at " + stage);
+                boolean more = false;
+                for (com.hex.kagune.control.family.ChildPage.Choice choice : choices) {
+                    if (choice.key().startsWith("m:") && !offered.contains(choice.key())) {
+                        offered.add(choice.key());
+                    }
+                    more |= choice.key().equals("more");
+                }
+                if (page == 1 && !more) {
+                    break;
+                }
+            }
+            check(play >= 3 && offered.size() == play, "every game a " + stage + " can have is offered, once (" + offered.size() + " of " + play + ")");
+            // 4.1.15 (the owner: "there's no way a son, like starting from being a teen, there's no way he would dance with his fucking dad or
+            // mom ... stop the touching with your fucking son"): a son from his teens on has no hugs, pats, nuzzles, dances or hand to hold,
+            // and never on any page; a daughter keeps them; younger, both do; a fist bump and a high five for everyone old enough.
+            for (boolean girl : new boolean[] {true, false}) {
+                boolean touched = girl || !stage.older();
+                check(com.hex.kagune.control.family.ChildMoment.touched(stage, girl) == touched, stage + (girl ? " daughter" : " son") + ": touched or not");
+                java.util.List<String> keys = new java.util.ArrayList<>();
+                for (int page = 1; page <= 2; page++) {
+                    for (com.hex.kagune.control.family.ChildPage.Choice choice : com.hex.kagune.control.family.ChildPage.play(stage, girl, false, 0, page)) {
+                        keys.add(choice.key());
+                    }
+                }
+                for (com.hex.kagune.control.family.ChildMoment m : com.hex.kagune.control.family.ChildMoment.values()) {
+                    boolean expected = m.fits(stage) && (touched || !m.touchy());
+                    check(m.fits(stage, girl) == expected, m + " for a " + stage + (girl ? " daughter" : " son"));
+                    if (java.util.Arrays.asList(com.hex.kagune.control.family.ChildMoment.PLAY).contains(m)) {
+                        check(keys.contains("m:" + m.name()) == expected, m + " on a " + stage + (girl ? " daughter" : " son") + "'s play page: " + expected);
+                    }
+                }
+                java.util.List<String> main = new java.util.ArrayList<>();
+                for (com.hex.kagune.control.family.ChildPage.Choice choice : com.hex.kagune.control.family.ChildPage.parent(stage,
+                    new com.hex.kagune.control.family.ChildPage.Parent(false, -1, false, false, false, false), girl)) {
+                    main.add(choice.key());
+                }
+                check(main.contains("hand") == (com.hex.kagune.control.family.ChildRules.hand(stage) && touched), stage + (girl ? " daughter" : " son")
+                    + ": a hand to hold " + touched);
+                boolean stroke = false;
+                for (com.hex.kagune.control.family.ChildPage.Choice choice : com.hex.kagune.control.family.ChildPage.asleep(true, true, touched)) {
+                    stroke |= choice.key().equals("stroke");
+                }
+                check(stroke == touched, stage + (girl ? " daughter" : " son") + " asleep: their hair stroked " + touched);
+            }
+            if (stage.older()) {
+                check(!com.hex.kagune.control.family.ChildMoment.DANCE.fits(stage, false) && !com.hex.kagune.control.family.ChildMoment.HUG.fits(stage, false)
+                    && com.hex.kagune.control.family.ChildMoment.FIST_BUMP.fits(stage, false) && com.hex.kagune.control.family.ChildMoment.HIGH_FIVE.fits(stage, false),
+                    "a teenage son: no dance, no hug; a fist bump and a high five");
+            }
+            check(com.hex.kagune.control.family.ChildMoment.DANCE.fits(com.hex.kagune.control.family.ChildStage.TEEN, true), "a teenage daughter still dances");
             boolean own = false;
             for (com.hex.kagune.control.family.ChildMoment m : com.hex.kagune.control.family.ChildMoment.OWN) {
                 own |= m.fits(stage);

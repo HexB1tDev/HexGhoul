@@ -136,6 +136,16 @@ public final class ChildLines {
                 : pick(seed, "Night night, " + parent + ".", "Will you check for monsters? ...Okay. Night.", "*yawns* Love you, " + parent + ".");
             case FEED -> baby ? pick(seed, "*munches happily*", "*grabs at the food, gurgling*") : pick(seed, "Yummy! Thank you, " + parent + "!", "*munch munch* So good!",
                 "Mmm! Can I have another?");
+            case NUZZLE -> baby ? pick(seed, "*coos and grabs a fistful of your hair*", "*gurgles happily*") : teen
+                ? pick(seed, "Not in front of people! ...*smiles at the floor*", "Ugh. ...Love you too, " + parent + ".")
+                : pick(seed, "*giggles and hugs your leg*", "Hehe! That tickles!", "Love you, " + parent + "!");
+            case BOOP -> baby ? pick(seed, "*goes cross-eyed, then shrieks with laughter*", "*sneezes, surprised*")
+                : pick(seed, "Hey! ...Boop! *boops you back*", "*cross-eyed* Hehehe! Again!", "My nose! You got my nose!");
+            case FIST_BUMP -> teen ? pick(seed, "*bumps it* ...Pshhh. *blows it up*", "Respect.", "Okay, that was cool. Don't tell anyone.")
+                : pick(seed, "Boom! *explodes its fist*", "Pow! Again! Harder!", "*bumps it with all its might*");
+            case PATTY_CAKE -> pick(seed, "Patty-cake, patty-cake! Faster!", "*claps, misses, giggles* Again!", "Roll it and pat it and mark it with a... me!");
+            case DANCE -> teen ? pick(seed, "Oh no. Okay. One song. ...Two.", "You're SO bad at this. *dances anyway*", "If anyone sees this, I'm moving out.")
+                : pick(seed, "Dance! Dance! *stomps happily*", "Spin me! Spin me!", "*sways and giggles, holding on tight*");
             default -> "";
         };
     }

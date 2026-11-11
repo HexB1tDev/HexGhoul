@@ -93,6 +93,12 @@ public final class ChildTalk {
      * chosen, to begin once the talk closes (the page then has only its line and goodbye).
      */
     static void open(ServerPlayer player, ChildNpc npc, String line, boolean play, com.hex.kagune.control.family.ChildMoment queued) {
+        open(player, npc, line, play ? 1 : 0, queued);
+    }
+
+    /** 4.1.15: the same, on the play page {@code playPage} (0: not the play page; 1, 2: its pages, ChildPage.play). */
+    static void open(ServerPlayer player, ChildNpc npc, String line, int playPage, com.hex.kagune.control.family.ChildMoment queued) {
+        boolean play = playPage > 0;
         ServerLevel level = player.m_284548_();
         Children.Child child = Children.get(level, npc.childId());
         if (child == null) {
@@ -119,13 +125,13 @@ public final class ChildTalk {
         if (queued != null) {
             page = List.of(); // Chosen: its line, then goodbye; the moment begins as the talk closes.
         } else if (parent && play) {
-            page = ChildPage.play(stage, carrying, npc.mind.ride);
+            page = ChildPage.play(stage, child.genome().gender().female(), carrying, npc.mind.ride, playPage); // 4.1.15: a teenage son's own
         } else if (parent) {
             boolean food = !player.m_21205_().m_41619_() && (player.m_21205_().m_41614_() || com.hex.kagune.control.ControlItems.ghoulMeat(player.m_21205_()));
             Households.Home house = Households.forChild(level, child);
             page = ChildPage.parent(stage, new ChildPage.Parent(carrying, npc.mind.ride, player.m_20148_().equals(npc.following()), food,
                 house != null && HomeLife.night(level.m_46468_(), true) && !npc.m_5803_(),
-                house != null && (npc.following() != null || npc.waiting()) && !house.at(npc.home())));
+                house != null && (npc.following() != null || npc.waiting()) && !house.at(npc.home())), child.genome().gender().female());
         } else {
             // 2.0.5: someone else's child: gentle choices only (never a parent's, never romance).
             boolean food = !player.m_21205_().m_41619_() && (player.m_21205_().m_41614_() || com.hex.kagune.control.ControlItems.ghoulMeat(player.m_21205_()));
@@ -160,7 +166,8 @@ public final class ChildTalk {
         boolean parent = child.parent(Pregnancies.player(player.m_20148_()));
         if (queued == null) {
             // 1.3.37: a hand on their hair, or a word to go back to sleep (2.0.5: the choices in ChildPage).
-            for (ChildPage.Choice choice : ChildPage.asleep(parent, !ChildBrain.busy(npc.mind, level.m_46467_()))) {
+            for (ChildPage.Choice choice : ChildPage.asleep(parent, !ChildBrain.busy(npc.mind, level.m_46467_()),
+                com.hex.kagune.control.family.ChildMoment.touched(child.stage(level.m_46467_()), child.genome().gender().female()))) {
                 add(keys, labels, choice.key(), choice.label());
             }
         }
@@ -261,7 +268,8 @@ public final class ChildTalk {
         }
         if ("back".equals(talk.keys().get(index)) || "stroke".equals(talk.keys().get(index))) {
             // 1.3.37: settled back to sleep (stroked: a parent's hand on their hair, and it eases them).
-            boolean stroked = "stroke".equals(talk.keys().get(index));
+            boolean stroked = "stroke".equals(talk.keys().get(index))
+                && com.hex.kagune.control.family.ChildMoment.touched(child.stage(level.m_46467_()), child.genome().gender().female()); // 4.1.15
             TALKS.remove(player.m_20148_());
             if (npc.m_5803_()) {
                 String line = com.hex.kagune.control.family.Drowsy.childSettles(child.stage(level.m_46467_()), stroked, npc.m_217043_().m_188503_(100));
@@ -303,6 +311,10 @@ public final class ChildTalk {
                 open(player, npc, ChildLines.play(stage, seed), true, null);
                 return;
             }
+            case "more" -> {
+                open(player, npc, ChildLines.play(stage, seed), 2, null);
+                return;
+            }
             case "back" -> {
                 open(player, npc, null, false, null);
                 return;
@@ -334,8 +346,12 @@ public final class ChildTalk {
                 reply = ChildLines.stay(stage, seed);
             }
             case "hand" -> {
-                ChildBrain.pickUp(npc, player, com.hex.kagune.control.family.ChildRules.RIDE_HAND);
-                reply = ChildLines.hand(stage, seed);
+                if (com.hex.kagune.control.family.ChildMoment.touched(stage, child.genome().gender().female())) {
+                    ChildBrain.pickUp(npc, player, com.hex.kagune.control.family.ChildRules.RIDE_HAND);
+                    reply = ChildLines.hand(stage, seed);
+                } else {
+                    reply = "*shoves its hands in its pockets* ...I'm good."; // 4.1.15: a son from his teens on
+                }
             }
             case "feed" -> {
                 net.minecraft.world.item.ItemStack held = player.m_21205_();
@@ -386,7 +402,7 @@ public final class ChildTalk {
                 }
                 if (key.startsWith("m:")) {
                     com.hex.kagune.control.family.ChildMoment moment = com.hex.kagune.control.family.ChildMoment.valueOf(key.substring(2));
-                    if (moment.fits(stage)) {
+                    if (moment.fits(stage, child.genome().gender().female())) {
                         // Its eager line now; the moment itself once the talk closes.
                         open(player, npc, moment == com.hex.kagune.control.family.ChildMoment.HUG ? "*holds its arms out wide*"
                             : stage == ChildStage.BABY ? "*wriggles, excited*" : "Yes! Yes yes yes!", false, moment);
@@ -569,7 +585,7 @@ public final class ChildTalk {
                     }
                 }
                 case "hand" -> {
-                    if (ChildRules.hand(stage) && npc.mind.carrier == null) {
+                    if (ChildRules.hand(stage) && npc.mind.carrier == null && com.hex.kagune.control.family.ChildMoment.touched(stage, child.genome().gender().female())) {
                         ChildBrain.pickUp(npc, player, ChildRules.RIDE_HAND);
                     }
                 }
@@ -601,8 +617,12 @@ public final class ChildTalk {
                     if (queued == null && !Set.of("sad", "proud").contains(effect) && !effect.startsWith("gift:")) {
                         try {
                             com.hex.kagune.control.family.ChildMoment moment = com.hex.kagune.control.family.ChildMoment.valueOf(effect.toUpperCase(java.util.Locale.ROOT));
-                            if (moment.fits(stage)) {
+                            boolean girl = child.genome().gender().female();
+                            if (moment.fits(stage, girl)) {
                                 queued = moment;
+                            } else if (moment.fits(stage) && moment.touchy() && com.hex.kagune.control.family.ChildMoment.FIST_BUMP.fits(stage, girl)) {
+                                // 4.1.15: a son from his teens on: a fist bump where a daughter gets a hug (the owner: "stop the touching").
+                                queued = com.hex.kagune.control.family.ChildMoment.FIST_BUMP;
                             }
                         } catch (IllegalArgumentException unknown) {
                             // (the tests keep every word known)

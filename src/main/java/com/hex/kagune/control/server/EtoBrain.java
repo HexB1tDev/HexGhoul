@@ -1606,8 +1606,10 @@ public final class EtoBrain {
                     mind.kissAt = now;
                     mind.held = 0;
                     mind.with = player.m_19879_();
-                    // 2.2.4: the kiss her mood gives (angry, possessive, giddy, tender, desperate, sleepy, hungry, teasing, or sweet).
-                    mind.kissStyle = com.hex.kagune.control.npc.MoodKiss.of(mood(npc, player, now));
+                    // 2.2.4: the kiss her mood gives (angry, possessive, giddy, tender, desperate, sleepy, hungry, teasing, or sweet). 4.1.15:
+                    // and the moment's: the morning after a night together, rain on them, the first shy few; now and then a film's, a nose
+                    // rub, a bow over their hand.
+                    mind.kissStyle = com.hex.kagune.control.npc.MoodKiss.of(mood(npc, player, now), kissMoment(npc, mind, player, now));
                     mind.dodged = false;
                     mind.dirty = true;
                     gesture(mind, EtoGesture.KISS, now);
@@ -1734,6 +1736,19 @@ public final class EtoBrain {
                 }
             }
         }
+    }
+
+    /** 4.1.15: the moment {@code npc}'s kiss with {@code player} comes in (MoodKiss.Moment). */
+    static com.hex.kagune.control.npc.MoodKiss.Moment kissMoment(EtoNpc npc, Mind mind, ServerPlayer player, long now) {
+        String key = npc.persona().key();
+        NpcMemory memory = NpcMemoryServer.of(player);
+        long night = memory.get(key, NpcMemory.NIGHT_AT, Long.MIN_VALUE);
+        boolean morning = night != Long.MIN_VALUE && now >= night && now - night < com.hex.kagune.control.npc.MoodKiss.MORNING_AFTER;
+        // Rain falling on her (open sky above her head, a biome it rains in): not just raining somewhere.
+        boolean raining = npc.m_9236_().m_46471_() && npc.m_9236_().m_46758_(net.minecraft.core.BlockPos.m_274561_(npc.m_20185_(), npc.m_20186_() + 1.0,
+            npc.m_20189_()));
+        return new com.hex.kagune.control.npc.MoodKiss.Moment(raining, morning, memory.get(key, NpcMemory.KISSES, 0L),
+            mind.stage == Romance.Stage.MARRIED, npc.m_217043_().m_188503_(100));
     }
 
     /**

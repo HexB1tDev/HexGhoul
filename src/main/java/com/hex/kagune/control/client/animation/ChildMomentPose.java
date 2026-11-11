@@ -161,10 +161,114 @@ public final class ChildMomentPose {
                 p.headX = 0.35F;
                 p.rightArmHold = give;
             }
+            case NUZZLE -> {
+                // 4.1.15: a nuzzle to the top of its head (bent down to a little one), both hands at its shoulders, a moment held, back.
+                float in = smooth(t / 12.0) * (1.0F - smooth((t - 32.0) / 12.0));
+                float reach = shoulderReach(stage);
+                if (small) {
+                    bend(p, knees, stage);
+                }
+                p.lean += 0.22F * in;
+                p.headX = 0.3F + 0.4F * in;
+                p.rightArmX = reach * in;
+                p.leftArmX = reach * in;
+                p.rightArmZ = -0.24F * in;
+                p.leftArmZ = 0.24F * in;
+                p.armHold = in;
+            }
+            case BOOP -> {
+                // 4.1.15: a finger out to its nose, the boop at 12, back.
+                float out = smooth(t / 9.0) * (1.0F - smooth((t - 18.0) / 12.0));
+                float jab = Math.max(0.0F, 1.0F - Math.abs(t - 12.0F) / 2.5F);
+                if (small) {
+                    bend(p, knees, stage);
+                }
+                p.rightArmX = (headReach(stage) + 0.12F) * out - 0.14F * jab;
+                p.rightArmY = 0.12F * out;
+                p.rightArmZ = -0.05F * out;
+                p.headX = 0.35F;
+                p.headZ = -0.1F * out;
+                p.rightArmHold = out;
+            }
+            case FIST_BUMP -> {
+                // 4.1.15: a fist out at its height, bumped at 10, then thrown up and open: the explosion.
+                float out = smooth(t / 7.0) * (1.0F - smooth((t - 12.0) / 4.0));
+                float boom = smooth((t - 11.0) / 4.0) * (1.0F - smooth((t - 20.0) / 9.0));
+                float bump = Math.max(0.0F, 1.0F - Math.abs(t - 10.0F) / 2.0F);
+                float level = stage.older() ? -1.35F : -1.1F;
+                p.rightArmX = level * out - 0.12F * bump - 1.9F * boom;
+                p.rightArmZ = -0.08F * out - 0.55F * boom;
+                p.lean = small ? 0.12F : 0.0F;
+                p.headX = small ? 0.22F : 0.05F;
+                p.rightArmHold = Math.max(out, boom);
+            }
+            case PATTY_CAKE -> {
+                // 4.1.15: four rounds of a clap of their own and both palms out to its; bent down to it.
+                bend(p, knees, stage);
+                float in = smooth(t / 6.0) * (1.0F - smooth((t - 72.0) / 8.0));
+                float own = pattyOwn(t);
+                float level = stage == ChildStage.TODDLER ? -0.95F : -1.2F;
+                p.rightArmX = (level - 0.25F * (1.0F - own)) * in;
+                p.leftArmX = (level - 0.25F * (1.0F - own)) * in;
+                p.rightArmZ = (-0.08F - 0.3F * own + 0.12F * (1.0F - own)) * in;
+                p.leftArmZ = (0.08F + 0.3F * own - 0.12F * (1.0F - own)) * in;
+                p.headX = 0.3F;
+                p.armHold = in;
+            }
+            case DANCE -> {
+                // 4.1.15: both its hands in theirs, low to a toddler, swaying side to side and stepping, a bounce on the beat.
+                float in = smooth(t / 8.0) * (1.0F - smooth((t - 80.0) / 10.0));
+                float sway = sin(t * 0.21);
+                float level = switch (stage) {
+                    case TODDLER -> -0.8F;
+                    case CHILD -> -1.0F;
+                    default -> -1.15F;
+                };
+                if (stage == ChildStage.TODDLER) {
+                    p.lean += 0.3F * in;
+                }
+                p.rightArmX = level * in;
+                p.leftArmX = level * in;
+                p.rightArmZ = -0.22F * in;
+                p.leftArmZ = 0.22F * in;
+                p.roll = 0.1F * sway * in;
+                p.headZ = -0.08F * sway * in;
+                p.headX = stage == ChildStage.TEEN ? 0.1F : 0.3F;
+                p.rightLegX = 0.18F * sway * in;
+                p.leftLegX = -0.18F * sway * in;
+                p.armHold = in;
+                p.legHold = in;
+            }
             default -> {
             }
         }
         return p;
+    }
+
+    /** 4.1.15: how far forward an arm goes to a child's shoulders at {@code stage} (radians, as PAT's reach, a little lower). */
+    static float shoulderReach(ChildStage stage) {
+        return switch (stage) {
+            case BABY -> -0.62F;
+            case TODDLER -> -0.88F;
+            case CHILD -> -1.12F;
+            case TEEN, ADULT -> -1.45F;
+        };
+    }
+
+    /** 4.1.15: how far forward an arm goes to a child's face at {@code stage} (radians). */
+    static float headReach(ChildStage stage) {
+        return switch (stage) {
+            case BABY -> -0.78F;
+            case TODDLER -> -1.05F;
+            case CHILD -> -1.32F;
+            case TEEN, ADULT -> -1.62F;
+        };
+    }
+
+    /** 4.1.15: PATTY_CAKE: 1 while both clap their own hands, 0 while their palms meet; four rounds of 18 ticks after the first 4. */
+    static float pattyOwn(float t) {
+        float round = ((t - 4.0F) % 18.0F + 18.0F) % 18.0F / 18.0F;
+        return 0.5F + 0.5F * (float)Math.cos(round * Math.PI * 2.0);
     }
 
     /**
@@ -389,6 +493,72 @@ public final class ChildMomentPose {
             }
             case TUCK -> {
                 return null; // asleep: lying in its bed as the game lays it
+            }
+            case NUZZLE -> {
+                // 4.1.15: its head ducked for the nuzzle, then up beaming, a little hop.
+                float in = smooth(t / 12.0) * (1.0F - smooth((t - 32.0) / 12.0));
+                float after = smooth((t - 32.0) / 6.0) * (1.0F - smooth((t - 42.0) / 6.0));
+                p.headX = (teen ? 0.25F : 0.35F) * in - 0.35F * after;
+                p.rightArmZ = 0.12F + 0.1F * after;
+                p.leftArmZ = -0.12F - 0.1F * after;
+                p.drop = teen ? 0.0F : -0.9F * after;
+            }
+            case BOOP -> {
+                // 4.1.15: still, eyes on the finger; at the boop its head jerks back; then it wobbles, giggling.
+                float jab = Math.max(0.0F, 1.0F - Math.abs(t - 12.5F) / 3.0F);
+                float giggle = smooth((t - 14.0) / 3.0) * (1.0F - smooth((t - 28.0) / 6.0));
+                p.headX = -0.2F - 0.3F * jab;
+                p.headZ = 0.2F * giggle * sin(t * 1.3);
+                p.rightArmX = -0.5F * giggle;
+                p.leftArmX = -0.5F * giggle;
+                p.rightArmZ = 0.3F * giggle;
+                p.leftArmZ = -0.3F * giggle;
+                p.drop = -0.7F * giggle * Math.abs(sin(t * 0.9));
+                p.armHold = giggle;
+            }
+            case FIST_BUMP -> {
+                // 4.1.15: its own fist out to meet theirs at 10, then up and open: boom.
+                float out = smooth(t / 7.0) * (1.0F - smooth((t - 12.0) / 4.0));
+                float boom = smooth((t - 11.0) / 4.0) * (1.0F - smooth((t - 20.0) / 9.0));
+                p.leftArmX = (teen ? -1.3F : -1.6F) * out - 1.8F * boom;
+                p.leftArmZ = 0.08F * out + 0.6F * boom;
+                p.headX = teen ? 0.0F : -0.25F;
+                p.drop = teen ? 0.0F : -1.0F * boom;
+                p.leftArmHold = Math.max(out, boom);
+            }
+            case PATTY_CAKE -> {
+                // 4.1.15: as theirs, mirrored: its own clap, then both palms up and out to theirs.
+                float in = smooth(t / 6.0) * (1.0F - smooth((t - 72.0) / 8.0));
+                float own = pattyOwn(t);
+                p.rightArmX = (-1.25F - 0.35F * (1.0F - own)) * in;
+                p.leftArmX = (-1.25F - 0.35F * (1.0F - own)) * in;
+                p.rightArmZ = (0.08F + 0.3F * own - 0.1F * (1.0F - own)) * in;
+                p.leftArmZ = (-0.08F - 0.3F * own + 0.1F * (1.0F - own)) * in;
+                p.headX = -0.3F;
+                p.drop = -0.5F * Math.abs(sin(t * 0.35)) * in;
+                p.armHold = in;
+            }
+            case DANCE -> {
+                // 4.1.15: both hands up in theirs, swaying the other way, stepping, bouncing.
+                float in = smooth(t / 8.0) * (1.0F - smooth((t - 80.0) / 10.0));
+                float sway = sin(t * 0.21);
+                float level = switch (stage) {
+                    case TODDLER -> -2.2F;
+                    case CHILD -> -1.55F;
+                    default -> -1.2F;
+                };
+                p.rightArmX = level * in;
+                p.leftArmX = level * in;
+                p.rightArmZ = 0.2F * in;
+                p.leftArmZ = -0.2F * in;
+                p.roll = -0.14F * sway * in;
+                p.headZ = 0.12F * sway * in;
+                p.headX = teen ? 0.0F : -0.35F;
+                p.drop = -0.8F * Math.abs(sin(t * 0.42)) * in;
+                p.rightLegX = -0.3F * sway * in;
+                p.leftLegX = 0.3F * sway * in;
+                p.armHold = in;
+                p.legHold = in;
             }
             case FLOWER -> {
                 // Held up to them, proud, then given (the arm stays out a moment, then down).

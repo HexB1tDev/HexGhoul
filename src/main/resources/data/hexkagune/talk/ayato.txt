@@ -232,3 +232,143 @@ page stars
 say: *He points at a random cluster.* That one's the rabbit. ...I made that up. Dad used to make them up too. He said if you can't remember the real names, invent better ones.
 > Then that one's us. | +5 kiss
   - *He stares at the stars a long time.* ...Yeah. That one's us. *He kisses you without looking away from the sky.*
+
+# =====================================================================================================================================
+# 4.1.15 (the owner: "if you're married to touka ayato will respond, and more"): who else the player is with (SceneServer.relations:
+# with_<key> dating or married, wed_<key> married, kidswith_<key> a child together, {kidwith} that child)
+# =====================================================================================================================================
+
+scene sister_wed
+who: wary friend
+when: wed_touka
+weight: 3
+say: *He blocks your path, hands in his pockets, chin up.* So. You married my sister. Nobody asked me. Which is fine. I'm asking you now.
+say: *He's sitting on a railing, wings out, waiting for you.* Married. To Touka. ...Took you long enough to tell me. Oh wait. You didn't.
+> I'll take care of her. I swear it. | +3 -> swear
+> Are you giving me your blessing? | +1 -> blessing
+> She can take care of herself. | +2 -> herself
+page swear
+say: *He steps in close.* Swear on what? Your life? Good. Because that's what it's worth if she cries because of you. ...Once. That's all it takes.
+> Understood. | +2 cross
+  - *He holds the stare a second longer, then steps back.* ...Good. Then we don't have a problem. Brother.
+> She's lucky to have a brother like you. | +3 -> lucky
+page lucky
+say: *He looks away so fast it's almost funny.* ...She's not. I left. I was a lousy brother. ...You stay, at least. Somebody has to.
+> You can still be there for her. | +4 shy
+  - ...Maybe. Don't tell her I said that. Don't tell her anything. ...Tell her I'm eating. She worries.
+page blessing
+say: Blessing? Do I look like a priest? *He clicks his tongue.* ...Fine. You have it. Don't make me take it back.
+> Thank you, Ayato. | +2 huff
+  - Don't thank me. Just don't screw it up. I'll know.
+page herself
+say: *A short laugh, despite himself.* ...Yeah. She kicked me through a wall once. She can. ...Doesn't mean she should have to. Remember that.
+> I'll remember. | +2 cross
+  - Good. Now get out of my way. I've got Doves to scare.
+ignored: *He watches you go, then calls after you.* ...She likes the coffee from the place by the station. Just so you know.
+
+scene sister_dating
+who: wary friend
+when: with_touka !wed_touka
+weight: 2
+say: *He's leaning on the wall outside Anteiku like he owns the street.* You've been seeing my sister. Don't bother denying it. Rabbits have good ears.
+> What of it? | 0 -> what
+> I care about her. A lot. | +3 -> care
+page what
+say: What of it? *He pushes off the wall.* If you're playing with her, stop. If you're not, then... don't play with her. That's all. That's the speech.
+> That was a terrible speech. | +2 laugh
+  - *He scowls.* I don't practice these. ...It's my first one. Shut up.
+page care
+say: ...She's been smiling more. Annoying. She hums when she grinds the beans now. *He makes a face.* If that's you, fine. Keep it up.
+> You noticed she's smiling? | +3 shy
+  - I notice everything. I'm a hunter. ...Don't make it weird.
+ignored: Tch. Run along. She's waiting.
+
+scene uncle
+who: anyone
+when: kidswith_touka
+weight: 3
+say: *{kidwith} is on his shoulders, pulling his hair. He looks furious. He hasn't put them down.* ...This one of yours bites. Obviously the Kirishima side.
+say: *He's teaching {kidwith} to glare at strangers.* Lesson one. Never smile at a Dove. ...Good. Again. Meaner.
+say: *He's holding {kidwith} up at arm's length like a cat.* It keeps calling me Uncle. Make it stop. ...No, actually, don't.
+> Uncle Ayato. It suits you. | +3 -> suits
+> Are you teaching them to fight? | +1 -> fight
+> Give them back before you drop them. | +1 -> drop
+page suits
+say: It does NOT suit me. *{kidwith} giggles. He glares at them. They giggle harder.* ...It's fine. It's whatever. I'll come by on Sundays. Don't make a thing of it.
+> Every Sunday, then. | +3 shy
+  - *He grumbles something that sounds a lot like "yeah, okay".*
+page fight
+say: Someone has to. You two are too soft. *He sets them down, very carefully.* ...Just the basics. How to run. When to run. Who to bite.
+> Who to bite?! | +2 laugh
+  - Doves. Bullies. Me, apparently. ...They're a natural.
+page drop
+say: Drop them? I don't drop things. *He shifts them to one arm, perfectly steady, without looking.* ...I'm a Kirishima. We hold on.
+> I know you do. | +3 shy
+  - ...Yeah. Well. Some of us learned late.
+ignored: *He keeps {kidwith} on his shoulders all the way home.*
+
+scene both_siblings
+who: together
+when: with_touka
+weight: 2
+say: *He rubs his face with both hands.* You. And me. And my SISTER. Do you have any idea what family dinner is going to be like?
+say: Touka looked at me today like she wanted to kick me into the river. Then she looked at you like she wanted to kick you in after me. ...So. That's going well.
+> We'll figure it out together. | +3 -> together
+> Are you jealous of your own sister? | +1 -> jealous
+page together
+say: "Together". *He snorts.* Fine. Rules. Not in front of her. Not in front of me. And if she asks, I'm the better kisser. Non-negotiable.
+> Deal. | +3 laugh
+  - *He grins, sharp and awful and fond.* ...Good. I win something for once.
+page jealous
+say: I'm jealous of EVERYONE. She just happens to be the one who can actually beat me. *He sighs.* ...Just don't make us choose. We're bad at that. Both of us.
+> I won't. Come here. | +3 mend hug
+  - *He comes, grumbling.* ...She's going to kill us both. ...Worth it.
+ignored: *He goes to sulk on a roof. Touka, probably, is sulking on another one.*
+
+scene one_eyed_king
+who: anyone
+when: with_ken
+say: *He narrows his eyes at you.* You and the one-eyed king. Him. The guy who apologises to the people he's beating up.
+> He's kinder than you think. | +1 -> kind
+> Jealous? | +1 -> rival
+page kind
+say: Kind doesn't keep you alive in this city. *He scuffs the ground.* ...He saved Touka once. More than once. So. He's tolerable. Barely.
+> Coming from you, that's a compliment. | +2 huff
+  - Don't spread it around.
+page rival
+say: Of HIM? Please. *A pause.* ...He's strong. Annoyingly strong. If he ever lets you get hurt, tell me. I've wanted an excuse for years.
+> I'll tell him you said hi. | +2 laugh
+  - Tell him nothing. Tell him I'm busy. ...Tell him hi.
+ignored: Tch. Go read a book with him or whatever you two do.
+
+scene owl_warning
+who: friend
+when: with_eto
+say: *He grabs your sleeve and pulls you into an alley.* The one-eyed owl. Are you out of your mind? She plays people like chess pieces. She played ME.
+> She's different with me. | 0 -> different
+> I know what I'm doing. | +1 -> know
+page different
+say: That's what she WANTS you to think. *He lets go of your sleeve.* ...Maybe she is. Maybe. If she isn't, you call me. Not Touka. Me.
+> I will. Thank you. | +3 shy
+  - *He's already walking away.* Don't thank me. Just stay alive. Owls eat rabbits.
+page know
+say: Nobody knows what they're doing with her. That's the point of her. *He shakes his head.* ...Fine. It's your funeral. I'll bring flowers. Ugly ones.
+> You'd come to my funeral? | +2 laugh
+  - I'd come to make sure. ...Just don't make me.
+ignored: *He watches the rooftops all afternoon, like he's expecting an owl.*
+
+scene dove_in_bed
+who: anyone
+when: with_general
+say: *He stares at you like you've grown a second head.* A Dove. The GENERAL. The guy who signs the orders. ...You're dating the guy who signs the orders.
+> He's a good man. | 0 -> good
+> Love's weird, Ayato. | +2 -> weird
+page good
+say: He's a good man who's put down half the ghouls I grew up with. *He crosses his arms.* ...But he lets you walk out of the bureau alive. So. That's something.
+> It's a start. | +1 cross
+  - It's a start to something stupid. ...Keep your mask on near his people.
+page weird
+say: Weird? It's a TRAGEDY. *He throws his hands up.* ...Fine. If he ever turns on you, I'm the one who comes through his window. Tell him that.
+> I'll tell him. | +2 laugh
+  - Good. Watch him go pale. I'd pay to see it.
+ignored: Doves. Unbelievable.
