@@ -235,6 +235,22 @@ public enum Quinque {
         return at != Long.MIN_VALUE && fires != Long.MIN_VALUE && now >= at && now - fires <= DAWN_OPEN_AFTER && fires >= at;
     }
 
+    /**
+     * 4.1.26: how far open Dawn's canopy is at {@code now} (0 .. 1) for a shot whose point began to open at {@code at} and whose ball leaves
+     * at {@code fires}: spread over {@code spread} ticks, open while {@link #tipOpen}, furled over {@code furl} ticks after.
+     */
+    public static float dawnOpening(long now, long at, long fires, float spread, float furl) {
+        if (at == Long.MIN_VALUE || fires == Long.MIN_VALUE || fires < at || now < at) {
+            return 0.0F;
+        }
+        float in = Math.min(1.0F, (now - at) / spread);
+        long shut = fires + DAWN_OPEN_AFTER;
+        if (now <= shut) {
+            return in;
+        }
+        return Math.max(0.0F, in * (1.0F - (now - shut) / furl));
+    }
+
     /** True if a player's Dawn may gather another ball {@code since} ticks after the last (never: always). */
     public static boolean dawnReady(long since) {
         return since < 0L || since >= DAWN_COOLDOWN;

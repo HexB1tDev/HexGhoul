@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.26 (HexGhoul): Arima, part 4: Dawn smooth, opening like a reverse umbrella (testing)
+
+See `.github/release-notes-4.1.26.md`. "Dawn needs a major rework in look so it's smooth and not cubic ... spread open ... Like a reverse umbrella": Dawn is a smooth mesh (`quinque/QuinqueDawnMesh`, built in its item pixels along x, cached at `STEPS` open steps) drawn by `client/QuinqueItemRenderer` (`QuinqueMesh.has/diagonal/drawn/caseBox/of(q, open)` per quinque); firing, its guard turns inside out into a cup opening forward round the spike, the lightning at its point, as open as its stack's shot says (`Quinque.dawnOpening`, `QuinqueClient.dawnOpening`; players' and Arima's shots set the same tags). Protocol 117.
+
 ## 4.1.25 (HexGhoul): Arima, part 3: both fighting styles (testing)
 
 See `.github/release-notes-4.1.25.md`. "Use both styles of fighting that we got. Both the Kickmaster and the normal one": up close the White Reaper sometimes throws Kick Master's string or the Speed Blitz (`AgentRules.brawlStyle`, `REAPER_BRAWL_*`; `AgentBrain.brawl`, its blinks and impacts), a player's strikes on their own ticks, synced as swing codes (`CcgAgent.STRIKE` + the strike's ordinal) and drawn whole by `AgentPose.brawl` (PaleMotions.strike) with Dawn carried clear at his right shoulder, raised as far as his trunk leans. Protocol 117.

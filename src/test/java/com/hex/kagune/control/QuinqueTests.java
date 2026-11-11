@@ -330,6 +330,10 @@ public final class QuinqueTests {
             if (mesh == null) {
                 continue;
             }
+            // 4.1.26: along its length (the katana stands along y, then is turned; Dawn lies along x where its boxes lay).
+            boolean dawn = q == Quinque.DAWN;
+            int along = dawn ? 0 : 1;
+            int acrossA = dawn ? 1 : 0;
             boolean finite = true;
             float low = Float.MAX_VALUE;
             float high = -Float.MAX_VALUE;
@@ -337,44 +341,51 @@ public final class QuinqueTests {
             for (int i = 0; i < mesh.pos.length; i += 3) {
                 finite &= Float.isFinite(mesh.pos[i]) && Float.isFinite(mesh.pos[i + 1]) && Float.isFinite(mesh.pos[i + 2])
                     && Float.isFinite(mesh.normal[i]) && Float.isFinite(mesh.normal[i + 1]) && Float.isFinite(mesh.normal[i + 2]);
-                low = Math.min(low, mesh.pos[i + 1]);
-                high = Math.max(high, mesh.pos[i + 1]);
-                wide = Math.max(wide, Math.max(Math.abs(mesh.pos[i] - 8.0F), Math.abs(mesh.pos[i + 2] - 8.0F)));
+                low = Math.min(low, mesh.pos[i + along]);
+                high = Math.max(high, mesh.pos[i + along]);
+                wide = Math.max(wide, Math.max(Math.abs(mesh.pos[i + acrossA] - 8.0F), Math.abs(mesh.pos[i + 2] - 8.0F)));
             }
             check(finite, q + ": every point and normal of its mesh a number");
-            check(low > -7.0F && low < -5.0F && high > 31.0F && high < 32.5F && wide < 4.0F,
+            check(dawn ? low > -15.5F && low < -14.0F && high > 31.5F && high < 33.5F && wide < 3.3F
+                : low > -7.0F && low < -5.0F && high > 31.0F && high < 32.5F && wide < 4.0F,
                 q + ": its mesh as long as its old model (" + low + " .. " + high + ", " + wide + " across)");
-            // Its grips: turned back off the diagonal, on the hilt's axis (x 8, z 8), between its ends.
+            // Its grips: on its hilt's axis between its ends (the katana's turned back off the diagonal first).
             com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
             for (float[] grip : new float[][] {h.rightGrip(), h.leftGrip()}) {
-                float[] back = unturned(grip);
-                float[] again = com.hex.kagune.control.quinque.QuinqueMesh.turned(back);
+                float[] back = dawn ? grip.clone() : unturned(grip);
+                float[] again = com.hex.kagune.control.quinque.QuinqueMesh.turned(q, back);
                 check(Math.abs(again[0] - grip[0]) + Math.abs(again[1] - grip[1]) < 1.0E-4F, q + ": turned undoes unturned");
-                check(Math.abs(back[0] - 8.0F) < 0.05F && Math.abs(back[2] - 8.0F) < 0.05F && back[1] > low + 0.5F && back[1] < 6.0F,
+                check(dawn ? Math.abs(back[1] - 8.0F) < 0.05F && Math.abs(back[2] - 8.0F) < 0.05F && back[0] > low + 0.5F && back[0] < -2.0F
+                    : Math.abs(back[0] - 8.0F) < 0.05F && Math.abs(back[2] - 8.0F) < 0.05F && back[1] > low + 0.5F && back[1] < 6.0F,
                     q + ": its grip " + java.util.Arrays.toString(grip) + " on its hilt's axis (standing " + java.util.Arrays.toString(back) + ")");
             }
-            // The baker's turn: an element turned -45 about z through 8 8 8 (tools/quinque_models.py box, FaceBakery's Rz).
-            float[] t = com.hex.kagune.control.quinque.QuinqueMesh.turned(new float[] {8.0F, 0.0F, 8.0F});
-            check(Math.abs(t[0] - (8.0F - 8.0F / (float)Math.sqrt(2.0))) < 1.0E-4F && Math.abs(t[1] - t[0]) < 1.0E-4F,
-                q + ": standing down the hilt goes down the diagonal, as the baker's boxes");
-            // The draw: grown out of the fist; the case round the grip shrinking to nothing.
-            check(com.hex.kagune.control.quinque.QuinqueMesh.drawn(31.0F, 1.0F) == 31.0F && com.hex.kagune.control.quinque.QuinqueMesh.drawn(31.0F, 0.0F)
-                == (float)com.hex.kagune.control.quinque.QuinqueMesh.HAND, q + ": all out when out, all in the fist when not");
+            if (!dawn) {
+                // The baker's turn: an element turned -45 about z through 8 8 8 (tools/quinque_models.py box, FaceBakery's Rz).
+                float[] t = com.hex.kagune.control.quinque.QuinqueMesh.turned(new float[] {8.0F, 0.0F, 8.0F});
+                check(Math.abs(t[0] - (8.0F - 8.0F / (float)Math.sqrt(2.0))) < 1.0E-4F && Math.abs(t[1] - t[0]) < 1.0E-4F,
+                    q + ": standing down the hilt goes down the diagonal, as the baker's boxes");
+            }
+            // The draw: grown out of the fist along its length; the case round the grip shrinking to nothing (the katana's: Dawn has none).
+            float hand = dawn ? (float)com.hex.kagune.control.quinque.QuinqueDawnMesh.HAND : (float)com.hex.kagune.control.quinque.QuinqueMesh.HAND;
+            float[] point = dawn ? new float[] {31.0F, 8.0F, 8.0F} : new float[] {8.0F, 31.0F, 8.0F};
+            check(com.hex.kagune.control.quinque.QuinqueMesh.drawn(q, point, 1.0F)[along] == 31.0F
+                && com.hex.kagune.control.quinque.QuinqueMesh.drawn(q, point, 0.0F)[along] == hand, q + ": all out when out, all in the fist when not");
             float last = -Float.MAX_VALUE;
             float lastCase = Float.MAX_VALUE;
             boolean growing = true;
             for (int k = 0; k <= 20; k++) {
                 float out = k / 20.0F;
-                float tip = com.hex.kagune.control.quinque.QuinqueMesh.drawn(high, out);
+                float[] far = dawn ? new float[] {high, 8.0F, 8.0F} : new float[] {8.0F, high, 8.0F};
+                float tip = com.hex.kagune.control.quinque.QuinqueMesh.drawn(q, far, out)[along];
                 growing &= tip > last;
                 last = tip;
-                float[] box = com.hex.kagune.control.quinque.QuinqueMesh.caseBox(out);
+                float[] box = com.hex.kagune.control.quinque.QuinqueMesh.caseBox(q, out);
                 if (box != null) {
                     float size = (box[3] - box[0]) * (box[4] - box[1]);
                     growing &= size < lastCase && box[1] > (float)com.hex.kagune.control.quinque.QuinqueMesh.HAND;
                     lastCase = size;
                 } else {
-                    growing &= k == 20;
+                    growing &= dawn || k == 20;
                 }
             }
             check(growing, q + ": coming out it grows out of the fist and its case shrinks into it, gone only once out");
@@ -391,9 +402,37 @@ public final class QuinqueTests {
         check(item.contains("initializeClient") && item.contains("(Ljava/util/function/Consumer;)V") && item.contains("net/minecraftforge/fml/DistExecutor"),
             "a mesh quinque gives Forge its renderer in initializeClient, through DistExecutor (compiled)");
         String source = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/QuinqueItemRenderer.java"));
-        check(source.contains("QuinqueMesh.DIAGONAL), 0.0F, 0.0F, 1.0F)") && source.indexOf("pose.m_85837_(0.5, 0.5, 0.5)") < source.indexOf("QuinqueMesh.DIAGONAL")
-            && source.indexOf("QuinqueMesh.DIAGONAL") < source.indexOf("pose.m_85837_(-0.5, -0.5, -0.5)"),
-            "the renderer turns the mesh onto the diagonal about the model's middle, as QuinqueMesh.turned does");
+        check(source.contains("QuinqueMesh.diagonal(q)), 0.0F, 0.0F, 1.0F)") && source.indexOf("pose.m_85837_(0.5, 0.5, 0.5)") < source.indexOf("QuinqueMesh.diagonal(q)")
+            && source.indexOf("QuinqueMesh.diagonal(q)") < source.indexOf("pose.m_85837_(-0.5, -0.5, -0.5)")
+            && com.hex.kagune.control.quinque.QuinqueMesh.diagonal(Quinque.KATANA) == com.hex.kagune.control.quinque.QuinqueMesh.DIAGONAL
+            && com.hex.kagune.control.quinque.QuinqueMesh.diagonal(Quinque.DAWN) == 0.0F,
+            "the renderer turns the mesh as QuinqueMesh.turned does about the model's middle (the katana onto the diagonal, Dawn as it lies)");
+        // 4.1.26 (the owner: "actually make it spread open like a fucking umbrella ... It just meant open. Like a reverse umbrella"): Dawn
+        // opens as its shot gathers (spread over a few ticks, open while its point is, furled after), its guard turned inside out into a cup
+        // opening forward (every panel's rim ahead of where it was), and the renderer draws it as open as its stack says.
+        check(Quinque.dawnOpening(100L, 100L, 110L, 4.0F, 6.0F) == 0.0F && Quinque.dawnOpening(104L, 100L, 110L, 4.0F, 6.0F) == 1.0F
+            && Quinque.dawnOpening(110L + Quinque.DAWN_OPEN_AFTER, 100L, 110L, 4.0F, 6.0F) == 1.0F
+            && Quinque.dawnOpening(110L + Quinque.DAWN_OPEN_AFTER + 3L, 100L, 110L, 4.0F, 6.0F) == 0.5F
+            && Quinque.dawnOpening(110L + Quinque.DAWN_OPEN_AFTER + 6L, 100L, 110L, 4.0F, 6.0F) == 0.0F
+            && Quinque.dawnOpening(99L, 100L, 110L, 4.0F, 6.0F) == 0.0F, "Dawn spreads open as its shot gathers, stays open while it fires, then furls");
+        com.hex.kagune.control.quinque.ArmMesh.Mesh shut = com.hex.kagune.control.quinque.QuinqueDawnMesh.of(0.0F);
+        com.hex.kagune.control.quinque.ArmMesh.Mesh open = com.hex.kagune.control.quinque.QuinqueDawnMesh.of(1.0F);
+        float shutReach = 0.0F;
+        float openReach = 0.0F;
+        float openRim = -Float.MAX_VALUE;
+        for (int i = 0; i < shut.pos.length; i += 3) {
+            shutReach = Math.max(shutReach, (float)Math.hypot(shut.pos[i + 1] - 8.0F, shut.pos[i + 2] - 8.0F));
+        }
+        for (int i = 0; i < open.pos.length; i += 3) {
+            float r = (float)Math.hypot(open.pos[i + 1] - 8.0F, open.pos[i + 2] - 8.0F);
+            openReach = Math.max(openReach, r);
+            if (r > 4.0F) {
+                openRim = Math.max(openRim, open.pos[i]);
+            }
+        }
+        check(shutReach < 3.3F && openReach > 6.0F && openRim > 14.0F, "Dawn open: its guard a cup spread forward round its spike (shut "
+            + shutReach + " px round, open " + openReach + ", its rim reaching x " + openRim + ")");
+        check(source.contains("QuinqueClient.dawnOpening(stack)"), "the renderer draws Dawn as open as its stack's shot has it");
         // Loaded as the items are registered (its offer), long before the first frame: no render type made by loading it.
         check(source.contains("private static final class Solid") && !source.replaceAll("(?s)private static final class Solid \\{.*?\\}", "")
             .contains("RenderType.m_"), "the renderer makes its render type the first time it draws, not as the items are registered");
@@ -433,7 +472,7 @@ public final class QuinqueTests {
             // 4.1.20: a mesh's points (every fifth), turned onto the diagonal as the item draws it.
             com.hex.kagune.control.quinque.ArmMesh.Mesh mesh = com.hex.kagune.control.quinque.QuinqueMesh.of(q);
             for (int v = 0; v < mesh.pos.length / 3; v += 5) {
-                out.add(com.hex.kagune.control.quinque.QuinqueMesh.turned(new float[] {mesh.pos[v * 3], mesh.pos[v * 3 + 1], mesh.pos[v * 3 + 2]}));
+                out.add(com.hex.kagune.control.quinque.QuinqueMesh.turned(q, new float[] {mesh.pos[v * 3], mesh.pos[v * 3 + 1], mesh.pos[v * 3 + 2]}));
             }
             return out;
         }

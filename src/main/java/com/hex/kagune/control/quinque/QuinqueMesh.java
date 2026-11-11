@@ -33,9 +33,44 @@ public final class QuinqueMesh {
         return new float[] {(float)(8.0 + x * Math.cos(a) - y * Math.sin(a)), (float)(8.0 + x * Math.sin(a) + y * Math.cos(a)), standing[2]};
     }
 
-    /** Whether {@code q} is drawn as a mesh (the rest keep their item models for now). */
+    /** Whether {@code q} is drawn as a mesh (the rest keep their item models for now). 4.1.26: Dawn too ({@link QuinqueDawnMesh}). */
     public static boolean has(Quinque q) {
-        return q == Quinque.KATANA;
+        return q == Quinque.KATANA || q == Quinque.DAWN;
+    }
+
+    /**
+     * 4.1.26: the turn {@code q}'s mesh is drawn with (degrees about z through the model's middle): the katana's standing mesh onto the
+     * handheld diagonal ({@link #DIAGONAL}); Dawn is built where its boxes lay, along x (none).
+     */
+    public static float diagonal(Quinque q) {
+        return q == Quinque.DAWN ? 0.0F : DIAGONAL;
+    }
+
+    /** 4.1.26: a point of {@code q}'s mesh where it is drawn: turned as {@link #diagonal} says. */
+    public static float[] turned(Quinque q, float[] p) {
+        return q == Quinque.DAWN ? p.clone() : turned(p);
+    }
+
+    /**
+     * 4.1.26: a point ({x, y, z}, item pixels) of {@code q}'s mesh {@code out} of the way out of its case: drawn in toward the fist along its
+     * length (the katana's y, Dawn's x).
+     */
+    public static float[] drawn(Quinque q, float[] p, float out) {
+        if (q == Quinque.DAWN) {
+            float f = Math.max(0.0F, Math.min(1.0F, out));
+            return new float[] {(float)(QuinqueDawnMesh.HAND + (p[0] - QuinqueDawnMesh.HAND) * f), p[1], p[2]};
+        }
+        return new float[] {p[0], drawn(p[1], out), p[2]};
+    }
+
+    /** 4.1.26: the small case round {@code q}'s grip as it comes out (the katana's; Dawn grows out of the bare fist: null). */
+    public static float[] caseBox(Quinque q, float out) {
+        return q == Quinque.DAWN ? null : caseBox(out);
+    }
+
+    /** 4.1.26: {@code q}'s mesh {@code open} of the way open (Dawn's canopy: {@link QuinqueDawnMesh}); the others as {@link #of(Quinque)}. */
+    public static ArmMesh.Mesh of(Quinque q, float open) {
+        return q == Quinque.DAWN ? QuinqueDawnMesh.of(open) : of(q);
     }
 
     private static final ArmMesh.Mesh[] BUILT = new ArmMesh.Mesh[Quinque.values().length];
@@ -45,6 +80,9 @@ public final class QuinqueMesh {
     public static synchronized ArmMesh.Mesh of(Quinque q) {
         if (!has(q)) {
             return null;
+        }
+        if (q == Quinque.DAWN) {
+            return QuinqueDawnMesh.of(0.0F);
         }
         if (BUILT[q.ordinal()] == null) {
             ArmMesh.Builder b = new ArmMesh.Builder(QuinqueMesh::item, QuinqueMesh::itemWay);

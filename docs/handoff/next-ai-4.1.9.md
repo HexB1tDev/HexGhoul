@@ -1,4 +1,4 @@
-# Next AI: after 4.1.25 (4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.26 (4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -33,7 +33,8 @@ Considering the amount of stuff that we got to do, you're spending so much time 
    (`QuinqueOwn.whip`, `WeaponLayer.whip`) has to be laid from the posed arm.
 4. **Arima, part 1 is done (4.1.23):** Dawn every time, the Slain Reaper advancement and his mastery for everyone who hit him in the last
    five minutes. **4.1.24:** his mansion (the owner's schematic, `art/reaper/arima_mansion.schem`), one per world, him in its garden.
-   **4.1.25:** both fighting styles (Kick Master's string and the Speed Blitz, up close). **Next for Arima:** Dawn smooth and opening like an umbrella, the ground strike as the blade growing
+   **4.1.25:** both fighting styles (Kick Master's string and the Speed Blitz, up close). **4.1.26:** Dawn smooth, opening like a reverse
+   umbrella. **Next for Arima:** the ground strike as the blade growing
    up, phase 2 (jacket off: `art/reaper/Reaper_Phase2.png`; the heavy blade: `art/reaper/Reaper_Quinque1.jpg`, `Reaper_quinque2.jpg`;
    bleed, faster, dodging; the blade shattering; on his knees). Then quests, then the Small City. One version at a time, short.
 5. **Open question to the owner:** should daughters 07, 10, 11, 12, 21 and 22 get open eyes painted on? Ask before touching them.
@@ -119,6 +120,7 @@ Considering the amount of stuff that we got to do, you're spending so much time 
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.26 | Arima part 4: Dawn a smooth mesh (`quinque/QuinqueDawnMesh`: guard panels, spike, shaft, built in item pixels along x, `STEPS` cached open steps); its guard turned inside out into a forward cup as it fires (`REVERSE`), lightning at the point; `QuinqueMesh` per-quinque turn/telescope/case/open; `Quinque.dawnOpening`/`QuinqueClient.dawnOpening` from the stack's shot tags; tools/quinque_models.py `MESHES` += dawn | pushed, EXIT 0 |
 | 4.1.25 | Arima part 3: up close the Reaper throws Kick Master's string or the Speed Blitz (`AgentBrain.brawl`/`brawlBlink`/`brawlLands`, `AgentRules.REAPER_BRAWL_*`, `brawlStyle`), synced as `CcgAgent.STRIKE` + ordinal, drawn by `AgentPose.brawl` (PaleMotions.strike, Dawn carried at the shoulder and raised by the lean); `AgentTests` (Dawn above the ground through every strike) | pushed, EXIT 0 |
 | 4.1.24 | Arima part 2: `hexkagune:reaper_mansion` (the owner's schematic via `tools/companion_structures.py`: short grass as 1.20.1's grass, bottom layer cropped, under-lawn air filled, `hexkagune:mansion_anchor` on the lawn's layer, Arima baked in with ForgeData `HexCcgAgent`/`RankLevel` 10/`Mansion`); a one-of-a-kind dry place (`DryLand.PLACES`, `MANSION_SALT`, `PlaceClaims`, `ControlStructures.ONE_OF_A_KIND`); his home in the garden (`AgentBrain` HOME_X/Y/Z, `AgentRules.REAPER_HOME_STROLL/LEASH`); never in the wild (`REAPER_CHANCE` 0) | pushed, EXIT 0 |
 | 4.1.23 | Arima part 1: Dawn's case every time he falls (`AgentRules.dawnChance` 1); `hexkagune:slain_reaper` (data/hexkagune/advancements, impossible criterion awarded by `AgentBrain.reaperSlain`) and his 60 mastery for his killer and every player who hit him in the last 5 minutes (`AgentBrain.reaperStruck`, `AgentRules.REAPER_SHARE_TICKS`); advancement API allowlisted with joined.tsrg and intermediary evidence | pushed, EXIT 0 |
@@ -461,6 +463,28 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.26, what and where (Arima part 4: Dawn smooth, a reverse umbrella)
+
+The owner (quoted exactly): "His Quinque, Dawn, needs a major rework in look so it's smooth and not cubic. We need it to open properly when
+shooting projectiles. Like, actually make it spread open like a fucking umbrella." And after an umbrella opening back over the hand was
+described: "It is not what I meant when I said an umbrella. I was being, I wasn't being literal, bro. It just meant open. Like a reverse
+umbrella, not like that, bro."
+
+- **`quinque/QuinqueDawnMesh`** (pure): built straight in item pixels (x along it, its axis at y 8 z 8, as its boxes lay: holds hold).
+  `canopy` (the guard: `PANELS` 8, hinged at `HINGE`; opened, each panel keeps its share of the circle while its chord angle goes to
+  `REVERSE` 145 degrees: a cup opening forward; flat at half way), `spike` (six blades laid shut, a gold line down each; its `ease`
+  parameter would splay them: the alternative render, not used), `shaft` (grip wire, butt, hooked guard), the light at the point while
+  open. `of(open)` caches `STEPS` + 1 meshes.
+- **`QuinqueMesh`:** `has` (katana, Dawn), `diagonal(q)`, `turned(q, p)`, `drawn(q, p, out)` (Dawn telescopes along x to its grip
+  `QuinqueDawnMesh.HAND`), `caseBox(q, out)` (Dawn: none), `of(q, open)`.
+- **Opening:** `Quinque.dawnOpening(now, at, fires, spread, furl)` from the stack's `DAWN_AT`/`DAWN_FIRES` (set by players' shots,
+  `QuinqueServer.opens`, and by every Arima aim path already); `QuinqueClient.dawnOpening(stack)`; the renderer draws that step.
+- **Models:** tools/quinque_models.py `MESHES` += dawn: its weapon frames and its fire frame builtin/entity, the cases still boxes (re-run
+  reproduces everything else).
+- **Tests:** `QuinqueTests.meshes` per quinque (Dawn along x, grips on its axis, its opening times, the open cup forward and wide).
+- **Previews:** `docs/handoff/dawn-smooth-4.1.26.png`, `dawn-first-person-4.1.26.png`, `dawn-blades-alternative-4.1.26.png`.
+- **Not tested in game.**
 
 ## 4.1.25, what and where (Arima part 3: both fighting styles)
 

@@ -66,6 +66,24 @@ public final class QuinqueClient {
         return open != null ? 1.0F : Math.min(0.96F, shown(stack, true));
     }
 
+    /** 4.1.26: how many ticks Dawn's canopy takes to spread open as a shot gathers, and to furl again after. */
+    static final float DAWN_SPREAD = 4.0F;
+    static final float DAWN_FURL = 6.0F;
+
+    /**
+     * 4.1.26 (the owner: "actually make it spread open like a fucking umbrella"): how far open Dawn's canopy is drawn (0 furled .. 1 open):
+     * spreading from when its point began to open ({@link Quinque#DAWN_AT}), open until its ball has left and gone
+     * ({@link Quinque#tipOpen}), then furling.
+     */
+    public static float dawnOpening(ItemStack stack) {
+        net.minecraft.nbt.CompoundTag tag = stack.m_41783_();
+        net.minecraft.client.multiplayer.ClientLevel world = net.minecraft.client.Minecraft.m_91087_().f_91073_;
+        if (tag == null || world == null || !tag.m_128441_(Quinque.DAWN_AT) || !tag.m_128441_(Quinque.DAWN_FIRES)) {
+            return 0.0F;
+        }
+        return Quinque.dawnOpening(world.m_46467_(), tag.m_128454_(Quinque.DAWN_AT), tag.m_128454_(Quinque.DAWN_FIRES), DAWN_SPREAD, DAWN_FURL);
+    }
+
     /** 2.0.32: {when its point began to open, the game time now} while Dawn's point is open, else null. */
     static long[] dawnOpen(ItemStack stack, net.minecraft.client.multiplayer.ClientLevel level) {
         net.minecraft.nbt.CompoundTag tag = stack.m_41783_();

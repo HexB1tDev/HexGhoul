@@ -34,8 +34,8 @@ public final class QuinqueMeshPreview {
     static List<PoseRender.Tri> tris(Quinque q, float out, Function<float[], double[]> place, List<Boolean> glows) {
         List<PoseRender.Tri> tris = new ArrayList<>();
         ArmMesh.Mesh mesh = QuinqueMesh.of(q);
-        add(tris, glows, mesh, v -> place.apply(QuinqueMesh.turned(new float[] {v[0], QuinqueMesh.drawn(v[1], out), v[2]})));
-        float[] box = QuinqueMesh.caseBox(out);
+        add(tris, glows, mesh, v -> place.apply(QuinqueMesh.turned(q, QuinqueMesh.drawn(q, v, out))));
+        float[] box = QuinqueMesh.caseBox(q, out);
         if (box != null) {
             add(tris, glows, QuinqueMesh.caseMesh(), v -> place.apply(QuinqueMesh.turned(new float[] {
                 box[0] + (v[0] + 1.0F) * 0.5F * (box[3] - box[0]), box[1] + (v[1] + 1.0F) * 0.5F * (box[4] - box[1]),

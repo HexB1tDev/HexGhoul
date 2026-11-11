@@ -60,7 +60,8 @@ public final class QuinqueItemRenderer extends net.minecraft.client.renderer.Blo
                           int overlay) {
         try {
             Quinque q = ControlItems.quinqueWeapon(stack);
-            ArmMesh.Mesh mesh = q == null ? null : QuinqueMesh.of(q);
+            // 4.1.26: Dawn's canopy as open as its stack's shot has it (QuinqueClient.dawnOpening).
+            ArmMesh.Mesh mesh = q == null ? null : QuinqueMesh.of(q, q == Quinque.DAWN ? QuinqueClient.dawnOpening(stack) : 0.0F);
             if (mesh == null) {
                 return;
             }
@@ -84,7 +85,7 @@ public final class QuinqueItemRenderer extends net.minecraft.client.renderer.Blo
                 // Turned onto the handheld diagonal about the model's middle, as the baker turns its boxes (QuinqueMesh.turned), then the
                 // model's own pixels (ItemRenderer has already moved the model's corner to the origin).
                 pose.m_85837_(0.5, 0.5, 0.5);
-                pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(QuinqueMesh.DIAGONAL), 0.0F, 0.0F, 1.0F));
+                pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(QuinqueMesh.diagonal(q)), 0.0F, 0.0F, 1.0F));
                 pose.m_85837_(-0.5, -0.5, -0.5);
                 pose.m_85841_(1.0F / 16.0F, 1.0F / 16.0F, 1.0F / 16.0F);
                 // An enchanted one shimmers as any enchanted item (its glint runs over the mesh by the uv its points are given).
@@ -96,12 +97,13 @@ public final class QuinqueItemRenderer extends net.minecraft.client.renderer.Blo
                     for (int c = 0; c < 4; c++) {
                         int v = i * 4 + c;
                         int argb = mesh.argb[v];
-                        to.m_252986_(m, mesh.pos[v * 3], QuinqueMesh.drawn(mesh.pos[v * 3 + 1], out), mesh.pos[v * 3 + 2])
+                        float[] p = QuinqueMesh.drawn(q, new float[] {mesh.pos[v * 3], mesh.pos[v * 3 + 1], mesh.pos[v * 3 + 2]}, out);
+                        to.m_252986_(m, p[0], p[1], p[2])
                             .m_6122_(argb >> 16 & 255, argb >> 8 & 255, argb & 255, 255).m_7421_((mesh.pos[v * 3] + mesh.pos[v * 3 + 2]) / 32.0F, mesh.pos[v * 3 + 1] / 32.0F)
                             .m_86008_(overlay).m_85969_(lit).m_252939_(n, mesh.normal[v * 3], mesh.normal[v * 3 + 1], mesh.normal[v * 3 + 2]).m_5752_();
                     }
                 }
-                float[] box = QuinqueMesh.caseBox(out);
+                float[] box = QuinqueMesh.caseBox(q, out);
                 if (box != null) {
                     ArmMesh.Mesh shell = QuinqueMesh.caseMesh();
                     for (int i = 0; i < shell.quads; i++) {

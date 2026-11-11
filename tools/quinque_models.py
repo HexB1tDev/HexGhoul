@@ -978,7 +978,7 @@ def model(kind, elements, display):
 # smooth meshes (quinque/QuinqueMesh.java), drawn by code (client/QuinqueItemRenderer.java): their weapon frames (out_1..6, full) are
 # builtin/entity models with the same display transforms (so every hold solved for the boxes holds), no elements. Their case frames
 # (shut, open, carried) stay boxes: a case is a case.
-MESHES = {"katana"}
+MESHES = {"katana", "dawn"}
 
 
 def drawn_by_code(kind, display):
@@ -989,7 +989,7 @@ def drawn_by_code(kind, display):
 
 def write(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
-    if path.name in {"dawn_half.json", "dawn_nearly.json", "dawn_full.json", "dawn_fire.json"}:
+    if path.name in {"dawn_half.json", "dawn_nearly.json", "dawn_full.json", "dawn_fire.json"} and "elements" in data:
         elements = data.pop("elements")
         payload = json.dumps(data, indent=1)[:-2] + ',\n "elements": [\n'
         payload += ",\n".join("  " + json.dumps(el, separators=(",", ":")) for el in elements)
@@ -1023,7 +1023,8 @@ def main():
                 frames[name] = drawn_by_code(kind, held)
         if kind == "dawn":
             # 2.0.30: its point parted about a light as a lightning ball leaves it (chosen as a shot is fired; see the item's overrides).
-            frames["fire"] = model(kind, tele(dawn_parts(open_tip=True), 1.0), held)
+            # 4.1.26: drawn by code like its other frames (its canopy spread open: QuinqueDawnMesh).
+            frames["fire"] = drawn_by_code(kind, held) if kind in MESHES else model(kind, tele(dawn_parts(open_tip=True), 1.0), held)
         for name, data in frames.items():
             for el in data.get("elements", []):
                 for v in el["from"] + el["to"]:
