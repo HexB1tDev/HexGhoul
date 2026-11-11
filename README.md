@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.28 (HexGhoul): Arima, phase 2 part 1: the jacket comes off (testing)
+
+See `.github/release-notes-4.1.28.md`. "He just removes his jacket, revealing a new skin ... he gets way faster": at half health (once, saved as `HexCcgAgentBare`) the White Reaper takes his jacket off (`AgentBrain.shed`, swing code `CcgAgent.SHED`, drawn by `AgentPose.shed`), his look switched to the appended `ccg_reaper_bare` (`AgentRules.REAPER_BARE_LOOK`, the owner's `art/reaper/Reaper_Phase2.png`, wide arms), faster (`REAPER_BARE_SPEED`, `REAPER_BARE_PACE`); no blow takes him past half with it on (`AgentRules.shedClamp`), none lands while he does it. Protocol 117.
+
 ## 4.1.27 (HexGhoul): Arima, part 5: the ground strike grows Dawn's blades, not a tentacle (testing)
 
 See `.github/release-notes-4.1.27.md`. "It shouldn't be a tentacle. It should be like a smooth part of the blade, as if the blade grew out of the ground": the ground strike raises Dawn's blades (`ReaperTendril.blades`: a great one and three round it, leaning, staggered) drawn from `QuinqueDawnMesh.risingBlade` by `client/render/ReaperTendrils` in place of the Rinkaku tube; its gameplay unchanged. Protocol 117.

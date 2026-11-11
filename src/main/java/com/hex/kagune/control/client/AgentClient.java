@@ -44,6 +44,13 @@ public final class AgentClient {
             double landed = agent.m_20096_() && flipAge > 4.0 ? flipAge - 4.0 : -1.0;
             return PaleMotions.flip(PaleRules.Flip.byOrdinal(agent.flip()), flipAge, landed);
         }
+        // 4.1.28: the White Reaper taking his jacket off (AgentPose.shed), his hands empty.
+        if (agent.swing() == CcgAgent.SHED) {
+            double shedAge = CcgAgent.since(now, agent.swingAt()) + partial;
+            if (shedAge >= 0.0 && shedAge < AgentRules.REAPER_SHED_TICKS) {
+                return AgentPose.shed(shedAge);
+            }
+        }
         // 4.1.25: the White Reaper's hand-to-hand (Kick Master's string or the Speed Blitz): the whole body a player's strike, legs and all,
         // Dawn carried clear (AgentPose.brawl).
         int code = agent.swing() - CcgAgent.STRIKE;
@@ -124,7 +131,7 @@ public final class AgentClient {
             AgentPose.seated(p, agent.f_19797_ + partial, agent.m_19879_());
             posed = true;
         } else if (still > 0.0F) {
-            if (agent.lookIndex() == com.hex.kagune.control.npc.AgentRules.REAPER_LOOK) {
+            if (AgentRules.reaperLook(agent.lookIndex())) {
                 AgentPose.reaperIdle(p, agent.f_19797_ + partial, agent.m_19879_(), still); // 2.0.43: his own, at ease
             } else {
                 AgentPose.idle(p, agent.f_19797_ + partial, agent.m_19879_(), still);

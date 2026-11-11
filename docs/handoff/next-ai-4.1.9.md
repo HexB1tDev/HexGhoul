@@ -38,7 +38,7 @@ the next AI now."
 4. **Arima, part 1 is done (4.1.23):** Dawn every time, the Slain Reaper advancement and his mastery for everyone who hit him in the last
    five minutes. **4.1.24:** his mansion (the owner's schematic, `art/reaper/arima_mansion.schem`), one per world, him in its garden.
    **4.1.25:** both fighting styles (Kick Master's string and the Speed Blitz, up close). **4.1.26:** Dawn smooth, opening like a reverse
-   umbrella. **4.1.27:** the ground strike grows Dawn's blades, not a tentacle. **Next for Arima: phase 2**, one version each, renders judged before
+   umbrella. **4.1.27:** the ground strike grows Dawn's blades, not a tentacle. **4.1.28:** the jacket comes off (part 1 below is done). **Next for Arima: phase 2**, one version each, renders judged before
    each push:
    1. **The jacket comes off** at half health (once): a shedding move (both hands to the collar, the coat swept off the shoulders, a new
       swing code), his look switched to a new appended look `ccg_reaper_bare` (from `art/reaper/Reaper_Phase2.png`, copied; slim arms
@@ -146,6 +146,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.28 | Arima phase 2 part 1: the jacket off at half health, once (`AgentBrain.shed`, `CcgAgent.SHED` 7, `AgentPose.shed` keyed by `SHED_KEYS`), the look `ccg_reaper_bare` (`AgentRules.REAPER_BARE_LOOK` 10, `reaperLook(index)`), faster; `shedClamp`; invulnerable while shedding; saved as `HexCcgAgentBare` | pushed, EXIT 0 |
 | 4.1.27 | Arima part 5: the ground strike's tendril replaced by Dawn's blades growing out of the mark (`ReaperTendril.blades`, `QuinqueDawnMesh.risingBlade`, `client/render/ReaperTendrils` draws them leaned and grown by `out(age - delay)`); gameplay unchanged | pushed, EXIT 0 |
 | 4.1.26 | Arima part 4: Dawn a smooth mesh (`quinque/QuinqueDawnMesh`: guard panels, spike, shaft, built in item pixels along x, `STEPS` cached open steps); its guard turned inside out into a forward cup as it fires (`REVERSE`), lightning at the point; `QuinqueMesh` per-quinque turn/telescope/case/open; `Quinque.dawnOpening`/`QuinqueClient.dawnOpening` from the stack's shot tags; tools/quinque_models.py `MESHES` += dawn | pushed, EXIT 0 |
 | 4.1.25 | Arima part 3: up close the Reaper throws Kick Master's string or the Speed Blitz (`AgentBrain.brawl`/`brawlBlink`/`brawlLands`, `AgentRules.REAPER_BRAWL_*`, `brawlStyle`), synced as `CcgAgent.STRIKE` + ordinal, drawn by `AgentPose.brawl` (PaleMotions.strike, Dawn carried at the shoulder and raised by the lean); `AgentTests` (Dawn above the ground through every strike) | pushed, EXIT 0 |
@@ -490,6 +491,31 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.28, what and where (Arima phase 2 part 1: the jacket comes off)
+
+The owner (quoted exactly): "he pulls out his jacket, he just removes his jacket, revealing a new skin that I'm gonna send you. Which is
+basically gonna serve as it's him, but like without the jacket ... During this next phase, he gets way faster."
+
+- **Look:** `AgentRules.LOOKS` += `ccg_reaper_bare` (index 10, `REAPER_BARE_LOOK`; `textures/entity/ccg/ccg_reaper_bare.png` copied from
+  `art/reaper/Reaper_Phase2.png`, which is painted WIDE-armed, so it is drawn on the wide model, not the slim one the plan guessed).
+  `AgentRules.reaperLook(index)` takes both; `AgentClient` (his idle) and `AgentRenderer` (`brawny`, the `Build` chest) use it.
+- **Server:** `AgentBrain.shed` runs first in `act`: at `REAPER_SHED_AT` (half) or when `hurt` set `Mind.shedPending`, once he is on the
+  ground and not soaring, he cancels the kick, brawl, lightning and ground strike, stops, swings `CcgAgent.SHED` for `REAPER_SHED_TICKS`
+  (34), facing his prey; at `REAPER_SHED_SWAP` (15) `Mind.bare`, `HexCcgAgentBare` saved, `dress` the bare look, speed `speed(mind)`
+  (`REAPER_BARE_SPEED` 1.3); `REAPER_BARE_PACE` 0.7 on the rest between blows. `arm` keeps his hand empty while he sheds (Dawn back after).
+  `hurt`: cancelled while shedding; with the jacket on `shedClamp` keeps any blow from taking him past half (`GhoulTank.bypasses`: `/kill`
+  and the void still kill). `wake` restores the bare look and speed from the flag.
+- **Client:** `AgentClient.pose` returns `AgentPose.shed(age)` whole for `SHED` (straight arms: he's a mob, no elbows): hands on his lapels
+  (tick 5-8), pulled open (12), swept back behind him (16-20, the look switches at 15), dropped (24), neck roll (27-30), rest (34); the
+  left arm a beat behind the right.
+- **Not done (offer it if the owner wants it):** the coat itself falling to the ground behind him; now it's a clean switch while his arms
+  are behind him.
+- **Tests:** `AgentTests.shedding` (the clamp, hands before his chest at the grip and behind him at the swap, never inside him, rest at the
+  end, the source wiring), `looks` (11 looks, the bare one wide).
+- **Preview:** `docs/handoff/arima-shed-4.1.28.png` (a scratch `ShedPreview` over `PoseRender` + `ReaperPreview.chest`, the coat skin before
+  the swap, the bare one after).
+- **Not tested in game.**
 
 ## 4.1.27, what and where (Arima part 5: the ground strike's blades)
 

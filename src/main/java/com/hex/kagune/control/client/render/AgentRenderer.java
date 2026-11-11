@@ -77,7 +77,7 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
             posed = null;
         }
         AgentModel.pose = posed;
-        AgentModel.brawny = agent.lookIndex() == AgentRules.REAPER_LOOK; // 2.0.45: his arms set out round his broader chest
+        AgentModel.brawny = AgentRules.reaperLook(agent.lookIndex()); // 2.0.45: his arms set out round his broader chest
         try {
             AgentClient.afterimages(agent, posed, partial);
         } catch (RuntimeException failure) {
@@ -167,7 +167,7 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
         @Override
         public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, CcgAgent agent, float limbSwing, float limbSwingAmount, float partialTick,
                             float ageInTicks, float netHeadYaw, float headPitch) {
-            if (agent.m_20145_() || agent.lookIndex() != AgentRules.REAPER_LOOK) {
+            if (agent.m_20145_() || !AgentRules.reaperLook(agent.lookIndex())) {
                 return;
             }
             try {

@@ -84,12 +84,68 @@ public final class AgentTests {
         ranks();
         tendril();
         headquarters();
+        shedding();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Agent tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 4.1.28 (the owner: "he pulls out his jacket, he just removes his jacket, revealing a new skin ... During this next phase, he gets way
+     * faster"): at half health the White Reaper takes his jacket off, once, nothing landing on him while he does, and is faster after.
+     */
+    static void shedding() throws IOException {
+        check(AgentRules.reaperLook(AgentRules.REAPER_LOOK) && AgentRules.reaperLook(AgentRules.REAPER_BARE_LOOK) && !AgentRules.reaperLook(0)
+            && !AgentRules.reaperLook(AgentRules.REGULAR_LOOKS - 1), "both of his looks are his, no investigator's");
+        check(AgentRules.REAPER_SHED_AT == 0.5F, "the jacket comes off at half health");
+        check(AgentRules.shedClamp(200.0F, 200.0F, 500.0F) == 100.0F && AgentRules.shedClamp(150.0F, 200.0F, 20.0F) == 20.0F
+            && AgentRules.shedClamp(100.0F, 200.0F, 30.0F) == 0.0F && AgentRules.shedClamp(120.0F, 200.0F, 30.0F) == 20.0F,
+            "with the jacket on no blow takes him past half, however big (the second phase always comes)");
+        check(AgentRules.REAPER_BARE_SPEED > 1.2 && AgentRules.REAPER_BARE_PACE < 0.8, "faster with it off: his speed and the rest between blows");
+        check(AgentRules.REAPER_SHED_SWAP > 10 && AgentRules.REAPER_SHED_SWAP < AgentRules.REAPER_SHED_TICKS - 10,
+            "the look switches mid-move, with time to grip it before and to roll his neck after");
+        check(com.hex.kagune.control.npc.CcgAgent.SHED > com.hex.kagune.control.npc.CcgAgent.GROUND
+            && com.hex.kagune.control.npc.CcgAgent.SHED < com.hex.kagune.control.npc.ArmRules.STEP, "the shed's swing code is clear of every other");
+        // The move: hands to his lapels in front of his chest, then swept back behind him by the time the look switches, back at rest at the end.
+        RigPose grip = AgentPose.shed(7.0);
+        for (boolean right : new boolean[] {true, false}) {
+            double[] fist = com.hex.kagune.control.client.animation.QuinqueGrip.fist(grip, right, true);
+            check(fist[2] < -3.0 && Math.abs(fist[0]) < 4.5 && fist[1] > -1.0 && fist[1] < 9.0,
+                (right ? "right" : "left") + " hand on his lapels: before his chest, near its middle, at its height: " + java.util.Arrays.toString(fist));
+            double[] off = com.hex.kagune.control.client.animation.QuinqueGrip.fist(AgentPose.shed(AgentRules.REAPER_SHED_SWAP + 1.0), right, false);
+            check(off[2] > 2.0, (right ? "right" : "left") + " hand behind his back as the coat comes off: " + java.util.Arrays.toString(off));
+        }
+        for (double age = 0.0; age < AgentRules.REAPER_SHED_TICKS; age += 0.5) {
+            RigPose p = AgentPose.shed(age);
+            for (boolean right : new boolean[] {true, false}) {
+                double[] fist = com.hex.kagune.control.client.animation.QuinqueGrip.fist(p, right, age >= AgentRules.REAPER_SHED_SWAP);
+                check(!(Math.abs(fist[0]) < 3.5 && fist[1] > 0.5 && fist[1] < 11.5 && Math.abs(fist[2]) < 1.5),
+                    "tick " + age + ": " + (right ? "right" : "left") + " hand never inside his body");
+            }
+        }
+        RigPose end = AgentPose.shed(AgentRules.REAPER_SHED_TICKS - 0.01);
+        check(Math.abs(end.rightArmX) < 0.01 && Math.abs(end.leftArmX) < 0.01 && Math.abs(end.headZ) < 0.01 && end.armHold < 0.01,
+            "back at rest as it ends (into his stance with no jump)");
+        // The server: before anything else, once; nothing lands while he does it; the jacket's state kept with him; faster.
+        String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+        int act = brain.indexOf("private static void act(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
+        check(act > 0 && brain.indexOf("if (shed(agent, mind, level, now)) {", act) - act < 200, "the shed comes before anything else he does");
+        check(brain.contains("event.setCanceled(true); // 4.1.28") && brain.contains("AgentRules.shedClamp(health, max, event.getAmount())")
+            && brain.contains("agent.mind.shedPending = true;"), "struck to half it starts; struck while it plays, nothing lands");
+        check(brain.contains("agent.getPersistentData().m_128405_(BARE, 1);") && brain.contains("mind.bare = saved.m_128441_(BARE);")
+            && brain.contains("mind.look = mind.bare ? AgentRules.REAPER_BARE_LOOK : AgentRules.REAPER_LOOK;"), "the jacket stays off, saved with him");
+        int swap = brain.indexOf("mind.look = AgentRules.REAPER_BARE_LOOK;");
+        check(swap > 0 && brain.indexOf("agent.dress(mind.look, mind.kind);", swap) - swap < 200
+            && brain.indexOf(".m_22100_(speed(mind));", swap) - swap < 400, "the look sent to every client as it comes off, and his speed with it");
+        String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
+        String renderer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java"));
+        check(client.contains("return AgentPose.shed(shedAge);") && client.contains("AgentRules.reaperLook(agent.lookIndex())")
+            && renderer.contains("AgentModel.brawny = AgentRules.reaperLook(agent.lookIndex());") && renderer.contains("!AgentRules.reaperLook(agent.lookIndex())")
+            && !client.contains("== com.hex.kagune.control.npc.AgentRules.REAPER_LOOK") && !renderer.contains("AgentRules.REAPER_LOOK"),
+            "drawn as him in either look: his build, his idle");
     }
 
     /**
@@ -213,7 +269,7 @@ public final class AgentTests {
      * White Reaper's own, last, slim armed, worn by him alone.
      */
     static void looks() throws IOException {
-        check(AgentRules.LOOKS.length == 10, "nine investigators' skins and the White Reaper's");
+        check(AgentRules.LOOKS.length == 11, "nine investigators' skins and the White Reaper's two (4.1.28: his jacket off)");
         check(AgentRules.REGULAR_LOOKS == 9 && AgentRules.REAPER_LOOK == 9, "the Reaper's skin is the one appended last");
         int women = 0;
         int slimMen = 0;
@@ -228,13 +284,16 @@ public final class AgentTests {
                 check(look.slim() == slimArms(png), look.texture() + " is drawn on the arms it is painted for");
             }
             check(!look.female() || look.slim(), look.texture() + ": a woman on the slim arms");
-            check(look.texture().matches("ccg_[fm][0-9]|ccg_reaper"), look.texture() + " has a plain name (no file names from the web)");
+            check(look.texture().matches("ccg_[fm][0-9]|ccg_reaper(_bare)?"), look.texture() + " has a plain name (no file names from the web)");
             women += look.female() ? 1 : 0;
             slimMen += !look.female() && look.slim() ? 1 : 0;
         }
         check(women == 4 && slimMen == 3, "four women; six men, three of them slim armed (the Reaper one of them)");
         AgentRules.Look reaper = AgentRules.LOOKS[AgentRules.REAPER_LOOK];
         check(reaper.texture().equals("ccg_reaper") && !reaper.female() && reaper.slim(), "the White Reaper: his skin, a man's body on the slim arms");
+        AgentRules.Look bare = AgentRules.LOOKS[AgentRules.REAPER_BARE_LOOK];
+        check(AgentRules.REAPER_BARE_LOOK == 10 && bare.texture().equals("ccg_reaper_bare") && !bare.female() && !bare.slim(),
+            "4.1.28: his jacket off, appended last: the owner's Reaper_Phase2.png on the wide arms it is painted for");
         check(AgentRules.look(-1) == AgentRules.LOOKS[AgentRules.LOOKS.length - 1] && AgentRules.look(AgentRules.LOOKS.length) == AgentRules.LOOKS[0],
             "any look number wraps onto the table");
         java.util.Set<Integer> rolled = new java.util.HashSet<>();

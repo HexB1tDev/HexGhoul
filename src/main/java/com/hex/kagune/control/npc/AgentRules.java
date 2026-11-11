@@ -43,11 +43,39 @@ public final class AgentRules {
         new Look("ccg_m3", false, true),
         new Look("ccg_m4", false, true),
         new Look("ccg_reaper", false, true),
+        new Look("ccg_reaper_bare", false, false),
     };
 
     /** 2.0.28: the looks an ordinary investigator may wear (all but the White Reaper's), and his. */
     public static final int REGULAR_LOOKS = 9;
     public static final int REAPER_LOOK = 9;
+    /**
+     * 4.1.28 (the owner: "he pulls out his jacket, he just removes his jacket, revealing a new skin"): his second phase's look, the jacket
+     * off (art/reaper/Reaper_Phase2.png, the owner's; wide armed as it was painted), appended so the numbers sent before keep their looks.
+     */
+    public static final int REAPER_BARE_LOOK = 10;
+
+    /** 4.1.28: either of the White Reaper's looks (his coat on, or off). */
+    public static boolean reaperLook(int index) {
+        return index == REAPER_LOOK || index == REAPER_BARE_LOOK;
+    }
+
+    /** 4.1.28: the share of his health at which the jacket comes off (once: kept with him). */
+    public static final float REAPER_SHED_AT = 0.5F;
+    /** 4.1.28: the shedding move (ticks), and the tick it is off his shoulders (his look switched there). */
+    public static final int REAPER_SHED_TICKS = 34;
+    public static final int REAPER_SHED_SWAP = 15;
+    /** 4.1.28 (the owner: "During this next phase, he gets way faster"): his speed and the rest between blows, the jacket off. */
+    public static final double REAPER_BARE_SPEED = 1.3;
+    public static final double REAPER_BARE_PACE = 0.7;
+
+    /**
+     * 4.1.28: a blow of {@code amount} on him at {@code health} of {@code max}, his jacket still on: never past the half where it comes off
+     * (so the second phase always comes, however big the blow).
+     */
+    public static float shedClamp(float health, float max, float amount) {
+        return Math.max(0.0F, Math.min(amount, health - max * REAPER_SHED_AT));
+    }
 
     /** 2.0.28: an ordinary investigator's look for a roll {@code r} in 0..1 (never the White Reaper's). */
     public static int regularLook(double r) {

@@ -192,6 +192,13 @@ public final class AgentBrain {
         final long[] moveReady = {Long.MIN_VALUE, Long.MIN_VALUE};
         /** Wounds its Cleave left bleeding: {entity id, until, damage (float bits)}. */
         final java.util.List<long[]> bleeds = new java.util.ArrayList<>();
+        /**
+         * 4.1.28: the White Reaper's jacket: off (his second phase, kept with him under {@link #BARE}); when he began taking it off (none:
+         * not now); due to come off (at half health, as soon as he stands on the ground).
+         */
+        boolean bare;
+        long shedAt = Long.MIN_VALUE;
+        boolean shedPending;
     }
 
     /** Its partner's id in its saved data (who it is: {@link CcgAgent#KEY}, packed). */
@@ -201,6 +208,8 @@ public final class AgentBrain {
     static final String RANK = CcgAgent.KEY + "Rank";
     /** 2.0.17: its rank's number (0 to 10). */
     static final String RANK_LEVEL = CcgAgent.KEY + "RankLevel";
+    /** 4.1.28: the White Reaper's jacket is off (his second phase). */
+    static final String BARE = CcgAgent.KEY + "Bare";
 
     private AgentBrain() {
     }
@@ -371,7 +380,9 @@ public final class AgentBrain {
                 saved.m_128405_(HOME_Y, (int)Math.floor(agent.m_20186_() + 0.01));
                 saved.m_128405_(HOME_Z, (int)Math.floor(agent.m_20189_()));
             }
-            mind.look = AgentRules.REAPER_LOOK; // 2.0.28: his own skin, a Reaper saved before included
+            // 2.0.28: his own skin, a Reaper saved before included; 4.1.28: the jacket off once he has shed it.
+            mind.bare = saved.m_128441_(BARE);
+            mind.look = mind.bare ? AgentRules.REAPER_BARE_LOOK : AgentRules.REAPER_LOOK;
             mind.kind = Quinque.DAWN;
             agent.m_21530_();
             agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_).m_22100_(AgentRules.REAPER_KNOCKBACK_RESISTANCE);
@@ -404,7 +415,7 @@ public final class AgentBrain {
             AgentArms.wake(agent, mind);
         }
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(AgentRules.health(mind.rank, mind.superior));
-        agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(mind.rank.speed);
+        agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(speed(mind));
         // 4.0.0 (the owner: "All naturally spawning CCG investigators will now wear ... the complete Formal Outfit ... The White Reaper is the
         // only exception"): the whole Formal Outfit on every one but him; its protection taken off its rank's own, so it fights as before.
         if (!reaper) {
@@ -440,7 +451,15 @@ public final class AgentBrain {
         }
     }
 
+    /** Its speed by its rank (4.1.28: the White Reaper's faster with his jacket off). */
+    static double speed(Mind mind) {
+        return mind.rank.speed * (mind.bare ? AgentRules.REAPER_BARE_SPEED : 1.0);
+    }
+
     private static void act(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (shed(agent, mind, level, now)) {
+            return; // 4.1.28: the White Reaper taking his jacket off: nothing else until it is off
+        }
         if (BikakuDevour.held(agent)) {
             // 3.6.3: being devoured: whatever it was doing stops, its kagune-made weapon back in its case, nothing more.
             if (mind.armOut) {
@@ -500,11 +519,75 @@ public final class AgentBrain {
     }
 
     /**
+     * 4.1.28 (the owner: "he pulls out his jacket, he just removes his jacket, revealing a new skin ... During this next phase, he gets way
+     * faster"): at half health (once), as soon as he stands on the ground, the White Reaper stops whatever he was doing and takes his
+     * jacket off ({@link CcgAgent#SHED}: both hands to his lapels, the coat swept back off his shoulders, a roll of his neck), no blow
+     * landing on him while he does; off his shoulders ({@link AgentRules#REAPER_SHED_SWAP}) his look is the bare one and he is faster, kept
+     * with him ({@link #BARE}). True while he does it.
+     */
+    private static boolean shed(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (mind.rank != AgentRules.Rank.RANK_10 || mind.bare && mind.shedAt == Long.MIN_VALUE) {
+            return false;
+        }
+        if (mind.shedAt == Long.MIN_VALUE) {
+            if (!mind.shedPending && agent.m_21223_() > agent.m_21233_() * AgentRules.REAPER_SHED_AT) {
+                return false;
+            }
+            mind.shedPending = true;
+            if (!agent.m_20096_() || mind.soarAt != Long.MIN_VALUE || BikakuDevour.held(agent)) {
+                return false; // landing first (a soar, a flip, a dash play out)
+            }
+            mind.shedPending = false;
+            mind.shedAt = now;
+            cancelKick(agent, mind, now);
+            cancelBrawl(agent, mind, now);
+            cancelLightning(agent, mind, now);
+            mind.groundAt = Long.MIN_VALUE; // a lance in the ground pulled out with the rest
+            mind.groundSpot = null;
+            mind.striking = false;
+            mind.parrying = false;
+            agent.m_21573_().m_26573_();
+            agent.swing(CcgAgent.SHED, now);
+            UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.6F, 0.6F);
+            return true;
+        }
+        long age = ago(now, mind.shedAt);
+        agent.m_21573_().m_26573_();
+        Vec3 velocity = agent.m_20184_();
+        agent.m_20256_(new Vec3(velocity.f_82479_ * 0.3, velocity.f_82480_, velocity.f_82481_ * 0.3));
+        if (mind.prey != 0 && level.m_6815_(mind.prey) instanceof LivingEntity prey) {
+            agent.m_21563_().m_24960_(prey, 30.0F, 30.0F);
+        }
+        if (!mind.bare && age >= AgentRules.REAPER_SHED_SWAP) {
+            mind.bare = true;
+            mind.look = AgentRules.REAPER_BARE_LOOK;
+            agent.getPersistentData().m_128405_(BARE, 1);
+            agent.dress(mind.look, mind.kind);
+            agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(speed(mind));
+            UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.9F, 0.75F);
+        }
+        if (age >= AgentRules.REAPER_SHED_TICKS || age < 0L) {
+            mind.shedAt = Long.MIN_VALUE;
+            mind.readyAt = Math.max(mind.readyAt, now + 4L);
+            agent.swing(-1, now);
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * The stack in its hand is its quinque: its case shut, or its weapon while it is open (put back if anything took it). 3.0.0: a
      * kagune-made weapon is no item: its hand is empty while it is out (and while it goes back into its case), the case in it at peace.
      */
     private static void arm(CcgAgent agent, Mind mind, long now) {
         ItemStack held = agent.m_21205_();
+        if (mind.shedAt != Long.MIN_VALUE) {
+            // 4.1.28: both hands on his jacket: Dawn put by while he takes it off.
+            if (!held.m_41619_()) {
+                agent.m_21008_(InteractionHand.MAIN_HAND, ItemStack.f_41583_);
+            }
+            return;
+        }
         if (mind.arm != null && (mind.armOut || ago(now, mind.armAt) < ArmRules.UNFOLD)) {
             if (!held.m_41619_()) {
                 agent.m_21008_(InteractionHand.MAIN_HAND, ItemStack.f_41583_);
@@ -1711,7 +1794,7 @@ public final class AgentBrain {
         mind.striking = false;
         mind.parrying = false;
         int step = mind.step;
-        mind.readyAt = now + Math.max(0, q.swing(step) - AgentRules.lands(q)) + Math.round(AgentRules.between(q) * mind.rank.pace) // 2.0.17: by its rank
+        mind.readyAt = now + Math.max(0, q.swing(step) - AgentRules.lands(q)) + Math.round(AgentRules.between(q) * mind.rank.pace * (mind.bare ? AgentRules.REAPER_BARE_PACE : 1.0)) // 2.0.17: by its rank
             + (step == q.finisher() ? AgentRules.AFTER_STRING : 0);
         Entity found = level.m_6815_(mind.target);
         if (parry || !(found instanceof LivingEntity prey) || !prey.m_6084_()) {
@@ -2175,7 +2258,20 @@ public final class AgentBrain {
         long now = level.m_46467_();
         agent.mind.hurtAt = now;
         if (agent.mind.rank == AgentRules.Rank.RANK_10 && !com.hex.kagune.control.GhoulTank.bypasses(event.getSource().m_19385_())) {
+            if (agent.mind.shedAt != Long.MIN_VALUE) {
+                event.setCanceled(true); // 4.1.28: taking his jacket off: nothing lands on him
+                return;
+            }
             event.setAmount(event.getAmount() * AgentRules.REAPER_TAKEN);
+            if (!agent.mind.bare) {
+                // 4.1.28: never past half while the jacket is on (the blow that gets there starts his second phase).
+                float health = agent.m_21223_();
+                float max = agent.m_21233_();
+                event.setAmount(AgentRules.shedClamp(health, max, event.getAmount()));
+                if (health - event.getAmount() <= max * AgentRules.REAPER_SHED_AT + 1.0E-3F) {
+                    agent.mind.shedPending = true;
+                }
+            }
         }
         if (!(event.getSource().m_7639_() instanceof LivingEntity attacker) || attacker instanceof CcgAgent || attacker == agent) {
             return;

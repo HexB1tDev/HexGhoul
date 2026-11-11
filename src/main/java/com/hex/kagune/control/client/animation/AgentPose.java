@@ -37,6 +37,76 @@ public final class AgentPose {
         return p;
     }
 
+    /**
+     * 4.1.28 (the owner: "he pulls out his jacket, he just removes his jacket, revealing a new skin"): the White Reaper taking his jacket
+     * off, {@code age} ticks in ({@link AgentRules#REAPER_SHED_TICKS} long, his hands empty): his hands come together on his lapels, his
+     * head down to them; he pulls the coat open, his chest out; sweeps it back off his shoulders and down his arms behind him (his look
+     * switched there, {@link AgentRules#REAPER_SHED_SWAP}); lets it fall, rolls his neck one way and the other, and stands ready.
+     * Straight arms (he is a mob on vanilla's model: no elbows), so each hand is put where the move reads from every side.
+     */
+    public static RigPose shed(double age) {
+        RigPose p = new RigPose();
+        float[] k = keyed(SHED_KEYS, age);
+        p.headX = k[1];
+        p.headZ = k[2];
+        p.lean = k[3];
+        p.rightArmX = k[4];
+        p.rightArmY = k[5];
+        p.rightArmZ = k[6];
+        // The left arm mirrors the right, a beat behind it (no two hands ever move as one).
+        float[] l = keyed(SHED_KEYS, age - 0.8);
+        p.leftArmX = l[4];
+        p.leftArmY = -l[5];
+        p.leftArmZ = -l[6];
+        float in = clamp01((float)(age / 2.0)) * clamp01((float)((AgentRules.REAPER_SHED_TICKS - age) / 3.0));
+        p.armHold = in;
+        p.rightArmHold = in;
+        p.leftArmHold = in;
+        p.headHold = 0.7F * in;
+        // His feet set a little apart, his weight back as the coat goes back.
+        p.rightLegZ = 0.05F * in;
+        p.leftLegZ = -0.05F * in;
+        p.lunge = k[7];
+        return p;
+    }
+
+    /**
+     * 4.1.28: the shed's keys: tick, head pitch (+ down), head roll, lean (+ forward), right arm x (- forward and up), y (- across him),
+     * z (+ out), the body's lunge (pixels, + forward).
+     */
+    static final float[][] SHED_KEYS = {
+        {0, 0, 0, 0, 0, 0, 0, 0},
+        {5, 0.32F, 0, 0.08F, -1.30F, -0.62F, 0.02F, 0.3F},
+        {8, 0.28F, 0, 0.08F, -1.38F, -0.50F, 0.02F, 0.3F},
+        {12, 0.02F, 0, -0.12F, -0.78F, 0.52F, 0.30F, 0.0F},
+        {16, -0.14F, 0, -0.18F, 0.62F, 0.18F, 0.34F, -0.5F},
+        {20, -0.10F, 0, -0.14F, 0.98F, 0.10F, 0.26F, -0.6F},
+        {24, 0.10F, 0, 0.04F, -0.12F, 0.0F, 0.08F, 0.0F},
+        {27, 0.16F, 0.30F, 0.02F, 0.04F, 0.0F, 0.06F, 0.0F},
+        {30, 0.12F, -0.24F, 0.0F, 0.0F, 0.0F, 0.05F, 0.0F},
+        {34, 0, 0, 0, 0, 0, 0, 0}};
+
+    /** 4.1.28: {@code keys} (each row its tick, then its channels) at {@code age}, eased in and out between each pair. */
+    static float[] keyed(float[][] keys, double age) {
+        float[] out = new float[keys[0].length];
+        if (age <= keys[0][0]) {
+            System.arraycopy(keys[0], 0, out, 0, out.length);
+            return out;
+        }
+        for (int i = 1; i < keys.length; i++) {
+            if (age <= keys[i][0]) {
+                float t = (float)((age - keys[i - 1][0]) / (keys[i][0] - keys[i - 1][0]));
+                float e = t * t * (3.0F - 2.0F * t);
+                for (int c = 0; c < out.length; c++) {
+                    out[c] = keys[i - 1][c] + (keys[i][c] - keys[i - 1][c]) * e;
+                }
+                return out;
+            }
+        }
+        System.arraycopy(keys[keys.length - 1], 0, out, 0, out.length);
+        return out;
+    }
+
     /** Bring the tip to the target and hold it there through the windup. */
     public static RigPose aimDawn(double age, float pitch) {
         RigPose pose = QuinquePose.hold(Quinque.DAWN);

@@ -59,6 +59,8 @@ public class CcgAgent extends PathfinderMob {
     public static final int AIM_DAWN = 5;
     /** 2.0.33: the White Reaper driving Dawn into the ground for his tendril (npc.ReaperTendril). */
     public static final int GROUND = 6;
+    /** 4.1.28: the White Reaper taking his jacket off (AgentRules.REAPER_SHED_TICKS). */
+    public static final int SHED = 7;
     /**
      * 4.1.25: the White Reaper's hand-to-hand: a strike of either string (Kick Master's or the Speed Blitz), its code this plus the
      * strike's ordinal ({@link com.hex.kagune.control.pale.PaleStrike}).
