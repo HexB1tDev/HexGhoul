@@ -3,4 +3,5 @@ package net.minecraft.world.level.levelgen.structure;
 
 public abstract class StructurePiece {
     /** getRotation */ public net.minecraft.world.level.block.Rotation m_6830_() { throw new UnsupportedOperationException(); }
+    /** getBoundingBox */ public BoundingBox m_73547_() { throw new UnsupportedOperationException(); }
 }

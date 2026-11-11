@@ -156,13 +156,22 @@ public final class PlaceClaims {
             return false;
         }
         int[] before = data.taken.at(id);
-        boolean mine = data.taken.take(id, x, z);
+        boolean mine = data.taken.takeApart(id, x, z, APART); // 4.1.42: never within APART chunks of another place
         if (before == null && mine) {
             data.m_77762_();
             com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + id + " is built at x " + ((x << 4) + 8) + ", z " + ((z << 4) + 8)
                 + " (/locate structure hexkagune:" + id + ").");
         }
         return mine;
+    }
+
+    /** 4.1.42: how far apart (chunks) any two one-of-a-kind places are: 512 blocks. */
+    public static final int APART = 32;
+
+    /** 4.1.42: true if another place already has its spot within {@link #APART} chunks of ({@code x}, {@code z}) in the world being made. */
+    public static boolean crowded(String id, int x, int z) {
+        Data data = data();
+        return data != null && data.taken.crowded(id, x, z, APART);
     }
 
     /** {@code id}'s spot ({@code x}, {@code z}) given up (nothing of it was built there). */

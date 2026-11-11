@@ -58,6 +58,7 @@ public final class NpcTests {
         ccgBuilding();
         smallCity();
         cityFixes();
+        worldgen();
         onePerWorld();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
@@ -1755,7 +1756,7 @@ public final class NpcTests {
             try (java.util.stream.Stream<java.nio.file.Path> tags = java.nio.file.Files.walk(data.resolve("tags/worldgen/biome"))) {
                 java.util.List<String> left = tags.filter(java.nio.file.Files::isRegularFile).map(f -> data.resolve("tags/worldgen/biome").relativize(f).toString())
                     .sorted().toList();
-                check(left.equals(List.of("overworld.json", "wet.json")), "no place's own biome list is left: " + left);
+                check(left.equals(List.of("overworld.json", "steep.json", "wet.json")), "no place's own biome list is left (4.1.42: the steep ones kept out): " + left);
             }
             check(wetTag.contains("\"#forge:is_swamp\"") && wetTag.contains("\"#forge:is_water\"") && wetTag.contains("\"#c:is_swamp\"")
                 && wetTag.contains("\"biomesoplenty:marsh\"") && wetTag.split("\"required\": false").length > 10,
@@ -1938,15 +1939,15 @@ public final class NpcTests {
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
             int overrides = structures.split("public Optional<Structure.GenerationStub> m_262864_\\(Structure.GenerationContext context\\) \\{\n            return this.m_214086_\\(context\\);").length - 1;
             check(overrides == 4, "the jigsaw village, every site, every jigsaw place and the Small City leave the game's biome-list test out (" + overrides + ")");
-            check(structures.contains("return !biome.m_203656_(WET);") && !structures.contains("return context.f_226630_().test(biome);"),
-                "a place stands in any biome but a wet one");
+            check(structures.contains("return !biome.m_203656_(WET) && !biome.m_203656_(STEEP);") && !structures.contains("return context.f_226630_().test(biome);"),
+                "a place stands in any biome but a wet one (4.1.42: or a steep one)");
             // 4.1.14 (the owner: "Fix structures still not spawning at all or able to be located (still not spawning)"): no one chunk a world
             // any more: every spot of its set where it lays out on dry land may hold it, until the world makes one (PlaceClaims).
             check(structures.contains("if (Site.onPurpose(context)) {\n                return this.here(context);")
                 && structures.contains("return claimed(id, context, () -> {")
                 && structures.contains("if (!offered(context, placeSpread(context, id))) {")
-                && structures.contains("Optional<Structure.GenerationStub> stub = this.here(context);"),
-                "a jigsaw place stands at any spot of its set where it lays out on dry land, until one is built (/place builds it anywhere)");
+                && structures.contains("Optional<Structure.GenerationStub> stub = this.flattest(context);"),
+                "a jigsaw place stands at any spot of its set where it lays out on dry, flat land (4.1.42: the flattest), until one is built (/place builds it anywhere)");
             check(structures.contains("if (inCity(context, x, z) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)")
                 && structures.contains("x, z, DryLand.PLACE_APART)) {") && structures.contains("if (!other.equals(id) && DryLand.near(placeSpread(context, other), x, z, DryLand.PLACE_APART)) {"),
                 "kept clear of the hideout's, the CCG building's, the other places' spots and the Small City");
@@ -1969,7 +1970,7 @@ public final class NpcTests {
                 "a one-of-a-kind place already standing is the world's one");
             // 4.1.17 (the owner: "they are spawning under the ground, which cannot happen ... always at the top max area"): every jigsaw
             // place is lifted onto the highest ground of its footprint; the tower starts on the ground, not at y 63.
-            check(structures.contains("return Optional.of(raised(stub.get(), DryLand.lift(ground, at.m_123341_(), at.m_123343_(), minX, minZ, maxX, maxZ)));")
+            check(structures.contains("return Optional.of(raised(best, DryLand.lift(ground, bestAt[0], bestAt[1], bestAt[2], bestAt[3], bestAt[4], bestAt[5])));")
                 && structures.contains("made.m_192781_(lift);"), "a place stands on the highest ground of its footprint");
             String tower = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json")));
             check(tower.contains("\"project_start_to_heightmap\": \"WORLD_SURFACE_WG\"") && !tower.contains("\"absolute\": 63"), "Ken's tower starts on the ground");
@@ -2080,6 +2081,105 @@ public final class NpcTests {
      * 4.1.39: the city's ground worked out once per city (its four quarters and every place asking inCity got the same 740 heights each
      * time); the humans a villager brings keep about its village (a homeless random walk took them off for good while its young brought more).
      */
+    /** 4.1.42: made-up land: heights by column, and which columns are sea or steep. */
+    record Land(java.util.function.IntBinaryOperator height, java.util.function.IntBinaryOperator water,
+                java.util.function.BiPredicate<Integer, Integer> sea, java.util.function.BiPredicate<Integer, Integer> steep)
+        implements com.hex.kagune.control.village.DryLand.Ground {
+        @Override
+        public int surface(int x, int z) {
+            return Math.max(this.height.applyAsInt(x, z), this.water.applyAsInt(x, z));
+        }
+
+        @Override
+        public int floor(int x, int z) {
+            return this.height.applyAsInt(x, z);
+        }
+
+        @Override
+        public boolean wet(int x, int y, int z) {
+            return this.sea.test(x, z);
+        }
+
+        @Override
+        public boolean sea(int x, int y, int z) {
+            return this.sea.test(x, z);
+        }
+
+        @Override
+        public boolean steep(int x, int y, int z) {
+            return this.steep.test(x, z);
+        }
+
+        static Land of(java.util.function.IntBinaryOperator height) {
+            return new Land(height, (x, z) -> Integer.MIN_VALUE, (x, z) -> false, (x, z) -> false);
+        }
+    }
+
+    /**
+     * 4.1.42 (the owner: "How does this generation pass your bug test, bro?"; "The structures are spawning multiple times ... And they're all
+     * fucking flying"): the city's land judged on made-up land (a valley the old samples stepped over, a hillside, the sea, a steep biome),
+     * the foundation's column on made-up columns (a floor over air filled down to the ground, a floor on the ground left), places kept apart,
+     * and the wiring: /place alone builds outside the world's one, every structure of ours on a foundation.
+     */
+    static void worldgen() {
+        int minX = 1000;
+        int minZ = -2000;
+        com.hex.kagune.control.village.DryLand.Ground flat = Land.of((x, z) -> 70);
+        check(com.hex.kagune.control.village.CityPlan.land(flat, minX, minZ) == 70, "flat land holds a city, on it");
+        // A valley 25 deep and 40 wide across the city, between two of the old 9 x 9 sample lines (every ~67 blocks: 2, 69, 136 ...).
+        java.util.function.IntBinaryOperator valley = (x, z) -> x >= minX + 90 && x < minX + 130 ? 45 : 70;
+        int[] old = new int[81];
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                old[i * 9 + j] = valley.applyAsInt(minX + 2 + 539 * i / 8, minZ + 2 + 539 * j / 8);
+            }
+        }
+        check(com.hex.kagune.control.village.CityPlan.ground(old) == 70, "(the old 9 x 9 samples never saw that valley: the city hung over it)");
+        check(com.hex.kagune.control.village.CityPlan.land(Land.of(valley), minX, minZ) == Integer.MIN_VALUE, "a valley across it: no city there");
+        check(com.hex.kagune.control.village.CityPlan.land(Land.of((x, z) -> 70 + (x - minX) * 30 / 544), minX, minZ) == Integer.MIN_VALUE,
+            "a hillside rising 30 over it: no city");
+        int gentle = com.hex.kagune.control.village.CityPlan.land(Land.of((x, z) -> 70 + (x - minX) * 8 / 544), minX, minZ);
+        check(gentle >= 70 && gentle <= 78, "a gentle rise of 8 over it holds one, on its middle: " + gentle);
+        check(com.hex.kagune.control.village.CityPlan.land(new Land((x, z) -> 70, (x, z) -> Integer.MIN_VALUE, (x, z) -> x > minX + 500,
+            (x, z) -> false), minX, minZ) == Integer.MIN_VALUE, "the sea at its edge: no city");
+        check(com.hex.kagune.control.village.CityPlan.land(new Land((x, z) -> 70, (x, z) -> Integer.MIN_VALUE, (x, z) -> false,
+            (x, z) -> z < minZ + 40), minX, minZ) == Integer.MIN_VALUE, "a steep biome in it: no city");
+        check(com.hex.kagune.control.village.DryLand.roughness(flat, 0, 0, 40, 40, 6) == 0
+            && com.hex.kagune.control.village.DryLand.roughness(Land.of((x, z) -> 60 + x), 0, 0, 40, 40, 6) == 39,
+            "a place's ground: its rise and fall over its footprint, edges and all");
+        // The foundation's column: 2 solid, 1 a plant, 0 air.
+        java.util.function.IntUnaryOperator floating = y -> y == 80 ? 2 : y <= 60 ? 2 : y == 61 ? 1 : 0;
+        int[] fill = com.hex.kagune.control.village.DryLand.footing(floating, 80, 1, 16);
+        check(fill != null && fill[0] == 60 && fill[1] == 80, "a floor over air: filled from the ground under it (through a plant) up to it");
+        check(com.hex.kagune.control.village.DryLand.footing(y -> y <= 80 ? 2 : 0, 80, 1, 16) == null, "a floor on the ground: left as it is");
+        check(com.hex.kagune.control.village.DryLand.footing(y -> y <= 60 ? 2 : 0, 80, 7, 16) == null, "no floor in its first layers: nothing filled");
+        check(com.hex.kagune.control.village.DryLand.footing(y -> y == 80 || y <= 10 ? 2 : 0, 80, 1, 16) == null,
+            "ground deeper than a foundation goes: nothing filled (no place stands on ground that steep)");
+        java.util.function.IntUnaryOperator layered = y -> y == 84 ? 2 : y <= 70 ? 2 : 0;
+        int[] high = com.hex.kagune.control.village.DryLand.footing(layered, 80, 7, 16);
+        check(high != null && high[0] == 70 && high[1] == 84, "the city's platform found in its first layers, filled under");
+        // Places apart.
+        com.hex.kagune.control.village.TakenPlaces taken = com.hex.kagune.control.village.TakenPlaces.read("");
+        check(taken.takeApart("anteiku", 0, 0, 32) && !taken.takeApart("library", 10, 10, 32) && taken.crowded("cyber_tower", 20, 5, 32)
+            && taken.takeApart("library", 40, 0, 32) && taken.takeApart("anteiku", 0, 0, 32) && !taken.takeApart("anteiku", 90, 90, 32),
+            "one-of-a-kind places never within 32 chunks of each other; each keeps its one spot");
+        try {
+            String structures = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java"));
+            int purpose = structures.indexOf("static boolean onPurpose(Structure.GenerationContext context) {");
+            check(purpose > 0 && structures.indexOf("if (!(context.f_226629_() instanceof net.minecraft.world.level.Level)) {", purpose) - purpose < 900,
+                "only /place (asking on the live world) builds outside the world's one: never the world's own making, whatever a mod does to the biome test");
+            check(structures.split("foundation\\(level, box, pieces\\);").length - 1 == 3, "the city, the sites and the jigsaw places all on a foundation");
+            String claims = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java"));
+            check(claims.contains("data.taken.takeApart(id, x, z, APART)") && structures.contains("PlaceClaims.crowded(id, chunk.f_45578_, chunk.f_45579_)"),
+                "a spot too near another place is never taken, nor pointed at by /locate");
+            String steep = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/data/hexkagune/tags/worldgen/biome/steep.json"));
+            check(steep.contains("#minecraft:is_mountain") && steep.contains("#minecraft:is_hill") && steep.contains("biomesoplenty:crag")
+                && steep.contains("\"required\": false"), "mountains and hills kept out, vanilla's and the biome mods' (only if they are there)");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
+    }
+
     static void cityFixes() {
         // 4.1.40: the old towns' maps (3, 4) still found for their people in older worlds, never built.
         check(com.hex.kagune.control.village.SiteMaps.byMap(3) != null && com.hex.kagune.control.village.SiteMaps.byMap(3).id().equals("village_1")
@@ -2217,8 +2317,9 @@ public final class NpcTests {
             && com.hex.kagune.control.village.CityPlan.ground(hilly) == Integer.MIN_VALUE && com.hex.kagune.control.village.CityPlan.DEEP >= 6
             && com.hex.kagune.control.village.CityPlan.ABOVE_SEA == 64, "a river under it is fine; it stands on its middle, over the sea's level, never on rough land");
         String structures = read("src/main/java/com/hex/kagune/control/ControlStructures.java");
-        check(structures.contains("if (ground.sea(column[0], middle, column[1])) {") && structures.contains("if (surface - floor > deep) {")
-            && structures.contains("\"minecraft\", \"is_ocean\""), "never over a sea or a lake deeper than a river");
+        String plan = read("src/main/java/com/hex/kagune/control/village/CityPlan.java");
+        check(plan.contains("if (ground.sea(column[0], middle, column[1]) || ground.steep(column[0], middle, column[1])) {") && plan.contains("if (surface - floor > DEEP) {")
+            && structures.contains("\"minecraft\", \"is_ocean\""), "never over a sea or a lake deeper than a river (4.1.42: nor a steep biome; CityPlan.land)");
         check(structures.contains("|| inCity(context, chunk.f_45578_, chunk.f_45579_)) {") && structures.contains("if (inCity(context, x, z) ||")
             && structures.contains("if (!offered(context, hideoutSpread(context)) || inCity(context, chunk.f_45578_, chunk.f_45579_)) {")
             && structures.contains("if (City.ground(context, corner[0], corner[1]) != Site.NO_GROUND && !City.holdsPlace(b[0], b[1])) {")

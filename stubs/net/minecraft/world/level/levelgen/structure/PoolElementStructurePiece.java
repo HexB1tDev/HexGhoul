@@ -9,4 +9,5 @@ public class PoolElementStructurePiece extends StructurePiece {
     }
 
     /** getPosition */ public net.minecraft.core.BlockPos m_72646_() { throw new UnsupportedOperationException(); }
+    /** getGroundLevelDelta */ public int m_72647_() { throw new UnsupportedOperationException(); }
 }

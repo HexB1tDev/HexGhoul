@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.42 (HexGhoul): structures once per world, on flat ground, never floating, spread out (testing)
+
+See `.github/release-notes-4.1.42.md`. "The structures are spawning multiple times ... And they're all fucking flying": `Site.onPurpose` only on the live world (a mod's biome test made every region build its own); `foundation` in `afterPlace` for the city, sites and places (`DryLand.footing`); the flattest of 25 spots (`DryPlace.flattest`, `DryLand.roughness`, `PLACE_FLAT` 6, `BIG_PLACE_FLAT` 10); `CityPlan.land` (17 x 17, `FLAT` 10); `hexkagune:steep` (vanilla, Forge, BoP, RU); `TakenPlaces.takeApart` (`PlaceClaims.APART` 32 chunks). Protocol 118.
+
 ## 4.1.41 (HexGhoul): the Reaper's blade turned over (testing)
 
 See `.github/release-notes-4.1.41.md`. "it's just fucking invert the fucking axis, bro. Just completely invert it and it's fine": `ReaperBladeMesh.inverted` (the blade built turned over about its length: v and w negated), `drawnV` for the shards. Protocol 118.

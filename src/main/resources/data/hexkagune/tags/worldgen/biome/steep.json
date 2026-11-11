@@ -1,0 +1,79 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:is_mountain",
+    "#minecraft:is_hill",
+    "minecraft:windswept_hills",
+    "minecraft:windswept_gravelly_hills",
+    "minecraft:windswept_forest",
+    "minecraft:windswept_savanna",
+    "minecraft:savanna_plateau",
+    "minecraft:wooded_badlands",
+    "minecraft:eroded_badlands",
+    "minecraft:stony_shore",
+    {
+      "id": "#forge:is_mountain",
+      "required": false
+    },
+    {
+      "id": "#forge:is_mountain/peak",
+      "required": false
+    },
+    {
+      "id": "#forge:is_mountain/slope",
+      "required": false
+    },
+    {
+      "id": "#forge:is_peak",
+      "required": false
+    },
+    {
+      "id": "#forge:is_slope",
+      "required": false
+    },
+    {
+      "id": "#forge:is_plateau",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:crag",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:jade_cliffs",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:highland",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:rocky_shrubland",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:rocky_rainforest",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:volcano",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:mountains",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:icy_heights",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:towering_cliffs",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:chalk_cliffs",
+      "required": false
+    }
+  ]
+}

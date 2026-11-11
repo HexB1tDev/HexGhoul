@@ -1280,3 +1280,9 @@ C net/minecraft/world/level/chunk/ChunkGeneratorStructureState  # [srg] ddz C_25
 M net/minecraft/world/level/chunk/ChunkGeneratorStructureState m_254887_ ()J  # [srg] getLevelSeed: joined.tsrg ddz d ()J m_254887_ 254887 (yarn getStructureSeed, method_46714)
 M com/mojang/serialization/MapCodec unit (Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;  # [lib] DFU MapCodec.unit(A) (no fields: a placement named by its type alone); vanilla 1.20.1 calls it the same way: DensityFunctions.BlendAlpha.CODEC = KeyDispatchDataCodec.of(MapCodec.unit(INSTANCE))
 C net/minecraft/world/entity/npc/Villager  # [srg] byb C_1118_ (class_1646, yarn VillagerEntity): a vanilla villager, not a wandering trader
+
+# --- 4.1.42: a foundation under every structure of ours (Structure.afterPlace): each piece's box and floor, the world's ground carried up --
+M net/minecraft/world/level/levelgen/structure/BoundingBox m_162396_ ()I             # [srg] minY: joined.tsrg drs h ()I m_162396_ (intermediary method_35416, yarn getMinY)
+M net/minecraft/world/level/levelgen/structure/StructurePiece m_73547_ ()Lnet/minecraft/world/level/levelgen/structure/BoundingBox;  # [srg] getBoundingBox: joined.tsrg dse f ()Ldrs; m_73547_ (intermediary method_14935, yarn getBoundingBox)
+M net/minecraft/world/level/levelgen/structure/PoolElementStructurePiece m_72647_ ()I  # [srg] getGroundLevelDelta: joined.tsrg drw d ()I m_72647_ (intermediary method_16646, yarn getGroundLevelDelta)
+M net/minecraft/world/level/WorldGenLevel m_8055_ (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;  # [srg] getBlockState, declared on BlockGetter: joined.tsrg cls a_ (Lgu;)Ldcb; m_8055_ (intermediary method_8320, yarn getBlockState); WorldGenLevel extends it

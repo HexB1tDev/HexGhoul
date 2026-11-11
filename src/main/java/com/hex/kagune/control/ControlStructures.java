@@ -215,38 +215,9 @@ public final class ControlStructures {
 
         /** The whole city's ground, measured ({@link #ground}). */
         private static int measure(Structure.GenerationContext context, int minX, int minZ) {
-            DryLand.Ground ground = ControlStructures.ground(context);
-            int n = com.hex.kagune.control.village.CityPlan.SAMPLES;
-            int size = com.hex.kagune.control.village.CityPlan.SIZE;
-            int deep = com.hex.kagune.control.village.CityPlan.DEEP;
-            int[] levels = new int[n * n];
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    int x = minX + 2 + (size - 5) * i / (n - 1);
-                    int z = minZ + 2 + (size - 5) * j / (n - 1);
-                    int floor = ground.floor(x, z);
-                    int surface = ground.surface(x, z);
-                    if (surface - floor > deep) {
-                        return Site.NO_GROUND;
-                    }
-                    levels[i * n + j] = Math.max(surface, floor);
-                }
-            }
-            int middle = com.hex.kagune.control.village.CityPlan.ground(levels);
-            if (middle == Integer.MIN_VALUE) {
-                return Site.NO_GROUND;
-            }
-            for (int[] column : DryLand.columns(minX, minZ, size, size, 16)) {
-                if (ground.sea(column[0], middle, column[1])) {
-                    return Site.NO_GROUND;
-                }
-            }
-            for (int[] column : DryLand.columns(minX, minZ, size, size, 32)) {
-                if (ground.surface(column[0], column[1]) - ground.floor(column[0], column[1]) > deep) {
-                    return Site.NO_GROUND;
-                }
-            }
-            return middle;
+            // 4.1.42: worked out by CityPlan.land (pure: its tests run it on made-up land, hillsides and valleys between samples and all).
+            int middle = com.hex.kagune.control.village.CityPlan.land(ControlStructures.ground(context), minX, minZ);
+            return middle == Integer.MIN_VALUE ? Site.NO_GROUND : middle;
         }
 
         /**
@@ -269,11 +240,77 @@ public final class ControlStructures {
             return SMALL_CITY;
         }
 
+        /** 4.1.42: the city on a foundation of the world's own ground, never over air ({@link ControlStructures#foundation}). */
+        @Override
+        public void m_214110_(WorldGenLevel level, StructureManager structures, ChunkGenerator generator, RandomSource random, BoundingBox box,
+                              ChunkPos chunk, PiecesContainer pieces) {
+            try {
+                foundation(level, box, pieces);
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.City.foundation");
+            }
+        }
+
         /** 4.1.9: the game's own biome test at the start left out: the city judges its own land (any biome but a wet one). */
         @Override
         public Optional<Structure.GenerationStub> m_262864_(Structure.GenerationContext context) {
             return this.m_214086_(context);
         }
+    }
+
+    /**
+     * 4.1.42 (the owner, of a city tower and the mansion hanging over hills: "How does this generation pass your bug test, bro?"): nothing of
+     * ours ever floats. Under every piece's floor (its lowest block in its first layers, up to its ground's height: column by column, in this
+     * chunk) the world's own ground is carried up: the first solid block under the gap copied up to the floor (stone under stone, dirt under
+     * dirt, the riverbed under a river), at most {@link #FOUNDATION} deep. A column the floor already stands on is left as it is; one with no
+     * floor in its first layers (a yard, the air beside a wall) is not filled.
+     */
+    static void foundation(WorldGenLevel level, BoundingBox chunk, PiecesContainer pieces) {
+        for (StructurePiece piece : pieces.f_192741_()) {
+            BoundingBox b = piece.m_73547_();
+            int x0 = Math.max(b.m_162395_(), chunk.m_162395_());
+            int x1 = Math.min(b.m_162399_(), chunk.m_162399_());
+            int z0 = Math.max(b.m_162398_(), chunk.m_162398_());
+            int z1 = Math.min(b.m_162401_(), chunk.m_162401_());
+            if (x0 > x1 || z0 > z1) {
+                continue;
+            }
+            int bottom = b.m_162396_();
+            int layers = piece instanceof PoolElementStructurePiece pool ? Math.max(1, pool.m_72647_()) : 1;
+            for (int x = x0; x <= x1; x++) {
+                for (int z = z0; z <= z1; z++) {
+                    final int cx = x;
+                    final int cz = z;
+                    // Each height of the column: 2 a floor of ours or ground to stand on, 1 something there that is no ground (a plant), 0 air
+                    // or water (DryLand.footing reads the floor and the ground under it).
+                    int[] fill = DryLand.footing(y -> {
+                        BlockPos at = new BlockPos(cx, y, cz);
+                        BlockState state = level.m_8055_(at);
+                        return state.m_60795_() || !state.m_60819_().m_76178_() ? DryLand.GAP : holds(level, state, at) ? DryLand.SOLID : DryLand.SOFT;
+                    }, bottom, layers, Math.max(LOWEST, bottom - FOUNDATION));
+                    if (fill == null) {
+                        continue;
+                    }
+                    BlockState ground = level.m_8055_(new BlockPos(x, fill[0], z));
+                    for (int f = fill[0] + 1; f < fill[1]; f++) {
+                        level.m_7731_(new BlockPos(x, f, z), ground, 2);
+                    }
+                }
+            }
+        }
+    }
+
+    /** 4.1.42: the deepest a foundation goes (blocks), and the overworld's floor. */
+    static final int FOUNDATION = 64;
+    static final int LOWEST = -64;
+
+    /** 4.1.42: true for ground a foundation stands on: not air, no water, not a plant (grass, flowers: nothing to stand on). */
+    static boolean holds(WorldGenLevel level, BlockState state, BlockPos at) {
+        if (state.m_60795_() || !state.m_60819_().m_76178_()) {
+            return false;
+        }
+        float hard = state.m_60800_(level, at);
+        return hard < 0.0F || hard > 0.05F;
     }
 
     /** 4.1.36: the Small City's offers as this world has them, or null if its set's placement is not {@link CityPlacement}. */
@@ -569,7 +606,9 @@ public final class ControlStructures {
          */
         static int dryGround(Structure.GenerationContext context, DryLand.Ground ground, int minX, int minZ, int size) {
             int[] floor = grid(ground, minX, minZ, size, size);
-            if (floor == null || DryLand.spread(floor) > STEEPEST) {
+            // 4.1.42: no more than its own flatness over its whole footprint, sampled every few blocks (a 5 x 5 grid let 24 blocks of
+            // hillside through, and it hung over the low side).
+            if (floor == null || DryLand.spread(floor) > STEEPEST || roughness(ground, minX, minZ, size, size) > flatFor(size)) {
                 return NO_GROUND;
             }
             int middle = DryLand.median(floor);
@@ -578,7 +617,12 @@ public final class ControlStructures {
         }
 
         /** 4.1.14: the steepest ground (blocks between its lowest and highest of a 5 x 5 grid) a one-of-a-kind place is built on. */
-        static final int STEEPEST = 2 * VillageGround.FLAT;
+        static final int STEEPEST = BIG_PLACE_FLAT;
+
+        /** 4.1.42: the most a place {@code size} across may rise and fall: a small place's {@link #PLACE_FLAT}, a big one's (the hideout) more. */
+        static int flatFor(int size) {
+            return size <= 80 ? PLACE_FLAT : BIG_PLACE_FLAT;
+        }
 
         /**
          * 4.1.6: where a place asked for on purpose stands: the middle of the dry ground of its 5 x 5 grid, or of the floor under the water
@@ -605,6 +649,14 @@ public final class ControlStructures {
          * anything); the world's own making and /locate test the place's own biomes (a tag: a missing biome is no biome of it).
          */
         static boolean onPurpose(Structure.GenerationContext context) {
+            // 4.1.42 (the owner: "The structures are spawning multiple times. There's tons of them spawning like hundreds of times in the
+            // fucking world. And they're all fucking flying"): the biome test alone was the tell, and a mod that rewrites the structures'
+            // biome test (one that takes anything, as Structure Essentials' can) made every chunk the world generated look like /place: each
+            // region built its own, unclaimed, lifted onto its highest ground with no other check. /place asks on the live world (its
+            // heights are the level's); the world's own making never does (its heights are the chunk being made), whatever any mod does.
+            if (!(context.f_226629_() instanceof net.minecraft.world.level.Level)) {
+                return false;
+            }
             try {
                 return context.f_226630_().test(null);
             } catch (RuntimeException asked) {
@@ -676,6 +728,17 @@ public final class ControlStructures {
         @Override
         public StructureType<?> m_213658_() {
             return SITES.get(this.site.id());
+        }
+
+        /** 4.1.42: the place (the hideout, the CCG building) on a foundation of the world's own ground, never over air. */
+        @Override
+        public void m_214110_(WorldGenLevel level, StructureManager structures, ChunkGenerator generator, RandomSource random, BoundingBox box,
+                              ChunkPos chunk, PiecesContainer pieces) {
+            try {
+                foundation(level, box, pieces);
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.Site.foundation");
+            }
         }
 
         /**
@@ -783,6 +846,9 @@ public final class ControlStructures {
         if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {
             return Optional.empty();
         }
+        if (taken == null && PlaceClaims.crowded(id, chunk.f_45578_, chunk.f_45579_)) {
+            return Optional.empty(); // 4.1.42: another place is too near: not here (nor does /locate point here)
+        }
         Optional<Structure.GenerationStub> stub = here.get();
         if (stub.isPresent() && making(context) && !PlaceClaims.claim(id, chunk.f_45578_, chunk.f_45579_)) {
             return Optional.empty(); // another spot was taken while this one was laid out
@@ -808,6 +874,29 @@ public final class ControlStructures {
         return offer[0] == chunk.f_45578_ && offer[1] == chunk.f_45579_;
     }
 
+    /**
+     * 4.1.42: how far the ground rises and falls (blocks) over a footprint, its highest less its lowest, sampled every {@link #ROUGH_STEP}
+     * blocks and along its far edges (the water's surface counted as ground).
+     */
+    static int roughness(DryLand.Ground ground, int minX, int minZ, int sizeX, int sizeZ) {
+        return DryLand.roughness(ground, minX, minZ, sizeX, sizeZ, ROUGH_STEP);
+    }
+
+    /** 4.1.42: the ground's samples (blocks apart); the most a place's ground may rise and fall, a big place's; as flat as land comes. */
+    static final int ROUGH_STEP = 6;
+    static final int PLACE_FLAT = 6;
+    static final int BIG_PLACE_FLAT = 10;
+    static final int FLAT_ENOUGH = 2;
+
+    /**
+     * 4.1.42 (the owner: "research the ... biomes of plenty mods in the basic Minecraft mods and separate them ... instead just spawns on a
+     * fucking mountain"): the steep biomes no place of ours stands in (vanilla's mountains and hills, Forge's mountain, peak, slope and
+     * plateau tags that biome mods fill, and the steep biomes of Biomes O' Plenty and Regions Unexplored by name, each only if it is there):
+     * data/hexkagune/tags/worldgen/biome/steep.json. The flatness tests stand behind it whatever biome a mod adds.
+     */
+    static final net.minecraft.tags.TagKey<?> STEEP = net.minecraft.tags.TagKey.m_203882_(Registries.f_256952_,
+        net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", "steep"));
+
     /** 4.1.1: the biomes no structure may stand in or beside (a sea, a river, a beach, a swamp): data/hexkagune/tags/worldgen/biome/wet.json. */
     static final net.minecraft.tags.TagKey<?> WET = net.minecraft.tags.TagKey.m_203882_(Registries.f_256952_,
         net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", "wet"));
@@ -831,6 +920,11 @@ public final class ControlStructures {
             @Override
             public boolean sea(int x, int y, int z) {
                 return biomes.m_203407_(x >> 2, y >> 2, z >> 2, sampler).m_203656_(SEA);
+            }
+
+            @Override
+            public boolean steep(int x, int y, int z) {
+                return biomes.m_203407_(x >> 2, y >> 2, z >> 2, sampler).m_203656_(STEEP);
             }
 
             @Override
@@ -891,7 +985,7 @@ public final class ControlStructures {
      */
     static boolean biome(Structure.GenerationContext context, int x, int y, int z) {
         net.minecraft.core.Holder<?> biome = context.f_226623_().m_203407_(x >> 2, y >> 2, z >> 2, context.f_226624_().m_224579_());
-        return !biome.m_203656_(WET);
+        return !biome.m_203656_(WET) && !biome.m_203656_(STEEP); // 4.1.42: and never a steep one
     }
 
     /**
@@ -905,6 +999,8 @@ public final class ControlStructures {
             .xmap(DryPlace::new, dry -> dry.inner).codec();
         /** The chunks either way a start may be moved. */
         static final int MOST = 5;
+        /** 4.1.42: the nearest spots the flattest is looked for among (the first 5 x 5: two chunks either way). */
+        static final int STRICT_SHIFTS = 25;
         private static final int[][] SHIFTS = DryLand.shifts(MOST);
         final JigsawStructure inner;
 
@@ -944,7 +1040,7 @@ public final class ControlStructures {
                 if (!offered(context, placeSpread(context, id))) {
                     return Optional.empty();
                 }
-                Optional<Structure.GenerationStub> stub = this.here(context);
+                Optional<Structure.GenerationStub> stub = this.flattest(context);
                 if (stub.isEmpty()) {
                     return stub;
                 }
@@ -994,11 +1090,34 @@ public final class ControlStructures {
             return known;
         }
 
+        /**
+         * 4.1.42 (the owner: "I see so many flat areas they could have a structure and instead just spawns on a fucking mountain"): of every
+         * spot its start reaches ({@link #SHIFTS}) that is dry and in a biome it may stand in (no mountain, hill, peak or slope:
+         * {@link ControlStructures#STEEP}), the flattest ({@link ControlStructures#roughness}); none at all if even that one's ground rises
+         * and falls more than {@link ControlStructures#PLACE_FLAT}. Lifted onto its highest ground (never buried) on a foundation (never over
+         * air: {@link ControlStructures#foundation}).
+         */
+        Optional<Structure.GenerationStub> flattest(Structure.GenerationContext context) {
+            return this.spot(context, true);
+        }
+
         /** 4.1.1: the place started where vanilla would start it if the land there is dry, or moved a chunk at a time onto dry land near it. */
         Optional<Structure.GenerationStub> here(Structure.GenerationContext context) {
+            return this.spot(context, false);
+        }
+
+        /** {@code strict}: the flattest spot, if flat enough ({@link #flattest}); else the first that will do (/place: {@link #here}). */
+        private Optional<Structure.GenerationStub> spot(Structure.GenerationContext context, boolean strict) {
             ChunkPos home = context.f_226628_();
             DryLand.Ground ground = ground(context);
+            Structure.GenerationStub best = null;
+            int bestRough = Integer.MAX_VALUE;
+            int[] bestAt = null;
+            int tried = 0;
             for (int[] shift : SHIFTS) {
+                if (strict && ++tried > STRICT_SHIFTS) {
+                    break; // 4.1.42: the nearest spots only, so a region with no flat land costs the world's making little
+                }
                 Structure.GenerationContext moved = shift[0] == 0 && shift[1] == 0 ? context : new Structure.GenerationContext(context.f_226621_(),
                     context.f_226622_(), context.f_226623_(), context.f_226624_(), context.f_226625_(), context.f_226626_(), context.f_226627_(),
                     new ChunkPos(home.f_45578_ + shift[0], home.f_45579_ + shift[1]), context.f_226629_(), context.f_226630_());
@@ -1017,10 +1136,21 @@ public final class ControlStructures {
                 BlockPos at = stub.get().f_226669_();
                 if (biome(context, at.m_123341_(), at.m_123342_(), at.m_123343_())
                     && DryLand.dry(ground, at.m_123342_(), minX, minZ, maxX - minX + 1, maxZ - minZ + 1)) {
-                    return Optional.of(raised(stub.get(), DryLand.lift(ground, at.m_123341_(), at.m_123343_(), minX, minZ, maxX, maxZ)));
+                    int rough = strict ? roughness(ground, minX, minZ, maxX - minX + 1, maxZ - minZ + 1) : 0;
+                    if (rough < bestRough) {
+                        bestRough = rough;
+                        best = stub.get();
+                        bestAt = new int[] {at.m_123341_(), at.m_123343_(), minX, minZ, maxX, maxZ};
+                    }
+                    if (rough <= FLAT_ENOUGH) {
+                        break; // as flat as land comes: no need to look further
+                    }
                 }
             }
-            return Optional.empty();
+            if (best == null || bestRough > PLACE_FLAT) {
+                return Optional.empty();
+            }
+            return Optional.of(raised(best, DryLand.lift(ground, bestAt[0], bestAt[1], bestAt[2], bestAt[3], bestAt[4], bestAt[5])));
         }
 
         /**
@@ -1045,6 +1175,17 @@ public final class ControlStructures {
         @Override
         public StructureType<?> m_213658_() {
             return DRY_PLACE;
+        }
+
+        /** 4.1.42: the place on a foundation of the world's own ground, never over air ({@link ControlStructures#foundation}). */
+        @Override
+        public void m_214110_(WorldGenLevel level, StructureManager structures, ChunkGenerator generator, RandomSource random, BoundingBox box,
+                              ChunkPos chunk, PiecesContainer pieces) {
+            try {
+                foundation(level, box, pieces);
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.DryPlace.foundation");
+            }
         }
 
         /**

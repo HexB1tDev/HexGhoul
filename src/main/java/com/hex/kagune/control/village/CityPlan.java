@@ -19,8 +19,9 @@ public final class CityPlan {
     /** The quarters' sites, by number. */
     public static final String[] QUARTERS = {"small_city_0", "small_city_1", "small_city_2", "small_city_3"};
     /** The most the city's ground may rise and fall (blocks, its highest less its lowest of {@link #SAMPLES} x {@link #SAMPLES}). */
-    public static final int FLAT = VillageGround.FLAT;
-    public static final int SAMPLES = 9;
+    public static final int FLAT = 10;
+    /** 4.1.42: 17 x 17 (every 34 blocks: 9 x 9 every 68 missed whole hillsides and valleys between them, and the city hung over them). */
+    public static final int SAMPLES = 17;
     /**
      * 4.1.36 (the owner: "that city should be able to go over rivers. It doesn't really matter. Just make sure it blends well with the
      * terrain"): water no deeper than this (blocks over its bed) may lie under it: a river, a swamp's pools, a pond; not a lake or a sea.
@@ -42,6 +43,44 @@ public final class CityPlan {
     }
 
     private CityPlan() {
+    }
+
+    /**
+     * 4.1.42: the whole city's ground (its streets' first free height) on {@code ground} for the city whose least corner is ({@code minX},
+     * {@code minZ}), or {@link Integer#MIN_VALUE} if it may not stand there: {@link #SAMPLES} x SAMPLES levels (the top of the ground or of
+     * the water over it) rising and falling more than {@link #FLAT} ({@link #ground}), water deeper than {@link #DEEP} at any of them or at
+     * any column every 32 blocks, or a sea's or a steep biome at any column every 16.
+     */
+    public static int land(DryLand.Ground ground, int minX, int minZ) {
+        int n = SAMPLES;
+        int[] levels = new int[n * n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                int x = minX + 2 + (SIZE - 5) * i / (n - 1);
+                int z = minZ + 2 + (SIZE - 5) * j / (n - 1);
+                int floor = ground.floor(x, z);
+                int surface = ground.surface(x, z);
+                if (surface - floor > DEEP) {
+                    return Integer.MIN_VALUE;
+                }
+                levels[i * n + j] = Math.max(surface, floor);
+            }
+        }
+        int middle = ground(levels);
+        if (middle == Integer.MIN_VALUE) {
+            return Integer.MIN_VALUE;
+        }
+        for (int[] column : DryLand.columns(minX, minZ, SIZE, SIZE, 16)) {
+            if (ground.sea(column[0], middle, column[1]) || ground.steep(column[0], middle, column[1])) {
+                return Integer.MIN_VALUE;
+            }
+        }
+        for (int[] column : DryLand.columns(minX, minZ, SIZE, SIZE, 32)) {
+            if (ground.surface(column[0], column[1]) - ground.floor(column[0], column[1]) > DEEP) {
+                return Integer.MIN_VALUE;
+            }
+        }
+        return middle;
     }
 
     /** Slot {@code slot}'s start chunk from the north-west slot's ({x, z}): 0 north-west, 1 north-east, 2 south-west, 3 south-east. */

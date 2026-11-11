@@ -28,6 +28,37 @@ public final class TakenPlaces {
         return at[0] == x && at[1] == z;
     }
 
+    /**
+     * 4.1.42 (the owner: "They got the fucking Kaneki Tower, the fucking library, and the Intaku all in the same spot"): as {@link #take}, but
+     * a spot within {@code apart} chunks of another place's spot is never taken (each takes the first spot the world makes, and the first
+     * spots made are all round where it starts: they crowded there).
+     */
+    public synchronized boolean takeApart(String id, int x, int z, int apart) {
+        int[] at = this.taken.get(id);
+        if (at != null) {
+            return at[0] == x && at[1] == z;
+        }
+        if (this.crowded(id, x, z, apart)) {
+            return false;
+        }
+        this.taken.put(id, new int[] {x, z});
+        return true;
+    }
+
+    /** 4.1.42: true if another place than {@code id} has its spot within {@code apart} chunks of ({@code x}, {@code z}). */
+    public synchronized boolean crowded(String id, int x, int z, int apart) {
+        for (java.util.Map.Entry<String, int[]> other : this.taken.entrySet()) {
+            if (!other.getKey().equals(id)) {
+                long dx = other.getValue()[0] - x;
+                long dz = other.getValue()[1] - z;
+                if (dx * dx + dz * dz < (long)apart * apart) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** {@code id}'s spot ({@code x}, {@code z}) given up; true if it was its spot. */
     public synchronized boolean release(String id, int x, int z) {
         int[] at = this.taken.get(id);

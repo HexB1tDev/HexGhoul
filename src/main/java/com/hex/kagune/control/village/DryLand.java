@@ -48,9 +48,69 @@ public final class DryLand {
         default boolean sea(int x, int y, int z) {
             return this.wet(x, y, z);
         }
+
+        /** 4.1.42: true if the biome there is a steep one (a mountain, a hill, a peak, a slope: hexkagune:steep); none where not told. */
+        default boolean steep(int x, int y, int z) {
+            return false;
+        }
     }
 
     private DryLand() {
+    }
+
+    /** 4.1.42: what a height of a column holds for a foundation ({@link #footing}): air or water; something that is no ground (a plant); solid. */
+    public static final int GAP = 0;
+    public static final int SOFT = 1;
+    public static final int SOLID = 2;
+
+    /**
+     * 4.1.42: a foundation's column: its floor (the lowest {@link #SOLID} height from {@code bottom} up through {@code layers} more: the
+     * structure's lowest block there) and the ground under it (the first {@link #SOLID} height below it, no lower than {@code deepest}):
+     * {ground, floor}, the heights strictly between them to be filled with the ground's own block; null if there is no floor in those
+     * layers, it already stands on the ground (nothing between), or there is no ground down to {@code deepest}.
+     */
+    public static int[] footing(java.util.function.IntUnaryOperator kind, int bottom, int layers, int deepest) {
+        int floor = Integer.MIN_VALUE;
+        for (int y = bottom; y <= bottom + layers; y++) {
+            if (kind.applyAsInt(y) == SOLID) {
+                floor = y;
+                break;
+            }
+        }
+        if (floor == Integer.MIN_VALUE) {
+            return null;
+        }
+        for (int y = floor - 1; y >= deepest; y--) {
+            if (kind.applyAsInt(y) == SOLID) {
+                return y == floor - 1 ? null : new int[] {y, floor};
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 4.1.42: how far the ground rises and falls (blocks) over a footprint, its highest less its lowest, sampled every {@code step} blocks
+     * and along its far edges (the water's surface counted as ground).
+     */
+    public static int roughness(Ground ground, int minX, int minZ, int sizeX, int sizeZ, int step) {
+        int lo = Integer.MAX_VALUE;
+        int hi = Integer.MIN_VALUE;
+        int maxX = minX + Math.max(1, sizeX) - 1;
+        int maxZ = minZ + Math.max(1, sizeZ) - 1;
+        for (int x = minX; ; x = Math.min(maxX, x + step)) {
+            for (int z = minZ; ; z = Math.min(maxZ, z + step)) {
+                int h = ground.surface(x, z);
+                lo = Math.min(lo, h);
+                hi = Math.max(hi, h);
+                if (z >= maxZ) {
+                    break;
+                }
+            }
+            if (x >= maxX) {
+                break;
+            }
+        }
+        return hi - lo;
     }
 
     /** 4.1.17: how far apart (blocks) the ground is sampled under a place's footprint for {@link #lift}. */
