@@ -147,6 +147,7 @@ public final class QuinqueTests {
     public static void main(String[] args) throws IOException {
         turning();
         aimed();
+        firstPerson();
         kinds();
         files();
         holds();
@@ -160,6 +161,142 @@ public final class QuinqueTests {
             System.exit(1);
         }
         System.out.println("Quinque tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 4.1.19 (the owner: "don't forget the the first person animation, like first person view to match the animation that they got, because
+     * they currently don't have that"): a melee quinque in first person is the third person chain seen from FirstPersonQuinque's view, and
+     * ArmItemLayer draws it in that order. The camera never spins with the body; the body's step carries the weapon away. At rest every
+     * one is in view, right of and below the crosshair; through every swing some of it is always in view, its impact (0.4 to 0.65) always
+     * is, and no part of it comes nearer the camera than {@link #FIRST_PERSON_NEAR}. The draw out of the case is in view all the way.
+     */
+    static final double FIRST_PERSON_NEAR = 1.0;
+
+    static void firstPerson() throws IOException {
+        // ArmItemLayer.throughBody: FirstPersonQuinque.view's steps, in its order, then the third person chain.
+        String layer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ArmItemLayer.java"));
+        String[] order = {"FirstPersonQuinque.still(p)", "pose.m_85841_(zoom, zoom, 1.0F)", "FirstPersonQuinque.PITCH, 1, 0, 0",
+            "pose.m_85837_(0.0, -p.drop / 16.0, -p.lunge / 16.0)", "pose.m_85841_(-model, -model, model)",
+            "pose.m_85837_(-eye[0] / 16.0, -eye[1] / 16.0, -eye[2] / 16.0)", "still.transform(\"rightArm\"", "pose.m_85837_(1.0 / 16.0, 0.125, -0.625)"};
+        int at = layer.indexOf("static void throughBody(");
+        for (String step : order) {
+            int next = at < 0 ? -1 : layer.indexOf(step, at);
+            check(next > at, "first person: ArmItemLayer.throughBody does " + step + " in FirstPersonQuinque.view's order");
+            at = next;
+        }
+        check(layer.contains("throughBody(pose, body, \"slim\".equals(player.m_108564_()))")
+            && layer.contains("ItemDisplayContext.THIRD_PERSON_RIGHT_HAND"), "first person: the held quinque drawn through the body with its third person transform");
+        for (Quinque q : Quinque.values()) {
+            com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
+            if (q.ranged || h == null) {
+                continue;
+            }
+            List<float[]> corners = corners(q);
+            check(corners.size() >= 8, q + ": its full model read for first person");
+            com.hex.kagune.control.client.animation.RigPose stance = com.hex.kagune.control.client.animation.QuinquePose.hold(q);
+            if (q.twoHanded) {
+                com.hex.kagune.control.client.animation.QuinqueGrip.reach(stance, q, false);
+            }
+            double[] grip = com.hex.kagune.control.client.animation.FirstPersonQuinque.held(stance, h, false, h.rightGrip());
+            check(com.hex.kagune.control.client.animation.FirstPersonQuinque.seen(grip) && grip[0] > 0.0 && grip[1] < 0.0,
+                q + ": first person at rest: the grip in view, right of and below the crosshair");
+            // The camera never spins: the finisher's whole turn changes nothing in first person.
+            com.hex.kagune.control.client.animation.RigPose spun = new com.hex.kagune.control.client.animation.RigPose().add(stance, 1.0F);
+            spun.rightArmHold = stance.rightArmHold;
+            spun.spin += 2.1F;
+            double[] spunGrip = com.hex.kagune.control.client.animation.FirstPersonQuinque.held(spun, h, false, h.rightGrip());
+            check(Math.abs(spunGrip[0] - grip[0]) + Math.abs(spunGrip[1] - grip[1]) + Math.abs(spunGrip[2] - grip[2]) < 1.0E-6,
+                q + ": first person leaves the body's whole turn out");
+            // The step: a lunge carries the weapon away along the look (tipped down by the view), as far as the body goes.
+            com.hex.kagune.control.client.animation.RigPose lunged = new com.hex.kagune.control.client.animation.RigPose().add(stance, 1.0F);
+            lunged.rightArmHold = stance.rightArmHold;
+            lunged.lunge += 8.0F;
+            double[] away = com.hex.kagune.control.client.animation.FirstPersonQuinque.held(lunged, h, false, h.rightGrip());
+            check(Math.abs((grip[2] - away[2]) - 0.5 * Math.cos(com.hex.kagune.control.client.animation.FirstPersonQuinque.PITCH)) < 1.0E-4,
+                q + ": a lunge of 8 pixels carries the weapon half a block away in first person");
+            for (int i = 1; i <= 6; i++) {
+                com.hex.kagune.control.client.animation.RigPose out = com.hex.kagune.control.client.animation.QuinquePose.unfolding(q, i / 7.0F);
+                check(com.hex.kagune.control.client.animation.FirstPersonQuinque.seen(
+                    com.hex.kagune.control.client.animation.FirstPersonQuinque.held(out, h, false, h.rightGrip())), q + ": first person: the draw in view at " + i + "/7");
+            }
+            for (int step = 0; step < q.steps(); step++) {
+                // 4.1.19: the mace's second swing (still written as arm angles) winds up behind the head: its head passes half a block over
+                // the camera. Its string is rewritten next (the quinque overhaul), under the same rule as the rest.
+                double near = q == Quinque.MACE && step == 1 ? 0.5 : FIRST_PERSON_NEAR;
+                double nearest = Double.MAX_VALUE;
+                boolean always = true;
+                boolean impact = false;
+                for (int k = 0; k <= 50; k++) {
+                    double t = k / 50.0;
+                    com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, t);
+                    if (q.twoHanded) {
+                        com.hex.kagune.control.client.animation.QuinqueGrip.reach(p, q, false);
+                    }
+                    boolean seen = false;
+                    for (float[] c : corners) {
+                        double[] v = com.hex.kagune.control.client.animation.FirstPersonQuinque.held(p, h, false, c);
+                        nearest = Math.min(nearest, Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]));
+                        seen |= com.hex.kagune.control.client.animation.FirstPersonQuinque.seen(v);
+                    }
+                    always &= seen;
+                    impact |= seen && t >= 0.4 && t <= 0.65;
+                }
+                check(always, q + " swing " + (step + 1) + ": always some of it in view in first person");
+                check(impact, q + " swing " + (step + 1) + ": its impact in view in first person");
+                check(nearest >= near, q + " swing " + (step + 1) + ": never nearer the camera than " + near + " (" + nearest + ")");
+            }
+        }
+    }
+
+    /** {@code q}'s weapon model ("full" frame): each element's eight corners (its pixels, its own turn applied). */
+    static List<float[]> corners(Quinque q) throws IOException {
+        List<float[]> out = new ArrayList<>();
+        String item = read("assets/hexkagune/models/item/" + q.weaponId + ".json");
+        Matcher full = item == null ? null : Pattern.compile("\"hexkagune:item/(quinque/[a-z_]+_full)\"").matcher(item);
+        String model = full != null && full.find() ? read("assets/hexkagune/models/item/" + full.group(1) + ".json") : null;
+        if (model == null) {
+            return out;
+        }
+        String num = "\\s*(-?[0-9.]+)\\s*";
+        Pattern box = Pattern.compile("\"from\":\\s*\\[" + num + "," + num + "," + num + "\\],\\s*\"to\":\\s*\\[" + num + "," + num + "," + num + "\\]");
+        Pattern turn = Pattern.compile("\"rotation\":\\s*\\{\\s*\"angle\":" + num + ",\\s*\"axis\":\\s*\"([xyz])\",\\s*\"origin\":\\s*\\[" + num + "," + num + "," + num + "\\]");
+        Matcher m = box.matcher(model);
+        List<Integer> starts = new ArrayList<>();
+        List<double[]> boxes = new ArrayList<>();
+        while (m.find()) {
+            starts.add(m.start());
+            double[] b = new double[6];
+            for (int i = 0; i < 6; i++) {
+                b[i] = Double.parseDouble(m.group(i + 1));
+            }
+            boxes.add(b);
+        }
+        for (int e = 0; e < boxes.size(); e++) {
+            String rest = model.substring(starts.get(e), e + 1 < starts.size() ? starts.get(e + 1) : model.length());
+            Matcher r = turn.matcher(rest);
+            boolean turned = r.find();
+            double[] b = boxes.get(e);
+            for (int c = 0; c < 8; c++) {
+                double[] p = {(c & 1) == 0 ? b[0] : b[3], (c & 2) == 0 ? b[1] : b[4], (c & 4) == 0 ? b[2] : b[5]};
+                if (turned) {
+                    double a = Math.toRadians(Double.parseDouble(r.group(1)));
+                    double[] o = {Double.parseDouble(r.group(3)), Double.parseDouble(r.group(4)), Double.parseDouble(r.group(5))};
+                    double x = p[0] - o[0];
+                    double y = p[1] - o[1];
+                    double z = p[2] - o[2];
+                    double cos = Math.cos(a);
+                    double sin = Math.sin(a);
+                    switch (r.group(2)) {
+                        case "x" -> p = new double[] {x, y * cos - z * sin, y * sin + z * cos};
+                        case "y" -> p = new double[] {x * cos + z * sin, y, -x * sin + z * cos};
+                        default -> p = new double[] {x * cos - y * sin, x * sin + y * cos, z};
+                    }
+                    p = new double[] {p[0] + o[0], p[1] + o[1], p[2] + o[2]};
+                }
+                out.add(new float[] {(float)p[0], (float)p[1], (float)p[2]});
+            }
+        }
+        return out;
     }
 
     /** 2.0.31: Dawn's own string: its sweep takes the others in front, its thrust the others in its line; its ribbons follow each swing. */

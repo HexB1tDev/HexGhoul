@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.19 (HexGhoul): quinques in first person move exactly as your body swings them (testing)
+
+See `.github/release-notes-4.1.19.md`. "don't forget the the first person animation, like first person view to match the animation that they got": the katana, spear, mace, blade and Dawn are placed in first person by the same arm, hand, model and transforms as in third person, frame by frame, the body's step carrying them, seen from just behind the head, looking a little down, zoomed to a held weapon's size (`FirstPersonQuinque`), so every cut crosses the screen the way the body swings it. At rest each is right of and below the crosshair; every impact is in view; nothing comes within a block of the camera (but the mace's old second swing, rewritten next). Protocol 117.
+
 ## 4.1.18 (HexGhoul): a real katana, five cuts that hit where they look, quinques that slide out of their cases (testing)
 
 See `.github/release-notes-4.1.18.md`. "like the katana looks like shit": the katana rebuilt as a katana (a steel blade with a glowing crimson hamon, a proper curve, an iron oval guard, a wrapped hilt with gold fittings). "We need to improve every single M1 of every single weapon": its three swings are now five (kesa-giri, gyaku-kesa, yoko-giri, tsuki, and a spinning kaiten-giri finisher), written by where the blade points and the hands are, the arm solved for it (QuinqueAim), tested to hit where they look. Every quinque slides out of its case through seven frames. First person and the other quinques' strings are next. Protocol 117.

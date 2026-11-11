@@ -80,6 +80,38 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
 
     // ---------------------------------------------------------------- first person
 
+    /**
+     * 4.1.19: {@code pose} (the camera's) turned onto the right hand of a body posed {@code p}, as the player model and ItemInHandLayer
+     * place a held item in third person, seen as {@link com.hex.kagune.control.client.animation.FirstPersonQuinque} sees it: the view
+     * zoomed and looking down, the body's step carrying the weapon, from its eye behind the head, the body's whole turn left out. Each
+     * step here is one of FirstPersonQuinque.view's, in its order (QuinqueTests.firstPerson holds them to it).
+     */
+    static void throughBody(PoseStack pose, com.hex.kagune.control.client.animation.RigPose p, boolean slim) {
+        com.hex.kagune.control.client.animation.RigPose still = com.hex.kagune.control.client.animation.FirstPersonQuinque.still(p);
+        float[] eye = com.hex.kagune.control.client.animation.FirstPersonQuinque.EYE;
+        float model = com.hex.kagune.control.client.animation.FirstPersonQuinque.MODEL;
+        float zoom = com.hex.kagune.control.client.animation.FirstPersonQuinque.ZOOM;
+        // The view zoomed about its middle (not its depth), looking down.
+        pose.m_85841_(zoom, zoom, 1.0F);
+        pose.m_252781_(new org.joml.Quaternionf().rotateAxis(com.hex.kagune.control.client.animation.FirstPersonQuinque.PITCH, 1, 0, 0));
+        // The body's step (PlayerRendererMixin's body position, blocks): its drop down, its lunge ahead.
+        pose.m_85837_(0.0, -p.drop / 16.0, -p.lunge / 16.0);
+        // The model's frame (x left, y down, sixteenths of a block, the player model's 0.9375) from the eye.
+        pose.m_85841_(-model, -model, model);
+        pose.m_85837_(-eye[0] / 16.0, -eye[1] / 16.0, -eye[2] / 16.0);
+        // The right arm as ModelPart.translateAndRotate places it (its pivot, then Rz Ry Rx), the posed angles PlayerAnimator gives it.
+        float[] at = still.transform("rightArm", com.hex.kagune.control.client.animation.RigPose.POSITION, -5.0F, 2.0F, 0.0F);
+        float[] turn = still.transform("rightArm", com.hex.kagune.control.client.animation.RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+        pose.m_85837_(at[0] / 16.0, at[1] / 16.0, at[2] / 16.0);
+        pose.m_252781_(new org.joml.Quaternionf().rotateAxis(turn[2], 0, 0, 1).rotateAxis(turn[1], 0, 1, 0).rotateAxis(turn[0], 1, 0, 0));
+        // ItemInHandLayer: a slim arm's half pixel, Rx(-90), Ry(180), its offset into the fist.
+        if (slim) {
+            pose.m_85837_(0.5 / 16.0, 0.0, 0.0);
+        }
+        pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(-90.0), 1, 0, 0).rotateAxis((float)Math.PI, 0, 1, 0));
+        pose.m_85837_(1.0 / 16.0, 0.125, -0.625);
+    }
+
     /** 3.1.3: every quinque's attacks in the camera view, independently of PlayerAnimator's third-person layer. */
     @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = "hexkagune", value = net.minecraftforge.api.distmarker.Dist.CLIENT)
     public static final class FirstPerson {
@@ -135,9 +167,26 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
                 PoseStack pose = event.getPoseStack();
                 pose.m_85836_();
                 try {
-                    pose.m_85837_(0.42 + motion[3], -0.43 + motion[4] - 0.6 * equip, -0.95 + motion[5]);
-                    pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(motion[0]), 0, 1, 0)
-                        .rotateAxis((float)Math.toRadians(motion[1]), 1, 0, 0).rotateAxis((float)Math.toRadians(motion[2]), 0, 0, 1));
+                    // 4.1.19 (the owner: "don't forget the the first person animation, like first person view to match the animation that
+                    // they got, because they currently don't have that"): a melee quinque with a stance (the spear, the katana, the mace,
+                    // the blade, Dawn) is drawn in first person exactly as the body swings it in third person (the same arm, the same hand,
+                    // the same model and transform, the body's step), seen from behind the head (FirstPersonQuinque), so each cut crosses
+                    // the screen the way it goes. The launcher keeps its own (it aims along the crosshair).
+                    com.hex.kagune.control.client.animation.RigPose body = legacy != null && arm == null && !legacy.ranged
+                        && com.hex.kagune.control.client.animation.QuinqueHolds.of(legacy) != null
+                        ? com.hex.kagune.control.client.QuinqueClient.pose(player, partial) : null;
+                    if (body != null) {
+                        pose.m_85837_(0.0, -0.6 * equip, 0.0);
+                        throughBody(pose, body, "slim".equals(player.m_108564_()));
+                        minecraft.m_91291_().m_269128_(held, net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                            event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.f_118083_, pose,
+                            event.getMultiBufferSource(), player.m_9236_(), player.m_19879_());
+                        return;
+                    } else {
+                        pose.m_85837_(0.42 + motion[3], -0.43 + motion[4] - 0.6 * equip, -0.95 + motion[5]);
+                        pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(motion[0]), 0, 1, 0)
+                            .rotateAxis((float)Math.toRadians(motion[1]), 1, 0, 0).rotateAxis((float)Math.toRadians(motion[2]), 0, 0, 1));
+                    }
                     if (arm == null) {
                         minecraft.m_91291_().m_269128_(held, net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
                             event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.f_118083_, pose,

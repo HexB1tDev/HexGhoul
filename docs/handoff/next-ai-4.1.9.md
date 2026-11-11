@@ -1,4 +1,4 @@
-# Next AI: after 4.1.18, with 4.1.19 (first person) saved as a patch, not built (4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.19 (4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -9,31 +9,21 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
-## START HERE (the owner said "Stop, handoff" during 4.1.19)
+## START HERE
 
-1. **Branch:** fast-forward yours onto `claude/hopeful-euler-dnx1ub`. 4.1.18 is pushed (`a2beb766`, full build EXIT 0); this handoff
-   sits on top of it.
-2. **Ship 4.1.19 (first person), which is finished code but unbuilt.** It is in `docs/handoff/wip-4.1.19-first-person.patch`, made with
-   `git diff --binary` against 4.1.18 and checked with `git apply --check`. It contains:
-   - `ArmItemLayer.throughBody` and `FIRST_PERSON_EYE`;
-   - the `ItemDisplayContext.THIRD_PERSON_RIGHT_HAND` stub and its allowlist line;
-   - `.github/release-notes-4.1.19.md` and the README entry;
-   - `tools/first_person_view.py` and `tools/FirstPersonProbe.java`;
-   - the previews `docs/handoff/katana-first-person-4.1.19.png` and `spear-mace-first-person-4.1.19.png`.
-
-   With the patch applied, `python3 tools/quick_check.py QuinqueTests QuinqueOwnTests` (verification on) passed: 1457 and 20127 checks.
-   The full build was NOT run.
-
-   Steps:
-   1. `git apply docs/handoff/wip-4.1.19-first-person.patch && git rm docs/handoff/wip-4.1.19-first-person.patch`
-   2. VERSION 4.1.19 in `build.py` and `patch/KagunePatch.java`.
-   3. A 4.1.19 row in the table below.
-   4. Look at the two previews yourself. Judge them and re-render if anything is off (the render rule above).
-   5. Commit, run the full build in an isolated copy, and push on EXIT 0.
-   6. Send the owner the previews in chat.
-3. **Then the quinque overhaul goes on** ("4.1.18, what and where", the "Next" list): each weapon's own string by intent, then the new
-   kagune-born quinques. Then the owner's big list, items 4-6 (Arima, quests, the Small City), one version at a time.
-4. **Open question to the owner:** should daughters 07, 10, 11, 12, 21 and 22 get open eyes painted on? Their skins have the eyes drawn
+1. **Branch:** fast-forward yours onto the newest pushed branch (this session's was `ccr-623accda-fz7zua`, fast-forwarded from
+   `claude/hopeful-euler-dnx1ub`). Check the table below for what is pushed.
+2. **4.1.19 (first person) is shipped** (see "4.1.19, what and where"). The 4.1.18 session's patch was applied, then its camera was
+   judged on renders and replaced: from 12 pixels behind the head the cuts landed on the bottom edge and the hilt swelled into the view.
+3. **Next, the owner's newest words (during 4.1.19, quoted exactly; their message was cut off there):** "Gotta say that handle looks like
+   shit, bro. The katana should be like every weapon in the game should look like it's made from a kagune. That that's horrible. Not only
+   that, but like I said, I don't want squares. You can see that katana still has". So: every quinque rebuilt as a smooth, kagune-grown
+   mesh (no boxes, no checkered hilt), the katana first. Item JSON models can only be boxes; the kagune-made Arm weapons already draw a
+   smooth mesh of their own (`quinque/ArmMesh`, `WeaponLayer.mesh`, first person `ArmItemLayer.raw`): follow that road.
+4. **Then the quinque overhaul goes on** ("4.1.18, what and where", the "Next" list): each weapon's own string by intent (the mace's
+   second swing first: it winds up behind the head, see 4.1.19), then the new kagune-born quinques. Then the owner's big list, items 4-6
+   (Arima, quests, the Small City), one version at a time.
+5. **Open question to the owner:** should daughters 07, 10, 11, 12, 21 and 22 get open eyes painted on? Their skins have the eyes drawn
    shut or hidden. Ask before you touch them.
 
 ## How to work (the owner asked the next AI to be "exactly like" the last one)
@@ -117,7 +107,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
-| 4.1.19 | Melee quinques with a stance (spear, katana, mace, Dawn) drawn in first person through the third person chain (`ArmItemLayer.throughBody`, `FIRST_PERSON_EYE`) | saved as `docs/handoff/wip-4.1.19-first-person.patch`, quick checks pass, full build NOT run: see START HERE |
+| 4.1.19 | Melee quinques (spear, katana, mace, blade, Dawn) drawn in first person through the third person chain, the body's step in, seen from behind the head looking down, zoomed (`client/animation/FirstPersonQuinque`, `ArmItemLayer.throughBody`); `QuinqueTests.firstPerson`; `tools/FirstPersonPreview.java` | pushed, EXIT 0 |
 | 4.1.18 | The katana model (`quinque_models.katana_parts`, its own texture patches); each quinque its own string (`Quinque.steps/finisher/swing(step)`, `Quinque.next(q, ...)`); the katana's five by intent (`QuinquePose.katanaAims`, solved by `QuinqueAim`, baked in `QuinqueKeys` by `tools/QuinqueAimBake.java`); seven draw frames (`OUT_STEPS`) | pushed, EXIT 0 |
 | 4.1.17 | Coat tails overlap at the middle and a hip lining (`outfit_models.overlap`); Ken's tower on the ground and every jigsaw place lifted onto its footprint's highest ground (`DryLand.lift`, `DryPlace.raised`); a standing place adopted as the world's one, duplicates logged, `making` only false for /locate (`PlaceClaims`); planted Ukaku spikes keep their shooter's colour | pushed, EXIT 0 |
 | 4.1.16 | Every woman blushes through a kiss and after, as deep as its mood (`KissBlush`, `MoodKiss.blush`); Ayato's eyes repainted (`companion_textures.REPAINT`), nothing under hair (companions); kids' blinks and kakugan on both layers (`blink_skins.py`, `child_skins.py`) | pushed, EXIT 0 |
@@ -437,7 +427,7 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
   - Solving at runtime took a third of a second a swing: never do that.
 - **The draw:** `OUT_STEPS` (7) frames `<kind>_out_1..6`, then `full`. The item overrides follow, and the frame tests count 8 (10 for a case).
 - **Next, in this order:**
-  1. **First person: written, in the 4.1.19 patch (START HERE).** `ArmItemLayer.FirstPerson.hand` draws a non-ranged quinque with a hold
+  1. **First person: done in 4.1.19 (its camera replaced: see "4.1.19, what and where"). As the patch had it:** `ArmItemLayer.FirstPerson.hand` draws a non-ranged quinque with a hold
      through `throughBody`:
      - the camera's frame to the model's (scale -0.9375, -0.9375, 0.9375), back from `FIRST_PERSON_EYE` {3.5, -0.5, 12}, which is a little
        behind and to the left of the head;
@@ -453,6 +443,33 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.19, what and where (first person)
+
+The owner (quoted exactly, from 4.1.16's list): "don't forget the the first person animation, like first person view to match the
+animation that they got, because they currently don't have that." And this session's rule from them: "it does not give up until it's a
+perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses whatsoever."
+
+- **`client/animation/FirstPersonQuinque`** (pure): `still` (spin 0, `rightArmHold` kept: `RigPose.add` drops it), `view` (model pixels to
+  camera blocks: the model's 0.9375 from `EYE` {4.5, -1, 24} (left, down, back from the neck), the body's step (drop down, lunge ahead,
+  blocks), `PITCH` 9 degrees down, `ZOOM` 1.7 on camera x and y only), `held` (`QuinqueGrip.held` then `view`), `seen` (70 degrees, 16:9).
+- **`ArmItemLayer.throughBody`** does `view`'s steps in its order with PoseStack ops (non-uniform scale for the zoom: PoseStack fixes the
+  normals), then the third person chain (arm pivot, Rz Ry Rx, ItemInHandLayer), and the item is drawn with `THIRD_PERSON_RIGHT_HAND`.
+  Every quinque with a hold but the ranged launcher goes this way (the blade too: it has a hold).
+- **Tried on renders and dropped** (`tools/FirstPersonPreview.java` makes every one of these in seconds):
+  - the true eye: the cuts happen a block under the screen;
+  - 4.1.18's patch, 12 pixels back and level: the cuts land on the bottom edge, the hilt swells into the view on a follow through;
+  - the grip's path squeezed into view with the blade's angle kept: lifting the hands turns the hilt onto the eye;
+  - the posed arms drawn too: from anywhere behind the shoulders they wall off the view (vanilla draws no arm under a held sword).
+- **Tests** (`QuinqueTests.firstPerson`): `throughBody`'s ops in `view`'s order (source check); no spin; a lunge of 8 pixels moves it half a
+  block along the look; at rest the grip in view, right of and below the crosshair; the draw in view at every frame; through every swing
+  (every 0.02) some corner of its full model always in view, the impact (0.4 to 0.65) in view, no corner nearer the camera than
+  `FIRST_PERSON_NEAR` (1 block; today's nearest 1.24, katana swing 2). **One exception, written in the test:** the mace's second swing
+  (0.5: its old wind-up behind the head; its third swing's shaft also passes through the head in third person). Remove it when the mace
+  is rewritten by intent, and add a head-clip rule for every string.
+- **Previews:** `docs/handoff/katana-first-person-4.1.19.png`, `quinques-first-person-4.1.19.png` (third person from behind over first person
+  at the same moments). `java ... FirstPersonPreview <dir> <kind> [match]` (kinds: katana, koukaku, mace, bikaku, dawn).
+- **Not tested in game.** Left-handed players (main arm left): third person was already drawn on the right arm; first person matches it.
 
 ## The owner's big list (after 4.1.16), in their order: do it all, one version at a time
 
