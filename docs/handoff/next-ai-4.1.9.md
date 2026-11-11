@@ -1,4 +1,4 @@
-# Next AI: after 4.1.35 (4.1.35: the Small City cut for 1.20.1, four quarters, not placed yet; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.36 (4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -30,7 +30,7 @@ Then: "Handoff and prompt, now".** Still: hurry, one short version at a time, re
    - **The limit:** one structure places only within 8 chunks of its start (272 x 272: `ControlStructures.Site` REACH_BACK/REACH_ON). The
      owner chose the whole city: **four 272 x 272 quarters** (0 NW, 1 NE, 2 SW, 3 SE) that always spawn together side by side at **one
      shared ground height** and **one shared turn**.
-   - **4.1.35 is done** (the cut; see "4.1.35, what and where"); the WIP patch below was applied and deleted.
+   - **4.1.35 and 4.1.36 are done** (the cut; the city in worlds, the villages deleted, humans in vanilla villages: see their "what and where"). **The Small City is finished.** Next: ask the owner.
    - **WIP patch:** `docs/handoff/small-city-4.1.35-wip.patch` (`git apply` it, delete it in the commit): `tools/city_structure.py` (reads
      the zip's region files into a compact grid, finds the ground, writes `build/city/small_city_<k>.schem`, Sponge v3: ran in 38 s,
      ~500k blocks and 560-800 states per quarter), `tools/library_structure.py` (writes byte/int/long arrays), `tools/exploration_structures.py`
@@ -186,6 +186,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.36 | The Small City in worlds: `hexkagune:small_city` (`ControlStructures.City`), placement `hexkagune:city` (`CityPlacement`, a `RandomSpreadStructurePlacement` offering a city's four start chunks), `CityPlan` (slots, turn, quarter per slot), `City.ground` (9 x 9, rivers allowed, no sea, FLAT 12, the median, >= 64), `inCity`/`holdsPlace` (places and cities never overlap), `DryLand.CITY_*`; villages and their files deleted; `VillageHumans`; `tools/city_render.py --placed`; `NpcTests.smallCity` | pushed, EXIT 0 |
 | 4.1.35 | The Small City cut for 1.20.1: `tools/city_structure.py` (the save to four quarter schematics), `tools/exploration_structures.py` sites `small_city_0..3` (maps 7-10, ground 6; swaps: pale oak wall sign, tuff bricks, wildflowers, infested stone; banner `Patterns`; `NO_ENTITY` shelves), `tools/city_render.py` (isometric from the tiles); `NpcTests.smallCity`; not placed in worlds yet | pushed, EXIT 0 |
 | 4.1.34 | The quest menu a compact box over the world: `QuestJournalView` (640 x 380, cards, checklist, badges, mastery bar, `roadmap`), `QuestStyle`, `QuestScreen` without the overlay; `tools/UiPreview` draws it over a stand-in world (`-Dmx -Dmy` for hover); `QuestTests.journal` | pushed, EXIT 0 |
 | 4.1.33 | Quests finished for good: `QuestLog.finishAll`/`finished` (saved `all=1`, `state` DONE for every PATH/GHOUL quest), called by `QuestServer.completeOpen`; hunts and favours unchanged; `QuestTests.forGood` | pushed, EXIT 0 |
@@ -538,6 +539,38 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.36, what and where (the Small City in worlds, the villages gone, humans in vanilla villages)
+
+The owner's words as 4.1.35's.
+
+- **The limit and the way round it:** a structure places only within 8 chunks of its start chunk, so the 544 x 544 city is four starts of
+  the one structure `hexkagune:small_city`, 17 chunks apart. **`ControlStructures.CityPlacement`** (`hexkagune:city`, registered on
+  `Registries.f_256888_`; codec `MapCodec.unit`) extends the vanilla random spread (48 spacing, 36 separation, `DryLand.CITY_SALT`): its
+  offers (`m_227008_`, untouched, so `/locate` finds the north-west quarter) plus the three chunks beside each (`m_214090_` overridden:
+  `CityPlan.slot`). **`City`** at a start chunk: its slot and the offer (`CityPlan.slot` over `cityOffers`, which is null unless the set's
+  placement really is `CityPlacement`: then no city at all), the turn (`CityPlan.turn(seed, offer)`), the quarter in that slot
+  (`CityPlan.quarterIn`), the whole city's ground (`City.ground`: 9 x 9 samples over 544 x 544, each the top of the ground or of the water
+  over it, no water deeper than `CityPlan.DEEP` 8; `CityPlan.ground`: spread <= 12, their median, at least `ABOVE_SEA` 64; no sea biome
+  (`SEA`, `minecraft:is_ocean`, via `DryLand.Ground.sea`) every 16 blocks, no deep water every 32), then `Site.stub` of that quarter turned,
+  at `CityPlan.slotCorner`. The owner, mid-4.1.36 (quoted exactly): "Also, that city should be able to go over rivers. It doesn't really
+  matter. Just make sure it blends well with the terrain." So rivers, beaches and swamps are allowed and it sits on the median (beard_box
+  cuts the land inside it over its streets and fills under its edges), not the highest.
+- **Kept apart:** `inCity(context, x, z)` (a built city's chunks plus `CITY_MARGIN` 10, judged by `City.ground`) in the hideout's, the CCG
+  building's and every jigsaw place's spot test; `City.holdsPlace` keeps a city off an older world's claimed place. (Keeping places from
+  every city *offer* failed: a region of 48 always has one, so nothing was left.)
+- **Deleted:** `worldgen/structure/village*.json`, `structure_set/villages.json`, `template_pool/village/`, `structures/village*/`,
+  `tools/village_structure.py`; `village_1`/`village_2` out of `exploration_structures.py` and `SiteMaps` (maps 3 and 4 gone). Kept: the
+  Java of the old villages' people (`BrickVillage`, `VillageMap`, `VillageTops`, `DryJigsaw`): old worlds' people still use them.
+- **`VillageHumans`:** every 100 ticks, each `Villager` within 96 of a player not yet looked at (`HexVillageHumans` in its data): one in 2
+  brings a human (persistent) at its feet, unless 4 are within 48.
+- **Render:** `tools/city_render.py --placed T` (slots by a port of `CityPlan.slotOf`, asserted equal to the whole city turned):
+  `docs/handoff/small-city-placed-4.1.36.png` (all four turns); `--placed T --land`: on rolling land with a river, the ground fitted roughly
+  as beard_box fits it (`on_land`): `docs/handoff/small-city-on-land-4.1.36.png`.
+- **Tests:** `NpcTests.smallCity` (slots a permutation every turn; every quarter block where the whole turned city puts it; reach; offers
+  known as their own; neighbours never touch; turns every way; `covers`; source checks for `inCity`, `holdsPlace`, `VillageHumans`); the
+  older DryLand tests moved off the villages' numbers.
+- **Not tested in game.** Old worlds: a city at the edge of land explored before 4.1.36 can lack a quarter. `/place` builds no city.
 
 ## 4.1.35, what and where (the Small City, cut for 1.20.1)
 

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.36 (HexGhoul): the Small City in every world, the villages gone, humans in vanilla villages (testing)
+
+See `.github/release-notes-4.1.36.md`. "Delete all ids hexkagune:village_x ( and anything related) add Hexkagune:small_city ... (a bit rarer than a normal village), Humans can now however spawn in normal minecraft villages": `hexkagune:small_city` (`ControlStructures.City`, four quarters at the four start chunks offered together by the placement `hexkagune:city`, `CityPlacement`, a random spread of 48/36; turn and ground from the seed and the whole footprint: `CityPlan`), over rivers, never a sea, on the land's middle height (`City.ground`, `CityPlan.ground`); places kept out of built cities (`inCity`); `village_1`, `village_2`, `village` and their set, pools, pieces and tool deleted; `VillageHumans` brings humans to vanilla villagers. Protocol 117.
+
 ## 4.1.35 (HexGhoul): the Small City, cut for 1.20.1 (testing)
 
 See `.github/release-notes-4.1.35.md`. "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City"": the whole 544 x 544 city read from `art/city/small-city.zip` by `tools/city_structure.py`, cut into four 272 x 272 quarters (`small_city_0..3`, maps 7-10, one ground) by `tools/exploration_structures.py` (pale oak wall signs, tuff bricks, wildflowers and infested stone swapped; banner patterns kept; shelves' entities dropped); `tools/city_render.py` draws it. Not placed in worlds yet (4.1.36). Protocol 117.

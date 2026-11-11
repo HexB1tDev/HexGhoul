@@ -1,5 +1,5 @@
 {
-  "type": "hexkagune:site_village_1",
+  "type": "hexkagune:small_city",
   "biomes": "#hexkagune:overworld",
   "step": "surface_structures",
   "spawn_overrides": {},

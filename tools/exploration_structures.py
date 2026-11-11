@@ -4,8 +4,9 @@ and v3), to 1.20.1 structure templates cut into tiles, with the people who live 
 
     python3 tools/exploration_structures.py --blocks blocks.json
 
-  art/exploration/village1.schem        -> hexkagune:village_1       the human town (people in their homes, two investigators walking it)
-  art/exploration/village2.schem        -> hexkagune:village_2       the CCG settlement (investigators on its patrol and at their posts)
+  art/city/small-city.zip               -> hexkagune:small_city      4.1.35/4.1.36: the owner's Small City, four quarters
+                                                                       (small_city_0 .. 3, tools/city_structure.py); it replaced
+                                                                       village_1 (the human town) and village_2 (the CCG settlement)
   art/exploration/aogiri_mansion.schem  -> hexkagune:aogiri_hideout  the Aogiri Tree hideout (4.0.2: the owner's mansion, replacing
                                                                        hideout_ougiri.schem: its guards, its patrol, its members, Ayato
                                                                        and Noro in rooms of their own)
@@ -43,13 +44,8 @@ TILE = 64
 KEEP = 2
 
 SITES = [
-    # The human town: 276 x 183; its two outer columns either side (a kerb) left out, so it is 272 wide: 17 chunks, all a structure's start
-    # chunk can reach (8 either side of it).
-    {"id": "village_1", "source": "village1.schem", "map": 3, "crop_x": (2, 274), "kind": "human", "houses": 14, "agents": 2,
-     "ring": (18, 44), "loot_every": 7},
-    # The CCG settlement: investigators walk its patrol and stand at their posts.
-    {"id": "village_2", "source": "village2.schem", "map": 4, "crop_x": None, "kind": "ccg", "houses": 0, "agents": 10, "ring": (14, 40),
-     "loot_every": 0},
+    # 4.1.36 (the owner: "Delete all ids hexkagune:village_x ( and anything related)"): the human town (village_1, map 3) and the CCG
+    # settlement (village_2, map 4) are gone; the Small City (below) stands in their place.
     # 4.0.2 (the owner: "we're gonna replace the Ougiri hideout with another schematic that I got ... I give them a mansion because I just
     # thought the Aogiri Tree deserves it"): 320 x 263, its grounds walled round. 272 is all a structure's start chunk reaches, so a band of
     # 24 columns is left out either side (the inner edge of the side wall's trees and the plain paving beside it: whole repeats of the

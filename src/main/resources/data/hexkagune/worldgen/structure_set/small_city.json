@@ -1,0 +1,11 @@
+{
+  "structures": [
+    {
+      "structure": "hexkagune:small_city",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "hexkagune:city"
+  }
+}

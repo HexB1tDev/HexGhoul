@@ -1,7 +1,0 @@
-{
-  "type": "hexkagune:site_village_2",
-  "biomes": "#hexkagune:overworld",
-  "step": "surface_structures",
-  "spawn_overrides": {},
-  "terrain_adaptation": "beard_box"
-}

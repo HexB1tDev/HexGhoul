@@ -35,6 +35,9 @@ import net.minecraftforge.registries.DeferredRegister;
  */
 public final class ControlStructures {
     private static final DeferredRegister<StructureType<?>> TYPES = DeferredRegister.create(Registries.f_256938_, "hexkagune");
+    /** 4.1.36: the placement hexkagune:city ({@link CityPlacement}). */
+    private static final DeferredRegister<net.minecraft.world.level.levelgen.structure.placement.StructurePlacementType<?>> PLACEMENTS =
+        DeferredRegister.create(Registries.f_256888_, "hexkagune");
     /** hexkagune:dry_jigsaw. */
     public static final StructureType<DryJigsaw> DRY_JIGSAW = () -> DryJigsaw.CODEC;
     /** 4.1.1: hexkagune:dry_place (Anteiku, the library, Ken's tower): a jigsaw place moved, near its start, onto dry land. */
@@ -50,7 +53,12 @@ public final class ControlStructures {
     static {
         TYPES.register("dry_jigsaw", () -> DRY_JIGSAW);
         TYPES.register("dry_place", () -> DRY_PLACE);
+        TYPES.register("small_city", () -> ControlStructures.SMALL_CITY);
+        PLACEMENTS.register("city", () -> ControlStructures.CITY_PLACEMENT);
         for (com.hex.kagune.control.village.SiteMaps.Site site : com.hex.kagune.control.village.SiteMaps.ALL) {
+            if (site.id().startsWith(ControlStructures.CITY)) {
+                continue; // 4.1.36: the Small City's quarters are built by hexkagune:small_city (City), not each on its own
+            }
             Codec<Site> codec = Structure.m_226607_(settings -> new Site(settings, site));
             StructureType<Site> type = () -> codec;
             SITES.put(site.id(), type);
@@ -63,6 +71,223 @@ public final class ControlStructures {
 
     static void register(IEventBus modBus) {
         TYPES.register(modBus);
+        PLACEMENTS.register(modBus);
+    }
+
+    /** 4.1.36: the Small City's site ids start so ({@link com.hex.kagune.control.village.CityPlan#QUARTERS}), and its structure set. */
+    static final String CITY = "small_city";
+
+    /** 4.1.36: hexkagune:small_city (the owner's Small City, a quarter at each of its four start chunks: {@link City}). */
+    public static final StructureType<City> SMALL_CITY = () -> City.CODEC;
+
+    public static final net.minecraft.world.level.levelgen.structure.placement.StructurePlacementType<CityPlacement> CITY_PLACEMENT =
+        () -> CityPlacement.CODEC;
+
+    /**
+     * 4.1.36: where the Small City may start: a random spread of {@link DryLand#CITY_SPACING} (the game's own: /locate finds it), whose
+     * every offer is the north-west quarter's start chunk; the three chunks beside it ({@link com.hex.kagune.control.village.CityPlan#slot})
+     * are offered with it, for the other three quarters. Its numbers are its own (structure_set/small_city.json names only the type).
+     */
+    public static final class CityPlacement extends net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement {
+        /** Its one (it holds nothing of its own: its numbers are DryLand's), and its codec: no fields (vanilla's own way, as its density functions'). */
+        static final CityPlacement INSTANCE = new CityPlacement();
+        static final Codec<CityPlacement> CODEC = MapCodec.unit(INSTANCE).codec();
+
+        CityPlacement() {
+            super(DryLand.CITY_SPACING, DryLand.CITY_SEPARATION, net.minecraft.world.level.levelgen.structure.placement.RandomSpreadType.LINEAR,
+                DryLand.CITY_SALT);
+        }
+
+        /** The offers ({@link #m_227008_}: the region's start chunk, the game's own) for the world with {@code seed}. */
+        DryLand.Spread offers(long seed) {
+            return new DryLand.Spread() {
+                @Override
+                public int spacing() {
+                    return DryLand.CITY_SPACING;
+                }
+
+                @Override
+                public int[] chunk(int x, int z) {
+                    ChunkPos at = CityPlacement.this.m_227008_(seed, x, z);
+                    return new int[] {at.f_45578_, at.f_45579_};
+                }
+            };
+        }
+
+        /** isPlacementChunk: any of a city's four start chunks. */
+        @Override
+        protected boolean m_214090_(net.minecraft.world.level.chunk.ChunkGeneratorStructureState state, int x, int z) {
+            try {
+                return com.hex.kagune.control.village.CityPlan.slot(this.offers(state.m_254887_()), x, z) != null;
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.CityPlacement");
+                return false;
+            }
+        }
+
+        @Override
+        public net.minecraft.world.level.levelgen.structure.placement.StructurePlacementType<?> m_203443_() {
+            return CITY_PLACEMENT;
+        }
+    }
+
+    /**
+     * 4.1.36 (the owner: "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City""): one quarter of
+     * the Small City at each of its four start chunks ({@link CityPlacement}). Each works out, from the world's seed and its city's
+     * north-west chunk alone, the city's turn and which quarter is in its slot ({@link com.hex.kagune.control.village.CityPlan}), and the
+     * whole city's ground ({@link #ground}): so the four are built together, turned as one, on one height, or none is. The ground must be
+     * fairly flat ({@link com.hex.kagune.control.village.CityPlan#FLAT}), with no sea and no water deeper than a river; the city stands on its
+     * middle. Its structure's terrain adaptation (beard_box) cuts the world's ground off over its streets and fills it up under them.
+     */
+    public static final class City extends Structure {
+        static final Codec<City> CODEC = Structure.m_226607_(City::new);
+        private final Site[] quarters = new Site[4];
+
+        City(Structure.StructureSettings settings) {
+            super(settings);
+            for (int k = 0; k < 4; k++) {
+                this.quarters[k] = new Site(settings, com.hex.kagune.control.village.SiteMaps.of(com.hex.kagune.control.village.CityPlan.QUARTERS[k]));
+            }
+        }
+
+        @Override
+        public Optional<Structure.GenerationStub> m_214086_(Structure.GenerationContext context) {
+            try {
+                return this.place(context);
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.City");
+                return Optional.empty();
+            }
+        }
+
+        private Optional<Structure.GenerationStub> place(Structure.GenerationContext context) {
+            DryLand.Spread offers = cityOffers(context);
+            if (offers == null) {
+                return Optional.empty(); // its set's placement is not the city's own (another mod changed it): no city rather than part of one
+            }
+            ChunkPos chunk = context.f_226628_();
+            int[] at = com.hex.kagune.control.village.CityPlan.slot(offers, chunk.f_45578_, chunk.f_45579_);
+            if (at == null) {
+                return Optional.empty();
+            }
+            int turns = com.hex.kagune.control.village.CityPlan.turn(context.f_226627_(), at[1], at[2]);
+            int quarter = com.hex.kagune.control.village.CityPlan.quarterIn(at[0], turns);
+            if (holdsPlace(at[1], at[2])) {
+                return Optional.empty(); // a one-of-a-kind place of an older world already stands here
+            }
+            int[] corner = com.hex.kagune.control.village.CityPlan.corner(at[1], at[2]);
+            int middle = ground(context, corner[0], corner[1]);
+            if (middle == Site.NO_GROUND) {
+                return Optional.empty();
+            }
+            int[] slot = com.hex.kagune.control.village.CityPlan.slotCorner(at[1], at[2], at[0]);
+            int side = com.hex.kagune.control.village.CityPlan.QUARTER;
+            return Optional.of(this.quarters[quarter].stub(context, turns, slot[0], slot[1], side, side, middle));
+        }
+
+        /**
+         * The whole city's ground (its streets' first free height: {@link com.hex.kagune.control.village.CityPlan#ground} of the levels of
+         * {@link com.hex.kagune.control.village.CityPlan#SAMPLES} x SAMPLES over its 544 x 544, the top of the ground or of the water over
+         * it), or {@link Site#NO_GROUND} if they rise and fall more than {@link com.hex.kagune.control.village.CityPlan#FLAT}, a sea's biome is
+         * in it (every 16 blocks), or water deeper than {@link com.hex.kagune.control.village.CityPlan#DEEP} lies in it (every 32: a lake, a
+         * sea). 4.1.36 (the owner: "that city should be able to go over rivers. It doesn't really matter. Just make sure it blends well with
+         * the terrain"): a river, a beach, a swamp may run under it (its terrain adaptation fills their beds up under its streets).
+         */
+        static int ground(Structure.GenerationContext context, int minX, int minZ) {
+            DryLand.Ground ground = ControlStructures.ground(context);
+            int n = com.hex.kagune.control.village.CityPlan.SAMPLES;
+            int size = com.hex.kagune.control.village.CityPlan.SIZE;
+            int deep = com.hex.kagune.control.village.CityPlan.DEEP;
+            int[] levels = new int[n * n];
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    int x = minX + 2 + (size - 5) * i / (n - 1);
+                    int z = minZ + 2 + (size - 5) * j / (n - 1);
+                    int floor = ground.floor(x, z);
+                    int surface = ground.surface(x, z);
+                    if (surface - floor > deep) {
+                        return Site.NO_GROUND;
+                    }
+                    levels[i * n + j] = Math.max(surface, floor);
+                }
+            }
+            int middle = com.hex.kagune.control.village.CityPlan.ground(levels);
+            if (middle == Integer.MIN_VALUE) {
+                return Site.NO_GROUND;
+            }
+            for (int[] column : DryLand.columns(minX, minZ, size, size, 16)) {
+                if (ground.sea(column[0], middle, column[1])) {
+                    return Site.NO_GROUND;
+                }
+            }
+            for (int[] column : DryLand.columns(minX, minZ, size, size, 32)) {
+                if (ground.surface(column[0], column[1]) - ground.floor(column[0], column[1]) > deep) {
+                    return Site.NO_GROUND;
+                }
+            }
+            return middle;
+        }
+
+        /**
+         * True if a one-of-a-kind place already took a spot in the city whose north-west start chunk is ({@code bx}, {@code bz}) (or near
+         * it): only one taken before 4.1.36 can be (every place since asks {@link #inCity} first), and such a spot never changes, so the
+         * four quarters all see it alike.
+         */
+        static boolean holdsPlace(int bx, int bz) {
+            for (String id : ONE_OF_A_KIND) {
+                int[] at = PlaceClaims.claimed(id);
+                if (at != null && com.hex.kagune.control.village.CityPlan.covers(bx, bz, at[0], at[1], DryLand.CITY_MARGIN)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public StructureType<?> m_213658_() {
+            return SMALL_CITY;
+        }
+
+        /** 4.1.9: the game's own biome test at the start left out: the city judges its own land (any biome but a wet one). */
+        @Override
+        public Optional<Structure.GenerationStub> m_262864_(Structure.GenerationContext context) {
+            return this.m_214086_(context);
+        }
+    }
+
+    /** 4.1.36: the Small City's offers as this world has them, or null if its set's placement is not {@link CityPlacement}. */
+    static DryLand.Spread cityOffers(Structure.GenerationContext context) {
+        net.minecraft.world.level.levelgen.structure.StructureSet found = context.f_226621_().m_175515_(Registries.f_256998_)
+            .m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", CITY));
+        return found != null && found.f_210004_() instanceof CityPlacement city ? city.offers(context.f_226627_()) : null;
+    }
+
+    /**
+     * 4.1.36: true if a Small City that is built (judged as the city judges itself: {@link City#ground}) covers start chunk ({@code x},
+     * {@code z}) or comes within {@link DryLand#CITY_MARGIN} chunks of it. A one-of-a-kind place asks before it takes a spot, so none is ever
+     * built in a city. (Every region offers a city, but only one on dry, flat land is built: the offers alone would keep a place from
+     * everywhere.)
+     */
+    static boolean inCity(Structure.GenerationContext context, int x, int z) {
+        DryLand.Spread offers = cityOffers(context);
+        if (offers == null) {
+            return false; // no city is built in this world
+        }
+        int spacing = offers.spacing();
+        int rx = Math.floorDiv(x, spacing);
+        int rz = Math.floorDiv(z, spacing);
+        for (int i = rx - 1; i <= rx + 1; i++) {
+            for (int j = rz - 1; j <= rz + 1; j++) {
+                int[] b = offers.chunk(i * spacing, j * spacing);
+                if (com.hex.kagune.control.village.CityPlan.covers(b[0], b[1], x, z, DryLand.CITY_MARGIN)) {
+                    int[] corner = com.hex.kagune.control.village.CityPlan.corner(b[0], b[1]);
+                    if (City.ground(context, corner[0], corner[1]) != Site.NO_GROUND && !City.holdsPlace(b[0], b[1])) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /** A vanilla jigsaw structure (its own fields, its own placing) started only where {@link VillageGround#suits} says. */
@@ -234,7 +459,7 @@ public final class ControlStructures {
                 return claimed(CCG, context, () -> {
                     if (!offered(context, spread(context, CCG, DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.CCG_SALT)))
                         || DryLand.near(hideoutSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART)
-                        || DryLand.near(villageSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART)) {
+                        || inCity(context, chunk.f_45578_, chunk.f_45579_)) {
                         return Optional.empty();
                     }
                     int span = Math.max(sizeX, sizeZ) + 2 * CCG_ROUND;
@@ -247,7 +472,7 @@ public final class ControlStructures {
                 // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): the world's one hideout,
                 // only ever on dry land. 4.1.14: at whichever of its set's spots on dry land the world makes first (PlaceClaims).
                 return claimed(HIDEOUT, context, () -> {
-                    if (!offered(context, hideoutSpread(context))) {
+                    if (!offered(context, hideoutSpread(context)) || inCity(context, chunk.f_45578_, chunk.f_45579_)) {
                         return Optional.empty();
                     }
                     int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
@@ -279,7 +504,7 @@ public final class ControlStructures {
          * The place laid with its footprint's least corner at ({@code minX}, {@code minZ}), turned {@code turns}, its ground on the world's
          * at {@code middle} (the middle of the dry ground's heights: the first free height, its ground block one under it).
          */
-        private Structure.GenerationStub stub(Structure.GenerationContext context, int turns, int minX, int minZ, int sizeX, int sizeZ, int middle) {
+        Structure.GenerationStub stub(Structure.GenerationContext context, int turns, int minX, int minZ, int sizeX, int sizeZ, int middle) {
             int base = middle - 1 - this.site.ground();
             net.minecraft.world.level.block.Rotation rotation = TURNS[turns];
             // The template's corner (its x 0, z 0) as the turn takes it: the turned footprint's least corner is (minX, minZ).
@@ -565,6 +790,9 @@ public final class ControlStructures {
     /** 4.1.1: the biomes no structure may stand in or beside (a sea, a river, a beach, a swamp): data/hexkagune/tags/worldgen/biome/wet.json. */
     static final net.minecraft.tags.TagKey<?> WET = net.minecraft.tags.TagKey.m_203882_(Registries.f_256952_,
         net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", "wet"));
+    /** 4.1.36: the seas (minecraft:is_ocean, every ocean, deep or not): the Small City stands over a river, never a sea. */
+    static final net.minecraft.tags.TagKey<?> SEA = net.minecraft.tags.TagKey.m_203882_(Registries.f_256952_,
+        net.minecraft.resources.ResourceLocation.m_214293_("minecraft", "is_ocean"));
 
     /** 4.1.1: the world as the game will make it (its two worldgen heightmaps: water counted as ground, and not; its biomes). */
     static DryLand.Ground ground(Structure.GenerationContext context) {
@@ -577,6 +805,11 @@ public final class ControlStructures {
             @Override
             public boolean wet(int x, int y, int z) {
                 return biomes.m_203407_(x >> 2, y >> 2, z >> 2, sampler).m_203656_(WET);
+            }
+
+            @Override
+            public boolean sea(int x, int y, int z) {
+                return biomes.m_203407_(x >> 2, y >> 2, z >> 2, sampler).m_203656_(SEA);
             }
 
             @Override
@@ -622,14 +855,11 @@ public final class ControlStructures {
         return fallback;
     }
 
-    /** 4.1.9: the hideout's, the villages' and the CCG building's spreads as this world has them. */
+    /** 4.1.9: the hideout's spread as this world has it (4.1.36: the villages' is gone: {@link #cityMiddles}). */
     static DryLand.Spread hideoutSpread(Structure.GenerationContext context) {
         return spread(context, "aogiri_hideout", DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.SALT));
     }
 
-    static DryLand.Spread villageSpread(Structure.GenerationContext context) {
-        return spread(context, "villages", DryLand.fixed(context.f_226627_(), DryLand.VILLAGE_SPACING, DryLand.VILLAGE_SEPARATION, DryLand.VILLAGE_SALT));
-    }
 
     /**
      * 4.1.1: true if a structure may stand in the biome at block ({@code x}, {@code y}, {@code z}). 4.1.9 (the owner: "it should be able
@@ -700,7 +930,7 @@ public final class ControlStructures {
                 BoundingBox box = stub.get().m_226677_().m_192798_();
                 int x = Math.floorDiv((box.m_162395_() + box.m_162399_()) >> 1, 16);
                 int z = Math.floorDiv((box.m_162398_() + box.m_162401_()) >> 1, 16);
-                if (DryLand.near(villageSpread(context), x, z, DryLand.PLACE_APART) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)
+                if (inCity(context, x, z) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)
                     || DryLand.near(spread(context, Site.CCG, DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.CCG_SALT)),
                         x, z, DryLand.PLACE_APART)) {
                     return Optional.empty();

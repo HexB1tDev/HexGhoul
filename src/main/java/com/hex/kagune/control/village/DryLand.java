@@ -43,6 +43,11 @@ public final class DryLand {
 
         /** True if the biome at block ({@code x}, {@code y}, {@code z}) is a wet one (a sea, a river, a beach, a swamp). */
         boolean wet(int x, int y, int z);
+
+        /** 4.1.36: true if the biome there is a sea (rivers, beaches and swamps are not); as {@link #wet} where not told apart. */
+        default boolean sea(int x, int y, int z) {
+            return this.wet(x, y, z);
+        }
     }
 
     private DryLand() {
@@ -168,8 +173,8 @@ public final class DryLand {
      * spot of the hideout's or a village's.
      */
     static int[][] offers(long seed, int salt, int inner, int outer, boolean apart) {
-        Spread[] keep = apart ? new Spread[] {fixed(seed, SPACING, SEPARATION, SALT), fixed(seed, VILLAGE_SPACING, VILLAGE_SEPARATION, VILLAGE_SALT)}
-            : new Spread[0];
+        // 4.1.36: the villages' spots are gone; the Small City is kept clear of where it is really built (ControlStructures.inCity).
+        Spread[] keep = apart ? new Spread[] {fixed(seed, SPACING, SEPARATION, SALT)} : new Spread[0];
         return offers(fixed(seed, SPACING, SEPARATION, salt), inner, outer, keep, CCG_APART);
     }
 
@@ -242,10 +247,19 @@ public final class DryLand {
      */
     public static final int CCG_SALT = 1873602245;
     public static final int CCG_APART = 12;
-    /** The villages' structure set (data/hexkagune/worldgen/structure_set/villages.json). */
-    public static final int VILLAGE_SPACING = 34;
-    public static final int VILLAGE_SEPARATION = 20;
-    public static final int VILLAGE_SALT = 1873602241;
+    /**
+     * 4.1.36: the Small City's set (data/hexkagune/worldgen/structure_set/small_city.json, its own placement hexkagune:city with these
+     * numbers: {@link CityPlan}). It replaces the villages' (34, 20). A region of 48 chunks holds at most one city (34 chunks wide, its
+     * offer moved at most 12): no two ever touch; one a region at most, on dry, fairly flat land only: rarer than a vanilla village (34).
+     */
+    public static final int CITY_SPACING = 48;
+    public static final int CITY_SEPARATION = 36;
+    public static final int CITY_SALT = 1873602250;
+    /**
+     * 4.1.36: how far (chunks) a one-of-a-kind place's start chunk is kept outside a Small City that is built (its square of chunks): the
+     * widest place's half (the hideout's, 9) and one more.
+     */
+    public static final int CITY_MARGIN = 10;
 
     /** 4.1.4: true if the start chunk ({@code x}, {@code z}) is within {@code apart} chunks of an offer of the random spread with these numbers. */
     public static boolean near(long seed, int x, int z, int apart, int spacing, int separation, int salt) {
