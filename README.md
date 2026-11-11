@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.18 (HexGhoul): a real katana, five cuts that hit where they look, quinques that slide out of their cases (testing)
+
+See `.github/release-notes-4.1.18.md`. "like the katana looks like shit": the katana rebuilt as a katana (a steel blade with a glowing crimson hamon, a proper curve, an iron oval guard, a wrapped hilt with gold fittings). "We need to improve every single M1 of every single weapon": its three swings are now five (kesa-giri, gyaku-kesa, yoko-giri, tsuki, and a spinning kaiten-giri finisher), written by where the blade points and the hands are, the arm solved for it (QuinqueAim), tested to hit where they look. Every quinque slides out of its case through seven frames. First person and the other quinques' strings are next. Protocol 117.
+
 ## 4.1.17 (HexGhoul): no gap in the coats, places on top of the ground and never twice, Ukaku spikes in their colour everywhere (testing)
 
 See `.github/release-notes-4.1.17.md`. "whenever you walk ... it opens like a gap in every armor": the two halves of a coat's tails overlap at the middle like a buttoned coat, and a strip of its cloth under the jacket's hem covers the hip as a half swings back. "they are spawning under the ground ... always at the top max area": Ken's tower is no longer fixed at y 63, and every one-of-a-kind place is lifted onto the highest ground under its footprint. "there's multiple structures of each": a place already standing becomes the world's one when its chunk loads, another mod's chunk wrapper can no longer get every spot built, and duplicates are logged. Ukaku spikes and kakuja needles stuck in blocks stay in the kagune's colour. Protocol 117.

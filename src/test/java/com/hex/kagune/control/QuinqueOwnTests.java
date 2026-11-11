@@ -50,9 +50,9 @@ public final class QuinqueOwnTests {
             }
         }
         for (Quinque q : Quinque.values()) {
-            for (int step = 0; step < 3; step++) {
-                check(magnitude(QuinqueOwn.legacy(q, step, q.swing * 0.5)) > 0.2, q + ": each legacy M1 moves the hand");
-                check(magnitude(QuinqueOwn.legacy(q, step, q.swing)) == 0, q + ": no old swing after it finishes");
+            for (int step = 0; step < q.steps(); step++) { // 4.1.17: each its own string, each blow its own length
+                check(magnitude(QuinqueOwn.legacy(q, step, q.swing(step) * 0.5)) > 0.2, q + ": each legacy M1 moves the hand");
+                check(magnitude(QuinqueOwn.legacy(q, step, q.swing(step))) == 0, q + ": no old swing after it finishes");
             }
         }
         System.out.println("Quinque own-view tests: " + passed + " checks passed");

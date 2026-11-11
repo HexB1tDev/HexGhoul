@@ -1,4 +1,4 @@
-# Next AI: after 4.1.17 (4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.18 (4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -20,6 +20,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.18 | The katana model (`quinque_models.katana_parts`, its own texture patches); each quinque its own string (`Quinque.steps/finisher/swing(step)`, `Quinque.next(q, ...)`); the katana's five by intent (`QuinquePose.katanaAims`, solved by `QuinqueAim`, baked in `QuinqueKeys` by `tools/QuinqueAimBake.java`); seven draw frames (`OUT_STEPS`) | pushed, EXIT 0 |
 | 4.1.17 | Coat tails overlap at the middle and a hip lining (`outfit_models.overlap`); Ken's tower on the ground and every jigsaw place lifted onto its footprint's highest ground (`DryLand.lift`, `DryPlace.raised`); a standing place adopted as the world's one, duplicates logged, `making` only false for /locate (`PlaceClaims`); planted Ukaku spikes keep their shooter's colour | pushed, EXIT 0 |
 | 4.1.16 | Every woman blushes through a kiss and after, as deep as its mood (`KissBlush`, `MoodKiss.blush`); Ayato's eyes repainted (`companion_textures.REPAINT`), nothing under hair (companions); kids' blinks and kakugan on both layers (`blink_skins.py`, `child_skins.py`) | pushed, EXIT 0 |
 | 4.1.15 | Scenes that know who the player is with (`relation` flags); the night's captions (`NightWords`); five kid games, a two-page play menu, no touching sons from their teens on; six new kisses (`MoodKiss.of(mood, Moment)`), the phases blended, every gesture crossfaded (`PoseFade`) | pushed, EXIT 0 |
@@ -312,6 +313,37 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
     If they report one in a fresh 4.1.17 world, ask for the `HexKagune:` log lines.
 - **Ukaku planted spikes:** `UkakuSpikes.Planted.shooter`, set from the bolt at SPIKE_IMPACT; `UkakuWingRenderer` tints it;
   `UkakuFx.crumble(shooter, ...)`. `UkakuTests.plantedColour` checks it.
+
+## 4.1.18, what and where (the quinque overhaul, part 1)
+
+- **The katana model** (`tools/quinque_models.py`):
+  - `katana_parts`: steel blade segments with per-face patches (`box(..., sides=...)`, "~" mirrors a face's patch).
+  - Its texture cells `KATA_FLAT`, `KATA_FLAT2`, `KATA_SPINE`, `KATA_TSUKA`, `KATA_TSUBA` are painted only for the katana; the other quinques'
+    files are unchanged.
+  - Look at any model textured: `python3 tools/item_render.py <model.json> <texture.png> <out.png>`. `QuinquePreview` paints an element one
+    flat colour (fine for poses).
+- **Strings:**
+  - `Quinque.steps()` (the katana 5, the others 3), `finisher()`, `swing(step)` (the katana's `KATANA_SWINGS`).
+  - `Quinque.next(q, last, since)` is used by `QuinqueServer`, `AgentBrain` and `QuinqueOwn.Combo.observe(q, ...)` (`QuinqueClient` passes the
+    held weapon).
+  - The old `next(int, long)` and `FINISHER` remain for nothing but legacy.
+- **Swings by intent** (`client/animation/QuinqueAim`):
+  - A key is (t, blade direction, right fist place: right/up/forward pixels from the neck, body channels).
+  - `solve` searches pitch/yaw/roll on the held model's kinematics (`QuinqueGrip.held/fist/reach`), with weights: `BLADE`, `HAND`, `LEFT`
+    (left hand's reach), `KEEP` (continuity, 4.0: lower it and the wrist flips between keys).
+  - `QuinquePose.Key` gained `spin` (the whole body turned; the finisher ends at 2 pi).
+  - `QuinquePose.aims(q, step)` gives the intents; the katana's are in `katanaAims`.
+  - **Bake after any aim change:** `javac -cp build/quick/classes:build/quick/base.jar -d <dir> tools/QuinqueAimBake.java`, then
+    `java -cp <dir>:build/quick/classes:build/quick/base.jar QuinqueAimBake`. `QuinqueTests.aimed` fails if `QuinqueKeys.java` is stale,
+    checks each aimed key's blade within 30 degrees, and that the arm never jumps more than 0.9 rad in 0.02 of a swing.
+  - Solving at runtime took a third of a second a swing: never do that.
+- **The draw:** `OUT_STEPS` (7) frames `<kind>_out_1..6`, then `full`. The item overrides follow, and the frame tests count 8 (10 for a case).
+- **Next, in this order:**
+  1. **First person from the same animation:** today `ArmItemLayer` plays `QuinqueOwn.legacy` (three generic motions) for quinques. Compute the
+     right fist and the blade from the third-person `RigPose` (`QuinqueGrip.held`) relative to the eye, and draw the held model there in
+     first person (both arms for two-handed ones). Check it with `QuinqueOwnPreview`.
+  2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
+  3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
 
 ## The owner's big list (after 4.1.16), in their order: do it all, one version at a time
 

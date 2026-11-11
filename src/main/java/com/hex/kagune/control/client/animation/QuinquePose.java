@@ -70,12 +70,19 @@ public final class QuinquePose {
         p.twist += (h.twist() * k - body);
     }
 
-    /** One key of a swing: when (0..1), the right arm's pitch, yaw and roll from the stance's, and the body's twist, lean, lunge, drop. */
-    record Key(float t, float pitch, float yaw, float roll, float twist, float lean, float lunge, float drop) {
+    /**
+     * One key of a swing: when (0..1), the right arm's pitch, yaw and roll from the stance's, and the body's twist, lean, lunge, drop; 4.1.17
+     * and its spin (the whole body turned about its middle: + to its left, a spinning cut's whole turn).
+     */
+    record Key(float t, float pitch, float yaw, float roll, float twist, float lean, float lunge, float drop, float spin) {
     }
 
     private static Key k(double t, double pitch, double yaw, double roll, double twist, double lean, double lunge, double drop) {
-        return new Key((float)t, (float)pitch, (float)yaw, (float)roll, (float)twist, (float)lean, (float)lunge, (float)drop);
+        return k(t, pitch, yaw, roll, twist, lean, lunge, drop, 0.0);
+    }
+
+    private static Key k(double t, double pitch, double yaw, double roll, double twist, double lean, double lunge, double drop, double spin) {
+        return new Key((float)t, (float)pitch, (float)yaw, (float)roll, (float)twist, (float)lean, (float)lunge, (float)drop, (float)spin);
     }
 
     /** At rest in the stance (a swing's first and last key). */
@@ -117,17 +124,7 @@ public final class QuinquePose {
                 default -> new Key[] {rest(0), k(0.3, 0.08, -0.55, 0, 0.6, -0.12, -2.5, 0.8), k(0.5, -0.38, 0.45, 0, -0.5, 0.3, 7.5, 0.9),
                     k(0.68, -0.38, 0.47, 0, -0.52, 0.32, 7.5, 1.0), rest(1)};
             };
-            case KATANA -> switch (step) {
-                // Kesa-giri: from over the right shoulder down across to the left hip.
-                case 0 -> new Key[] {rest(0), k(0.3, -1.0, 0.45, -0.35, 0.35, -0.05, -0.5, 0), k(0.5, 0.15, -0.25, 0.35, -0.3, 0.2, 2.5, 0.8),
-                    k(0.68, 0.3, -0.4, 0.45, -0.45, 0.25, 2.2, 1.0), rest(1)};
-                // Gyaku-kesa: from low on the left, rising across to high on the right.
-                case 1 -> new Key[] {rest(0), k(0.3, 0.3, -0.45, 0.6, -0.4, 0.15, 0, 0.6), k(0.5, -0.6, 0.25, -0.2, 0.25, 0.05, 2.5, 0.2),
-                    k(0.68, -1.0, 0.4, -0.35, 0.4, -0.05, 2.0, 0), rest(1)};
-                // Shomen, the finisher: straight up over the head and down the middle with a long step.
-                default -> new Key[] {rest(0), k(0.3, -1.45, 0.0, 0, 0, -0.15, -1.0, 0), k(0.5, 0.05, 0.0, 0, 0, 0.3, 4.0, 0.6),
-                    k(0.68, 0.25, 0.0, 0, 0, 0.38, 4.0, 0.8), rest(1)};
-            };
+            case KATANA -> katana(step);
             case SPEAR -> switch (step) {
                 // A straight thrust, driven along its own length: the chest turns back to draw it (the arm turning against it so it
                 // stays on the line), then squares up and the hips go in behind it.
@@ -154,6 +151,68 @@ public final class QuinquePose {
             // The launcher clubs with its muzzle brake: drawn in, the whole body driven in behind it.
             case LAUNCHER -> new Key[] {rest(0), k(0.3, -0.2, -0.3, 0, 0.35, -0.08, -1.5, 0), k(0.5, 0.12, 0.25, 0, -0.25, 0.2, 4.0, 0.3),
                 k(0.68, 0.15, 0.25, 0, -0.26, 0.22, 4.0, 0.3), rest(1)};
+        };
+    }
+
+    /** 4.1.17: {@code q}'s {@code step}th swing written by intent (QuinqueAim), or null where it is still written as arm angles. */
+    static QuinqueAim.Aim[] aims(Quinque q, int step) {
+        return q == Quinque.KATANA ? katanaAims(Math.floorMod(step, q.steps())) : null;
+    }
+
+    /**
+     * 4.1.17 (the owner: "We need to improve every single M1 of every single weapon. They're bad ... the katana looks like shit"): the
+     * katana's five, written by where the blade points and where the hands are (right, up, forward from the neck; QuinqueAim solves the
+     * arm): a breath of anticipation, the windup, the cut at its fastest through the impact (0.5), a follow through that carries on past it,
+     * the body settling, back into chudan. The feet step in under each (the lunge), the hips drive it (the twist), the whole body turns
+     * round once behind the last.
+     */
+    static Key[] katana(int step) {
+        // Solved once, by tools/QuinqueAimBake.java (QuinqueKeys; QuinqueTests checks they still match their aims).
+        return QuinqueKeys.KEYS[Quinque.KATANA.ordinal()][Math.floorMod(step, Quinque.KATANA.steps())];
+    }
+
+    static QuinqueAim.Aim[] katanaAims(int step) {
+        return switch (step) {
+            // Kesa-giri: up into hasso by the right shoulder (the blade up and back), cut down across the body to the left hip.
+            case 0 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+                QuinqueAim.a(0.12, -0.1, 0.75, 0.65, 1.5, -4.5, 6.0, 0.15, -0.03, 0, 0),
+                QuinqueAim.a(0.3, 0.25, 0.9, -0.35, 4.0, -1.0, 4.0, 0.45, -0.05, -0.5, 0),
+                QuinqueAim.a(0.42, 0.35, 0.55, 0.75, 2.5, -2.5, 7.5, 0.1, 0.12, 1.8, 0.4),
+                QuinqueAim.a(0.5, -0.45, -0.05, 0.89, 0.5, -5.5, 8.5, -0.35, 0.22, 2.6, 0.8),
+                QuinqueAim.a(0.56, -0.6, -0.35, 0.7, -1.3, -6.8, 7.0, -0.48, 0.24, 2.6, 0.9),
+                QuinqueAim.a(0.62, -0.7, -0.6, 0.35, -3.0, -8.0, 5.0, -0.6, 0.25, 2.6, 1.0),
+                QuinqueAim.a(0.71, -0.55, -0.4, 0.65, -2.2, -7.5, 5.5, -0.45, 0.18, 2.0, 0.75),
+                QuinqueAim.a(0.8, -0.4, -0.2, 0.9, -1.5, -7.0, 6.0, -0.3, 0.12, 1.4, 0.5), QuinqueAim.rest(1)};
+            // Gyaku-kesa: gathered low on the left, rising across the front to high on the right.
+            case 1 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+                QuinqueAim.a(0.15, -0.6, -0.55, 0.55, -3.0, -8.0, 4.5, -0.45, 0.12, 0, 0.6),
+                QuinqueAim.a(0.3, -0.7, -0.6, 0.35, -3.5, -8.5, 3.5, -0.55, 0.15, 0.5, 0.7),
+                QuinqueAim.a(0.4, -0.15, -0.2, 0.95, -1.5, -6.5, 6.5, -0.15, 0.08, 1.6, 0.45),
+                QuinqueAim.a(0.5, 0.45, 0.25, 0.86, 0.5, -4.5, 8.5, 0.25, 0.0, 2.6, 0.2),
+                QuinqueAim.a(0.62, 0.6, 0.65, 0.45, 3.5, -1.0, 6.0, 0.5, -0.08, 2.2, 0.0),
+                QuinqueAim.a(0.8, 0.1, 0.6, 0.8, 1.5, -4.0, 6.5, 0.25, -0.04, 1.0, 0), QuinqueAim.rest(1)};
+            // Yoko-giri: the blade laid out level to the right, swept flat across the chest to the left, the hips whipping round.
+            case 2 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+                QuinqueAim.a(0.15, 0.85, 0.05, 0.5, 3.5, -5.0, 4.5, 0.3, -0.03, 0, 0.2),
+                QuinqueAim.a(0.3, 0.97, 0.0, -0.2, 5.0, -5.0, 2.5, 0.65, -0.05, -0.4, 0.3),
+                QuinqueAim.a(0.5, 0.0, 0.0, 1.0, 0.0, -5.0, 9.0, -0.15, 0.12, 2.4, 0.4),
+                QuinqueAim.a(0.66, -0.95, 0.0, 0.3, -4.5, -5.0, 4.5, -0.7, 0.15, 2.2, 0.4),
+                QuinqueAim.a(0.82, -0.4, 0.3, 0.85, -2.0, -5.5, 6.5, -0.3, 0.06, 1.0, 0.2), QuinqueAim.rest(1)};
+            // Tsuki: drawn back to the right hip on the line, then driven straight out along it with a long lunge.
+            case 3 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+                QuinqueAim.a(0.15, -0.05, 0.15, 0.99, 2.0, -6.0, 4.0, 0.3, -0.06, -0.8, 0.3),
+                QuinqueAim.a(0.32, 0.0, 0.1, 1.0, 3.0, -6.5, 1.5, 0.5, -0.1, -1.5, 0.5),
+                QuinqueAim.a(0.5, 0.0, 0.08, 1.0, 0.0, -4.5, 10.5, -0.35, 0.3, 6.0, 0.6),
+                QuinqueAim.a(0.62, 0.0, 0.08, 1.0, 0.0, -4.5, 10.5, -0.37, 0.31, 6.0, 0.6),
+                QuinqueAim.a(0.82, -0.1, 0.4, 0.9, 0.5, -5.5, 7.5, -0.1, 0.12, 3.0, 0.3), QuinqueAim.rest(1)};
+            // Kaiten-giri, the finisher: coiled low with the blade back out to the right, then the whole body spun round once with it
+            // level out in front (the cut through everyone round him), stepping out of it into chudan.
+            default -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+                QuinqueAim.a(0.18, 0.95, 0.0, -0.3, 4.5, -5.0, 2.5, 0.6, -0.05, -0.5, 0.7, 0.0),
+                QuinqueAim.a(0.4, 0.3, 0.0, 0.95, 1.5, -5.0, 8.0, 0.2, 0.08, 0.8, 0.4, Math.PI * 0.7),
+                QuinqueAim.a(0.6, -0.3, 0.0, 0.95, -0.5, -5.0, 8.5, -0.2, 0.12, 2.0, 0.3, Math.PI * 1.55),
+                QuinqueAim.a(0.75, -0.8, 0.0, 0.6, -3.5, -5.0, 6.0, -0.55, 0.12, 2.2, 0.4, Math.PI * 2.0),
+                QuinqueAim.a(0.88, -0.3, 0.4, 0.85, -1.0, -5.5, 6.5, -0.25, 0.05, 1.0, 0.2, Math.PI * 2.0), QuinqueAim.restTurned(1, Math.PI * 2.0)};
         };
     }
 
@@ -194,7 +253,7 @@ public final class QuinquePose {
     }
 
     private static float[] values(Key k) {
-        return new float[] {k.pitch(), k.yaw(), k.roll(), k.twist(), k.lean(), k.lunge(), k.drop()};
+        return new float[] {k.pitch(), k.yaw(), k.roll(), k.twist(), k.lean(), k.lunge(), k.drop(), k.spin()};
     }
 
     /** How far into its swing the impact is (0..1): where the cut lands. */
@@ -206,13 +265,14 @@ public final class QuinquePose {
      */
     public static RigPose swing(Quinque q, int step, double t) {
         QuinqueHolds.Hold h = QuinqueHolds.of(q);
-        float[] v = curve(keys(q, Math.floorMod(step, 3)), t);
+        float[] v = curve(keys(q, Math.floorMod(step, q.steps())), t);
         RigPose p = hold(q);
         QuinqueGrip.aimRight(p, h.pitch() + v[0], h.yaw() + v[1], h.roll() + v[2]);
         p.twist += v[3];
         p.lean += v[4];
         p.lunge += v[5];
         p.drop += v[6];
+        p.spin += v[7]; // 4.1.17: the whole body turning (the head with it: it is looking along the cut)
         step(p, q, v[5]);
         return p;
     }

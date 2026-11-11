@@ -130,9 +130,39 @@ public enum Quinque {
         return last < 0 || since < 0L || since > COMBO ? 0 : (last + 1) % 3;
     }
 
+    /**
+     * 4.1.17 (the owner: "We need to improve every single M1 of every single weapon. They're bad ... the most basic garbage you can have"):
+     * how many blows make up its string: each its own (the katana five; the others three until theirs are rebuilt).
+     */
+    public int steps() {
+        return this == KATANA ? 5 : 3;
+    }
+
+    /** 4.1.17: its string's last blow, the finisher (harder, and some reach others round it). */
+    public int finisher() {
+        return this.steps() - 1;
+    }
+
+    /** 4.1.17: which of {@code q}'s blows comes next ({@link #steps} to its string), {@code last} the blow before ({@code -1} none). */
+    public static int next(Quinque q, int last, long since) {
+        int steps = q == null ? 3 : q.steps();
+        return last < 0 || since < 0L || since > COMBO ? 0 : (last + 1) % steps;
+    }
+
+    /** 4.1.17: how long its {@code step}th blow is drawn (ticks): the katana's each its own, its spinning finisher the longest. */
+    public int swing(int step) {
+        if (this == KATANA) {
+            return KATANA_SWINGS[Math.floorMod(step, KATANA_SWINGS.length)];
+        }
+        return this.swing;
+    }
+
+    /** 4.1.17: the katana's five, by blow (ticks). */
+    static final int[] KATANA_SWINGS = {9, 9, 9, 10, 14};
+
     /** How much harder its {@code step}th blow lands (its finisher's weight). */
     public float weight(int step) {
-        if (step != FINISHER) {
+        if (step != this.finisher()) {
             return 1.0F;
         }
         return switch (this) {
@@ -147,7 +177,7 @@ public enum Quinque {
 
     /** How far round its finisher reaches others (blocks; 0 none): the katana's wide cut, the mace's slam, the spear's thrust's line. */
     public double sweep(int step) {
-        if (step != FINISHER) {
+        if (step != this.finisher()) {
             return 0.0;
         }
         return switch (this) {

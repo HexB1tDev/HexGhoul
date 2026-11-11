@@ -223,7 +223,7 @@ public final class QuinqueClient {
             return out > 0.0F ? com.hex.kagune.control.client.animation.QuinquePose.unfolding(shut, out) : null;
         }
         com.hex.kagune.control.client.animation.RigPose p;
-        double t = (swing.combo.age(clock)) / weapon.swing;
+        double t = (swing.combo.age(clock)) / weapon.swing(swing.combo.step()); // 4.1.17: each blow its own length
         if (t >= 0.0 && t < 1.0) {
             if (weapon == Quinque.DAWN) {
                 stillFor(body, false, clock); // 3.3.2: a swing ends the idle
@@ -283,7 +283,7 @@ public final class QuinqueClient {
             SWINGS.clear();
         }
         Swing swing = SWINGS.computeIfAbsent(body.m_19879_(), id -> new Swing());
-        swing.combo.observe(body.f_20911_, body.f_20913_, clock);
+        swing.combo.observe(ControlItems.quinqueWeapon(body.m_21205_()), body.f_20911_, body.f_20913_, clock); // 4.1.17: its own string
         return swing;
     }
 

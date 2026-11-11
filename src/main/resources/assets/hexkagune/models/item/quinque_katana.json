@@ -9,15 +9,39 @@
   },
   {
    "predicate": {
-    "hexkagune:deploy": 0.45
+    "hexkagune:deploy": 0.3071
    },
-   "model": "hexkagune:item/quinque/katana_half"
+   "model": "hexkagune:item/quinque/katana_out_1"
   },
   {
    "predicate": {
-    "hexkagune:deploy": 0.7
+    "hexkagune:deploy": 0.4143
    },
-   "model": "hexkagune:item/quinque/katana_nearly"
+   "model": "hexkagune:item/quinque/katana_out_2"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.5214
+   },
+   "model": "hexkagune:item/quinque/katana_out_3"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.6286
+   },
+   "model": "hexkagune:item/quinque/katana_out_4"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.7357
+   },
+   "model": "hexkagune:item/quinque/katana_out_5"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.8429
+   },
+   "model": "hexkagune:item/quinque/katana_out_6"
   },
   {
    "predicate": {

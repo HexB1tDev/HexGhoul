@@ -18,12 +18,17 @@ public final class QuinqueOwn {
         private double began = -1.0E9;
 
         public void observe(boolean active, int swingTime, double clock) {
+            this.observe(null, active, swingTime, clock);
+        }
+
+        /** 4.1.17: as {@code q}'s string goes ({@link Quinque#steps} to it; null: three). */
+        public void observe(Quinque q, boolean active, int swingTime, double clock) {
             if (clock < this.began) {
                 this.swinging = false;
                 this.step = -1;
             }
             if (active && (!this.swinging || swingTime < this.last)) {
-                this.step = Quinque.next(this.step, (long)(clock - this.began));
+                this.step = Quinque.next(q, this.step, (long)(clock - this.began));
                 this.began = clock;
             }
             this.swinging = active;
@@ -65,9 +70,9 @@ public final class QuinqueOwn {
     }
 
     public static double[] legacy(Quinque q, int step, double age) {
-        int kind = q == Quinque.SPEAR || q == Quinque.LAUNCHER || q == Quinque.DAWN && step == Quinque.FINISHER ? 2
-            : step == Quinque.FINISHER || q == Quinque.MACE && step == 0 ? 1 : 0;
-        return motion(kind, step % 2 == 1, q.swing, q.swing * 0.5, age, 1);
+        int kind = q == Quinque.SPEAR || q == Quinque.LAUNCHER || q == Quinque.DAWN && step == q.finisher() ? 2
+            : step == q.finisher() || q == Quinque.MACE && step == 0 ? 1 : 0;
+        return motion(kind, step % 2 == 1, q.swing(step), q.swing(step) * 0.5, age, 1);
     }
 
     private static double[] motion(int kind, boolean back, double total, double land, double age, int repeats) {

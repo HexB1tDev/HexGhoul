@@ -224,7 +224,7 @@ public final class QuinquePreview {
         box(tris, c, rgb);
     }
 
-    static final double[] TIMES = {0.3, 0.42, 0.5, 0.6, 0.75};
+    static final double[] TIMES = {0.15, 0.3, 0.42, 0.5, 0.62, 0.75, 0.88};
     static final String[][] KINDS = {{"koukaku", "koukaku"}, {"katana", "katana"}, {"mace", "mace"}, {"launcher", "launcher"}, {"bikaku", "bikaku"}, {"dawn", "dawn"}};
     static final Quinque[] QUINQUES = {Quinque.SPEAR, Quinque.KATANA, Quinque.MACE, Quinque.LAUNCHER, Quinque.BLADE, Quinque.DAWN};
 
@@ -291,7 +291,7 @@ public final class QuinquePreview {
                 rows.get(0).add(kick);
                 names.get(0).add("recoil");
             }
-            for (int step = 0; step < 3; step++) {
+            for (int step = 0; step < q.steps(); step++) { // 4.1.17: each its own string
                 List<RigPose> row = new ArrayList<>();
                 List<String> label = new ArrayList<>();
                 for (double t : TIMES) {

@@ -1510,7 +1510,7 @@ public final class AgentBrain {
     /** The next of its string sets out at {@code prey}: a blow on its way (it can be met), landing a little on. */
     private static void begin(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
         Quinque q = mind.kind;
-        mind.step = Quinque.next(mind.step, ago(now, mind.stepAt));
+        mind.step = Quinque.next(q, mind.step, ago(now, mind.stepAt));
         mind.stepAt = now;
         mind.striking = true;
         mind.parrying = false;
@@ -1523,7 +1523,7 @@ public final class AgentBrain {
             () -> stopped(agent, mind, token));
         agent.swing(mind.step, now);
         Vec3 at = agent.m_20182_().m_82520_(0.0, agent.m_20206_() * 0.6, 0.0);
-        boolean heavy = mind.step == Quinque.FINISHER;
+        boolean heavy = mind.step == q.finisher();
         UkakuFire.sound(level, at, heavy ? "hexkagune:sfx.blade_heavy" : "hexkagune:sfx.blade_arc", 0.6F, q == Quinque.MACE ? 0.75F : 1.1F
             + 0.15F * (float)agent.m_217043_().m_188500_());
         // The spear's and the katana's blows step in; the spear's thrust drives in hard.
@@ -1557,8 +1557,8 @@ public final class AgentBrain {
         mind.striking = false;
         mind.parrying = false;
         int step = mind.step;
-        mind.readyAt = now + Math.max(0, q.swing - AgentRules.lands(q)) + Math.round(AgentRules.between(q) * mind.rank.pace) // 2.0.17: by its rank
-            + (step == Quinque.FINISHER ? AgentRules.AFTER_STRING : 0);
+        mind.readyAt = now + Math.max(0, q.swing(step) - AgentRules.lands(q)) + Math.round(AgentRules.between(q) * mind.rank.pace) // 2.0.17: by its rank
+            + (step == q.finisher() ? AgentRules.AFTER_STRING : 0);
         Entity found = level.m_6815_(mind.target);
         if (parry || !(found instanceof LivingEntity prey) || !prey.m_6084_()) {
             KaguneClash.landed(agent);
@@ -1585,7 +1585,7 @@ public final class AgentBrain {
             : WoundBook.Blow.SLASH, centre.m_82546_(flat.m_82490_(0.3)), flat, 0.0);
         prey.f_19802_ = 0;
         boolean hit = prey.m_6469_(agent.m_269291_().m_269333_(agent), dealt);
-        if (hit && step == Quinque.FINISHER) {
+        if (hit && step == q.finisher()) {
             QuinqueServer.finisher(agent, prey, q, dealt, level);
             mind.strung = mind.rank == AgentRules.Rank.RANK_10; // 2.0.49: his string landed: a soar may follow (ReaperTactics)
             mind.clear = agent.m_217043_().m_188500_() < 0.4; // and now and then it flips clear after it

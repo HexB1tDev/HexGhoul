@@ -45,6 +45,9 @@ CASE, TRIM, HANDLE, LATCH, EMBLEM, CORE = (0, 0), (1, 0), (2, 0), (3, 0), (4, 0)
 BLADE, EDGE, JOINT, WRAP, STEEL, SHAFT = (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1)
 FLESH, VEIN, BONE, GOLD = (0, 2), (1, 2), (2, 2), (3, 2)
 ENGRAVING = (4, 2)
+# 4.1.17 (the owner: "the katana looks like shit"): the katana's own: its blade's flat across its width (spine, steel, the glowing hamon,
+# the edge; two of them, the hamon's wave a step apart), its spine, its hilt's diamond wrap over the white same, its guard.
+KATA_FLAT, KATA_FLAT2, KATA_SPINE, KATA_TSUKA, KATA_TSUBA = (0, 3), (1, 3), (2, 3), (3, 3), (4, 3)
 
 BASE = {"case": (206, 209, 214), "trim": (64, 66, 72), "handle": (24, 24, 27), "latch": (150, 153, 160), "wrap": (30, 28, 30),
         "steel": (184, 187, 194), "flesh": (150, 40, 52), "vein": (88, 14, 26), "bone": (226, 218, 198), "gold": (196, 160, 70)}
@@ -53,8 +56,9 @@ KINDS = {
                    shaft=(40, 38, 42)),
     "koukaku": dict(BASE, emblem=(16, 150, 168), core=(90, 250, 255), blade=(62, 66, 76), edge=(208, 214, 224), joint=(32, 35, 42),
                     shaft=(226, 226, 230)),
-    "katana": dict(BASE, emblem=(120, 10, 20), core=(255, 70, 70), blade=(34, 30, 36), edge=(255, 60, 66), joint=(18, 16, 20),
-                   shaft=(36, 30, 34)),
+    "katana": dict(BASE, emblem=(120, 10, 20), core=(255, 70, 70), blade=(34, 30, 36), edge=(236, 239, 243), joint=(22, 20, 24),
+                   shaft=(36, 30, 34), steel=(150, 154, 162), gold=(186, 146, 62), spine=(104, 108, 118), ji=(192, 197, 206),
+                   hamon=(255, 74, 84), ito=(26, 22, 30), same=(222, 216, 204), iron=(44, 44, 50)),
     "mace": dict(BASE, emblem=(150, 30, 90), core=(255, 70, 120), blade=(150, 40, 52), edge=(226, 218, 198), joint=(88, 14, 26),
                  shaft=(214, 206, 192)),
     "launcher": dict(BASE, emblem=(30, 120, 200), core=(120, 240, 255), blade=(56, 58, 66), edge=(196, 200, 210), joint=(28, 30, 36),
@@ -110,6 +114,34 @@ def texture(kind, colours):
     patch(VEIN, colours["vein"], "vein")
     patch(BONE, colours["bone"], "plate")
     patch(GOLD, colours["gold"], "plate")
+    if kind == "katana":
+        # Across the flat, spine to edge: the spine's shade, the steel (ji), the hamon glowing crimson (a Bikaku's), the bright edge; the
+        # hamon's wave rides a pixel up and down the rows, the second patch a row out of step with the first.
+        def mix(a, b, k):
+            return tuple(a[i] + (b[i] - a[i]) * k for i in range(3))
+        for cell, phase in ((KATA_FLAT, 0.0), (KATA_FLAT2, math.pi)):
+            cx, cy = cell
+            for y in range(4):
+                # The hamon one unbroken crimson line along the flat, its wave a soft swell of the steel into it and of it into the edge
+                # (a step of shade, never a checker).
+                swell = 0.5 + 0.5 * math.sin(phase + y * math.pi / 2.0)
+                row = [colours["spine"], mix(colours["ji"], colours["hamon"], 0.25 * swell), colours["hamon"],
+                       mix(colours["edge"], colours["hamon"], 0.35 * (1.0 - swell))]
+                for x, c in enumerate(row):
+                    img.putpixel((cx * 4 + x, cy * 4 + y), tuple(clamp(v) for v in c) + (255,))
+        cx, cy = KATA_SPINE
+        for y in range(4):
+            for x in range(4):
+                img.putpixel((cx * 4 + x, cy * 4 + y), tuple(clamp(v * (0.9 if x in (0, 3) else 1.05)) for v in colours["spine"]) + (255,))
+        cx, cy = KATA_TSUKA
+        for y, pattern in enumerate(("#..#", ".##.", ".##.", "#..#")):
+            for x, mark in enumerate(pattern):
+                img.putpixel((cx * 4 + x, cy * 4 + y), (colours["ito"] if mark == "#" else colours["same"]) + (255,))
+        cx, cy = KATA_TSUBA
+        for y in range(4):
+            for x in range(4):
+                k = 1.12 if x in (0, 3) or y in (0, 3) else 0.92   # the iron's edge catching the light
+                img.putpixel((cx * 4 + x, cy * 4 + y), tuple(clamp(v * k) for v in colours["iron"]) + (255,))
     if kind == "dawn":
         for row, pattern in enumerate(("..#...#.", ".#.#....", ".#.#....", "..#...#.")):
             for col, mark in enumerate(pattern):
@@ -124,10 +156,16 @@ def uv(cell):
     return [cx * 2, cy * 2, cx * 2 + 2, cy * 2 + 2]
 
 
-def box(frm, to, cell, turned=True, rot=None):
+def box(frm, to, cell, turned=True, rot=None, sides=None):
     """An element. {turned}: the standing weapons' -45 degrees about z (the handheld diagonal); {rot}: its own (axis, angle, origin)
-    instead (1.3.33: the launcher, built lying along x)."""
+    instead (1.3.33: the launcher, built lying along x). 4.1.17 {sides}: a face's own patch ({face: cell}; a face named with "~" in front
+    has its patch mirrored across, so a blade's two flats both run spine to edge)."""
     faces = {face: {"uv": uv(cell), "texture": "#q"} for face in ("north", "south", "east", "west", "up", "down")}
+    for face, own in (sides or {}).items():
+        mirrored = face.startswith("~")
+        face = face.lstrip("~")
+        u0, v0, u1, v1 = uv(own)
+        faces[face]["uv"] = [u1, v0, u0, v1] if mirrored else [u0, v0, u1, v1]
     if cell == ENGRAVING:
         for face in ("north", "south", "up", "down"):
             faces[face]["uv"] = [8, 4, 12, 6]
@@ -203,15 +241,41 @@ def spear_parts():
 
 
 def katana_parts():
-    p = [sym(0.95, -5.1, 0.95, -4.0, STEEL),               # the pommel (kashira)
-         sym(0.75, -4.0, 0.75, 6.0, WRAP),                 # the hilt, both hands (1.3.33: a katana's, a third of its blade)
-         sym(2.6, 6.0, 2.6, 6.8, STEEL), sym(1.7, 6.1, 2.7, 6.7, CORE),   # the tsuba and its glow
-         sym(0.85, 6.8, 0.75, 8.2, GOLD)]                  # the habaki
-    curve = [(8.2, 13.0, 0.0), (13.0, 18.0, 0.2), (18.0, 23.0, 0.45), (23.0, 27.5, 0.75), (27.5, 30.5, 1.05)]
-    for y0, y1, dx in curve:
-        p.append(sym(1.0, y0, 0.4, y1, BLADE, dx))
-        p.append(part(8 + 1.0 + dx - 0.05, y0, 7.65, 8 + 1.0 + dx + 0.3, y1, 8.35, EDGE))   # the edge (its hamon glowing)
-    p.append(part(8.8, 30.5, 7.65, 10.2, 32.0, 8.35, EDGE))                                # the point
+    """
+    4.1.17 (the owner: "the katana looks like shit"): a katana, not a black bar with a red stripe. Its hilt (tsuka) a little oval in its
+    diamond wrap over the white same, a gold ornament (menuki) on each side, an iron cap (kashira) and a gold collar (fuchi); its guard
+    (tsuba) an oval of two crossed plates, iron with a gold rim; a gold collar (habaki) on the blade; the blade steel, its flats each spine
+    to edge (the spine's shade, the steel, the hamon glowing crimson along it, a Bikaku's, the bright edge), curving as a katana's does (its
+    point drawn back toward the spine: the edge the outside of the curve), thinning toward the point (kissaki), the edge rising to meet the
+    spine there in three steps.
+    """
+    p = [sym(0.85, -5.05, 0.7, -4.6, JOINT),               # the kashira
+         sym(0.9, -4.7, 0.75, -4.5, GOLD)]
+    for i in range(5):                                     # the tsuka, both hands (1.3.33: a katana's, a third of its blade): its wrap
+        y0 = -4.6 + 2.04 * i                               # in five turns, each a run of the diamonds (one long run stretched them)
+        p.append(sym(0.8, y0, 0.65, y0 + 2.04, KATA_TSUKA))
+    p += [part(7.55, -0.2, 7.2, 8.45, 1.6, 7.35, GOLD), part(7.55, 1.8, 8.65, 8.45, 3.6, 8.8, GOLD),   # the menuki
+          sym(0.9, 5.6, 0.75, 6.05, GOLD),                 # the fuchi
+          sym(1.15, 6.05, 0.95, 6.15, GOLD),               # the seppa (a gold washer each side of the guard)
+          sym(2.5, 6.15, 1.35, 6.55, KATA_TSUBA), sym(1.75, 6.15, 2.1, 6.55, KATA_TSUBA),   # the tsuba: an iron oval
+          sym(1.15, 6.55, 0.95, 6.65, GOLD),
+          sym(0.95, 6.65, 0.5, 7.9, GOLD)]                 # the habaki
+    base, tip = 7.9, 30.4
+    steps = 9
+    flat = {"~north": KATA_FLAT, "south": KATA_FLAT, "east": EDGE, "west": KATA_SPINE, "up": KATA_SPINE, "down": KATA_SPINE}
+    flat2 = dict(flat, **{"~north": KATA_FLAT2, "south": KATA_FLAT2})
+    for i in range(steps):
+        y0 = base + (tip - base) * i / steps
+        y1 = base + (tip - base) * (i + 1) / steps
+        u = (i + 0.5) / steps
+        sori = -1.15 * u * u                               # the curve: the point drawn back toward the spine (-x)
+        width = 2.1 - 0.4 * u
+        thick = 0.42 - 0.12 * u
+        spine = 8 - 1.0 + sori                              # the spine's line, the width out to the edge (+x) from it
+        p.append(((spine, y0, 8 - thick), (spine + width, y1, 8 + thick), BLADE, flat if i % 2 == 0 else flat2))
+    spine = 8 - 1.0 - 1.15
+    for y0, y1, width in ((tip, tip + 0.6, 1.5), (tip + 0.6, tip + 1.1, 1.0), (tip + 1.1, tip + 1.5, 0.5)):   # the kissaki
+        p.append(((spine, y0, 7.72), (spine + width, y1, 8.28), BLADE, flat))
     return p
 
 
@@ -464,12 +528,13 @@ WEAPONS = {"bikaku": blade_parts, "koukaku": spear_parts, "katana": katana_parts
 def telescoped(parts, f):
     """The weapon {f} out (0..1): every height drawn in toward the hand; the case round the grip, shrinking into it as it comes out."""
     els = []
-    for (x0, y0, z0), (x1, y1, z1), cell in parts:
+    for piece in parts:
+        (x0, y0, z0), (x1, y1, z1), cell = piece[:3]
         a = HAND + (y0 - HAND) * f
         b = HAND + (y1 - HAND) * f
         if b - a < 0.05:
             continue
-        els.append(box((x0, a, z0), (x1, b, z1), cell))
+        els.append(box((x0, a, z0), (x1, b, z1), cell, sides=piece[3] if len(piece) > 3 else None))
     if f < 1.0:
         k = 1.0 - f
         half = 2.4 + 3.6 * k
@@ -888,7 +953,11 @@ def carried(slim):
     return d
 
 
-FRAMES = [("case_open", 0.2), ("half", 0.45), ("nearly", 0.7), ("full", 0.95)]
+# 4.1.17 (the owner: "add better pull-out animations to the Quinkays so that they are more realistic when they're returning to the case"):
+# the weapon comes out of its case (and goes back in) through seven frames, not two: each a seventh further out, so it slides rather than
+# jumping a third at a time.
+OUT_STEPS = 7
+FRAMES = ([("case_open", 0.2)] + [(f"out_{i}", round(0.2 + 0.75 * i / OUT_STEPS, 4)) for i in range(1, OUT_STEPS)] + [("full", 0.95)])
 ITEMS = {  # kind -> (case item, weapon item)
     "bikaku": ("quinque_case_bikaku", "quinque_bikaku_blade"),
     "koukaku": ("quinque_case_koukaku", "quinque_koukaku_spear"),
@@ -932,10 +1001,10 @@ def main():
             "case_open": model(kind, case_elements(True), CASE_DISPLAY),
             "case_carried": model(kind, case_elements(False), carried(False)),
             "case_carried_slim": model(kind, case_elements(False), carried(True)),
-            "half": model(kind, tele(parts, 0.33), held),
-            "nearly": model(kind, tele(parts, 0.66), held),
             "full": model(kind, tele(parts, 1.0), held),
         }
+        for i in range(1, OUT_STEPS):
+            frames[f"out_{i}"] = model(kind, tele(parts, i / OUT_STEPS), held)
         if kind == "dawn":
             # 2.0.30: its point parted about a light as a lightning ball leaves it (chosen as a shot is fired; see the item's overrides).
             frames["fire"] = model(kind, tele(dawn_parts(open_tip=True), 1.0), held)

@@ -22,7 +22,7 @@ public final class BladeArmPose {
     static final float GUARD_LEAN = 0.12F;
 
     private static QuinquePose.Key k(double t, double pitch, double yaw, double roll, double twist, double lean, double lunge, double drop) {
-        return new QuinquePose.Key((float)t, (float)pitch, (float)yaw, (float)roll, (float)twist, (float)lean, (float)lunge, (float)drop);
+        return new QuinquePose.Key((float)t, (float)pitch, (float)yaw, (float)roll, (float)twist, (float)lean, (float)lunge, (float)drop, 0.0F);
     }
 
     private static QuinquePose.Key guard(double t) {

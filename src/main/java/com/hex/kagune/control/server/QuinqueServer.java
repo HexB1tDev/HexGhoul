@@ -289,11 +289,11 @@ public final class QuinqueServer {
         if (attacker instanceof ServerPlayer player && !CrystalShots.striking && !sweeping) {
             // 1.3.26: its string of M1s: the third blow the finisher (harder, and the katana's, the spear's and the mace's reaching others).
             long[] combo = COMBOS.computeIfAbsent(player.m_20148_(), id -> new long[] {-1L, Long.MIN_VALUE});
-            int step = Quinque.next((int)combo[0], combo[1] == Long.MIN_VALUE ? Long.MAX_VALUE : now - combo[1]);
+            int step = Quinque.next(quinque, (int)combo[0], combo[1] == Long.MIN_VALUE ? Long.MAX_VALUE : now - combo[1]);
             combo[0] = step;
             combo[1] = now;
             event.setAmount(event.getAmount() * quinque.weight(step));
-            if (step == Quinque.FINISHER) {
+            if (step == quinque.finisher()) {
                 finisher(player, event.getEntity(), quinque, event.getAmount(), level);
             } else if (quinque.arc(step) > 0.0) {
                 arc(player, event.getEntity(), quinque, step, event.getAmount(), level, QuinqueServer::sweepable);
@@ -331,7 +331,7 @@ public final class QuinqueServer {
         if (quinque == Quinque.DAWN) {
             target.m_147240_(0.8, -look.f_82479_, -look.f_82481_); // 2.0.31: the thrust drives it back along its line
         }
-        double reach = quinque.sweep(Quinque.FINISHER);
+        double reach = quinque.sweep(quinque.finisher());
         if (reach <= 0.0) {
             return;
         }

@@ -95,8 +95,58 @@ public final class QuinqueTests {
             && !com.hex.kagune.control.npc.AgentRules.volley(4.0, 0.0), "the volley from far enough off, half the time");
     }
 
+    /**
+     * 4.1.17 (the owner: "We need to improve every single M1 of every single weapon ... the animations always have to be top tier"): a swing
+     * written by intent is drawn as it says: the baked keys (QuinqueKeys) are its aims solved as they stand now; at each aimed key the blade
+     * points within a few degrees of its aim; and between keys the arm never turns over (no wrist flip).
+     */
+    static void aimed() {
+        String baked = com.hex.kagune.control.client.animation.QuinqueKeysBaker.source();
+        try {
+            String file = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/animation/QuinqueKeys.java"));
+            check(file.equals(baked), "QuinqueKeys.java is its aims solved as they stand (run tools/QuinqueAimBake.java after changing an aim)");
+        } catch (java.io.IOException e) {
+            check(false, "QuinqueKeys.java can be read");
+        }
+        for (Quinque q : Quinque.values()) {
+            for (int step = 0; step < q.steps(); step++) {
+                com.hex.kagune.control.client.animation.QuinqueAim.Aim[] aims = com.hex.kagune.control.client.animation.QuinqueKeysBaker.aims(q, step);
+                if (aims == null) {
+                    continue;
+                }
+                double lastPitch = Double.NaN;
+                double lastYaw = 0.0;
+                double lastRoll = 0.0;
+                for (double t = 0.0; t <= 1.0001; t += 0.02) {
+                    com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, t);
+                    float[] arm = {p.rightArmX, p.rightArmY, p.rightArmZ};
+                    if (!Double.isNaN(lastPitch)) {
+                        double jump = Math.max(Math.abs(arm[0] - lastPitch), Math.max(Math.abs(arm[1] - lastYaw), Math.abs(arm[2] - lastRoll)));
+                        check(jump < 0.9, q + " " + step + " at " + String.format("%.2f", t) + ": the arm moves, never turns over (" + jump + ")");
+                    }
+                    lastPitch = arm[0];
+                    lastYaw = arm[1];
+                    lastRoll = arm[2];
+                }
+                for (com.hex.kagune.control.client.animation.QuinqueAim.Aim aim : aims) {
+                    if (aim.blade() == null) {
+                        continue;
+                    }
+                    com.hex.kagune.control.client.animation.RigPose p = new com.hex.kagune.control.client.animation.RigPose();
+                    double[] at = com.hex.kagune.control.client.animation.QuinqueAim.solve(q, aim.blade(), aim.hand(), new double[] {-1.15, -0.75, 0.49});
+                    com.hex.kagune.control.client.animation.QuinqueGrip.aimRight(p, at[0], at[1], at[2]);
+                    double[] dir = com.hex.kagune.control.client.animation.QuinqueAim.blade(p, q);
+                    double[] want = com.hex.kagune.control.client.animation.QuinqueAim.unit(new double[] {-aim.blade()[0], -aim.blade()[1], -aim.blade()[2]});
+                    double off = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dir[0] * want[0] + dir[1] * want[1] + dir[2] * want[2]))));
+                    check(off < 30.0, q + " " + step + " at " + aim.t() + ": the blade points where it is aimed (" + Math.round(off) + " degrees off)");
+                }
+            }
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         turning();
+        aimed();
         kinds();
         files();
         holds();
@@ -260,11 +310,24 @@ public final class QuinqueTests {
         // 1.3.26: a string of three M1s, the third the finisher; a pause starts it again.
         check(Quinque.next(-1, 0L) == 0 && Quinque.next(0, 10L) == 1 && Quinque.next(1, 10L) == 2 && Quinque.next(2, 10L) == 0
             && Quinque.next(1, Quinque.COMBO + 1) == 0 && Quinque.next(0, Long.MAX_VALUE) == 0, "three M1s to a string, a pause starts again");
+        // 4.1.17 (the owner: "We need to improve every single M1 of every single weapon"): each its own string, the last its finisher.
+        check(Quinque.KATANA.steps() == 5 && Quinque.KATANA.finisher() == 4, "the katana: five to its string, the fifth the finisher");
         for (Quinque q : Quinque.values()) {
-            check(q.weight(0) == 1.0F && q.weight(1) == 1.0F && (q.ranged || q.weight(Quinque.FINISHER) > 1.0F), q + ": only its third blow is heavier");
+            int step = -1;
+            for (int i = 0; i < q.steps() * 2; i++) {
+                int next = Quinque.next(q, step, 10L);
+                check(next == (i % q.steps()), q + ": its string goes round in order (" + i + ")");
+                step = next;
+            }
+            check(Quinque.next(q, q.steps() - 2, Quinque.COMBO + 1) == 0, q + ": a pause starts the string again");
+            for (int s = 0; s < q.steps(); s++) {
+                check(s == q.finisher() ? q.ranged || q.weight(s) > 1.0F : q.weight(s) == 1.0F, q + ": only its finisher is heavier (" + s + ")");
+                check(q.swing(s) >= 4 && q.swing(s) <= 20, q + ": a sane swing length (" + s + ")");
+            }
         }
-        check(Quinque.KATANA.sweep(Quinque.FINISHER) > 0.0 && Quinque.MACE.sweep(Quinque.FINISHER) > 0.0 && Quinque.SPEAR.sweep(Quinque.FINISHER) > 0.0
-            && Quinque.BLADE.sweep(Quinque.FINISHER) == 0.0 && Quinque.KATANA.sweep(0) == 0.0, "the katana's, mace's and spear's finishers reach others");
+        check(Quinque.KATANA.sweep(Quinque.KATANA.finisher()) > 0.0 && Quinque.MACE.sweep(Quinque.MACE.finisher()) > 0.0
+            && Quinque.SPEAR.sweep(Quinque.SPEAR.finisher()) > 0.0 && Quinque.BLADE.sweep(Quinque.BLADE.finisher()) == 0.0
+            && Quinque.KATANA.sweep(0) == 0.0 && Quinque.KATANA.sweep(2) == 0.0, "the katana's, mace's and spear's finishers reach others");
         int heat = 0;
         int shots = 0;
         while (heat < Quinque.HEAT_MOST && shots < 1000) {
@@ -297,7 +360,7 @@ public final class QuinqueTests {
 
     static void files() throws IOException {
         String lang = read("assets/hexkagune/lang/en_us.json");
-        Pattern override = Pattern.compile("\"hexkagune:" + Quinque.PROPERTY + "\"\\s*:\\s*([0-9.]+)\\s*}\\s*,\\s*\"model\"\\s*:\\s*\"hexkagune:([a-z_/]+)\"");
+        Pattern override = Pattern.compile("\"hexkagune:" + Quinque.PROPERTY + "\"\\s*:\\s*([0-9.]+)\\s*}\\s*,\\s*\"model\"\\s*:\\s*\"hexkagune:([a-z0-9_/]+)\"");
         for (Quinque q : Quinque.values()) {
             for (String item : new String[] {q.caseId, q.weaponId}) {
                 String json = read("assets/hexkagune/models/item/" + item + ".json");
@@ -321,9 +384,10 @@ public final class QuinqueTests {
                     }
                     frames++;
                 }
-                // 1.3.28: a case also has an investigator's two carried frames (ahead of the four opening ones); a weapon never does.
-                // 2.0.32: Dawn's weapon has its fire frame last too.
-                int expected = item.equals(q.caseId) ? 6 : q == Quinque.DAWN ? 5 : 4;
+                // 1.3.28: a case also has an investigator's two carried frames (ahead of the opening ones); a weapon never does.
+                // 2.0.32: Dawn's weapon has its fire frame last too. 4.1.17: eight opening frames (the case open, six on the way out,
+                // all the way out), so the weapon slides out of its case rather than jumping a third at a time.
+                int expected = item.equals(q.caseId) ? 10 : q == Quinque.DAWN ? 9 : 8;
                 check(frames == expected && previous > 0.9 && previous <= 1.0, item + ": " + expected + " frames past its shut case, the last all the way out");
                 check(json.contains("case_carried") == item.equals(q.caseId), item + ": the carried frames on the case alone");
                 Matcher parent = Pattern.compile("\"parent\"\\s*:\\s*\"hexkagune:([a-z_/]+)\"").matcher(json);
@@ -406,7 +470,7 @@ public final class QuinqueTests {
             if (h == null) {
                 continue;
             }
-            for (String frame : new String[] {"full", "nearly", "half"}) {
+            for (String frame : new String[] {"full", "out_1", "out_2", "out_3", "out_4", "out_5", "out_6"}) { // 4.1.17: seven frames out
                 double[] d = third(q.model + "_" + frame);
                 boolean same = d != null;
                 for (int i = 0; same && i < 3; i++) {
@@ -429,7 +493,7 @@ public final class QuinqueTests {
                 double off = toSegment(left, a, b);
                 check(Math.abs(miss) < 0.6F && off < 0.8, q + ": in its stance the left hand is on its grip (" + off + " px)");
                 float worst = 0.0F;
-                for (int step = 0; step < 3; step++) {
+                for (int step = 0; step < q.steps(); step++) {
                     for (double t = 0.0; t <= 1.0; t += 0.05) {
                         com.hex.kagune.control.client.animation.RigPose swing = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, t);
                         worst = Math.max(worst, Math.abs(com.hex.kagune.control.client.animation.QuinqueGrip.reach(swing, q, false)));
