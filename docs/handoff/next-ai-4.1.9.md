@@ -1,4 +1,4 @@
-# Next AI: after 4.1.34 (4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.35 (4.1.35: the Small City cut for 1.20.1, four quarters, not placed yet; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -30,6 +30,7 @@ Then: "Handoff and prompt, now".** Still: hurry, one short version at a time, re
    - **The limit:** one structure places only within 8 chunks of its start (272 x 272: `ControlStructures.Site` REACH_BACK/REACH_ON). The
      owner chose the whole city: **four 272 x 272 quarters** (0 NW, 1 NE, 2 SW, 3 SE) that always spawn together side by side at **one
      shared ground height** and **one shared turn**.
+   - **4.1.35 is done** (the cut; see "4.1.35, what and where"); the WIP patch below was applied and deleted.
    - **WIP patch:** `docs/handoff/small-city-4.1.35-wip.patch` (`git apply` it, delete it in the commit): `tools/city_structure.py` (reads
      the zip's region files into a compact grid, finds the ground, writes `build/city/small_city_<k>.schem`, Sponge v3: ran in 38 s,
      ~500k blocks and 560-800 states per quarter), `tools/library_structure.py` (writes byte/int/long arrays), `tools/exploration_structures.py`
@@ -185,6 +186,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.35 | The Small City cut for 1.20.1: `tools/city_structure.py` (the save to four quarter schematics), `tools/exploration_structures.py` sites `small_city_0..3` (maps 7-10, ground 6; swaps: pale oak wall sign, tuff bricks, wildflowers, infested stone; banner `Patterns`; `NO_ENTITY` shelves), `tools/city_render.py` (isometric from the tiles); `NpcTests.smallCity`; not placed in worlds yet | pushed, EXIT 0 |
 | 4.1.34 | The quest menu a compact box over the world: `QuestJournalView` (640 x 380, cards, checklist, badges, mastery bar, `roadmap`), `QuestStyle`, `QuestScreen` without the overlay; `tools/UiPreview` draws it over a stand-in world (`-Dmx -Dmy` for hover); `QuestTests.journal` | pushed, EXIT 0 |
 | 4.1.33 | Quests finished for good: `QuestLog.finishAll`/`finished` (saved `all=1`, `state` DONE for every PATH/GHOUL quest), called by `QuestServer.completeOpen`; hunts and favours unchanged; `QuestTests.forGood` | pushed, EXIT 0 |
 | 4.1.32 | A quinque's M1 first: `WeaponClient.quinqueFirst` (HIGH, lands the hit via `MultiPlayerGameMode.attack` m_105223_, `Minecraft.f_91072_`, cancels the click ahead of the original's kagune listener), `KaguneCombat.startSwipe`/`quinqueOut`; `QuinqueTests.first` | pushed, EXIT 0 |
@@ -536,6 +538,30 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.35, what and where (the Small City, cut for 1.20.1)
+
+The owner (quoted exactly): "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City". Delete all ids
+hexkagune:village_x ( and anything related) add Hexkagune:small_city. This big structure is relatively rare (a bit rarer than a normal
+village), Humans can now however spawn in normal minecraft villages." They chose "Whole city".
+
+- **`tools/city_structure.py`:** reads `art/city/small-city.zip`'s region files (chunks -17..16 both ways), finds the city's ground (y 64),
+  writes `build/city/small_city_<k>.schem` (Sponge v3, layers y 58 .. 195; a stamp skips the work while the zip is unchanged; ~20 s).
+- **`tools/exploration_structures.py`:** four more sites (`small_city_0..3`: 0 NW, 1 NE, 2 SW, 3 SE; maps 7-10; `"ground": 6`;
+  `"city": True`), each 272 x 138 x 272 in 5 x 5 tiles (~1.8 MB each), 12 homes (24 humans) and 2 investigators. New `SWAPS`:
+  `pale_oak_wall_sign`, `tuff_bricks`, `wildflowers` (pink petals), `infested_stone_bricks`, `infested_stone` (the last also changed one
+  block of `village_1`'s `t_1_1`). Banners' `patterns` written as 1.20.1's `Patterns` (`BANNER_CODES`, `DYES`); `NO_ENTITY` (shelves) left
+  out of the city only, so the older places stay byte-identical. Run: `python3 tools/exploration_structures.py --blocks <1.20 blocks.json>`
+  (~1 min; PrismarineJS minecraft-data `data/pc/1.20/blocks.json`).
+- **`tools/city_render.py`:** the city from its tiles, isometric from the south-east (numpy, a depth buffer; `--box x0 z0 x1 z1`,
+  `--scale N`, `--turn`, `--people`). Renders: `docs/handoff/small-city-4.1.35.png`, `small-city-middle-4.1.35.png` (the quarters' seam:
+  none visible). Use it for 4.1.36's placed city too.
+- **`library_structure.py`:** writes byte, int and long arrays.
+- **Tests:** `NpcTests.smallCity` (four quarters, one ground and height, maps 7-10, homes and patrols, every tile on disk);
+  `ccgBuilding` now expects 8 sites.
+- **Not placed in worlds:** the sites' structure types are registered (`ControlStructures` loops over `SiteMaps.ALL`) but no structure or
+  structure set uses them yet: that is 4.1.36.
+- **Not tested in game.**
 
 ## 4.1.34, what and where (the quest menu, a cute box)
 

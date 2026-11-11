@@ -56,6 +56,7 @@ public final class NpcTests {
         mansion();
         dryLand();
         ccgBuilding();
+        smallCity();
         onePerWorld();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
@@ -2067,12 +2068,35 @@ public final class NpcTests {
         return false;
     }
 
+    /** 4.1.35: the owner's Small City, cut into four 272 x 272 quarters on one ground, every tile of each on disk. */
+    static void smallCity() {
+        boolean quarters = true;
+        boolean tiles = true;
+        for (int k = 0; k < 4; k++) {
+            com.hex.kagune.control.village.SiteMaps.Site q = com.hex.kagune.control.village.SiteMaps.of("small_city_" + k);
+            quarters &= q != null && q.width() == 272 && q.depth() == 272 && q.height() == 138 && q.ground() == 6 && q.map() == 7 + k
+                && com.hex.kagune.control.village.SiteMaps.byMap(7 + k) == q && q.homes().length == 12 && q.route().length >= 8;
+            if (q == null) {
+                continue;
+            }
+            for (int i = 0; i < q.across(); i++) {
+                for (int j = 0; j < q.down(); j++) {
+                    tiles &= java.nio.file.Files.isRegularFile(java.nio.file.Path.of("src/main/resources/data/hexkagune/structures/small_city_" + k
+                        + "/t_" + i + "_" + j + ".nbt"));
+                }
+            }
+        }
+        check(quarters, "the city's four quarters: 272 x 272 each (one structure's reach), all 138 tall on the one ground (layer 6), maps 7-10, "
+            + "12 homes and a patrol each");
+        check(tiles, "every tile of every quarter is written");
+    }
+
     static void ccgBuilding() {
         com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of("ccg_building");
         check(site != null && site.width() == 39 && site.depth() == 39 && site.height() == 58 && site.ground() == 0 && site.map() == 6
             && site.across() == 1 && site.down() == 1 && com.hex.kagune.control.village.SiteMaps.byMap(6) == site,
             "the building is the owner's (39 x 39, 58 tall: the empty layers over its roof left off), one tile, its own map");
-        check(com.hex.kagune.control.village.SiteMaps.ALL.length == 4 && com.hex.kagune.control.village.SiteMaps.of("aogiri_hideout").map() == 5
+        check(com.hex.kagune.control.village.SiteMaps.ALL.length == 8 && com.hex.kagune.control.village.SiteMaps.of("aogiri_hideout").map() == 5
             && com.hex.kagune.control.village.SiteMaps.of("village_1").map() == 3 && com.hex.kagune.control.village.SiteMaps.of("village_2").map() == 4,
             "the three older places keep their maps");
         // Its patrol: a loop round the L, a block or two out from its walls, all of it within its perimeter.

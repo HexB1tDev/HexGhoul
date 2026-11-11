@@ -77,6 +77,17 @@ SITES = [
      "rooms": {"hexkagune:general": (9, 49, 5)}},
 ]
 
+# 4.1.35 (the owner: "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City""): the city, 544 x 544,
+# cut by tools/city_structure.py into four 272 x 272 quarters (0 north-west, 1 north-east, 2 south-west, 3 south-east: what one structure can
+# place) on the city's one ground (its schematics' layer 6, the world's y 64), placed side by side by ControlStructures. Its people: humans
+# at home and investigators on patrol in every quarter.
+import city_structure  # noqa: E402
+
+CITY_GROUND = 6
+for _k in range(4):
+    SITES.append({"id": f"small_city_{_k}", "source": str(city_structure.OUT / f"small_city_{_k}.schem"), "map": 7 + _k, "crop_x": None,
+                  "kind": "human", "houses": 12, "agents": 2, "ring": (24, 110), "loot_every": 7, "ground": CITY_GROUND, "city": True})
+
 # 1.20.1 has none of these (1.20.3 to 1.21.9): each one's nearest, and the properties it keeps.
 SWAPS = {
     "minecraft:short_grass": ("minecraft:grass", ()),
@@ -125,7 +136,24 @@ SWAPS = {
     "minecraft:oak_shelf": ("minecraft:oak_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
     "minecraft:dark_oak_shelf": ("minecraft:dark_oak_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
     "minecraft:mangrove_shelf": ("minecraft:mangrove_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
+    # 4.1.35, the Small City's (1.21.4 to 1.21.5): a pale oak sign on birch, tuff bricks as stone bricks, wildflowers (a carpet of small
+    # flowers over the ground, one to four a block) as pink petals, laid the same way.
+    "minecraft:pale_oak_wall_sign": ("minecraft:birch_wall_sign", ("facing", "waterlogged")),
+    "minecraft:tuff_bricks": ("minecraft:stone_bricks", ()),
+    "minecraft:wildflowers": ("minecraft:pink_petals", ("facing", "flower_amount")),
+    # Infested blocks look like the plain ones and let silverfish out when broken: the city's (and the town's one) are plain.
+    "minecraft:infested_stone_bricks": ("minecraft:stone_bricks", ()),
+    "minecraft:infested_stone": ("minecraft:stone", ()),
 }
+# 4.1.35: block entities 1.20.1 has no kind of (their block swapped for one without any): left out of the city (the older places keep theirs
+# as they were: the game skips them).
+NO_ENTITY = {"minecraft:shelf"}
+# 4.1.35: a banner's patterns as 1.20.1 keeps them (Patterns: a short code and a dye number; a newer game writes patterns: an id and a
+# colour's name). Only the ones the owner's files use.
+BANNER_CODES = {"minecraft:gradient_up": "gru", "minecraft:border": "bo", "minecraft:stripe_downright": "drs",
+                "minecraft:stripe_downleft": "dls", "minecraft:rhombus": "mr"}
+DYES = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown",
+        "green", "red", "black"]
 DROP = {"minecraft:barrier", "minecraft:structure_void", "minecraft:jigsaw", "minecraft:structure_block", "minecraft:command_block",
         "minecraft:light", "minecraft:cactus_flower"}
 AIR = {"minecraft:air", "minecraft:cave_air", "minecraft:void_air"}
@@ -216,6 +244,12 @@ def block_entity(kind, inner, loot, seed):
             out[side] = L.compound(messages=L.strings(*lines), color=L.s(val(t.get("color", "black"))),
                                    has_glowing_text=L.Tag(L.BYTE, val(t.get("has_glowing_text", 0))))
         out["is_waxed"] = L.Tag(L.BYTE, 0)
+    elif kind == "minecraft:banner" and "patterns" in inner:
+        patterns = []
+        for q in val(inner["patterns"])[1]:
+            q = {k: val(v) for k, v in val(q).items()}
+            patterns.append({"Pattern": L.s(BANNER_CODES[q["pattern"]]), "Color": L.Tag(L.INT, DYES.index(q["color"]))})
+        out["Patterns"] = L.Tag(L.LIST, (L.COMPOUND, patterns))
     elif kind in CONTAINERS or kind in ("minecraft:furnace", "minecraft:blast_furnace", "minecraft:smoker", "minecraft:hopper",
                                         "minecraft:dispenser", "minecraft:dropper", "minecraft:campfire", "minecraft:soul_campfire"):
         out["Items"] = L.Tag(L.LIST, (L.COMPOUND, []))
@@ -567,7 +601,7 @@ def write_tiles(site, out, entities, people, middle, width, depth, height, loot,
         key = (tile_of(x, xs), tile_of(z, zs))
         local = (x - xs[key[0]], y, z - zs[key[1]])
         pieces[key][local] = c
-        if (x, y, z) in entities:
+        if (x, y, z) in entities and not (site.get("city") and entities[(x, y, z)][0] in NO_ENTITY):
             kind, inner = entities[(x, y, z)]
             given = None
             if loot and kind in CONTAINERS:
@@ -749,6 +783,8 @@ def main():
     registry = None
     if "--blocks" in sys.argv:
         registry = Registry(sys.argv[sys.argv.index("--blocks") + 1])
+    ground, y0 = city_structure.make()
+    assert ground - y0 == CITY_GROUND, (ground, y0)
     results = [build(site, registry) for site in SITES]
     java(results)
     for r in results:

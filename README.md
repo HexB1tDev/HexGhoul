@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.35 (HexGhoul): the Small City, cut for 1.20.1 (testing)
+
+See `.github/release-notes-4.1.35.md`. "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City"": the whole 544 x 544 city read from `art/city/small-city.zip` by `tools/city_structure.py`, cut into four 272 x 272 quarters (`small_city_0..3`, maps 7-10, one ground) by `tools/exploration_structures.py` (pale oak wall signs, tuff bricks, wildflowers and infested stone swapped; banner patterns kept; shelves' entities dropped); `tools/city_render.py` draws it. Not placed in worlds yet (4.1.36). Protocol 117.
+
 ## 4.1.34 (HexGhoul): the quest menu, a cute box (testing)
 
 See `.github/release-notes-4.1.34.md`. "It's just really dull, really bad looking, not interactive at all", "the background and all, they're also super ugly", "why not just a cute box?": `QuestJournalView` laid out as a 640 x 380 box (`UI_WIDTH`/`UI_HEIGHT`) with `QuestStyle` (plate, brackets, honeycomb, icons, chips, checks, badges), cards with hover, a mastery bar to the next quest, a clickable road (`roadmap`); `QuestScreen` draws no full-screen overlay. Protocol 117.

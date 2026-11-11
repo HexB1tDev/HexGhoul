@@ -98,6 +98,16 @@ def _write(f, kind, value):
         f.write(struct.pack(">i", len(items)))
         for item in items:
             _write(f, inner, item)
+    elif kind == BYTES:
+        # 4.1.35: a byte array (a Sponge schematic's block data).
+        f.write(struct.pack(">i", len(value)))
+        f.write(bytes(value))
+    elif kind == INTS:
+        f.write(struct.pack(">i", len(value)))
+        f.write(struct.pack(">%di" % len(value), *value))
+    elif kind == LONGS:
+        f.write(struct.pack(">i", len(value)))
+        f.write(struct.pack(">%dq" % len(value), *value))
     elif kind == COMPOUND:
         for name, tag in value.items():
             f.write(bytes([tag.kind]))
