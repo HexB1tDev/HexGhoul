@@ -21,5 +21,7 @@ public class Minecraft {
     /** setScreen */ public void m_91152_(net.minecraft.client.gui.screens.Screen screen) { throw new UnsupportedOperationException(); }
     /** isPaused */ public boolean m_91104_() { throw new UnsupportedOperationException(); }
     /** getCameraEntity (3.6.8) */ public net.minecraft.world.entity.Entity m_91288_() { throw new UnsupportedOperationException(); }
+    /** getBlockEntityRenderDispatcher (4.1.20): joined.tsrg enn.ao ()Lflt; m_167982_ */ public net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher m_167982_() { throw new UnsupportedOperationException(); }
+    /** getEntityModels (4.1.20): joined.tsrg enn.aO ()Lfea; m_167973_ */ public net.minecraft.client.model.geom.EntityModelSet m_167973_() { throw new UnsupportedOperationException(); }
     /** getFrameTime (partial tick) */ public float m_91296_() { throw new UnsupportedOperationException(); }
 }

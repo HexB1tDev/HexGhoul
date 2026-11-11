@@ -148,6 +148,7 @@ public final class QuinqueTests {
         turning();
         aimed();
         firstPerson();
+        meshes();
         kinds();
         files();
         holds();
@@ -248,9 +249,144 @@ public final class QuinqueTests {
         }
     }
 
+    /**
+     * 4.1.20 (the owner: "The katana should be like every weapon in the game should look like it's made from a kagune ... I don't want
+     * squares"): a quinque grown as a mesh is smooth (thousands of quads, no boxes), as long as its old model, turned onto the handheld
+     * diagonal exactly as the baker turned its boxes, so both its grips lie on its hilt's axis; it grows out of the fist as it comes out of
+     * its case; its weapon frames are drawn by code (builtin/entity, no elements) and its case's are still boxes; and its renderer and item
+     * override the game's methods by the names the game calls (renderByItem m_108829_, Forge's initializeClient), read in the compiled
+     * classes (4.1.9's lesson: a stub's Mojang name compiles and never runs).
+     */
+    static void meshes() throws IOException {
+        for (Quinque q : Quinque.values()) {
+            String full = read("assets/hexkagune/models/item/quinque/" + kind(q) + "_full.json");
+            boolean byCode = full != null && full.contains("\"minecraft:builtin/entity\"");
+            check(byCode == com.hex.kagune.control.quinque.QuinqueMesh.has(q), q + ": its weapon drawn by code exactly when it is a mesh");
+            if (!com.hex.kagune.control.quinque.QuinqueMesh.has(q)) {
+                check(com.hex.kagune.control.quinque.QuinqueMesh.of(q) == null, q + ": no mesh");
+                continue;
+            }
+            for (String frame : new String[] {"full", "out_1", "out_2", "out_3", "out_4", "out_5", "out_6"}) {
+                String json = read("assets/hexkagune/models/item/quinque/" + kind(q) + "_" + frame + ".json");
+                check(json != null && json.contains("\"minecraft:builtin/entity\"") && !json.contains("\"elements\"")
+                    && json.contains("\"thirdperson_righthand\""), q + ": its " + frame + " frame drawn by code, placed by its display");
+            }
+            for (String frame : new String[] {"case_closed", "case_open", "case_carried"}) {
+                String json = read("assets/hexkagune/models/item/quinque/" + kind(q) + "_" + frame + ".json");
+                check(json != null && json.contains("\"elements\""), q + ": its " + frame + " frame still a case of boxes");
+            }
+            com.hex.kagune.control.quinque.ArmMesh.Mesh mesh = com.hex.kagune.control.quinque.QuinqueMesh.of(q);
+            check(mesh != null && mesh.quads >= 2000, q + ": a smooth mesh (" + (mesh == null ? 0 : mesh.quads) + " quads)");
+            if (mesh == null) {
+                continue;
+            }
+            boolean finite = true;
+            float low = Float.MAX_VALUE;
+            float high = -Float.MAX_VALUE;
+            float wide = 0.0F;
+            for (int i = 0; i < mesh.pos.length; i += 3) {
+                finite &= Float.isFinite(mesh.pos[i]) && Float.isFinite(mesh.pos[i + 1]) && Float.isFinite(mesh.pos[i + 2])
+                    && Float.isFinite(mesh.normal[i]) && Float.isFinite(mesh.normal[i + 1]) && Float.isFinite(mesh.normal[i + 2]);
+                low = Math.min(low, mesh.pos[i + 1]);
+                high = Math.max(high, mesh.pos[i + 1]);
+                wide = Math.max(wide, Math.max(Math.abs(mesh.pos[i] - 8.0F), Math.abs(mesh.pos[i + 2] - 8.0F)));
+            }
+            check(finite, q + ": every point and normal of its mesh a number");
+            check(low > -7.0F && low < -5.0F && high > 31.0F && high < 32.5F && wide < 4.0F,
+                q + ": its mesh as long as its old model (" + low + " .. " + high + ", " + wide + " across)");
+            // Its grips: turned back off the diagonal, on the hilt's axis (x 8, z 8), between its ends.
+            com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
+            for (float[] grip : new float[][] {h.rightGrip(), h.leftGrip()}) {
+                float[] back = unturned(grip);
+                float[] again = com.hex.kagune.control.quinque.QuinqueMesh.turned(back);
+                check(Math.abs(again[0] - grip[0]) + Math.abs(again[1] - grip[1]) < 1.0E-4F, q + ": turned undoes unturned");
+                check(Math.abs(back[0] - 8.0F) < 0.05F && Math.abs(back[2] - 8.0F) < 0.05F && back[1] > low + 0.5F && back[1] < 6.0F,
+                    q + ": its grip " + java.util.Arrays.toString(grip) + " on its hilt's axis (standing " + java.util.Arrays.toString(back) + ")");
+            }
+            // The baker's turn: an element turned -45 about z through 8 8 8 (tools/quinque_models.py box, FaceBakery's Rz).
+            float[] t = com.hex.kagune.control.quinque.QuinqueMesh.turned(new float[] {8.0F, 0.0F, 8.0F});
+            check(Math.abs(t[0] - (8.0F - 8.0F / (float)Math.sqrt(2.0))) < 1.0E-4F && Math.abs(t[1] - t[0]) < 1.0E-4F,
+                q + ": standing down the hilt goes down the diagonal, as the baker's boxes");
+            // The draw: grown out of the fist; the case round the grip shrinking to nothing.
+            check(com.hex.kagune.control.quinque.QuinqueMesh.drawn(31.0F, 1.0F) == 31.0F && com.hex.kagune.control.quinque.QuinqueMesh.drawn(31.0F, 0.0F)
+                == (float)com.hex.kagune.control.quinque.QuinqueMesh.HAND, q + ": all out when out, all in the fist when not");
+            float last = -Float.MAX_VALUE;
+            float lastCase = Float.MAX_VALUE;
+            boolean growing = true;
+            for (int k = 0; k <= 20; k++) {
+                float out = k / 20.0F;
+                float tip = com.hex.kagune.control.quinque.QuinqueMesh.drawn(high, out);
+                growing &= tip > last;
+                last = tip;
+                float[] box = com.hex.kagune.control.quinque.QuinqueMesh.caseBox(out);
+                if (box != null) {
+                    float size = (box[3] - box[0]) * (box[4] - box[1]);
+                    growing &= size < lastCase && box[1] > (float)com.hex.kagune.control.quinque.QuinqueMesh.HAND;
+                    lastCase = size;
+                } else {
+                    growing &= k == 20;
+                }
+            }
+            check(growing, q + ": coming out it grows out of the fist and its case shrinks into it, gone only once out");
+            check(Math.abs(com.hex.kagune.control.quinque.QuinqueMesh.out(0.95F) - 1.0F) < 1.0E-6F
+                && com.hex.kagune.control.quinque.QuinqueMesh.out(0.2F) == 0.0F
+                && Math.abs(com.hex.kagune.control.quinque.QuinqueMesh.out(0.3071F) - 1.0F / 7.0F) < 0.01F,
+                q + ": the renderer reads its frames' deploy as the baker placed them (case open 0.2, out_1 a seventh, full 0.95)");
+        }
+        String renderer = compiled("com/hex/kagune/control/client/QuinqueItemRenderer.class");
+        check(renderer.contains("m_108829_") && renderer.contains("(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;"
+            + "Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V"),
+            "the quinques' renderer overrides renderByItem by its run-time name m_108829_ (compiled)");
+        String item = compiled("com/hex/kagune/control/ControlItems$MeshQuinque.class");
+        check(item.contains("initializeClient") && item.contains("(Ljava/util/function/Consumer;)V") && item.contains("net/minecraftforge/fml/DistExecutor"),
+            "a mesh quinque gives Forge its renderer in initializeClient, through DistExecutor (compiled)");
+        String source = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/QuinqueItemRenderer.java"));
+        check(source.contains("QuinqueMesh.DIAGONAL), 0.0F, 0.0F, 1.0F)") && source.indexOf("pose.m_85837_(0.5, 0.5, 0.5)") < source.indexOf("QuinqueMesh.DIAGONAL")
+            && source.indexOf("QuinqueMesh.DIAGONAL") < source.indexOf("pose.m_85837_(-0.5, -0.5, -0.5)"),
+            "the renderer turns the mesh onto the diagonal about the model's middle, as QuinqueMesh.turned does");
+        // Loaded as the items are registered (its offer), long before the first frame: no render type made by loading it.
+        check(source.contains("private static final class Solid") && !source.replaceAll("(?s)private static final class Solid \\{.*?\\}", "")
+            .contains("RenderType.m_"), "the renderer makes its render type the first time it draws, not as the items are registered");
+    }
+
+    /** The baker's kind of {@code q}'s models (its file names). */
+    static String kind(Quinque q) {
+        return switch (q) {
+            case SPEAR -> "koukaku";
+            case KATANA -> "katana";
+            case MACE -> "mace";
+            case LAUNCHER -> "launcher";
+            case BLADE -> "bikaku";
+            case DAWN -> "dawn";
+        };
+    }
+
+    /** A point turned onto the diagonal (item pixels) back to standing: QuinqueMesh.turned undone. */
+    static float[] unturned(float[] p) {
+        double a = -Math.toRadians(com.hex.kagune.control.quinque.QuinqueMesh.DIAGONAL);
+        double x = p[0] - 8.0;
+        double y = p[1] - 8.0;
+        return new float[] {(float)(8.0 + x * Math.cos(a) - y * Math.sin(a)), (float)(8.0 + x * Math.sin(a) + y * Math.cos(a)), p[2]};
+    }
+
+    /** A compiled class's bytes as text (its constant pool readable). */
+    static String compiled(String path) throws IOException {
+        try (java.io.InputStream in = QuinqueTests.class.getClassLoader().getResourceAsStream(path)) {
+            return in == null ? "" : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.ISO_8859_1);
+        }
+    }
+
     /** {@code q}'s weapon model ("full" frame): each element's eight corners (its pixels, its own turn applied). */
     static List<float[]> corners(Quinque q) throws IOException {
         List<float[]> out = new ArrayList<>();
+        if (com.hex.kagune.control.quinque.QuinqueMesh.has(q)) {
+            // 4.1.20: a mesh's points (every fifth), turned onto the diagonal as the item draws it.
+            com.hex.kagune.control.quinque.ArmMesh.Mesh mesh = com.hex.kagune.control.quinque.QuinqueMesh.of(q);
+            for (int v = 0; v < mesh.pos.length / 3; v += 5) {
+                out.add(com.hex.kagune.control.quinque.QuinqueMesh.turned(new float[] {mesh.pos[v * 3], mesh.pos[v * 3 + 1], mesh.pos[v * 3 + 2]}));
+            }
+            return out;
+        }
         String item = read("assets/hexkagune/models/item/" + q.weaponId + ".json");
         Matcher full = item == null ? null : Pattern.compile("\"hexkagune:item/(quinque/[a-z_]+_full)\"").matcher(item);
         String model = full != null && full.find() ? read("assets/hexkagune/models/item/" + full.group(1) + ".json") : null;

@@ -8,6 +8,8 @@ public class Item implements net.minecraft.world.level.ItemLike {
     public Item(Properties properties) {
     }
 
+    /** 4.1.20: Forge's (Item.java.patch: called from the constructor on a client only), its own name. */
+    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientItemExtensions> consumer) { }
     /** getUseAnimation (1.3.40) */ public UseAnim m_6164_(ItemStack stack) { throw new UnsupportedOperationException(); }
     /** getUseDuration (1.3.40) */ public int m_8105_(ItemStack stack) { throw new UnsupportedOperationException(); }
     public static class Properties {

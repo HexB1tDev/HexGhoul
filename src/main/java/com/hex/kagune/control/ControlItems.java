@@ -40,7 +40,26 @@ public final class ControlItems {
     static {
         for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
             CASES.put(q, ITEMS.register(q.caseId, () -> new Item(new Item.Properties().m_41487_(1))));
-            WEAPONS.put(q, ITEMS.register(q.weaponId, () -> new SwordItem(Tiers.NETHERITE, q.damage, q.speed, new Item.Properties())));
+            // 4.1.20: a quinque grown as a mesh is drawn by code (client.QuinqueItemRenderer), the rest by their item models.
+            WEAPONS.put(q, ITEMS.register(q.weaponId, () -> com.hex.kagune.control.quinque.QuinqueMesh.has(q) ? new MeshQuinque(q)
+                : new SwordItem(Tiers.NETHERITE, q.damage, q.speed, new Item.Properties())));
+        }
+    }
+
+    /**
+     * 4.1.20: a quinque grown as a smooth mesh (the owner: "every weapon in the game should look like it's made from a kagune ... I don't want
+     * squares"): a sword as the others are, its model's parent builtin/entity, drawn by client.QuinqueItemRenderer, which Forge is given
+     * here on a client only (the item's constructor calls this there; the server never runs it, nor loads the renderer).
+     */
+    static final class MeshQuinque extends SwordItem {
+        MeshQuinque(com.hex.kagune.control.quinque.Quinque q) {
+            super(Tiers.NETHERITE, q.damage, q.speed, new Item.Properties());
+        }
+
+        @Override
+        public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientItemExtensions> consumer) {
+            net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
+                () -> () -> com.hex.kagune.control.client.QuinqueItemRenderer.offer(consumer));
         }
     }
 

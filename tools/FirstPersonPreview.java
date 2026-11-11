@@ -47,7 +47,8 @@ public final class FirstPersonPreview {
     static List<Face> faces(String kind, String frame) throws Exception {
         Map<String, Object> json = (Map<String, Object>)new QuinquePreview.Json(Files.readString(new File(QuinquePreview.MODELS, kind + "_" + frame + ".json").toPath())).value();
         List<Face> out = new ArrayList<>();
-        for (Object o : (List<Object>)json.get("elements")) {
+        // 4.1.20: a mesh quinque's frames have no elements (drawn by code).
+        for (Object o : (List<Object>)json.getOrDefault("elements", new ArrayList<>())) {
             Map<String, Object> e = (Map<String, Object>)o;
             double[] from = QuinquePreview.nums(e.get("from"));
             double[] to = QuinquePreview.nums(e.get("to"));
@@ -144,8 +145,15 @@ public final class FirstPersonPreview {
                 canvas.tri(new PoseRender.Tri(new double[][] {a, c, d}, col, new double[] {0, 1, 0}), false);
             }
         }
-        for (PoseRender.Tri t : item(body, h, faces, tex)) {
-            canvas.tri(t, true);
+        if (com.hex.kagune.control.quinque.QuinqueMesh.has(q)) {
+            // 4.1.20: a mesh quinque, as its renderer draws it.
+            List<Boolean> glows = new ArrayList<>();
+            List<PoseRender.Tri> tris = QuinqueMeshPreview.tris(q, 1.0F, v -> FirstPersonQuinque.held(body, h, false, v), glows);
+            QuinqueMeshPreview.draw(canvas, tris, glows, new double[] {0, 0, 0});
+        } else {
+            for (PoseRender.Tri t : item(body, h, faces, tex)) {
+                canvas.tri(t, true);
+            }
         }
         BufferedImage img = canvas.image();
         Graphics2D g = img.createGraphics();
@@ -195,7 +203,12 @@ public final class FirstPersonPreview {
                     QuinqueGrip.reach(p, q, false);
                 }
                 PoseRender.Camera cam = PoseRender.orbit(200, 12, 4.2, 1.15);
-                BufferedImage third = PoseRender.render(p, cam, W, H, QuinquePreview.item(p, flat));
+                List<PoseRender.Tri> held = QuinquePreview.item(p, flat);
+                if (com.hex.kagune.control.quinque.QuinqueMesh.has(q)) {
+                    QuinqueHolds.Hold hold = QuinqueHolds.of(q);
+                    held = QuinqueMeshPreview.tris(q, 1.0F, v -> PoseRender.world(p, QuinqueGrip.held(p, hold, false, v)), new ArrayList<>());
+                }
+                BufferedImage third = PoseRender.render(p, cam, W, H, held);
                 Graphics2D g = third.createGraphics();
                 g.setColor(Color.WHITE);
                 g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));

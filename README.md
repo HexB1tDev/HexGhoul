@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.20 (HexGhoul): a katana grown out of kagune, smooth, no squares (testing)
+
+See `.github/release-notes-4.1.20.md`. "The katana should be like every weapon in the game should look like it's made from a kagune ... I don't want squares": the katana is a smooth mesh grown out of kagune (`quinque/QuinqueMesh`), drawn by its own item renderer everywhere it shows (`client/QuinqueItemRenderer`, Forge's client item extensions): a dark plated blade with a glowing wavy temper edge, a flesh collar with RC eyes, a veined kagune tsuba with two Rinkaku tendrils coiled over it, a ribbed hilt bound in crossing sinew, a flesh pommel with an eye. It grows out of the fist as its case shrinks; enchanted, it shimmers. Same place in the hand as before, so every grip, cut and first person view holds. Protocol 117.
+
 ## 4.1.19 (HexGhoul): quinques in first person move exactly as your body swings them (testing)
 
 See `.github/release-notes-4.1.19.md`. "don't forget the the first person animation, like first person view to match the animation that they got": the katana, spear, mace, blade and Dawn are placed in first person by the same arm, hand, model and transforms as in third person, frame by frame, the body's step carrying them, seen from just behind the head, looking a little down, zoomed to a held weapon's size (`FirstPersonQuinque`), so every cut crosses the screen the way the body swings it. At rest each is right of and below the crosshair; every impact is in view; nothing comes within a block of the camera (but the mace's old second swing, rewritten next). Protocol 117.

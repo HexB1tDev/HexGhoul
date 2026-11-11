@@ -974,6 +974,19 @@ def model(kind, elements, display):
             "elements": elements, "display": display, "gui_light": "front"}
 
 
+# 4.1.20 (the owner: "every weapon in the game should look like it's made from a kagune ... I don't want squares"): the quinques grown as
+# smooth meshes (quinque/QuinqueMesh.java), drawn by code (client/QuinqueItemRenderer.java): their weapon frames (out_1..6, full) are
+# builtin/entity models with the same display transforms (so every hold solved for the boxes holds), no elements. Their case frames
+# (shut, open, carried) stay boxes: a case is a case.
+MESHES = {"katana"}
+
+
+def drawn_by_code(kind, display):
+    return {"credit": "HexKagune: tools/quinque_models.py (drawn by client/QuinqueItemRenderer.java)", "parent": "minecraft:builtin/entity",
+            "textures": {"q": f"hexkagune:item/quinque_{kind}", "particle": f"hexkagune:item/quinque_{kind}"},
+            "display": display, "gui_light": "front"}
+
+
 def write(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.name in {"dawn_half.json", "dawn_nearly.json", "dawn_full.json", "dawn_fire.json"}:
@@ -1005,11 +1018,14 @@ def main():
         }
         for i in range(1, OUT_STEPS):
             frames[f"out_{i}"] = model(kind, tele(parts, i / OUT_STEPS), held)
+        if kind in MESHES:
+            for name in ["full"] + [f"out_{i}" for i in range(1, OUT_STEPS)]:
+                frames[name] = drawn_by_code(kind, held)
         if kind == "dawn":
             # 2.0.30: its point parted about a light as a lightning ball leaves it (chosen as a shot is fired; see the item's overrides).
             frames["fire"] = model(kind, tele(dawn_parts(open_tip=True), 1.0), held)
         for name, data in frames.items():
-            for el in data["elements"]:
+            for el in data.get("elements", []):
                 for v in el["from"] + el["to"]:
                     assert -16 <= v <= 32, f"{kind} {name}: {v} is out of a model's bounds"
             write(MODELS / "quinque" / f"{kind}_{name}.json", data)

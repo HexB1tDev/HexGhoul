@@ -1,4 +1,4 @@
-# Next AI: after 4.1.19 (4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.20 (4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -15,13 +15,13 @@ alter the owner's files, one version at a time, no PR.
    `claude/hopeful-euler-dnx1ub`). Check the table below for what is pushed.
 2. **4.1.19 (first person) is shipped** (see "4.1.19, what and where"). The 4.1.18 session's patch was applied, then its camera was
    judged on renders and replaced: from 12 pixels behind the head the cuts landed on the bottom edge and the hilt swelled into the view.
-3. **Next, the owner's newest words (during 4.1.19, quoted exactly; their message was cut off there):** "Gotta say that handle looks like
-   shit, bro. The katana should be like every weapon in the game should look like it's made from a kagune. That that's horrible. Not only
-   that, but like I said, I don't want squares. You can see that katana still has". So: every quinque rebuilt as a smooth, kagune-grown
-   mesh (no boxes, no checkered hilt), the katana first. Item JSON models can only be boxes; the kagune-made Arm weapons already draw a
-   smooth mesh of their own (`quinque/ArmMesh`, `WeaponLayer.mesh`, first person `ArmItemLayer.raw`): follow that road.
-4. **Then the quinque overhaul goes on** ("4.1.18, what and where", the "Next" list): each weapon's own string by intent (the mace's
-   second swing first: it winds up behind the head, see 4.1.19), then the new kagune-born quinques. Then the owner's big list, items 4-6
+3. **4.1.20 did the owner's newest words for the katana** (quoted exactly; their message was cut off there): "Gotta say that handle looks
+   like shit, bro. The katana should be like every weapon in the game should look like it's made from a kagune. That that's horrible. Not
+   only that, but like I said, I don't want squares. You can see that katana still has". See "4.1.20, what and where". **Next: the same
+   for every other quinque, one version each, together with its own string by intent** (the mace first: its second swing winds up behind
+   the head and its third's shaft goes through it). Dawn waits for Arima.
+4. **Then the quinque overhaul goes on** ("4.1.18, what and where", the "Next" list): each weapon's own string by intent (with its mesh,
+   above), then the new kagune-born quinques (meshes from the start). Then the owner's big list, items 4-6
    (Arima, quests, the Small City), one version at a time.
 5. **Open question to the owner:** should daughters 07, 10, 11, 12, 21 and 22 get open eyes painted on? Their skins have the eyes drawn
    shut or hidden. Ask before you touch them.
@@ -107,6 +107,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.20 | The katana a smooth mesh grown out of kagune (`quinque/QuinqueMesh`, `ArmMesh.Builder`'s frame), drawn by its own item renderer (`client/QuinqueItemRenderer`, Forge's `IClientItemExtensions` given in `ControlItems.MeshQuinque.initializeClient` through DistExecutor), turned onto the handheld diagonal as the baker's boxes; its draw continuous; enchantment glint; `QuinqueTests.meshes`; `tools/QuinqueMeshPreview.java` | pushed, EXIT 0 |
 | 4.1.19 | Melee quinques (spear, katana, mace, blade, Dawn) drawn in first person through the third person chain, the body's step in, seen from behind the head looking down, zoomed (`client/animation/FirstPersonQuinque`, `ArmItemLayer.throughBody`); `QuinqueTests.firstPerson`; `tools/FirstPersonPreview.java` | pushed, EXIT 0 |
 | 4.1.18 | The katana model (`quinque_models.katana_parts`, its own texture patches); each quinque its own string (`Quinque.steps/finisher/swing(step)`, `Quinque.next(q, ...)`); the katana's five by intent (`QuinquePose.katanaAims`, solved by `QuinqueAim`, baked in `QuinqueKeys` by `tools/QuinqueAimBake.java`); seven draw frames (`OUT_STEPS`) | pushed, EXIT 0 |
 | 4.1.17 | Coat tails overlap at the middle and a hip lining (`outfit_models.overlap`); Ken's tower on the ground and every jigsaw place lifted onto its footprint's highest ground (`DryLand.lift`, `DryPlace.raised`); a standing place adopted as the world's one, duplicates logged, `making` only false for /locate (`PlaceClaims`); planted Ukaku spikes keep their shooter's colour | pushed, EXIT 0 |
@@ -443,6 +444,43 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.20, what and where (the katana grown out of kagune)
+
+The owner (quoted exactly): "Gotta say that handle looks like shit, bro. The katana should be like every weapon in the game should look like
+it's made from a kagune. That that's horrible. Not only that, but like I said, I don't want squares. You can see that katana still has"
+
+- **Why a mesh:** item JSON models can only be boxes. The kagune-made Arm weapons (3.0.0) already draw smooth meshes (`ArmMesh`), so the
+  quinques use the same builder. `ArmMesh.Builder` now takes where its points and ways are stored (the hand's frame for the Arm weapons,
+  as before; a quinque's item model pixels for these).
+- **`quinque/QuinqueMesh`** (pure): `has(q)` (the katana so far), `of(q)` (built once), stored STANDING in item pixels (weapon terms u
+  along from the guard at `ANCHOR` 6.35, v toward the back, w through). **`turned`**: the item draws it turned `DIAGONAL` (-45) about z
+  through 8 8 8, as tools/quinque_models.py turns every box (`box(..., turned=True)`). The holds' grips are on that diagonal (katana right
+  grip 4.75 4.75 8 = standing y 3.4). Forget the turn and the blade sits 45 degrees off in every hand while looking plausible in a render
+  (it happened, and the test now catches it). `out(shown)` (deploy 0.2 .. 0.95 to 0 .. 1), `drawn(y, out)` (telescoped toward `HAND` 5),
+  `caseBox(out)` and `caseMesh()` (the small case round the grip, a rounded box with a glowing seam).
+- **The katana:** `blade` (96 lofted sections, back to edge; plates every `PLATE` with a lip and a seam, raised on the back and the
+  shinogi only so the edge bevel stays one face; glowing edge quads from the wavy `temper` line to the edge), `guard` (a flesh collar,
+  two RC eyes, a lumpy veined tsuba, two Rinkaku tendrils coiled over its rim and hooked up the blade), `hilt` (ribbed core, two flat
+  sinew bands half a turn apart so they cross on the hilt's faces, black collars, a flesh pommel and eye). About 4600 quads.
+- **`client/QuinqueItemRenderer`** (a BlockEntityWithoutLevelRenderer: `m_108829_` renderByItem): draws the mesh turned and telescoped,
+  the case while it comes out, `ItemRenderer.m_115222_` for the glint (uvs from position so it runs over it), glowing quads full bright.
+  Its render type is made lazily (`Solid`): the class is loaded as items register.
+- **`ControlItems.MeshQuinque`**: a SwordItem whose `initializeClient` (Forge's, called by Item's constructor on a client only) gives
+  `QuinqueItemRenderer.offer` through `DistExecutor.unsafeRunWhenOn` (the server check passes).
+- **Models:** tools/quinque_models.py `MESHES` (`{"katana"}`): the weapon's `full` and `out_1..6` are `minecraft:builtin/entity` with the
+  same display (so the holds hold); the case frames stay boxes. Re-run it after a change; it reproduces every other file exactly.
+- **API** (allowlisted with joined.tsrg, intermediary and yarn evidence; maps fetched from raw.githubusercontent.com): BEWLR class, its
+  constructor and `m_108829_`, BlockEntityRenderDispatcher, EntityModelSet, `Minecraft.m_167982_`/`m_167973_`, `ItemRenderer.m_115222_`,
+  `ItemStack.m_41790_`, Forge's `IClientItemExtensions` and `Item.initializeClient`. The verifier checks overrides too.
+- **Tests** (`QuinqueTests.meshes`): drawn by code exactly when a mesh; frames builtin/entity, the case still boxes; thousands of quads,
+  all finite, as long as the old model; both grips on the hilt's axis; `turned` as the baker's turn; the draw grows and the case shrinks;
+  `out` reads the baker's deploy values; the compiled renderer has `m_108829_` with its descriptor and the item `initializeClient` through
+  DistExecutor; the renderer turns about the model's middle; no render type made on loading. `firstPerson` now uses the mesh's points.
+- **Previews:** `docs/handoff/katana-kagune-4.1.20.png`, `katana-kagune-held-4.1.20.png`; `QuinqueMeshPreview <dir> KATANA` (alone, held,
+  draw, first person); `FirstPersonPreview` and `QuinquePreview` draw mesh quinques too.
+- **Not tested in game.** If the katana is invisible in game, look first at the renderer (the log says "drawing a quinque" if it throws),
+  then at whether Forge called `initializeClient` (without it, vanilla's own BEWLR draws nothing: invisible too).
 
 ## 4.1.19, what and where (first person)
 

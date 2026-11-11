@@ -123,7 +123,7 @@ public final class QuinquePreview {
         java.util.Map<String, Object> json = (java.util.Map<String, Object>)new Json(Files.readString(new File(MODELS, kind + "_" + frame + ".json").toPath())).value();
         BufferedImage tex = ImageIO.read(new File(TEXTURES, "quinque_" + texture + ".png"));
         List<Element> elements = new ArrayList<>();
-        for (Object o : (List<Object>)json.get("elements")) {
+        for (Object o : (List<Object>)json.getOrDefault("elements", new ArrayList<>())) { // 4.1.20: a mesh quinque has none
             java.util.Map<String, Object> e = (java.util.Map<String, Object>)o;
             double[] uv = nums(((java.util.Map<String, Object>)((java.util.Map<String, Object>)e.get("faces")).get("north")).get("uv"));
             int u = (int)((uv[0] + 1.0) / 16.0 * tex.getWidth());
@@ -330,6 +330,12 @@ public final class QuinquePreview {
         for (int i = 0; i < poses.size(); i++) {
             RigPose pose = poses.get(i);
             List<PoseRender.Tri> extra = item(pose, model);
+            if (com.hex.kagune.control.quinque.QuinqueMesh.has(q)) {
+                // 4.1.20: a mesh quinque, as its renderer draws it (lit throughout here).
+                com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
+                extra = QuinqueMeshPreview.tris(q, 1.0F, v -> PoseRender.world(pose, com.hex.kagune.control.client.animation.QuinqueGrip.held(pose, h, false, v)),
+                    new ArrayList<>());
+            }
             double[] grip = q.twoHanded ? com.hex.kagune.control.client.animation.QuinqueGrip.leftGrip(pose, q, false) : null;
             if (grip != null) {
                 mark(extra, PoseRender.world(pose, grip), 0xFF30FF);

@@ -510,12 +510,24 @@ public final class ArmMesh {
         final List<double[]> nrm = new ArrayList<>();
         final List<Integer> col = new ArrayList<>();
         final List<Boolean> glow = new ArrayList<>();
+        /** 4.1.20: where a point and a way of the weapon's own terms are stored (the hand's frame; a quinque's: its item model's pixels). */
+        final java.util.function.UnaryOperator<double[]> point;
+        final java.util.function.UnaryOperator<double[]> way;
+
+        Builder() {
+            this(ArmMesh::hand, ArmMesh::hand);
+        }
+
+        Builder(java.util.function.UnaryOperator<double[]> point, java.util.function.UnaryOperator<double[]> way) {
+            this.point = point;
+            this.way = way;
+        }
 
         /** A quad (the weapon's own terms), its normals given per vertex. */
         void quad(double[][] p, double[][] n, int[] c, boolean glows) {
             for (int i = 0; i < 4; i++) {
-                this.pos.add(hand(p[i]));
-                this.nrm.add(hand(n[i] == null ? faceNormal(p) : normOr(n[i], faceNormal(p))));
+                this.pos.add(this.point.apply(p[i]));
+                this.nrm.add(this.way.apply(n[i] == null ? faceNormal(p) : normOr(n[i], faceNormal(p))));
                 this.col.add(c[i]);
             }
             this.glow.add(glows);

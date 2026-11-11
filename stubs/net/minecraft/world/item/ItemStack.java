@@ -2,6 +2,7 @@
 package net.minecraft.world.item;
 
 public final class ItemStack {
+    /** hasFoil (4.1.20): joined.tsrg cfz.B ()Z m_41790_, intermediary method_7958 (yarn hasGlint) */ public boolean m_41790_() { throw new UnsupportedOperationException(); }
     /** shrink(count) (7.0.2) */ public void m_41774_(int count) { throw new UnsupportedOperationException(); }
     ItemStack() {
     }
