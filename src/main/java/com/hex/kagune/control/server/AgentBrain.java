@@ -1899,8 +1899,8 @@ public final class AgentBrain {
         OutfitServer.drop(agent, looting, byPlayer);
         if (reaper(agent)) {
             HumanBrain.drop(agent, looting);
-            // 2.0.32: whoever brings him down by their own hand may take Dawn, shut in its black case (2.2.9: one time in five).
-            if (byPlayer && agent.m_217043_().m_188500_() < AgentRules.dawnChance(looting)) {
+            // 2.0.32: Dawn, shut in its black case (2.2.9: one time in five; 4.1.23: every time he falls, however he falls).
+            if (agent.m_217043_().m_188500_() < AgentRules.dawnChance(looting)) {
                 agent.m_19983_(new ItemStack(ControlItems.caseOf(Quinque.DAWN), 1));
             }
             return;
@@ -1913,9 +1913,71 @@ public final class AgentBrain {
         agent.m_19983_(mind.arm != null ? ControlItems.armCaseStack(mind.arm, mind.master) : new ItemStack(ControlItems.caseOf(mind.kind), 1));
     }
 
+    /** 4.1.23: who struck each White Reaper and when (game ticks; his UUID, then theirs): everyone who did in the last five minutes shares his fall. */
+    private static final Map<UUID, Map<UUID, Long>> REAPER_STRUCK = new HashMap<>();
+    /** 4.1.23: the advancement every one of them earns. */
+    static final String SLAIN_REAPER = "slain_reaper";
+
+    /** 4.1.23: a player's blow on the White Reaper, remembered for his fall (blows older than five minutes forgotten as new ones come). */
+    @SubscribeEvent
+    public static void reaperStruck(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (!(event.getEntity() instanceof CcgAgent agent) || !(agent.m_9236_() instanceof ServerLevel level) || !reaper(agent)
+            || event.getSource() == null || !(event.getSource().m_7639_() instanceof ServerPlayer player)) {
+            return;
+        }
+        long now = level.m_46467_();
+        Map<UUID, Long> struck = REAPER_STRUCK.computeIfAbsent(agent.m_20148_(), id -> new HashMap<>());
+        struck.values().removeIf(at -> !AgentRules.sharesReaper(at, now));
+        struck.put(player.m_20148_(), now);
+    }
+
+    /**
+     * 4.1.23 (the owner: "When both players are kill him, they get like a special achievement from our mod called like Slain Reaper ... make
+     * sure that both players get it"): the White Reaper fallen: whoever brought him down and every player who struck him in the last five
+     * minutes earns Slain Reaper, and a ghoul among them his mastery.
+     */
+    static void reaperSlain(CcgAgent agent, ServerLevel level, net.minecraft.world.damagesource.DamageSource source) {
+        long now = level.m_46467_();
+        Map<UUID, Long> struck = REAPER_STRUCK.remove(agent.m_20148_());
+        java.util.Set<UUID> who = new java.util.LinkedHashSet<>();
+        if (source != null && source.m_7639_() instanceof ServerPlayer killer) {
+            who.add(killer.m_20148_());
+        }
+        if (struck != null) {
+            struck.forEach((id, at) -> {
+                if (AgentRules.sharesReaper(at, now)) {
+                    who.add(id);
+                }
+            });
+        }
+        int mastery = AgentRules.mastery(AgentRules.Rank.RANK_10);
+        for (UUID id : who) {
+            ServerPlayer player = level.m_7654_().m_6846_().m_11259_(id);
+            if (player == null) {
+                continue;
+            }
+            net.minecraft.advancements.Advancement slain = level.m_7654_().m_129889_()
+                .m_136041_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", SLAIN_REAPER));
+            if (slain != null) {
+                player.m_8960_().m_135988_(slain, "slain");
+            } else {
+                com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: the advancement hexkagune:" + SLAIN_REAPER + " is missing");
+            }
+            if (KaguneProfile.isUnlocked(player)) {
+                KaguneProfile.addMastery(player, mastery);
+                com.hex.kagune.network.KaguneNetwork.broadcast(player);
+                player.m_5661_(Component.m_237113_("\u00a7c+" + mastery + " mastery \u00a77(the White Reaper brought down)"), true);
+            }
+        }
+    }
+
     /** 2.2.9: an investigator brought down by a ghoul: mastery for it, by its rank ({@link AgentRules#mastery}). */
     @SubscribeEvent
     public static void slain(LivingDeathEvent event) {
+        if (event.getEntity() instanceof CcgAgent fallen && fallen.m_9236_() instanceof ServerLevel at && reaper(fallen)) {
+            reaperSlain(fallen, at, event.getSource());
+            return;
+        }
         if (!(event.getEntity() instanceof CcgAgent agent) || !(agent.m_9236_() instanceof ServerLevel)
             || !(event.getSource().m_7639_() instanceof net.minecraft.server.level.ServerPlayer player) || !KaguneProfile.isUnlocked(player)) {
             return;

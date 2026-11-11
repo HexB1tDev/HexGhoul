@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.23 (HexGhoul): Arima, part 1: Dawn every time, Slain Reaper for everyone who hit him (testing)
+
+See `.github/release-notes-4.1.23.md`. "He drops Dawn 100% guaranteed ... make sure that both players get it": Dawn's case drops every time the White Reaper falls (`AgentRules.dawnChance` 1); every player who hit him in the last five minutes (`AgentRules.REAPER_SHARE_TICKS`, `AgentBrain.reaperStruck`) and his killer earn the new challenge advancement `hexkagune:slain_reaper` (Adventure tab, awarded by code on an impossible criterion: `AgentBrain.reaperSlain`) and, if a ghoul, his 60 mastery. Protocol 117.
+
 ## 4.1.22 (HexGhoul): first person for the kagune-made weapons (testing)
 
 See `.github/release-notes-4.1.22.md`. "Just make the first person of the other weapons. Don't touch their looks": the bone greatsword, the flesh hammer and the crystal spear are drawn in first person on the posed right arm as their third person layer draws them (`ArmItemLayer.throughBody(..., false)` then `WeaponLayer.mesh`), seen from behind the head (`FirstPersonQuinque.arm` mirrors it for tests and previews). The launcher (aims down the crosshair) and the whip (its tendril's own path) keep theirs. `QuinqueTests.firstPersonArms`. Protocol 117.

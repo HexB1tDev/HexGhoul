@@ -690,8 +690,23 @@ public final class AgentTests {
             last = mastery;
         }
         check(com.hex.kagune.control.npc.AgentRules.mastery(com.hex.kagune.control.npc.AgentRules.Rank.RANK_10) == 60, "the Reaper: 60");
-        check(com.hex.kagune.control.npc.AgentRules.dawnChance(0) == 0.2 && com.hex.kagune.control.npc.AgentRules.dawnChance(9) <= 0.36,
-            "Dawn: rare (one in five, a little more with Looting), no longer every time");
+        // 4.1.23 (the owner: "he drops Dawn 100% guaranteed"): every time; everyone who struck him in the last five minutes shares his fall.
+        check(com.hex.kagune.control.npc.AgentRules.dawnChance(0) == 1.0 && com.hex.kagune.control.npc.AgentRules.dawnChance(3) == 1.0,
+            "Dawn: every time the White Reaper falls");
+        check(com.hex.kagune.control.npc.AgentRules.REAPER_SHARE_TICKS == 6000L
+            && com.hex.kagune.control.npc.AgentRules.sharesReaper(1000L, 1000L) && com.hex.kagune.control.npc.AgentRules.sharesReaper(1000L, 7000L)
+            && !com.hex.kagune.control.npc.AgentRules.sharesReaper(1000L, 7001L) && !com.hex.kagune.control.npc.AgentRules.sharesReaper(5000L, 4000L),
+            "Slain Reaper: a blow in the last five minutes (6000 ticks) shares his fall, an older one doesn't");
+        try {
+            String brain = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+            String json = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/data/hexkagune/advancements/slain_reaper.json"));
+            check(brain.contains("m_135988_(slain, \"slain\")") && json.contains("\"slain\"") && json.contains("minecraft:impossible")
+                && json.contains("Slain Reaper"), "Slain Reaper: awarded by code on its one criterion, which nothing else grants");
+            check(!brain.contains("if (byPlayer && agent.m_217043_().m_188500_() < AgentRules.dawnChance(looting))"),
+                "Dawn: dropped however he falls, not only by a player's hand");
+        } catch (java.io.IOException e) {
+            check(false, "Slain Reaper: its files can be read");
+        }
         check(com.hex.kagune.control.npc.AgentRules.rationChance(0) > com.hex.kagune.control.npc.AgentRules.caseChance(Quinque.BLADE, null, false, 0)
             && com.hex.kagune.control.npc.AgentRules.rationChance(3) < 0.25, "a ration: uncommon, though likelier than any case");
         java.util.Set<String> cookbook = new java.util.HashSet<>();

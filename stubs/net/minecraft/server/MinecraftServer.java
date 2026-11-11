@@ -3,5 +3,6 @@ package net.minecraft.server;
 
 public abstract class MinecraftServer {
     /** getPlayerList */ public net.minecraft.server.players.PlayerList m_6846_() { throw new UnsupportedOperationException(); }
+    /** getAdvancements */ public ServerAdvancementManager m_129889_() { throw new UnsupportedOperationException(); }
     /** getAllLevels */ public Iterable<net.minecraft.server.level.ServerLevel> m_129785_() { throw new UnsupportedOperationException(); }
 }

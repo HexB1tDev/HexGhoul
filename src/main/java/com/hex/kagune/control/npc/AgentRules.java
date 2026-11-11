@@ -317,10 +317,22 @@ public final class AgentRules {
 
     /**
      * 2.2.9 (the owner: "Dawn drops yes, but it's kind of rare"): the White Reaper's case (Dawn) left to whoever brings him down by their
-     * own hand: one in five (a little more with Looting). It was every time (2.0.32).
+     * own hand: one in five (a little more with Looting). 4.1.23 (the owner: "he drops Dawn 100% guaranteed. Since there's only one of
+     * them in the map"): every time he falls.
      */
     public static double dawnChance(int looting) {
-        return 0.2 + 0.05 * Math.max(0, Math.min(3, looting));
+        return 1.0;
+    }
+
+    /**
+     * 4.1.23 (the owner: "If like two players hit him within like let's say 5 minutes, then you just need to hit him once. And if the other
+     * player kills him, then you also get the achievement in mastery"): how long a blow on the White Reaper counts toward his fall (ticks).
+     */
+    public static final long REAPER_SHARE_TICKS = 5L * 60L * 20L;
+
+    /** 4.1.23: whether a blow struck at {@code struckAt} shares his fall at {@code now} (game ticks). */
+    public static boolean sharesReaper(long struckAt, long now) {
+        return now >= struckAt && now - struckAt <= REAPER_SHARE_TICKS;
     }
 
     /**
