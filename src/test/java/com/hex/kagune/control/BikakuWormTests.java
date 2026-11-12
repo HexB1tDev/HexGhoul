@@ -1704,7 +1704,10 @@ public final class BikakuWormTests {
             check(input.contains("path == KagunePath.BIKAKU ? view.mastery() >= com.hex.kagune.control.bikaku.BikakuRules.KAKUJA"),
                 "Bikaku's K is timed (tap or hold) once the kakuja is open");
             String menu = read("src/main/java/com/hex/kagune/control/client/BikakuMenuView.java");
-            check(menu.contains("open && form.picked()") && menu.contains("(hold K, mastery "), "the menu: The Walker is K tapped, not clicked; the kakuja K held");
+            // 4.1.59: the menu in the quest menu's style: a form is taken only by its button, and only one picked in the menu (The Walker is K
+            // tapped: its button says TAP K and takes nothing); the kakuja's card and detail say K held.
+            check(menu.contains("return state(model, form) == QuestLog.State.DONE && form.picked();") && menu.contains("form.picked() ? \"USE THIS FORM\" : \"TAP K\"")
+                && menu.contains("\"K held\"") && menu.contains("ready = \"HOLD K"), "the menu: The Walker is K tapped, not clicked; the kakuja K held");
         } catch (java.io.IOException failure) {
             check(false, "read the sources: " + failure);
         }
