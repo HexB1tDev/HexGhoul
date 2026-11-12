@@ -4,25 +4,70 @@ import com.hex.kagune.control.RinkakuForms;
 import com.hex.kagune.control.RinkakuUnlocks;
 import com.hex.kagune.control.client.ui.UiCanvas;
 import com.hex.kagune.control.king.KingForm;
+import com.hex.kagune.control.quest.Gate;
+import com.hex.kagune.control.quest.Gates;
+import com.hex.kagune.control.quest.QuestBook;
+import com.hex.kagune.control.quest.QuestLog;
+import com.hex.kagune.control.ukaku.UkakuMutation;
 import com.hex.kagune.gameplay.KaguneForm;
 import com.hex.kagune.gameplay.MutationNode;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
- * 6.0.0: the Rinkaku path's kagune menu (the menu key), drawn like Ukaku's ({@link UkakuMenuView}: the same organic board, 960 x
- * 520 scaled to the window) in Rinkaku's crimson over black: his organ and mastery, his forms to pick (the half kakujas in violet),
- * his RC and what K does, the kakugan placement, and (1.0.41, in place of the mutation tree, which the path no longer has) its one
- * passive, You Thought You'd Get Rid of Me That Easily?, opened by its quest. 1.0.10: once the final kakuja is chosen the whole
- * board turns to it ({@link KingTheme}): pure black with red veins for War, white with feathers for Peace.
+ * 6.0.0: the Rinkaku path's kagune menu (the menu key): his organ and mastery, his forms to pick (the half kakujas), his RC and what K
+ * does, the kakugan placement, and (1.0.41) its one passive, You Thought You'd Get Rid of Me That Easily?, opened by its quest. 1.0.10:
+ * the final kakuja, War or Peace, after the Dragon.
+ *
+ * <p>4.1.58 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+ * Dialog, mastery menus ALL OF THEM"): the quest menu's box ({@link QuestFrame}), as the Ukaku menu (4.1.56). Tabs FORMS and FINAL KAKUJA
+ * (its badge: a choice waiting). FORMS: the five forms and the passive as quest cards on the left, his RC and the kakugan under them; the
+ * one picked on the right as a quest is shown (its story, the form itself in a framed tile, its limbs, speed and control, its moves as a
+ * checklist, and a WEAR THIS FORM button), the road of every step at the foot (a step picks its form). FINAL KAKUJA: War and Peace as
+ * cards, the one picked with its emblem, its card's rows and a button to the choice; K's keys under them. Once one is chosen, its mark is
+ * on the plate (War's veins, Peace's feathers) and its name is the menu's title.
  */
 public final class RinkakuMenuView {
+    /** The old board's virtual size (the screens that still scale by it). */
     public static final int UI_WIDTH = UkakuMenuView.UI_WIDTH;
     public static final int UI_HEIGHT = UkakuMenuView.UI_HEIGHT;
+    /** 4.1.58: the box's size: the Ukaku menu's. */
+    public static final int BOX_WIDTH = UkakuMenuView.BOX_WIDTH;
+    public static final int BOX_HEIGHT = UkakuMenuView.BOX_HEIGHT;
+    static final int DETAIL_WIDTH = UkakuMenuView.DETAIL_WIDTH;
+    static final int ROAD_Y = UkakuMenuView.ROAD_Y;
+    static final int TILE_WIDTH = UkakuMenuView.TILE_WIDTH;
+    static final int TILE_HEIGHT = UkakuMenuView.TILE_HEIGHT;
+    /** The half kakujas' colour (the original's purple kakuja buttons), for their chips' words. */
+    static final int HALF = 0xFFC08AE8;
 
-    /** What the menu shows; {@code pending} is a mutation clicked once (a second click takes it). */
+    /** 4.1.58: the menu's tabs. */
+    public enum Tab {
+        FORMS("FORMS"), KING("FINAL KAKUJA");
+
+        final String label;
+
+        Tab(String label) {
+            this.label = label;
+        }
+    }
+
+    /**
+     * What the menu shows; {@code pending} is a mutation clicked once (the old tree's; none are drawn now). 4.1.58: the tab open and what is
+     * picked in it ("pick:ID" a form, "pick:passive", "step:N" a step of the road; "pick:war", "pick:peace"; null: the form worn, the
+     * kakuja chosen or War).
+     */
     public record Model(int mastery, boolean active, KaguneForm form, float energy, float maxEnergy, long mutations, MutationNode pending,
-                        QuestLocks quests, King king) {
+                        QuestLocks quests, King king, Tab tab, String picked) {
+        public Model {
+            quests = quests == null ? QuestLocks.ALL : quests;
+            king = king == null ? King.ASLEEP : king;
+            tab = tab == null ? Tab.FORMS : tab;
+        }
+
         public Model(int mastery, boolean active, KaguneForm form, float energy, float maxEnergy, long mutations, MutationNode pending) {
             this(mastery, active, form, energy, maxEnergy, mutations, pending, QuestLocks.ALL, King.ASLEEP);
         }
@@ -30,6 +75,11 @@ public final class RinkakuMenuView {
         public Model(int mastery, boolean active, KaguneForm form, float energy, float maxEnergy, long mutations, MutationNode pending,
                      QuestLocks quests) {
             this(mastery, active, form, energy, maxEnergy, mutations, pending, quests, King.ASLEEP);
+        }
+
+        public Model(int mastery, boolean active, KaguneForm form, float energy, float maxEnergy, long mutations, MutationNode pending,
+                     QuestLocks quests, King king) {
+            this(mastery, active, form, energy, maxEnergy, mutations, pending, quests, king, Tab.FORMS, null);
         }
     }
 
@@ -44,254 +94,668 @@ public final class RinkakuMenuView {
     private RinkakuMenuView() {
     }
 
-    /** Draws the board and returns its clickable areas: "eyes", "form:ID", "passive", "king:ID". */
+    /**
+     * Draws the box at its own size and returns its clickable areas: "tab:FORMS", "tab:KING", "pick:ID" (a form looked at), "pick:passive",
+     * "step:N", "form:ID" (WEAR THIS FORM, only for a form that may be worn and is not), "eyes", "pick:war", "pick:peace", "king:ID" (to the
+     * choice, only while it may be made).
+     */
     public static Map<String, UkakuMenuView.Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time) {
-        KingTheme t = KingTheme.of(model.king().chosen());
         Map<String, UkakuMenuView.Rect> hits = new LinkedHashMap<>();
-        int panelWidth = 930;
-        int panelHeight = 500;
-        int centerX = UI_WIDTH / 2;
-        int centerY = UI_HEIGHT / 2;
-        int left = centerX - panelWidth / 2;
-        int top = centerY - panelHeight / 2;
-        c.batch(() -> {
-            UkakuMenuView.organicPanel(c, centerX, centerY, panelWidth / 2, panelHeight / 2, t.panelFill(), t.panelEdge());
-            UkakuMenuView.organicPanel(c, centerX, centerY, panelWidth / 2 - 5, panelHeight / 2 - 5, t.innerFill(), t.innerEdge());
-            if (t.feathers()) {
-                KingTheme.feathers(c, left + 30, top + 18, panelWidth - 60, panelHeight - 36, t.vein(), t.veinBright(), time);
-            }
-            if (t.veins()) {
-                KingTheme.veins(c, left + 20, top + 14, panelWidth - 40, panelHeight - 28, t.vein(), t.veinBright(), time);
-            }
-            UkakuMenuView.drawVein(c, left + 262, top + 44, left + 280, centerY, left + 250, top + panelHeight - 45, t.vein(), t.feathers() ? 1 : 3);
-            UkakuMenuView.drawVein(c, left + 535, top + 42, left + 520, centerY, left + 550, top + panelHeight - 42, t.vein(), t.feathers() ? 1 : 3);
-            UkakuMenuView.drawVein(c, left + 18, top + 74, centerX, top + 32, left + panelWidth - 18, top + 74, t.veinBright(), 2);
-        });
         KingForm chosen = model.king().chosen();
-        c.centered(chosen == KingForm.WAR ? "W A R   ·   T H E   O N E - E Y E D   K I N G" : chosen == KingForm.PEACE ? "P E A C E   ·   K A N E K I   : R E"
-            : "R I N K A K U   E V O L U T I O N", centerX, top + 18, t.title(), !t.feathers());
-        c.centered("RC CELL / CENTIPEDE MATRIX", centerX, top + 34, t.subtitle(), !t.feathers());
-        c.centered("M1 tails  •  J grapple  •  G grab  •  H crush  •  K half kakuja  •  hold K final", centerX, top + 51, t.hint(), !t.feathers());
-
-        identity(c, t, model, hits, mouseX, mouseY, left + 24, top + 68);
-        middle(c, t, model, hits, mouseX, mouseY, left + 295, top + 76, time);
-        mutations(c, t, model, hits, mouseX, mouseY, left + 566, top + 70);
-
-        c.centered(model.active() ? "R  RETRACT" : "R  MANIFEST", centerX, top + panelHeight - 16, model.active() ? t.on() : t.off(), !t.feathers());
-
-        String tip = tooltip(hits, mouseX, mouseY, model);
-        if (tip != null) {
-            int width = c.width(tip) + 8;
-            int x = (int)Math.min(UI_WIDTH - width - 4, mouseX + 10);
-            int y = (int)Math.max(4, mouseY - 16);
-            c.fill(x - 1, y - 1, x + width + 1, y + 13, t.panelEdge());
-            c.fill(x, y, x + width, y + 12, t.tipFill());
-            c.text(tip, x + 4, y + 2, t.value(), false);
+        // 1.0.10: once the final kakuja is chosen, its mark is on the board (4.1.58: its emblem, War's one eye or Peace's cross blade, where
+        // the quest menu keeps its honeycomb: the header's empty middle, never over anything to read).
+        boolean marked = chosen == KingForm.WAR || chosen == KingForm.PEACE;
+        QuestFrame.plate(c, BOX_WIDTH, BOX_HEIGHT, time, 292, 6, marked ? 0 : 170, marked ? 0 : 38);
+        if (marked) {
+            // Its own emblem, small (its card's: War's one eye, Peace's turning cross blade).
+            c.push();
+            c.translate(MARK_X + MARK_WIDTH / 2.0F, MARK_Y + MARK_HEIGHT / 2.0F);
+            if (chosen == KingForm.WAR) {
+                c.scale(0.4F);
+                KingChoiceView.warEye(c, 0, 0, time);
+            } else {
+                c.scale(0.5F);
+                KingChoiceView.peaceCross(c, 0, 0, false, time);
+            }
+            c.pop();
         }
+        header(c, model, time);
+        QuestFrame.tabs(c, List.of(new QuestFrame.Tab(Tab.FORMS.name(), Tab.FORMS.label, 0, false),
+            new QuestFrame.Tab(Tab.KING.name(), Tab.KING.label, choosable(model) ? 1 : 0, true)), model.tab().name(), hits, mouseX, mouseY,
+            QuestFrame.LIST_X, QuestFrame.TABS_Y, time);
+        QuestFrame.Tip tip = model.tab() == Tab.KING ? kingTab(c, model, hits, mouseX, mouseY, time) : formsTab(c, model, hits, mouseX, mouseY, time);
+        QuestFrame.tooltip(c, tip, 8, BOX_WIDTH - 8);
         return hits;
     }
 
-    private static void identity(UiCanvas c, KingTheme t, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y) {
-        int mastery = model.mastery();
-        KaguneForm form = model.form();
-        c.text("CURRENT ORGAN", x, y, t.header(), false);
-        row(c, t, "Type", "Rinkaku", x, y + 25);
-        row(c, t, "Silhouette", "Tails from the lower back", x, y + 43);
-        row(c, t, "Form", form.displayName(), x, y + 61);
-        row(c, t, "Limbs", Integer.toString(form.limbCount()), x, y + 79);
+    /** Where the final kakuja's emblem is drawn: the header's empty middle (between the title and the bar). */
+    static final int MARK_X = 286;
+    static final int MARK_Y = 4;
+    static final int MARK_WIDTH = 186;
+    static final int MARK_HEIGHT = 40;
 
-        c.text("MASTERY", x, y + 109, t.header(), false);
-        c.text(mastery + " / 1000", x + 126, y + 109, t.value(), false);
-        c.batch(() -> {
-            UkakuMenuView.capsule(c, x, y + 128, 205, 8, t.barBack());
-            UkakuMenuView.capsule(c, x, y + 128, Math.max(8, Math.round(205.0F * Math.min(1000, mastery) / 1000.0F)), 8, t.bar());
-        });
-        c.text(nextForm(mastery), x, y + 142, t.muted(), false);
-
-        c.text("FORMS", x, y + 164, t.header(), false);
-        int rowY = y + 182;
-        for (KaguneForm option : RinkakuForms.forms()) {
-            // 7.0.1: a form past its mastery may still wait for its quest.
-            boolean quest = option.isUnlocked(mastery) && !model.quests().passes(com.hex.kagune.control.quest.Gates.rinkaku(option));
-            boolean unlocked = option.isUnlocked(mastery) && !quest;
-            boolean selected = option == form;
-            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, rowY - 3, 220, 16);
-            boolean hover = rect.contains(mouseX, mouseY);
-            int fill = t == KingTheme.RINKAKU ? RinkakuForms.buttonColor(selected ? t.bar() : hover && unlocked ? t.buttonHover() : t.button(), option, selected,
-                unlocked) : selected ? t.bar() : hover && unlocked ? t.buttonHover() : t.button();
-            c.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), fill);
-            int label = t == KingTheme.RINKAKU ? RinkakuForms.labelColor(unlocked ? t.value() : t.faint(), option, unlocked)
-                : selected && t.feathers() ? 0xFFFFFFFF : unlocked ? t.value() : t.faint();
-            // 1.0.10: Rinkaku's two kakujas are his half kakujas now; the final kakuja is War or Peace.
-            String name = RinkakuForms.kakuja(option) ? option.displayName() + " (half)" : option.displayName();
-            c.text(name, x + 6, rowY + 1, label, false);
-            c.text(unlocked ? (selected ? "worn" : "") : quest ? "quest" : option.requiredMastery() + "", x + 186 - (quest ? 6 : 0), rowY + 1,
-                unlocked ? (selected && t.feathers() ? 0xFFFFFFFF : t.trait()) : quest ? t.quest() : t.faint(), false);
-            hits.put("form:" + option.id(), rect);
-            rowY += 19;
-        }
-        // 1.0.5: the final kakuja, after the Dragon (1.0.10: chosen once on its cards; K held puts it on).
-        c.text("FINAL KAKUJA", x, rowY + 5, t.header(), false);
-        c.text("hold K", x + 220 - c.width("hold K"), rowY + 5, t.label(), false);
-        rowY += 23;
-        King king = model.king();
-        for (KingForm option : new KingForm[] {KingForm.WAR, KingForm.PEACE}) {
-            boolean mine = king.chosen() == option;
-            boolean open = king.awake() && king.chosen() == KingForm.NONE && option.built();
-            boolean worn = king.worn() == option;
-            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, rowY - 3, 220, 16);
-            boolean hover = rect.contains(mouseX, mouseY);
-            int fill = worn ? t.bar() : mine ? t.buttonHover() : hover && open ? t.buttonHover() : t.button();
-            c.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), fill);
-            c.text(option.displayName(), x + 6, rowY + 1, worn && t.feathers() ? 0xFFFFFFFF : mine || open ? t.value() : t.faint(), false);
-            String state;
-            int colour;
-            if (!king.awake()) {
-                state = "dragon";
-                colour = t.quest();
-            } else if (mine) {
-                state = worn ? "worn" : "yours";
-                colour = worn && t.feathers() ? 0xFFFFFFFF : t.trait();
-            } else if (!option.built()) {
-                state = "sealed";
-                colour = t.faint();
-            } else if (open) {
-                state = "choose";
-                colour = t.available();
-            } else {
-                state = "forsaken";
-                colour = t.faint();
-            }
-            c.text(state, x + 220 - 6 - c.width(state), rowY + 1, colour, false);
-            hits.put("king:" + option.id(), rect);
-            rowY += 19;
-        }
+    /** True while War or Peace may be chosen: the Dragon has been through him and nothing is chosen yet. */
+    static boolean choosable(Model model) {
+        return model.king().awake() && model.king().chosen() == KingForm.NONE;
     }
 
-    private static void middle(UiCanvas c, KingTheme t, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y,
-                               double time) {
-        c.text("RC", x, y, t.header(), false);
-        float share = model.maxEnergy() <= 0.0F ? 0.0F : Math.max(0.0F, Math.min(1.0F, model.energy() / model.maxEnergy()));
-        c.text(Math.round(model.energy()) + " / " + Math.round(model.maxEnergy()), x + 126, y, t.value(), false);
-        c.batch(() -> {
-            UkakuMenuView.capsule(c, x, y + 19, 205, 8, t.barBack());
-            UkakuMenuView.capsule(c, x, y + 19, Math.max(8, Math.round(205.0F * share)), 8, t.rc());
-        });
-        c.text("At 0 the kagune goes in for 10 s", x, y + 33, t.muted(), false);
+    // ------------------------------------------------------------------ the header
 
-        // 1.0.10: K: a tap for the strongest half kakuja, a hold for the final kakuja.
-        c.text("K", x, y + 60, t.header(), false);
-        row(c, t, "K tap", "Strongest half kakuja", x, y + 80);
-        row(c, t, "K hold", model.king().chosen() == KingForm.NONE ? "Final kakuja (after the Dragon)" : model.king().chosen().displayName(), x, y + 98);
-        c.text("Half kakujas: Centipede (750), Full Kakuja (1000)", x, y + 122, t.trait(), false);
-        c.text("Full Kakuja, right click: dash (S held: back)", x, y + 138, t.muted(), false); // 2.1.7: no vanish
-
-        button(c, t, hits, "eyes", "ADJUST KAKUGAN", x, y + 200, 220, mouseX, mouseY, time);
-
-        // 6.0.4: his tendril moves unlock with mastery (RinkakuUnlocks), as Ukaku's do.
-        c.text("UNLOCKS", x, y + 236, t.header(), false);
+    /** The title (the final kakuja's once chosen), the matrix and mastery; the bar to the next step; his RC and the kagune out or in. */
+    private static void header(UiCanvas c, Model model, double time) {
         int mastery = model.mastery();
-        String[][] moves = {{"J", "Grapple"}, {"Z", "Thy Death"}, {"G  N", "Grab  ·  Throw"}, {"H", "Crush"}, {"V", "Lift"}, {"B", "Slam"}};
-        int[] needs = {RinkakuUnlocks.GRAPPLE, RinkakuUnlocks.RAPID_STRIKE, RinkakuUnlocks.GRAB, RinkakuUnlocks.CRUSH, RinkakuUnlocks.LIFT, RinkakuUnlocks.SLAM};
-        for (int i = 0; i < moves.length; i++) {
-            boolean open = RinkakuUnlocks.unlocked(mastery, needs[i]);
-            int rowY = y + 254 + i * 16;
-            c.text(moves[i][0], x, rowY, open ? t.label() : t.faint(), false);
-            c.text(moves[i][1], x + 40, rowY, open ? t.value() : t.faint(), false);
-            c.text(open ? "ready" : Integer.toString(needs[i]), x + 186, rowY, open ? t.trait() : t.faint(), false);
+        KingForm chosen = model.king().chosen();
+        String title = chosen == KingForm.WAR ? "WAR  ·  THE ONE-EYED KING" : chosen == KingForm.PEACE ? "PEACE  ·  RINKAKU :RE" : "RINKAKU";
+        List<int[]> steps = new ArrayList<>(steps().keySet().stream().map(m -> new int[] {m}).toList());
+        int from = 0;
+        int next = -1;
+        for (int[] step : steps) {
+            if (step[0] <= mastery) {
+                from = Math.max(from, step[0]);
+            } else if (next < 0) {
+                next = step[0];
+            }
         }
+        float share = next < 0 ? 1.0F : (mastery - from) / (float)Math.max(1, next - from);
+        String goal = next < 0 ? "Every step of the Rinkaku reached" : mastery + " / " + next + "  ·  next: " + steps().get(next);
+        QuestFrame.header(c, BOX_WIDTH, title, "RC CELL / CENTIPEDE MATRIX  ·  MASTERY " + mastery, share, next < 0, goal, time);
+        int right = BOX_WIDTH - 12;
+        boolean out = model.active();
+        right = QuestFrame.chipLeft(c, right, 56, out ? "KAGUNE OUT  ·  R RETRACTS" : "KAGUNE IN  ·  R MANIFESTS",
+            out ? 0xFF2A0A10 : 0xFF181012, out ? QuestStyle.RED_DARK : QuestStyle.GREY_DARK, out ? 0xFFFF8A7A : QuestJournalView.MUTED);
+        QuestFrame.chipLeft(c, right, 56, "RC " + Math.round(model.energy()) + " / " + Math.round(model.maxEnergy()), QuestFrame.RED_FILL,
+            QuestStyle.RED_DARK, QuestFrame.VALUE);
+    }
+
+    /** Every step of the Rinkaku by its mastery: its forms (the tails, the half kakujas) and its moves, in words. */
+    public static TreeMap<Integer, String> steps() {
+        TreeMap<Integer, List<String>> parts = new TreeMap<>();
+        for (KaguneForm form : RinkakuForms.forms()) {
+            parts.computeIfAbsent(form.requiredMastery(), k -> new ArrayList<>()).add(form.displayName() + (RinkakuForms.kakuja(form) ? " (half kakuja)" : ""));
+        }
+        String[][] moves = {{"Grapple (J)"}, {"Thy Death (Z)"}, {"Grab (G), Throw (N)"}, {"Crush (H)"}, {"Lift (V)"}, {"Slam (B)"}};
+        int[] needs = {RinkakuUnlocks.GRAPPLE, RinkakuUnlocks.RAPID_STRIKE, RinkakuUnlocks.GRAB, RinkakuUnlocks.CRUSH, RinkakuUnlocks.LIFT,
+            RinkakuUnlocks.SLAM};
+        for (int i = 0; i < needs.length; i++) {
+            parts.computeIfAbsent(needs[i], k -> new ArrayList<>()).add(moves[i][0]);
+        }
+        TreeMap<Integer, String> out = new TreeMap<>();
+        parts.forEach((m, words) -> out.put(m, String.join(", ", words)));
+        return out;
+    }
+
+    // ------------------------------------------------------------------ the forms' tab
+
+    private static QuestFrame.Tip formsTab(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, double time) {
+        String picked = picked(model);
+        int y = QuestFrame.CONTENT_Y;
+        int index = 0;
+        for (KaguneForm form : RinkakuForms.forms()) {
+            QuestFrame.card(c, formCard(model, form), QuestFrame.LIST_X, y, QuestFrame.LIST_WIDTH, picked.equals("pick:" + form.id()), hits, mouseX,
+                mouseY, time, index++);
+            y += QuestFrame.CARD_HEIGHT + QuestFrame.CARD_GAP;
+        }
+        QuestFrame.card(c, passiveCard(model), QuestFrame.LIST_X, y, QuestFrame.LIST_WIDTH, picked.equals("pick:passive"), hits, mouseX, mouseY,
+            time, index);
+        y += QuestFrame.CARD_HEIGHT + QuestFrame.CARD_GAP;
+        y = rc(c, model, QuestFrame.LIST_X, y + 6, QuestFrame.LIST_WIDTH);
+        int ky = QuestFrame.section(c, "KAKUGAN", QuestFrame.LIST_X, y + 4, QuestFrame.LIST_WIDTH);
+        QuestFrame.button(c, "eyes", "ADJUST KAKUGAN", QuestFrame.LIST_X, ky, QuestFrame.LIST_WIDTH, 16, true, false, hits, mouseX, mouseY, time);
+        if (picked.equals("pick:passive")) {
+            passiveDetail(c, model, QuestFrame.DETAIL_X, QuestFrame.CONTENT_Y, DETAIL_WIDTH);
+        } else {
+            formDetail(c, model, pickedForm(model), hits, mouseX, mouseY, QuestFrame.DETAIL_X, QuestFrame.CONTENT_Y, DETAIL_WIDTH, time);
+        }
+        return road(c, model, picked, hits, mouseX, mouseY, QuestFrame.DETAIL_X, ROAD_Y, DETAIL_WIDTH, time);
+    }
+
+    /** What is picked on the forms' tab: the pick as given ("pick:ID", "pick:passive"), a step's form ("step:N"), else the form worn. */
+    static String picked(Model model) {
+        String picked = model.picked();
+        if (picked != null) {
+            if (picked.equals("pick:passive")) {
+                return picked;
+            }
+            if (picked.startsWith("pick:") && KaguneForm.fromId(picked.substring(5)) != null && RinkakuForms.forms().length > 0
+                && java.util.Arrays.asList(RinkakuForms.forms()).contains(KaguneForm.fromId(picked.substring(5)))) {
+                return picked;
+            }
+            if (picked.startsWith("step:")) {
+                try {
+                    return "pick:" + formAt(Integer.parseInt(picked.substring(5))).id();
+                } catch (NumberFormatException wrong) {
+                    // the form worn
+                }
+            }
+        }
+        KaguneForm worn = model.form();
+        return "pick:" + (worn != null && java.util.Arrays.asList(RinkakuForms.forms()).contains(worn) ? worn : RinkakuForms.forms()[0]).id();
+    }
+
+    /** The form shown on the right (the passive's pick shows the worn one). */
+    static KaguneForm pickedForm(Model model) {
+        String picked = picked(model);
+        KaguneForm form = picked.startsWith("pick:") ? KaguneForm.fromId(picked.substring(5)) : null;
+        return form == null || !java.util.Arrays.asList(RinkakuForms.forms()).contains(form) ? RinkakuForms.forms()[0] : form;
+    }
+
+    /** The form a step at {@code mastery} belongs to: the last whose mastery it has reached. */
+    static KaguneForm formAt(int mastery) {
+        KaguneForm at = RinkakuForms.forms()[0];
+        for (KaguneForm form : RinkakuForms.forms()) {
+            if (mastery >= form.requiredMastery()) {
+                at = form;
+            }
+        }
+        return at;
+    }
+
+    /** How a form stands: worn (open), had (done), waiting for its quest (closed), or ahead (locked). */
+    static QuestLog.State state(Model model, KaguneForm form) {
+        if (!form.isUnlocked(model.mastery())) {
+            return QuestLog.State.LOCKED;
+        }
+        if (!model.quests().passes(Gates.rinkaku(form))) {
+            return QuestLog.State.CLOSED;
+        }
+        return form == model.form() ? QuestLog.State.OPEN : QuestLog.State.DONE;
+    }
+
+    /** True if {@code form} may be put on from here: reached, its quest done, not worn now. */
+    static boolean wearable(Model model, KaguneForm form) {
+        return state(model, form) == QuestLog.State.DONE;
     }
 
     /**
-     * 1.0.41: no mutations on the Rinkaku path any more: in their place its one passive, You Thought You'd Get Rid of Me That
-     * Easily?, which its quest alone gives.
+     * A form as a quest card: its glyph (its tails, the centipede legs), its name, a chip (WORN, READY, NEEDS ITS QUEST, "at mastery 500"; a
+     * half kakuja's says so), the bar to it and how far along for the next one.
      */
-    private static void mutations(UiCanvas c, KingTheme t, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y) {
-        c.text("PASSIVE", x, y, t.header(), false);
-        com.hex.kagune.control.quest.Gate gate = com.hex.kagune.control.quest.Gate.RINKAKU_NOT_THAT_EASILY;
-        boolean owned = model.quests().passes(gate);
-        int rowY = y + 20;
-        UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, rowY - 3, 340, 15);
-        if (rect.contains(mouseX, mouseY)) {
-            c.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), t.button());
+    static QuestFrame.Card formCard(Model model, KaguneForm form) {
+        int mastery = model.mastery();
+        QuestLog.State state = state(model, form);
+        KaguneForm[] all = RinkakuForms.forms();
+        int at = java.util.Arrays.asList(all).indexOf(form);
+        int from = at <= 0 ? 0 : all[at - 1].requiredMastery();
+        boolean reached = state != QuestLog.State.LOCKED;
+        boolean next = !reached && mastery >= from;
+        float share = reached ? 1.0F : next ? Math.max(0.0F, Math.min(1.0F, (mastery - from) / (float)Math.max(1, form.requiredMastery() - from))) : 0.0F;
+        boolean half = RinkakuForms.kakuja(form);
+        String chip = switch (state) {
+            case OPEN -> half ? "WORN  ·  HALF KAKUJA" : "WORN";
+            case DONE -> half ? "READY  ·  HALF KAKUJA" : "READY";
+            case CLOSED -> "NEEDS ITS QUEST";
+            default -> "at mastery " + form.requiredMastery();
+        };
+        return new QuestFrame.Card("pick:" + form.id(), form.displayName(), !reached || state == QuestLog.State.CLOSED, chip, QuestStyle.colour(state),
+            QuestStyle.dark(state), next ? Math.round(share * 100.0F) + "%" : "", share, state == QuestLog.State.DONE ? QuestJournalView.BAR_DONE
+            : QuestJournalView.BAR, next && share >= 0.8F, (cc, x, y, size, back, t) -> formGlyph(cc, form, state, x, y, size, back, t));
+    }
+
+    /** The passive as a card: had (its quest done) or waiting for its quest. */
+    static QuestFrame.Card passiveCard(Model model) {
+        boolean owned = model.quests().passes(Gate.RINKAKU_NOT_THAT_EASILY);
+        int ink = owned ? QuestStyle.GREEN : QuestStyle.colour(QuestLog.State.LOCKED);
+        int dark = owned ? QuestStyle.GREEN_DARK : QuestStyle.GREY_DARK;
+        return new QuestFrame.Card("pick:passive", PASSIVE_NAME, !owned, owned ? "PASSIVE  ·  YOURS" : "PASSIVE  ·  NEEDS ITS QUEST", ink, dark,
+            "", -1.0F, 0, false, (cc, x, y, size, back, t) -> {
+                UkakuMenuView.mutationGlyph(cc, UkakuMutation.NOT_THAT_EASILY, owned ? ink : QuestStyle.mix(ink, back, 0.45F), x, y, size, back, t);
+                if (!owned) {
+                    QuestStyle.lock(cc, x + size / 2, y + size / 2, size / 2, QuestStyle.mix(QuestStyle.GOLD, back, 0.2F), back);
+                }
+            });
+    }
+
+    /** His RC: how much, a bar, what happens at none. */
+    private static int rc(UiCanvas c, Model model, int x, int y, int width) {
+        float share = model.maxEnergy() <= 0.0F ? 0.0F : Math.max(0.0F, Math.min(1.0F, model.energy() / model.maxEnergy()));
+        y = QuestFrame.section(c, "RC", Math.round(model.energy()) + " / " + Math.round(model.maxEnergy()), x, y, width);
+        int barY = y + 3;
+        c.batch(() -> {
+            UkakuMenuView.capsule(c, x, barY, width, 3, QuestJournalView.BAR_BACK);
+            UkakuMenuView.capsule(c, x, barY, Math.max(6, Math.round(width * share)), 3, QuestJournalView.BAR);
+        });
+        c.text("At 0 the kagune goes in for 10 s", x, y + 10, QuestFrame.MUTED, false);
+        return y + 22;
+    }
+
+    /**
+     * A form, as the journal shows a quest: its name large, its mastery a chip; where he stands with it; its story; the form itself in a
+     * framed tile beside its limbs, speed and control, and its moves as a checklist; WEAR THIS FORM while it may be put on, a stamp when worn,
+     * else what it waits for.
+     */
+    private static void formDetail(UiCanvas c, Model model, KaguneForm form, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY,
+                                   int x, int y, int width, double time) {
+        int mastery = model.mastery();
+        QuestLog.State state = state(model, form);
+        c.push();
+        c.translate(x, y);
+        c.scale(1.25F);
+        c.text(c.fit(form.displayName(), Math.round((width - 110) / 1.25F)), 0, 0, QuestStyle.WHITE, true);
+        c.pop();
+        String chip = form.requiredMastery() == 0 ? "From the start" : "Mastery " + form.requiredMastery();
+        QuestStyle.chip(c, x + width - c.width(chip) - 12, y, chip, 0xFF1E0A0E, QuestStyle.RED_DARK, QuestFrame.MUTED);
+        int rowY = y + 16;
+        Gate gate = Gates.rinkaku(form);
+        String standing = switch (state) {
+            case OPEN -> "Worn now" + (model.active() ? ", out" : "");
+            case DONE -> "Yours: wear it below";
+            case CLOSED -> "Opens with its quest: " + QuestBook.openersText(gate);
+            default -> "Ahead of you: at mastery " + form.requiredMastery();
+        };
+        c.text(c.fit(standing, width), x, rowY, state == QuestLog.State.OPEN ? QuestJournalView.OPEN : state == QuestLog.State.DONE
+            ? QuestJournalView.DONE : QuestFrame.MUTED, false);
+        rowY += 13;
+        rowY = QuestFrame.story(c, story(form), x, rowY, width) + 8;
+        preview(c, model, form, state, x, rowY, TILE_WIDTH, TILE_HEIGHT, time);
+        int rx = x + TILE_WIDTH + 12;
+        int rw = width - TILE_WIDTH - 12;
+        int ink = state == QuestLog.State.LOCKED ? QuestFrame.MUTED : QuestFrame.VALUE;
+        int ry = QuestFrame.section(c, "THE ORGAN", rx, rowY, rw);
+        QuestFrame.row(c, "Limbs", limbs(form), rx, ry, 58, rw, ink);
+        int speed = RinkakuForms.speed(form);
+        QuestFrame.row(c, "Speed", speed < 0 ? "his own" : "Speed " + UkakuMenuView.roman(speed + 1) + ", kagune out", rx, ry + 12, 58, rw, ink);
+        QuestFrame.row(c, "Control", RinkakuForms.autonomous(form) ? "its legs fight on their own" : RinkakuForms.kakuja(form) ? "yours; K tap brings it"
+            : "yours", rx, ry + 24, 58, rw, ink);
+        ry += 42;
+        List<int[]> moves = new ArrayList<>();
+        KaguneForm[] all = RinkakuForms.forms();
+        int at = java.util.Arrays.asList(all).indexOf(form);
+        int until = at + 1 < all.length ? all[at + 1].requiredMastery() : Integer.MAX_VALUE;
+        TreeMap<Integer, String> steps = steps();
+        int got = 0;
+        for (Map.Entry<Integer, String> step : steps.entrySet()) {
+            if (step.getKey() >= form.requiredMastery() && step.getKey() < until) {
+                moves.add(new int[] {step.getKey()});
+                got += mastery >= step.getKey() ? 1 : 0;
+            }
         }
-        c.fill(x + 4, rowY + 1, x + 10, rowY + 7, owned ? t.owned() : t.locked());
-        c.text(PASSIVE_NAME, x + 16, rowY, owned ? t.value() : t.faint(), false);
-        hits.put("passive", rect);
-        rowY += 18;
-        for (String line : PASSIVE_TEXT) {
-            c.text(line, x + 16, rowY, owned ? t.trait() : t.faint(), false);
+        ry = QuestFrame.section(c, "STEPS", got + " / " + moves.size(), rx, ry, rw);
+        int nextStep = steps.ceilingKey(mastery + 1) == null ? -1 : steps.ceilingKey(mastery + 1);
+        for (int[] move : moves) {
+            QuestFrame.checkRow(c, mastery >= move[0], move[0] != nextStep && mastery < move[0], steps.get(move[0]), String.valueOf(move[0]), rx, ry, rw);
+            ry += 14;
+        }
+        rowY = Math.max(rowY + TILE_HEIGHT, ry) + 8;
+        if (state == QuestLog.State.OPEN) {
+            QuestFrame.stamp(c, x, rowY, "WORN", QuestStyle.RED, QuestStyle.RED_DARK);
+        } else {
+            String label = switch (state) {
+                case DONE -> "WEAR THIS FORM";
+                case CLOSED -> "NEEDS ITS QUEST";
+                default -> "AT MASTERY " + form.requiredMastery();
+            };
+            QuestFrame.button(c, "form:" + form.id(), label, x, rowY, 200, 22, state == QuestLog.State.DONE, false, hits, mouseX, mouseY, time);
+        }
+    }
+
+    /** A form's limbs in words. */
+    static String limbs(KaguneForm form) {
+        if (form.hasCentipedeLegs()) {
+            int tentacles = form.limbCount() - 2;
+            return tentacles > 0 ? "2 centipede legs, " + tentacles + " tentacles" : "2 centipede legs";
+        }
+        return form.limbCount() + (form.limbCount() == 1 ? " tail" : " tails");
+    }
+
+    /** What each form is, told as a quest's story. */
+    static String story(KaguneForm form) {
+        if (RinkakuForms.autonomous(form)) {
+            return "Your first half kakuja: two centipede legs out of your back that hunt and fight on their own while you run. A tap of K brings "
+                + "out the strongest you have.";
+        }
+        if (RinkakuForms.kakuja(form)) {
+            return "Your second half kakuja: the centipede legs and four tentacles together, all yours to command. Right click dashes (S held: "
+                + "back).";
+        }
+        return switch (form.limbCount()) {
+            case 1 -> "One tail out of your lower back, raw and hungry. It strikes, grapples and throws what it takes.";
+            case 2 -> "A second tail: two to strike with, to grab and to throw with, to crush what they hold.";
+            default -> "Four tails: the full Rinkaku, crushing, lifting and slamming with all of them at once.";
+        };
+    }
+
+    /** The form itself in a framed tile (its edge beating while worn): its tails, its centipede legs; veiled with a padlock when ahead. */
+    private static void preview(UiCanvas c, Model model, KaguneForm form, QuestLog.State state, int x, int y, int width, int height, double time) {
+        int edge = state == QuestLog.State.OPEN ? QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, 0.5F + 0.5F * (float)Math.sin(time * 2.2))
+            : state == QuestLog.State.DONE ? QuestStyle.GREEN_DARK : QuestStyle.TILE_EDGE;
+        c.batch(() -> {
+            QuestStyle.box(c, x, y, width, height, QuestStyle.TILE, edge);
+            c.gradient(x + 2, y + 2, x + width - 2, y + height - 2, 0xFF12060A, 0xFF070305);
+        });
+        PathChoiceLayout.Box box = new PathChoiceLayout.Box(x + 8, y + 6, width - 16, height - 30);
+        boolean locked = state == QuestLog.State.LOCKED || state == QuestLog.State.CLOSED;
+        int tails = form.hasCentipedeLegs() ? Math.max(0, form.limbCount() - 2) : form.limbCount();
+        List<PathSilhouette.Mark> marks = PathSilhouette.rinkakuForm(box, time, locked ? 0.0F : 1.0F, tails, form.hasCentipedeLegs(), 0x0C080E);
+        c.batch(() -> {
+            for (PathSilhouette.Mark mark : marks) {
+                UkakuMenuView.draw(c, mark);
+            }
+            if (locked) {
+                c.fill(x + 2, y + 2, x + width - 2, y + height - 2, 0xA0080306);
+                QuestStyle.lock(c, x + width / 2 - 13, y + (height - 26) / 2 - 12, 26, QuestStyle.mix(QuestStyle.GOLD, QuestStyle.TILE, 0.2F), 0xFF0A0405);
+            }
+        });
+        c.centered(limbs(form), x + width / 2, y + height - 15, locked ? QuestFrame.FAINT : 0xFFB0767A, false);
+    }
+
+    /** The passive, as a quest: its name, what it does, what it changes, and its quest (or a stamp once it is his). */
+    private static void passiveDetail(UiCanvas c, Model model, int x, int y, int width) {
+        Gate gate = Gate.RINKAKU_NOT_THAT_EASILY;
+        boolean owned = model.quests().passes(gate);
+        c.push();
+        c.translate(x, y);
+        c.scale(1.25F);
+        c.text(c.fit(PASSIVE_NAME, Math.round((width - 80) / 1.25F)), 0, 0, QuestStyle.WHITE, true);
+        c.pop();
+        QuestStyle.chip(c, x + width - c.width("Passive") - 12, y, "Passive", 0xFF1E0A0E, QuestStyle.RED_DARK, QuestFrame.MUTED);
+        int rowY = y + 16;
+        c.text(c.fit(owned ? "Yours for good: its quest is done" : "Opens with its quest: " + QuestBook.openersText(gate), width), x, rowY,
+            owned ? QuestJournalView.DONE : QuestJournalView.OPEN, false);
+        rowY += 13;
+        rowY = QuestFrame.story(c, String.join(" ", PASSIVE_TEXT), x, rowY, width) + 10;
+        rowY = QuestFrame.section(c, "WITH IT", "now, then with it", x, rowY, width);
+        String[][] rows = {{"A killing blow", "you die", "you're blown apart"}, {"Then", "you respawn", "all forget you; you knit back"},
+            {"How often", "never", "once every 5 minutes"}};
+        int after = owned ? QuestJournalView.DONE : QuestFrame.VALUE;
+        for (String[] r : rows) {
+            c.text(r[0], x, rowY, QuestFrame.MUTED, false);
+            c.text(r[1], x + 136, rowY, QuestFrame.FAINT, false);
+            int ax = x + 226;
+            int ay = rowY + 4;
+            c.batch(() -> {
+                QuestStyle.line(c, ax, ay, ax + 12, ay, 1.6F, after);
+                QuestStyle.line(c, ax + 8, ay - 3, ax + 12, ay, 1.6F, after);
+                QuestStyle.line(c, ax + 8, ay + 3, ax + 12, ay, 1.6F, after);
+            });
+            c.text(c.fit(r[2], width - 246), x + 246, rowY, after, false);
             rowY += 13;
         }
-        rowY += 6;
-        c.text(owned ? "yours" : "quest: " + com.hex.kagune.control.quest.QuestBook.openersText(gate), x + 16, rowY, owned ? t.owned() : t.label(), false);
+        rowY += 10;
+        if (owned) {
+            QuestFrame.stamp(c, x, rowY, "YOURS", QuestStyle.GREEN, QuestStyle.GREEN_DARK);
+        } else {
+            int ly = rowY;
+            c.batch(() -> QuestStyle.lock(c, x, ly, 12, QuestStyle.GOLD, QuestJournalView.INNER));
+            c.text(c.fit("Waits for its quest: " + QuestBook.openersText(gate), width - 20), x + 17, rowY + 3, QuestFrame.FAINT, false);
+        }
+    }
+
+    /** Every step of the Rinkaku on the quest road: reached ticked, the next beating, the rest locked; the picked form's steps ringed. */
+    private static QuestFrame.Tip road(UiCanvas c, Model model, String picked, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY,
+                                       int x, int y, int width, double time) {
+        int mastery = model.mastery();
+        y = QuestFrame.section(c, "YOUR ROAD", "a step picks its form", x, y, width);
+        TreeMap<Integer, String> steps = steps();
+        Integer next = steps.ceilingKey(mastery + 1);
+        KaguneForm shown = picked.equals("pick:passive") ? null : pickedForm(model);
+        List<QuestFrame.Node> nodes = new ArrayList<>();
+        int reached = -1;
+        int i = 0;
+        for (Map.Entry<Integer, String> step : steps.entrySet()) {
+            boolean got = mastery >= step.getKey();
+            reached = got ? i : reached;
+            QuestLog.State state = got ? QuestLog.State.DONE : next != null && step.getKey().equals(next) ? QuestLog.State.OPEN : QuestLog.State.LOCKED;
+            nodes.add(new QuestFrame.Node("step:" + step.getKey(), String.valueOf(step.getKey()), step.getValue() + "  ·  "
+                + (got ? "reached" : "at mastery " + step.getKey()), state, shown != null && formAt(step.getKey()) == shown));
+            i++;
+        }
+        return QuestFrame.road(c, nodes, reached, hits, mouseX, mouseY, x, y, width, 64, time);
+    }
+
+    // ------------------------------------------------------------------ the final kakuja's tab
+
+    private static QuestFrame.Tip kingTab(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, double time) {
+        KingForm picked = pickedKing(model);
+        int y = QuestFrame.CONTENT_Y;
+        int index = 0;
+        for (KingForm form : new KingForm[] {KingForm.WAR, KingForm.PEACE}) {
+            QuestFrame.card(c, kingCard(model, form), QuestFrame.LIST_X, y, QuestFrame.LIST_WIDTH, form == picked, hits, mouseX, mouseY, time, index++);
+            y += QuestFrame.CARD_HEIGHT + QuestFrame.CARD_GAP;
+        }
+        int ky = QuestFrame.section(c, "K", QuestFrame.LIST_X, y + 6, QuestFrame.LIST_WIDTH);
+        KingForm chosen = model.king().chosen();
+        QuestFrame.row(c, "K tap", "Strongest half kakuja", QuestFrame.LIST_X, ky, 52, QuestFrame.LIST_WIDTH, QuestFrame.VALUE);
+        QuestFrame.row(c, "K hold", chosen == KingForm.NONE ? "Final kakuja (after the Dragon)" : chosen.displayName() + ", the final kakuja",
+            QuestFrame.LIST_X, ky + 12, 52, QuestFrame.LIST_WIDTH, chosen == KingForm.NONE ? QuestFrame.MUTED : QuestFrame.VALUE);
+        QuestFrame.row(c, "Half", "Centipede (750), Full Kakuja (1000)", QuestFrame.LIST_X, ky + 24, 52, QuestFrame.LIST_WIDTH, QuestFrame.VALUE);
+        c.text(c.fit("Full Kakuja, right click: dash (S held: back)", QuestFrame.LIST_WIDTH), QuestFrame.LIST_X, ky + 40, QuestFrame.MUTED, false);
+        kingDetail(c, model, picked, hits, mouseX, mouseY, QuestFrame.DETAIL_X, QuestFrame.CONTENT_Y, DETAIL_WIDTH, time);
+        return kingRoad(c, model, hits, mouseX, mouseY, QuestFrame.DETAIL_X, ROAD_Y, DETAIL_WIDTH, time);
+    }
+
+    /** The final kakuja shown: the one picked, else the one chosen, else War. */
+    static KingForm pickedKing(Model model) {
+        if ("pick:peace".equals(model.picked())) {
+            return KingForm.PEACE;
+        }
+        if ("pick:war".equals(model.picked())) {
+            return KingForm.WAR;
+        }
+        return model.king().chosen() == KingForm.PEACE ? KingForm.PEACE : KingForm.WAR;
+    }
+
+    /** How War or Peace stands for him: worn, chosen, to choose, forsaken, sealed, or waiting for the Dragon. */
+    enum KingState {
+        WORN, CHOSEN, CHOOSE, FORSAKEN, SEALED, DRAGON
+    }
+
+    static KingState kingState(Model model, KingForm form) {
+        King king = model.king();
+        if (!king.awake()) {
+            return KingState.DRAGON;
+        }
+        if (king.chosen() == form) {
+            return king.worn() == form ? KingState.WORN : KingState.CHOSEN;
+        }
+        if (!form.built()) {
+            return KingState.SEALED;
+        }
+        return king.chosen() == KingForm.NONE ? KingState.CHOOSE : KingState.FORSAKEN;
+    }
+
+    /** War or Peace as a quest card: its mark, its name, a chip; one waiting to be chosen glows gold. */
+    static QuestFrame.Card kingCard(Model model, KingForm form) {
+        KingState state = kingState(model, form);
+        int ink = switch (state) {
+            case WORN -> QuestStyle.RED;
+            case CHOSEN -> QuestStyle.GREEN;
+            case CHOOSE -> QuestStyle.GOLD;
+            default -> QuestStyle.colour(QuestLog.State.LOCKED);
+        };
+        int dark = switch (state) {
+            case WORN -> QuestStyle.RED_DARK;
+            case CHOSEN -> QuestStyle.GREEN_DARK;
+            case CHOOSE -> QuestStyle.GOLD_DARK;
+            default -> QuestStyle.GREY_DARK;
+        };
+        String chip = switch (state) {
+            case WORN -> "WORN  ·  HOLD K";
+            case CHOSEN -> "YOURS  ·  HOLD K";
+            case CHOOSE -> "CHOOSE  ·  ONCE";
+            case FORSAKEN -> "FORSAKEN";
+            case SEALED -> "SEALED";
+            case DRAGON -> "AFTER THE DRAGON";
+        };
+        boolean dim = state == KingState.FORSAKEN || state == KingState.SEALED || state == KingState.DRAGON;
+        String title = form == KingForm.WAR ? "War  ·  the one-eyed king" : "Peace  ·  Rinkaku :re";
+        return new QuestFrame.Card("pick:" + form.id(), title, dim, chip, ink, dark, "", -1.0F, 0, state == KingState.CHOOSE,
+            (cc, x, y, size, back, t) -> {
+                kingGlyph(cc, form, dim ? QuestStyle.mix(ink, back, 0.45F) : ink, x, y, size, back, t);
+                if (state == KingState.DRAGON || state == KingState.SEALED) {
+                    QuestStyle.lock(cc, x + size / 2, y + size / 2, size / 2, QuestStyle.mix(QuestStyle.GOLD, back, 0.2F), back);
+                }
+            });
+    }
+
+    /** War's glyph an eye (one white point in the black), Peace's a cross blade. */
+    static void kingGlyph(UiCanvas c, KingForm form, int ink, int x, int y, int size, int back, double time) {
+        int cx = x + size / 2;
+        int cy = y + size / 2;
+        if (form == KingForm.WAR) {
+            QuestStyle.circle(c, cx, cy, Math.round(size * 0.42F), ink);
+            QuestStyle.circle(c, cx, cy, Math.round(size * 0.3F), 0xFF050203);
+            QuestStyle.circle(c, cx, cy, Math.max(1, Math.round(size * 0.1F)), 0xFFFFFFFF);
+            return;
+        }
+        double turn = Math.toRadians(30.0) + time * 0.3;
+        for (int k = 0; k < 4; k++) {
+            double a = turn + k * Math.PI / 2.0;
+            float length = size * (k % 2 == 0 ? 0.46F : 0.28F);
+            QuestStyle.line(c, cx, cy, cx + (float)Math.cos(a) * length, cy + (float)Math.sin(a) * length, Math.max(1.5F, size * 0.14F), ink);
+        }
+        QuestStyle.circle(c, cx, cy, Math.max(1, Math.round(size * 0.12F)), 0xFFFF2234);
+    }
+
+    /**
+     * War or Peace, as a quest: its name, its title, where he stands with it, its story; its emblem in a framed tile beside its card's rows;
+     * a button to the choice while it may be made, a stamp once it is his, else what it waits for.
+     */
+    private static void kingDetail(UiCanvas c, Model model, KingForm form, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY,
+                                   int x, int y, int width, double time) {
+        KingState state = kingState(model, form);
+        c.push();
+        c.translate(x, y);
+        c.scale(1.25F);
+        c.text(form == KingForm.WAR ? "War" : "Peace", 0, 0, QuestStyle.WHITE, true);
+        c.pop();
+        String chip = form == KingForm.WAR ? "The one-eyed king" : "Rinkaku :re";
+        QuestStyle.chip(c, x + width - c.width(chip) - 12, y, chip, 0xFF1E0A0E, QuestStyle.RED_DARK, QuestFrame.MUTED);
+        int rowY = y + 16;
+        String standing = switch (state) {
+            case WORN -> "Yours, worn now: hold K to take it off";
+            case CHOSEN -> "Yours for good: hold K to let it out";
+            case CHOOSE -> "Yours to choose, once and for good";
+            case FORSAKEN -> "Forsaken: you chose " + model.king().chosen().displayName();
+            case SEALED -> "Sealed: not ready yet. It is coming";
+            case DRAGON -> "Waits for the Dragon (Kakuja V2) to go through you";
+        };
+        c.text(c.fit(standing, width), x, rowY, state == KingState.WORN || state == KingState.CHOSEN ? QuestJournalView.DONE
+            : state == KingState.CHOOSE ? QuestJournalView.OPEN : QuestFrame.MUTED, false);
+        rowY += 13;
+        String story = form == KingForm.WAR ? "The black king: a torn cape, one eye burning white, six tails that hunt and a Black Sun. He takes "
+            + "what is in his way." : "The white king: armour like porcelain, kagune wings, six cross blades on his arms. Graceful, and long in "
+            + "his blows.";
+        rowY = QuestFrame.story(c, story, x, rowY, width) + 8;
+        boolean dim = state == KingState.FORSAKEN || state == KingState.SEALED || state == KingState.DRAGON;
+        int tileY = rowY;
+        int edge = state == KingState.WORN ? QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, 0.5F + 0.5F * (float)Math.sin(time * 2.2))
+            : state == KingState.CHOSEN ? QuestStyle.GREEN_DARK : state == KingState.CHOOSE ? QuestStyle.GOLD_DARK : QuestStyle.TILE_EDGE;
+        c.batch(() -> {
+            QuestStyle.box(c, x, tileY, TILE_WIDTH, TILE_HEIGHT, QuestStyle.TILE, edge);
+            c.gradient(x + 2, tileY + 2, x + TILE_WIDTH - 2, tileY + TILE_HEIGHT - 2, 0xFF12060A, 0xFF070305);
+        });
+        if (form == KingForm.WAR) {
+            KingChoiceView.warEye(c, x + TILE_WIDTH / 2, tileY + TILE_HEIGHT / 2 - 6, time);
+        } else {
+            KingChoiceView.peaceCross(c, x + TILE_WIDTH / 2, tileY + TILE_HEIGHT / 2 - 6, false, time);
+        }
+        if (dim) {
+            c.batch(() -> {
+                c.fill(x + 2, tileY + 2, x + TILE_WIDTH - 2, tileY + TILE_HEIGHT - 2, 0x90080306);
+                if (state != KingState.FORSAKEN) {
+                    QuestStyle.lock(c, x + TILE_WIDTH / 2 - 13, tileY + TILE_HEIGHT / 2 - 18, 26, QuestStyle.mix(QuestStyle.GOLD, QuestStyle.TILE, 0.2F),
+                        0xFF0A0405);
+                }
+            });
+        }
+        c.centered(form == KingForm.WAR ? "one eye" : "the cross blade", x + TILE_WIDTH / 2, tileY + TILE_HEIGHT - 15, dim ? QuestFrame.FAINT
+            : 0xFFB0767A, false);
+        int rx = x + TILE_WIDTH + 12;
+        int rw = width - TILE_WIDTH - 12;
+        int ry = QuestFrame.section(c, "THE KAKUJA", rx, rowY, rw);
+        for (String[] row : form == KingForm.WAR ? KingChoiceView.WAR_ROWS : KingChoiceView.PEACE_ROWS) {
+            c.text(row[0], rx, ry, QuestFrame.MUTED, false);
+            for (String line : UkakuMenuView.wrap(c, row[1], rw - 70)) {
+                c.text(line, rx + 70, ry, dim ? QuestFrame.MUTED : QuestFrame.VALUE, false);
+                ry += 12;
+            }
+            ry += 1;
+        }
+        rowY = Math.max(rowY + TILE_HEIGHT, ry) + 8;
+        if (state == KingState.WORN || state == KingState.CHOSEN) {
+            QuestFrame.stamp(c, x, rowY, "YOURS", QuestStyle.GREEN, QuestStyle.GREEN_DARK);
+        } else {
+            String label = switch (state) {
+                case CHOOSE -> "CHOOSE ON ITS CARDS";
+                case FORSAKEN -> "FORSAKEN";
+                case SEALED -> "SEALED";
+                default -> "AFTER THE DRAGON";
+            };
+            QuestFrame.button(c, "king:" + form.id(), label, x, rowY, 200, 22, state == KingState.CHOOSE, true, hits, mouseX, mouseY, time);
+            if (state == KingState.CHOOSE) {
+                c.text("once, and never again", x + 212, rowY + 8, QuestStyle.GOLD, false);
+            }
+        }
+    }
+
+    /** The road to the final kakuja: the Full Kakuja at 1000, the Dragon through him, War or Peace chosen. */
+    private static QuestFrame.Tip kingRoad(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x,
+                                           int y, int width, double time) {
+        y = QuestFrame.section(c, "TO THE FINAL KAKUJA", x, y, width);
+        King king = model.king();
+        boolean full = RinkakuForms.finalKakuja().isUnlocked(model.mastery());
+        boolean dragon = king.awake();
+        boolean chose = king.chosen() != KingForm.NONE;
+        boolean[] done = {full, dragon, chose};
+        String[][] words = {{"1000", "The Full Kakuja, at mastery 1000"}, {"Dragon", "The Dragon (Kakuja V2) through you"},
+            {"Choose", "War or Peace, once and for good"}};
+        List<QuestFrame.Node> nodes = new ArrayList<>();
+        int reached = -1;
+        boolean nextSet = false;
+        for (int i = 0; i < 3; i++) {
+            QuestLog.State state = done[i] ? QuestLog.State.DONE : !nextSet ? QuestLog.State.OPEN : QuestLog.State.LOCKED;
+            if (!done[i]) {
+                nextSet = true;
+            } else {
+                reached = i;
+            }
+            nodes.add(new QuestFrame.Node("road:" + i, words[i][0], words[i][1] + "  ·  " + (done[i] ? "done" : "ahead"), state, false));
+        }
+        return QuestFrame.road(c, nodes, reached, hits, mouseX, mouseY, x, y, width, 180, time);
+    }
+
+    // ------------------------------------------------------------------ glyphs
+
+    /** A form's glyph in its tile: its tails (one, two, four) curling up, the centipede legs as two thick segmented arcs. */
+    static void formGlyph(UiCanvas c, KaguneForm form, QuestLog.State state, int x, int y, int size, int back, double time) {
+        int ink = QuestStyle.colour(state);
+        int dim = state == QuestLog.State.LOCKED || state == QuestLog.State.CLOSED ? QuestStyle.mix(ink, back, 0.5F) : ink;
+        float s = size;
+        float sway = state == QuestLog.State.OPEN ? (float)Math.sin(time * 2.4) * 0.05F : 0.0F;
+        float rx = x + s * 0.5F;
+        float ry = y + s * 0.92F;
+        int tails = form.hasCentipedeLegs() ? Math.max(0, form.limbCount() - 2) : form.limbCount();
+        if (form.hasCentipedeLegs()) {
+            for (int side = -1; side <= 1; side += 2) {
+                float a = (float)Math.toRadians(side < 0 ? -118.0 : -62.0) + sway * side;
+                UkakuMenuView.tentacle(c, rx, ry, a, s * 0.78F, -side * 0.5F, s * 0.2F, dim);
+                // its segments: a notch across it every few steps
+                float px = rx;
+                float py = ry;
+                for (int k = 1; k <= 3; k++) {
+                    float t = k / 4.0F;
+                    float aa = a - side * 0.5F * t * t;
+                    px += (float)Math.cos(aa) * s * 0.19F;
+                    py += (float)Math.sin(aa) * s * 0.19F;
+                    QuestStyle.line(c, px - (float)Math.sin(aa) * s * 0.1F, py + (float)Math.cos(aa) * s * 0.1F, px + (float)Math.sin(aa) * s * 0.1F,
+                        py - (float)Math.cos(aa) * s * 0.1F, 1.0F, back);
+                }
+            }
+        }
+        float[] angles = tails <= 1 ? new float[] {-60.0F} : tails == 2 ? new float[] {-125.0F, -55.0F}
+            : new float[] {-150.0F, -112.0F, -68.0F, -30.0F};
+        for (int i = 0; i < tails; i++) {
+            float a = (float)Math.toRadians(angles[i]) + sway * (i % 2 == 0 ? 1 : -1);
+            UkakuMenuView.tentacle(c, rx, ry - (form.hasCentipedeLegs() ? s * 0.1F : 0.0F), a, s * (form.hasCentipedeLegs() ? 0.5F : 0.74F),
+                (angles[i] < -90.0F ? -1 : 1) * 0.8F, s * (form.hasCentipedeLegs() ? 0.12F : tails == 1 ? 0.22F : 0.17F), dim);
+        }
+        if (state == QuestLog.State.LOCKED || state == QuestLog.State.CLOSED) {
+            QuestStyle.lock(c, x + size / 2, y + size / 2, size / 2, QuestStyle.mix(QuestStyle.GOLD, back, 0.2F), back);
+        }
     }
 
     /** 1.0.41: the passive's name and what it does, as the menu shows them. */
     static final String PASSIVE_NAME = "You Thought You'd Get Rid of Me That Easily?";
     static final String[] PASSIVE_TEXT = {"Every 5 min, death blows you apart and", "everything forgets you; you knit back",
         "together, slowly, and stand up whole."};
-
-    private static void button(UiCanvas c, KingTheme t, Map<String, UkakuMenuView.Rect> hits, String key, String label, int x, int y, int width,
-                               double mouseX, double mouseY, double time) {
-        UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, y, width, 20);
-        boolean hover = rect.contains(mouseX, mouseY);
-        int pulse = hover || t.feathers() ? 0 : (int)(10 * (0.5 + 0.5 * Math.sin(time * 2.4)));
-        c.fill(x - 1, y - 1, x + width + 1, y + 21, t.panelEdge());
-        c.fill(x, y, x + width, y + 20, hover ? t.buttonHover() : t.button() + (pulse << 16));
-        c.centered(label, x + width / 2, y + 6, hover ? t.title() : t.value(), !t.feathers());
-        hits.put(key, rect);
-    }
-
-    private static void row(UiCanvas c, KingTheme t, String label, String value, int x, int y) {
-        c.text(label, x, y, t.label(), false);
-        c.text(value, x + 90, y, t.value(), false);
-    }
-
-    private static String nextForm(int mastery) {
-        for (KaguneForm form : RinkakuForms.forms()) {
-            if (!form.isUnlocked(mastery)) {
-                return "Next: " + form.displayName() + " at " + form.requiredMastery();
-            }
-        }
-        return "Every form is yours";
-    }
-
-    private static String tooltip(Map<String, UkakuMenuView.Rect> hits, double x, double y, Model model) {
-        for (Map.Entry<String, UkakuMenuView.Rect> entry : hits.entrySet()) {
-            if (!entry.getValue().contains(x, y)) {
-                continue;
-            }
-            String key = entry.getKey();
-            if (key.equals("passive")) {
-                return "Graft's revive: done its quest, the Rinkaku path's for good";
-            }
-            if (key.startsWith("form:")) {
-                KaguneForm form = KaguneForm.fromId(key.substring(5));
-                if (form == null) {
-                    return null;
-                }
-                if (RinkakuForms.kakuja(form)) {
-                    return form.isUnlocked(model.mastery()) ? form.displayName() + ": a half kakuja (K tap brings out the strongest)"
-                        : "A half kakuja: unlocks at mastery " + form.requiredMastery();
-                }
-                return form.isUnlocked(model.mastery()) ? form.displayName() + ": " + form.limbCount() + " limbs" : "Unlocks at mastery " + form.requiredMastery();
-            }
-            if (key.equals("eyes")) {
-                return "Place the kakugan on your skin's eyes";
-            }
-            if (key.startsWith("king:")) {
-                KingForm form = KingForm.byId(key.substring(5));
-                King king = model.king();
-                if (!king.awake()) {
-                    return "The final kakuja: after the Dragon (Kakuja V2)";
-                }
-                if (king.chosen() == KingForm.NONE) {
-                    return form.built() ? "Click to choose War or Peace, once and for good" : form.displayName() + ": not yet. It is coming";
-                }
-                return king.chosen() == form ? form.displayName() + ": hold K to let it out, and again to take it off" : "You chose " + king.chosen().displayName();
-            }
-        }
-        return null;
-    }
 }

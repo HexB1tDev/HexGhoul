@@ -207,6 +207,75 @@ public class UiPreview {
     }
 
     /**
+     * 4.1.58: the Rinkaku menu as the game draws it at 1080p, GUI scale 2: the quest menu's box over a stand-in daylit scene; the mouse on
+     * the first area whose name starts with {@code over} (null: at {@code mx, my}).
+     */
+    static void rinkakuMenu(File out, com.hex.kagune.control.client.RinkakuMenuView.Model model, String over, double mx, double my) throws Exception {
+        int w = 960;
+        int h = 540;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        for (int i = 0; i < w; i += 40) {
+            c.fill(i, h * 6 / 10 - 20 - (i * 37 % 60), i + 40, h * 6 / 10, 0xFF4E8834);
+        }
+        int bw = com.hex.kagune.control.client.RinkakuMenuView.BOX_WIDTH;
+        int bh = com.hex.kagune.control.client.RinkakuMenuView.BOX_HEIGHT;
+        double time = 1.3;
+        if (over != null) {
+            BufferedImage scratch = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for (java.util.Map.Entry<String, UkakuMenuView.Rect> hit : com.hex.kagune.control.client.RinkakuMenuView.draw(new ImageCanvas(graphics(scratch, 1),
+                false), model, -1, -1, time).entrySet()) {
+                if (hit.getKey().startsWith(over)) {
+                    mx = hit.getValue().x() + hit.getValue().width() * 0.6;
+                    my = hit.getValue().y() + hit.getValue().height() * 0.5;
+                    break;
+                }
+            }
+        }
+        c.push();
+        c.translate((w - bw) / 2.0F, (h - bh) / 2.0F);
+        com.hex.kagune.control.client.RinkakuMenuView.draw(c, model, mx, my, time);
+        c.pop();
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
+    /** 4.1.58: the Rinkaku menu: its forms (one to wear under the mouse, a road step, one ahead), its passive, the final kakuja's states. */
+    static void rinkaku(File dir) throws Exception {
+        com.hex.kagune.gameplay.KaguneForm quad = com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD;
+        com.hex.kagune.gameplay.KaguneForm centipede = com.hex.kagune.gameplay.KaguneForm.CENTIPEDE;
+        com.hex.kagune.gameplay.KaguneForm full = com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA;
+        com.hex.kagune.control.client.QuestLocks all = com.hex.kagune.control.client.QuestLocks.ALL;
+        java.util.Set<com.hex.kagune.control.quest.Gate> open = java.util.EnumSet.noneOf(com.hex.kagune.control.quest.Gate.class);
+        com.hex.kagune.control.client.QuestLocks none = new com.hex.kagune.control.client.QuestLocks(open::contains, 0);
+        com.hex.kagune.control.king.KingForm no = com.hex.kagune.control.king.KingForm.NONE;
+        com.hex.kagune.control.king.KingForm war = com.hex.kagune.control.king.KingForm.WAR;
+        com.hex.kagune.control.king.KingForm peace = com.hex.kagune.control.king.KingForm.PEACE;
+        com.hex.kagune.control.client.RinkakuMenuView.Tab forms = com.hex.kagune.control.client.RinkakuMenuView.Tab.FORMS;
+        com.hex.kagune.control.client.RinkakuMenuView.Tab king = com.hex.kagune.control.client.RinkakuMenuView.Tab.KING;
+        com.hex.kagune.control.client.RinkakuMenuView.King asleep = com.hex.kagune.control.client.RinkakuMenuView.King.ASLEEP;
+        com.hex.kagune.control.client.RinkakuMenuView.King awake = new com.hex.kagune.control.client.RinkakuMenuView.King(true, no, no, no);
+        rinkakuMenu(new File(dir, "rinkaku-forms-wear.png"), new com.hex.kagune.control.client.RinkakuMenuView.Model(600, true, quad, 64.0F, 100.0F, 0L,
+            null, all, asleep, forms, "pick:dual"), "form:", 0, 0);
+        rinkakuMenu(new File(dir, "rinkaku-forms-worn.png"), new com.hex.kagune.control.client.RinkakuMenuView.Model(800, true, centipede, 82.0F, 100.0F,
+            0L, null, all, asleep, forms, null), "step:1000", 0, 0);
+        rinkakuMenu(new File(dir, "rinkaku-forms-ahead.png"), new com.hex.kagune.control.client.RinkakuMenuView.Model(300, false,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL, 100.0F, 100.0F, 0L, null, none, asleep, forms, "pick:full"), "step:350", 0, 0);
+        rinkakuMenu(new File(dir, "rinkaku-passive.png"), new com.hex.kagune.control.client.RinkakuMenuView.Model(600, true, quad, 64.0F, 100.0F, 0L,
+            null, none, asleep, forms, "pick:passive"), null, 0, 0);
+        rinkakuMenu(new File(dir, "rinkaku-king-choose.png"), new com.hex.kagune.control.client.RinkakuMenuView.Model(1000, true, full, 70.0F, 100.0F,
+            0L, null, all, awake, king, null), "king:", 0, 0);
+        rinkakuMenu(new File(dir, "rinkaku-king-dragon.png"), new com.hex.kagune.control.client.RinkakuMenuView.Model(1000, true, full, 70.0F, 100.0F,
+            0L, null, all, asleep, king, "pick:peace"), null, 0, 0);
+        rinkakuMenu(new File(dir, "rinkaku-king-war.png"), new com.hex.kagune.control.client.RinkakuMenuView.Model(1000, true, full, 70.0F, 100.0F, 0L,
+            null, all, new com.hex.kagune.control.client.RinkakuMenuView.King(true, war, war, no), king, null), null, 0, 0);
+        rinkakuMenu(new File(dir, "rinkaku-king-peace.png"), new com.hex.kagune.control.client.RinkakuMenuView.Model(1000, true, full, 70.0F, 100.0F, 0L,
+            null, all, new com.hex.kagune.control.client.RinkakuMenuView.King(true, peace, no, no), forms, null), null, 0, 0);
+    }
+
+    /**
      * 4.1.56: the Ukaku menu in the quest menu's style: the organ's tab at a few masteries (a stage picked, a step of the road under the
      * mouse), a stage ahead picked, the mutations' tab (one ready under the mouse, one waiting for its quest, one had).
      */
@@ -717,6 +786,10 @@ public class UiPreview {
             ukaku(dir);
             return;
         }
+        if (args.length > 1 && args[1].equals("rinkaku")) {
+            rinkaku(dir);
+            return;
+        }
         menu(new File(dir, "ukaku-menu-0.png"), 0, WingForm.TWIN, 0, 0);
         menu(new File(dir, "ukaku-menu-300.png"), 300, WingForm.TWIN, 330, 248);
         menu(new File(dir, "ukaku-menu-600.png"), 600, WingForm.TWIN, 410, 248);
@@ -981,8 +1054,8 @@ public class UiPreview {
         }
         Object[][] menus = {{"king-menu-rinkaku.png", none, none}, {"king-menu-war.png", war, war}, {"king-menu-peace.png", peace, none}};
         for (Object[] shot : menus) {
-            int w = com.hex.kagune.control.client.RinkakuMenuView.UI_WIDTH;
-            int h = com.hex.kagune.control.client.RinkakuMenuView.UI_HEIGHT;
+            int w = com.hex.kagune.control.client.RinkakuMenuView.BOX_WIDTH;
+            int h = com.hex.kagune.control.client.RinkakuMenuView.BOX_HEIGHT;
             BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
             ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
             com.hex.kagune.control.king.KingForm chosen = (com.hex.kagune.control.king.KingForm)shot[1];

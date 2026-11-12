@@ -44,6 +44,7 @@ public final class QuestTests {
         forGoodLater();
         journal();
         ukakuMenu();
+        rinkakuMenu();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -130,6 +131,168 @@ public final class QuestTests {
                 "no full-screen overlay: the world seen round the box");
         } catch (java.io.IOException failure) {
             check(false, "the journal's source: " + failure);
+        }
+    }
+
+    /** 4.1.58: a canvas that draws nothing and keeps every word drawn with where it lands (the box's coordinates, scaled as drawn). */
+    static final class Recorder implements com.hex.kagune.control.client.ui.UiCanvas {
+        final java.util.List<int[]> texts = new java.util.ArrayList<>();
+        final java.util.List<String> words = new java.util.ArrayList<>();
+        private final float[] at = {0.0F, 0.0F, 1.0F};
+        private final java.util.Deque<float[]> stack = new java.util.ArrayDeque<>();
+
+        public void fill(int x0, int y0, int x1, int y1, int argb) {
+        }
+
+        public void gradient(int x0, int y0, int x1, int y1, int top, int bottom) {
+        }
+
+        public void text(String text, int x, int y, int argb, boolean shadow) {
+            this.texts.add(new int[] {Math.round(this.at[0] + x * this.at[2]), Math.round(this.at[1] + y * this.at[2]), Math.round(this.width(text) * this.at[2])});
+            this.words.add(text);
+        }
+
+        public void centered(String text, int centerX, int y, int argb) {
+            this.text(text, centerX - this.width(text) / 2, y, argb, false);
+        }
+
+        public int width(String text) {
+            return text.length() * 6;
+        }
+
+        public void face(int x, int y, int size) {
+        }
+
+        public void hat(int x, int y, int size, int[] hole) {
+        }
+
+        public void push() {
+            this.stack.push(this.at.clone());
+        }
+
+        public void translate(float x, float y) {
+            this.at[0] += x * this.at[2];
+            this.at[1] += y * this.at[2];
+        }
+
+        public void scale(float factor) {
+            this.at[2] *= factor;
+        }
+
+        public void pop() {
+            System.arraycopy(this.stack.pop(), 0, this.at, 0, 3);
+        }
+
+        public void batch(Runnable draw) {
+            draw.run();
+        }
+
+        void clear() {
+            this.texts.clear();
+            this.words.clear();
+        }
+    }
+
+    /** 4.1.58: everything clickable in {@code hits} inside a {@code width} x {@code height} box and apart; every word inside it. */
+    static void boxed(java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits, Recorder canvas, int width, int height, String where) {
+        java.util.List<com.hex.kagune.control.client.UkakuMenuView.Rect> rects = new java.util.ArrayList<>(hits.values());
+        for (int a = 0; a < rects.size(); a++) {
+            com.hex.kagune.control.client.UkakuMenuView.Rect r = rects.get(a);
+            check(r.x() >= 0 && r.y() >= 0 && r.x() + r.width() <= width && r.y() + r.height() <= height, where + ": everything to click inside the box");
+            for (int b = a + 1; b < rects.size(); b++) {
+                com.hex.kagune.control.client.UkakuMenuView.Rect o = rects.get(b);
+                check(r.x() + r.width() <= o.x() || o.x() + o.width() <= r.x() || r.y() + r.height() <= o.y() || o.y() + o.height() <= r.y(),
+                    where + ": nothing to click over anything else to click");
+            }
+        }
+        for (int i = 0; i < canvas.texts.size(); i++) {
+            int[] t = canvas.texts.get(i);
+            check(t[0] >= 8 && t[0] + t[2] <= width - 8 && t[1] >= 4 && t[1] + 8 <= height - 4, where + ": the words inside the box: \"" + canvas.words.get(i) + "\"");
+        }
+    }
+
+    /**
+     * 4.1.58 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+     * Dialog, mastery menus ALL OF THEM"): the Rinkaku menu is the quest menu's box: both tabs; every form, the passive and every step of the
+     * road to click; War and Peace to click; everything clickable and every word inside the box, apart; a form put on only by its WEAR THIS
+     * FORM button, drawn only for the form picked and only while it may be worn; the choice of War or Peace opened only by its button, only
+     * while it may be made; the screen keeps no overlay.
+     */
+    static void rinkakuMenu() {
+        Recorder canvas = new Recorder();
+        int width = com.hex.kagune.control.client.RinkakuMenuView.BOX_WIDTH;
+        int height = com.hex.kagune.control.client.RinkakuMenuView.BOX_HEIGHT;
+        check(width <= 760 && height <= 460, "the Rinkaku menu a compact box, the world seen round it");
+        java.util.Set<com.hex.kagune.control.quest.Gate> none = java.util.EnumSet.noneOf(com.hex.kagune.control.quest.Gate.class);
+        com.hex.kagune.control.client.QuestLocks[] locks = {com.hex.kagune.control.client.QuestLocks.ALL,
+            new com.hex.kagune.control.client.QuestLocks(none::contains, 0)};
+        com.hex.kagune.control.king.KingForm no = com.hex.kagune.control.king.KingForm.NONE;
+        com.hex.kagune.control.king.KingForm war = com.hex.kagune.control.king.KingForm.WAR;
+        com.hex.kagune.control.king.KingForm peace = com.hex.kagune.control.king.KingForm.PEACE;
+        com.hex.kagune.control.client.RinkakuMenuView.King[] kings = {com.hex.kagune.control.client.RinkakuMenuView.King.ASLEEP,
+            new com.hex.kagune.control.client.RinkakuMenuView.King(true, no, no, no), new com.hex.kagune.control.client.RinkakuMenuView.King(true, war, war, no),
+            new com.hex.kagune.control.client.RinkakuMenuView.King(true, war, no, no), new com.hex.kagune.control.client.RinkakuMenuView.King(true, peace, no, no)};
+        String[] picks = {null, "pick:seed", "pick:full", "pick:passive", "step:350", "step:1000", "pick:war", "pick:peace", "junk", "pick:nope"};
+        long seen = 0;
+        int wears = 0;
+        int chooses = 0;
+        com.hex.kagune.gameplay.KaguneForm[] forms = com.hex.kagune.control.RinkakuForms.forms();
+        for (com.hex.kagune.control.client.RinkakuMenuView.Tab tab : com.hex.kagune.control.client.RinkakuMenuView.Tab.values()) {
+            for (int mastery : new int[] {0, 300, 600, 800, 1000}) {
+                for (com.hex.kagune.gameplay.KaguneForm worn : forms) {
+                    for (com.hex.kagune.control.client.QuestLocks lock : locks) {
+                        for (com.hex.kagune.control.client.RinkakuMenuView.King king : kings) {
+                            for (String pick : picks) {
+                                for (double time : new double[] {0.0, 3.0}) {
+                                    canvas.clear();
+                                    com.hex.kagune.control.client.RinkakuMenuView.Model model = new com.hex.kagune.control.client.RinkakuMenuView.Model(mastery,
+                                        mastery > 0, worn, 50.0F, 100.0F, 0L, null, lock, king, tab, pick);
+                                    java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits =
+                                        com.hex.kagune.control.client.RinkakuMenuView.draw(canvas, model, 300, 200, time);
+                                    String where = "rinkaku " + tab + " at " + mastery + " in " + worn + " (" + king + ", " + pick + ")";
+                                    seen += canvas.texts.size();
+                                    check(hits.containsKey("tab:FORMS") && hits.containsKey("tab:KING"), where + ": both tabs there to click");
+                                    boxed(hits, canvas, width, height, where);
+                                    java.util.List<String> wear = hits.keySet().stream().filter(k -> k.startsWith("form:")).toList();
+                                    java.util.List<String> choose = hits.keySet().stream().filter(k -> k.startsWith("king:")).toList();
+                                    if (tab == com.hex.kagune.control.client.RinkakuMenuView.Tab.FORMS) {
+                                        check(hits.containsKey("eyes") && hits.containsKey("pick:passive") && choose.isEmpty(), where + ": the kakugan, the passive; no choice");
+                                        for (com.hex.kagune.gameplay.KaguneForm form : forms) {
+                                            check(hits.containsKey("pick:" + form.id()), where + ": " + form + " a card to click");
+                                        }
+                                        for (Integer step : com.hex.kagune.control.client.RinkakuMenuView.steps().keySet()) {
+                                            check(hits.containsKey("step:" + step), where + ": the step at " + step + " on the road");
+                                        }
+                                        check(wear.size() <= 1, where + ": one WEAR button at most");
+                                        for (String key : wear) {
+                                            com.hex.kagune.gameplay.KaguneForm form = com.hex.kagune.gameplay.KaguneForm.fromId(key.substring(5));
+                                            wears++;
+                                            check(form != null && form != worn && form.isUnlocked(mastery)
+                                                && lock.passes(com.hex.kagune.control.quest.Gates.rinkaku(form)), where + ": WEAR only for a form that may be worn and is not");
+                                        }
+                                    } else {
+                                        check(hits.containsKey("pick:war") && hits.containsKey("pick:peace") && wear.isEmpty(), where + ": War and Peace to click; nothing to wear");
+                                        boolean can = king.awake() && king.chosen() == no;
+                                        check(choose.size() == (can ? 1 : 0), where + ": the choice's button only while it may be made");
+                                        chooses += choose.size();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(seen > 100000 && wears > 100 && chooses > 100, "the Rinkaku menu's words, WEAR and choice buttons all drawn and checked (" + seen + ", " + wears
+            + ", " + chooses + ")");
+        try {
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/RinkakuMenuScreen.java"));
+            check(!screen.contains("this.m_280273_(graphics)") && !screen.contains("graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_"),
+                "no full-screen overlay round the Rinkaku menu");
+            check(screen.contains("RinkakuMenuView.BOX_WIDTH") && screen.indexOf("new C2SKaguneForm(form)") > screen.indexOf("key.startsWith(\"form:\")")
+                && screen.indexOf("this.picked = key;") > 0, "the screen sized from the box; a form worn only by its button; a card only looked at");
+        } catch (java.io.IOException failure) {
+            check(false, "the Rinkaku screen's source: " + failure);
         }
     }
 

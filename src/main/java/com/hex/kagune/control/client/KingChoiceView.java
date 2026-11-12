@@ -103,8 +103,27 @@ public final class KingChoiceView {
         int top = frame(c, t, r, 0xFF040203, picked, hover);
         c.batch(() -> veins(c, r.x() + 4, top + 4, r.width() - 8, 150, 0xFF6E0C16, 0xFF34070E, time));
         // The one eye: black, a white point burning in it, red veins out of it.
-        int cx = r.x() + r.width() / 2;
-        int cy = top + 78;
+        warEye(c, r.x() + r.width() / 2, top + 78, time);
+        text(c, r, top, KingTheme.WAR, "WAR", "THE ONE-EYED KING", WAR_ROWS, true);
+    }
+
+    /** 4.1.58: War's card's rows (the Rinkaku menu shows them too). */
+    static final List<String[]> WAR_ROWS = List.of(
+        new String[] {"Look", "Black, a torn cape, one eye"},
+        new String[] {"Rinkaku", "Six that hunt; a Black Sun"},
+        new String[] {"Moves", "Centipede arms, a small Dragon"},
+        new String[] {"Body", "+45% melee, +35% speed"},
+        new String[] {"Toughness", "25% of blows off, then half the rest (2.0: no extra health)"});
+    /** 4.1.58: Peace's card's rows. */
+    static final List<String[]> PEACE_ROWS = List.of(
+        new String[] {"Look", "White armour, kagune wings"},
+        new String[] {"Blades", "Six cross blades on arms"},
+        new String[] {"Moves", "Graceful, long combos"},
+        new String[] {"Body", "+30% melee, +40% attack speed"},
+        new String[] {"Toughness", "35% of blows off, then half the rest (2.0: no extra health)"});
+
+    /** 4.1.58: War's one eye about ({@code cx}, {@code cy}): black, a white point burning in it, red veins out of it (its card's, the menu's). */
+    static void warEye(UiCanvas c, int cx, int cy, double time) {
         c.batch(() -> {
             UkakuMenuView.organicPanel(c, cx, cy, 64, 46, 0xFF0A0506, 0xFF3A0810);
             for (int k = 0; k < 8; k++) {
@@ -118,22 +137,26 @@ public final class KingChoiceView {
             UkakuMenuView.fillCircle(c, cx, cy, 8 + (int)Math.round(2 * pulse), 0x406A6A6A);
             UkakuMenuView.fillCircle(c, cx, cy, 4, 0xFFFFFFFF);
         });
-        text(c, r, top, KingTheme.WAR, "WAR", "THE ONE-EYED KING", List.of(
-            new String[] {"Look", "Black, a torn cape, one eye"},
-            new String[] {"Rinkaku", "Six that hunt; a Black Sun"},
-            new String[] {"Moves", "Centipede arms, a small Dragon"},
-            new String[] {"Body", "+45% melee, +35% speed"},
-            new String[] {"Toughness", "25% of blows off, then half the rest (2.0: no extra health)"}), true);
     }
 
     static void peace(UiCanvas c, KingTheme t, UkakuMenuView.Rect r, boolean picked, boolean hover, boolean sealed, double time) {
         int top = frame(c, t, r, sealed ? 0xFFCDD0D6 : 0xFFF4F4F7, picked, hover);
         c.batch(() -> KingTheme.feathers(c, r.x() + 4, top + 4, r.width() - 8, r.height() - 8, 0xFFDCE0E8, 0xFFC4C9D2, time));
         // The cross blade: four points, two long, a red core and a burning centre; it turns slowly.
-        int cx = r.x() + r.width() / 2;
-        int cy = top + 78;
+        peaceCross(c, r.x() + r.width() / 2, top + 78, true, time);
+        text(c, r, top, KingTheme.PEACE, "PEACE", "RINKAKU :RE", PEACE_ROWS, false);
+        if (sealed) {
+            c.fill(r.x(), top + r.height() - 26, r.x() + r.width(), top + r.height() - 8, 0xE01E2026);
+            c.centered("SEALED: NOT READY YET. IT IS COMING.", r.x() + r.width() / 2, top + r.height() - 21, 0xFFF0E6E0);
+        }
+    }
+
+    /** 4.1.58: Peace's cross blade about ({@code cx}, {@code cy}), turning slowly, on its pale plate if {@code plate}. */
+    static void peaceCross(UiCanvas c, int cx, int cy, boolean plate, double time) {
         c.batch(() -> {
-            UkakuMenuView.organicPanel(c, cx, cy, 64, 46, 0xFFE6E9EE, 0xFFB4B9C4);
+            if (plate) {
+                UkakuMenuView.organicPanel(c, cx, cy, 64, 46, 0xFFE6E9EE, 0xFFB4B9C4);
+            }
             double turn = Math.toRadians(30.0) + time * 0.3;
             for (int k = 0; k < 4; k++) {
                 double a = turn + k * Math.PI / 2.0;
@@ -146,16 +169,6 @@ public final class KingChoiceView {
             UkakuMenuView.fillCircle(c, cx, cy, 6, 0xFFFF2234);
             UkakuMenuView.fillCircle(c, cx, cy, 2, 0xFFFFFFFF);
         });
-        text(c, r, top, KingTheme.PEACE, "PEACE", "RINKAKU :RE", List.of(
-            new String[] {"Look", "White armour, kagune wings"},
-            new String[] {"Blades", "Six cross blades on arms"},
-            new String[] {"Moves", "Graceful, long combos"},
-            new String[] {"Body", "+30% melee, +40% attack speed"},
-            new String[] {"Toughness", "35% of blows off, then half the rest (2.0: no extra health)"}), false);
-        if (sealed) {
-            c.fill(r.x(), top + r.height() - 26, r.x() + r.width(), top + r.height() - 8, 0xE01E2026);
-            c.centered("SEALED: NOT READY YET. IT IS COMING.", r.x() + r.width() / 2, top + r.height() - 21, 0xFFF0E6E0);
-        }
     }
 
     /** The card's text as the menu sets it: the name as a header, the title under it, then label and value rows. */

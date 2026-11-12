@@ -19,6 +19,10 @@ import net.minecraft.network.chat.Component;
 /**
  * 6.0.0: the Rinkaku path's kagune menu (the menu key), drawn by {@link RinkakuMenuView}: forms picked and mutations taken with the
  * original's own requests (the server checks them), and the kakugan placement.
+ *
+ * <p>4.1.58 (the owner: "Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is"): the
+ * quest menu's box with the world round it (no overlay), its tabs, what is picked kept while it is open; a form is put on only by its WEAR
+ * THIS FORM button, the final kakuja's choice opened only by its button.
  */
 public final class RinkakuMenuScreen extends Screen {
     private final long openedAt = System.currentTimeMillis();
@@ -28,6 +32,8 @@ public final class RinkakuMenuScreen extends Screen {
     private float originY;
     private MutationNode pending;
     private long pendingUntil;
+    private RinkakuMenuView.Tab tab = RinkakuMenuView.Tab.FORMS;
+    private String picked;
 
     public RinkakuMenuScreen() {
         super(Component.m_237113_("HexKagune Rinkaku"));
@@ -35,14 +41,11 @@ public final class RinkakuMenuScreen extends Screen {
 
     @Override
     public void m_88315_(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.m_280273_(graphics);
-        // 1.0.10: Peace's board sits on a pale veil, War's and Rinkaku's on the dark.
-        boolean pale = KingClient.chosen() == com.hex.kagune.control.king.KingForm.PEACE;
-        graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_, pale ? 0xC8C8CCD4 : 0xE8080506, pale ? 0xD8E2E4EA : 0xF0180608);
-        this.scale = Math.max(0.25F, Math.min(1.0F, Math.min((this.f_96543_ - 12.0F) / RinkakuMenuView.UI_WIDTH,
-            (this.f_96544_ - 12.0F) / RinkakuMenuView.UI_HEIGHT)));
-        this.originX = (this.f_96543_ - RinkakuMenuView.UI_WIDTH * this.scale) * 0.5F;
-        this.originY = (this.f_96544_ - RinkakuMenuView.UI_HEIGHT * this.scale) * 0.5F;
+        // 4.1.58: as the quest menu: no overlay over the world, only the box and its shadow round it.
+        this.scale = Math.max(0.25F, Math.min(1.0F, Math.min((this.f_96543_ - 24.0F) / RinkakuMenuView.BOX_WIDTH,
+            (this.f_96544_ - 24.0F) / RinkakuMenuView.BOX_HEIGHT)));
+        this.originX = (this.f_96543_ - RinkakuMenuView.BOX_WIDTH * this.scale) * 0.5F;
+        this.originY = (this.f_96544_ - RinkakuMenuView.BOX_HEIGHT * this.scale) * 0.5F;
         Minecraft minecraft = Minecraft.m_91087_();
         LocalPlayer player = minecraft.f_91074_;
         if (this.pending != null && System.currentTimeMillis() > this.pendingUntil) {
@@ -54,7 +57,7 @@ public final class RinkakuMenuScreen extends Screen {
             : com.hex.kagune.control.king.KingForm.NONE;
         RinkakuMenuView.Model model = new RinkakuMenuView.Model(state.mastery(), state.active(), state.form(), state.energy(), KaguneProfile.MAX_ENERGY,
             state.mutationMask(), this.pending, QuestLocks.live(), new RinkakuMenuView.King(KingClient.awake(), KingClient.chosen(), worn,
-            com.hex.kagune.control.king.KingForm.NONE));
+            com.hex.kagune.control.king.KingForm.NONE), this.tab, this.picked);
         canvas.push();
         canvas.translate(this.originX, this.originY);
         canvas.scale(this.scale);
@@ -77,6 +80,15 @@ public final class RinkakuMenuScreen extends Screen {
             String key = entry.getKey();
             if (key.equals("eyes")) {
                 Minecraft.m_91087_().m_91152_(new KakuganScreen());
+                return true;
+            }
+            if (key.startsWith("tab:")) {
+                this.tab = RinkakuMenuView.Tab.valueOf(key.substring(4));
+                this.picked = null;
+                return true;
+            }
+            if (key.startsWith("pick:") || key.startsWith("step:")) {
+                this.picked = key; // 4.1.58: a card or a step looked at; nothing changes in the game
                 return true;
             }
             if (key.startsWith("form:")) {

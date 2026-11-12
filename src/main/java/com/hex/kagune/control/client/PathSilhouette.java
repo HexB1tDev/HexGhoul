@@ -128,6 +128,75 @@ public final class PathSilhouette {
         return marks;
     }
 
+    /**
+     * 4.1.58: one of Rinkaku's forms for the menu's preview, as it is: {@code tails} tails from the lower back (1, 2 or 4), and with
+     * {@code legs} two centipede legs too, thick, segmented, armoured and spiked, rearing higher (the Centipede Form: the legs alone; the
+     * Full Kakuja: the legs and four tentacles). The figure seen from behind, the tails writhing.
+     */
+    public static List<Mark> rinkakuForm(PathChoiceLayout.Box box, double time, float intensity, int tails, boolean legs, int bg) {
+        List<Mark> marks = new ArrayList<>();
+        Figure f = Figure.in(box, legs ? 0.5F : 0.6F);
+        float rootX = f.cx;
+        float rootY = f.waistY - f.size * 0.06F;
+        double speed = 1.2 + 1.4 * intensity;
+        java.util.List<float[][]> curves = new java.util.ArrayList<>();
+        java.util.List<double[]> kinds = new java.util.ArrayList<>(); // {side, angle, leg (1) or tail (0)}
+        double[][] tailAngles = tails <= 1 ? new double[][] {{1, 40.0}} : tails == 2 ? new double[][] {{-1, 38.0}, {1, 38.0}}
+            : new double[][] {{-1, 18.0}, {-1, 50.0}, {1, 18.0}, {1, 50.0}};
+        if (legs) {
+            kinds.add(new double[] {-1, 70.0, 1});
+            kinds.add(new double[] {1, 70.0, 1});
+        }
+        if (!legs || tails > 2) {
+            for (double[] a : tailAngles) {
+                kinds.add(new double[] {a[0], a[1], 0});
+            }
+        }
+        float[][][] envelope = new float[kinds.size() * 16][][];
+        for (int i = 0; i < kinds.size(); i++) {
+            double[] k = kinds.get(i);
+            curves.add(tendril((int)k[0], Math.toRadians(k[1]), time * (k[2] > 0 ? speed * 0.5 : speed) + i * 1.3));
+            for (int j = 0; j < 16; j++) {
+                envelope[i * 16 + j] = tendril((int)k[0], Math.toRadians(k[1]), j * Math.PI / 8.0);
+            }
+        }
+        float length = fit(box, rootX, rootY, Math.min(box.width() * 0.48F, box.height() * 0.9F), 0.05F, 1.0F, envelope);
+        float fade = 0.45F + 0.55F * Math.max(0.0F, Math.min(1.0F, intensity));
+        for (int i = 0; i < kinds.size(); i++) {
+            boolean leg = kinds.get(i)[2] > 0;
+            float[][] points = curves.get(i);
+            float reach = leg ? length : length * 0.82F;
+            float root = Math.max(2.0F, reach * (leg ? 0.15F : 0.10F));
+            for (int s = 0; s + 1 < points.length; s++) {
+                float a = s / (float)(points.length - 1);
+                float b = (s + 1) / (float)(points.length - 1);
+                float x0 = rootX + points[s][0] * reach;
+                float y0 = rootY + points[s][1] * reach;
+                float x1 = rootX + points[s + 1][0] * reach;
+                float y1 = rootY + points[s + 1][1] * reach;
+                float t0 = root + (0.8F - root) * a;
+                float t1 = root + (0.8F - root) * b;
+                if (!leg) {
+                    marks.add(new Stroke(x0, y0, x1, y1, t0, t1, blend(bg, s % 2 == 0 ? RINKAKU : RINKAKU_DARK, fade)));
+                    continue;
+                }
+                // A centipede leg: dark armour plates, a red seam at each joint, a pale spike off each plate.
+                marks.add(new Stroke(x0, y0, x1, y1, t0, t1, blend(bg, KAKUJA_PLATE, fade)));
+                marks.add(new Stroke(x0, y0, x1, y1, Math.max(0.6F, t0 * 0.3F), Math.max(0.6F, t1 * 0.3F), blend(bg, RINKAKU, fade * 0.8F)));
+                if (s % 2 == 1 && s < points.length - 2) {
+                    float dx = x1 - x0;
+                    float dy = y1 - y0;
+                    float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+                    float spike = t1 * 0.9F + 1.0F;
+                    marks.add(new Stroke(x1, y1, x1 - dy / d * spike, y1 + dx / d * spike, 1.2F, 0.6F, blend(bg, KAKUJA_NEEDLE, fade)));
+                    marks.add(new Stroke(x1, y1, x1 + dy / d * spike, y1 - dx / d * spike, 1.2F, 0.6F, blend(bg, KAKUJA_NEEDLE, fade)));
+                }
+            }
+        }
+        figure(marks, f, bg, intensity);
+        return marks;
+    }
+
     /** A unit-length S-curve (cubic Bézier, 14 segments) heading outward and up from the root. */
     private static float[][] tendril(int side, double angle, double phase) {
         double dx = side * Math.cos(angle);
