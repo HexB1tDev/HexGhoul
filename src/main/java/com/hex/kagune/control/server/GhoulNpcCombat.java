@@ -157,13 +157,31 @@ final class GhoulNpcCombat {
         if (distance > BladeArm.reach(who.tier(), step) + prey.m_20205_() * 0.5 + 0.5 || Math.abs(to.f_82480_) > 2.5 || way.m_82526_(look) < 0.2) {
             return; // it slipped the cut
         }
-        Vec3 centre = GhoulNpcBrain.centre(prey);
-        WoundHits.expect(prey, step == BladeArm.FINISHER ? WoundBook.Blow.STAB : WoundBook.Blow.SLASH, centre.m_82546_(way.m_82490_(0.3)), way, 0.0);
-        prey.f_19802_ = 0;
-        if (prey.m_6469_(npc.m_269291_().m_269333_(npc), GhoulNpcBrain.damage(npc, who) * BladeArm.weight(step)) && step == BladeArm.FINISHER) {
-            prey.m_147240_(0.7, -way.f_82479_, -way.f_82481_);
+        bladeCut(npc, who, step, prey, way, level);
+        if (BladeArm.sweeps(step)) {
+            // 4.1.47: the sweep cuts everyone before it in its reach, not only its prey (never one it would spare: GhoulNpcBrain.fair).
+            double reach = BladeArm.reach(who.tier(), step);
+            for (LivingEntity other : level.m_6443_(LivingEntity.class, npc.m_20191_().m_82400_(reach + 1.0), o -> o != npc && o != prey && o.m_6084_())) {
+                Vec3 off = other.m_20182_().m_82546_(npc.m_20182_());
+                Vec3 flatOff = flat(off);
+                if (Math.sqrt(off.m_165925_()) > reach + other.m_20205_() * 0.5 || Math.abs(off.f_82480_) > 2.5 || flatOff.m_82526_(look) < 0.0
+                    || !GhoulNpcBrain.fair(npc, who, mind, other, now)) {
+                    continue;
+                }
+                bladeCut(npc, who, step, other, flatOff, level);
+            }
         }
-        UkakuFire.sound(level, centre, "hexkagune:sfx.blade_heavy", step == BladeArm.FINISHER ? 0.8F : 0.45F, 1.15F);
+    }
+
+    /** 4.1.47: one cut landing on {@code body} ({@code way}: from the ghoul to it, flat): a slash's wound, its damage; the cleave throws it back. */
+    private static void bladeCut(GhoulNpc npc, NpcIdentity who, int step, LivingEntity body, Vec3 way, ServerLevel level) {
+        Vec3 centre = GhoulNpcBrain.centre(body);
+        WoundHits.expect(body, WoundBook.Blow.SLASH, centre.m_82546_(way.m_82490_(0.3)), way, 0.0);
+        body.f_19802_ = 0;
+        if (body.m_6469_(npc.m_269291_().m_269333_(npc), GhoulNpcBrain.damage(npc, who) * BladeArm.weight(step)) && step == BladeArm.FINISHER) {
+            body.m_147240_(0.9, -way.f_82479_, -way.f_82481_);
+        }
+        UkakuFire.sound(level, centre, "hexkagune:sfx.blade_heavy", step == BladeArm.FINISHER ? 0.85F : 0.45F, step == BladeArm.FINISHER ? 0.9F : 1.15F);
     }
 
     // ---------------------------------------------------------------- rinkaku: the transplant's string

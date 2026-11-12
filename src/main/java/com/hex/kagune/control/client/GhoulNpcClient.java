@@ -166,7 +166,10 @@ public final class GhoulNpcClient {
         if (run > 0.05F) {
             return com.hex.kagune.control.client.animation.BladeArmPose.run(phase, run);
         }
-        return com.hex.kagune.control.client.animation.BladeArmPose.guard();
+        // 4.1.47 (the owner: "a proper ambient stand"): its stance, alive (breathing, the blade drifting and turned over now and then), its
+        // feet set in it while it stands, its walk's legs while it circles.
+        float still = 1.0F - (float)Math.max(0.0, Math.min(1.0, speed / 0.06));
+        return com.hex.kagune.control.client.animation.BladeArmPose.stand(clock, view.identity().seed(), still);
     }
 
     /** Forgets the NPCs no longer in {@code level} (dead, gone, out of range). */

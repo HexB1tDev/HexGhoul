@@ -721,18 +721,46 @@ public final class NpcTests {
      * thrust reaches furthest and hits hardest; the spiral winds shoulder to wrist before the blade grows; its shape stays on the arm; its
      * poses hold the blade arm and keep the free hand on the forearm while it winds.
      */
+    /**
+     * 4.1.47: the great blade's lowest point in {@code p} (blocks above the feet; below 0 it is in the ground), from the game's own transform
+     * of the right arm (its pivot and turn, the chest's twist and lean carried) and the body's drop.
+     */
+    static double bladeLow(com.hex.kagune.control.client.animation.RigPose p) {
+        float[] turn = p.transform("rightArm", com.hex.kagune.control.client.animation.RigPose.ROTATION, 0, 0, 0);
+        float[] pivot = p.transform("rightArm", com.hex.kagune.control.client.animation.RigPose.POSITION, -5, 2, 0);
+        double cx = Math.cos(turn[0]), sx = Math.sin(turn[0]), cy = Math.cos(turn[1]), sy = Math.sin(turn[1]), cz = Math.cos(turn[2]), sz = Math.sin(turn[2]);
+        double[] lowest = {99.0};
+        com.hex.kagune.control.npc.BladeArmModel.build(1.0, false, 0x7A1E5C, (a, b, c, d, n, ca, cb, cc, cd) -> {
+            for (double[] local : new double[][] {a, b, c, d}) {
+                double y1 = local[1] * cx - local[2] * sx;
+                double z1 = local[1] * sx + local[2] * cx;
+                double x2 = local[0] * cy + z1 * sy;
+                double y = pivot[1] + x2 * sz + y1 * cz;
+                lowest[0] = Math.min(lowest[0], (24.0 - y - p.drop) / 16.0);
+            }
+        });
+        return lowest[0];
+    }
+
     static void blades() {
-        check(com.hex.kagune.control.npc.BladeArm.next(-1, 0L) == 0 && com.hex.kagune.control.npc.BladeArm.next(0, 3L) == 1
-            && com.hex.kagune.control.npc.BladeArm.next(1, 3L) == 2 && com.hex.kagune.control.npc.BladeArm.next(2, 3L) == 0
+        check(com.hex.kagune.control.npc.BladeArm.STEPS == 4 && com.hex.kagune.control.npc.BladeArm.next(-1, 0L) == 0
+            && com.hex.kagune.control.npc.BladeArm.next(0, 3L) == 1 && com.hex.kagune.control.npc.BladeArm.next(1, 3L) == 2
+            && com.hex.kagune.control.npc.BladeArm.next(2, 3L) == 3 && com.hex.kagune.control.npc.BladeArm.next(3, 3L) == 0
             && com.hex.kagune.control.npc.BladeArm.next(1, com.hex.kagune.control.npc.BladeArm.CHAIN + 1) == 0
-            && com.hex.kagune.control.npc.BladeArm.next(0, -5L) == 0, "three cuts to a string, chained only close together");
+            && com.hex.kagune.control.npc.BladeArm.next(0, -5L) == 0, "4.1.47: four slashes to a string, chained only close together");
+        for (int step = 0; step < com.hex.kagune.control.npc.BladeArm.STEPS; step++) {
+            check(com.hex.kagune.control.npc.BladeArm.sweeps(step) == (step == com.hex.kagune.control.npc.BladeArm.SWEEP), "only the sweep cuts all before it: " + step);
+        }
         for (int step = 0; step < com.hex.kagune.control.npc.BladeArm.STEPS; step++) {
             check(com.hex.kagune.control.npc.BladeArm.lands(step) > 1 && com.hex.kagune.control.npc.BladeArm.lands(step)
                 < com.hex.kagune.control.npc.BladeArm.ticks(step), "cut " + step + " lands partway through");
         }
-        check(com.hex.kagune.control.npc.BladeArm.reach(1, 2) > com.hex.kagune.control.npc.BladeArm.reach(1, 0)
+        check(com.hex.kagune.control.npc.BladeArm.reach(1, 3) > com.hex.kagune.control.npc.BladeArm.reach(1, 2)
+            && com.hex.kagune.control.npc.BladeArm.reach(1, 2) > com.hex.kagune.control.npc.BladeArm.reach(1, 0)
+            && com.hex.kagune.control.npc.BladeArm.weight(3) > com.hex.kagune.control.npc.BladeArm.weight(2)
             && com.hex.kagune.control.npc.BladeArm.weight(2) > com.hex.kagune.control.npc.BladeArm.weight(0)
-            && com.hex.kagune.control.npc.BladeArm.reach(2) > com.hex.kagune.control.npc.BladeArm.reach(0), "the thrust furthest and hardest; stronger, longer");
+            && com.hex.kagune.control.npc.BladeArm.reach(2) > com.hex.kagune.control.npc.BladeArm.reach(0)
+            && com.hex.kagune.control.npc.BladeArm.reach(0) >= 3.2, "the cleave furthest and hardest, the sweep next; stronger, longer; the great blade's reach");
         double last = 1.0;
         for (int i = 0; i < com.hex.kagune.control.npc.BladeArm.PLATES; i++) {
             double at = com.hex.kagune.control.npc.BladeArm.plate(i, 0.3);
@@ -744,31 +772,65 @@ public final class NpcTests {
         check(com.hex.kagune.control.npc.BladeArm.blade(0.5) == 0.0 && com.hex.kagune.control.npc.BladeArm.blade(1.0) == 1.0
             && com.hex.kagune.control.npc.BladeArm.blade(0.8) > 0.0, "the blade grows once the spiral reaches the wrist");
         int[] quads = {0};
-        double[] most = {0.0, -99.0, 0.0, 99.0};
+        int[] gleams = {0};
+        double[] most = {0.0, -99.0, 0.0, 99.0, 0.0, 0.0};
         for (boolean slim : new boolean[] {false, true}) {
             com.hex.kagune.control.npc.BladeArmModel.build(1.0, slim, 0x7A1E5C, (a, b, c, d, n, ca, cb, cc, cd) -> {
                 quads[0]++;
+                gleams[0] += n == com.hex.kagune.control.npc.BladeArmModel.GLOW ? 1 : 0;
                 for (double[] p : new double[][] {a, b, c, d}) {
                     most[0] = Math.max(most[0], Math.max(Math.abs(p[0] + 1.0), Math.abs(p[2])));
                     most[1] = Math.max(most[1], p[1]);
                     most[3] = Math.min(most[3], p[1]);
+                    if (p[1] > 20.0 && p[1] < 28.0) {
+                        most[4] = Math.max(most[4], p[2]);
+                        most[5] = Math.min(most[5], p[2]);
+                    }
                     check(Double.isFinite(p[0]) && Double.isFinite(p[1]) && Double.isFinite(p[2]) && (ca >>> 24) == 0xFF, "a finite, opaque corner");
                 }
             });
         }
-        check(quads[0] > 100 && most[0] < 7.0 && most[1] > 24.0 && most[1] < 30.0 && most[3] > -8.0,
-            "the blade on the arm: close round it, its point well past the fist (" + quads[0] + " quads, " + most[0] + ", " + most[3] + ".." + most[1] + ")");
+        // 4.1.47 (the owner: "it looks way too small, not sharp"; then a picture): the ribbons round the arm, one great blade past the fist,
+        // its point more than twice the arm's length from the shoulder.
+        check(quads[0] > 400 && gleams[0] > 50 && most[0] < 9.5 && most[1] > 33.0 && most[1] < 38.0 && most[3] > -4.5,
+            "the great blade on the arm (" + quads[0] + " quads, " + gleams[0] + " glowing, " + most[0] + ", " + most[3] + ".." + most[1] + ")");
+        check(most[4] > 5.0 && most[4] > -most[5] + 1.0, "the owner chose \"B: blade turned over\": its edge (the widest side) on the back of the arm (z +"
+            + most[4] + " against " + most[5] + "), facing down with the arm held out");
         int[] none = {0};
         com.hex.kagune.control.npc.BladeArmModel.build(0.0, false, 0x7A1E5C, (a, b, c, d, n, ca, cb, cc, cd) -> none[0]++);
         check(none[0] == 0, "nothing before it winds out");
         com.hex.kagune.control.client.animation.RigPose guard = com.hex.kagune.control.client.animation.BladeArmPose.guard();
         check(guard.rightArmHold == 1.0F && guard.twist < 0.0F, "its guard: the blade arm held, the right shoulder forward");
-        for (int step = 0; step < 3; step++) {
-            for (double t = 0.0; t <= 1.0; t += 0.1) {
+        for (int step = 0; step < com.hex.kagune.control.npc.BladeArm.STEPS; step++) {
+            for (double t = 0.0; t <= 1.0; t += 0.05) {
                 com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.BladeArmPose.swing(step, t);
                 check(Float.isFinite(p.rightArmX) && Float.isFinite(p.rightArmY) && Float.isFinite(p.rightArmZ) && Math.abs(p.lunge) <= 8.0F,
                     "cut " + step + " at " + t + " is a sane pose");
+                double low = bladeLow(p);
+                check(low > -0.05, "4.1.47: cut " + step + " at " + t + " keeps the great blade out of the ground (" + low + " blocks)");
             }
+        }
+        for (double time = 0.0; time < 320.0; time += 3.0) {
+            com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.BladeArmPose.stand(time, 31);
+            check(p.rightArmHold == 1.0F && p.legHold == 1.0F && bladeLow(p) > -0.05, "4.1.47: its stance at " + time + ": held, feet set, the blade off the ground");
+        }
+        check(com.hex.kagune.control.client.animation.BladeArmPose.stand(10.0, 31, 0.0F).legHold == 0.0F, "walking, its legs its walk's");
+        boolean alive = false;
+        com.hex.kagune.control.client.animation.RigPose first = com.hex.kagune.control.client.animation.BladeArmPose.stand(0.0, 31);
+        for (double time = 4.0; time < 200.0; time += 4.0) {
+            com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.BladeArmPose.stand(time, 31);
+            alive |= Math.abs(p.rightArmX - first.rightArmX) + Math.abs(p.rightArmZ - first.rightArmZ) + Math.abs(p.lean - first.lean) > 0.05;
+        }
+        check(alive, "4.1.47: the stance is alive (it breathes, the blade drifts), not a still pose");
+        try {
+            String client = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/GhoulNpcClient.java")));
+            String combat = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcCombat.java")));
+            check(client.contains("return com.hex.kagune.control.client.animation.BladeArmPose.stand(clock, view.identity().seed(), still);")
+                && !client.contains("return com.hex.kagune.control.client.animation.BladeArmPose.guard();"), "every client draws its living stance, not a still guard");
+            check(combat.contains("if (BladeArm.sweeps(step)) {") && combat.contains("|| !GhoulNpcBrain.fair(npc, who, mind, other, now)) {")
+                && combat.contains("WoundHits.expect(body, WoundBook.Blow.SLASH,"), "the sweep cuts all before it it may (never one it would spare); every cut a slash");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
         }
         com.hex.kagune.control.client.animation.RigPose winding = com.hex.kagune.control.client.animation.BladeArmPose.wrap(0.5);
         double[] left = com.hex.kagune.control.client.animation.QuinqueGrip.fist(winding, false, false);

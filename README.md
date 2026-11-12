@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.47 (HexGhoul): the ghouls' arm blade rebuilt, its moveset and stance (testing)
+
+See `.github/release-notes-4.1.47.md`. "Improve severely the kagune arm blade of the ghouls" (and the owner's picture, choice "B: blade turned over", "a proper moveset, slash attacks and a proper ambient stand"): `BladeArmModel` rebuilt (two ribbons wound round the arm with veins, one great single-edged blade with a glowing gleam, turned over: edge on z +), `BladeArm` four slashes (`SWEEP` cuts all before it, `FINISHER` the cleave; `BLADE_LENGTH` 26, reach 3.2), `BladeArmPose` new keys (each edge-first) and `stand` (alive, feet set while still), `GhoulNpcCombat.bladeCut`; `NpcTests.bladeLow` keeps every frame out of the ground. Protocol 121.
+
 ## 4.1.46 (HexGhoul): the CCG's ghoul division (testing)
 
 See `.github/release-notes-4.1.46.md`. "New Re CCG Ghoul division ... they spawn in trios": `Gang.CCG_DIVISION` (ordinal 3, `ccg()`, `TRIO`), `NpcIdentity.ccg()`/`kakugan()`, `AgentBrain.ccg(Entity)` (the CCG's on both sides: `wanted`, `attacked`, `hurt`, sweeps, `AgentArms.foes`, Eto), `GhoulNpcBrain.division` (as `AgentBrain.wanted`), `called` both ways, Formal Outfit, human meat, no dawn slip, `AgentSpawner.division` (`DIVISION_CHANCE` 0.35, three or none), no kakugan (`GhoulNpcRenderer.Eyes`), a CCG word for a right click. Protocol 120.
