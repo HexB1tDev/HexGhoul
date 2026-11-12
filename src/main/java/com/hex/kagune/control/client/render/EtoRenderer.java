@@ -176,7 +176,8 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             FADES.clear();
         }
         own = FADES.computeIfAbsent(npc.m_19879_(), id -> new com.hex.kagune.control.client.animation.PoseFade()).through(own, view.gestureAt(), clock);
-        return EtoFight.pose(npc, view.fight(), moment(npc, alive(npc, view, own, partial), clock), clock, partial);
+        // 4.1.54: Banjou's body thrown into his wing's blows (EtoFight.slap).
+        return EtoFight.slap(npc, EtoFight.pose(npc, view.fight(), moment(npc, alive(npc, view, own, partial), clock), clock, partial), clock);
     }
 
     /** 1.3.20: a moment with one of its children (a hug, a toss, a spin...) over its gesture: its parent's side of it. */
@@ -509,6 +510,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             event.registerEntityRenderer(ControlEntities.NORO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.NORO));
             event.registerEntityRenderer(ControlEntities.GENERAL.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.GENERAL));
             event.registerEntityRenderer(ControlEntities.ROMA.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.ROMA)); // 4.1.49
+            event.registerEntityRenderer(ControlEntities.BANJOU.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.BANJOU)); // 4.1.54
         }
     }
 }

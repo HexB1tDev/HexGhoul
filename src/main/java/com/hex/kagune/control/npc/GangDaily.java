@@ -6,7 +6,8 @@ import java.util.Random;
 /**
  * 4.1.53 (the owner: "Noro gives Daily quests (missions with item rewards such as ores, ghoul meat,  human meat, reputation etc...)"; of
  * the Clowns: "The leader gives daily quests as well with clown related rewards, and reputation."): a member's daily quest (pure, tested).
- * One a game day, asked of their gang's quest giver (Noro for Aogiri, Roma for the Clowns): a job ({@link Job}) with its goal, counted
+ * One a game day, asked of their gang's quest giver (Noro for Aogiri, Roma for the Clowns; 4.1.54, the owner: Banjou, "Daily quest giver",
+ * for the Gas Masks): a job ({@link Job}) with its goal, counted
  * as they do it (kills) or handed over when they come back (things brought), and paid when it is done: its items and
  * {@link GangStanding#DAILY} reputation. {@link #kind} 0 is none; {@link #day} the game day it was given; {@link #claimed} once paid.
  */
@@ -19,7 +20,11 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
         AOGIRI_MEAT(GangPlayer.AOGIRI, "Bring Noro %d human meat", 4, 8, true),
         CLOWNS_GAS(GangPlayer.CLOWNS, "Kill %d Gas Masks", 3, 5, false),
         CLOWNS_CCG(GangPlayer.CLOWNS, "Kill %d investigators", 2, 4, false),
-        CLOWNS_FLOWERS(GangPlayer.CLOWNS, "Bring Roma %d alliums", 4, 8, true);
+        CLOWNS_FLOWERS(GangPlayer.CLOWNS, "Bring Roma %d alliums", 4, 8, true),
+        // 4.1.54: Banjou's (appended: a job is kept by its place here).
+        GAS_CLOWNS(GangPlayer.GAS_MASKS, "Kill %d Clowns", 3, 5, false),
+        GAS_CCG(GangPlayer.GAS_MASKS, "Kill %d investigators", 2, 4, false),
+        GAS_CHARCOAL(GangPlayer.GAS_MASKS, "Bring Banjou %d charcoal", 6, 12, true);
 
         public final int gang;
         public final String asks;
@@ -38,6 +43,15 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
         /** What it asks, with its goal ("Kill 4 investigators"). */
         public String text(int goal) {
             return String.format(java.util.Locale.ROOT, this.asks, goal);
+        }
+
+        /** 4.1.54: the job as its giver asks it in his own words, mid-sentence (Banjou: "kill 4 Clowns", "bring me 8 charcoal, for the filters"). */
+        public String asked(int goal) {
+            if (this == GAS_CHARCOAL) {
+                return "bring me " + goal + " charcoal, for the filters";
+            }
+            String text = this.text(goal);
+            return text.isEmpty() ? text : Character.toLowerCase(text.charAt(0)) + text.substring(1);
         }
 
         /** The jobs of {@code gang}'s giver. */
@@ -59,9 +73,13 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
                 case "minecraft:cake" -> "cake";
                 case "minecraft:firework_rocket" -> "fireworks";
                 case "minecraft:allium" -> "alliums";
+                case "minecraft:iron_ingot" -> "iron ingots";
+                case "minecraft:charcoal" -> "charcoal";
+                case "minecraft:golden_apple" -> this.count == 1 ? "golden apple" : "golden apples";
                 case GHOUL_MEAT -> "Ghoul Meat";
                 case MEAT -> "human meat";
                 case CLOWN_MASK -> "clown mask";
+                case GAS_MASK -> "gas mask";
                 default -> this.item.substring(this.item.indexOf(':') + 1).replace('_', ' ');
             };
             return this.count == 1 ? (name.equals("cake") ? "a cake" : "a " + name) : this.count + " " + name;
@@ -72,6 +90,10 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
     public static final String MEAT = "hexkagune:human_meat";
     public static final String GHOUL_MEAT = "hexkagune:ghoul_meat";
     public static final String CLOWN_MASK = "hexkagune:mask_clown";
+    /** 4.1.54: the Gas Masks' own mask (the one a member is given, and one of Banjou's pay). */
+    public static final String GAS_MASK = "hexkagune:mask_gas";
+    /** 4.1.54: what Banjou's job of things brought asks for (his men's filters). */
+    public static final String CHARCOAL = "minecraft:charcoal";
 
     public static final GangDaily NONE = new GangDaily(0, 0, 0, -1L, false);
 
@@ -119,13 +141,18 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
     /** What it pays (besides {@link GangStanding#DAILY} reputation), rolled from the day and the player: two things of the gang's. */
     public List<Pay> pay(long seed) {
         Random random = new Random(seed * 31L + this.day * 104729L + this.kind * 13L + this.goal);
-        List<Pay> choices = this.job().gang == GangPlayer.AOGIRI
-            ? List.of(new Pay("minecraft:raw_iron", 6 + random.nextInt(5)), new Pay("minecraft:raw_gold", 3 + random.nextInt(4)),
+        List<Pay> choices = switch (this.job().gang) {
+            case GangPlayer.AOGIRI -> List.of(new Pay("minecraft:raw_iron", 6 + random.nextInt(5)), new Pay("minecraft:raw_gold", 3 + random.nextInt(4)),
                 new Pay("minecraft:diamond", 1 + random.nextInt(2)), new Pay(GHOUL_MEAT, 4 + random.nextInt(5)), new Pay(MEAT, 4 + random.nextInt(5)),
-                new Pay("minecraft:emerald", 3 + random.nextInt(4)))
-            : List.of(new Pay("minecraft:cake", 1), new Pay("minecraft:firework_rocket", 6 + random.nextInt(5)), new Pay(CLOWN_MASK, 1),
+                new Pay("minecraft:emerald", 3 + random.nextInt(4)));
+            // 4.1.54: the Gas Masks' (Banjou's): a mask, the filters' charcoal, iron, meat for the hungry, emeralds, now and then a golden apple.
+            case GangPlayer.GAS_MASKS -> List.of(new Pay(GAS_MASK, 1), new Pay(CHARCOAL, 8 + random.nextInt(9)), new Pay("minecraft:iron_ingot",
+                4 + random.nextInt(5)), new Pay(GHOUL_MEAT, 3 + random.nextInt(4)), new Pay("minecraft:emerald", 2 + random.nextInt(4)),
+                new Pay("minecraft:golden_apple", 1));
+            default -> List.of(new Pay("minecraft:cake", 1), new Pay("minecraft:firework_rocket", 6 + random.nextInt(5)), new Pay(CLOWN_MASK, 1),
                 new Pay(GHOUL_MEAT, 3 + random.nextInt(4)), new Pay("minecraft:allium", 4 + random.nextInt(5)), new Pay("minecraft:gold_ingot",
                 2 + random.nextInt(3)));
+        };
         int first = random.nextInt(choices.size());
         int second = (first + 1 + random.nextInt(choices.size() - 1)) % choices.size();
         return List.of(choices.get(first), choices.get(second));

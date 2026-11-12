@@ -1,0 +1,147 @@
+# Banjou's scenes (4.1.54). Read by SceneBook (see its comment for the form; SceneWords for every word allowed).
+# His voice: the Gas Masks' leader, at home in the cottage of their hideout. The owner: "wants to be tough but truly isnt, is aware of how
+# weak he truly is". He starts every sentence like a gang boss and finishes it like an apology; he says he's weak before anyone else can;
+# his men follow him because he is the one who stays. With the woman he loves he stops trying to sound tough, and is better for it.
+
+# =====================================================================================================================================
+# A FEW OF HIS OWN
+# =====================================================================================================================================
+
+scene speech
+who: friend
+say: *He's standing in the garden with a piece of paper, reading to a potted orchid in a very deep voice.* "Listen up, Gas Masks. Nobody touches this hideout while I'm-" *He sees you and the paper goes behind his back.* ...How long have you been there?
+> Long enough. Keep going. | +2 -> speech
+> It was good. | +2
+  - *He brightens, then catches himself and frowns hard.* ...It was supposed to be scary. Was it scary?
+page speech
+say: *He sighs and holds the paper out so you can see it. Half of it is crossed out.* I'm supposed to give a speech when a new one joins. Make them feel like they've come somewhere safe. *He scratches his beard.* Every time I try to sound tough, I sound like a man trying to sound tough.
+> Then don't sound tough. Sound like you. | +4 -> you
+> You sound fine. | +2 shy
+  - *He goes pink above the beard.* ...Thanks.
+page you
+say: *He looks at the paper a long moment, then folds it up and puts it in his pocket.* "You're safe here. We look after each other. That's all." *He shrugs, embarrassed.* ...That's it? That's the whole speech?
+> That's a good speech. | +4 shy
+  - *He nods slowly, like he's trying to believe it.* ...Yeah. Okay. I'll try that one next time.
+ignored: *He reads the speech to the orchid again, quieter this time.*
+
+scene patching
+who: friend
+say: *He's sitting on the cottage step with a needle and thread and one of his men's masks in his lap, squinting at a torn strap.* Hold this? The strap. Just- yeah. Thanks. *He fumbles the needle twice.* My hands are too big for this. I do it anyway.
+> Why not let them fix their own? | +2 -> own
+> *Hold the strap steady.* | +3
+  - *He gets it on the third try and beams at you.* There! Good as new. Better than new. Well. As good as new.
+page own
+say: *He doesn't look up from the strap.* Because I can't fight like they can. I can't hunt like they can. *The needle goes through.* But I can make sure every mask fits and every filter's fresh. That's mine. That's what I can do for them.
+> That matters. | +4 shy
+  - *He ducks his head.* ...You think so? *He ties off the thread.* Yeah. Okay. It matters.
+> You do more than you think. | +4 look
+  - *He looks at you for a long moment, then away.* ...Don't say that. I'll start believing it.
+ignored: *He finishes the strap and starts on the next mask without a word.*
+
+scene clowns
+who: friend
+when: day
+say: *He's at the garden wall, glaring out at nothing.* Clowns came by last night. Laughing. They always laugh. *He clenches a big fist.* One of my boys got hurt. I went out there. ...I got knocked over in the first ten seconds.
+> Did they leave? | +2 -> left
+> Are you hurt? | +3 -> left
+ignored: *He goes on glaring at the trees for a long time.*
+page left
+say: *He rubs his jaw.* They left. Because the boys came out after me. *He laughs, short and tired.* That's how it always goes. I go first, I go down, they finish it. ...At least I go first. Somebody has to.
+> That's brave. | +4 shy
+  - *He snorts.* That's stupid. ...It's a little brave. Don't tell them I said so.
+> Let me help next time. | +4
+  - *He looks at you, surprised.* ...You would? *A slow nod.* Okay. Next time. Stand next to me. Not behind. Next to.
+
+# =====================================================================================================================================
+# HIS COURTSHIP'S MOMENTS
+# =====================================================================================================================================
+
+moment banjou_supper
+say: *The boys are eating in the garden, masks pushed up, laughing for the first time in days. He's watching them from the cottage step, not eating anything himself.* ...Look at them. *He swallows.* I couldn't do that. I tried. Four days, I tried.
+> You'll eat too. | +3 -> eat
+> They're happy. | +3 -> eat
+ignored: *He watches them until every plate is clean, then quietly starts collecting the dishes.*
+page eat
+say: *He turns to look at you properly.* Nobody's ever done something for my boys because of me. *He rubs the back of his neck.* There's- the CCG have been sniffing round the hideout. I can't make them leave. Would you... help me with that too? I hate asking.
+> Ask me anything. | +4 shy
+  - *He goes red to the ears.* ...Okay. Okay. I'll try not to ask too much.
+
+moment banjou_doves
+say: *He comes running up, out of breath, his tiny blue wing still half out.* Are you okay? Are you hurt? I was- I was right behind you. *He looks at the ground.* ...I was a lot behind you.
+> You came. That's what counts. | +4 -> came
+> You were brave. | +3 -> came
+ignored: *He checks you over for scratches, muttering, and won't stop until he's sure.*
+page came
+say: *He lets the wing fold away.* ...They won't come back for a while. The boys can sleep. *He breathes out.* Hey. Can I ask you something stupid? Take me somewhere high sometime. Really high. I want to see everything look small. Just once.
+> I'll take you. | +3 shy
+  - *He grins, embarrassed and delighted.* ...It's a date. No! Not a date. A trip. A trip.
+
+moment banjou_high
+say: *The wind's strong up here. He's sitting with his legs over the edge, very still, looking down at the whole world gone tiny.* ...Huh. *He laughs, quiet.* Everything's so small. Even the scary things.
+> Even you look big up here. | +4 -> big
+> *Sit close beside him.* | +4 -> big
+ignored: *He sits there until the sun moves, saying nothing, and seems lighter when he stands up.*
+page big
+say: *He looks at you, then back down.* I've spent my whole life feeling small. Up here, next to you... *He stops.* I've been trying to get wild ghouls to join us for years. They laugh at me. I wonder if you could show me how you do it. How you make people want to stay.
+> I'll show you. | +4 shy
+  - *He nods, very seriously.* I'll take notes. I'm going to take so many notes.
+
+moment banjou_recruit
+say: *He's staring at the wild ghoul following you as if it's a magic trick.* It just... came? With you? *He looks at you, then at it, then at you.* What did you say to it? What did you DO?
+> I was kind to it. | +4 -> kind
+> I listened. | +4 -> kind
+ignored: *He stares after the two of you, scribbling in a little notebook.*
+page kind
+say: *He laughs, short and helpless.* That's it? That's- that's what I do. That's what I've been doing. *He shakes his head.* Maybe it works better when you do it. *Softer.* Come to the cottage tonight. Late. When I've got the mask on. ...There's something I want to show you.
+> I'll be there. | +4 shy
+  - *He goes red all the way down to his collar.* ...Okay. Okay. I'll leave the lantern lit.
+
+moment banjou_deep
+say: *The cottage is dark except for the one lantern. He's sitting on the edge of the bed with the gas mask on, breathing slow through the filter. When you come in, he doesn't say anything. He just reaches up, unbuckles it, and takes it off.* ...Hi.
+> Hi. | +4 -> hi
+> *Sit down beside him.* | +5 -> hi
+ignored: *He sits with the mask in his lap until the lantern burns low.*
+page hi
+say: *He turns the mask over in his big hands.* Every night I put this on so nobody can see I'm scared. *He sets it down on the bed between you.* I'm still scared. I'm not hiding it from you. *A small, shaky laugh.* If you asked me something right now, I'd say yes. I wouldn't even try to sound tough about it.
+> You don't have to be tough with me. | +5 shy
+  - *He leans his forehead against yours and closes his eyes.* ...Okay. Then ask. Quick. Before I get nervous again.
+
+# =====================================================================================================================================
+# DATES
+# =====================================================================================================================================
+
+date banjou_garden
+prompt: The garden at night. I'll show you the flowers.
+who: together
+say: *He walks you round the walled garden with a lantern, naming every flower in a low, serious voice, like a general reviewing troops.* That's a blue orchid. That's also a blue orchid. That one's a lilac. It's having a hard week.
+> You named the lilac? | +3 -> named
+> *Take his arm.* | +3 cling
+  - *He stops mid-sentence and forgets what he was saying entirely.* ...That one's a lilac. I said that. Sorry.
+page named
+say: *He goes red.* ...Only some of them. *He holds the lantern up to the potted orchids by the gate.* These ones I brought from a ruined house. They were the only thing alive there. *Quietly.* I know how that feels.
+> They're alive now. So are you. | +4 shy
+  - *He looks at you like you've said something he's going to remember for the rest of his life.*
+
+date banjou_stars
+prompt: The cottage roof. I counted the stars.
+who: together
+say: *He helps you up onto the pink roof, very carefully, then sits down so heavily the tiles creak.* ...Don't worry. It's held me before. Mostly. *He lies back.* Look. That one's mine. I named it. I'm not telling you what.
+> Tell me. | +3 -> name
+> *Lie down next to him.* | +3 cling
+  - *He holds very still so you'll stay.* ...This is the best night I've ever had. Don't tell me if it's not yours.
+page name
+say: *He mumbles something.* ...It's named after you. I named it the night you first came by. *He covers his face with one big hand.* That's so embarrassing. Forget I said it.
+> I'm not forgetting that. | +4 shy
+  - *He laughs into his hand.* ...Yeah. I didn't think you would.
+
+date banjou_tea
+prompt: Tea at the cottage. I'll get it right.
+who: together
+say: *The cottage smells of smoke. Two cups are on the table, and a third is in pieces on the floor.* Sit! Sit. Don't look at that. That never happened. *He pours, and only spills a little.* There. Tea. Properly.
+> It's perfect. | +3 -> perfect
+> You're sweet when you're nervous. | +3 shy
+  - *He sloshes the pot.* I'm not nervous! ...I'm a little nervous.
+page perfect
+say: *He sits down across from you and wraps his huge hands round a tiny cup.* I practised. All week. The boys drank a lot of bad tea. *He smiles into it.* I wanted one thing I did for you to come out right.
+> It all comes out right with you. | +4 shy
+  - *He puts the cup down very carefully, because his hands have started shaking, and grins at the table.*

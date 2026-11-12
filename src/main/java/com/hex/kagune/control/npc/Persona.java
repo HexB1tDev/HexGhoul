@@ -30,7 +30,15 @@ public abstract class Persona {
      * in the middle of their circus tent. After the others (the talk screen's faces go by this order).
      */
     public static final Persona ROMA = new Roma();
-    public static final List<Persona> ALL = List.of(ETO, TOUKA, KEN, AYATO, NORO, GENERAL, ROMA);
+    /**
+     * 4.1.54 (the owner: "New gang: / Gas Masks - Toxic logo, green name. / Leader - Banjou / Personality - wants to be tough but truly isnt,
+     * is aware of how weak he truly is. / Kagune - super small blue Ukaku wing (singular) cannot shoot projectiles, only uses basic m1s with
+     * it. / Dialog - Daily quest giver, Chat, Romanceable (Only females). / Lives in the small house in the schematic."; "The gas mask leader
+     * puts on the mask at night and is just alex model by the way, not muscled at all"): Banjou, the Gas Masks' leader, in the cottage of
+     * their hideout. After the others (the talk screen's faces go by this order).
+     */
+    public static final Persona BANJOU = new Banjou();
+    public static final List<Persona> ALL = List.of(ETO, TOUKA, KEN, AYATO, NORO, GENERAL, ROMA, BANJOU);
 
     /** Its key: its bond in each player's quest log, its memory, its one place in the world ({@code UniqueNpcs}), its textures. */
     public abstract String key();
@@ -190,6 +198,19 @@ public abstract class Persona {
     }
 
     public boolean maskInFight() {
+        return false;
+    }
+
+    /** 4.1.54: whether its mask goes on at night (Banjou: the owner, "puts on the mask at night"), off again by day. */
+    public boolean maskAtNight() {
+        return false;
+    }
+
+    /**
+     * 4.1.54: whether its wings never throw anything (Banjou: the owner, "cannot shoot projectiles, only uses basic m1s with it"): a string of
+     * slaps with its one wing instead ({@code NpcWings}, {@link WingRules#SLAPS}).
+     */
+    public boolean slapsOnly() {
         return false;
     }
 
@@ -1438,6 +1459,208 @@ public abstract class Persona {
             return "minecraft:allium".equals(id);
         }
     }
+
+    // ---------------------------------------------------------------- 4.1.54: Banjou, the Gas Masks' leader
+
+    /**
+     * 4.1.54: Banjou, who leads the Gas Masks from the cottage in their hideout. Big, bearded, and trying very hard to sound like a man nobody
+     * should cross; he knows exactly how weak he is and so does everyone else, and his gang follows him anyway, because he is the one who
+     * stays. A man's body on the slim arms, no muscle (the owner: "just alex model by the way, not muscled at all"); only dates women; one
+     * small blue Ukaku wing that slaps and nothing more; his gas mask on at night.
+     */
+    private static final class Banjou extends Persona {
+        private Script script;
+
+        @Override
+        public String key() {
+            return Teaching.BANJOU;
+        }
+
+        @Override
+        public String name() {
+            return "Banjou";
+        }
+
+        /** The owner: "green name". */
+        @Override
+        public String colour() {
+            return "\u00a7a";
+        }
+
+        @Override
+        public float size() {
+            return 1.0F;
+        }
+
+        @Override
+        public boolean female() {
+            return false;
+        }
+
+        /** The owner: "just alex model by the way": the slim arms (his skin, painted for the wide ones, has its arms narrowed). */
+        @Override
+        public boolean slim() {
+            return true;
+        }
+
+        /** The owner: "not muscled at all". */
+        @Override
+        public double muscle() {
+            return 0.0;
+        }
+
+        /** Not much of a fighter, and he knows it. */
+        @Override
+        public float health() {
+            return 220.0F;
+        }
+
+        @Override
+        public double armor() {
+            return 10.0;
+        }
+
+        @Override
+        public float might() {
+            return 0.45F;
+        }
+
+        @Override
+        public boolean wings() {
+            return true;
+        }
+
+        /** The owner: "super small blue Ukaku wing": his slaps a good deal weaker than Touka's spikes. */
+        @Override
+        public double wingPower() {
+            return 0.6;
+        }
+
+        @Override
+        public boolean slapsOnly() {
+            return true;
+        }
+
+        /** The owner: "blue". */
+        @Override
+        public int kaguneColour() {
+            return BANJOU_KAGUNE;
+        }
+
+        @Override
+        public String mask() {
+            return "mask_gas";
+        }
+
+        /** The owner: "puts on the mask at night". */
+        @Override
+        public boolean maskAtNight() {
+            return true;
+        }
+
+        @Override
+        public int hair() {
+            return BANJOU_HAIR;
+        }
+
+        @Override
+        public int eyes() {
+            return BANJOU_EYES;
+        }
+
+        @Override
+        public int skin() {
+            return BANJOU_SKIN;
+        }
+
+        @Override
+        public boolean oneEyed() {
+            return false;
+        }
+
+        /** The owner: "Romanceable (Only females)". */
+        @Override
+        public boolean likes(boolean woman) {
+            return woman;
+        }
+
+        /** He goes red at almost anything sweet, and then tries to say something tough about it. */
+        @Override
+        public boolean blushes(EtoGesture gesture) {
+            return gesture.blush || switch (gesture) {
+                case KISS, HAND, CLING, LEAN, HAIR, HUG, PECK, RING, PET -> true;
+                default -> false;
+            };
+        }
+
+        /** He works himself up to asking for a long time, and then mumbles it. */
+        @Override
+        public double kissing() {
+            return 0.45;
+        }
+
+        @Override
+        public double forward() {
+            return 0.55;
+        }
+
+        @Override
+        public boolean clings() {
+            return false;
+        }
+
+        @Override
+        public String home() {
+            return "the cottage";
+        }
+
+        @Override
+        public EtoGesture[] idles(EtoMood mood) {
+            return switch (mood) {
+                case GIDDY -> new EtoGesture[] {EtoGesture.HUM, EtoGesture.HAIR, EtoGesture.SHY, EtoGesture.STRETCH};
+                case SULKY, JEALOUS -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.HUFF, EtoGesture.LOOK, EtoGesture.TAP};
+                case LONELY, BORED -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.TAP, EtoGesture.STRETCH, EtoGesture.CHIN};
+                case CLINGY, AFFECTIONATE -> new EtoGesture[] {EtoGesture.SHY, EtoGesture.HAIR, EtoGesture.LOOK, EtoGesture.HUM};
+                case SLEEPY -> new EtoGesture[] {EtoGesture.YAWN, EtoGesture.STRETCH, EtoGesture.CHIN};
+                // Trying to look like a man to be afraid of: the pose, held a moment too long.
+                case BLOODTHIRSTY -> new EtoGesture[] {EtoGesture.POSE, EtoGesture.CROSS, EtoGesture.CRACK};
+                case CLAIMED, WARY -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.POSE, EtoGesture.LOOK, EtoGesture.HAIR};
+                default -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.POSE, EtoGesture.HAIR, EtoGesture.LOOK, EtoGesture.CHIN, EtoGesture.SHY};
+            };
+        }
+
+        @Override
+        public EtoGesture[] anyIdle() {
+            return new EtoGesture[] {EtoGesture.CROSS, EtoGesture.POSE, EtoGesture.HAIR, EtoGesture.LOOK, EtoGesture.CHIN, EtoGesture.STRETCH,
+                EtoGesture.SHY, EtoGesture.TAP, EtoGesture.HUFF};
+        }
+
+        @Override
+        public Script script() {
+            if (this.script == null) {
+                this.script = new BanjouScript();
+            }
+            return this.script;
+        }
+
+        /** Charcoal: the filters in the Gas Masks' masks are charcoal, and he is always the one making sure there are enough. */
+        @Override
+        public boolean errandItem(String id) {
+            return "minecraft:charcoal".equals(id);
+        }
+
+        /** A blue orchid: the flowers he keeps in pots all over the cottage and pretends somebody else waters. */
+        @Override
+        public boolean flower(String id) {
+            return "minecraft:blue_orchid".equals(id);
+        }
+    }
+
+    /** 4.1.54: Banjou's colours (his skin's hair, eyes and skin; a child of his takes them) and his one wing's blue. */
+    static final int BANJOU_HAIR = 0x6B4E36; // his brown hair and beard (the owner's skin)
+    static final int BANJOU_EYES = 0x87A7B6;
+    static final int BANJOU_SKIN = 0xF7CAA5;
+    public static final int BANJOU_KAGUNE = 0x4038E8; // a blue that keeps the crystal's depths blue too (0x2E6FE6 turned them teal: rendered)
 
     /** 4.1.49: Roma's colours (her skin's hair, eyes and skin; a child of hers takes them) and her tendrils' purple. */
     static final int ROMA_HAIR = 0x8EA1A6; // her grey-teal hair (the owner's skin)

@@ -17,6 +17,15 @@
       "chars": [
         "\ue001"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "hexkagune:font/gas_toxic.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue002"
+      ]
     }
   ]
 }

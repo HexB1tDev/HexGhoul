@@ -480,6 +480,28 @@ public class UiPreview {
             com.hex.kagune.control.client.NpcTalkView.Motion.still(45));
     }
 
+    /**
+     * 4.1.54: Banjou: asked to join (his question and the three answers, one of which takes him seriously), and giving one of the Gas Masks
+     * today's job (the option on his first page, the job given, the reputation bar in the gang's green).
+     */
+    static void banjouTalk(File dir) throws Exception {
+        java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> answers = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.SAY_1,
+            com.hex.kagune.control.npc.NpcTalk.Choice.SAY_2, com.hex.kagune.control.npc.NpcTalk.Choice.SAY_3, com.hex.kagune.control.npc.NpcTalk.Choice.BACK);
+        etoFrame(new File(dir, "banjou-join.png"), face("banjou/banjou.png"), new com.hex.kagune.control.client.NpcTalkView.Model("Banjou",
+            "The Gas Masks' leader - wary", 0, false, "Join us? *He straightens up, trying to look like a gang boss.* Why? Tell me why. And don't lie to "
+            + "me. Everyone lies to me.", answers, java.util.List.of("You? The boss? Of a gang? Seriously?",
+            "Because you're the strongest ghoul in the ward. Everyone says so.", "Because they follow you. Not for your strength. Because you stay.",
+            "Back."), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(0));
+        java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
+            com.hex.kagune.control.npc.NpcTalk.Choice.SAY_3, com.hex.kagune.control.npc.NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE);
+        com.hex.kagune.control.npc.GangDaily job = com.hex.kagune.control.npc.GangDaily.give(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS, 3L, 7L);
+        etoFrame(new File(dir, "daily-banjou.png"), face("banjou/banjou.png"), new com.hex.kagune.control.client.NpcTalkView.Model("Banjou",
+            "The Gas Masks' leader - happy", 35, false, "I hate asking. Could you " + job.job().asked(job.goal())
+            + "? I'd do it myself, but you'd do it better.", page,
+            java.util.List.of("Talk to me.", "How are the boys?", "Anything the boys need today?", "Leave."), 58 | com.hex.kagune.control.npc.GangPlayer.GAS_MASKS << 8),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(35));
+    }
+
     /** A companion's face from their skin (128 pixels read at 64). */
     static BufferedImage face(String path) throws Exception {
         BufferedImage skin = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/" + path));
@@ -606,6 +628,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("dailies")) {
             dailiesTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("banjou")) {
+            banjouTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("king")) {

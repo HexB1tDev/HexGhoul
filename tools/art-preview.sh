@@ -2,7 +2,7 @@
 # Ukaku's moves off-game: the posed body (exact PlayerAnimator + bendy-lib, tools/PoseRender.java) with the wings
 # (WingRig) and the RC fragments, in the wing previewer's translucent rasterizer. Run `python3 build.py` once first.
 # Usage: tools/art-preview.sh <out-dir> [sheet ...]   (sheets: aim shot moves crystal spikes vortex gatling kakuja kakuja-aim
-#        rebirth-thralls war-fp-view kakuja-kit kakuja-motion kakuja-final kakuja-final-kit rinkaku-mask wounds centipede centipede-grab centipede-mask rinkaku-kakuja centipede-game kakuja-burst kakugan-lean tendril-guard crystal-thorns wounds-anatomy steel-blade slams slams-gif impacts guard coats)
+#        rebirth-thralls war-fp-view kakuja-kit kakuja-motion kakuja-final kakuja-final-kit rinkaku-mask wounds centipede centipede-grab centipede-mask rinkaku-kakuja centipede-game kakuja-burst kakugan-lean tendril-guard crystal-thorns wounds-anatomy steel-blade slams slams-gif impacts guard coats banjou banjou-gif)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CLASSES="$ROOT/build/art-classes"

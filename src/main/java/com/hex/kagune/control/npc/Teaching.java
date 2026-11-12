@@ -72,6 +72,8 @@ public final class Teaching {
     public static final String GENERAL = "general";
     /** 4.1.49: Roma, the Clowns' leader. */
     public static final String ROMA = "roma";
+    /** 4.1.54: Banjou, the Gas Masks' leader. */
+    public static final String BANJOU = "banjou";
 
     /** Every lesson, in the order each teacher teaches them. */
     public static final List<Lesson> ALL = List.of(

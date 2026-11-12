@@ -1841,7 +1841,7 @@ public final class BikakuWormTests {
             String moves = read("src/main/java/com/hex/kagune/control/server/BikakuMoves.java");
             check(moves.contains("move.cost() > 0.0F && !KaguneServerController.useEnergy(player, move.cost(), true)"), "a free regeneration is never refused for an empty bar");
             String network = read("src/main/java/com/hex/kagune/control/network/ControlNetwork.java");
-            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("registerMessage(57, S2CGangName.class") && network.contains("PROTOCOL = \"124\""), "every client is told (message 57; 4.1.52: protocol 124, the talk page's reputation)");
+            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("registerMessage(57, S2CGangName.class") && network.contains("PROTOCOL = \"125\""), "every client is told (message 57; 4.1.52: the talk page's reputation; 4.1.54: protocol 125, Banjou's slaps)");
             String client = read("src/main/java/com/hex/kagune/control/client/PotentialClient.java");
             check(client.contains("model.f_102811_, model.f_103375_") && client.contains("model.f_102808_, model.f_102809_") && client.contains("event.setCanceled(true)"),
                 "a part off isn't drawn on him, nor its hand in first person");

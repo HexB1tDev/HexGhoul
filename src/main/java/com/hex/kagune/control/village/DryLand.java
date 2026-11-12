@@ -404,7 +404,7 @@ public final class DryLand {
      * where the place itself stands once laid out and moved onto dry land as it always is ({@link #firstPlaced}), at least
      * {@link #PLACE_APART} chunks from every village offer and from the middle of every one-of-a-kind place chosen before it.
      */
-    public static final String[] PLACES = {"anteiku", "library", "cyber_tower", "reaper_mansion", "circus"};
+    public static final String[] PLACES = {"anteiku", "library", "cyber_tower", "reaper_mansion", "circus", "gas_hideout"};
     public static final int ANTEIKU_SALT = 1324066190;
     public static final int LIBRARY_SALT = 1300741852;
     public static final int TOWER_SALT = 1324066191;
@@ -412,6 +412,8 @@ public final class DryLand {
     public static final int MANSION_SALT = 1324066192;
     /** 4.1.48 (the owner chose "One per world + clowns"): the circus tent, the Clowns' home. */
     public static final int CIRCUS_SALT = 1324066193;
+    /** 4.1.54 (the owner's GasMask_hideout.schem): the Gas Masks' hideout, Banjou's cottage in it. */
+    public static final int GAS_HIDEOUT_SALT = 1324066194;
     /** 4.1.9: how far (chunks) a one-of-a-kind place's middle keeps from a village's offer and from the places chosen before it. */
     public static final int PLACE_APART = 12;
     /** 4.1.9: how many offers that look like land are laid out in full before a world goes without the place (none on land). */
@@ -428,6 +430,7 @@ public final class DryLand {
             case "cyber_tower" -> TOWER_SALT;
             case "reaper_mansion" -> MANSION_SALT;
             case "circus" -> CIRCUS_SALT;
+            case "gas_hideout" -> GAS_HIDEOUT_SALT;
             default -> -1;
         };
     }

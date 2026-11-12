@@ -89,6 +89,84 @@ public final class WingRules {
             0.0F, 0.0F, SIDE > 0 ? 1.0F : 0.0F, SIDE > 0 ? 0.0F : 1.0F);
     }
 
+    // ---------------------------------------------------------------- 4.1.54: Banjou's one small wing
+
+    /**
+     * 4.1.54 (the owner: "Kagune - super small blue Ukaku wing (singular) cannot shoot projectiles, only uses basic m1s with it"): Banjou's
+     * wing is the twin wings as they first come in ({@link #SLAP_MASTERY}: the smallest the rig grows them), only the one on {@link #SIDE},
+     * drawn smaller still about its root ({@link #SLAP_SCALE}: about half Touka's at rest); it throws nothing. His M1 is a string of the base
+     * form's one-wing blows on his right, the player's own (ComboStyle.UKAKU_LEFT_WING's, mirrored): a slap, a wide swing and a rising wing,
+     * each as long and landing as late as the player's, then a rest. (The overhead slam is left out: a wing this small brings its hand down
+     * beside his own shoulder, short of anything in front of him; rendered and judged.)
+     */
+    public static final int SLAP_MASTERY = 100;
+    public static final float SLAP_SCALE = 0.7F;
+    public static final com.hex.kagune.control.ukaku.WingRig.Motion[] SLAPS = {com.hex.kagune.control.ukaku.WingRig.Motion.SLAP_RIGHT,
+        com.hex.kagune.control.ukaku.WingRig.Motion.SWING_RIGHT, com.hex.kagune.control.ukaku.WingRig.Motion.RISE_RIGHT};
+    /** The body's part in each (UkakuBody's poses of the same blows). */
+    public static final com.hex.kagune.control.StrikePattern[] SLAP_PATTERNS = {com.hex.kagune.control.StrikePattern.WING_SLAP,
+        com.hex.kagune.control.StrikePattern.WING_SWING, com.hex.kagune.control.StrikePattern.WING_RISE};
+    /** Each blow's length (ticks) and where in it the wing lands (the player's: ComboStyle.UKAKU_LEFT_WING's). */
+    public static final int[] SLAP_TICKS = {16, 20, 20};
+    public static final float[] SLAP_IMPACT = {0.5F, 0.5F, 0.5F};
+    /** What each hurts before his {@code Persona.wingPower} (his is 0.6: a weak man's wing). */
+    public static final float[] SLAP_DAMAGE = {5.0F, 6.0F, 6.5F};
+    /**
+     * How far (blocks, his middle to the edge of what he hits) each blow reaches (his wing's hand lands about 0.75 in front of him, his body
+     * turned into it: rendered with a body at that distance), and how close he walks in before he starts one.
+     */
+    public static final double SLAP_REACH = 1.3;
+    public static final double SLAP_START = 0.9;
+    /** The rest after the string's last blow (ticks), and the longest a string waits between blows before it starts again from the slap. */
+    public static final int SLAP_REST = 24;
+    public static final int SLAP_CHAIN = 30;
+
+    /** The tick of blow {@code slap} its wing lands on. */
+    public static int slapImpact(int slap) {
+        return Math.max(2, Math.min(SLAP_TICKS[slap] - 2, Math.round(SLAP_TICKS[slap] * SLAP_IMPACT[slap])));
+    }
+
+    /**
+     * His wing as the rig draws it ({@code slap}: the blow under way, or -1; {@code progress} 0..1 through it): only the right wing, never
+     * aiming, crystal as a fight's.
+     */
+    public static com.hex.kagune.control.ukaku.WingRig.Input banjou(float deploy, double time, float crystal, boolean dissolving, float detail, int slap,
+                                                                    float progress) {
+        boolean striking = slap >= 0 && slap < SLAPS.length;
+        return new com.hex.kagune.control.ukaku.WingRig.Input(com.hex.kagune.control.ukaku.WingForm.TWIN, SLAP_MASTERY, deploy, time, crystal, crystal,
+            striking ? SLAPS[slap] : com.hex.kagune.control.ukaku.WingRig.Motion.NONE, striking ? progress : 0.0F, striking ? SLAP_IMPACT[slap] : 0.4F,
+            0.0F, 0.0F, false, detail, 1.0F, dissolving, 0.0F, 0.0F, com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 0.0F, 0.0F,
+            SIDE > 0 ? 1.0F : 0.0F, SIDE > 0 ? 0.0F : 1.0F);
+    }
+
+    /**
+     * {@code carry} (a body frame: 3 x 3 then its offset, rig space) with what it carries drawn {@code scale} times its size about the wing's
+     * root on {@link #SIDE} (its shoulder blade stays where it is; the wing shrinks into it).
+     */
+    public static double[] shrunk(double[] carry, double scale) {
+        double[] a = carry == null ? new double[] {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0} : carry;
+        double[] root = {com.hex.kagune.control.ukaku.WingRig.ROOT_X * SIDE, com.hex.kagune.control.ukaku.WingRig.ROOT_Y,
+            com.hex.kagune.control.ukaku.WingRig.ROOT_Z};
+        double[] out = new double[12];
+        for (int r = 0; r < 3; r++) {
+            double moved = 0.0;
+            for (int c = 0; c < 3; c++) {
+                out[r * 3 + c] = a[r * 3 + c] * scale;
+                moved += a[r * 3 + c] * root[c] * (1.0 - scale);
+            }
+            out[9 + r] = a[9 + r] + moved;
+        }
+        return out;
+    }
+
+    /** Where his wing's hand is (rig space, at his size 1) {@code progress} through blow {@code slap}: the rig's own, shrunk as it is drawn. */
+    public static double[] slapTip(int slap, float progress) {
+        double[] tip = com.hex.kagune.control.ukaku.WingRig.slamTip(SLAP_MASTERY, com.hex.kagune.control.ukaku.WingForm.TWIN, SIDE, SLAPS[slap], progress,
+            SLAP_IMPACT[slap]);
+        double[] s = shrunk(null, SLAP_SCALE);
+        return new double[] {s[0] * tip[0] + s[9], s[4] * tip[1] + s[10], s[8] * tip[2] + s[11]};
+    }
+
     /**
      * 4.0.0: Ayato's: {@code in} as a full pair (both wings, a stronger Ukaku's size), or, {@code kakuja}, the first kakuja (its armoured
      * tentacles, drawn by the kakuja's own rig).

@@ -75,6 +75,7 @@ public final class NightWords {
             case "roma" -> new String[] {"She takes her mask off last and sets it face up on the pillow, grinning at the ceiling.",
                 "She does a little bow before getting into bed. Nobody claps. She does it anyway.",
                 "For once she doesn't say anything funny. She just reaches for you."};
+            case "banjou" -> new String[] {"He takes the gas mask off last, sets it on the dresser, and looks at it a long moment before he looks at you.", "He checks the door twice, then the window, then the door again. Then he laughs at himself.", "He's very big and very careful, and he asks twice if you're sure."};
             case "noro" -> new String[] {"The mask comes off last. He sets it face down, carefully.",
                 "He says nothing at all. He doesn't need to."};
             default -> new String[] {she + " takes your hand and leads the way.", she + " laughs softly and closes the door behind " + herself + ".",

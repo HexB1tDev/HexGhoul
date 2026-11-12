@@ -374,7 +374,8 @@ public final class NpcTests {
      */
     static void dailies() {
         boolean all = true;
-        for (int gang : new int[] {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS}) {
+        for (int gang : new int[] {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS,
+            com.hex.kagune.control.npc.GangPlayer.GAS_MASKS}) { // 4.1.54: and Banjou's
             java.util.Set<com.hex.kagune.control.npc.GangDaily.Job> seen = new java.util.HashSet<>();
             for (long day = 0; day < 200; day++) {
                 for (long seed = 0; seed < 5; seed++) {
@@ -408,6 +409,18 @@ public final class NpcTests {
                 clowns.add(pay.item());
             }
         }
+        // 4.1.54: Banjou pays in the Gas Masks' things: a gas mask, the filters' charcoal, iron, emeralds, Ghoul Meat, now and then a golden apple.
+        java.util.Set<String> gas = new java.util.HashSet<>();
+        for (long seed = 0; seed < 400; seed++) {
+            for (com.hex.kagune.control.npc.GangDaily.Pay pay : com.hex.kagune.control.npc.GangDaily.give(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS, seed, seed).pay(seed)) {
+                gas.add(pay.item());
+                check(!pay.text().contains("_"), "a reward named plainly: " + pay.text());
+            }
+        }
+        check(gas.containsAll(java.util.List.of(com.hex.kagune.control.npc.GangDaily.GAS_MASK, com.hex.kagune.control.npc.GangDaily.CHARCOAL,
+            "minecraft:iron_ingot", "minecraft:golden_apple")) && com.hex.kagune.control.npc.GangDaily.Job.GAS_CLOWNS.ordinal()
+            > com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_FLOWERS.ordinal() && com.hex.kagune.control.npc.GangDaily.Job.GAS_CHARCOAL.brought,
+            "Banjou's jobs (appended: a kept job keeps its place) and pay");
         check(aogiri.containsAll(java.util.List.of("minecraft:raw_iron", "minecraft:raw_gold", "minecraft:diamond", com.hex.kagune.control.npc.GangDaily.GHOUL_MEAT,
                 com.hex.kagune.control.npc.GangDaily.MEAT)) && clowns.containsAll(java.util.List.of("minecraft:cake", "minecraft:firework_rocket",
                 com.hex.kagune.control.npc.GangDaily.CLOWN_MASK)) && com.hex.kagune.control.npc.GangStanding.DAILY == 10,
@@ -420,6 +433,13 @@ public final class NpcTests {
             && eto.contains("page = withDaily(player, npc, page);") && eto.contains("GangServer.daily(player, npc.persona(), c.seed())")
             && server.contains("reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);"),
             "Noro gives Aogiri's, Roma the Clowns', from their first page; done, it pays its items and reputation");
+        // 4.1.54 (the owner, the Gas Masks' "Gang Bonuses": "While wearing the gas Mask, gain night vision. / Gain speed 2 when at low HP.").
+        check(server.contains(": persona == Persona.BANJOU\n            ? GangPlayer.GAS_MASKS") && server.contains("MobEffects.f_19611_, MASK_SIGHT_TICKS, 0")
+            && server.contains("item.piece().id().startsWith(\"mask_gas\")") && server.contains("MobEffects.f_19596_, 40, 1")
+            && com.hex.kagune.control.server.GangServer.GAS_SPEED_AT <= 0.35F && server.contains("gasTraits(player, g); // 4.1.54")
+            && server.contains("case GAS_CLOWNS -> clown;") && server.contains("? GangDaily.GAS_MASK : null"),
+            "the Gas Masks: Banjou's dailies; night vision while their gas mask is worn (taken back when it comes off), Speed II at low health; "
+                + "joining gives the gas mask");
         check(brain.contains("who.gang() == 0 && !who.aogiri() && GangServer.of(player).member(com.hex.kagune.control.npc.GangPlayer.AOGIRI)")
             && brain.indexOf("Long until = mind.grudges.get(body.m_20148_());") < brain.indexOf("GangServer.of(player).member(com.hex.kagune.control.npc.GangPlayer.AOGIRI)"),
             "Aogiri: wild ghouls no longer attack unless provoked (a grudge still holds)");
@@ -460,19 +480,39 @@ public final class NpcTests {
             "three Gas Masks, then the quinque case");
         c = c.killedGasMask().join(com.hex.kagune.control.npc.GangPlayer.CLOWNS);
         check(c.member(com.hex.kagune.control.npc.GangPlayer.CLOWNS) && c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_NOT_YET, "joined: the Clowns'");
+        // 4.1.54 (the owner: the Gas Masks joined by "Short chain, like Roma"): Banjou taken seriously, three Clowns, a clown's mask.
+        com.hex.kagune.control.npc.GangPlayer m = com.hex.kagune.control.npc.GangPlayer.NEW;
+        check(m.killedClown().clownKills() == 0, "the Clowns count only once Banjou has been taken seriously");
+        m = m.takenSeriously();
+        check(m.gasStep() == com.hex.kagune.control.npc.GangPlayer.GAS_CLOWNS_NEXT && m.takenSeriously() == m, "taken seriously: the Clowns next (once)");
+        m = m.killedClown().killedClown();
+        check(m.gasStep() == com.hex.kagune.control.npc.GangPlayer.GAS_CLOWNS_NEXT && m.killedClown().gasStep() == com.hex.kagune.control.npc.GangPlayer.GAS_MASK_NEXT
+            && com.hex.kagune.control.npc.GangPlayer.GAS_CLOWNS == 3, "three Clowns, then a clown's mask");
+        m = m.killedClown().join(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS);
+        check(m.member(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS) && m.gasStep() == com.hex.kagune.control.npc.GangPlayer.GAS_NOT_YET && m.clownKills() == 0
+            && !m.member(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "joined: the Gas Masks'");
+        for (int i = 0; i < 11; i++) {
+            m = m.killedOwn();
+        }
+        check(m.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && m.banned(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS)
+            && !m.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "the Gas Masks ban past ten of their own, as every gang");
+        check(com.hex.kagune.control.npc.GangPlayer.title(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS).equals("the Gas Masks")
+            && com.hex.kagune.control.npc.GangPlayer.GAS_MASKS == 3, "the Gas Masks: gang 3");
         check(com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.AOGIRI, "Ken").equals("\u00a7f\ue000 \u00a74Ken\u00a7r")
             && com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.CLOWNS, "Ken").equals("\u00a7f\ue001 \u00a79Ken\u00a7r")
+            && com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS, "Ken").equals("\u00a7f\ue002 \u00a7aKen\u00a7r")
             && com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.NONE, "Ken").equals("Ken"),
-            "(symbol) (space) (name): the emblem in its own colours, Aogiri's name dark red, the Clowns' blue; a gangless name as it is");
+            "(symbol) (space) (name): the emblem in its own colours, Aogiri's name dark red, the Clowns' blue, the Gas Masks' green (4.1.54: "
+                + "\"Toxic logo, green name\"); a gangless name as it is");
         NpcIdentity rolled = NpcIdentity.roll(300, new java.util.Random(11)::nextDouble);
         check(com.hex.kagune.control.npc.GangPlayer.of(rolled.ganged(com.hex.kagune.control.npc.Gang.CLOWNS, 2)) == com.hex.kagune.control.npc.GangPlayer.CLOWNS
-            && com.hex.kagune.control.npc.GangPlayer.of(rolled.ganged(com.hex.kagune.control.npc.Gang.GAS_MASKS, 2)) == com.hex.kagune.control.npc.GangPlayer.NONE
-            && com.hex.kagune.control.npc.GangPlayer.of(rolled) == com.hex.kagune.control.npc.GangPlayer.NONE, "a Clown is the Clowns'; a Gas Mask no gang a player joins");
+            && com.hex.kagune.control.npc.GangPlayer.of(rolled.ganged(com.hex.kagune.control.npc.Gang.GAS_MASKS, 2)) == com.hex.kagune.control.npc.GangPlayer.GAS_MASKS
+            && com.hex.kagune.control.npc.GangPlayer.of(rolled) == com.hex.kagune.control.npc.GangPlayer.NONE, "a Clown is the Clowns'; 4.1.54: a Gas Mask the Gas Masks'");
         try {
             String font = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/assets/minecraft/font/default.json")));
             check(font.contains("\"hexkagune:font/aogiri_tree.png\"") && font.contains("\"hexkagune:font/clown_face.png\"") && font.contains("\\ue000")
-                && font.contains("\\ue001"), "the emblems in the game's own font");
-            for (String glyph : new String[] {"aogiri_tree", "clown_face"}) {
+                && font.contains("\\ue001") && font.contains("\"hexkagune:font/gas_toxic.png\"") && font.contains("\\ue002"), "the emblems in the game's own font");
+            for (String glyph : new String[] {"aogiri_tree", "clown_face", "gas_toxic"}) {
                 java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(new java.io.File("src/main/resources/assets/hexkagune/textures/font/" + glyph + ".png"));
                 int drawn = 0;
                 for (int y = 0; y < 16; y++) {
@@ -2246,7 +2286,7 @@ public final class NpcTests {
                         || name.equals("small_city.json") && json.contains("\"type\": \"hexkagune:small_city\""), name + ": built only on dry land");
                 }
             }
-            for (String place : List.of("anteiku", "library", "cyber_tower", "reaper_mansion", "circus")) {
+            for (String place : List.of("anteiku", "library", "cyber_tower", "reaper_mansion", "circus", "gas_hideout")) {
                 String json = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/structure/" + place + ".json")));
                 check(json.contains("\"type\": \"hexkagune:dry_place\"") && json.contains("\"start_pool\": \"hexkagune:" + place + "/start\""),
                     place + ": moved near its start onto dry land");
@@ -2389,8 +2429,9 @@ public final class NpcTests {
         // Their numbers, each its own salt, the same as their sets'.
         java.util.Set<Integer> salts = new java.util.HashSet<>(List.of(com.hex.kagune.control.village.DryLand.SALT, com.hex.kagune.control.village.DryLand.CCG_SALT,
             com.hex.kagune.control.village.DryLand.CITY_SALT));
-        check(List.of(com.hex.kagune.control.village.DryLand.PLACES).equals(List.of("anteiku", "library", "cyber_tower", "reaper_mansion", "circus")),
-            "the five jigsaw places, in the order chosen (4.1.24: the White Reaper's mansion; 4.1.48: the circus tent last)");
+        check(List.of(com.hex.kagune.control.village.DryLand.PLACES).equals(List.of("anteiku", "library", "cyber_tower", "reaper_mansion", "circus",
+            "gas_hideout")), "the six jigsaw places, in the order chosen (4.1.24: the White Reaper's mansion; 4.1.48: the circus tent; 4.1.54: the "
+            + "Gas Masks' hideout last)");
         // The offers are read from the set as the world has it (a mod may change every set's spacing): with the file's numbers they are
         // exactly the hideout's and the CCG building's as before; with other numbers, that spread's own offers.
         for (long seed : new long[] {0L, 42L, -7_000_000_000L}) {
@@ -2486,7 +2527,7 @@ public final class NpcTests {
             // none is taken (a world from before the claims); a second is told in the log; every one-of-a-kind place is looked for.
             String adopt = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java")));
             check(adopt.contains("if (taken == null) {\n                    claim(place, at.f_45578_, at.f_45579_);")
-                && adopt.contains("ONE_OF_A_KIND = {\"aogiri_hideout\", \"ccg_building\", \"anteiku\", \"library\", \"cyber_tower\", \"reaper_mansion\",\n        \"circus\"}"),
+                && adopt.contains("ONE_OF_A_KIND = {\"aogiri_hideout\", \"ccg_building\", \"anteiku\", \"library\", \"cyber_tower\", \"reaper_mansion\",\n        \"circus\", \"gas_hideout\"}"),
                 "a one-of-a-kind place already standing is the world's one");
             // 4.1.17 (the owner: "they are spawning under the ground, which cannot happen ... always at the top max area"): every jigsaw
             // place is lifted onto the highest ground of its footprint; the tower starts on the ground, not at y 63.
@@ -2494,7 +2535,7 @@ public final class NpcTests {
                 && structures.contains("made.m_192781_(lift);"), "a place stands on the highest ground of its footprint");
             String tower = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json")));
             check(tower.contains("\"project_start_to_heightmap\": \"WORLD_SURFACE_WG\"") && !tower.contains("\"absolute\": 63"), "Ken's tower starts on the ground");
-            for (String place : new String[] {"anteiku", "library", "cyber_tower", "reaper_mansion", "circus"}) {
+            for (String place : new String[] {"anteiku", "library", "cyber_tower", "reaper_mansion", "circus", "gas_hideout"}) {
                 String json = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/" + place + ".json")));
                 check(json.contains("\"project_start_to_heightmap\": \"WORLD_SURFACE_WG\""), place + " starts on the ground's height");
             }
@@ -2537,8 +2578,8 @@ public final class NpcTests {
             String commands = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java")));
             // (Read in the source: ControlStructures registers the game's own registries as it loads, and there is no game here.)
             check(commands.contains("Commands.m_82127_(\"places\")") && commands.contains("ControlStructures.report()")
-                && structures.contains("ONE_OF_A_KIND = java.util.List.of(\"aogiri_hideout\", \"ccg_building\", \"cyber_tower\", \"anteiku\", \"library\",\n        \"reaper_mansion\", \"circus\")"),
-                "/kagune places lists the seven places");
+                && structures.contains("ONE_OF_A_KIND = java.util.List.of(\"aogiri_hideout\", \"ccg_building\", \"cyber_tower\", \"anteiku\", \"library\",\n        \"reaper_mansion\", \"circus\", \"gas_hideout\")"),
+                "/kagune places lists the eight places (4.1.54: the Gas Masks' hideout)");
             // 4.1.13: from a player it makes each place's start chunk and looks in it: built there, or stopped (one chunk a world: anything that
             // stops it there leaves the world without it).
             check(commands.contains("ControlStructures.report(player.m_284548_())") && structures.contains("if (standsIn(level, level.m_6325_(at[0], at[1]), id)) {")

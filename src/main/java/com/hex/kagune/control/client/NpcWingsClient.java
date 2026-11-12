@@ -13,7 +13,7 @@ import net.minecraft.client.Minecraft;
 public final class NpcWingsClient {
     /** Her wings as the server last said; {@code ...Began} are client clock times. */
     public record View(boolean out, double outBegan, boolean crystal, double crystalBegan, int prey, long shotAt, double shotBegan, int shotSide,
-                       long volleyAt, double volleyBegan, boolean kakuja, double kakujaBegan, double mendBegan) {
+                       long volleyAt, double volleyBegan, boolean kakuja, double kakujaBegan, double mendBegan, int slap, double slapBegan) {
     }
 
     private static final Map<Integer, View> VIEWS = new HashMap<>();
@@ -27,7 +27,8 @@ public final class NpcWingsClient {
         double clock = PaleClient.clock(0.0F);
         VIEWS.put(message.id(), new View(message.out(), began(world, clock, message.outAt()), message.crystal(), began(world, clock, message.crystalAt()),
             message.prey(), message.shotAt(), began(world, clock, message.shotAt()), message.shotSide(), message.volleyAt(),
-            began(world, clock, message.volleyAt()), message.kakuja(), began(world, clock, message.kakujaAt()), began(world, clock, message.mendAt())));
+            began(world, clock, message.volleyAt()), message.kakuja(), began(world, clock, message.kakujaAt()), began(world, clock, message.mendAt()),
+            message.slap(), began(world, clock, message.slapAt())));
     }
 
     private static double began(long world, double clock, long at) {
@@ -94,6 +95,18 @@ public final class NpcWingsClient {
         }
         double since = clock - view.shotBegan();
         return since < 0.0 ? 0.0F : (float)Math.exp(-since * 0.55);
+    }
+
+    /**
+     * 4.1.54: Banjou's slap under way: which blow ({@link WingRules#SLAPS}) and how far through it (0..1), or null (none, or over: the server
+     * says when it ends, but a frame never waits on it).
+     */
+    public static float[] slap(View view, double clock) {
+        if (view == null || view.slap() < 0 || view.slap() >= WingRules.SLAPS.length) {
+            return null;
+        }
+        double progress = (clock - view.slapBegan()) / WingRules.SLAP_TICKS[view.slap()];
+        return progress < 0.0 || progress > 1.0 ? null : new float[] {view.slap(), (float)progress};
     }
 
     /** Every companion this client knows wings of (entity ids; a copy). */

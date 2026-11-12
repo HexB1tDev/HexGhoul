@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """4.1.50 (the owner: Aogiri's name "dark red with a custom tree emblem", the Clowns' "blue with a custom clown face", "(symbol) (space)
-(name)"): the two gangs' emblems as 16 x 16 font glyphs (assets/hexkagune/textures/font/), drawn here pixel by pixel, and the font that
-maps them (assets/minecraft/font/default.json: U+E000 the tree, U+E001 the clown, private characters added to the game's own font: every
+(name)"; 4.1.54, the Gas Masks: "Toxic logo, green name"): the gangs' emblems as 16 x 16 font glyphs (assets/hexkagune/textures/font/), drawn here pixel by pixel, and the font that
+maps them (assets/minecraft/font/default.json: U+E000 the tree, U+E001 the clown, U+E002 the toxic trefoil, private characters added to the game's own font: every
 resource pack's default.json is read and joined, so a plain name can carry them). The glyphs keep their own colours (the name after them
 is coloured, not the emblem: GangPlayer.named puts white before them).
 
@@ -59,7 +59,31 @@ CLOWN = [
 CLOWN_COLOURS = {"b": (36, 84, 196), "B": (88, 140, 240), "w": (245, 245, 240), "k": (20, 20, 24), "t": (70, 120, 230), "r": (200, 30, 40),
                  "R": (240, 80, 80)}
 
-GLYPHS = [("aogiri_tree", TREE, TREE_COLOURS, ""), ("clown_face", CLOWN, CLOWN_COLOURS, "")]
+# 4.1.54 (the owner: the Gas Masks "Toxic logo, green name"): the biohazard trefoil in toxic green: three horns round round holes, each open
+# outward, meeting at a small ring in the middle (g: green, d: its darker edge). Drawn from the true symbol's construction shrunk to 16 px,
+# its horns two pixels thick (as heavy as the tree and the clown at a small GUI scale).
+TOXIC = [
+    "....dgg..ggd....",
+    "...ggd....dgg...",
+    "..ggd......dgg..",
+    "..gg........gg..",
+    "..gg........gg..",
+    "..ggd......dgg..",
+    ".dgggg.gg.ggggd.",
+    "dggggggggggggggd",
+    "ggd..dg..gd..dgg",
+    "gg....dggd....gg",
+    "gd....gggg....dg",
+    "d.....g..g.....d",
+    ".....dg..gd.....",
+    "....dggddggd....",
+    "...dgd....dgd...",
+    "..dd........dd..",
+]
+TOXIC_COLOURS = {"g": (110, 214, 52), "d": (60, 150, 30)}
+
+GLYPHS = [("aogiri_tree", TREE, TREE_COLOURS, ""), ("clown_face", CLOWN, CLOWN_COLOURS, ""),
+          ("gas_toxic", TOXIC, TOXIC_COLOURS, "")]
 
 
 def image(rows, colours):
@@ -86,7 +110,7 @@ def write():
 def preview(out):
     """A mock (not the game's font): each emblem big, then in a name tag and a chat line at the game's sizes, scaled up 4 times."""
     scale = 4
-    W, H = 760, 420
+    W, H = 760, 500
     sheet = Image.new("RGB", (W, H), (58, 68, 80))
     d = ImageDraw.Draw(sheet)
     try:
@@ -94,17 +118,17 @@ def preview(out):
         small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
     except OSError:
         font = small = ImageFont.load_default()
-    d.text((12, 8), "Gang emblems (4.1.50): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
+    d.text((12, 8), "Gang emblems (4.1.50, 4.1.54): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
     x = 20
     for name, rows, colours, _ in GLYPHS:
         big = image(rows, colours).resize((160, 160), Image.NEAREST)
         sheet.paste(big, (x, 40), big)
         d.text((x, 205), name.replace("_", " "), fill=(230, 230, 230), font=small)
         x += 200
-    lines = [("aogiri_tree", (170, 0, 0), "Ken"), ("clown_face", (85, 85, 255), "Ken")]
+    lines = [("aogiri_tree", (170, 0, 0), "Ken"), ("clown_face", (85, 85, 255), "Ken"), ("gas_toxic", (85, 255, 85), "Ken")]
     y = 240
     for name, rows, colours, _ in GLYPHS:
-        colour = (170, 0, 0) if name == "aogiri_tree" else (85, 85, 255)
+        colour = (170, 0, 0) if name == "aogiri_tree" else (85, 255, 85) if name == "gas_toxic" else (85, 85, 255)
         # A name tag: dark translucent box, the emblem, a space, the name.
         glyph = image(rows, colours).resize((8 * scale, 8 * scale), Image.NEAREST)
         label = "Ken"

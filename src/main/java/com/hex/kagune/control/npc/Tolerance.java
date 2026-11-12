@@ -77,6 +77,7 @@ public final class Tolerance {
                 "Careful. I heal fast, but still."};
             case "general" -> new String[] {"Steady! ...Once. I'll overlook once.", "Watch your arm. I've court-martialled for less.", "Hm. Careless."};
             case "roma" -> new String[] {"Ow! Ha! ...No, really, ow. Once. You get one.", "Hit me again and I'll laugh. You won't like it.", "Sloppy! Aim for something vital next time. Kidding."};
+            case "banjou" -> new String[] {"Ow! ...Okay. Once. I'll pretend I didn't feel that.", "Hey! I bruise easy. ...Don't do that again.", "That hurt. I'm saying it hurt. I'm not ashamed."};
             case "ayato" -> new String[] {"Hey! Watch it. ...Once. You get one.", "Do that again and I hit back.", "Tch. Sloppy. Aim better."};
             case "noro" -> new String[] {"*He doesn't react.*", "*His head turns. Slowly.*"};
             default -> new String[] {"Ow."};
@@ -91,6 +92,7 @@ public final class Tolerance {
             case "ken" -> new String[] {"Oh. ...That's okay. Another time.", "Ah, you're busy. It's alright. I'll wait."};
             case "general" -> new String[] {"...As you were.", "Hm. Another time, then."};
             case "roma" -> new String[] {"...Okay. Your loss. Huge loss. Tragic.", "Fine! I'll do it alone. Like a sad mime."};
+            case "banjou" -> new String[] {"...Oh. Okay. That's fine. I'm used to it.", "Right. Of course. Another time, maybe."};
             case "ayato" -> new String[] {"...Fine. Whatever. Your loss.", "Tch. Didn't want one anyway."};
             case "noro" -> new String[] {"*He doesn't move.*"};
             default -> new String[] {"Hm."};
@@ -106,6 +108,7 @@ public final class Tolerance {
                 case "ken" -> new String[] {"I believe you. I just need a moment. That's all. Come back in a little while?"};
                 case "general" -> new String[] {"...I heard you. Give me an hour. I'm not going anywhere. I only need to sign something very hard."};
                 case "roma" -> new String[] {"...I heard you. Go away for an hour. I need to be furious somewhere you can't see it."};
+                case "banjou" -> new String[] {"...I heard you. I just need an hour. I'm not leaving. I'm going to go stand in the garden and feel stupid."};
                 case "ayato" -> new String[] {"...I heard you. Go away for a bit. I'm not leaving. I just need to hit something first."};
                 case "noro" -> new String[] {"*He turns away. Later.*"};
                 default -> new String[] {"Give me a minute."};
@@ -120,6 +123,7 @@ public final class Tolerance {
                 "Already forgotten. Come here."};
             case "general" -> new String[] {"...Forgiven. Don't make a habit of it.", "I can't stay angry at you. It's most irregular.", "It's forgotten. Come here."};
             case "roma" -> new String[] {"...Forgiven. Don't make it a running gag.", "I can't stay mad at you. It's a design flaw.", "Sorry accepted! Come here, idiot."};
+            case "banjou" -> new String[] {"...Forgiven. I can't stay mad at you. I've tried. I'm bad at it.", "It's okay. Really. Come here.", "Already forgotten. I forgive everybody. It's a problem."};
             case "ayato" -> new String[] {"...Fine. Forgiven. Don't make it a habit.", "Tch. I can't stay mad at you. It's annoying.",
                 "Sorry? ...Yeah. Okay. Come here, idiot."};
             case "noro" -> new String[] {"*A nod.*", "*He looks at you. Then nods.*"};
@@ -135,6 +139,7 @@ public final class Tolerance {
             case "ken" -> new String[] {"...Hi. I'm alright. Just a little hurt. Not the body kind.", "You came. ...Okay. I'm listening."};
             case "general" -> new String[] {"Yes? I'm still angry.", "Oh. You. ...Say what you came to say."};
             case "roma" -> new String[] {"What. I'm still mad. Not funny-mad. Mad-mad.", "Oh. It's you. ...Say what you came to say."};
+            case "banjou" -> new String[] {"What. I'm still mad. ...A little.", "Oh. You. ...Say what you came to say."};
             case "ayato" -> new String[] {"What. I'm still mad.", "Oh. It's you. ...Say what you came to say."};
             case "noro" -> new String[] {"*Silence. Even for him.*"};
             default -> new String[] {"Hm."};

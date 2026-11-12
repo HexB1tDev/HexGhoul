@@ -1063,6 +1063,7 @@ public final class SceneServer {
             case "ayato" -> new String[] {"Tch. Fine. Ignore me.", "...Whatever. I didn't want to talk anyway.", "Your loss."};
             case "general" -> new String[] {"...As you were.", "Hm. Another time.", "Never mind. It will keep."};
             case "roma" -> new String[] {"...Oh well! Next act!", "Hm. Another time, then.", "*shrugs theatrically and wanders off*"};
+            case "banjou" -> new String[] {"...Oh. Okay. Never mind.", "Hm. Another time.", "*rubs the back of his neck and wanders off*"};
             default -> new String[] {"*looks down and wanders off*", "*waits a little, then goes back to playing*", "*sighs a very small sigh*"};
         };
         return lines[Math.floorMod(seed, lines.length)];

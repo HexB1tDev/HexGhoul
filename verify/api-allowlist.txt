@@ -829,6 +829,7 @@ M net/minecraft/world/entity/LivingEntity m_21230_ ()I  # [srg] getArmorValue: j
 F net/minecraft/world/effect/MobEffects f_19615_ Lnet/minecraft/world/effect/MobEffect;  # [srg] WITHER: joined.tsrg bfc t f_19615_ 19615 (POISON f_19614_ is s); 1.0.16, Rebirth cleanses it
 F net/minecraft/world/effect/MobEffects f_19591_ Lnet/minecraft/world/effect/MobEffect;  # [order] SLOW_FALLING: 28th field 'B' of bfc (unluck 'A' f_19590_, conduit 'C' f_19592_; poison 's' f_19614_, wither 't' f_19615_ as above); 1.0.16, Peace's glide
 F net/minecraft/world/effect/MobEffects f_19610_ Lnet/minecraft/world/effect/MobEffect;  # [order] BLINDNESS: 15th field 'o' of bfc (invisibility 'n' f_19609_ as above, night vision 'p' f_19611_); 1.0.17, War's burst
+F net/minecraft/world/effect/MobEffects f_19611_ Lnet/minecraft/world/effect/MobEffect;  # [order] NIGHT_VISION: 16th field 'p' of bfc (blindness 'o' f_19610_, hunger 'q' f_19612_ as above); joined.tsrg bfc p f_19611_ 19611, intermediary field_5925; 4.1.54, the Gas Masks' mask
 
 # --- 1.0.34: Peace reworked (control/awakening/PeaceKit, control/server/FleshThralls, client/fx/PeaceFx)
 F net/minecraft/world/level/block/Blocks f_49991_ Lnet/minecraft/world/level/block/Block;  # [order] LAVA: joined.tsrg cpo H f_49991_ (AIR 'a' f_50016_ as above, WATER 'G' f_49990_), intermediary cpo.H field_10164; awakening/mappings.srg, tools/check_mappings.py: the Aegis pushes him off it

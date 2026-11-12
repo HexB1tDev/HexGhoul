@@ -20,7 +20,7 @@ public final class SceneWords {
      * 4.0.0: every speaker whose script may hold courtship moments and dates: the three, and Ayato (his script, talk/ayato.txt, is his
      * courtship's moments, his dates and a few scenes of his own: not yet every mood of every tier as theirs are).
      */
-    public static final Set<String> ROMANCE_SCRIPTS = Set.of("eto", "touka", "ken", "ayato", "general", "roma"); // 4.1.5: the General; 4.1.49: Roma
+    public static final Set<String> ROMANCE_SCRIPTS = Set.of("eto", "touka", "ken", "ayato", "general", "roma", "banjou"); // 4.1.5: the General; 4.1.49: Roma; 4.1.54: Banjou
     public static final String CHILD = "child";
     /** The wild ghouls who walk with a player (any of them: by its temper). */
     public static final String ALLY = "ally";
@@ -90,7 +90,7 @@ public final class SceneWords {
      * 4.1.15: the companions whose ties to the player every other one can see (with_, wed_, kidswith_ each), by persona key, and what their
      * flags call them ({@link #tieName}: the black rabbit's by his mask, as the companions' scripts never name him).
      */
-    public static final Set<String> RELATED = Set.of("eto", "touka", "ken", "ayato", "general", "noro", "roma");
+    public static final Set<String> RELATED = Set.of("eto", "touka", "ken", "ayato", "general", "noro", "roma", "banjou");
 
     /** 4.1.15: the word a tie to persona {@code key} goes by in the flags ({@code with_<word>}). */
     public static String tieName(String key) {
@@ -99,7 +99,7 @@ public final class SceneWords {
 
     private static Set<String> relationFlags() {
         Set<String> out = new java.util.HashSet<>();
-        for (String key : Set.of("eto", "touka", "ken", "ayato", "general", "noro", "roma")) {
+        for (String key : Set.of("eto", "touka", "ken", "ayato", "general", "noro", "roma", "banjou")) {
             out.add("with_" + tieName(key));
             out.add("wed_" + tieName(key));
             out.add("kidswith_" + tieName(key));

@@ -603,6 +603,7 @@ public final class EtoBrain {
                     case "ayato" -> "*drops onto the bed, arms crossed* ...You coming, or do I have to drag you?";
                     case "general" -> "*hangs his coat on the chair, squares it, and sits on the edge of the bed* ...Lights out. Come to bed.";
                     case "roma" -> "*flops onto the bed, mask on, then off* ...Lights out. Come to bed before I get bored.";
+                    case "banjou" -> "*sits on the edge of the bed and unlaces his boots, then looks up* ...You coming? I lit the lantern. I mean- come to bed.";
                     default -> "*curls up on her side of the bed* Come to bed, love. Don't make me wait.";
                 };
                 say(npc, partner, line);

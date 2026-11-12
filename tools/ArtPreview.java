@@ -64,6 +64,15 @@ public final class ArtPreview {
         if (wanted.contains("slams-gif")) {
             slamsGif(new File(out, "ukaku-slams.gif"));
         }
+        // 4.1.54: Banjou's one small blue wing, at rest and through his string of slaps (only when asked: banjou, banjou-gif).
+        if (wanted.contains("banjou")) {
+            banjouSheet(new File(out, "banjou-wing.png"));
+            banjouSlaps(new File(out, "banjou-slaps.png"));
+            banjouImpacts(new File(out, "banjou-impacts.png"));
+        }
+        if (wanted.contains("banjou-gif")) {
+            banjouGif(new File(out, "banjou-slaps.gif"));
+        }
         if (wanted.isEmpty() || wanted.contains("crystal")) {
             crystal(new File(out, "ukaku-crystal.png"));
         }
@@ -2259,6 +2268,139 @@ public final class ArtPreview {
         System.out.println("wrote " + file + " (" + frames.size() + " frames)");
     }
 
+    // ------------------------------------------------------------------ 4.1.54: Banjou's wing
+
+    /** Banjou's game texture (his skin, arms narrowed for the slim model). */
+    static BufferedImage banjouSkin() throws Exception {
+        return ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/banjou/banjou.png"));
+    }
+
+    /** A shot of Banjou: his skin on the slim arms, his wing shrunk and blue as the game draws it. */
+    static Shot banjouShot(String label, RigPose pose, WingRig.Input wings, double[] eye, double[] target, List<WingPreview.Tri> extra) throws Exception {
+        Shot shot = new Shot(label, pose, wings, eye, target, extra);
+        SKINS.put(shot, banjouSkin());
+        SLIM.add(shot);
+        SHRINK.put(shot, Double.parseDouble(System.getProperty("shrink", Float.toString(com.hex.kagune.control.npc.WingRules.SLAP_SCALE))));
+        TINT.put(shot, Integer.parseInt(System.getProperty("tint", Integer.toHexString(com.hex.kagune.control.npc.Persona.BANJOU.kaguneColour())), 16));
+        return shot;
+    }
+
+    /** His body {@code progress} through blow {@code slap}, as EtoFight.slap puts it on him (UkakuBody's pose at EtoFight.SLAP_BODY). */
+    static RigPose banjouBody(int slap, float progress) {
+        float amp = 0.85F; // EtoFight.SLAP_BODY
+        return body(com.hex.kagune.control.npc.WingRules.SLAP_PATTERNS[slap], true, false, progress, com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[slap],
+            (amp - 0.92F) / 0.16F);
+    }
+
+    /** His wing at rest (out, crystal), and Touka's beside it for its size, front, side, behind and three quarters. */
+    static void banjouSheet(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[][] eyes = {{0.0, 1.6, 6.0}, {6.0, 1.5, 0.4}, {0.0, 2.0, -6.0}, {4.2, 2.4, 4.6}};
+        String[] names = {"front", "his right side", "behind", "three quarters"};
+        double[] target = {0.0, 1.15, 0.0};
+        for (int k = 0; k < eyes.length; k++) {
+            shots.add(banjouShot("Banjou, wing out: " + names[k], new RigPose(), com.hex.kagune.control.npc.WingRules.banjou(1.0F, 1.3, 1.0F, false, 1.0F, -1,
+                0.0F), eyes[k], target, new ArrayList<>()));
+        }
+        for (int k = 0; k < eyes.length; k++) {
+            Shot touka = new Shot("Touka's wing (for its size): " + names[k], new RigPose(), com.hex.kagune.control.npc.WingRules.companion(1.0F, 1.3, 1.0F,
+                false, 0.0F, WingRig.FORWARD, 0.0F, 0.0F, 1.0F), eyes[k], target, new ArrayList<>());
+            SKINS.put(touka, banjouSkin());
+            SLIM.add(touka);
+            shots.add(touka);
+        }
+        sheet(file, "Banjou's one small blue wing (WingRules.banjou, shrunk as UkakuWingRenderer draws it) beside Touka's", shots, 4, 300, 320);
+    }
+
+    /** His string, blow by blow: the wind-up, on its way, the impact, just after, the way back, and the hand's path from above. */
+    static void banjouSlaps(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[] eye = {4.4, 2.6, 5.2};
+        double[] target = {0.2, 1.2, 0.5};
+        double[] high = {1.0, 7.5, 3.0};
+        double[] below = {0.2, 1.2, 0.4};
+        String[] names = {"Slap", "Wide swing", "Rising wing"};
+        for (int s = 0; s < com.hex.kagune.control.npc.WingRules.SLAPS.length; s++) {
+            float i = com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[s];
+            float[] keys = {0.15F, i - 0.14F, i - 0.05F, i, i + 0.1F, i + 0.3F};
+            String[] key = {"wind-up", "wound up", "on its way", "IMPACT", "just after", "way back"};
+            for (int k = 0; k < keys.length; k++) {
+                float progress = Math.max(0.0F, Math.min(1.0F, keys[k]));
+                shots.add(banjouShot((s + 1) + " " + names[s] + ": " + key[k], banjouBody(s, progress), com.hex.kagune.control.npc.WingRules.banjou(1.0F, 1.3,
+                    1.0F, false, 1.0F, s, progress), eye, target, new ArrayList<>()));
+            }
+            List<WingPreview.Tri> path = new ArrayList<>();
+            for (int n = 0; n <= 40; n++) {
+                float progress = n / 40.0F;
+                boolean hit = Math.abs(progress - i) < 0.5F / 40;
+                path.addAll(dot(com.hex.kagune.control.npc.WingRules.slapTip(s, progress), hit ? 0.06 : 0.03, hit ? 0xFFFFFFFF
+                    : progress <= i ? 0xFF4FA0FF : 0xFFFFC040));
+            }
+            shots.add(banjouShot((s + 1) + " " + names[s] + ": hand's path (white: impact)", banjouBody(s, i), com.hex.kagune.control.npc.WingRules.banjou(1.0F,
+                1.3, 1.0F, false, 1.0F, s, i), high, below, path));
+        }
+        sheet(file, "Banjou's string: his one small wing's slap, wide swing and rising wing (WingRules.SLAPS), his body as EtoFight.slap", shots,
+            7, 260, 300);
+    }
+
+    /** A grey stand-in for what he hits: a body's box ({@code w} wide, {@code h} tall) standing {@code at} blocks in front of him. */
+    static List<WingPreview.Tri> dummy(double at, double w, double h) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        double x0 = -w / 2, x1 = w / 2, z0 = at - w / 2, z1 = at + w / 2;
+        double[][][] faces = {
+            {{x0, 0, z0}, {x1, 0, z0}, {x1, h, z0}, {x0, h, z0}}, {{x1, 0, z1}, {x0, 0, z1}, {x0, h, z1}, {x1, h, z1}},
+            {{x0, 0, z1}, {x0, 0, z0}, {x0, h, z0}, {x0, h, z1}}, {{x1, 0, z0}, {x1, 0, z1}, {x1, h, z1}, {x1, h, z0}},
+            {{x0, h, z0}, {x1, h, z0}, {x1, h, z1}, {x0, h, z1}}};
+        double[][] normals = {{0, 0, -1}, {0, 0, 1}, {-1, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        int grey = 0xFF7A7F86;
+        for (int f = 0; f < faces.length; f++) {
+            double[][] q = faces[f];
+            out.add(new WingPreview.Tri(new double[][] {q[0], q[1], q[2]}, new int[] {grey, grey, grey}, normals[f], true));
+            out.add(new WingPreview.Tri(new double[][] {q[0], q[2], q[3]}, new int[] {grey, grey, grey}, normals[f], true));
+        }
+        return out;
+    }
+
+    /** Each blow at its impact from in front, his right side and above, a stand-in body at slapping distance (its near face 0.6 off him). */
+    static void banjouImpacts(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[][] eyes = {{-2.2, 1.7, 7.5}, {7.0, 1.6, 0.9}, {0.4, 8.0, 1.4}};
+        double[][] targets = {{0.0, 1.1, 0.6}, {0.0, 1.1, 0.9}, {0.0, 1.0, 0.9}};
+        String[] views = {"in front (left of him)", "his right side", "above"};
+        String[] names = {"Slap", "Wide swing", "Rising wing"};
+        for (int s = 0; s < com.hex.kagune.control.npc.WingRules.SLAPS.length; s++) {
+            float i = com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[s];
+            for (int k = 0; k < eyes.length; k++) {
+                shots.add(banjouShot((s + 1) + " " + names[s] + " at the impact, " + views[k], banjouBody(s, i), com.hex.kagune.control.npc.WingRules.banjou(1.0F,
+                    1.3, 1.0F, false, 1.0F, s, i), eyes[k], targets[k], dummy(0.6 + 0.3, 0.6, 1.95)));
+            }
+        }
+        sheet(file, "Banjou's blows at the impact, a body at slapping distance (scale " + System.getProperty("shrink", "" + com.hex.kagune.control.npc.WingRules.SLAP_SCALE)
+            + ")", shots, 3, 360, 300);
+    }
+
+    /** His whole string, each blow as soon as the one before ends, then his rest, at 30 frames a second from in front and to his right. */
+    static void banjouGif(File file) throws Exception {
+        double[] eye = {3.6, 2.2, 5.0};
+        double[] target = {0.2, 1.2, 0.5};
+        List<BufferedImage> frames = new ArrayList<>();
+        for (int s = 0; s < com.hex.kagune.control.npc.WingRules.SLAPS.length; s++) {
+            int count = Math.round(com.hex.kagune.control.npc.WingRules.SLAP_TICKS[s] * 1.5F);
+            for (int f = 0; f < count; f++) {
+                float progress = f / (float)count;
+                BufferedImage frame = render(banjouShot("", banjouBody(s, progress), com.hex.kagune.control.npc.WingRules.banjou(1.0F, 1.3 + f / 30.0, 1.0F,
+                    false, 1.0F, s, progress), eye, target, new ArrayList<>()), 360, 360);
+                Graphics2D g = frame.createGraphics();
+                g.setColor(new Color(0xEDE3D6));
+                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+                g.drawString(com.hex.kagune.control.npc.WingRules.SLAPS[s].name(), 8, 18);
+                g.dispose();
+                frames.add(frame);
+            }
+        }
+        writeGif(file, frames, 3);
+    }
+
     /** 4.1.13: every slam at its impact, from straight in front, from his side and from above (where a hand goes, plainly). */
     static void impactsSheet(File file) throws Exception {
         List<Shot> shots = new ArrayList<>();
@@ -2517,6 +2659,12 @@ public final class ArtPreview {
         // 4.1.13: the wings ride his torso as the game draws them (UkakuWingRenderer: BodyFrame.carry), leaning and turning with it.
         double[] carry = shot.pose() == null || shot.wings().form().kakuja() ? null
             : com.hex.kagune.control.client.animation.BodyFrame.carry(shot.pose(), "torso");
+        // 4.1.54: drawn smaller about its root as the game draws Banjou's (WingRules.shrunk), in his colour (KaguneTint.recolour).
+        Double shrink = SHRINK.get(shot);
+        if (shrink != null) {
+            carry = com.hex.kagune.control.npc.WingRules.shrunk(carry, shrink);
+        }
+        Integer tint = TINT.get(shot);
         for (WingRig.Quad q : WingRig.build(shot.wings(), shot.eye())) {
             float[] v = q.xyz();
             double[] n = carried(carry, new double[] {q.nx(), q.ny(), q.nz()}, false);
@@ -2524,7 +2672,7 @@ public final class ArtPreview {
             for (int k = 0; k < 4; k++) {
                 c[k] = carried(carry, new double[] {v[k * 3], v[k * 3 + 1], v[k * 3 + 2]}, true);
             }
-            int[] a = q.argb();
+            int[] a = tint == null ? q.argb() : com.hex.kagune.control.KaguneTint.recolour(q.argb(), tint);
             tris.add(new WingPreview.Tri(new double[][] {c[0], c[1], c[2]}, new int[] {a[0], a[1], a[2]}, n, false));
             tris.add(new WingPreview.Tri(new double[][] {c[0], c[2], c[3]}, new int[] {a[0], a[2], a[3]}, n, false));
         }
@@ -2539,6 +2687,10 @@ public final class ArtPreview {
         WingPreview.OPENINGS.set(new ArrayList<>());
         return panel.image();
     }
+
+    /** 4.1.54: shots whose wing is drawn smaller about its root (Banjou's: WingRules.shrunk), and in another colour (KaguneTint). */
+    static final java.util.Map<Shot, Double> SHRINK = new java.util.IdentityHashMap<>();
+    static final java.util.Map<Shot, Integer> TINT = new java.util.IdentityHashMap<>();
 
     /** 7.0.2: the skin a shot's body wears (a ghoul NPC's vanilla skin); none, the stand-in suit. */
     static final java.util.Map<Shot, java.awt.image.BufferedImage> SKINS = new java.util.IdentityHashMap<>();

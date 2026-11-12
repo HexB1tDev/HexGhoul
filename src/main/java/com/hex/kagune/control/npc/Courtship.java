@@ -296,6 +296,38 @@ public final class Courtship {
             "Dawn. Here. I'll be the one not wearing a mask.",
             "Be with Roma at dawn"));
 
+    /**
+     * 4.1.54 (the owner: Banjou "wants to be tough but truly isnt, is aware of how weak he truly is", "Romanceable (Only females)"): Banjou's:
+     * supper for his hungry men (he is the one supposed to feed them, and he can't hunt), the investigators sniffing round his hideout that he cannot see off
+     * alone, somewhere high where he can feel big for once, a wild ghoul made a friend (he has tried to recruit for years and they laugh at
+     * him), and the cottage in the dead of night, the mask off.
+     */
+    static final List<Chapter> BANJOU = List.of(
+        new Chapter("banjou_supper", "Supper for the boys", Task.GIVE, 4, Set.of("hexkagune:ghoul_meat"), "the Ghoul Meat",
+            "You want to... help? Me? Okay. Okay. The boys are hungry and I'm the one who's supposed to feed them. Four pieces of ghoul meat. "
+                + "...I'd go myself. I'd come back with nothing. I always do.",
+            "{n} of four. The boys will eat before I do. They always do.",
+            "Bring Banjou Ghoul Meat for his men: {n} of {need}"),
+        new Chapter("banjou_doves", "The doves at the gate", Task.DOVES, 3, Set.of(), "",
+            "Investigators have been sniffing round the hideout. Three of them, at least. I went out to scare them off. ...They didn't scare. "
+                + "Could you? I'll be right behind you. A bit behind you.",
+            "{n} of three. I'm counting. I'm also hiding. Mostly counting.",
+            "Kill three CCG investigators for Banjou: {n} of {need}"),
+        new Chapter("banjou_high", "Somewhere I look big", Task.HIGH, 1, Set.of(), "",
+            "Take me somewhere high? Really high. Where everything looks small. ...I'd like to feel big, just once, next to somebody. Is that stupid?",
+            "Higher. I can still see things that are bigger than me.",
+            "Take Banjou somewhere high (him following you)"),
+        new Chapter("banjou_recruit", "Show me how it's done", Task.ALLY, 1, Set.of(), "",
+            "I've been trying to bring wild ghouls into the Gas Masks for years. They laugh at me. Every time. ...Make one of them a friend. "
+                + "Show me how you do it. I'll take notes.",
+            "Still working on it? They laughed at me too. Don't let it get to you.",
+            "Make a wild ghoul your ally (it walks with you)"),
+        new Chapter("banjou_deep", "The mask comes off", Task.DEEP, 1, Set.of(), "",
+            "Come to the cottage tonight. Late. When the boys are asleep and I've got the mask on. ...I want you to see me take it off. I don't "
+                + "do that in front of anyone.",
+            "The dead of night. The cottage. I'll leave the lantern lit.",
+            "Be with Banjou at his cottage in the dead of night"));
+
     /** {@code key}'s chapters, in order (none for one who has none). */
     public static List<Chapter> of(String key) {
         return switch (key == null ? "" : key) {
@@ -305,6 +337,7 @@ public final class Courtship {
             case "ayato" -> AYATO;
             case "general" -> GENERAL;
             case "roma" -> ROMA;
+            case "banjou" -> BANJOU;
             default -> List.of();
         };
     }
@@ -483,6 +516,8 @@ public final class Courtship {
                 "Out. With you. ...Yes. I'll leave the coat. No, I'll keep the coat. Where?", "I'll clear my evening. Name the place."};
             case "roma" -> new String[] {"A date! Oh, I LOVE dates. Somewhere dramatic. Somewhere we could plausibly both die. Pick!",
                 "Out? With the ringmaster? Bold. Very bold. I'll wear my good face. Where?", "Yes yes yes. Where? Don't say a graveyard. ...Do say a graveyard."};
+            case "banjou" -> new String[] {"A date? With me? ...Okay. Okay! Where? Somewhere quiet. Somewhere I won't trip over anything.",
+                "Out? Together? I'll wash the beard. Where are we going?", "Yes. Yes. Pick somewhere. I'll follow you anywhere. Literally, I'm bad with maps."};
             default -> new String[] {"Where to?"};
         };
         return lines[Math.floorMod(seed, lines.length)];
@@ -500,6 +535,8 @@ public final class Courtship {
             case "general" -> new String[] {"Twice in a day and the bureau will notice. ...Tomorrow.", "Tomorrow. I'll be watching the clock."};
             case "roma" -> new String[] {"Twice in one day? Greedy! I love it. No. Tomorrow. Leave them wanting more, that's showbiz.",
                 "Tomorrow, sweetheart. The ringmaster needs her beauty sleep. In a coffin. Kidding. It's a hammock."};
+            case "banjou" -> new String[] {"We already went out today. ...Tomorrow? I'll be counting the hours. Don't tell anyone that.",
+                "Tomorrow. I need tonight to calm down from the last one."};
             default -> new String[] {"Tomorrow."};
         };
         return lines[Math.floorMod(seed, lines.length)];

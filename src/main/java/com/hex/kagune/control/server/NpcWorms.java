@@ -347,7 +347,7 @@ final class NpcWorms {
 
     static S2CNpcWings wings(EtoNpc npc, State st) {
         return new S2CNpcWings(npc.m_19879_(), st.out, st.outAt, false, Long.MIN_VALUE, 0, Long.MIN_VALUE, 1, Long.MIN_VALUE, false, Long.MIN_VALUE,
-            st.mendAt);
+            st.mendAt, -1, Long.MIN_VALUE);
     }
 
     /** A player starts seeing him: how his worms are. */

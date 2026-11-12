@@ -553,6 +553,7 @@ public final class CompanionTests {
         speedster();
         general();
         roma();
+        banjou(); // 4.1.54
         kickMaster();
         twirlKick();
     }
@@ -807,8 +808,8 @@ public final class CompanionTests {
      */
     static void roma() {
         Persona r = Persona.ROMA;
-        check(Persona.ALL.get(Persona.ALL.size() - 1) == r && r.key().equals("roma") && Persona.of("roma") == r && "Roma".equals(r.name()),
-            "Roma, after the others (their places on the talk screen kept)");
+        check(Persona.ALL.indexOf(r) == 6 && r.key().equals("roma") && Persona.of("roma") == r && "Roma".equals(r.name()),
+            "Roma, after the others (their places on the talk screen kept; 4.1.54: Banjou after her)");
         check(r.size() == Persona.TOUKA.size() && r.female() && r.slim() && r.curves() < 1.0F && r.legs() < Persona.TOUKA.legs() && r.build() < 1.0F,
             "the size of Touka, a woman, on the slim arms, skinny");
         check(r.romanceable() && r.likes(true) && r.likes(false) && !r.human() && !r.owlKit() && !r.wings() && !r.worms(),
@@ -878,6 +879,91 @@ public final class CompanionTests {
             check(text.split("hexkagune:roma", -1).length == 2, "Roma in the circus tent, one of her");
         } catch (java.io.IOException failure) {
             check(false, "read the circus tent: " + failure);
+        }
+    }
+
+    /**
+     * 4.1.54 (the owner: "New gang: / Gas Masks - Toxic logo, green name. / Leader - Banjou / Personality - wants to be tough but truly isnt,
+     * is aware of how weak he truly is. / Kagune - super small blue Ukaku wing (singular) cannot shoot projectiles, only uses basic m1s with
+     * it. / Dialog - Daily quest giver, Chat, Romanceable (Only females). / Lives in the small house in the schematic."; "The gas mask leader
+     * puts on the mask at night and is just alex model by the way, not muscled at all"; his home, asked: "The cottage").
+     */
+    static void banjou() {
+        Persona b = Persona.BANJOU;
+        check(Persona.ALL.get(Persona.ALL.size() - 1) == b && b.key().equals("banjou") && Persona.of("banjou") == b && "Banjou".equals(b.name())
+            && "\u00a7a".equals(b.colour()), "Banjou, after the others (their places on the talk screen kept), his name green");
+        check(!b.female() && b.slim() && b.muscle() == 0.0 && b.size() == 1.0F, "a man on the slim arms (\"just alex model\"), no muscle at all");
+        check(b.romanceable() && b.likes(true) && !b.likes(false) && !b.human() && !b.owlKit() && !b.worms() && !b.kickMaster() && b.tendrils() == 0,
+            "romanced by women only; a ghoul");
+        check(b.wings() && b.slapsOnly() && !b.kakuja() && b.wingPower() < 1.0 && b.kagune() == com.hex.kagune.control.family.KaguneGenes.WINGS,
+            "his one Ukaku wing, weaker than Touka's, slapping only (his child takes the wings)");
+        int blue = b.kaguneColour();
+        check((blue & 255) > (blue >> 16 & 255) + 100 && (blue & 255) > (blue >> 8 & 255) + 100, "his wing blue: " + Integer.toHexString(blue));
+        check("mask_gas".equals(b.mask()) && b.maskAtNight() && !b.maskInFight() && com.hex.kagune.control.outfit.Outfits.of(b.mask()) != null
+            && com.hex.kagune.control.outfit.Outfits.of(b.mask()).mask(), "his gas mask, a real mask, on at night");
+        String layer = read("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java");
+        check(layer.contains("if (npc.persona().maskAtNight()) {\n                return com.hex.kagune.control.npc.EtoRules.night(npc.m_9236_().m_46468_()) ? npc.persona().mask() : null;"),
+            "every client draws it on him at night and never by day");
+        // His courtship: five chapters, only for a woman; his scenes parse, each chapter's moment there, three dates.
+        java.util.List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of("banjou");
+        check(chapters.size() == 5 && chapters.get(chapters.size() - 1).task() == com.hex.kagune.control.npc.Courtship.Task.DEEP,
+            "his courtship: five chapters, the mask coming off in the dead of night last");
+        String scenes = read("src/main/resources/data/hexkagune/talk/banjou.txt");
+        com.hex.kagune.control.npc.scene.SceneBook.Parsed book = com.hex.kagune.control.npc.scene.SceneBook.parse("banjou", scenes);
+        check(book.errors().isEmpty() && !FORBIDDEN.matcher(scenes).find(), "his scenes parse: " + book.errors());
+        for (com.hex.kagune.control.npc.Courtship.Chapter chapter : chapters) {
+            check(scenes.contains("moment " + chapter.id() + "\n"), chapter.id() + ": its moment in his scenes");
+        }
+        check(scenes.split("\ndate banjou_").length == 4, "three dates of his own");
+        // Only a woman: a man asking is told no, kindly; asking a woman is answered.
+        EtoTalk.Context man = context(NpcBonds.MOST, Romance.Stage.NONE, null, true, EtoMood.HAPPY, 1, Teaching.View.NONE, false, 6000L);
+        EtoTalk.Context woman = context(NpcBonds.MOST, Romance.Stage.NONE, null, true, EtoMood.HAPPY, 1, Teaching.View.NONE, true, 6000L);
+        check(!b.script().main(man, "").choices().contains(NpcTalk.Choice.FAVOUR) && b.script().main(woman, "").choices().contains(NpcTalk.Choice.FAVOUR)
+            && b.script().answer(man, NpcTalk.Choice.ASK_OUT).effect() == EtoTalk.Effect.NONE, "his courtship offered to a woman, never a man");
+        Script script = b.script();
+        check(script.kissed(1, false).length() > 5 && script.maniac(2).length() > 3 && script.won(0).length() > 3 && !script.busy().isEmpty(),
+            "his fight and kiss lines");
+        // His wing: the twin wings' smallest, only his right one, drawn smaller still about its root; a string of the player's one-wing blows.
+        com.hex.kagune.control.ukaku.WingRig.Input rest = com.hex.kagune.control.npc.WingRules.banjou(1.0F, 0.0, 1.0F, false, 1.0F, -1, 0.0F);
+        check(rest.growRight() == 1.0F && rest.growLeft() == 0.0F && rest.motion() == com.hex.kagune.control.ukaku.WingRig.Motion.NONE
+            && rest.aimRight() == 0.0F && rest.mastery() == com.hex.kagune.control.npc.WingRules.SLAP_MASTERY
+            && com.hex.kagune.control.npc.WingRules.SLAP_SCALE < 1.0F && com.hex.kagune.control.npc.WingRules.SLAP_SCALE >= 0.5F,
+            "one wing (his right), never aiming, small");
+        double[] root = {com.hex.kagune.control.ukaku.WingRig.ROOT_X, com.hex.kagune.control.ukaku.WingRig.ROOT_Y, com.hex.kagune.control.ukaku.WingRig.ROOT_Z};
+        double[] s = com.hex.kagune.control.npc.WingRules.shrunk(null, 0.5);
+        check(Math.abs(s[0] * root[0] + s[9] - root[0]) < 1.0E-9 && Math.abs(s[4] * root[1] + s[10] - root[1]) < 1.0E-9
+            && Math.abs(s[8] * root[2] + s[11] - root[2]) < 1.0E-9 && s[0] == 0.5, "shrunk about its root: the shoulder blade stays where it is");
+        int n = com.hex.kagune.control.npc.WingRules.SLAPS.length;
+        check(n == 3 && com.hex.kagune.control.npc.WingRules.SLAP_TICKS.length == n && com.hex.kagune.control.npc.WingRules.SLAP_IMPACT.length == n
+            && com.hex.kagune.control.npc.WingRules.SLAP_DAMAGE.length == n && com.hex.kagune.control.npc.WingRules.SLAP_PATTERNS.length == n,
+            "his string: a slap, a wide swing, a rising wing, each with its length, impact, damage and the body's pose");
+        for (int i = 0; i < n; i++) {
+            int impact = com.hex.kagune.control.npc.WingRules.slapImpact(i);
+            double[] hand = com.hex.kagune.control.npc.WingRules.slapTip(i, com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[i]);
+            check(impact > 2 && impact < com.hex.kagune.control.npc.WingRules.SLAP_TICKS[i] - 2 && hand[2] > 0.5 && hand[1] > 0.9 && hand[1] < 1.8
+                && com.hex.kagune.control.npc.WingRules.SLAP_REACH >= hand[2], "blow " + i + ": lands in front of him at chest height, in his reach ("
+                + java.util.Arrays.toString(hand) + ")");
+        }
+        String wings = read("src/main/java/com/hex/kagune/control/server/NpcWings.java");
+        check(wings.indexOf("if (npc.persona().slapsOnly()) {\n            return slaps(npc, mind, st, target, level, now);") < wings.indexOf("case VOLLEY -> {")
+            && wings.contains("if (age == WingRules.slapImpact(slap)) {\n                land(npc, st, slap, target, level, gap);")
+            && !wings.substring(wings.indexOf("static boolean slaps("), wings.indexOf("private static void land(")).contains("throwSpike"),
+            "his wing throws nothing: it slaps, each blow landing on its tick");
+        String renderer = read("src/main/java/com/hex/kagune/control/client/render/UkakuWingRenderer.java");
+        check(renderer.contains("carry = com.hex.kagune.control.npc.WingRules.shrunk(carry, com.hex.kagune.control.npc.WingRules.SLAP_SCALE);")
+            && renderer.contains("emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, npc.persona().kaguneColour());")
+            && read("src/main/java/com/hex/kagune/control/client/render/EtoRenderer.java").contains("return EtoFight.slap(npc, EtoFight.pose("),
+            "every client draws it small and blue, slapping, his body turned into each blow");
+        // In the cottage of the Gas Masks' hideout, four of them about it.
+        try {
+            byte[] hideout = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(java.nio.file.Path.of(
+                "src/main/resources/data/hexkagune/structures/gas_hideout.nbt"))).readAllBytes();
+            String text = new String(hideout, java.nio.charset.StandardCharsets.ISO_8859_1);
+            check(text.split("hexkagune:banjou", -1).length == 2 && text.split("HexGasHideout", -1).length == 5
+                && text.contains("hexkagune:gas_hideout_anchor") && text.contains("minecraft:cherry_door") && text.contains("minecraft:pink_glazed_terracotta"),
+                "Banjou in the hideout's cottage, one of him; four Gas Masks about it; the owner's build");
+        } catch (java.io.IOException failure) {
+            check(false, "read the Gas Masks' hideout: " + failure);
         }
     }
 
@@ -1636,7 +1722,7 @@ public final class CompanionTests {
     }
 
     static void talk() {
-        for (Persona p : new Persona[] {Persona.TOUKA, Persona.KEN, Persona.AYATO, Persona.ROMA}) { // 4.1.49: and Roma
+        for (Persona p : new Persona[] {Persona.TOUKA, Persona.KEN, Persona.AYATO, Persona.ROMA, Persona.BANJOU}) { // 4.1.49: and Roma; 4.1.54: Banjou
             Script script = p.script();
             Set<String> topicIds = new HashSet<>();
             int words = 0;

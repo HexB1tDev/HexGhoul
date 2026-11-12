@@ -32,7 +32,9 @@ import net.minecraftforge.fml.common.Mod;
  * and logging out); their name shows it to everyone ({@link #name}: the emblem, a space, the name in the gang's colour, in chat and over
  * their head: every client is told each player's gang, {@link S2CGangName}); kills of the CCG, the Gas Masks and their own are counted
  * ({@link #died}); a gang never goes for its own and goes for what goes for them ({@link #stance}, {@link #threatens}); and the ways in are
- * talked through with Ayato (Aogiri: "Kill 5 CCG") and Roma (the Clowns: a joke, three Gas Masks, a quinque case) ({@link #talk}).
+ * talked through with Ayato (Aogiri: "Kill 5 CCG") and Roma (the Clowns: a joke, three Gas Masks, a quinque case) ({@link #talk}). 4.1.54:
+ * and Banjou (the Gas Masks: an answer that takes him seriously, three Clowns, a clown's mask); their traits (the owner: "While wearing the
+ * gas Mask, gain night vision. / Gain speed 2 when at low HP.": {@link #gasTraits}).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class GangServer {
@@ -43,6 +45,9 @@ public final class GangServer {
     private static final String CCG = "HexGangCcgKills";
     private static final String CLOWN_STEP = "HexGangClownStep";
     private static final String GAS = "HexGangGasKills";
+    /** 4.1.54: the Gas Masks' chain (where it stands, the Clowns killed for it). */
+    private static final String GAS_STEP = "HexGangGasStep";
+    private static final String CLOWN_KILLS = "HexGangClownKills";
     /** How far a gang's member is looked for round one of the gang that might defend them (blocks). */
     static final double DEFEND = 24.0;
     /** What a gang is to a player: nothing, theirs, or one that banned them. */
@@ -70,7 +75,7 @@ public final class GangServer {
     public static GangPlayer of(ServerPlayer player) {
         CompoundTag k = kept(player);
         return new GangPlayer(k.m_128451_(GANG), k.m_128451_(OWN), k.m_128451_(BANNED), k.m_128471_(AOGIRI_QUEST), k.m_128451_(CCG),
-            k.m_128451_(CLOWN_STEP), k.m_128451_(GAS));
+            k.m_128451_(CLOWN_STEP), k.m_128451_(GAS), k.m_128451_(GAS_STEP), k.m_128451_(CLOWN_KILLS));
     }
 
     /** {@code player}'s gang kept as {@code g}; a change of gang shown on their name everywhere. */
@@ -84,6 +89,8 @@ public final class GangServer {
         k.m_128405_(CCG, g.ccgKills());
         k.m_128405_(CLOWN_STEP, g.clownStep());
         k.m_128405_(GAS, g.gasKills());
+        k.m_128405_(GAS_STEP, g.gasStep());
+        k.m_128405_(CLOWN_KILLS, g.clownKills());
         if (was != g.gang()) {
             SEEN.put(player.m_20148_(), g.gang());
             player.refreshDisplayName();
@@ -178,6 +185,9 @@ public final class GangServer {
                 if (who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS) {
                     now = now.killedGasMask();
                 }
+                if (who.gangOf() == com.hex.kagune.control.npc.Gang.CLOWNS) {
+                    now = now.killedClown(); // 4.1.54: the Gas Masks' chain
+                }
                 if (was.member(GangPlayer.of(who))) {
                     now = now.killedOwn();
                 }
@@ -199,8 +209,9 @@ public final class GangServer {
                 NpcIdentity who = dead instanceof GhoulNpc ghoul ? ghoul.identity() : null;
                 boolean ccg = AgentBrain.ccg(dead) || who != null && who.ccg();
                 boolean gas = who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS;
+                boolean clown = who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.CLOWNS;
                 boolean rival = who != null && !ccg && (who.aogiri() || who.gang() != 0) && !was.member(GangPlayer.of(who));
-                dailyKill(player, ccg, rival, gas);
+                dailyKill(player, ccg, rival, gas, clown);
             }
             if (now.equals(was)) {
                 if (by != 0) {
@@ -219,6 +230,10 @@ public final class GangServer {
             if (now.gasKills() != was.gasKills()) {
                 player.m_5661_(Component.m_237113_("§9The Clowns: §f" + Math.min(now.gasKills(), GangPlayer.CLOWN_GAS) + "/" + GangPlayer.CLOWN_GAS
                     + " Gas Masks" + (now.clownStep() == GangPlayer.CLOWN_CASE ? " §7(now a quinque case, for Roma)" : "")), true);
+            }
+            if (now.clownKills() != was.clownKills()) {
+                player.m_5661_(Component.m_237113_("§aThe Gas Masks: §f" + Math.min(now.clownKills(), GangPlayer.GAS_CLOWNS) + "/" + GangPlayer.GAS_CLOWNS
+                    + " Clowns" + (now.gasStep() == GangPlayer.GAS_MASK_NEXT ? " §7(now a clown's mask, for Banjou)" : "")), true);
             }
             if (now.gang() == GangPlayer.NONE && was.gang() != GangPlayer.NONE) {
                 player.m_5661_(Component.m_237113_("§c" + cap(GangPlayer.title(was.gang())) + " has banned you for killing its own. Your tag is gone, "
@@ -247,6 +262,8 @@ public final class GangServer {
      */
     static final double AOGIRI_HIDEOUT = 180.0;
     static final double CLOWN_HIDEOUT = 70.0;
+    /** 4.1.54: the Gas Masks' hideout (28 x 19, its garden walled): a little past its walls. */
+    static final double GAS_HIDEOUT = 40.0;
     /** The members their gang has turned on (the bar empty, warned, still in its hideout), as of their last check. */
     private static final java.util.Set<UUID> TURNED = ConcurrentHashMap.newKeySet();
     /** When each member last had a blow on one of their own counted (the world's game time). */
@@ -319,16 +336,21 @@ public final class GangServer {
         return TURNED.contains(player.m_20148_());
     }
 
-    /** True if {@code player} is in their gang's hideout: Aogiri's mansion, the Clowns' tent (their claimed spots, in the overworld). */
+    /**
+     * True if {@code player} is in their gang's hideout: Aogiri's mansion, the Clowns' tent, the Gas Masks' hideout (their claimed spots, in
+     * the overworld).
+     */
     static boolean inHideout(ServerPlayer player, int gang) {
-        if (gang != GangPlayer.AOGIRI && gang != GangPlayer.CLOWNS || player.m_9236_().m_46472_() != net.minecraft.world.level.Level.f_46428_) {
+        if (gang != GangPlayer.AOGIRI && gang != GangPlayer.CLOWNS && gang != GangPlayer.GAS_MASKS
+            || player.m_9236_().m_46472_() != net.minecraft.world.level.Level.f_46428_) {
             return false;
         }
-        int[] chunk = com.hex.kagune.control.PlaceClaims.claimed(gang == GangPlayer.AOGIRI ? "aogiri_hideout" : "circus");
+        int[] chunk = com.hex.kagune.control.PlaceClaims.claimed(gang == GangPlayer.AOGIRI ? "aogiri_hideout" : gang == GangPlayer.CLOWNS ? "circus"
+            : "gas_hideout");
         if (chunk == null) {
             return false;
         }
-        double reach = gang == GangPlayer.AOGIRI ? AOGIRI_HIDEOUT : CLOWN_HIDEOUT;
+        double reach = gang == GangPlayer.AOGIRI ? AOGIRI_HIDEOUT : gang == GangPlayer.CLOWNS ? CLOWN_HIDEOUT : GAS_HIDEOUT;
         double dx = player.m_20185_() - ((chunk[0] << 4) + 8);
         double dz = player.m_20189_() - ((chunk[1] << 4) + 8);
         return dx * dx + dz * dz <= reach * reach;
@@ -348,10 +370,12 @@ public final class GangServer {
             UUID id = player.m_20148_();
             if (g.gang() == GangPlayer.NONE) {
                 TURNED.remove(id);
+                gasTraits(player, g); // 4.1.54: a night vision of the mask's taken back
                 return;
             }
             long now = player.m_9236_().m_46467_();
             vanish(player, now); // 4.1.53
+            gasTraits(player, g); // 4.1.54
             if (kept(player).m_128451_(MASK) != g.gang()) {
                 giveMask(player, g.gang()); // 4.1.53: a member from before it got theirs
             }
@@ -416,7 +440,8 @@ public final class GangServer {
 
     /** 4.1.53: the gang whose daily quests {@code persona} gives (the owner: Noro for Aogiri; Roma, the Clowns' leader), or none. */
     static int gives(Persona persona) {
-        return persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : GangPlayer.NONE;
+        return persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : persona == Persona.BANJOU
+            ? GangPlayer.GAS_MASKS : GangPlayer.NONE; // 4.1.54: Banjou the Gas Masks' (the owner: "Daily quest giver")
     }
 
     /** What asking {@code persona} for today's job is called (one of their gang only), or null. */
@@ -429,20 +454,22 @@ public final class GangServer {
         if (d.today(today(player)) && !d.claimed()) {
             return d.done() || d.job().brought ? "About today's job..." : "Today's job: how far?";
         }
-        return gang == GangPlayer.AOGIRI ? "Any work for me today?" : "Got a job for me, boss?";
+        return gang == GangPlayer.AOGIRI ? "Any work for me today?" : gang == GangPlayer.GAS_MASKS ? "Anything the boys need today?"
+            : "Got a job for me, boss?";
     }
 
-    /** One of today's kills counted for {@code player}'s daily quest (an investigator, one of another gang, a Gas Mask). */
-    static void dailyKill(ServerPlayer player, boolean ccg, boolean rival, boolean gas) {
+    /** One of today's kills counted for {@code player}'s daily quest (an investigator, one of another gang, a Gas Mask, a Clown). */
+    static void dailyKill(ServerPlayer player, boolean ccg, boolean rival, boolean gas, boolean clown) {
         GangDaily d = daily(player);
         if (!d.today(today(player)) || d.claimed() || d.done() || d.job().brought) {
             return;
         }
         GangDaily.Job job = d.job();
         boolean counts = switch (job) {
-            case AOGIRI_CCG, CLOWNS_CCG -> ccg;
+            case AOGIRI_CCG, CLOWNS_CCG, GAS_CCG -> ccg;
             case AOGIRI_RIVALS -> rival;
             case CLOWNS_GAS -> gas;
+            case GAS_CLOWNS -> clown;
             default -> false;
         };
         if (!counts) {
@@ -450,7 +477,7 @@ public final class GangServer {
         }
         GangDaily after = d.counted();
         daily(player, after);
-        String giver = job.gang == GangPlayer.AOGIRI ? "Noro" : "Roma";
+        String giver = job.gang == GangPlayer.AOGIRI ? "Noro" : job.gang == GangPlayer.GAS_MASKS ? "Banjou" : "Roma";
         player.m_5661_(Component.m_237113_(colour(job.gang) + "Daily: §f" + job.text(after.goal()) + " §7(" + after.count() + "/" + after.goal() + ")"
             + (after.done() ? " §a- done, go back to " + giver : "")), true);
     }
@@ -462,7 +489,11 @@ public final class GangServer {
     static String daily(ServerPlayer player, Persona persona, int seed) {
         int gang = gives(persona);
         if (gang == GangPlayer.NONE || !of(player).member(gang)) {
-            return persona == Persona.NORO ? "..." : "Jobs are for Clowns, sweetheart. Join first.";
+            return persona == Persona.NORO ? "..." : persona == Persona.BANJOU ? "Jobs are for the boys. ...Join first. Then I'll find you something."
+                : "Jobs are for Clowns, sweetheart. Join first.";
+        }
+        if (gang == GangPlayer.GAS_MASKS) {
+            return banjouDaily(player, seed); // 4.1.54
         }
         boolean noro = gang == GangPlayer.AOGIRI;
         long today = today(player);
@@ -471,7 +502,7 @@ public final class GangServer {
             GangDaily fresh = GangDaily.give(gang, today, player.m_20148_().getLeastSignificantBits());
             daily(player, fresh);
             player.m_5661_(Component.m_237113_(colour(gang) + "Daily: §f" + fresh.job().text(fresh.goal()) + " §7(0/" + fresh.goal() + ")"), false);
-            String what = fresh.job().text(fresh.goal()).toLowerCase(java.util.Locale.ROOT);
+            String what = lowerFirst(fresh.job().text(fresh.goal())); // 4.1.54: names kept ("Roma", "Clowns"), only its first letter
             return noro ? pick(seed, "*tilts his head* ...Work. " + capFirst(what) + ". Today.", "Aogiri needs this done. " + capFirst(what) + ".",
                 "...You came. Good. " + capFirst(what) + ". Then come back.")
                 : pick(seed, "A job! For you! " + capFirst(what) + ". Make it funny.", "Today's act: " + what + ". Break a leg. Theirs, preferably.",
@@ -519,6 +550,64 @@ public final class GangServer {
             : pick(seed, "*throws confetti made of something* Bravo! Take your prize!", "What a show! Here, a little something. Don't eat the confetti.");
     }
 
+    /**
+     * 4.1.54: Banjou's daily: as Noro's and Roma's (one a day; kills counted, charcoal handed over from the hand; paid in the Gas Masks'
+     * things and {@link com.hex.kagune.control.npc.GangStanding#DAILY} reputation), in his words.
+     */
+    static String banjouDaily(ServerPlayer player, int seed) {
+        int gang = GangPlayer.GAS_MASKS;
+        long today = today(player);
+        GangDaily d = daily(player);
+        if (!d.today(today)) {
+            GangDaily fresh = GangDaily.give(gang, today, player.m_20148_().getLeastSignificantBits());
+            daily(player, fresh);
+            player.m_5661_(Component.m_237113_(colour(gang) + "Daily: §f" + fresh.job().text(fresh.goal()) + " §7(0/" + fresh.goal() + ")"), false);
+            String what = fresh.job().asked(fresh.goal());
+            return pick(seed, "Okay. Today the boys need you to " + what + ". ...If you can. Please.", "Right. Boss voice. *clears his throat* I need you "
+                + "to " + what + ". ...That sounded good, right?", "I hate asking. Could you " + what + "? I'd do it myself, but you'd do it better.");
+        }
+        if (d.claimed()) {
+            return pick(seed, "You already did today's. Rest. That's an order. ...A request.", "Tomorrow. The boys are fine. Thanks to you.");
+        }
+        if (!d.done() && d.job().brought) {
+            net.minecraft.world.item.ItemStack held = player.m_21205_();
+            net.minecraft.world.item.Item wanted = com.hex.kagune.control.ControlItems.vanilla(GangDaily.CHARCOAL);
+            int have = wanted != null && !held.m_41619_() && held.m_41720_() == wanted ? held.m_41613_() : 0;
+            GangDaily got = d.brought(have);
+            if (!got.done()) {
+                return d.goal() + " charcoal. In your hand, so I can count it. ...Sorry. I count everything. Filters run out fast.";
+            }
+            if (!player.m_7500_()) {
+                held.m_41774_(d.goal());
+            }
+            d = got;
+        }
+        if (!d.done()) {
+            return d.count() + " of " + d.goal() + ". You're doing great. Better than I would.";
+        }
+        daily(player, d.paid());
+        StringBuilder paid = new StringBuilder();
+        for (GangDaily.Pay pay : d.pay(player.m_20148_().getLeastSignificantBits())) {
+            net.minecraft.world.item.Item item = com.hex.kagune.control.ControlItems.vanilla(pay.item());
+            if (item == null) {
+                continue;
+            }
+            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, pay.count());
+            paid.append(paid.length() == 0 ? "" : ", ").append(pay.text());
+            if (!player.m_36356_(stack)) {
+                player.m_36176_(stack, false);
+            }
+        }
+        reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);
+        player.m_5661_(Component.m_237113_(colour(gang) + "Daily done: §f" + paid + " §7(+" + com.hex.kagune.control.npc.GangStanding.DAILY
+            + "% reputation)"), false);
+        return pick(seed, "You did it. *hands it over with both hands* ...Thank you. Really.", "The boys will hear about this. Take it. You earned it.");
+    }
+
+    private static String lowerFirst(String text) {
+        return text.isEmpty() ? text : Character.toLowerCase(text.charAt(0)) + text.substring(1);
+    }
+
     private static String capFirst(String text) {
         return text.isEmpty() ? text : Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
@@ -532,7 +621,8 @@ public final class GangServer {
      * a Clown's mask): into their inventory (dropped at their feet if it is full), once for each gang they join.
      */
     static void giveMask(ServerPlayer player, int gang) {
-        String id = gang == GangPlayer.AOGIRI ? "hexkagune:mask_bin_brothers" : gang == GangPlayer.CLOWNS ? GangDaily.CLOWN_MASK : null;
+        String id = gang == GangPlayer.AOGIRI ? "hexkagune:mask_bin_brothers" : gang == GangPlayer.CLOWNS ? GangDaily.CLOWN_MASK
+            : gang == GangPlayer.GAS_MASKS ? GangDaily.GAS_MASK : null; // 4.1.54: the Gas Masks' own
         net.minecraft.world.item.Item item = id == null ? null : com.hex.kagune.control.ControlItems.vanilla(id);
         kept(player).m_128405_(MASK, gang);
         if (item == null) {
@@ -610,8 +700,45 @@ public final class GangServer {
         player.m_5661_(Component.m_237113_("§9The Clowns: §fnow you see me... §7(5 s; again in 5 minutes)"), true);
     }
 
+    /** 4.1.54: the players given the gas mask's night vision (taken back when the mask comes off, or they leave the gang). */
+    private static final java.util.Set<UUID> MASK_SIGHT = ConcurrentHashMap.newKeySet();
+    /** 4.1.54: how long each grant of it lasts (ticks; renewed each second): past the game's own flicker in a night vision's last 10 s. */
+    static final int MASK_SIGHT_TICKS = 300;
+    /** 4.1.54: at this share of health or under, a Gas Mask is quick (the owner: "Gain speed 2 when at low HP"). */
+    public static final float GAS_SPEED_AT = 0.3F;
+
+    /**
+     * 4.1.54 (the owner, the Gas Masks' "Gang Bonuses": "While wearing the gas Mask, gain night vision. / Gain speed 2 when at low HP."):
+     * checked once a second. Night vision while a gas mask (any of the Gas Masks' own: {@code mask_gas}, its variants) is on their head, taken
+     * back as soon as it comes off (only ours: a potion's longer one is left alone); Speed II while at {@link #GAS_SPEED_AT} of their health
+     * or under.
+     */
+    static void gasTraits(ServerPlayer player, GangPlayer g) {
+        boolean member = g.member(GangPlayer.GAS_MASKS);
+        UUID id = player.m_20148_();
+        if (member && gasMaskOn(player)) {
+            player.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19611_, MASK_SIGHT_TICKS, 0, false, false,
+                true));
+            MASK_SIGHT.add(id);
+        } else if (MASK_SIGHT.remove(id)) {
+            net.minecraft.world.effect.MobEffectInstance sight = player.m_21124_(net.minecraft.world.effect.MobEffects.f_19611_);
+            if (sight != null && sight.m_19557_() <= MASK_SIGHT_TICKS) {
+                player.m_21195_(net.minecraft.world.effect.MobEffects.f_19611_);
+            }
+        }
+        if (member && player.m_6084_() && player.m_21223_() <= player.m_21233_() * GAS_SPEED_AT) {
+            player.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19596_, 40, 1, false, false, true));
+        }
+    }
+
+    /** 4.1.54: true if what is on {@code player}'s head is one of the Gas Masks' masks. */
+    static boolean gasMaskOn(ServerPlayer player) {
+        net.minecraft.world.item.ItemStack head = player.m_6844_(net.minecraft.world.entity.EquipmentSlot.HEAD);
+        return head.m_41720_() instanceof com.hex.kagune.control.outfit.OutfitItem item && item.piece().id().startsWith("mask_gas");
+    }
+
     static String colour(int gang) {
-        return gang == GangPlayer.AOGIRI ? "§4" : gang == GangPlayer.CLOWNS ? "§9" : "§7";
+        return gang == GangPlayer.AOGIRI ? "§4" : gang == GangPlayer.CLOWNS ? "§9" : gang == GangPlayer.GAS_MASKS ? "§a" : "§7";
     }
 
     // ---------------------------------------------------------------- the name
@@ -660,19 +787,21 @@ public final class GangServer {
     public record Said(String line, List<String[]> jokes) {
     }
 
-    /** True if {@code persona} is the way into a gang: Ayato (Aogiri), Roma (the Clowns). */
+    /** True if {@code persona} is the way into a gang: Ayato (Aogiri), Roma (the Clowns), Banjou (4.1.54: the Gas Masks). */
     static boolean leads(Persona persona) {
-        return persona == Persona.AYATO || persona == Persona.ROMA;
+        return persona == Persona.AYATO || persona == Persona.ROMA || persona == Persona.BANJOU;
     }
 
     /** The gang {@code persona} is the way into. */
     static int gangOf(Persona persona) {
-        return persona == Persona.AYATO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : GangPlayer.NONE;
+        return persona == Persona.AYATO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : persona == Persona.BANJOU ? GangPlayer.GAS_MASKS
+            : GangPlayer.NONE;
     }
 
-    /** 4.1.52: the gang {@code persona} belongs to (Ayato and Noro Aogiri's, Roma the Clowns'), or none. */
+    /** 4.1.52: the gang {@code persona} belongs to (Ayato and Noro Aogiri's, Roma the Clowns', 4.1.54: Banjou the Gas Masks'), or none. */
     static int memberOf(Persona persona) {
-        return persona == Persona.AYATO || persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : GangPlayer.NONE;
+        return persona == Persona.AYATO || persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS
+            : persona == Persona.BANJOU ? GangPlayer.GAS_MASKS : GangPlayer.NONE;
     }
 
     /** What asking {@code persona} about their gang is called on the talk screen, by where {@code player} stands. */
@@ -680,7 +809,14 @@ public final class GangServer {
         GangPlayer g = of(player);
         int gang = gangOf(persona);
         if (g.member(gang)) {
-            return gang == GangPlayer.AOGIRI ? "How's Aogiri?" : "How are the Clowns?";
+            return gang == GangPlayer.AOGIRI ? "How's Aogiri?" : gang == GangPlayer.GAS_MASKS ? "How are the boys?" : "How are the Clowns?";
+        }
+        if (gang == GangPlayer.GAS_MASKS) {
+            // 4.1.54: Banjou's chain: a clown's mask in the hand once the Clowns are done.
+            if (g.gasStep() == GangPlayer.GAS_MASK_NEXT && holdsClownMask(player)) {
+                return "Here. A clown's mask. (the mask in your hand)";
+            }
+            return g.gasStep() != GangPlayer.GAS_NOT_YET ? "About joining the Gas Masks..." : "I want to join the Gas Masks.";
         }
         if (gang == GangPlayer.AOGIRI) {
             return g.aogiriDone() ? "It's done. Five doves." : g.aogiriQuest() ? "About joining Aogiri..." : "I want to join Aogiri.";
@@ -695,6 +831,9 @@ public final class GangServer {
     static Said talk(ServerPlayer player, Persona persona, String key, int seed) {
         GangPlayer g = of(player);
         int gang = gangOf(persona);
+        if (gang == GangPlayer.GAS_MASKS) {
+            return banjou(player, g, key, seed); // 4.1.54
+        }
         boolean ayato = gang == GangPlayer.AOGIRI;
         if (g.member(gang)) {
             return new Said(ayato ? pick(seed, "Aogiri's fine. Don't get sloppy.", "You're one of us. Act like it.", "Still breathing? Good. Aogiri needs you.")
@@ -706,8 +845,10 @@ public final class GangServer {
                 : "*the grin stays; the eyes don't* You killed my Clowns. You don't get a mask. You get a head start. Run.", null);
         }
         if (g.gang() != GangPlayer.NONE) {
-            return new Said(ayato ? "You run with the Clowns. Aogiri doesn't share. Get lost."
-                : "Aogiri? Ew. Trees. The ringmaster doesn't do double acts. Ditch them first.", null);
+            // 4.1.54: whichever other gang they run with (the Gas Masks now too).
+            return new Said(ayato ? "You run with " + GangPlayer.title(g.gang()) + ". Aogiri doesn't share. Get lost."
+                : g.gang() == GangPlayer.AOGIRI ? "Aogiri? Ew. Trees. The ringmaster doesn't do double acts. Ditch them first."
+                : "The Gas Masks? The heavy breathers? Ugh. The ringmaster doesn't do double acts. Ditch them first.", null);
         }
         if (ayato) {
             if (g.aogiriDone()) {
@@ -753,6 +894,78 @@ public final class GangServer {
             + "Except me.", null);
     }
 
+    /**
+     * 4.1.54 (the owner: the Gas Masks joined by "Short chain, like Roma"; Banjou "wants to be tough but truly isnt, is aware of how weak he
+     * truly is"): Banjou's way in. Something said to him that takes him seriously (of three answers, {@link #SERIOUS}: not mockery, not
+     * flattery he knows is false), then three Clowns killed (they keep hurting his men), then a clown's mask brought as proof.
+     */
+    static Said banjou(ServerPlayer player, GangPlayer g, String key, int seed) {
+        int gang = GangPlayer.GAS_MASKS;
+        if (g.member(gang)) {
+            return new Said(pick(seed, "The boys are good. Fed, masked, nobody hurt this week. ...That last part's new. Thank you.",
+                "You're one of us. I still can't believe you picked us.", "Everyone's fine. I counted. Twice."), null);
+        }
+        if (g.banned(gang)) {
+            return new Said("You killed my boys. *His voice shakes, and he doesn't back down.* You're not a Gas Mask. You never were. Get out before "
+                + "they see you.", null);
+        }
+        if (g.gang() != GangPlayer.NONE) {
+            return new Said("You're with " + GangPlayer.title(g.gang()) + ". I can't take you. I'd be stealing, and they'd come for the boys.", null);
+        }
+        if (g.gasStep() == GangPlayer.GAS_NOT_YET) {
+            if (key.startsWith("gang:serious:")) {
+                int said = Integer.parseInt(key.substring("gang:serious:".length()));
+                if (said == SERIOUS) {
+                    set(player, g.takenSeriously());
+                    player.m_5661_(Component.m_237113_("§aThe Gas Masks: §fkill " + GangPlayer.GAS_CLOWNS + " Clowns §7(0/" + GangPlayer.GAS_CLOWNS + ")"),
+                        false);
+                    return new Said("*He looks at you for a long moment, like nobody's ever said that to him.* ...Okay. Okay. Then here's the thing. The "
+                        + "Clowns keep hurting my boys, and I can't stop them. Three of them. Then bring me one of their masks, so the boys know it was "
+                        + "you.", null);
+                }
+                return new Said(said == 0 ? "*His face goes still.* ...Yeah. I've heard that one. Come back when you mean it."
+                    : "*He laughs, not unkindly.* Don't. I know what I am. Flattery's how people get my boys killed.", null);
+            }
+            List<String[]> answers = new ArrayList<>(List.of(new String[] {ANSWERS[0], "gang:serious:0"}, new String[] {ANSWERS[1], "gang:serious:1"},
+                new String[] {ANSWERS[2], "gang:serious:2"}));
+            java.util.Collections.rotate(answers, Math.floorMod(seed, answers.size()));
+            return new Said("Join us? *He straightens up, trying to look like a gang boss.* Why? Tell me why. And don't lie to me. Everyone lies to me.",
+                answers);
+        }
+        if (g.gasStep() == GangPlayer.GAS_CLOWNS_NEXT) {
+            return new Said(g.clownKills() + " of three Clowns. Be careful. They laugh the whole time. Don't let it get in your head.", null);
+        }
+        if (!takeClownMask(player)) {
+            return new Said("Now one of their masks. A clown's. So the boys know it was you who stood up for them.", null);
+        }
+        set(player, g.join(gang));
+        joined(player, gang);
+        return new Said("*He turns the clown's mask over in his big hands, then hands you one of theirs.* ...Welcome to the Gas Masks. I'm the weakest "
+            + "one here. You'll be fine.", null);
+    }
+
+    /** 4.1.54: what may be said to Banjou; the third takes him seriously. */
+    static final String[] ANSWERS = {"You? The boss? Of a gang? Seriously?", "Because you're the strongest ghoul in the ward. Everyone says so.",
+        "Because they follow you. Not for your strength. Because you stay."};
+    static final int SERIOUS = 2;
+
+    /** 4.1.54: true if {@code player} holds one of the Clowns' masks (any of their five). */
+    static boolean holdsClownMask(ServerPlayer player) {
+        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        return held.m_41720_() instanceof com.hex.kagune.control.outfit.OutfitItem item && item.piece().id().startsWith("mask_clown");
+    }
+
+    /** 4.1.54: the clown's mask in {@code player}'s hand given over (kept in creative): true if there was one. */
+    static boolean takeClownMask(ServerPlayer player) {
+        if (!holdsClownMask(player)) {
+            return false;
+        }
+        if (!player.m_7500_()) {
+            player.m_21205_().m_41774_(1);
+        }
+        return true;
+    }
+
     /** The jokes told to Roma; the second is the one that lands (her humour). */
     static final String[] JOKES = {"Why did the scarecrow win an award? He was outstanding in his field.",
         "What's the best part of a dove? The briefcase. It's a lunchbox.", "Why don't ghouls eat clowns? They taste funny."};
@@ -762,7 +975,7 @@ public final class GangServer {
         standing(player, GangStanding.joined(today(player))); // 4.1.52: the bar starts at half
         giveMask(player, gang); // 4.1.53
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.levelup", 0.8F, 0.7F);
-        player.m_5661_(Component.m_237113_((gang == GangPlayer.AOGIRI ? "§4" : "§9") + "You joined " + GangPlayer.title(gang)
+        player.m_5661_(Component.m_237113_(colour(gang) + "You joined " + GangPlayer.title(gang)
             + ". §7They will never go for you again, and they will fight for you."), false);
     }
 

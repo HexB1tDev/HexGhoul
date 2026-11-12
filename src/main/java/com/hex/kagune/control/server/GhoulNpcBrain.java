@@ -177,6 +177,19 @@ public final class GhoulNpcBrain {
         return rolled.ganged(clowns, mask >= 1 && mask <= n ? mask : 1 + Math.min(n - 1, (int)(Math.max(0.0, roll) * n)));
     }
 
+    /**
+     * 4.1.54: set (by the Gas Masks' hideout's template, tools/companion_structures.py) on the Gas Masks who live there; which mask each wears
+     * is {@link #CIRCUS_MASK}, and where each first woke its home ({@link #CIRCUS_HOME_X}), as the circus's Clowns.
+     */
+    static final String GAS_HIDEOUT = "HexGasHideout";
+
+    /** 4.1.54: {@code rolled} made one of the Gas Masks of their hideout, in its mask {@code mask} (as {@link #circus} makes a Clown). */
+    static NpcIdentity gasHideout(NpcIdentity rolled, int mask, double roll) {
+        com.hex.kagune.control.npc.Gang gas = com.hex.kagune.control.npc.Gang.GAS_MASKS;
+        int n = gas.masks().size();
+        return rolled.ganged(gas, mask >= 1 && mask <= n ? mask : 1 + Math.min(n - 1, (int)(Math.max(0.0, roll) * n)));
+    }
+
     /** 4.1.45: a gang's own (which one in its saved data), how far one hurt calls the rest, how long they hold it against whoever did it. */
     static final String GANG_ID = "HexGang";
     static final double GANG_CALL = 24.0;
@@ -367,6 +380,14 @@ public final class GhoulNpcBrain {
             } else if (saved.m_128471_(CIRCUS)) {
                 // 4.1.48: one of the Clowns, placed with the circus tent: its own mask (its template's), and where it woke its home.
                 who = circus(who, saved.m_128451_(CIRCUS_MASK), npc.m_217043_().m_188500_());
+                if (!saved.m_128441_(CIRCUS_HOME_X)) {
+                    saved.m_128405_(CIRCUS_HOME_X, (int)Math.floor(npc.m_20185_()));
+                    saved.m_128405_(CIRCUS_HOME_Y, (int)Math.floor(npc.m_20186_() + 0.01));
+                    saved.m_128405_(CIRCUS_HOME_Z, (int)Math.floor(npc.m_20189_()));
+                }
+            } else if (saved.m_128471_(GAS_HIDEOUT)) {
+                // 4.1.54: one of the Gas Masks, placed with their hideout: its own mask, and where it woke its home (kept to as a Clown is).
+                who = gasHideout(who, saved.m_128451_(CIRCUS_MASK), npc.m_217043_().m_188500_());
                 if (!saved.m_128441_(CIRCUS_HOME_X)) {
                     saved.m_128405_(CIRCUS_HOME_X, (int)Math.floor(npc.m_20185_()));
                     saved.m_128405_(CIRCUS_HOME_Y, (int)Math.floor(npc.m_20186_() + 0.01));
@@ -811,7 +832,8 @@ public final class GhoulNpcBrain {
         if (who.aogiri() && AogiriGuard.idle(npc, mind, level, now)) {
             return;
         }
-        // 4.1.48: a circus Clown keeps to its tent: strolling about its spot, never walking off with the others.
+        // 4.1.48: a circus Clown keeps to its tent: strolling about its spot, never walking off with the others. 4.1.54: a Gas Mask of the
+        // hideout to its garden, the same way.
         if (atCircus(npc, mind, level, now)) {
             return;
         }

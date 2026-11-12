@@ -27,6 +27,52 @@ public final class EtoFight {
      * Her pose this frame: her fight's move ({@code fight}, from the server) put on {@code under} (her gesture's pose, or null), as a
      * Pale player's would be; null when nothing poses her at all.
      */
+    /**
+     * 4.1.54: Banjou's slaps: his body thrown into each blow of his one wing as a player's is into the same blow (UkakuBody's poses, put on the
+     * body as KaguneBodyAnimation puts a player's: the twist, the lean with the head kept on the target, the arms, the legs).
+     */
+    public static RigPose slap(EtoNpc npc, RigPose under, double clock) {
+        if (!npc.persona().slapsOnly()) {
+            return under;
+        }
+        float[] slap = com.hex.kagune.control.client.NpcWingsClient.slap(com.hex.kagune.control.client.NpcWingsClient.get(npc.m_19879_()), clock);
+        if (slap == null) {
+            return under;
+        }
+        int i = (int)slap[0];
+        com.hex.kagune.control.ukaku.UkakuBody.Pose pose = com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.npc.WingRules.SLAP_PATTERNS[i],
+            com.hex.kagune.control.npc.WingRules.SIDE > 0, false, slap[1], com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[i]);
+        RigPose p = under == null ? new RigPose() : under;
+        add(p, pose, SLAP_BODY);
+        return p;
+    }
+
+    /** 4.1.54: how much of a player's body his blows carry (a little less: a man swinging a small wing, not a big one). */
+    static final float SLAP_BODY = 0.85F;
+
+    /** {@code pose} (UkakuBody's) put on {@code p} at {@code amp}, as KaguneBodyAnimation.addUkaku does a player's (its twist too). */
+    public static void add(RigPose p, com.hex.kagune.control.ukaku.UkakuBody.Pose pose, float amp) {
+        p.twist += pose.twist * amp;
+        p.headX += pose.headX * amp - 0.6F * (pose.torsoX + pose.torsoBend) * amp;
+        p.headY += pose.headY * amp;
+        p.lean += (pose.torsoX + pose.torsoBend) * amp;
+        p.rightArmX += pose.rightArmX * amp;
+        p.rightArmY += pose.rightArmY * amp;
+        p.rightArmZ += pose.rightArmZ * amp;
+        p.rightElbow += pose.rightArmBend * amp;
+        p.leftArmX += pose.leftArmX * amp;
+        p.leftArmY += pose.leftArmY * amp;
+        p.leftArmZ += pose.leftArmZ * amp;
+        p.leftElbow += pose.leftArmBend * amp;
+        p.rightLegX += pose.rightLegX * amp;
+        p.rightLegZ += pose.rightLegZ * amp;
+        p.leftLegX += pose.leftLegX * amp;
+        p.leftLegZ += pose.leftLegZ * amp;
+        p.rightKnee += pose.rightKnee * amp;
+        p.leftKnee += pose.leftKnee * amp;
+        p.flip += pose.flip;
+    }
+
     public static RigPose pose(EtoNpc npc, PaleClient.PaleView fight, RigPose under, double clock, float partial) {
         Body body = BODIES.computeIfAbsent(npc.m_19879_(), id -> new Body());
         float age = npc.f_19797_ + partial;

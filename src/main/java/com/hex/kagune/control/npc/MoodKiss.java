@@ -191,6 +191,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"*shoves you away* ...Don't get used to it. I'm still mad. A little.", "There. Now shut up. ...Okay, I'm not mad anymore. Idiot."};
                 case "general" -> new String[] {"*kisses you once, stiffly, and steps back* ...I'm still angry. That was not a concession.", "That doesn't settle it. ...It helps."};
                 case "roma" -> new String[] {"*kisses you hard, then flicks your nose* ...I'm still mad. That was a free sample.", "That doesn't fix it. ...It fixes like forty percent."};
+                case "banjou" -> new String[] {"*kisses you, then remembers he's angry and frowns very hard* ...I'm still mad. I'm just bad at it.", "That doesn't fix it. ...Okay, it fixes most of it. Don't tell the boys."};
                 case "ayato" -> new String[] {"*grabs your collar, kisses you hard, shoves you off* ...I'm still mad. Shut up.", "That doesn't fix it. ...It fixes it a little."};
                 default -> new String[] {"*pulls back, flushed* ...Okay. I can't stay angry when you do that.", "That wasn't fair. ...I'm not angry anymore."};
             };
@@ -199,6 +200,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"Mine. Got it? Mine.", "*keeps hold of your collar* ...Next time someone looks at you, I'm biting them."};
                 case "general" -> new String[] {"*a hand at your back, not letting go* Mine. ...Let them all see.", "*jaw set* Whoever that was can find another district."};
                 case "roma" -> new String[] {"*an arm hooked round your neck, grinning at nobody* Mine. Tell the whole audience.", "*purple flickering behind her* Whoever that was, I have a trapdoor with their name on it."};
+                case "banjou" -> new String[] {"*an arm round you, standing as tall as he can* ...Mine. I'd fight for you. I'd lose. I'd still fight.", "*a small blue flicker over his shoulder* Whoever that was can deal with me. ...And the boys. Mostly the boys."};
                 case "ayato" -> new String[] {"*doesn't let go* Mine. Tell everyone.", "*crystal flickering on his wings* Anyone else tries that, they're dead."};
                 default -> new String[] {"...I'm sorry. I needed to know you were still mine.", "*holds you a little too tight* Mine. ...Sorry. Mine."};
             };
@@ -207,6 +209,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"*can't stop grinning* ...Shut up. I'm not smiling. I'm NOT.", "*hops on the spot, then catches herself* ...You saw nothing."};
                 case "general" -> new String[] {"*laughing into it, astonished at himself* ...I don't do this. I'm doing this.", "Again. ...That's an order."};
                 case "roma" -> new String[] {"*laughing into it so hard she has to stop* Again! Again! I'm keeping score!", "*spins you once, mid-kiss* Ta-daaa. ...Again."};
+                case "banjou" -> new String[] {"*laughing, red to the ears* Sorry, sorry. I don't know what's gotten into me. Again?", "*grinning like an idiot* ...The boys are going to hear me humming all day. I don't care."};
                 case "ayato" -> new String[] {"*grinning, then scowling about it* ...Stop looking at me like that.", "Again. ...What? I said again."};
                 default -> new String[] {"*laughs, surprised at himself* I don't know what's wrong with me today. Again?", "*grinning like an idiot* ...Sorry. I'm just happy."};
             };
@@ -215,6 +218,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"*forehead to yours, eyes closed* ...Okay. That one was nice. Really nice.", "*softly* Don't move yet."};
                 case "general" -> new String[] {"*forehead against yours, eyes shut* ...Hold there.", "*very quietly* ...Thirty years. Nothing was ever like that."};
                 case "roma" -> new String[] {"*forehead to yours, quiet, no joke at all* ...Stay right there.", "*very softly* ...That one wasn't a bit. That one was real."};
+                case "banjou" -> new String[] {"*forehead against yours, very quiet* ...I'm not much. But I'm yours.", "*his big hands careful on your face* ...Thank you. For picking me."};
                 case "ayato" -> new String[] {"*forehead against yours, quiet for once* ...Don't move.", "*very quietly* ...That one I'm keeping."};
                 default -> new String[] {"*touches his forehead to yours* ...I love you. That's all.", "*keeps his hands on your face a moment longer* Thank you."};
             };
@@ -223,6 +227,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"*face in your shoulder* Where were you? ...Don't answer. Just stay.", "Idiot. You were gone ages. ...Stay."};
                 case "general" -> new String[] {"*holds on too hard* Where were you? I had the whole bureau looking. ...Don't tell them I said so.", "...You're back. Stay."};
                 case "roma" -> new String[] {"*holds on too tight* Where WERE you? I had a whole bit ready for your funeral. I hated it.", "...You came back. Good. Don't do that again."};
+                case "banjou" -> new String[] {"*holds on and doesn't let go* Where were you? I sent the boys out looking. Don't do that to me.", "...You came back. I'm not crying. It's the filters. I'm not even wearing it."};
                 case "ayato" -> new String[] {"*holds on too hard* Where were you? Don't do that. Don't you EVER do that.", "...You came back. Good. Stay."};
                 default -> new String[] {"*holds on* I kept thinking something happened to you. Please don't disappear like that.", "I missed you. So much. Stay?"};
             };
@@ -231,6 +236,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"*leans her whole weight on you* ...I'm not asleep. I'm resting my eyes. On you.", "Mm. G'night. ...It's day? Don't care."};
                 case "general" -> new String[] {"*head dropping onto your shoulder* ...Two days awake. Don't move.", "*half asleep* Stay. That's an order."};
                 case "roma" -> new String[] {"*head drops onto your shoulder* ...Wake me if anyone dies. Or don't. Surprise me.", "*half asleep* Stay. Ringmaster's orders."};
+                case "banjou" -> new String[] {"*head drooping onto your shoulder* ...Sorry. Long night. Just a minute.", "*half asleep* Stay. ...Please. I sleep better."};
                 case "ayato" -> new String[] {"*head drops onto your shoulder* ...I'm not tired. Shut up.", "*half asleep* Stay. That's an order."};
                 default -> new String[] {"*rests his head on your shoulder* ...Sorry. I'm so tired. This is nice.", "*half asleep* Stay. Just a little."};
             };
@@ -239,6 +245,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"*nips your lip* ...Sorry. I'm starving. That's not an excuse. It's a warning.", "*kakugan flickering* Don't look at me like that, I'm hungry."};
                 case "general" -> new String[] {"*hard, brief, his hands not quite steady* ...A bad day. I needed that. Stay near me.", "*grips your shoulders* I lost people today. Not you. Never you."};
                 case "roma" -> new String[] {"*bites your lip, grinning, kakugan lit* ...Relax. I only nibble on people I like.", "*purple flickering behind her* Hunt with me. It'll be a riot."};
+                case "banjou" -> new String[] {"*pulls back fast, kakugan lit* Sorry! Sorry. I'm hungry. I'd never- not you.", "*breathless* ...Hunt with me later? I'm not good at it. You could show me."};
                 case "ayato" -> new String[] {"*bites your lip, eyes red* ...Don't flinch. I'm not going to eat you. Probably.", "*kakugan burning* Hunt with me. Now."};
                 default -> new String[] {"*pulls back fast, kakugan bright* I'm sorry. I almost bit. I need to eat.", "*a little breathless* ...Hunt with me later? Please."};
             };
@@ -247,6 +254,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"Ha! Took you long enough. *hops back* Bet you can't do it again.", "*sticks her tongue out and backs away* Slowpoke."};
                 case "general" -> new String[] {"*steps back, the corner of his mouth moving* Too slow, recruit.", "Hm. You telegraph. Again."};
                 case "roma" -> new String[] {"*leans out of reach, cackling* Too slow! The ringmaster is untouchable!", "Ha! You telegraph like a mime. Again."};
+                case "banjou" -> new String[] {"*leans back and nearly falls over* Ha! Too slow! ...I meant to do that.", "*steps out of reach, very pleased* I won one! Finally! Somebody write it down!"};
                 case "ayato" -> new String[] {"*smirks and steps back* Too slow. Again.", "Ha. That all you've got?"};
                 default -> new String[] {"*laughs and steps back* You were faster than I thought.", "*grins* Okay, okay. You win. This time."};
             };
@@ -259,6 +267,7 @@ public final class MoodKiss {
                     "*straightens his collar twice* I have commanded whole squads. This is harder."};
                 case "roma" -> new String[] {"*for once, no punchline at all, just going pink* ...Huh. That's never happened to me.",
                     "*both hands over her face, peeking through her fingers* ...Do it again before I think of a joke."};
+                case "banjou" -> new String[] {"*bright red under the beard* ...That was- I mean- yeah. Good. Okay.", "*covers his face with one big hand* Don't look at me. I'm a mess."};
                 case "ayato" -> new String[] {"*looking anywhere but at you* ...Whatever. It was fine. It was- shut up.", "*ears going red* Don't tell my sister."};
                 default -> new String[] {"*rubs the back of his neck, smiling at the ground* ...Sorry. I'm not very good at this yet.",
                     "*a shy little laugh* ...My heart's going really fast."};
@@ -271,6 +280,7 @@ public final class MoodKiss {
                     "*half a smile* I slept. Actually slept. ...Your fault."};
                 case "roma" -> new String[] {"*yawns into it* Morning. We survived the night. Statistically impressive.",
                     "*not letting go* Five more minutes. Then I'll be funny."};
+                case "banjou" -> new String[] {"*yawns into it* Morning. ...You stayed. Huh.", "*not letting go* Five more minutes. The boys can guard themselves."};
                 case "ayato" -> new String[] {"*yawns* ...Morning. Don't look at me, I look terrible.", "*not letting go* Five more minutes. Not a request."};
                 default -> new String[] {"*smiles, still half asleep* Good morning. ...I could get used to waking up like this.", "*yawns into it* Mm. Morning. Coffee's on me."};
             };
@@ -283,6 +293,7 @@ public final class MoodKiss {
                     "*makes no move to get out of the rain* Stay a moment longer."};
                 case "roma" -> new String[] {"*face up to the rain, laughing* Free shower! Romantic AND hygienic!",
                     "*soaked, grinning, not moving* ...Stay. This is the good part."};
+                case "banjou" -> new String[] {"*holding his coat over the two of you, missing most of you* ...I'm trying, okay?", "*soaked, laughing at himself* So much for looking cool."};
                 case "ayato" -> new String[] {"*shakes the rain out of his hair, grinning* ...Don't tell anyone I liked that.", "We're soaked. ...Whatever. Worth it."};
                 default -> new String[] {"*laughing, rain running down his face* We should get inside. ...In a minute.", "*brushes wet hair off your forehead* I'll remember this one."};
             };
@@ -291,6 +302,7 @@ public final class MoodKiss {
                 case "touka" -> new String[] {"*her foot lifts before she can stop it* ...That was involuntary. It doesn't count.", "*mortified* Did my foot just- don't answer that."};
                 case "general" -> new String[] {"*straightens up slowly* ...I saw that in a film once. I always wanted to.", "*a rare, real smile* Was that adequate?"};
                 case "roma" -> new String[] {"*dips you, very theatrical* Ta-da! ...Too much? Never too much.", "*pulls back and takes a little bow* Thank you, thank you, I'm here all week."};
+                case "banjou" -> new String[] {"*dips you, wobbles, and almost drops you* ...That went better in my head.", "*pulls back, amazed at himself* Did that work? That worked."};
                 case "ayato" -> new String[] {"*smirks* What? I've seen movies.", "*pulls back, very pleased with himself* ...Yeah. I'm good at that."};
                 default -> new String[] {"*pulls back, a little breathless* I've wanted to do that since the first time I saw you.", "*laughs* Too much? ...Not too much."};
             };
@@ -300,6 +312,7 @@ public final class MoodKiss {
                     "*rubs her nose against yours and looks away fast* Don't say it's cute."};
                 case "general" -> new String[] {"*nose against yours, startled into a laugh* ...Where did you learn that?", "*very solemn, nose to nose* Absurd. ...Again."};
                 case "roma" -> new String[] {"*nose to nose, crossing her eyes at you* Hiii.", "*boops your nose with hers* Boop. That's the whole joke. I love it."};
+                case "banjou" -> new String[] {"*bumps his nose against yours, beard tickling* ...Hi.", "*nose to nose, grinning sheepishly* That's the bit I'm good at."};
                 case "ayato" -> new String[] {"*scrunches his nose against yours* ...What is this. ...Fine. It's nice.", "*nose to nose, scowling, failing* Stop smiling."};
                 default -> new String[] {"*rubs his nose against yours, laughing* That's my favourite kind.", "*grins, nose to nose* Hi."};
             };
@@ -311,6 +324,7 @@ public final class MoodKiss {
                 case "general" -> new String[] {"*bows over your hand, every inch the officer* An honour. As always.", "*kisses your knuckles, very correct* At your service."};
                 case "roma" -> new String[] {"*kisses your knuckles, then pretends to pocket your ring* ...Kidding. Your hand. Your very nice hand.",
                     "*a sweeping circus bow over your hand* Ladies, gentlemen, and you."};
+                case "banjou" -> new String[] {"*kisses your knuckles very carefully, like they might break* ...Is that how it's done?", "*a stiff little bow over your hand* My lady. ...Too much? Too much."};
                 case "ayato" -> new String[] {"*kisses your knuckles, then drops your hand fast* ...Don't make that face. People do that.",
                     "*bows, sarcastic, then not sarcastic at all* ...Yours."};
                 default -> new String[] {"*bows over your hand and kisses your knuckles* Too old-fashioned? I liked it.", "*a little bow* May I have the rest of the evening too?"};
@@ -330,6 +344,7 @@ public final class MoodKiss {
             case "touka" -> new String[] {"*ducks away* Ha! Missed. Try again, slowpoke.", "*leans back, smirking* Nope. Again."};
             case "general" -> new String[] {"*straightens his collar, eyes amused* Not on duty.", "*turns his head at the last moment* Earn it."};
             case "roma" -> new String[] {"*sticks her tongue out and ducks* Nope! Earn it!", "*turns her head, cackling* The ringmaster doesn't kiss in the first act."};
+            case "banjou" -> new String[] {"*leans back too far and grabs the wall* ...Earn it. Ha. That's what you say, right?", "*ducks, and immediately looks guilty* Sorry! Try again. I won't move. Probably."};
             case "ayato" -> new String[] {"*leans back, smirking* Earn it.", "*dodges* Slow. ...Try again."};
             default -> new String[] {"*steps back, laughing* Sorry, sorry. I couldn't help it. Again?", "*dodges, grinning* One more try."};
         };

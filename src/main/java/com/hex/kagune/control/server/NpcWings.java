@@ -72,6 +72,12 @@ final class NpcWings {
         long kakujaAt = Long.MIN_VALUE;
         long burstReady = Long.MIN_VALUE;
         long mendAt = Long.MIN_VALUE;
+        /** 4.1.54: Banjou's slap under way (WingRules.SLAPS, -1: none) and since when, the next of his string, when he may start one again. */
+        int slap = -1;
+        long slapAt = Long.MIN_VALUE;
+        int nextSlap;
+        long slapReady = Long.MIN_VALUE;
+        long slapEnded = Long.MIN_VALUE;
     }
 
     /**
@@ -120,6 +126,7 @@ final class NpcWings {
             }
             st.volleyAt = Long.MIN_VALUE;
             st.prey = 0;
+            st.slap = -1; // 4.1.54
             st.dirty = true;
             UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.2, 0.0), "entity.ender_dragon.flap", 0.5F, 1.6F);
         }
@@ -152,6 +159,9 @@ final class NpcWings {
         if (st.prey != target.m_19879_()) {
             st.prey = target.m_19879_();
             st.dirty = true;
+        }
+        if (npc.persona().slapsOnly()) {
+            return slaps(npc, mind, st, target, level, now); // 4.1.54: Banjou's wing throws nothing; it slaps
         }
         // 4.0.0: Ayato, badly hurt: his kakuja tears out of his back (crystal everywhere), and stays out until the fight is over.
         if (npc.persona().kakuja() && !st.kakuja && npc.m_21223_() < npc.m_21233_() * KAKUJA_BELOW) {
@@ -253,6 +263,102 @@ final class NpcWings {
             }
         }
         return true;
+    }
+
+    // ---------------------------------------------------------------- 4.1.54: Banjou's slaps
+
+    /**
+     * 4.1.54 (the owner: "super small blue Ukaku wing (singular) cannot shoot projectiles, only uses basic m1s with it"): a tick of Banjou's
+     * fight, all of it his wing's string ({@link WingRules#SLAPS}): walked in to arm's length, a blow at a time, each landing on its tick
+     * ({@link WingRules#slapImpact}), the string's last followed by a rest. Nothing thrown, nothing of his eyes' kit started (a move of it
+     * already under way plays out first).
+     */
+    static boolean slaps(EtoNpc npc, EtoBrain.Mind mind, State st, LivingEntity target, ServerLevel level, long now) {
+        if (mind.owl.busy()) {
+            return false;
+        }
+        double gap = EtoOwl.gap(npc, target);
+        double size = npc.persona().size();
+        if (st.slap >= 0) {
+            int slap = st.slap;
+            long age = now - st.slapAt;
+            npc.m_21573_().m_26573_();
+            if (age <= WingRules.slapImpact(slap)) {
+                EtoOwl.face(npc, target);
+            }
+            if (age == WingRules.slapImpact(slap)) {
+                land(npc, st, slap, target, level, gap);
+            }
+            if (age >= WingRules.SLAP_TICKS[slap]) {
+                boolean last = slap + 1 >= WingRules.SLAPS.length;
+                st.slap = -1;
+                st.slapEnded = now;
+                st.nextSlap = last ? 0 : slap + 1;
+                st.slapReady = now + (last ? WingRules.SLAP_REST : 0L);
+                st.dirty = true;
+            }
+            return true;
+        }
+        EtoOwl.face(npc, target);
+        if (now - st.outAt >= WingRules.DEPLOY_TICKS && gap <= WingRules.SLAP_START * size && now >= st.slapReady && npc.m_142582_(target)) {
+            if (st.slapEnded != Long.MIN_VALUE && now - st.slapEnded > WingRules.SLAP_CHAIN) {
+                st.nextSlap = 0; // too long since the last: the string starts again from the slap
+            }
+            st.slap = Math.floorMod(st.nextSlap, WingRules.SLAPS.length);
+            st.slapAt = now;
+            st.dirty = true;
+            npc.m_21573_().m_26573_();
+            UkakuFire.sound(level, back(npc), "entity.ender_dragon.flap", 0.45F, 1.8F + 0.1F * st.slap);
+            return true;
+        }
+        if (gap > WingRules.SLAP_START * size - 0.3) {
+            npc.m_21573_().m_5624_(target, 1.1);
+        } else {
+            npc.m_21573_().m_26573_();
+        }
+        return true;
+    }
+
+    /**
+     * Blow {@code slap} lands: what it is aimed at, if it is in reach (its edge within {@link WingRules#SLAP_REACH} of him, or the wing's
+     * hand on it), and any other foe the hand comes down on; hurt (his wing's weight: Persona.wingPower), knocked the way the blow goes (the
+     * rising wing up and off its feet), a slap's sound. Missed, the swish.
+     */
+    private static void land(EtoNpc npc, State st, int slap, LivingEntity target, ServerLevel level, double gap) {
+        double size = npc.persona().size();
+        double[] local = WingRules.slapTip(slap, WingRules.SLAP_IMPACT[slap]);
+        double yaw = Math.toRadians(npc.f_20883_);
+        double forwardX = -Math.sin(yaw);
+        double forwardZ = Math.cos(yaw);
+        double rightX = -Math.cos(yaw);
+        double rightZ = -Math.sin(yaw);
+        Vec3 hand = new Vec3(npc.m_20185_() + (rightX * local[0] + forwardX * local[2]) * size, npc.m_20186_() + local[1] * size,
+            npc.m_20189_() + (rightZ * local[0] + forwardZ * local[2]) * size);
+        float damage = (float)(WingRules.SLAP_DAMAGE[slap] * npc.persona().wingPower());
+        Vec3 facing = UkakuFire.horizontal(target.m_20182_().m_82546_(npc.m_20182_()));
+        boolean any = false;
+        List<LivingEntity> caught = new ArrayList<>(level.m_6443_(LivingEntity.class, new AABB(hand.f_82479_, hand.f_82480_, hand.f_82481_,
+            hand.f_82479_, hand.f_82480_, hand.f_82481_).m_82400_(1.2 * size), b -> b != npc && b != target && b.m_6084_() && EtoBrain.foe(npc, b)));
+        caught.add(0, target);
+        for (LivingEntity body : caught) {
+            boolean reached = body == target && gap <= WingRules.SLAP_REACH * size || body.m_20191_().m_82400_(0.6 * size).m_82390_(hand);
+            if (!reached) {
+                continue;
+            }
+            Vec3 at = GhoulNpcBrain.centre(body).m_82546_(facing.m_82490_(body.m_20205_() * 0.5));
+            WoundHits.expect(body, WoundBook.Blow.BLUNT, at, facing, 0.0);
+            body.f_19802_ = 0;
+            if (!body.m_6469_(npc.m_269291_().m_269333_(npc), damage)) {
+                continue;
+            }
+            any = true;
+            double up = slap == 2 ? 0.42 : 0.18; // the rising wing: up off its feet
+            double push = 0.32 + 0.06 * slap;
+            body.m_20256_(body.m_20184_().m_82490_(0.4).m_82549_(new Vec3(facing.f_82479_ * push, up, facing.f_82481_ * push)));
+            body.f_19864_ = true;
+        }
+        UkakuFire.sound(level, hand, any ? slap == 2 ? "entity.player.attack.strong" : "entity.player.attack.knockback" : "entity.player.attack.sweep",
+            any ? 0.9F : 0.5F, any ? 0.9F + 0.08F * slap : 1.4F);
     }
 
     /** 4.0.0: {@code ticks} as the companion throws: a full Ukaku (Ayato) sooner, his kakuja sooner still. */
@@ -385,7 +491,7 @@ final class NpcWings {
 
     static S2CNpcWings message(EtoNpc npc, State st) {
         return new S2CNpcWings(npc.m_19879_(), st.out, st.outAt, st.crystal, st.crystalAt, st.prey, st.shotAt, st.shotSide, st.volleyAt, st.kakuja,
-            st.kakujaAt, st.mendAt);
+            st.kakujaAt, st.mendAt, st.slap, st.slapAt);
     }
 
     /** A player starts seeing her: they are told how her wings are. */

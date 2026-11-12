@@ -328,6 +328,12 @@ public final class UkakuWingRenderer {
             if (npc.persona().kakuja()) {
                 input = com.hex.kagune.control.npc.WingRules.full(input, grownKakuja > 0.02F);
             }
+            // 4.1.54: Banjou's one small wing, slapping (WingRules.banjou): never aiming, nothing thrown.
+            float[] slap = npc.persona().slapsOnly() ? com.hex.kagune.control.client.NpcWingsClient.slap(wings, clock) : null;
+            if (npc.persona().slapsOnly()) {
+                input = com.hex.kagune.control.npc.WingRules.banjou(deploy, time / 20.0, crystal, !wings.out(), distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F,
+                    slap == null ? -1 : (int)slap[0], slap == null ? 0.0F : slap[1]);
+            }
             List<WingRig.Quad> quads = WingRig.build(input, eye);
             if (quads.isEmpty()) {
                 continue;
@@ -339,11 +345,15 @@ public final class UkakuWingRenderer {
             com.hex.kagune.control.client.animation.RigPose drawn = EtoRenderer.lastPose(id);
             double[] carry = drawn == null ? new double[] {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}
                 : com.hex.kagune.control.client.animation.BodyFrame.carry(drawn, "torso");
+            if (npc.persona().slapsOnly()) {
+                carry = com.hex.kagune.control.npc.WingRules.shrunk(carry, com.hex.kagune.control.npc.WingRules.SLAP_SCALE); // 4.1.54: "super small"
+            }
             double[] scaled = new double[12];
             for (int k = 0; k < 12; k++) {
                 scaled[k] = carry[k] * size;
             }
-            emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, com.hex.kagune.control.KaguneColours.DEFAULT); // (hers stay hers)
+            // Each in its own colour: Touka's and Ayato's the original crimson, Banjou's blue (4.1.54, the owner: "blue Ukaku wing").
+            emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, npc.persona().kaguneColour());
         }
         // 1.3.43: the ghoul children in view with Ukaku of their own: one wing (born of two kinds: 1.3.45: on the left beside a tentacle,
         // else the side its seed gives) or the pair,

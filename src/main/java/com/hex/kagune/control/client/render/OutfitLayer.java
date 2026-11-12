@@ -51,6 +51,10 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             return view != null && (view.identity().aogiri() || view.identity().gang() != 0) ? view.identity().maskItem() : null;
         }
         if (wearer instanceof com.hex.kagune.control.npc.EtoNpc npc && npc.persona().mask() != null) {
+            // 4.1.54: Banjou's gas mask goes on at night (the owner: "puts on the mask at night"), off by day.
+            if (npc.persona().maskAtNight()) {
+                return com.hex.kagune.control.npc.EtoRules.night(npc.m_9236_().m_46468_()) ? npc.persona().mask() : null;
+            }
             // 4.0.0: Noro never shows his face; Ayato's respirator goes on when his kagune comes out.
             if (!npc.persona().maskInFight()) {
                 return npc.persona().mask();

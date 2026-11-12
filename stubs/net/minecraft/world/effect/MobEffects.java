@@ -7,6 +7,7 @@ public final class MobEffects {
     /** JUMP */ public static final MobEffect f_19603_ = null;
     /** INVISIBILITY */ public static final MobEffect f_19609_ = null;
     /** BLINDNESS */ public static final MobEffect f_19610_ = null;
+    /** NIGHT_VISION (4.1.54) */ public static final MobEffect f_19611_ = null;
     /** HUNGER */ public static final MobEffect f_19612_ = null;
     /** CONFUSION (Nausea) */ public static final MobEffect f_19604_ = null;
     /** POISON */ public static final MobEffect f_19614_ = null;

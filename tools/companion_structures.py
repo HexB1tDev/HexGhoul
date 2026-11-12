@@ -7,6 +7,7 @@
   art/exploration/Ken_tower.litematic -> src/main/resources/data/hexkagune/structures/cyber_tower.nbt  Ken sitting on the top of his tower
   art/reaper/arima_mansion.schem -> src/main/resources/data/hexkagune/structures/reaper_mansion.nbt  4.1.24: Arima in its garden
   art/exploration/circus.schematic -> src/main/resources/data/hexkagune/structures/circus.nbt  4.1.48: four Clowns in the tent
+  art/exploration/GasMask_hideout.schem -> src/main/resources/data/hexkagune/structures/gas_hideout.nbt  4.1.54: Banjou in the cottage, four Gas Masks
 
 4.1.48: the circus tent is the old MCEdit "Alpha" format (numeric block ids and data in Blocks/Data: alpha() maps the few it has to 1.20.1's
 states). It has no floor (it stood on its world's ground): a floor of dirt path is laid under everything inside its outer ring (floor()),
@@ -56,6 +57,15 @@ def CLOWN(mask):
     return {"HexCircus": ("byte", 1), "HexCircusMask": ("int", mask), "HexGang": ("int", CIRCUS_GANG)}
 
 
+#: 4.1.54: the saved data of the Gas Mask hideout's Gas Mask wearing mask {@code mask} (1..5): GhoulNpcBrain.GAS_HIDEOUT, CIRCUS_MASK, GANG_ID
+#: (the hideout's own gang number, -2: a roaming gang's is never under 1, the circus's is -1), kept with the world.
+GAS_GANG = -2
+
+
+def GAS_MASK(mask):
+    return {"HexGasHideout": ("byte", 1), "HexCircusMask": ("int", mask), "HexGang": ("int", GAS_GANG)}
+
+
 PLACES = {
     "anteiku": {
         "source": "anteiku.schem",
@@ -87,6 +97,22 @@ PLACES = {
             {"who": "hexkagune:roma", "at": (38, 0, 24), "yaw": 0.0},
         ],
         "keep_air": False, "crop": None, "floor": "minecraft:dirt_path", "anchor": (38, -1, 24), "anchor_name": "hexkagune:circus_anchor",
+    },
+    "gas_hideout": {
+        "source": "exploration/GasMask_hideout.schem",
+        # 4.1.54 (the owner: Banjou "Lives in the small house in the schematic"; asked which, "The cottage": the main cherry house with the
+        # pink roof): Banjou on the cottage's ground floor, facing its cherry doors (east). Four of the Gas Masks about it, each in a different
+        # mask, all of one gang (HexGang), kept with the world: two outside the front door (south), one in the walled garden, one in its
+        # little crimson-roofed garden house. Its bottom layer is its own ground (dirt, grass, moss): the anchor in its middle puts it on the
+        # world's surface.
+        "people": [
+            {"who": "hexkagune:banjou", "at": (7, 2, 11), "yaw": -90.0},
+            {"who": "hexkagune:ghoul", "at": (10, 1, 18), "yaw": 0.0, "who_data": GAS_MASK(1)},
+            {"who": "hexkagune:ghoul", "at": (15, 1, 18), "yaw": 0.0, "who_data": GAS_MASK(2)},
+            {"who": "hexkagune:ghoul", "at": (19, 2, 8), "yaw": 90.0, "who_data": GAS_MASK(3)},
+            {"who": "hexkagune:ghoul", "at": (20, 2, 13), "yaw": 0.0, "who_data": GAS_MASK(4)},
+        ],
+        "keep_air": False, "crop": None, "anchor": (14, 0, 9), "anchor_name": "hexkagune:gas_hideout_anchor",
     },
     "cyber_tower": {
         "source": "exploration/Ken_tower.litematic",

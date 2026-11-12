@@ -464,6 +464,6 @@ public final class Chores {
 
     /** 4.0.0: whose household words {@code key} speaks: Ayato Ken's (the owner: his romance "quite similar to kaneki"), the rest their own. */
     static String household(String key) {
-        return "ayato".equals(key) || "general".equals(key) ? "ken" : "roma".equals(key) ? "touka" : key; // 4.1.5: the General; 4.1.49: Roma as Touka
+        return "ayato".equals(key) || "general".equals(key) || "banjou".equals(key) ? "ken" : "roma".equals(key) ? "touka" : key; // 4.1.5: the General; 4.1.49: Roma as Touka; 4.1.54: Banjou as Ken
     }
 }

@@ -46,6 +46,9 @@ COMPANIONS = {
     "general": {"turns": (), "slim": True},
     # 4.1.49: Roma (the owner's skin, art/exploration/Roma_skin.png, slim arms): both eyes turn.
     "roma": {"turns": ("right", "left"), "slim": True},
+    # 4.1.54: Banjou, the Gas Masks' leader (the owner: "is just alex model by the way, not muscled at all"); his skin is painted for the
+    # wide arms (their art/exploration/Banjou_skin.png, copied unchanged to art/banjou_skin.png): the game's copy has its arms narrowed.
+    "banjou": {"turns": ("right", "left"), "slim": True, "narrow": True},
 }
 # Eye pixels by hand, if detection is wrong for a skin: {key: {"right": [(x, y), ...], "left": [...], "white": [...]}} in 64px face
 # coordinates (0..7 across the face front, 0..7 down).
@@ -73,6 +76,8 @@ EYES.update({
     # 4.1.49: Roma (the owner's second skin, "Should be easier to map the face"): under her lashes (row 5), each eye the two pixels on row 6,
     # the outer one the white, the inner (grey) the iris.
     "roma": {"right": [(1, 6), (2, 6)], "left": [(5, 6), (6, 6)], "white": [(1, 6), (6, 6)], "lash": [(0, 5), (1, 5), (2, 5), (5, 5), (6, 5), (7, 5)]},
+    # 4.1.54: Banjou's eyes on the face's fifth row (whites at the outer corners, blue-grey irises inside), his brows over them.
+    "banjou": {"right": [(1, 4), (2, 4)], "left": [(5, 4), (6, 4)], "white": [(1, 4), (6, 4)], "lash": [(1, 3), (2, 3), (5, 3), (6, 3)]},
 })
 # 4.1.49: a blush placed by hand, where a face's own isn't under its eyes ({key: [(x, y), ...]} in 64px face coordinates). None now (Roma's
 # first skin had one; her second's blush is under her eyes, as everyone's).
