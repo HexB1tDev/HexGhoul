@@ -9,11 +9,15 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
-## START HERE (newest): the owner's new list (after 4.1.48), with their answers
+## START HERE (newest, after 4.1.49): ship 4.1.50 from its patch, then the owner's new list (with their answers)
 
 **State:** 4.1.49 Roma is done (her skin: the owner's second, `NewRoma.zip`, as `art/exploration/Roma_skin.png`; their first, with a
 clown face, was replaced: "I changed my mind do this one for her skin").
-4.1.50 (joining gangs) follows as its own version (its code was taken out of 4.1.49's commit and put back in 4.1.50's).
+**4.1.50 (joining gangs) is NOT pushed:** the owner stopped the session ("Handoff and prompt, now Im out of usage"). It is complete as a
+patch: `git apply docs/handoff/wip-4.1.50.patch` on top of 4.1.49 (`96fa9b90`) gives the whole version (code, emblems, release notes
+`.github/release-notes-4.1.50.md`, README entry, VERSION 4.1.50, protocol 123); quick_check (verifier, NpcTests, CompanionTests,
+BikakuWormTests) passes. To ship: apply, delete the patch file in the same commit, run the full build in an isolated copy, push on EXIT 0
+(both `claude/admiring-johnson-8df58h` and your session branch), send the jar. Then the agreed order below, with the new to-do items.
 
 **The owner's new list (quoted exactly):** "News and reworks: / New CCG schematic, map it out with sitting areas, offices and etc. / New
 Reputation bar when talking to fellow gang members, high reputation means you're feared, they react to it, some stepping back to let you
@@ -39,6 +43,15 @@ proving it); "Joining gives the mask" (each gang's mask a wearable head item on 
 reputation is raised by daily quests and by killing the CCG and rivals, lowered by hitting your own (kills cost a lot; the 10-kill ban
 stays), and drifts back toward 50% over days away; at 0, warned to leave the hideout, and "They attack after a warning" (~30 s; not
 banned, it can recover). The emblems (`docs/handoff/gang-emblems-4.1.50.png`) got no comment yet.
+
+**Added to the to-do (the owner, quoted exactly):** "Make sure ayato + touka and being married to tokou reactions are in." / "Then, add being
+married to a gang leader but being part of another gang generates different reactions from the spouse, constantly demanding they quit the
+gang." / "Add a new Quit the gang button to each leader whenever the player joins it." / "kicked from the gang if the player marries
+another gang leader, but can still join if the player was already married before joining." (Notes: Ayato's and Touka's reactions to a
+player married to Touka exist since 4.1.15 (`SceneServer.relations`, the "with_touka"/"wed_touka" scenes in talk/ayato.txt): check every
+pairing is there and add what is missing. "Gang leader" = Ayato (Aogiri), Roma (the Clowns), Banjou (the Gas Masks, to come). The quit
+button: the leader's "gang" option on their first page when the player is a member (`EtoServer.withGang`, `GangServer.ask/talk`); quitting
+is not a ban. A marriage to another gang's leader while a member: membership removed (not banned); married first, then joining: allowed.)
 
 **Agreed order (told to the owner):** 4.1.49 Roma (her skin) -> 4.1.50 joining gangs -> the new CCG tower furnished -> the reputation bar
 -> Aogiri's and the Clowns' traits and daily quests (Noro, Roma) -> the Gas Masks (Banjou, his hideout, traits, the toxic emblem, green
@@ -356,6 +369,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.50 | Joining gangs: `GangPlayer` (AOGIRI_CCG 5, CLOWN_GAS 3, BAN_OVER 10, `named`), `GangServer` (`PlayerPersisted` keys HexGang*, `died`, `name` (NameFormat), `loggedIn`, `talk`/`ask`, `JOKES`/`FUNNY`, `threatens`, `stance`), `S2CGangName` (57), `GangClient`, `EtoServer.withGang` (SAY_3, key "gang"), `GhoulNpcBrain.wanted`/`hurt`; emblems `tools/gang_emblems.py`, `assets/minecraft/font/default.json` (build.py NEW_PREFIXES: that one file); `NpcTests.joining`; protocol 123 | WIP: `docs/handoff/wip-4.1.50.patch` (quick_check with the verifier, NpcTests, CompanionTests, BikakuWormTests pass; full build not run) |
 | 4.1.49 | Roma: `Persona.ROMA` (curves 0.75, legs 0.7, build 0.94, slim, `kickMaster`, `tendrils` 4, `ROMA_KAGUNE`), `RomaNpc`, `ControlEntities.ROMA`, `RomaScript`, `talk/roma.txt`, `Courtship.ROMA`, shared tables, circus template (38, 1, 24); `NpcTendrils` (`KICK_RANGE` 2.8, Impale 3.5-10, Hurl 6-22), `GraftRig` TRANSPLANT 4 tails (`TAIL_LOW`), `GraftMove.ROMA_IMPALE/HURL/THROW`, `GraftRules.heldPoint`, `GraftRenderer` companion pass; textures (`companion_textures.py`: the owner's second skin, NewRoma.png; EYES row 6 under her lashes); `tools/RomaPreview.java`, GraftPreview `roma`; protocol 122 | pushed, EXIT 0 |
 | 4.1.48 | The circus tent (`hexkagune:circus`, the owner's Alpha schematic via `tools/companion_structures.py` `alpha`/`floor`/`people`; dirt-path floor, `circus_anchor` at the floor's middle (38, 0, 24); one per world: `DryLand.PLACES`/`CIRCUS_SALT` 1324066193, `PlaceClaims`, `ControlStructures.ONE_OF_A_KIND`); four Clowns (`HexCircus`, `HexCircusMask`, `HexGang` -1: `GhoulNpcBrain.circus`, `atCircus`, `clearWay`, `CIRCUS_STROLL` 7, `CIRCUS_LEASH` 20); `Gang.rival` (Clowns vs Gas Masks on sight); Ayato and Noro `slim()` (`narrow_arms`), `AYATO_SHARE` 0.42, `NORO_SHARE` = `PLAYER_SHARE` 0.52 (the owner: "Reduce the player's muscle size to be the same as Noro."), `PLAYER_ARM_OUT` = `armOut(PLAYER_SHARE)`; `tools/structure_render.py`; renders `circus-tent-4.1.48.png`, `companion-builds-4.1.48.png` | pushed, EXIT 0 |
 | 4.1.47 | The arm blade rebuilt: `BladeArmModel` (ribbons `RIBBONS` 2 x `RIBBON_TURNS` 1.3 with `crack` veins, `blade` a single-edged great blade, `edgeAt`/`spineAt`, gleam GLOW strips, `turned` sink: edge on z +), `BladeArm` (`STEPS` 4, `SWEEP` 2 `sweeps`, `FINISHER` 3, `BLADE_LENGTH` 26, reach 3.2), `BladeArmPose` (four edge-first keys, `stand(time, seed, still)`, guard up and out), `GhoulNpcClient.blade` the stance, `GhoulNpcCombat.bladeCut` (all slashes, sweep on `fair`), `NpcTests.bladeLow`; tools `BladeArmShowcase`, `BladeArmMoves`, `BladeArmColours`, `BladeLow`; protocol 121 | pushed, EXIT 0 |

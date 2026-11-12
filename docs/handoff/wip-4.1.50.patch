@@ -1,0 +1,1118 @@
+diff --git a/.github/release-notes-4.1.50.md b/.github/release-notes-4.1.50.md
+new file mode 100644
+index 00000000..e2310882
+--- /dev/null
++++ b/.github/release-notes-4.1.50.md
+@@ -0,0 +1,32 @@
++## 4.1.50 (HexGhoul): joining gangs
++
++HexKagune 4.1.50 for Forge 1.20.1. Not tested in game. **Update the server and every client together** (protocol 122 to 123).
++
++Your words: "Players are now able to join gangs as well, dialog with Ayato and with a quest you can join Aogiri tree, the player's name turns
++dark red with a symbol on the left (symbol) (space) (name)"; the quest "Kill 5 CCG"; the Clowns through Roma, "A short chain"; "Custom
++clown face"; and for every gang: "the gang will never attack the player again, even when hit, they will however help the player and
++defend him against hostiles. IF the player kills over 10 members of his own gang, he will be banned from joining, tag removed and will be
++attacked on sight."
++
++**Joining:**
++- **Aogiri Tree:** talk to Ayato, "I want to join Aogiri." He sets the test: **kill 5 CCG** (investigators or their ghoul division; the
++  count shows over your hotbar). Go back to him: you're in.
++- **The Clowns:** talk to Roma, "I want to join the Clowns." **Make her laugh**: pick one of three jokes (the dark one lands; the others
++  you can try again later). Then **kill 3 Gas Masks**, then **hand her an investigator's quinque case** (any quinque's case, in your hand).
++- One gang at a time: each turns you away while you're in the other.
++
++**Your name:** "(emblem) (space) (name)", in chat and over your head, on every client: **Aogiri's tree with your name in dark red**, **the
++Clowns' face with your name in blue**. The emblems are their own colours.
++
++**Being a member:**
++- Your gang **never goes for you again**, not even when you hit them (no grudge, nobody called).
++- They **defend you**: anything going for you near them (a mob after you, whatever last hurt you) they go for.
++- **Kill more than 10 of your own** and you're **banned**: out of the gang, your tag gone, and they attack you on sight. Each kill of your
++  own is counted to you over your hotbar.
++- Kept with you through death and logging out.
++
++### Other
++
++- The emblems: `docs/handoff/gang-emblems-4.1.50.png` (16 x 16 each, added to the game's own font as two private characters).
++- Next on your list: the new CCG tower, the reputation bar, gang traits and daily quests, the Gas Masks (Banjou), a "Quit the gang" option,
++  marriage and gangs, then the menus.
+diff --git a/README.md b/README.md
+index f5af7a26..9e6b5109 100644
+--- a/README.md
++++ b/README.md
+@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
+ autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
+ 
+ 
++## 4.1.50 (HexGhoul): joining gangs (testing)
++
++See `.github/release-notes-4.1.50.md`. `GangPlayer` (pure: member, banned, Aogiri's 5 CCG, the Clowns' joke, 3 Gas Masks and a quinque case, banned past 10 own kills; `named`: emblem, space, coloured name), `GangServer` (`PlayerPersisted`, `LivingDeathEvent` counts, `PlayerEvent.NameFormat`, `S2CGangName` message 57 to every client, the "gang" option on Ayato's and Roma's first page via `EtoServer.withGang`), `GhoulNpcBrain.wanted`/`hurt` (its own never, the banned on sight, its own's foes); emblems `tools/gang_emblems.py` into `assets/minecraft/font/default.json` (U+E000, U+E001); Forge's NameFormat and `Player.refreshDisplayName` allowlisted; `NpcTests.joining`. Protocol 123.
++
+ ## 4.1.49 (HexGhoul): Roma, the Clowns' leader (testing)
+ 
+ See `.github/release-notes-4.1.49.md`. `Persona.ROMA` (Touka's size, skinny, slim, dates anyone, `kickMaster()`, `tendrils()` 4, purple), `RomaNpc`, `RomaScript`, `talk/roma.txt`, `Courtship.ROMA`, her lines in the shared tables; in the circus tent's middle. Her fight: Kick Master (`EtoOwl` by `Persona.kickMaster`) and `NpcTendrils` (four transplant tails on `GraftRig`: the string, `THORN_4`, `GraftMove.ROMA_IMPALE`, `ROMA_HURL`/`ROMA_THROW`), drawn by `GraftRenderer`'s companion pass. Her textures by `tools/companion_textures.py` (the owner's second skin; her eyes under her lashes by hand in `EYES`; `CHEEKS`, `"veins"` for hand-placed faces). Protocol 122.
+diff --git a/build.py b/build.py
+index f5ea74e0..0d7c82c0 100644
+--- a/build.py
++++ b/build.py
+@@ -24,7 +24,7 @@ import sys
+ import zipfile
+ 
+ ROOT = Path(__file__).resolve().parent
+-VERSION = "4.1.49"
++VERSION = "4.1.50"
+ INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
+ BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
+ OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
+@@ -83,6 +83,8 @@ NEW_PREFIXES = (
+     "assets/hexkagune/geo/",  # 3.6.5: GeckoLib models (Grand Devouring's inside)
+     "assets/hexkagune/animations/",  # 3.6.5: GeckoLib animations
+     "data/hexkagune/",
++    # 4.1.50: two private characters (U+E000, U+E001: the gangs' emblems) added to the game's own font; this one file, nothing else of it.
++    "assets/minecraft/font/default.json",
+ )
+ 
+ 
+diff --git a/patch/KagunePatch.java b/patch/KagunePatch.java
+index 759465ae..4cafc4d0 100644
+--- a/patch/KagunePatch.java
++++ b/patch/KagunePatch.java
+@@ -40,7 +40,7 @@ public final class KagunePatch implements Opcodes {
+     private static final String COOLDOWN = "slingshotCooldownUntil";
+     /** 3.0.0: the grapple's flight onto the grabbed block. */
+     static final String SLINGSHOT = "com/hex/kagune/control/server/RinkakuSlingshot";
+-    static final String VERSION = "4.1.49";
++    static final String VERSION = "4.1.50";
+     private static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
+     private static final String VECTOR = "net/minecraft/world/phys/Vec3";
+     // 1.1.0 kagune control expansion hooks
+diff --git a/src/main/java/com/hex/kagune/control/client/GangClient.java b/src/main/java/com/hex/kagune/control/client/GangClient.java
+new file mode 100644
+index 00000000..6ba3632b
+--- /dev/null
++++ b/src/main/java/com/hex/kagune/control/client/GangClient.java
+@@ -0,0 +1,24 @@
++package com.hex.kagune.control.client;
++
++import com.hex.kagune.control.network.S2CGangName;
++import net.minecraft.client.Minecraft;
++import net.minecraft.world.entity.player.Player;
++
++/** 4.1.50: what this client is told of each player's gang ({@link S2CGangName}): kept, and their name asked for again. */
++public final class GangClient {
++    private GangClient() {
++    }
++
++    public static void accept(S2CGangName message) {
++        com.hex.kagune.control.server.GangServer.SEEN.put(message.player(), message.gang());
++        Minecraft minecraft = Minecraft.m_91087_();
++        if (minecraft.f_91073_ == null) {
++            return;
++        }
++        for (Player player : minecraft.f_91073_.m_6907_()) {
++            if (player.m_20148_().equals(message.player())) {
++                player.refreshDisplayName();
++            }
++        }
++    }
++}
+diff --git a/src/main/java/com/hex/kagune/control/network/ControlNetwork.java b/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
+index 42314380..7be6f599 100644
+--- a/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
++++ b/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
+@@ -27,7 +27,7 @@ public final class ControlNetwork {
+      * abilities do out in the world (1.0.13); 35: War's M1, its blows and their effects (1.0.14); 36: the Black Sun out of the ground (1.0.15); 37: Peace playable, its blades' moves and cuts (1.0.16); 38: the transformations, nothing hurts him nor any ability while it comes (1.0.17). 39: Peace's six blades, their numbering and moves (1.0.18). 40: the marks blows leave instead of vanilla particles (1.0.19). 41: the fighting grammar: M1 flags, the heavy, the charge (1.0.20). 42: Peace's blades reach farther, its paths changed (1.0.21).
+      * 54: Eto (1.3.0): her state and surgery, her talk choices, the one-eye grant in the kakugan state. 58: genders (1.3.9). 59: pregnancy, children (1.3.10).
+      */
+-    private static final String PROTOCOL = "122"; // 122 (4.1.49): the entity hexkagune:roma (the registries differ); GraftMove ROMA_IMPALE, ROMA_HURL, ROMA_THROW (appended; S2CGhoulNpc may send their ordinals under a companion's id: Roma's tendrils), S2CHurl under her id.   121 (4.1.47): the arm blade's string is four cuts (S2CGhoulNpc may send cut 3), new cuts and a living stance drawn by every client.   120 (4.1.46): S2CGhoulNpc's identity may carry gang 3, the CCG's ghoul division (every client draws no kakugan on it).   119 (4.1.45): S2CGhoulNpc's identity carries a ghoul's roaming gang (bits 44 and 45: Gang, its mask a variant of its gang's).   118 (4.1.39): the registries differ since 4.1.36 (the structure type hexkagune:small_city and the placement type hexkagune:city added, the old villages' site types gone), not bumped then.   117 (4.1.15): S2CCutscene NIGHT's string carries the night's captions before its morning words (NightWords.pack); MoodKiss SHY, MORNING, RAIN, MOVIE, NOSE, GALLANT (appended; S2CEto may send their ordinals); ChildMoment NUZZLE, BOOP, FIST_BUMP, PATTY_CAKE, DANCE (appended; S2CChild may send their ordinals).   116 (4.1.8): PaleMove.TWIRL_CHARGE and C2SPaleAction.TWIRL, the speed kick's detail read anew.   115 (4.1.7): Kick Master's strikes (PaleStrike ordinals) and gates (Gate) on the wire.   114 (4.1.5): the entity hexkagune:general (the registries differ).   113 (4.1.4): the structure type hexkagune:site_ccg_building (the registries differ); CcgAgent carries SEAT (sat at its desk).   112 (4.1.3): Gate STYLE_SPEEDSTER (S2CQuests sends its id); the eyes' M1 and right click are the game's own until it is open.   111 (4.1.2): ComboStyle UKAKU_WINGS and UKAKU_LEFT_WING after UKAKU_FIRE (S2CControlState sends its ordinal), StrikePattern WING_SLAP to TWIN_SLAM; an Ukaku's wing guard uses S2CRinkakuBlock.   110 (4.1.1): the structure type hexkagune:dry_place (the registries differ); the hideout's structure set is a random spread.   109 (4.1.0): S2CUkakuFx UNLEASH (49, a player Ayato taught lifting both hands as the wings come out).   108 (4.0.9): EtoGesture SIT (appended; S2CEto may send its ordinal).   107 (4.0.3): the Crimson Hood item is gone (the registries differ); the outfits file is version 3.   106 (4.0.2): EtoGesture POSE, SLICK, SHRUG, TILT (appended; S2CEto may send their ordinals); S2CUkakuFx TILT (48, a player Noro taught tilting their head as the kagune comes out); the outfits' coat-tail bones (8, 9).   105 (4.0.0): S2CNpcWings carries an NPC's kakuja and its mend (Ayato's, Noro's); S2CCutscene AYATO_KAKUJA (4) and NORO (5); S2CGhoulNpc's identity carries a wild ghoul's rank and mask and Aogiri; S2CBikakuState is sent under an NPC's or a child's id (Noro's worms, a Bikaku parent's child's); the outfits and masks are items.   104 (3.7.3): S2CPotential (message 56), Potential Unlock's torn parts.   103 (3.6.3): S2CBikakuState carries the Bikaku mutations and Grand Devouring (and its cooldown).   102 (3.6.1): S2CBikakuState carries each worm's part of a move (held, caught, mark).   101 (3.6.0): S2CBikakuState carries the Bikaku form; C2SBikakuAction FORM.   100 (3.5.9): S2CBikakuState carries the worm's ways round blocks.   99 (3.5.8): S2CBikakuState carries the bite's and the move's reach and a wind-up; C2SBikakuAction KEY_UP, ATTACK, ATTACK_UP.   98 (3.5.7): S2CBikakuState carries a target for each kakuja tentacle (6), when Undying Abomination began, each tentacle's own bites; BikakuMove JAWS, HUNGER, CATACLYSM, UNDYING (appended).   97 (3.5.4): S2CBikakuState carries the Bikaku kakuja.   96 (3.5.3): S2CBikakuState carries when Monstrous Regeneration began.   95 (3.5.0): C2SBikakuAction (message 55), S2CBikakuState carries the worm's move, its point, targets and catch.   94 (3.4.9): KagunePath BIKAKU (appended; S2CPathState may send its ordinal), S2CBikakuState (message 54), the Bikaku path's worm.   93 (3.3.6): EtoGesture JEALOUS (appended; S2CEto may send its ordinal).   92 (3.1.8): C2SArmAction.THIRD (4), Arm.Ability SWING/FAULT/GUARD (S2CArmSwing codes 40-42; a SWING's bound packs its latch).   91 (3.1.6): S2CHurl (message 53), C2SUkakuAction HURL (11), Rinkaku's Rubble Hurl.   90 (3.1.5): S2CImpale (message 52), C2SUkakuAction IMPALE (10), Rinkaku's Impale.   89 (3.1.2): C2SArmAction.FOLD (3), dedicated briefcase key for every quinque. 88 (3.0.6): C2SArmAction (message 50) and S2CArmSwing (51), a player's kagune-made weapon.   87 (3.0.0): CcgAgent carries ARM, ARM_AT, ARM_TARGET (the higher ranks' kagune-made weapons), its SWING may send ArmRules codes (16 up: a blow of its string; 32 up: one of its moves).   86 (2.4.8-2.4.9): S2CUkakuFx CRACK (a player Ken taught cracks a finger), S2CEto may send STOKE, SEASON, TASTE and SERVE (the spouse cooking and handing food over).   85 (2.4.5): S2CThyDeath (message 49), C2SUkakuAction THY_DEATH.   84 (2.3.0): S2CChild carries its mother's size (a grown daughter her height).   83 (2.2.4): S2CEto carries the kiss's mood (MoodKiss).  82 (2.1.9): CcgAgent and GhoulNpc carry AFRAID (trembling before Peace or War).  81 (2.1.7): C2SUkakuAction REAPER_DASH (Ukaku's final kakuja dashes).  80 (2.0.49): CcgAgent FLIP may carry SOARING (the Reaper's soar).  79 (2.0.48): S2CUkakuFx DAWN_RING (the Reaper's volley).  78 (2.0.42): S2CRinkakuBlock, C2SUkakuAction BLOCK.  77 (2.0.33): CcgAgent SWING can send the Reaper's GROUND, S2CUkakuFx REAPER_MARK / REAPER_TENDRIL.  76 (2.0.25): Dawn aim and lightning FX.  75 (2.0.23): CcgAgent SWING can send the Reaper kick.  74 (2.0.22): CcgAgent LOOK can send Dawn's appended quinque ordinal.  73 (2.0.3): ChildStage ADULT (S2CChild may send its ordinal 4); 72 (1.3.68): S2CGhoulNpc carries its eyes (a wild ghoul prowling at night); 71 (1.3.62): S2CKingFx marks a hard clash's GROUND; 70 (1.3.57): S2CChild carries its talk cue; 69 (1.3.52): S2CNpcSay carries its bubble's life; 68 (1.3.43): S2CChild's genome carries the kagune (nine parts), children send S2CGhoulNpc; 61 (1.3.19): S2CNpcWings; 62 (1.3.20): S2CChild's ride and moment; 63 (1.3.21): HOME, hand, tuck, feed; 64 (1.3.29): S2CNpcApproach, ANSWER; 65 (1.3.29): S2CQuests carries the romance cards; 66 (1.3.30): S2CNpcSay; 67 (1.3.36): S2CGhoulNpc carries the arm blade (identity bit 36, its cut in move)
++    private static final String PROTOCOL = "123"; // 123 (4.1.50): S2CGangName (message 57), a player's gang (their name carries its emblem).   122 (4.1.49): the entity hexkagune:roma (the registries differ); GraftMove ROMA_IMPALE, ROMA_HURL, ROMA_THROW (appended; S2CGhoulNpc may send their ordinals under a companion's id: Roma's tendrils), S2CHurl under her id.   121 (4.1.47): the arm blade's string is four cuts (S2CGhoulNpc may send cut 3), new cuts and a living stance drawn by every client.   120 (4.1.46): S2CGhoulNpc's identity may carry gang 3, the CCG's ghoul division (every client draws no kakugan on it).   119 (4.1.45): S2CGhoulNpc's identity carries a ghoul's roaming gang (bits 44 and 45: Gang, its mask a variant of its gang's).   118 (4.1.39): the registries differ since 4.1.36 (the structure type hexkagune:small_city and the placement type hexkagune:city added, the old villages' site types gone), not bumped then.   117 (4.1.15): S2CCutscene NIGHT's string carries the night's captions before its morning words (NightWords.pack); MoodKiss SHY, MORNING, RAIN, MOVIE, NOSE, GALLANT (appended; S2CEto may send their ordinals); ChildMoment NUZZLE, BOOP, FIST_BUMP, PATTY_CAKE, DANCE (appended; S2CChild may send their ordinals).   116 (4.1.8): PaleMove.TWIRL_CHARGE and C2SPaleAction.TWIRL, the speed kick's detail read anew.   115 (4.1.7): Kick Master's strikes (PaleStrike ordinals) and gates (Gate) on the wire.   114 (4.1.5): the entity hexkagune:general (the registries differ).   113 (4.1.4): the structure type hexkagune:site_ccg_building (the registries differ); CcgAgent carries SEAT (sat at its desk).   112 (4.1.3): Gate STYLE_SPEEDSTER (S2CQuests sends its id); the eyes' M1 and right click are the game's own until it is open.   111 (4.1.2): ComboStyle UKAKU_WINGS and UKAKU_LEFT_WING after UKAKU_FIRE (S2CControlState sends its ordinal), StrikePattern WING_SLAP to TWIN_SLAM; an Ukaku's wing guard uses S2CRinkakuBlock.   110 (4.1.1): the structure type hexkagune:dry_place (the registries differ); the hideout's structure set is a random spread.   109 (4.1.0): S2CUkakuFx UNLEASH (49, a player Ayato taught lifting both hands as the wings come out).   108 (4.0.9): EtoGesture SIT (appended; S2CEto may send its ordinal).   107 (4.0.3): the Crimson Hood item is gone (the registries differ); the outfits file is version 3.   106 (4.0.2): EtoGesture POSE, SLICK, SHRUG, TILT (appended; S2CEto may send their ordinals); S2CUkakuFx TILT (48, a player Noro taught tilting their head as the kagune comes out); the outfits' coat-tail bones (8, 9).   105 (4.0.0): S2CNpcWings carries an NPC's kakuja and its mend (Ayato's, Noro's); S2CCutscene AYATO_KAKUJA (4) and NORO (5); S2CGhoulNpc's identity carries a wild ghoul's rank and mask and Aogiri; S2CBikakuState is sent under an NPC's or a child's id (Noro's worms, a Bikaku parent's child's); the outfits and masks are items.   104 (3.7.3): S2CPotential (message 56), Potential Unlock's torn parts.   103 (3.6.3): S2CBikakuState carries the Bikaku mutations and Grand Devouring (and its cooldown).   102 (3.6.1): S2CBikakuState carries each worm's part of a move (held, caught, mark).   101 (3.6.0): S2CBikakuState carries the Bikaku form; C2SBikakuAction FORM.   100 (3.5.9): S2CBikakuState carries the worm's ways round blocks.   99 (3.5.8): S2CBikakuState carries the bite's and the move's reach and a wind-up; C2SBikakuAction KEY_UP, ATTACK, ATTACK_UP.   98 (3.5.7): S2CBikakuState carries a target for each kakuja tentacle (6), when Undying Abomination began, each tentacle's own bites; BikakuMove JAWS, HUNGER, CATACLYSM, UNDYING (appended).   97 (3.5.4): S2CBikakuState carries the Bikaku kakuja.   96 (3.5.3): S2CBikakuState carries when Monstrous Regeneration began.   95 (3.5.0): C2SBikakuAction (message 55), S2CBikakuState carries the worm's move, its point, targets and catch.   94 (3.4.9): KagunePath BIKAKU (appended; S2CPathState may send its ordinal), S2CBikakuState (message 54), the Bikaku path's worm.   93 (3.3.6): EtoGesture JEALOUS (appended; S2CEto may send its ordinal).   92 (3.1.8): C2SArmAction.THIRD (4), Arm.Ability SWING/FAULT/GUARD (S2CArmSwing codes 40-42; a SWING's bound packs its latch).   91 (3.1.6): S2CHurl (message 53), C2SUkakuAction HURL (11), Rinkaku's Rubble Hurl.   90 (3.1.5): S2CImpale (message 52), C2SUkakuAction IMPALE (10), Rinkaku's Impale.   89 (3.1.2): C2SArmAction.FOLD (3), dedicated briefcase key for every quinque. 88 (3.0.6): C2SArmAction (message 50) and S2CArmSwing (51), a player's kagune-made weapon.   87 (3.0.0): CcgAgent carries ARM, ARM_AT, ARM_TARGET (the higher ranks' kagune-made weapons), its SWING may send ArmRules codes (16 up: a blow of its string; 32 up: one of its moves).   86 (2.4.8-2.4.9): S2CUkakuFx CRACK (a player Ken taught cracks a finger), S2CEto may send STOKE, SEASON, TASTE and SERVE (the spouse cooking and handing food over).   85 (2.4.5): S2CThyDeath (message 49), C2SUkakuAction THY_DEATH.   84 (2.3.0): S2CChild carries its mother's size (a grown daughter her height).   83 (2.2.4): S2CEto carries the kiss's mood (MoodKiss).  82 (2.1.9): CcgAgent and GhoulNpc carry AFRAID (trembling before Peace or War).  81 (2.1.7): C2SUkakuAction REAPER_DASH (Ukaku's final kakuja dashes).  80 (2.0.49): CcgAgent FLIP may carry SOARING (the Reaper's soar).  79 (2.0.48): S2CUkakuFx DAWN_RING (the Reaper's volley).  78 (2.0.42): S2CRinkakuBlock, C2SUkakuAction BLOCK.  77 (2.0.33): CcgAgent SWING can send the Reaper's GROUND, S2CUkakuFx REAPER_MARK / REAPER_TENDRIL.  76 (2.0.25): Dawn aim and lightning FX.  75 (2.0.23): CcgAgent SWING can send the Reaper kick.  74 (2.0.22): CcgAgent LOOK can send Dawn's appended quinque ordinal.  73 (2.0.3): ChildStage ADULT (S2CChild may send its ordinal 4); 72 (1.3.68): S2CGhoulNpc carries its eyes (a wild ghoul prowling at night); 71 (1.3.62): S2CKingFx marks a hard clash's GROUND; 70 (1.3.57): S2CChild carries its talk cue; 69 (1.3.52): S2CNpcSay carries its bubble's life; 68 (1.3.43): S2CChild's genome carries the kagune (nine parts), children send S2CGhoulNpc; 61 (1.3.19): S2CNpcWings; 62 (1.3.20): S2CChild's ride and moment; 63 (1.3.21): HOME, hand, tuck, feed; 64 (1.3.29): S2CNpcApproach, ANSWER; 65 (1.3.29): S2CQuests carries the romance cards; 66 (1.3.30): S2CNpcSay; 67 (1.3.36): S2CGhoulNpc carries the arm blade (identity bit 36, its cut in move)
+     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+         KaguneMod.id("control"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
+     private static boolean initialized;
+@@ -103,6 +103,7 @@ public final class ControlNetwork {
+         CHANNEL.registerMessage(54, S2CBikakuState.class, S2CBikakuState::encode, S2CBikakuState::decode, S2CBikakuState::handle); // 3.4.9: the Bikaku worm
+         CHANNEL.registerMessage(55, C2SBikakuAction.class, C2SBikakuAction::encode, C2SBikakuAction::decode, C2SBikakuAction::handle); // 3.5.0: its move keys
+         CHANNEL.registerMessage(56, S2CPotential.class, S2CPotential::encode, S2CPotential::decode, S2CPotential::handle); // 3.7.3: Potential Unlock's torn parts
++        CHANNEL.registerMessage(57, S2CGangName.class, S2CGangName::encode, S2CGangName::decode, S2CGangName::handle); // 4.1.50: a player's gang
+     }
+ 
+     /** To the subject and every client tracking them. */
+diff --git a/src/main/java/com/hex/kagune/control/network/S2CGangName.java b/src/main/java/com/hex/kagune/control/network/S2CGangName.java
+new file mode 100644
+index 00000000..708cde87
+--- /dev/null
++++ b/src/main/java/com/hex/kagune/control/network/S2CGangName.java
+@@ -0,0 +1,31 @@
++package com.hex.kagune.control.network;
++
++import java.util.UUID;
++import java.util.function.Supplier;
++import net.minecraft.network.FriendlyByteBuf;
++import net.minecraftforge.api.distmarker.Dist;
++import net.minecraftforge.fml.DistExecutor;
++import net.minecraftforge.network.NetworkEvent;
++
++/**
++ * 4.1.50: a player's gang ({@code GangPlayer}: 0 none, 1 Aogiri Tree, 2 the Clowns), told to every client: their name over their head and
++ * in chat carries its emblem ({@code GangServer.name}).
++ */
++public record S2CGangName(UUID player, int gang) {
++    public static void encode(S2CGangName message, FriendlyByteBuf buffer) {
++        buffer.m_130077_(message.player);
++        buffer.writeByte(message.gang);
++    }
++
++    public static S2CGangName decode(FriendlyByteBuf buffer) {
++        return new S2CGangName(buffer.m_130259_(), buffer.readByte());
++    }
++
++    public static void handle(S2CGangName message, Supplier<NetworkEvent.Context> supplier) {
++        NetworkEvent.Context context = supplier.get();
++        if (context.getSender() == null) { // only ever accepted from the server
++            context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.hex.kagune.control.client.GangClient.accept(message)));
++        }
++        context.setPacketHandled(true);
++    }
++}
+diff --git a/src/main/java/com/hex/kagune/control/npc/GangPlayer.java b/src/main/java/com/hex/kagune/control/npc/GangPlayer.java
+new file mode 100644
+index 00000000..e0a6b6c9
+--- /dev/null
++++ b/src/main/java/com/hex/kagune/control/npc/GangPlayer.java
+@@ -0,0 +1,130 @@
++package com.hex.kagune.control.npc;
++
++/**
++ * 4.1.50 (the owner: "Players are now able to join gangs as well, dialog with Ayato and with a quest you can join Aogiri tree, the
++ * player's name turns dark red with a symbol on the left (symbol) (space) (name)"; the quest "Kill 5 CCG"; the Clowns through Roma, "A
++ * short chain": make her laugh, kill 3 Gas Masks, bring her an investigator's quinque case; the Clowns' name blue with a clown face; and
++ * for every gang: "the gang will never attack the player again, even when hit, they will however help the player and defend him against
++ * hostiles. IF the player kills over 10 members of his own gang, he will be banned from joining, tag removed and will be attacked on
++ * sight."): a player's gang (pure, tested). Which one they belong to ({@link #NONE}, {@link #AOGIRI}, {@link #CLOWNS}), how many of their
++ * own they have killed since joining, the gangs that have banned them, and where they stand on each way in.
++ */
++public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest, int ccgKills, int clownStep, int gasKills) {
++    public static final int NONE = 0;
++    public static final int AOGIRI = 1;
++    public static final int CLOWNS = 2;
++    /** Aogiri's quest: this many of the CCG killed (the owner: "Kill 5 CCG"). */
++    public static final int AOGIRI_CCG = 5;
++    /** The Clowns' chain: this many Gas Masks killed. */
++    public static final int CLOWN_GAS = 3;
++    /** Killing more than this many of their own gets them banned (the owner: "over 10"). */
++    public static final int BAN_OVER = 10;
++    /** The Clowns' chain: nothing yet; she laughed (the Gas Masks next); the Gas Masks done (a quinque case next). */
++    public static final int CLOWN_NOT_YET = 0;
++    public static final int CLOWN_GAS_MASKS = 1;
++    public static final int CLOWN_CASE = 2;
++    /** The emblems (assets/minecraft/font/default.json's private characters: tools/gang_emblems.py). */
++    public static final String TREE = "";
++    public static final String CLOWN = "";
++
++    public static final GangPlayer NEW = new GangPlayer(NONE, 0, 0, false, 0, CLOWN_NOT_YET, 0);
++
++    /** True if they belong to {@code gang}. */
++    public boolean member(int gang) {
++        return gang != NONE && this.gang == gang;
++    }
++
++    /** True if {@code gang} has banned them. */
++    public boolean banned(int gang) {
++        return gang != NONE && (this.banned & bit(gang)) != 0;
++    }
++
++    static int bit(int gang) {
++        return 1 << gang;
++    }
++
++    /** They join {@code gang}: its member, their count of their own killed begun again, its way in done with. */
++    public GangPlayer join(int gang) {
++        return new GangPlayer(gang, 0, this.banned, gang == AOGIRI ? false : this.aogiriQuest, gang == AOGIRI ? 0 : this.ccgKills,
++            gang == CLOWNS ? CLOWN_NOT_YET : this.clownStep, gang == CLOWNS ? 0 : this.gasKills);
++    }
++
++    /** Aogiri's quest begun (Ayato's "Kill 5 CCG"). */
++    public GangPlayer startAogiri() {
++        return new GangPlayer(this.gang, this.ownKills, this.banned, true, 0, this.clownStep, this.gasKills);
++    }
++
++    /** True once Aogiri's quest is done (five of the CCG killed while it was on). */
++    public boolean aogiriDone() {
++        return this.aogiriQuest && this.ccgKills >= AOGIRI_CCG;
++    }
++
++    /** One of the CCG killed: counted while Aogiri's quest is on. */
++    public GangPlayer killedDove() {
++        return this.aogiriQuest && !this.member(AOGIRI) ? new GangPlayer(this.gang, this.ownKills, this.banned, true, this.ccgKills + 1, this.clownStep,
++            this.gasKills) : this;
++    }
++
++    /** Roma laughed: the Gas Masks next. */
++    public GangPlayer laughed() {
++        return this.clownStep == CLOWN_NOT_YET ? new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, CLOWN_GAS_MASKS, 0)
++            : this;
++    }
++
++    /** One of the Gas Masks killed: counted while the Clowns' chain asks for them; the third moves it on to the case. */
++    public GangPlayer killedGasMask() {
++        if (this.clownStep != CLOWN_GAS_MASKS) {
++            return this;
++        }
++        int kills = this.gasKills + 1;
++        return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, kills >= CLOWN_GAS ? CLOWN_CASE : CLOWN_GAS_MASKS,
++            kills);
++    }
++
++    /**
++     * One of their own gang killed by them: counted; past {@link #BAN_OVER} they are banned from it, out of it, their tag gone (the gang
++     * goes for them on sight from then on).
++     */
++    public GangPlayer killedOwn() {
++        if (this.gang == NONE) {
++            return this;
++        }
++        int kills = this.ownKills + 1;
++        if (kills > BAN_OVER) {
++            return new GangPlayer(NONE, 0, this.banned | bit(this.gang), false, 0, CLOWN_NOT_YET, 0);
++        }
++        return new GangPlayer(this.gang, kills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills);
++    }
++
++    /**
++     * Their name as everyone sees it (chat, the tag over their head): the gang's emblem in its own colours, a space, the name in the gang's
++     * colour (the owner: "(symbol) (space) (name)": Aogiri's dark red, the Clowns' blue); a gangless name as it is.
++     */
++    public static String named(int gang, String name) {
++        return switch (gang) {
++            case AOGIRI -> "§f" + TREE + " §4" + name + "§r";
++            case CLOWNS -> "§f" + CLOWN + " §9" + name + "§r";
++            default -> name;
++        };
++    }
++
++    /** The gang's name. */
++    public static String title(int gang) {
++        return switch (gang) {
++            case AOGIRI -> "Aogiri Tree";
++            case CLOWNS -> "the Clowns";
++            default -> "no gang";
++        };
++    }
++
++    /** The gang a ghoul NPC of {@code who} belongs to, as a player would join it (Aogiri's members, the Clowns), or {@link #NONE}. */
++    public static int of(NpcIdentity who) {
++        if (who == null) {
++            return NONE;
++        }
++        if (who.aogiri()) {
++            return AOGIRI;
++        }
++        return who.gangOf() == Gang.CLOWNS ? CLOWNS : NONE;
++    }
++}
+diff --git a/src/main/java/com/hex/kagune/control/server/EtoServer.java b/src/main/java/com/hex/kagune/control/server/EtoServer.java
+index ce54d101..0a55b476 100644
+--- a/src/main/java/com/hex/kagune/control/server/EtoServer.java
++++ b/src/main/java/com/hex/kagune/control/server/EtoServer.java
+@@ -569,6 +569,22 @@ public final class EtoServer {
+             show(player, npc, c, script.gifts(c, script.giftsAsked(c.seed())), Kind.GIFTS);
+             return;
+         }
++        if (key.startsWith("gang")) {
++            // 4.1.50: joining their gang (Ayato's Aogiri, Roma's Clowns), or how it stands; a joke told to Roma.
++            GangServer.Said said = GangServer.talk(player, npc.persona(), key, c.seed());
++            if (said.jokes() != null) {
++                List<EtoTalk.Option> jokes = new java.util.ArrayList<>();
++                NpcTalk.Choice[] slots = {NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3};
++                for (int i = 0; i < said.jokes().size() && i < slots.length; i++) {
++                    jokes.add(new EtoTalk.Option(slots[i], said.jokes().get(i)[0], said.jokes().get(i)[1]));
++                }
++                jokes.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
++                show(player, npc, c, new EtoTalk.Page(said.line(), jokes), Kind.SCENE);
++            } else {
++                show(player, npc, context(player, npc), script.main(context(player, npc), said.line()), Kind.MAIN);
++            }
++            return;
++        }
+         if (key.equals("dates")) {
+             // 2.1.2: where to go together.
+             if (c.dating()) {
+@@ -1287,6 +1303,26 @@ public final class EtoServer {
+      * 1.3.41: Touka's first page offers her cookbook ("Got any recipes? For ghouls.") once she likes you
+      * ({@link com.hex.kagune.control.kitchen.Cookbook#REGARD}), before the goodbye, if there is room. She asks two cocoa beans for it.
+      */
++    /** 4.1.50: Ayato's and Roma's first page: their gang (joining it, how it stands), before the way out. */
++    private static EtoTalk.Page withGang(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
++        if (!GangServer.leads(npc.persona()) || page.options().size() >= S2CNpcTalk.MOST) {
++            return page;
++        }
++        int at = page.options().size();
++        for (int i = 0; i < page.options().size(); i++) {
++            NpcTalk.Choice choice = page.options().get(i).choice();
++            if (choice == NpcTalk.Choice.SAY_3) {
++                return page;
++            }
++            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
++                at = Math.min(at, i);
++            }
++        }
++        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
++        out.add(at, new EtoTalk.Option(NpcTalk.Choice.SAY_3, GangServer.ask(player, npc.persona()), "gang"));
++        return new EtoTalk.Page(page.line(), out);
++    }
++
+     private static EtoTalk.Page withCookbook(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+         if (npc.persona() != com.hex.kagune.control.npc.Persona.TOUKA || page.options().size() >= S2CNpcTalk.MOST
+             || QuestServer.bond(player, npc.persona().key()).regard() < com.hex.kagune.control.kitchen.Cookbook.REGARD) {
+@@ -1323,6 +1359,7 @@ public final class EtoServer {
+             page = withHome(player, npc, page);
+             page = withCookbook(player, npc, page);
+             page = withLesson(player, npc, page);
++            page = withGang(player, npc, page);
+         }
+         List<EtoTalk.Option> options = page.options().size() > S2CNpcTalk.MOST ? page.options().subList(0, S2CNpcTalk.MOST) : page.options();
+         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(options), kind));
+diff --git a/src/main/java/com/hex/kagune/control/server/GangServer.java b/src/main/java/com/hex/kagune/control/server/GangServer.java
+new file mode 100644
+index 00000000..1c7c7fcf
+--- /dev/null
++++ b/src/main/java/com/hex/kagune/control/server/GangServer.java
+@@ -0,0 +1,357 @@
++package com.hex.kagune.control.server;
++
++import com.hex.kagune.control.network.ControlNetwork;
++import com.hex.kagune.control.network.S2CGangName;
++import com.hex.kagune.control.npc.GangPlayer;
++import com.hex.kagune.control.npc.GhoulNpc;
++import com.hex.kagune.control.npc.NpcIdentity;
++import com.hex.kagune.control.npc.Persona;
++import com.hex.kagune.control.Safety;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++import java.util.UUID;
++import java.util.concurrent.ConcurrentHashMap;
++import net.minecraft.nbt.CompoundTag;
++import net.minecraft.network.chat.Component;
++import net.minecraft.server.level.ServerPlayer;
++import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.entity.Mob;
++import net.minecraft.world.entity.player.Player;
++import net.minecraftforge.event.entity.living.LivingDeathEvent;
++import net.minecraftforge.event.entity.player.PlayerEvent;
++import net.minecraftforge.eventbus.api.SubscribeEvent;
++import net.minecraftforge.fml.common.Mod;
++
++/**
++ * 4.1.50: players in the gangs ({@link GangPlayer}), on the server. Their gang is kept with them ({@code PlayerPersisted}: through death
++ * and logging out); their name shows it to everyone ({@link #name}: the emblem, a space, the name in the gang's colour, in chat and over
++ * their head: every client is told each player's gang, {@link S2CGangName}); kills of the CCG, the Gas Masks and their own are counted
++ * ({@link #died}); a gang never goes for its own and goes for what goes for them ({@link #stance}, {@link #threatens}); and the ways in are
++ * talked through with Ayato (Aogiri: "Kill 5 CCG") and Roma (the Clowns: a joke, three Gas Masks, a quinque case) ({@link #talk}).
++ */
++@Mod.EventBusSubscriber(modid = "hexkagune")
++public final class GangServer {
++    private static final String GANG = "HexGang";
++    private static final String OWN = "HexGangOwnKills";
++    private static final String BANNED = "HexGangBanned";
++    private static final String AOGIRI_QUEST = "HexGangAogiriQuest";
++    private static final String CCG = "HexGangCcgKills";
++    private static final String CLOWN_STEP = "HexGangClownStep";
++    private static final String GAS = "HexGangGasKills";
++    /** How far a gang's member is looked for round one of the gang that might defend them (blocks). */
++    static final double DEFEND = 24.0;
++    /** What a gang is to a player: nothing, theirs, or one that banned them. */
++    static final int STRANGER = 0;
++    static final int OWN_GANG = 1;
++    static final int OUTCAST = 2;
++
++    /** 4.1.50: each player's gang as this side knows it (a client's: as the server told it; read by {@link #name}). */
++    public static final Map<UUID, Integer> SEEN = new ConcurrentHashMap<>();
++
++    private GangServer() {
++    }
++
++    // ---------------------------------------------------------------- kept with the player
++
++    private static CompoundTag kept(ServerPlayer player) {
++        CompoundTag root = player.getPersistentData();
++        if (!root.m_128441_("PlayerPersisted")) {
++            root.m_128365_("PlayerPersisted", new CompoundTag());
++        }
++        return root.m_128469_("PlayerPersisted");
++    }
++
++    /** {@code player}'s gang and where they stand with each. */
++    public static GangPlayer of(ServerPlayer player) {
++        CompoundTag k = kept(player);
++        return new GangPlayer(k.m_128451_(GANG), k.m_128451_(OWN), k.m_128451_(BANNED), k.m_128471_(AOGIRI_QUEST), k.m_128451_(CCG),
++            k.m_128451_(CLOWN_STEP), k.m_128451_(GAS));
++    }
++
++    /** {@code player}'s gang kept as {@code g}; a change of gang shown on their name everywhere. */
++    static void set(ServerPlayer player, GangPlayer g) {
++        int was = of(player).gang();
++        CompoundTag k = kept(player);
++        k.m_128405_(GANG, g.gang());
++        k.m_128405_(OWN, g.ownKills());
++        k.m_128405_(BANNED, g.banned());
++        k.m_128379_(AOGIRI_QUEST, g.aogiriQuest());
++        k.m_128405_(CCG, g.ccgKills());
++        k.m_128405_(CLOWN_STEP, g.clownStep());
++        k.m_128405_(GAS, g.gasKills());
++        if (was != g.gang()) {
++            SEEN.put(player.m_20148_(), g.gang());
++            player.refreshDisplayName();
++            tellEveryone(player, g.gang());
++        }
++    }
++
++    /** Every player on the server, in every world. */
++    private static List<ServerPlayer> everyone(ServerPlayer near) {
++        List<ServerPlayer> out = new ArrayList<>();
++        net.minecraft.server.MinecraftServer server = near.m_284548_().m_7654_();
++        for (net.minecraft.server.level.ServerLevel level : server == null ? List.of(near.m_284548_()) : server.m_129785_()) {
++            out.addAll(level.m_6907_());
++        }
++        return out;
++    }
++
++    /** Every player told {@code player}'s gang (their name over their head, in chat). */
++    private static void tellEveryone(ServerPlayer player, int gang) {
++        for (ServerPlayer other : everyone(player)) {
++            ControlNetwork.sendTo(other, new S2CGangName(player.m_20148_(), gang));
++        }
++    }
++
++    /** True if {@code player} holds an investigator's quinque case (its case, shut). */
++    static boolean holdsCase(ServerPlayer player) {
++        return com.hex.kagune.control.ControlItems.quinqueCase(player.m_21205_()) != null;
++    }
++
++    /** The quinque case in {@code player}'s hand given over (kept in creative): true if there was one. */
++    static boolean takeCase(ServerPlayer player) {
++        if (!holdsCase(player)) {
++            return false;
++        }
++        if (!player.m_7500_()) {
++            player.m_21205_().m_41774_(1);
++        }
++        return true;
++    }
++
++    // ---------------------------------------------------------------- what a gang is to a player
++
++    /** What the gang of {@code who} is to {@code player}: {@link #OWN_GANG}, {@link #OUTCAST} (it banned them), or {@link #STRANGER}. */
++    static int stance(ServerPlayer player, NpcIdentity who) {
++        int gang = GangPlayer.of(who);
++        if (gang == GangPlayer.NONE) {
++            return STRANGER;
++        }
++        GangPlayer g = of(player);
++        return g.member(gang) ? OWN_GANG : g.banned(gang) ? OUTCAST : STRANGER;
++    }
++
++    /**
++     * True if {@code body} is going for one of {@code who}'s gang's players near {@code npc} (a mob after them, or what last hurt them): the
++     * gang defends its own (the owner: "they will however help the player and defend him against hostiles").
++     */
++    static boolean threatens(LivingEntity npc, NpcIdentity who, LivingEntity body) {
++        int gang = GangPlayer.of(who);
++        if (gang == GangPlayer.NONE || body instanceof Player && !(body instanceof ServerPlayer)) {
++            return false;
++        }
++        for (ServerPlayer player : npc.m_9236_().m_6443_(ServerPlayer.class, npc.m_20191_().m_82400_(DEFEND), p -> p.m_6084_() && !p.m_5833_())) {
++            if (player == body || !of(player).member(gang)) {
++                continue;
++            }
++            if (body instanceof ServerPlayer other && of(other).member(gang)) {
++                continue; // never one of their own
++            }
++            if (body instanceof Mob mob && mob.m_5448_() == player || player.m_21188_() == body && body.m_6084_()) {
++                return true;
++            }
++        }
++        return false;
++    }
++
++    // ---------------------------------------------------------------- kills counted
++
++    @SubscribeEvent
++    public static void died(LivingDeathEvent event) {
++        try {
++            if (!(event.getSource().m_7639_() instanceof ServerPlayer player)) {
++                return;
++            }
++            LivingEntity dead = event.getEntity();
++            GangPlayer was = of(player);
++            GangPlayer now = was;
++            if (AgentBrain.ccg(dead)) {
++                now = now.killedDove();
++            }
++            if (dead instanceof GhoulNpc ghoul && ghoul.identity() != null) {
++                NpcIdentity who = ghoul.identity();
++                if (who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS) {
++                    now = now.killedGasMask();
++                }
++                if (was.member(GangPlayer.of(who))) {
++                    now = now.killedOwn();
++                }
++            }
++            if (now.equals(was)) {
++                return;
++            }
++            set(player, now);
++            if (now.ccgKills() != was.ccgKills()) {
++                player.m_5661_(Component.m_237113_("§4Aogiri Tree: §f" + Math.min(now.ccgKills(), GangPlayer.AOGIRI_CCG) + "/" + GangPlayer.AOGIRI_CCG
++                    + " CCG" + (now.aogiriDone() ? " §7(go back to Ayato)" : "")), true);
++            }
++            if (now.gasKills() != was.gasKills()) {
++                player.m_5661_(Component.m_237113_("§9The Clowns: §f" + Math.min(now.gasKills(), GangPlayer.CLOWN_GAS) + "/" + GangPlayer.CLOWN_GAS
++                    + " Gas Masks" + (now.clownStep() == GangPlayer.CLOWN_CASE ? " §7(now a quinque case, for Roma)" : "")), true);
++            }
++            if (now.gang() == GangPlayer.NONE && was.gang() != GangPlayer.NONE) {
++                player.m_5661_(Component.m_237113_("§c" + cap(GangPlayer.title(was.gang())) + " has banned you for killing its own. Your tag is gone, "
++                    + "and they will kill you on sight."), false);
++            } else if (now.ownKills() != was.ownKills()) {
++                player.m_5661_(Component.m_237113_("§cYou killed one of your own (" + now.ownKills() + "). Over " + GangPlayer.BAN_OVER
++                    + " and you are out, for good."), true);
++            }
++        } catch (RuntimeException | LinkageError failure) {
++            Safety.caught(failure, "GangServer.died");
++        }
++    }
++
++    private static String cap(String text) {
++        return text.isEmpty() ? text : Character.toUpperCase(text.charAt(0)) + text.substring(1);
++    }
++
++    // ---------------------------------------------------------------- the name
++
++    /**
++     * Their name with their gang on it (the owner: "(symbol) (space) (name)"): asked by the game for chat and the tag over their head; on
++     * the server from what is kept with them, on a client from what the server told it.
++     */
++    @SubscribeEvent
++    public static void name(PlayerEvent.NameFormat event) {
++        try {
++            Player player = event.getEntity();
++            Integer gang = player instanceof ServerPlayer server ? Integer.valueOf(of(server).gang()) : SEEN.get(player.m_20148_());
++            if (gang != null && gang != GangPlayer.NONE) {
++                event.setDisplayname(Component.m_237113_(GangPlayer.named(gang, event.getDisplayname().getString())));
++            }
++        } catch (RuntimeException | LinkageError failure) {
++            Safety.caught(failure, "GangServer.name");
++        }
++    }
++
++    /** A player in: they are told every player's gang, and everyone theirs. */
++    @SubscribeEvent
++    public static void loggedIn(PlayerEvent.PlayerLoggedInEvent event) {
++        try {
++            if (!(event.getEntity() instanceof ServerPlayer player)) {
++                return;
++            }
++            int gang = of(player).gang();
++            SEEN.put(player.m_20148_(), gang);
++            player.refreshDisplayName();
++            tellEveryone(player, gang);
++            for (ServerPlayer other : everyone(player)) {
++                if (other != player) {
++                    ControlNetwork.sendTo(player, new S2CGangName(other.m_20148_(), of(other).gang()));
++                }
++            }
++        } catch (RuntimeException | LinkageError failure) {
++            Safety.caught(failure, "GangServer.loggedIn");
++        }
++    }
++
++    // ---------------------------------------------------------------- the ways in, talked through
++
++    /** What the talk does: the line said, and (the Clowns' joke) the jokes to pick from ({label, key} each); null for none. */
++    public record Said(String line, List<String[]> jokes) {
++    }
++
++    /** True if {@code persona} is the way into a gang: Ayato (Aogiri), Roma (the Clowns). */
++    static boolean leads(Persona persona) {
++        return persona == Persona.AYATO || persona == Persona.ROMA;
++    }
++
++    /** The gang {@code persona} is the way into. */
++    static int gangOf(Persona persona) {
++        return persona == Persona.AYATO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : GangPlayer.NONE;
++    }
++
++    /** What asking {@code persona} about their gang is called on the talk screen, by where {@code player} stands. */
++    static String ask(ServerPlayer player, Persona persona) {
++        GangPlayer g = of(player);
++        int gang = gangOf(persona);
++        if (g.member(gang)) {
++            return gang == GangPlayer.AOGIRI ? "How's Aogiri?" : "How are the Clowns?";
++        }
++        if (gang == GangPlayer.AOGIRI) {
++            return g.aogiriDone() ? "It's done. Five doves." : g.aogiriQuest() ? "About joining Aogiri..." : "I want to join Aogiri.";
++        }
++        if (g.clownStep() == GangPlayer.CLOWN_CASE && holdsCase(player)) {
++            return "Here. A dove's quinque case. (the case in your hand)";
++        }
++        return g.clownStep() != GangPlayer.CLOWN_NOT_YET ? "About joining the Clowns..." : "I want to join the Clowns.";
++    }
++
++    /** The talk about {@code persona}'s gang ({@code key}: "gang", or "gang:joke:n" a joke told): what is said, what it does. */
++    static Said talk(ServerPlayer player, Persona persona, String key, int seed) {
++        GangPlayer g = of(player);
++        int gang = gangOf(persona);
++        boolean ayato = gang == GangPlayer.AOGIRI;
++        if (g.member(gang)) {
++            return new Said(ayato ? pick(seed, "Aogiri's fine. Don't get sloppy.", "You're one of us. Act like it.", "Still breathing? Good. Aogiri needs you.")
++                : pick(seed, "My favourite Clown! Go scare someone.", "You wear our face well. ...Kidding, you don't have one. You have mine. In your heart.",
++                    "The Clowns are great! Three of them are on fire, but great."), null);
++        }
++        if (g.banned(gang)) {
++            return new Said(ayato ? "You killed our own. You're not Aogiri, and you never will be. Get out of my sight before I finish it."
++                : "*the grin stays; the eyes don't* You killed my Clowns. You don't get a mask. You get a head start. Run.", null);
++        }
++        if (g.gang() != GangPlayer.NONE) {
++            return new Said(ayato ? "You run with the Clowns. Aogiri doesn't share. Get lost."
++                : "Aogiri? Ew. Trees. The ringmaster doesn't do double acts. Ditch them first.", null);
++        }
++        if (ayato) {
++            if (g.aogiriDone()) {
++                set(player, g.join(GangPlayer.AOGIRI));
++                joined(player, GangPlayer.AOGIRI);
++                return new Said("Five doves. ...Fine. You're Aogiri now. Don't make me regret it. And if you ever turn on us, I'll kill you myself.", null);
++            }
++            if (g.aogiriQuest()) {
++                return new Said(g.ccgKills() + " of five. The doves aren't going to kill themselves. Move.", null);
++            }
++            set(player, g.startAogiri());
++            player.m_5661_(Component.m_237113_("§4Aogiri Tree: §fkill " + GangPlayer.AOGIRI_CCG + " CCG §7(0/" + GangPlayer.AOGIRI_CCG + ")"), false);
++            return new Said("Join Aogiri? ...You? Tch. Fine. Prove it. Kill five doves. CCG. I'll know if you lie.", null);
++        }
++        // Roma's chain: a joke that makes her laugh, three Gas Masks, a quinque case.
++        if (g.clownStep() == GangPlayer.CLOWN_NOT_YET) {
++            if (key.startsWith("gang:joke:")) {
++                int told = Integer.parseInt(key.substring("gang:joke:".length()));
++                if (told == FUNNY) {
++                    set(player, g.laughed());
++                    player.m_5661_(Component.m_237113_("§9The Clowns: §fkill " + GangPlayer.CLOWN_GAS + " Gas Masks §7(0/" + GangPlayer.CLOWN_GAS + ")"),
++                        false);
++                    return new Said("*bursts out laughing so hard she has to hold onto you* HA! The BRIEFCASE! ...Okay. Okay. You're funny. Next act: three "
++                        + "Gas Masks. Kill them. They're no fun at all.", null);
++                }
++                return new Said(told == 0 ? "*stares at you* ...That's a dad joke. I'm not your dad. Try again some other time."
++                    : "Hey! ...That one's about ME. ...It's a little funny. But no. Come back with better material.", null);
++            }
++            List<String[]> jokes = new ArrayList<>(List.of(new String[] {JOKES[0], "gang:joke:0"}, new String[] {JOKES[1], "gang:joke:1"},
++                new String[] {JOKES[2], "gang:joke:2"}));
++            java.util.Collections.rotate(jokes, Math.floorMod(seed, jokes.size()));
++            return new Said("Join the Clowns? Make me laugh first! Go on. Tell me a joke. A good one. I'll know.", jokes);
++        }
++        if (g.clownStep() == GangPlayer.CLOWN_GAS_MASKS) {
++            return new Said(g.gasKills() + " of three Gas Masks! Chop chop. They're the ones breathing heavily at everyone.", null);
++        }
++        if (!takeCase(player)) {
++            return new Said("Now bring me an investigator's quinque case. The briefcase! I want to put flowers in it.", null);
++        }
++        set(player, g.join(GangPlayer.CLOWNS));
++        joined(player, GangPlayer.CLOWNS);
++        return new Said("*opens the case, drops an allium in it, and cackles* A dove's briefcase! Welcome to the Clowns, sweetheart. Nobody touches you now. "
++            + "Except me.", null);
++    }
++
++    /** The jokes told to Roma; the second is the one that lands (her humour). */
++    static final String[] JOKES = {"Why did the scarecrow win an award? He was outstanding in his field.",
++        "What's the best part of a dove? The briefcase. It's a lunchbox.", "Why don't ghouls eat clowns? They taste funny."};
++    static final int FUNNY = 1;
++
++    private static void joined(ServerPlayer player, int gang) {
++        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.levelup", 0.8F, 0.7F);
++        player.m_5661_(Component.m_237113_((gang == GangPlayer.AOGIRI ? "§4" : "§9") + "You joined " + GangPlayer.title(gang)
++            + ". §7They will never go for you again, and they will fight for you."), false);
++    }
++
++    private static String pick(int seed, String... lines) {
++        return lines[Math.floorMod(seed, lines.length)];
++    }
++}
+diff --git a/src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java b/src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java
+index b0ebda22..d17e75aa 100644
+--- a/src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java
++++ b/src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java
+@@ -545,6 +545,21 @@ public final class GhoulNpcBrain {
+         if (body instanceof Player player && player.m_5833_()) {
+             return false;
+         }
++        // 4.1.50 (the owner: "the gang will never attack the player again, even when hit, they will however help the player and defend him
++        // against hostiles. IF the player kills over 10 members of his own gang, he will be banned from joining, tag removed and will be
++        // attacked on sight"): its own never (grudge or not), the banned on sight, and what goes for its own.
++        if (body instanceof ServerPlayer player && !player.m_7500_()) {
++            int stance = GangServer.stance(player, who);
++            if (stance == GangServer.OWN_GANG) {
++                return false;
++            }
++            if (stance == GangServer.OUTCAST) {
++                return true;
++            }
++        }
++        if (GangServer.threatens(npc, who, body)) {
++            return true;
++        }
+         Long until = mind.grudges.get(body.m_20148_());
+         if (until != null && until > now) {
+             // 1.3.39: even a player in creative who hit it: it fights back (its kagune out, as the owner tests them), though its blows
+@@ -1020,6 +1035,9 @@ public final class GhoulNpcBrain {
+         long now = npc.m_9236_().m_46467_();
+         mind.hurtAt = now;
+         Entity source = event.getSource().m_7639_();
++        if (source instanceof ServerPlayer member && GangServer.stance(member, who) == GangServer.OWN_GANG) {
++            return; // 4.1.50: one of its own's blows: never held against them, nobody called
++        }
+         if (source instanceof LivingEntity attacker && attacker != npc) {
+             int grudge = who.temper().grudge();
+             boolean holds = true;
+diff --git a/src/main/resources/assets/hexkagune/textures/font/aogiri_tree.png b/src/main/resources/assets/hexkagune/textures/font/aogiri_tree.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..b51609dacef3ea2730f7c2057c2446b7b3767c8d
+GIT binary patch
+literal 230
+zcmV<C02%*@P)<h;3K|Lk000e1NJLTq000mG000mO1^@s6AM^iV00023Nkl<Zc%03X
+zyA8rH7=-VSko!ok++>b;3lGB-8HO#w95ksS(YrBKqO-YxKoneMo$o%sWZ+kd&J{I&
+zH{Wq+3ZVc%^8Triyst8nJcUrU00-G)KRQ=zqo0?>+Tu9$0D$Z5zAwnR%evw;=WGes
+z$qIDj&pDf^J7A4NU+sWl0AOu_VSEHGu{vdbqCW+w%T%5Ow9m<71+liM3JOrYN_4KY
+gAL!NRQu(j-0N%M~0^`SmYXATM07*qoM6N<$f--SpNdN!<
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/main/resources/assets/hexkagune/textures/font/clown_face.png b/src/main/resources/assets/hexkagune/textures/font/clown_face.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..adfbfbeaa4618e0c917a7d73349713208aa776c3
+GIT binary patch
+literal 268
+zcmV+n0rUQeP)<h;3K|Lk000e1NJLTq000mG000mO1^@s6AM^iV0002fNkl<Zc$}?~
+zF$#k~5JmsmZsQGXELKngVzEVzVV@=!OP^y{ScE_@V2U)}AdU5=8eL~c3Blhi_~*SH
+zR$z~$b>q^yasSM#v~FBwbKKe|0N{N+s&V{?GOc4pATbe@mCXSFYp~zZEC4842>>3K
+zTm*Rzr+Hh&?MY%V3@;Jnoz}66_<(=@(k%pJr?bl}y3C55C;))+e4k)b8ko{d66*W}
+zZ{UZ(qHhBb5Z-_QO3}9g%x8iP)^3%)YaP$OQIha*c(DPOY=vM^uqE=r-SP#D`fa#7
+SG9euR0000<MNUMnLSTYmfNtRc
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/main/resources/assets/minecraft/font/default.json b/src/main/resources/assets/minecraft/font/default.json
+new file mode 100644
+index 00000000..dc65db78
+--- /dev/null
++++ b/src/main/resources/assets/minecraft/font/default.json
+@@ -0,0 +1,22 @@
++{
++  "providers": [
++    {
++      "type": "bitmap",
++      "file": "hexkagune:font/aogiri_tree.png",
++      "ascent": 7,
++      "height": 8,
++      "chars": [
++        "\ue000"
++      ]
++    },
++    {
++      "type": "bitmap",
++      "file": "hexkagune:font/clown_face.png",
++      "ascent": 7,
++      "height": 8,
++      "chars": [
++        "\ue001"
++      ]
++    }
++  ]
++}
+diff --git a/src/test/java/com/hex/kagune/control/BikakuWormTests.java b/src/test/java/com/hex/kagune/control/BikakuWormTests.java
+index d7ac2a6c..42d690c9 100644
+--- a/src/test/java/com/hex/kagune/control/BikakuWormTests.java
++++ b/src/test/java/com/hex/kagune/control/BikakuWormTests.java
+@@ -1841,7 +1841,7 @@ public final class BikakuWormTests {
+             String moves = read("src/main/java/com/hex/kagune/control/server/BikakuMoves.java");
+             check(moves.contains("move.cost() > 0.0F && !KaguneServerController.useEnergy(player, move.cost(), true)"), "a free regeneration is never refused for an empty bar");
+             String network = read("src/main/java/com/hex/kagune/control/network/ControlNetwork.java");
+-            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("PROTOCOL = \"122\""), "every client is told (message 56, protocol 122)");
++            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("registerMessage(57, S2CGangName.class") && network.contains("PROTOCOL = \"123\""), "every client is told (message 57, protocol 123)");
+             String client = read("src/main/java/com/hex/kagune/control/client/PotentialClient.java");
+             check(client.contains("model.f_102811_, model.f_103375_") && client.contains("model.f_102808_, model.f_102809_") && client.contains("event.setCanceled(true)"),
+                 "a part off isn't drawn on him, nor its hand in first person");
+diff --git a/src/test/java/com/hex/kagune/control/NpcTests.java b/src/test/java/com/hex/kagune/control/NpcTests.java
+index c14f75d4..6e9cd8bb 100644
+--- a/src/test/java/com/hex/kagune/control/NpcTests.java
++++ b/src/test/java/com/hex/kagune/control/NpcTests.java
+@@ -61,6 +61,7 @@ public final class NpcTests {
+         worldgen();
+         onePerWorld();
+         gangs();
++        joining();
+         division();
+         if (!FAILURES.isEmpty()) {
+             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
+@@ -291,6 +292,76 @@ public final class NpcTests {
+      * mask of their gang's (its own paint on its base's model), kept in the identity every client is told; they start nothing and stand
+      * together.
+      */
++    /**
++     * 4.1.50 (the owner: Aogiri "dialog with Ayato and with a quest", "Kill 5 CCG"; the Clowns through Roma, "A short chain": make her laugh,
++     * kill 3 Gas Masks, bring her an investigator's quinque case; "(symbol) (space) (name)", Aogiri dark red with a tree, the Clowns blue
++     * with a clown face; "the gang will never attack the player again, even when hit, they will however help the player and defend him
++     * against hostiles. IF the player kills over 10 members of his own gang, he will be banned from joining, tag removed and will be
++     * attacked on sight."): a player's gang.
++     */
++    static void joining() {
++        com.hex.kagune.control.npc.GangPlayer g = com.hex.kagune.control.npc.GangPlayer.NEW;
++        check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.killedDove().ccgKills() == 0, "no quest, no count");
++        g = g.startAogiri();
++        for (int i = 0; i < 4; i++) {
++            g = g.killedDove();
++        }
++        check(g.aogiriQuest() && !g.aogiriDone() && g.killedDove().aogiriDone(), "Aogiri's quest: five of the CCG");
++        g = g.killedDove().join(com.hex.kagune.control.npc.GangPlayer.AOGIRI);
++        check(g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && !g.aogiriQuest() && g.ownKills() == 0, "joined: Aogiri's");
++        for (int i = 0; i < 10; i++) {
++            g = g.killedOwn();
++        }
++        check(g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.ownKills() == 10, "ten of their own: still theirs (\"over 10\")");
++        g = g.killedOwn();
++        check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.gang() == com.hex.kagune.control.npc.GangPlayer.NONE
++            && g.banned(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && !g.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "the eleventh: banned, out, its tag gone");
++        com.hex.kagune.control.npc.GangPlayer c = com.hex.kagune.control.npc.GangPlayer.NEW;
++        check(c.killedGasMask().gasKills() == 0, "the Gas Masks count only once she has laughed");
++        c = c.laughed();
++        check(c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_GAS_MASKS, "she laughed: the Gas Masks next");
++        c = c.killedGasMask().killedGasMask();
++        check(c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_GAS_MASKS && c.killedGasMask().clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_CASE,
++            "three Gas Masks, then the quinque case");
++        c = c.killedGasMask().join(com.hex.kagune.control.npc.GangPlayer.CLOWNS);
++        check(c.member(com.hex.kagune.control.npc.GangPlayer.CLOWNS) && c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_NOT_YET, "joined: the Clowns'");
++        check(com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.AOGIRI, "Ken").equals("\u00a7f\ue000 \u00a74Ken\u00a7r")
++            && com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.CLOWNS, "Ken").equals("\u00a7f\ue001 \u00a79Ken\u00a7r")
++            && com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.NONE, "Ken").equals("Ken"),
++            "(symbol) (space) (name): the emblem in its own colours, Aogiri's name dark red, the Clowns' blue; a gangless name as it is");
++        NpcIdentity rolled = NpcIdentity.roll(300, new java.util.Random(11)::nextDouble);
++        check(com.hex.kagune.control.npc.GangPlayer.of(rolled.ganged(com.hex.kagune.control.npc.Gang.CLOWNS, 2)) == com.hex.kagune.control.npc.GangPlayer.CLOWNS
++            && com.hex.kagune.control.npc.GangPlayer.of(rolled.ganged(com.hex.kagune.control.npc.Gang.GAS_MASKS, 2)) == com.hex.kagune.control.npc.GangPlayer.NONE
++            && com.hex.kagune.control.npc.GangPlayer.of(rolled) == com.hex.kagune.control.npc.GangPlayer.NONE, "a Clown is the Clowns'; a Gas Mask no gang a player joins");
++        try {
++            String font = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/assets/minecraft/font/default.json")));
++            check(font.contains("\"hexkagune:font/aogiri_tree.png\"") && font.contains("\"hexkagune:font/clown_face.png\"") && font.contains("\\ue000")
++                && font.contains("\\ue001"), "the emblems in the game's own font");
++            for (String glyph : new String[] {"aogiri_tree", "clown_face"}) {
++                java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(new java.io.File("src/main/resources/assets/hexkagune/textures/font/" + glyph + ".png"));
++                int drawn = 0;
++                for (int y = 0; y < 16; y++) {
++                    for (int x = 0; x < 16; x++) {
++                        drawn += image.getRGB(x, y) >>> 24 == 255 ? 1 : 0;
++                    }
++                }
++                check(image.getWidth() == 16 && image.getHeight() == 16 && drawn > 60, glyph + ": a 16 x 16 emblem (" + drawn + " pixels)");
++            }
++            String brain = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java")));
++            check(brain.indexOf("if (stance == GangServer.OWN_GANG) {\n                return false;") < brain.indexOf("Long until = mind.grudges.get(body.m_20148_());")
++                && brain.indexOf("if (GangServer.threatens(npc, who, body)) {") < brain.indexOf("Long until = mind.grudges.get(body.m_20148_());"),
++                "its own never gone for, grudge or not; the banned on sight; what goes for its own gone for");
++            check(brain.contains("if (source instanceof ServerPlayer member && GangServer.stance(member, who) == GangServer.OWN_GANG) {\n            return;"),
++                "its own's blows never held against them");
++            String server = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java")));
++            check(server.contains("public static void name(PlayerEvent.NameFormat event) {") && server.contains("player.refreshDisplayName();")
++                && server.contains("k.m_128405_(GANG, g.gang());") && server.contains("root.m_128469_(\"PlayerPersisted\")"),
++                "the name everyone sees carries the gang; kept with the player through death");
++        } catch (java.io.IOException failure) {
++            check(false, "read the gangs' files: " + failure);
++        }
++    }
++
+     static void gangs() {
+         com.hex.kagune.control.npc.Gang clowns = com.hex.kagune.control.npc.Gang.CLOWNS;
+         com.hex.kagune.control.npc.Gang gas = com.hex.kagune.control.npc.Gang.GAS_MASKS;
+diff --git a/stubs/net/minecraft/world/entity/player/Player.java b/stubs/net/minecraft/world/entity/player/Player.java
+index 7f80fd19..1f6d0a1a 100644
+--- a/stubs/net/minecraft/world/entity/player/Player.java
++++ b/stubs/net/minecraft/world/entity/player/Player.java
+@@ -2,6 +2,7 @@
+ package net.minecraft.world.entity.player;
+ 
+ public abstract class Player extends net.minecraft.world.entity.LivingEntity {
++    /** refreshDisplayName (Forge-added: Player.java.patch; 4.1.50) */ public void refreshDisplayName() { throw new UnsupportedOperationException(); }
+     /** addItem */ public boolean m_36356_(net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }
+     /** drop(stack, includeThrowerName) */ public net.minecraft.world.entity.item.ItemEntity m_36176_(net.minecraft.world.item.ItemStack stack, boolean thrower) { throw new UnsupportedOperationException(); }
+     /** getFoodData */ public net.minecraft.world.food.FoodData m_36324_() { throw new UnsupportedOperationException(); }
+diff --git a/stubs/net/minecraftforge/event/entity/player/PlayerEvent.java b/stubs/net/minecraftforge/event/entity/player/PlayerEvent.java
+index c52aeddd..93272a77 100644
+--- a/stubs/net/minecraftforge/event/entity/player/PlayerEvent.java
++++ b/stubs/net/minecraftforge/event/entity/player/PlayerEvent.java
+@@ -16,6 +16,13 @@ public class PlayerEvent extends net.minecraftforge.event.entity.living.LivingEv
+     public static class PlayerChangedDimensionEvent extends PlayerEvent {
+     }
+ 
++    /** 4.1.50: a player's display name asked for (ForgeEventFactory.getPlayerDisplayName): what it is to be. */
++    public static class NameFormat extends PlayerEvent {
++        public net.minecraft.network.chat.Component getUsername() { throw new UnsupportedOperationException(); }
++        public net.minecraft.network.chat.Component getDisplayname() { throw new UnsupportedOperationException(); }
++        public void setDisplayname(net.minecraft.network.chat.Component displayname) { throw new UnsupportedOperationException(); }
++    }
++
+     public static class StartTracking extends PlayerEvent {
+         public net.minecraft.world.entity.Entity getTarget() { throw new UnsupportedOperationException(); }
+     }
+diff --git a/tools/gang_emblems.py b/tools/gang_emblems.py
+new file mode 100644
+index 00000000..117416e7
+--- /dev/null
++++ b/tools/gang_emblems.py
+@@ -0,0 +1,133 @@
++#!/usr/bin/env python3
++"""4.1.50 (the owner: Aogiri's name "dark red with a custom tree emblem", the Clowns' "blue with a custom clown face", "(symbol) (space)
++(name)"): the two gangs' emblems as 16 x 16 font glyphs (assets/hexkagune/textures/font/), drawn here pixel by pixel, and the font that
++maps them (assets/minecraft/font/default.json: U+E000 the tree, U+E001 the clown, private characters added to the game's own font: every
++resource pack's default.json is read and joined, so a plain name can carry them). The glyphs keep their own colours (the name after them
++is coloured, not the emblem: GangPlayer.named puts white before them).
++
++    python3 tools/gang_emblems.py [--preview out.png]
++"""
++import json
++import sys
++from pathlib import Path
++
++from PIL import Image, ImageDraw, ImageFont
++
++ROOT = Path(__file__).resolve().parent.parent
++ASSETS = ROOT / "src" / "main" / "resources" / "assets" / "hexkagune"
++
++# The tree: a bare, gnarled tree, its crown of forking branches, a thick trunk, roots spreading (o: outline, f: bark, h: light).
++TREE = [
++    "................",
++    "..o..o....o..o..",
++    "..of.fo..of.fo..",
++    "o..ff.f..f.ff..o",
++    "of..fffhhfff..fo",
++    ".fff..fhhf..fff.",
++    "...fffffhffff...",
++    "......fhhf......",
++    "......fhhf......",
++    "......fhhf......",
++    "......fhhf......",
++    ".....ffhhff.....",
++    "....ff.hh.ff....",
++    "..fff..ff..fff..",
++    ".oo...o..o...oo.",
++    "................",
++]
++TREE_COLOURS = {"o": (58, 6, 6), "f": (139, 26, 26), "h": (196, 57, 43)}
++
++# The clown: a white face, blue tufts of hair, black diamond eyes with a blue tear, a red nose, a wide red grin.
++CLOWN = [
++    "................",
++    ".bb..........bb.",
++    "bBbb.wwwwww.bbBb",
++    "bBBbwwwwwwwwbBBb",
++    ".bbwwwwwwwwwwbb.",
++    "..wwkwwwwwwkwww.",
++    "..wkkkwwwwkkkww.",
++    "..wwkwwrrwwkwww.",
++    "..wwtwrRRrwtwww.",
++    "..wwwwwrrwwwwww.",
++    "..wrwwwwwwwwrww.",
++    "..wwrrwwwwrrwww.",
++    "...wwrrrrrrwww..",
++    "....wwwwwwwww...",
++    "......wwwww.....",
++    "................",
++]
++CLOWN_COLOURS = {"b": (36, 84, 196), "B": (88, 140, 240), "w": (245, 245, 240), "k": (20, 20, 24), "t": (70, 120, 230), "r": (200, 30, 40),
++                 "R": (240, 80, 80)}
++
++GLYPHS = [("aogiri_tree", TREE, TREE_COLOURS, ""), ("clown_face", CLOWN, CLOWN_COLOURS, "")]
++
++
++def image(rows, colours):
++    im = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
++    for y, row in enumerate(rows):
++        assert len(row) == 16, (y, row)
++        for x, c in enumerate(row):
++            if c != ".":
++                im.putpixel((x, y), colours[c] + (255,))
++    return im
++
++
++def write():
++    (ASSETS / "textures" / "font").mkdir(parents=True, exist_ok=True)
++    providers = []
++    for name, rows, colours, char in GLYPHS:
++        image(rows, colours).save(ASSETS / "textures" / "font" / (name + ".png"))
++        providers.append({"type": "bitmap", "file": "hexkagune:font/" + name + ".png", "ascent": 7, "height": 8, "chars": [char]})
++    font = ROOT / "src" / "main" / "resources" / "assets" / "minecraft" / "font"
++    font.mkdir(parents=True, exist_ok=True)
++    (font / "default.json").write_text(json.dumps({"providers": providers}, indent=2, ensure_ascii=True) + "\n")
++
++
++def preview(out):
++    """A mock (not the game's font): each emblem big, then in a name tag and a chat line at the game's sizes, scaled up 4 times."""
++    scale = 4
++    W, H = 760, 420
++    sheet = Image.new("RGB", (W, H), (58, 68, 80))
++    d = ImageDraw.Draw(sheet)
++    try:
++        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 8 * scale)
++        small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
++    except OSError:
++        font = small = ImageFont.load_default()
++    d.text((12, 8), "Gang emblems (4.1.50): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
++    x = 20
++    for name, rows, colours, _ in GLYPHS:
++        big = image(rows, colours).resize((160, 160), Image.NEAREST)
++        sheet.paste(big, (x, 40), big)
++        d.text((x, 205), name.replace("_", " "), fill=(230, 230, 230), font=small)
++        x += 200
++    lines = [("aogiri_tree", (170, 0, 0), "Ken"), ("clown_face", (85, 85, 255), "Ken")]
++    y = 240
++    for name, rows, colours, _ in GLYPHS:
++        colour = (170, 0, 0) if name == "aogiri_tree" else (85, 85, 255)
++        # A name tag: dark translucent box, the emblem, a space, the name.
++        glyph = image(rows, colours).resize((8 * scale, 8 * scale), Image.NEAREST)
++        label = "Ken"
++        tw = d.textlength(label, font=font)
++        box_w = int(8 * scale + 4 * scale + tw + 4 * scale)
++        d.rectangle((20, y, 20 + box_w, y + 11 * scale), fill=(28, 30, 36))
++        sheet.paste(glyph, (20 + 2 * scale, y + int(1.5 * scale)), glyph)
++        d.text((20 + 8 * scale + 4 * scale, y), label, fill=colour, font=font)
++        # A chat line: <emblem name> hello
++        cx = 260
++        d.text((cx, y), "<", fill=(255, 255, 255), font=font)
++        cx += int(d.textlength("<", font=font))
++        sheet.paste(glyph, (cx, y + int(1.5 * scale)), glyph)
++        cx += 8 * scale + 4 * scale
++        d.text((cx, y), label, fill=colour, font=font)
++        cx += int(d.textlength(label, font=font))
++        d.text((cx, y), "> hey", fill=(255, 255, 255), font=font)
++        y += 80
++    sheet.save(out)
++    print("wrote", out)
++
++
++if __name__ == "__main__":
++    write()
++    if "--preview" in sys.argv:
++        preview(sys.argv[sys.argv.index("--preview") + 1])
+diff --git a/verify/api-allowlist.txt b/verify/api-allowlist.txt
+index 444b7273..8dab3c3d 100644
+--- a/verify/api-allowlist.txt
++++ b/verify/api-allowlist.txt
+@@ -128,6 +128,12 @@ M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles setRoll (F)V
+ C net/minecraftforge/client/event/MovementInputUpdateEvent                           # [forge] fired from LocalPlayer.aiStep after input.tick (LocalPlayer.java.patch)
+ M net/minecraftforge/client/event/MovementInputUpdateEvent getInput ()Lnet/minecraft/client/player/Input;  # [forge]
+ M net/minecraftforge/event/entity/player/PlayerEvent getEntity ()Lnet/minecraft/world/entity/player/Player;  # [forge] PlayerEvent.java
++# 4.1.50: a gang member's name, its emblem before it (PlayerEvent.NameFormat, posted by ForgeEventFactory.getPlayerDisplayName from
++# Player.getDisplayName; Player.refreshDisplayName asks again: both Forge's own, never obfuscated)
++C net/minecraftforge/event/entity/player/PlayerEvent$NameFormat                       # [forge] 1.20.1 event/entity/player/PlayerEvent.java (class NameFormat)
++M net/minecraftforge/event/entity/player/PlayerEvent$NameFormat getDisplayname ()Lnet/minecraft/network/chat/Component;  # [forge] same
++M net/minecraftforge/event/entity/player/PlayerEvent$NameFormat setDisplayname (Lnet/minecraft/network/chat/Component;)V  # [forge] same
++M net/minecraft/world/entity/player/Player refreshDisplayName ()V                      # [forge] 1.20.1 patches/minecraft/net/minecraft/world/entity/player/Player.java.patch (public void refreshDisplayName)
+ C net/minecraftforge/client/event/RegisterGuiOverlaysEvent                           # [forge] mod-bus event
+ M net/minecraftforge/client/event/RegisterGuiOverlaysEvent registerBelowAll (Ljava/lang/String;Lnet/minecraftforge/client/gui/overlay/IGuiOverlay;)V  # [forge]
+ C net/minecraftforge/client/gui/overlay/IGuiOverlay                                  # [forge]
