@@ -2,6 +2,7 @@
 package net.minecraft.world.entity.player;
 
 public abstract class Player extends net.minecraft.world.entity.LivingEntity {
+    /** refreshDisplayName (Forge-added: Player.java.patch; 4.1.50) */ public void refreshDisplayName() { throw new UnsupportedOperationException(); }
     /** addItem */ public boolean m_36356_(net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }
     /** drop(stack, includeThrowerName) */ public net.minecraft.world.entity.item.ItemEntity m_36176_(net.minecraft.world.item.ItemStack stack, boolean thrower) { throw new UnsupportedOperationException(); }
     /** getFoodData */ public net.minecraft.world.food.FoodData m_36324_() { throw new UnsupportedOperationException(); }

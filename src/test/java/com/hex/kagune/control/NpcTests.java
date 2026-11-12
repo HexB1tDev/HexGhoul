@@ -61,6 +61,7 @@ public final class NpcTests {
         worldgen();
         onePerWorld();
         gangs();
+        joining();
         division();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
@@ -291,6 +292,76 @@ public final class NpcTests {
      * mask of their gang's (its own paint on its base's model), kept in the identity every client is told; they start nothing and stand
      * together.
      */
+    /**
+     * 4.1.50 (the owner: Aogiri "dialog with Ayato and with a quest", "Kill 5 CCG"; the Clowns through Roma, "A short chain": make her laugh,
+     * kill 3 Gas Masks, bring her an investigator's quinque case; "(symbol) (space) (name)", Aogiri dark red with a tree, the Clowns blue
+     * with a clown face; "the gang will never attack the player again, even when hit, they will however help the player and defend him
+     * against hostiles. IF the player kills over 10 members of his own gang, he will be banned from joining, tag removed and will be
+     * attacked on sight."): a player's gang.
+     */
+    static void joining() {
+        com.hex.kagune.control.npc.GangPlayer g = com.hex.kagune.control.npc.GangPlayer.NEW;
+        check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.killedDove().ccgKills() == 0, "no quest, no count");
+        g = g.startAogiri();
+        for (int i = 0; i < 4; i++) {
+            g = g.killedDove();
+        }
+        check(g.aogiriQuest() && !g.aogiriDone() && g.killedDove().aogiriDone(), "Aogiri's quest: five of the CCG");
+        g = g.killedDove().join(com.hex.kagune.control.npc.GangPlayer.AOGIRI);
+        check(g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && !g.aogiriQuest() && g.ownKills() == 0, "joined: Aogiri's");
+        for (int i = 0; i < 10; i++) {
+            g = g.killedOwn();
+        }
+        check(g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.ownKills() == 10, "ten of their own: still theirs (\"over 10\")");
+        g = g.killedOwn();
+        check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.gang() == com.hex.kagune.control.npc.GangPlayer.NONE
+            && g.banned(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && !g.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "the eleventh: banned, out, its tag gone");
+        com.hex.kagune.control.npc.GangPlayer c = com.hex.kagune.control.npc.GangPlayer.NEW;
+        check(c.killedGasMask().gasKills() == 0, "the Gas Masks count only once she has laughed");
+        c = c.laughed();
+        check(c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_GAS_MASKS, "she laughed: the Gas Masks next");
+        c = c.killedGasMask().killedGasMask();
+        check(c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_GAS_MASKS && c.killedGasMask().clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_CASE,
+            "three Gas Masks, then the quinque case");
+        c = c.killedGasMask().join(com.hex.kagune.control.npc.GangPlayer.CLOWNS);
+        check(c.member(com.hex.kagune.control.npc.GangPlayer.CLOWNS) && c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_NOT_YET, "joined: the Clowns'");
+        check(com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.AOGIRI, "Ken").equals("\u00a7f\ue000 \u00a74Ken\u00a7r")
+            && com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.CLOWNS, "Ken").equals("\u00a7f\ue001 \u00a79Ken\u00a7r")
+            && com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.NONE, "Ken").equals("Ken"),
+            "(symbol) (space) (name): the emblem in its own colours, Aogiri's name dark red, the Clowns' blue; a gangless name as it is");
+        NpcIdentity rolled = NpcIdentity.roll(300, new java.util.Random(11)::nextDouble);
+        check(com.hex.kagune.control.npc.GangPlayer.of(rolled.ganged(com.hex.kagune.control.npc.Gang.CLOWNS, 2)) == com.hex.kagune.control.npc.GangPlayer.CLOWNS
+            && com.hex.kagune.control.npc.GangPlayer.of(rolled.ganged(com.hex.kagune.control.npc.Gang.GAS_MASKS, 2)) == com.hex.kagune.control.npc.GangPlayer.NONE
+            && com.hex.kagune.control.npc.GangPlayer.of(rolled) == com.hex.kagune.control.npc.GangPlayer.NONE, "a Clown is the Clowns'; a Gas Mask no gang a player joins");
+        try {
+            String font = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/assets/minecraft/font/default.json")));
+            check(font.contains("\"hexkagune:font/aogiri_tree.png\"") && font.contains("\"hexkagune:font/clown_face.png\"") && font.contains("\\ue000")
+                && font.contains("\\ue001"), "the emblems in the game's own font");
+            for (String glyph : new String[] {"aogiri_tree", "clown_face"}) {
+                java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(new java.io.File("src/main/resources/assets/hexkagune/textures/font/" + glyph + ".png"));
+                int drawn = 0;
+                for (int y = 0; y < 16; y++) {
+                    for (int x = 0; x < 16; x++) {
+                        drawn += image.getRGB(x, y) >>> 24 == 255 ? 1 : 0;
+                    }
+                }
+                check(image.getWidth() == 16 && image.getHeight() == 16 && drawn > 60, glyph + ": a 16 x 16 emblem (" + drawn + " pixels)");
+            }
+            String brain = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java")));
+            check(brain.indexOf("if (stance == GangServer.OWN_GANG) {\n                return false;") < brain.indexOf("Long until = mind.grudges.get(body.m_20148_());")
+                && brain.indexOf("if (GangServer.threatens(npc, who, body)) {") < brain.indexOf("Long until = mind.grudges.get(body.m_20148_());"),
+                "its own never gone for, grudge or not; the banned on sight; what goes for its own gone for");
+            check(brain.contains("if (source instanceof ServerPlayer member && GangServer.stance(member, who) == GangServer.OWN_GANG) {\n            return;"),
+                "its own's blows never held against them");
+            String server = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java")));
+            check(server.contains("public static void name(PlayerEvent.NameFormat event) {") && server.contains("player.refreshDisplayName();")
+                && server.contains("k.m_128405_(GANG, g.gang());") && server.contains("root.m_128469_(\"PlayerPersisted\")"),
+                "the name everyone sees carries the gang; kept with the player through death");
+        } catch (java.io.IOException failure) {
+            check(false, "read the gangs' files: " + failure);
+        }
+    }
+
     static void gangs() {
         com.hex.kagune.control.npc.Gang clowns = com.hex.kagune.control.npc.Gang.CLOWNS;
         com.hex.kagune.control.npc.Gang gas = com.hex.kagune.control.npc.Gang.GAS_MASKS;
