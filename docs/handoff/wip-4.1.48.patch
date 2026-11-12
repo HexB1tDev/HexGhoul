@@ -1,0 +1,288 @@
+diff --git a/src/main/java/com/hex/kagune/control/npc/Persona.java b/src/main/java/com/hex/kagune/control/npc/Persona.java
+index 46da969c..1dd15b7a 100644
+--- a/src/main/java/com/hex/kagune/control/npc/Persona.java
++++ b/src/main/java/com/hex/kagune/control/npc/Persona.java
+@@ -723,6 +723,15 @@ public abstract class Persona {
+      * starts less, and means more by it.
+      */
+     private static final class Ayato extends Persona {
++        /**
++         * 4.1.48 (the owner: "Ayato and Noro should both be Alex models"): on the slim arms (Ayato's skin is painted for them; Noro's game
++         * copy has its arms narrowed: tools/companion_textures.py, narrow_arms). A man's body otherwise (no hips, no bust).
++         */
++        @Override
++        public boolean slim() {
++            return true;
++        }
++
+         private Script script;
+ 
+         /**
+@@ -905,6 +914,21 @@ public abstract class Persona {
+      * anyone. Bikaku: three worms, the whole of it, and a body that will not stay dead. A teacher, never a lover.
+      */
+     private static final class Noro extends Persona {
++        /** 4.1.48 (the owner: "give some to Noro, both less than the player, noro more than ayato"): {@link ReaperBuild#NORO_SHARE}. */
++        @Override
++        public double muscle() {
++            return ReaperBuild.NORO_SHARE;
++        }
++
++        /**
++         * 4.1.48 (the owner: "Ayato and Noro should both be Alex models"): on the slim arms (Ayato's skin is painted for them; Noro's game
++         * copy has its arms narrowed: tools/companion_textures.py, narrow_arms). A man's body otherwise (no hips, no bust).
++         */
++        @Override
++        public boolean slim() {
++            return true;
++        }
++
+         private Script script;
+ 
+         @Override
+diff --git a/src/main/java/com/hex/kagune/control/npc/ReaperBuild.java b/src/main/java/com/hex/kagune/control/npc/ReaperBuild.java
+index 5a264ced..8192143b 100644
+--- a/src/main/java/com/hex/kagune/control/npc/ReaperBuild.java
++++ b/src/main/java/com/hex/kagune/control/npc/ReaperBuild.java
+@@ -44,8 +44,12 @@ public final class ReaperBuild {
+      * 4.0.8 (the owner: "I sent you the new ayato skin, make him a little muscular but way less than the male player."): Ayato's build, the
+      * same shape, {@link #AYATO_SHARE} of how far the White Reaper's stands out past the torso (a male player's is {@link #PLAYER_SHARE}).
+      */
+-    public static final double AYATO_SHARE = 0.3;
++    // 4.1.48 (the owner: "ayato is meant to have muscles they're gone? Also give some to Noro, both less than the player, noro more than
++    // ayato"): 0.42 (0.3 was lost under his black jacket in game); Noro's NORO_SHARE, between his and a male player's.
++    public static final double AYATO_SHARE = 0.42;
+     public static final double[][] AYATO = slimmer(PROFILE, AYATO_SHARE);
++    /** 4.1.48: Noro's build, more than Ayato's, less than a male player's. */
++    public static final double NORO_SHARE = 0.52;
+ 
+     /**
+      * 4.1.5 (the owner: "give him some muscles also less than the player"): the General's build, between Ayato's and a male player's.
+diff --git a/src/main/resources/assets/hexkagune/textures/entity/noro/noro.png b/src/main/resources/assets/hexkagune/textures/entity/noro/noro.png
+index 15a54dbf84a0cf905f9b2ed9e7b126c5335d4617..0838b4c66ae0792e2c7def54f84861c33f40278a 100644
+GIT binary patch
+delta 1581
+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
+
+delta 1567
+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
+RM?e4o002ovPDHLkV1i1Z0sjC1
+
+diff --git a/src/test/java/com/hex/kagune/control/CompanionTests.java b/src/test/java/com/hex/kagune/control/CompanionTests.java
+index 2f6a1203..1e2fb581 100644
+--- a/src/test/java/com/hex/kagune/control/CompanionTests.java
++++ b/src/test/java/com/hex/kagune/control/CompanionTests.java
+@@ -1309,9 +1309,12 @@ public final class CompanionTests {
+         }
+         // 4.0.8 (the owner: "I sent you the new ayato skin, make him a little muscular but way less than the male player."): Ayato's build a
+         // share of the White Reaper's, way less than a male player's; nobody else's changed; his skin wide-armed, as he is drawn.
+-        check(Persona.AYATO.muscle() > 0.0 && Persona.AYATO.muscle() <= com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE / 2.0
+-            && Persona.KEN.muscle() == 0.0 && Persona.NORO.muscle() == 0.0 && Persona.ETO.muscle() == 0.0 && !Persona.AYATO.slim() && Persona.KEN.slim(),
+-            "Ayato a little muscular, way less than a male player; Ken as he was");
++        // 4.1.48 (the owner: "ayato is meant to have muscles they're gone? Also give some to Noro, both less than the player, noro more than
++        // ayato"; "Ayato and Noro should both be Alex models"): Ayato's build plainer, Noro's more, both under a male player's; both slim.
++        check(Persona.AYATO.muscle() >= 0.4 && Persona.NORO.muscle() > Persona.AYATO.muscle()
++            && Persona.NORO.muscle() < com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE
++            && Persona.KEN.muscle() == 0.0 && Persona.ETO.muscle() == 0.0 && Persona.AYATO.slim() && Persona.NORO.slim() && Persona.KEN.slim(),
++            "Ayato muscular, Noro more, both less than a male player; both on the slim arms; Ken as he was");
+         check(com.hex.kagune.control.npc.ReaperBuild.armOut(com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE) == com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT
+             && com.hex.kagune.control.npc.ReaperBuild.armOut(com.hex.kagune.control.npc.ReaperBuild.AYATO_SHARE) < com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT,
+             "his arms out round his chest, less than a male player's");
+diff --git a/tools/CompanionBuildPreview.java b/tools/CompanionBuildPreview.java
+new file mode 100644
+index 00000000..fa4183a7
+--- /dev/null
++++ b/tools/CompanionBuildPreview.java
+@@ -0,0 +1,65 @@
++import com.hex.kagune.control.client.animation.RigPose;
++import com.hex.kagune.control.npc.ReaperBuild;
++import java.awt.Color;
++import java.awt.Font;
++import java.awt.Graphics2D;
++import java.awt.image.BufferedImage;
++import java.io.File;
++import java.util.ArrayList;
++import java.util.List;
++import javax.imageio.ImageIO;
++
++/**
++ * 4.1.48: the companions' builds off-game (EtoRenderer.Build: ReaperBuild.chest of the persona's muscle, its arms set out by
++ * ReaperBuild.armOut), on the slim arms in their own game textures: Ayato and Noro at the shares given, from in front, three quarters and
++ * the side, with a male player's for comparison.
++ *
++ * <pre>
++ * javac -nowarn -cp build/quick/classes:build/quick/base.jar -sourcepath tools -d build/build-preview tools/CompanionBuildPreview.java
++ * java -Djava.awt.headless=true -cp build/build-preview:build/quick/classes:build/quick/base.jar CompanionBuildPreview &lt;out.png&gt; key:share:slim ...
++ * </pre>
++ */
++public final class CompanionBuildPreview {
++    public static void main(String[] args) throws Exception {
++        PoseRender.stiff = true;
++        List<BufferedImage> frames = new ArrayList<>();
++        for (int i = 1; i < args.length; i++) {
++            String[] a = args[i].split(":");
++            String key = a[0];
++            double share = Double.parseDouble(a[1]);
++            boolean slim = a.length < 3 || Boolean.parseBoolean(a[2]);
++            for (double yaw : new double[] {0, 40, 90}) {
++                String path = key.startsWith("ghoul/") ? "src/main/resources/assets/hexkagune/textures/entity/" + key + ".png"
++                    : "src/main/resources/assets/hexkagune/textures/entity/" + key + "/" + key + ".png";
++                PoseRender.skin = ImageIO.read(new File(path));
++                PoseRender.slim = slim;
++                PoseRender.armOut = ReaperBuild.armOut(share);
++                RigPose pose = new RigPose();
++                List<PoseRender.Tri> tris = new ArrayList<>(PoseRender.model(pose));
++                if (share > 0.0) {
++                    ReaperPreview.chest(tris, pose, false, ReaperBuild.of(share));
++                    ReaperPreview.chest(tris, pose, true, ReaperBuild.of(share));
++                }
++                PoseRender.Canvas canvas = new PoseRender.Canvas(240, 300, 2, PoseRender.orbit(yaw, 6, 3.7, 1.05), 0x3A4450);
++                for (PoseRender.Tri t : tris) {
++                    canvas.tri(t, true);
++                }
++                BufferedImage img = canvas.image();
++                Graphics2D g = img.createGraphics();
++                g.setColor(Color.WHITE);
++                g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
++                g.drawString(key + " build " + share + (slim ? " (slim)" : " (wide)"), 5, 14);
++                g.dispose();
++                frames.add(img);
++            }
++        }
++        BufferedImage sheet = new BufferedImage(3 * 240, (frames.size() / 3) * 300, BufferedImage.TYPE_INT_RGB);
++        Graphics2D g = sheet.createGraphics();
++        for (int i = 0; i < frames.size(); i++) {
++            g.drawImage(frames.get(i), i % 3 * 240, i / 3 * 300, null);
++        }
++        g.dispose();
++        ImageIO.write(sheet, "png", new File(args[0]));
++        System.out.println("wrote " + args[0]);
++    }
++}
+diff --git a/tools/companion_textures.py b/tools/companion_textures.py
+index f28f470b..0249fcee 100644
+--- a/tools/companion_textures.py
++++ b/tools/companion_textures.py
+@@ -37,8 +37,10 @@ COMPANIONS = {
+     "ken": {"turns": ("left",), "slim": True},
+     # 4.0.0: Ayato (the owner's skin, art/exploration/Ayato_skin.png): both eyes turn; Noro (Noro_skin.webp): his face is his stitched
+     # mask, its two dark eye-holes turn red.
+-    "ayato": {"turns": ("right", "left"), "slim": False},  # 4.0.8: the owner's new skin (art/exploration/Ayato_skin_2.png), wide arms
+-    "noro": {"turns": ("right", "left"), "slim": True},
++    # 4.1.48 (the owner: "Ayato and Noro should both be Alex models"): both on the slim arms. Ayato's skin is painted for them already
++    # (its arms' fourth columns are clear); Noro's is painted for the wide arms: the game's copy has its arms narrowed (narrow_arms).
++    "ayato": {"turns": ("right", "left"), "slim": True},  # 4.0.8: the owner's new skin (art/exploration/Ayato_skin_2.png)
++    "noro": {"turns": ("right", "left"), "slim": True, "narrow": True},
+     # 4.1.5: the General (the owner's skin, sent with "use this skin for the general": art/exploration/General_skin.png, slim arms). A
+     # human: no eye of his ever turns (his kakugan textures are empty).
+     "general": {"turns": (), "slim": True},
+@@ -171,6 +173,41 @@ def find_eyes(face):
+     return found, skin
+ 
+ 
++# 4.1.48: each arm's boxes in a 64px skin (its corner u, v): the right arm and its outer layer, the left arm and its outer layer.
++ARM_BOXES = [(40, 16), (40, 32), (32, 48), (48, 48)]
++
++
++def narrow_arms(skin):
++    """4.1.48: a skin painted for the wide (4 pixel) arms laid out for the slim (3 pixel) ones, as a slim model reads it: each arm face 4
++    wide is made 3 by leaving out one middle column (the front's third, the back's second: the same side of the arm), the sides as they
++    are; the slim layout's spare columns cleared. A 128px skin at twice the pixels."""
++    k = skin.size[0] // 64
++    out = skin.copy()
++    src = skin.load()
++    dst = out.load()
++
++    def face(u, v, w, h, keep, to_u):
++        for y in range(h * k):
++            for i, col in enumerate(keep):
++                for dx in range(k):
++                    dst[(to_u + i) * k + dx, v * k + y] = src[(u + col) * k + dx, v * k + y]
++
++    for u, v in ARM_BOXES:
++        # The box's whole area (16 x 16) cleared, then each face laid out again at the slim positions.
++        for y in range(16 * k):
++            for x in range(16 * k):
++                dst[u * k + x, v * k + y] = (0, 0, 0, 0)
++        front_keep = [0, 1, 3]
++        back_keep = [0, 2, 3]
++        face(u + 4, v, 4, 4, front_keep, u + 4)          # top (4 wide -> 3)
++        face(u + 8, v, 4, 4, front_keep, u + 7)          # bottom
++        face(u, v + 4, 4, 12, [0, 1, 2, 3], u)           # the outer side
++        face(u + 4, v + 4, 4, 12, front_keep, u + 4)     # the front
++        face(u + 8, v + 4, 4, 12, [0, 1, 2, 3], u + 7)   # the inner side
++        face(u + 12, v + 4, 4, 12, back_keep, u + 11)    # the back
++    return out
++
++
+ def build(key, config, preview):
+     source = ART / (key + "_skin.png")
+     if not source.exists():
+@@ -188,6 +225,8 @@ def build(key, config, preview):
+             for x in (5, 6):
+                 source_face.put(day, 7 - x, y, source_face.at(x, y))
+         skin = day
++    if config.get("narrow"):
++        skin = narrow_arms(skin)
+     if key in REPAINT:
+         skin = skin.copy()
+         painter = Face(skin)

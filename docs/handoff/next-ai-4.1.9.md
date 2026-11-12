@@ -1,4 +1,4 @@
-# Next AI: after 4.1.47 (4.1.47: the ghouls' arm blade rebuilt as the owner's picture, four slashes, a living stance, protocol 121; 4.1.46: the CCG's ghoul division, protocol 120; 4.1.45: roaming gangs, the Clowns and the Gas Masks, protocol 119; 4.1.44: the hideout and the CCG building spawn again; 4.1.43: the one-of-a-kind claim taken as the place is built, never two Etos; 4.1.42: structures once per world, flat, never floating, spread out; 4.1.41: the Reaper's blade turned over about its length; 4.1.40: older worlds' townspeople keep their maps, "complete all" reopens gates at login; 4.1.39: Small City fixes, humans kept in their village, the city ground cached, protocol 118; 4.1.38: two minutes after a fight the Reaper puts his jacket back on; 4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.47, 4.1.48 half done (4.1.48 WIP: Ayato and Noro on slim arms with builds 0.42/0.52, in docs/handoff/wip-4.1.48.patch; 4.1.47: the ghouls' arm blade rebuilt as the owner's picture, four slashes, a living stance, protocol 121; 4.1.46: the CCG's ghoul division, protocol 120; 4.1.45: roaming gangs, the Clowns and the Gas Masks, protocol 119; 4.1.44: the hideout and the CCG building spawn again; 4.1.43: the one-of-a-kind claim taken as the place is built, never two Etos; 4.1.42: structures once per world, flat, never floating, spread out; 4.1.41: the Reaper's blade turned over about its length; 4.1.40: older worlds' townspeople keep their maps, "complete all" reopens gates at login; 4.1.39: Small City fixes, humans kept in their village, the city ground cached, protocol 118; 4.1.38: two minutes after a fight the Reaper puts his jacket back on; 4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -8,6 +8,56 @@ passing is not the bar. It is also in `CLAUDE.md`.
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
+
+## START HERE (after 4.1.47): finish 4.1.48, then Roma (4.1.49), then joining gangs (4.1.50)
+
+The owner stopped the session ("Stop, prompt and handoff, Now"). **Pushed** (each after a full build with EXIT 0 on its exact commit):
+4.1.45 roaming gangs (`cf3fa763`), 4.1.46 the CCG ghoul division (`2dc0ee3f`), 4.1.47 the arm blade rebuilt (`2cec5cd4`). The commit
+carrying this note changes only docs/ and art/ (the build's code is 4.1.47's).
+
+**1. Apply the unfinished 4.1.48 first:** `git apply docs/handoff/wip-4.1.48.patch` (binary patch: Noro's texture too). It holds, checked
+with `tools/quick_check.py` and CompanionTests passing, the full build not yet run:
+- the owner: "Ayato and Noro should both be Alex models": `Persona` Ayato and Noro `slim()` true. Ayato's game texture is painted for the
+  slim arms already; Noro's was wide, so `tools/companion_textures.py` (`narrow_arms`, `"narrow": True`) now writes his game copy with
+  each arm face 4 to 3 pixels (art/noro_skin.png untouched). Seen in a render: clean on slim arms.
+- the owner: "ayato is meant to have muscles they're gone? Also give some to Noro, both less than the player, noro more than ayato":
+  `ReaperBuild.AYATO_SHARE` 0.3 to 0.42 (0.3 was lost under his black jacket), `NORO_SHARE` 0.52 (`Persona` Noro `muscle()`), a male
+  player 0.6. CompanionTests updated. Render: `docs/handoff/companion-builds-4.1.48.png` (`tools/CompanionBuildPreview.java`).
+
+**2. Then the rest of 4.1.48: the circus tent** (the owner sent `circus.schematic`, now `art/exploration/circus.schematic`, unchanged).
+It is the OLD MCEdit "Alpha" format (numeric ids in Blocks/Data, gzip NBT), 77 x 46 x 49: only air (0), white wool (35:0), red wool
+(35:14), glowstone (89), spruce log (17:1, upright), grass (31:1, 1.20.1 `minecraft:grass`), a dandelion (37). Its outer wall is a ring
+(layer 1, rows z 1..47); four entrances: z 1 and z 47 at x 20-24 and x 52-56; no floor (it stands on the world's ground). Plan, decided:
+- `tools/companion_structures.py` (writes one template with people in it, as `reaper_mansion`): add a reader for the Alpha format (map the
+  ids above to states), an option for a generated floor layer under the tent's ring (use `minecraft:dirt_path`: people stand on it, and
+  trees and grass cannot root there), a jigsaw anchor at the floor's middle (`hexkagune:circus_anchor`), and several people per place.
+- the owner chose "One per world + clowns": four Clown gang members inside at (22,0,8), (54,0,8), (28,0,32), (48,0,18) (checked: air at
+  y 0..2, inside the ring), as `hexkagune:ghoul` with ForgeData e.g. `HexCircus` 1, `HexCircusMask` 1..5 (each a different mask),
+  `HexGang` one fixed number (so `GhoulNpcBrain.mates` holds), `PersistenceRequired` 1. `GhoulNpcBrain.tick` (identity null) turns the
+  flag into `NpcIdentity.roll(...).ganged(Gang.CLOWNS, mask)` as it does `AOGIRI`; they keep near home (not `roam`). Roma's spot (4.1.49):
+  the middle, (38,0,24).
+- wire it as the mansion is: `worldgen/structure/circus.json` (type `hexkagune:dry_place`), `structure_set/circus.json` (own salt),
+  `template_pool/circus/start.json`, `DryLand.PLACES` + a salt + `placeSalt`, `PlaceClaims.ONE_OF_A_KIND`, `ControlStructures.ONE_OF_A_KIND`
+  and its name for `/kagune places`; NpcTests pins these lists (search "reaper_mansion" in NpcTests and CompanionTests).
+- the owner chose "Yes, rivals": Clowns and Gas Masks fight on sight (a `Gang.rival` and a line in `GhoulNpcBrain.wanted`'s gang branch).
+- Render the tent (front, side, inside) and judge it before pushing.
+
+**3. 4.1.49 Roma** (the owner, quoted exactly): "New Official NPC named "Roma", she is the leader of the clowns, can be romanced, has a
+messed up sense of humor but can be romatic when comes to it. She uses Kick master combat, has a Rinkaku with 4 purple tendrils (can use
+all moves from Rinakaku, including impale, Debris Hurl, etc. She spawns in this circus tent, is the size of Touka, is female, can be
+romanced by both Females and Males. (Alex Model, skinny)". **Her skin:** the owner sent it only as a picture in the chat (no file); I asked
+them to upload it as a PNG file. Ask again if it is not in the session. She is a new `Persona` (as Touka: EtoNpc), placed in the tent.
+
+**4. 4.1.50 joining gangs** (answers given): Aogiri through Ayato's dialog and the quest "Kill 5 CCG"; the Clowns through Roma, the owner
+chose "A short chain": make her laugh in dialog, kill 3 Gas Masks, bring her an investigator's quinque case. Aogiri's name dark red with a
+custom tree emblem, the Clowns' blue with a custom clown face ("Custom clown face": draw it and show a render first), "(symbol) (space)
+(name)". For every gang (the owner): "the gang will never attack the player again, even when hit, they will however help the player and
+defend him against hostiles. IF the player kills over 10 members of his own gang, he will be banned from joining, tag removed and will be
+attacked on sight." How a player joins the Gas Masks was never asked.
+
+**Asked in between and done:** 4.1.47's arm blade (the owner's picture: broad ribbons round the arm into one huge smooth blade; their
+choice "B: blade turned over"; four slashes and a living stance; "that will do, make sure that kagunes use random colors on this one
+too": they do, `KaguneTint.wild`).
 
 ## START HERE (after 4.1.45): the gangs, then the CCG division and joining gangs
 
@@ -235,6 +285,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.48 | WIP, not pushed: Ayato and Noro slim (`narrow_arms` for Noro's texture), builds 0.42/0.52; `docs/handoff/wip-4.1.48.patch`; the circus tent not started in code (plan in START HERE) | WIP |
 | 4.1.47 | The arm blade rebuilt: `BladeArmModel` (ribbons `RIBBONS` 2 x `RIBBON_TURNS` 1.3 with `crack` veins, `blade` a single-edged great blade, `edgeAt`/`spineAt`, gleam GLOW strips, `turned` sink: edge on z +), `BladeArm` (`STEPS` 4, `SWEEP` 2 `sweeps`, `FINISHER` 3, `BLADE_LENGTH` 26, reach 3.2), `BladeArmPose` (four edge-first keys, `stand(time, seed, still)`, guard up and out), `GhoulNpcClient.blade` the stance, `GhoulNpcCombat.bladeCut` (all slashes, sweep on `fair`), `NpcTests.bladeLow`; tools `BladeArmShowcase`, `BladeArmMoves`, `BladeArmColours`, `BladeLow`; protocol 121 | pushed, EXIT 0 |
 | 4.1.46 | The CCG's ghoul division: `Gang.CCG_DIVISION` (ordinal 3), `NpcIdentity.ccg`/`kakugan`, `AgentBrain.ccg` everywhere the CCG spared its own (`wanted`, `attacked` both ways, `hurt`, the Reaper's sweep, `AgentArms.foes`, `EtoBrain`), `GhoulNpcBrain.division` (`AgentBrain.wanted`'s rules; `marked`, `shows`), `called` both ways, FORMAL_SET, human meat, no `dawn`, `AgentSpawner.division` (0.35, three or none), `GhoulNpcRenderer.Eyes` none, `GhoulNpcTalk.CCG_WORDS`; a mate's stray blow no grudge; `NpcTests.division`; `tools/DivisionPreview.java`; protocol 120 | pushed, EXIT 0 |
 | 4.1.45 | Roaming gangs: `npc.Gang` (CLOWNS, GAS_MASKS, 3-5, `faces` all different), `NpcIdentity.gang` bits 44-45 (`ganged`: a DRIFTER), `GhoulNpcSpawner.gang` (`GANG_CHANCE` 0.3, `GANG_ID` number in saved data), `GhoulNpcBrain` `roam`/`mates`/`wanted`/`hurt` (`GANG_CALL` 24, `GANG_GRUDGE` 2400), masks on the face (`OutfitLayer.faction`, `Outfits.geometryOf`), 8 paints (`tools/gang_masks.py`), preview `tools/GangPreview.java`; `NpcTests.gangs`; protocol 119 | pushed, EXIT 0 |
