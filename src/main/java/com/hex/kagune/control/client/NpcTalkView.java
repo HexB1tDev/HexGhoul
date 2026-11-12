@@ -40,9 +40,19 @@ public final class NpcTalkView {
     static final double RISE = 0.28;
 
     /** What is shown: who is talking, how it stands with the player, what it says, the answers. */
-    public record Model(String name, String temper, int regard, boolean ally, String line, List<NpcTalk.Choice> choices, List<String> labels) {
+    public record Model(String name, String temper, int regard, boolean ally, String line, List<NpcTalk.Choice> choices, List<String> labels,
+                        int standing) {
         public Model(String name, String temper, int regard, boolean ally, String line, List<NpcTalk.Choice> choices) {
             this(name, temper, regard, ally, line, choices, choices.stream().map(NpcTalk.Choice::text).toList());
+        }
+
+        public Model(String name, String temper, int regard, boolean ally, String line, List<NpcTalk.Choice> choices, List<String> labels) {
+            this(name, temper, regard, ally, line, choices, labels, -1);
+        }
+
+        /** 4.1.52: true if the page shows the player's reputation in the speaker's gang (one of their own, its leader too). */
+        public boolean ranked() {
+            return this.standing >= 0;
         }
 
         /** The words shown for answer {@code i}. */
@@ -114,10 +124,15 @@ public final class NpcTalkView {
         String standing = model.ally() ? "WALKS WITH YOU" : band.label().toUpperCase(java.util.Locale.ROOT);
         c.text(temper[0].toUpperCase(java.util.Locale.ROOT), textX, top + 18, QuestJournalView.SUBTITLE, false);
         meter(c, right - METER, top + 1, m, standing, time);
+        // 4.1.52 (the owner: "New Reputation bar when talking to fellow gang members"): under the bond, where they stand in the gang.
+        int lower = model.ranked() ? RANK_ROOM : 0;
+        if (model.ranked()) {
+            reputation(c, right - METER, top + 27, model.standing() & 0xFF, model.standing() >> 8, time);
+        }
 
         // A vein under the heading.
-        c.fill(textX, top + 31, right, top + 32, 0x55B83A44);
-        c.fill(textX, top + 31, textX + (int)((right - textX) * Math.min(1.0, m.opened() / 0.5)), top + 32, 0xAAB83A44);
+        c.fill(textX, top + 31 + lower, right, top + 32 + lower, 0x55B83A44);
+        c.fill(textX, top + 31 + lower, textX + (int)((right - textX) * Math.min(1.0, m.opened() / 0.5)), top + 32 + lower, 0xAAB83A44);
 
         // The answers: one column, or two when there are many; in only once the words are all said, one after another.
         List<NpcTalk.Choice> choices = model.choices();
@@ -127,7 +142,7 @@ public final class NpcTalkView {
         int lowest = bottom - rows * 19;
 
         // What it says, typed out: as many lines as fit above the answers.
-        int y = top + 40;
+        int y = top + 40 + lower;
         List<String> lines = wrap(c, text, textWidth);
         int fit = Math.max(3, (lowest - 4 - y) / 12);
         // 1.3.4: the answers in the middle of the room left under the words (not down against the board's edge).
@@ -264,6 +279,65 @@ public final class NpcTalkView {
             String delta = (m.delta() > 0 ? "+" : "") + m.delta();
             int colour = m.delta() > 0 ? 0x7CE08E : 0xF05060;
             c.text(delta, at - c.width(delta) / 2, barY - 16 - Math.round(life * 12.0F), alpha << 24 | colour, true);
+        }
+    }
+
+    /** 4.1.52: how far the words come down to make room for the reputation meter. */
+    static final int RANK_ROOM = 20;
+    /** 4.1.52: each gang's colour on its meter (none, Aogiri's dark red, the Clowns' blue, the Gas Masks' green). */
+    static final int[] GANG_COLOURS = {0xFF8A8A8A, 0xFFC4283A, 0xFF4F78E8, 0xFF58C050};
+
+    /**
+     * 4.1.52: the reputation meter: "REPUTATION", the word for where they stand (FEARED bright; UNWANTED red, beating), the share; a bar in
+     * the gang's colour filled to it, its marks at each fifth, the feared stretch lined above, a diamond where they stand.
+     */
+    static void reputation(UiCanvas c, int x, int y, int rep, int gang, double time) {
+        int value = Math.max(0, Math.min(com.hex.kagune.control.npc.GangStanding.MOST, rep));
+        int colour = GANG_COLOURS[Math.max(0, Math.min(GANG_COLOURS.length - 1, gang))];
+        String band = com.hex.kagune.control.npc.GangStanding.band(value).toUpperCase(java.util.Locale.ROOT);
+        int beat = (int)Math.round(160 + 95 * Math.sin(time * 6.0));
+        int bandColour = value <= 0 ? beat << 24 | 0xF03040 : value >= com.hex.kagune.control.npc.GangStanding.FEARED ? mix(colour, 0xFFFFFFFF, 0.35F) : colour;
+        c.text("REPUTATION", x, y, QuestJournalView.MUTED, false);
+        c.text(band, x + c.width("REPUTATION") + 8, y, bandColour, false);
+        String share = value + "%";
+        c.text(share, x + METER - c.width(share), y, QuestJournalView.VALUE, false);
+        int barY = y + 13;
+        int most = com.hex.kagune.control.npc.GangStanding.MOST;
+        int feared = x + com.hex.kagune.control.npc.GangStanding.FEARED * METER / most;
+        c.fill(x - 1, barY - 1, x + METER + 1, barY + 7, 0xFF12060A);
+        // The track, the feared stretch (80 up) a shade brighter.
+        c.fill(x, barY, feared, barY + 6, fade(colour, 0.16F));
+        c.fill(feared + 1, barY, x + METER, barY + 6, fade(colour, 0.34F));
+        int at = x + value * METER / most;
+        if (at > x) {
+            int fill = value >= com.hex.kagune.control.npc.GangStanding.FEARED ? mix(colour, 0xFFFFFFFF, 0.2F) : colour;
+            c.fill(x, barY, at, barY + 6, fill);
+            c.fill(x, barY, at, barY + 2, fade(0xFFFFFFFF, 0.22F));
+        }
+        for (int mark = 20; mark < 100; mark += 20) {
+            int mx = x + mark * METER / most;
+            c.fill(mx, barY, mx + 1, barY + 6, 0x90000000);
+        }
+        // Where they stand: a diamond the heart's size, glowing as it breathes.
+        int glow = (int)Math.round(50 + 45 * Math.sin(time * 3.2));
+        c.fill(at - 9, barY - 5, at + 10, barY + 11, glow << 24 | colour & 0xFFFFFF);
+        c.push();
+        c.translate(at - 5, barY - 3);
+        c.scale(2.0F);
+        diamond(c, 0, 0, 0xFFFFFFFF, value <= 0 ? 0xFFF03040 : mix(colour, 0xFFFFFFFF, 0.35F));
+        c.pop();
+    }
+
+    /** 4.1.52: a little diamond, 5 by 6 (the reputation meter's marker): its light edge and its fill, outlined dark. */
+    static void diamond(UiCanvas c, int x, int y, int light, int body) {
+        String[] rows = {"..X..", ".XLX.", "XLXXX", "XXXXX", ".XXX.", "..X.."};
+        for (int r = 0; r < rows.length; r++) {
+            for (int col = 0; col < 5; col++) {
+                char ch = rows[r].charAt(col);
+                if (ch != '.') {
+                    c.fill(x + col, y + r, x + col + 1, y + r + 1, ch == 'L' ? light : body);
+                }
+            }
         }
     }
 

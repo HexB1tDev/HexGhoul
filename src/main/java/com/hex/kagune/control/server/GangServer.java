@@ -3,6 +3,7 @@ package com.hex.kagune.control.server;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CGangName;
 import com.hex.kagune.control.npc.GangPlayer;
+import com.hex.kagune.control.npc.GangStanding;
 import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.NpcIdentity;
 import com.hex.kagune.control.npc.Persona;
@@ -18,6 +19,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -178,10 +180,28 @@ public final class GangServer {
                     now = now.killedOwn();
                 }
             }
+            // 4.1.52: a member's reputation: up for the CCG and for other gangs killed, down a lot for one of their own.
+            int by = 0;
+            if (was.gang() != GangPlayer.NONE) {
+                NpcIdentity who = dead instanceof GhoulNpc ghoul ? ghoul.identity() : null;
+                if (AgentBrain.ccg(dead) || who != null && who.ccg()) {
+                    by = GangStanding.KILL_CCG;
+                } else if (who != null && (who.aogiri() || who.gang() != 0) && !was.member(GangPlayer.of(who))) {
+                    by = GangStanding.KILL_RIVAL;
+                } else if (who != null && was.member(GangPlayer.of(who))) {
+                    by = -GangStanding.KILL_OWN;
+                }
+            }
             if (now.equals(was)) {
+                if (by != 0) {
+                    reputation(player, by);
+                }
                 return;
             }
             set(player, now);
+            if (by != 0 && now.gang() == was.gang()) {
+                reputation(player, by);
+            }
             if (now.ccgKills() != was.ccgKills()) {
                 player.m_5661_(Component.m_237113_("§4Aogiri Tree: §f" + Math.min(now.ccgKills(), GangPlayer.AOGIRI_CCG) + "/" + GangPlayer.AOGIRI_CCG
                     + " CCG" + (now.aogiriDone() ? " §7(go back to Ayato)" : "")), true);
@@ -204,6 +224,158 @@ public final class GangServer {
 
     private static String cap(String text) {
         return text.isEmpty() ? text : Character.toUpperCase(text.charAt(0)) + text.substring(1);
+    }
+
+    // ---------------------------------------------------------------- 4.1.52: reputation
+
+    private static final String REP = "HexGangRep";
+    private static final String REP_DAY = "HexGangRepDay";
+    private static final String WARNED = "HexGangWarned";
+    /**
+     * How far (blocks, on the level) from its claimed spot's middle a gang's hideout reaches: Aogiri's mansion (272 x 263, moved up to 32
+     * off its spot to find its ground), the Clowns' tent (77 x 49).
+     */
+    static final double AOGIRI_HIDEOUT = 180.0;
+    static final double CLOWN_HIDEOUT = 70.0;
+    /** The members their gang has turned on (the bar empty, warned, still in its hideout), as of their last check. */
+    private static final java.util.Set<UUID> TURNED = ConcurrentHashMap.newKeySet();
+    /** When each member last had a blow on one of their own counted (the world's game time). */
+    private static final Map<UUID, Long> STRUCK = WorldTimes.map();
+
+    /** {@code player}'s standing in their gang as kept (a member from before 4.1.52: at half). */
+    public static GangStanding standing(ServerPlayer player) {
+        CompoundTag k = kept(player);
+        if (!k.m_128441_(REP)) {
+            return GangStanding.NEW;
+        }
+        return new GangStanding(k.m_128451_(REP), k.m_128454_(REP_DAY), k.m_128454_(WARNED));
+    }
+
+    static void standing(ServerPlayer player, GangStanding s) {
+        CompoundTag k = kept(player);
+        k.m_128405_(REP, s.reputation());
+        k.m_128356_(REP_DAY, s.day());
+        k.m_128356_(WARNED, s.warnedAt());
+    }
+
+    /** The game day (whole days of the world's clock). */
+    static long today(ServerPlayer player) {
+        return player.m_9236_().m_46467_() / GangStanding.DAY;
+    }
+
+    /** {@code player}'s reputation now (drifted to today), or -1 if they are in no gang. */
+    public static int reputation(ServerPlayer player) {
+        return of(player).gang() == GangPlayer.NONE ? -1 : standing(player).drifted(today(player)).reputation();
+    }
+
+    /** The talk screen's standing for {@code player} talking to one of {@code gang}: reputation | gang << 8, or -1 (not theirs). */
+    static int shown(ServerPlayer player, int gang) {
+        if (gang == GangPlayer.NONE || !of(player).member(gang)) {
+            return -1;
+        }
+        return reputation(player) | gang << 8;
+    }
+
+    /** {@code by} added to a member's reputation (taken, if less than 0), shown over their hotbar. */
+    static void reputation(ServerPlayer player, int by) {
+        GangPlayer g = of(player);
+        if (g.gang() == GangPlayer.NONE || by == 0) {
+            return;
+        }
+        long today = today(player);
+        GangStanding before = standing(player).drifted(today);
+        GangStanding after = before.plus(by, today);
+        standing(player, after);
+        if (after.reputation() != before.reputation()) {
+            String band = GangStanding.band(after.reputation());
+            boolean moved = !band.equals(GangStanding.band(before.reputation()));
+            player.m_5661_(Component.m_237113_(colour(g.gang()) + cap(GangPlayer.title(g.gang())) + " §7reputation §f" + after.reputation() + "% "
+                + (by > 0 ? "§a+" + by : "§c" + by) + (moved ? " §7(" + band + ")" : "")), true);
+        }
+    }
+
+    /** 4.1.52: a blow on one of their own (one counted every {@link GangStanding#HIT_REST} ticks): their reputation down a little. */
+    static void struckOwn(ServerPlayer player, long now) {
+        Long last = STRUCK.get(player.m_20148_());
+        if (last != null && now >= last && now - last < GangStanding.HIT_REST) {
+            return;
+        }
+        STRUCK.put(player.m_20148_(), now);
+        reputation(player, -GangStanding.HIT_OWN);
+    }
+
+    /** True if {@code player}'s gang goes for them now (the bar empty, told to leave its hideout half a minute ago, still in it). */
+    public static boolean turned(ServerPlayer player) {
+        return TURNED.contains(player.m_20148_());
+    }
+
+    /** True if {@code player} is in their gang's hideout: Aogiri's mansion, the Clowns' tent (their claimed spots, in the overworld). */
+    static boolean inHideout(ServerPlayer player, int gang) {
+        if (gang != GangPlayer.AOGIRI && gang != GangPlayer.CLOWNS || player.m_9236_().m_46472_() != net.minecraft.world.level.Level.f_46428_) {
+            return false;
+        }
+        int[] chunk = com.hex.kagune.control.PlaceClaims.claimed(gang == GangPlayer.AOGIRI ? "aogiri_hideout" : "circus");
+        if (chunk == null) {
+            return false;
+        }
+        double reach = gang == GangPlayer.AOGIRI ? AOGIRI_HIDEOUT : CLOWN_HIDEOUT;
+        double dx = player.m_20185_() - ((chunk[0] << 4) + 8);
+        double dz = player.m_20189_() - ((chunk[1] << 4) + 8);
+        return dx * dx + dz * dz <= reach * reach;
+    }
+
+    /**
+     * Once a second for each member: the bar drifting toward half over the days; at 0 in the hideout, told to leave, then (the owner: "They
+     * attack after a warning") turned on after {@link GangStanding#GRACE}; out of it again, let go (not banned: it can rise again).
+     */
+    @SubscribeEvent
+    public static void tick(TickEvent.PlayerTickEvent event) {
+        try {
+            if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player) || player.f_19797_ % 20 != 0) {
+                return;
+            }
+            GangPlayer g = of(player);
+            UUID id = player.m_20148_();
+            if (g.gang() == GangPlayer.NONE) {
+                TURNED.remove(id);
+                return;
+            }
+            long now = player.m_9236_().m_46467_();
+            GangStanding was = standing(player);
+            GangStanding s = was.drifted(now / GangStanding.DAY);
+            boolean inside = inHideout(player, g.gang());
+            String who = colour(g.gang()) + cap(GangPlayer.title(g.gang()));
+            if (s.empty() && inside) {
+                if (s.warnedAt() < 0L) {
+                    s = s.warn(now);
+                    player.m_5661_(Component.m_237113_(who + ": §cyou are not welcome here anymore. Leave the hideout. You have "
+                        + GangStanding.GRACE / 20L + " seconds."), false);
+                } else if (!s.turned(now, true)) {
+                    player.m_5661_(Component.m_237113_("§cLeave the hideout: §f" + s.secondsLeft(now) + "s"), true);
+                } else if (!TURNED.contains(id)) {
+                    player.m_5661_(Component.m_237113_(who + " §cturns on you."), false);
+                }
+            } else if (s.warnedAt() >= 0L) {
+                s = s.calm();
+                if (s.empty() && !inside) {
+                    player.m_5661_(Component.m_237113_("§7You left the hideout. They let you go, for now."), true);
+                }
+            }
+            if (s.turned(now, inside)) {
+                TURNED.add(id);
+            } else {
+                TURNED.remove(id);
+            }
+            if (!s.equals(was)) {
+                standing(player, s);
+            }
+        } catch (RuntimeException | LinkageError failure) {
+            Safety.caught(failure, "GangServer.tick");
+        }
+    }
+
+    static String colour(int gang) {
+        return gang == GangPlayer.AOGIRI ? "§4" : gang == GangPlayer.CLOWNS ? "§9" : "§7";
     }
 
     // ---------------------------------------------------------------- the name
@@ -260,6 +432,11 @@ public final class GangServer {
     /** The gang {@code persona} is the way into. */
     static int gangOf(Persona persona) {
         return persona == Persona.AYATO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : GangPlayer.NONE;
+    }
+
+    /** 4.1.52: the gang {@code persona} belongs to (Ayato and Noro Aogiri's, Roma the Clowns'), or none. */
+    static int memberOf(Persona persona) {
+        return persona == Persona.AYATO || persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : GangPlayer.NONE;
     }
 
     /** What asking {@code persona} about their gang is called on the talk screen, by where {@code player} stands. */
@@ -346,6 +523,7 @@ public final class GangServer {
     static final int FUNNY = 1;
 
     private static void joined(ServerPlayer player, int gang) {
+        standing(player, GangStanding.joined(today(player))); // 4.1.52: the bar starts at half
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.levelup", 0.8F, 0.7F);
         player.m_5661_(Component.m_237113_((gang == GangPlayer.AOGIRI ? "§4" : "§9") + "You joined " + GangPlayer.title(gang)
             + ". §7They will never go for you again, and they will fight for you."), false);

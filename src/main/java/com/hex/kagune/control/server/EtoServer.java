@@ -1371,7 +1371,7 @@ public final class EtoServer {
         }
         String temper = npc.persona().script().title(context) + " - " + context.mood().word();
         ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), npc.displayName(), temper, context.regard(), false, face(npc), page.line(), ordinals,
-            labels));
+            labels, GangServer.shown(player, GangServer.memberOf(npc.persona()))));
     }
 
     /** 1.3.14: the face on the talk screen: -1 Eto's, -2 Touka's, -3 Ken's (Persona's order). */

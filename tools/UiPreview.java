@@ -437,6 +437,33 @@ public class UiPreview {
             loved, main, mainLabels), com.hex.kagune.control.client.NpcTalkView.Motion.still(72));
     }
 
+    /**
+     * 4.1.52: the talk screen with the reputation meter: one of Aogiri talking to a feared member, one of the Clowns to a member at half,
+     * one to a member whose bar is empty (UNWANTED beating), and Ayato to a member of his (the leaders show it too).
+     */
+    static void reputationTalk(File dir) throws Exception {
+        BufferedImage ghoul = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/ghoul/boy_03.png"));
+        BufferedImage ayato = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/ayato/ayato.png"));
+        java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> all = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.WHO,
+            com.hex.kagune.control.npc.NpcTalk.Choice.CHAT, com.hex.kagune.control.npc.NpcTalk.Choice.FAVOUR, com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE);
+        int aogiri = com.hex.kagune.control.npc.GangPlayer.AOGIRI << 8;
+        int clowns = com.hex.kagune.control.npc.GangPlayer.CLOWNS << 8;
+        etoFrame(new File(dir, "reputation-feared.png"), ghoul, new com.hex.kagune.control.client.NpcTalkView.Model("Masked ghoul", "Aogiri Tree", 40, false,
+            com.hex.kagune.control.npc.GangTalk.greet(88, 0), all, all.stream().map(com.hex.kagune.control.npc.NpcTalk.Choice::text).toList(), 88 | aogiri),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(40));
+        etoFrame(new File(dir, "reputation-known.png"), ghoul, new com.hex.kagune.control.client.NpcTalkView.Model("Grinning clown", "The Clowns", 10, false,
+            com.hex.kagune.control.npc.GangTalk.greet(50, 0), all, all.stream().map(com.hex.kagune.control.npc.NpcTalk.Choice::text).toList(), 50 | clowns),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(10));
+        etoFrame(new File(dir, "reputation-unwanted.png"), ghoul, new com.hex.kagune.control.client.NpcTalkView.Model("Masked ghoul", "Aogiri Tree", -40, false,
+            com.hex.kagune.control.npc.GangTalk.greet(0, 0), all, all.stream().map(com.hex.kagune.control.npc.NpcTalk.Choice::text).toList(), aogiri),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(-40));
+        BufferedImage half = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        half.getGraphics().drawImage(ayato, 0, 0, 64, 64, null);
+        etoFrame(new File(dir, "reputation-leader.png"), ayato.getWidth() > 64 ? half : ayato, new com.hex.kagune.control.client.NpcTalkView.Model("Ayato",
+            "Aogiri's - bored", 30, false, "Tch. You're still breathing. Good. Aogiri doesn't need dead weight.", all,
+            java.util.List.of("Who are you?", "Talk to me.", "How's Aogiri?", "Leave."), 67 | aogiri), com.hex.kagune.control.client.NpcTalkView.Motion.still(30));
+    }
+
     static void etoFrame(File out, BufferedImage face, com.hex.kagune.control.client.NpcTalkView.Model model,
                          com.hex.kagune.control.client.NpcTalkView.Motion motion) throws Exception {
         int w = 960;
@@ -544,6 +571,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("eto-talk")) {
             etoTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("reputation")) {
+            reputationTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("king")) {

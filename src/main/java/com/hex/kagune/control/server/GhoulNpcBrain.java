@@ -62,6 +62,8 @@ public final class GhoulNpcBrain {
         /** Who hurt it, and until when it holds that against them. */
         final Map<UUID, Long> grudges = new HashMap<>();
         long hurtAt = Long.MIN_VALUE;
+        /** 4.1.52: stepping out of a feared member's way until then. */
+        long yieldUntil = Long.MIN_VALUE;
         /** The kagune: out or not, since when, and when it last fought. */
         boolean out;
         long outAt = Long.MIN_VALUE;
@@ -551,7 +553,8 @@ public final class GhoulNpcBrain {
         if (body instanceof ServerPlayer player && !player.m_7500_()) {
             int stance = GangServer.stance(player, who);
             if (stance == GangServer.OWN_GANG) {
-                return false;
+                // 4.1.52 (the owner: "They attack after a warning"): its own, unless the bar is empty and they stayed in the hideout.
+                return GangServer.turned(player);
             }
             if (stance == GangServer.OUTCAST) {
                 return true;
@@ -744,6 +747,44 @@ public final class GhoulNpcBrain {
         npc.m_21573_().m_26519_(to.f_82479_, y, to.f_82481_, 1.3);
     }
 
+    /** 4.1.52: how near (blocks) a feared member comes before one of their gang steps back, and how far it steps (a little). */
+    static final double YIELD_NEAR = 2.5;
+    static final double YIELD_STEP = 1.6;
+
+    /**
+     * 4.1.52: one of a gang (a ghoul NPC; its leaders and the official NPCs are never ghoul NPCs: they never step back) with a feared member
+     * of its gang near steps back out of their way, a block or two, looking at them; only some do ({@link GangStanding#yields}: by its own
+     * seed, always the same ones). True while it does.
+     */
+    static boolean yields(GhoulNpc npc, NpcIdentity who, Mind mind, ServerLevel level, long now) {
+        int gang = com.hex.kagune.control.npc.GangPlayer.of(who);
+        if (gang == com.hex.kagune.control.npc.GangPlayer.NONE || !com.hex.kagune.control.npc.GangStanding.yields(who.seed())) {
+            return false;
+        }
+        if (now < mind.yieldUntil) {
+            return true;
+        }
+        for (ServerPlayer player : level.m_6907_()) {
+            if (player.m_5833_() || player.m_20280_(npc) > YIELD_NEAR * YIELD_NEAR || !GangServer.of(player).member(gang)
+                || GangServer.reputation(player) < com.hex.kagune.control.npc.GangStanding.FEARED) {
+                continue;
+            }
+            double dx = npc.m_20185_() - player.m_20185_();
+            double dz = npc.m_20189_() - player.m_20189_();
+            double length = Math.sqrt(dx * dx + dz * dz);
+            if (length < 0.05) {
+                dx = 1.0;
+                dz = 0.0;
+                length = 1.0;
+            }
+            npc.m_21573_().m_26519_(npc.m_20185_() + dx / length * YIELD_STEP, npc.m_20186_(), npc.m_20189_() + dz / length * YIELD_STEP, 0.9);
+            npc.m_21563_().m_24960_(player, 30.0F, 30.0F);
+            mind.yieldUntil = now + 30L;
+            return true;
+        }
+        return false;
+    }
+
     private static void idle(GhoulNpc npc, NpcIdentity who, Mind mind, ServerLevel level, long now) {
         calm(npc, mind, now, false);
         ServerPlayer owner = owner(npc, mind);
@@ -754,6 +795,11 @@ public final class GhoulNpcBrain {
         if (mind.owner != null) {
             // Its player is away (gone, another world): it waits where it is.
             npc.m_21573_().m_26573_();
+            return;
+        }
+        // 4.1.52 (the owner: "high reputation means you're feared, they react to it, some stepping back to let you pass (just a little and
+        // not the leaders, they do not step back this also applies for official NPCS)"): some of a gang step out of a feared member's way.
+        if (yields(npc, who, mind, level, now)) {
             return;
         }
         // 4.0.2: an Aogiri member at the hideout at its work: at its post, asking a newcomer their business, on patrol, about its floor.
@@ -1035,7 +1081,8 @@ public final class GhoulNpcBrain {
         long now = npc.m_9236_().m_46467_();
         mind.hurtAt = now;
         Entity source = event.getSource().m_7639_();
-        if (source instanceof ServerPlayer member && GangServer.stance(member, who) == GangServer.OWN_GANG) {
+        if (source instanceof ServerPlayer member && GangServer.stance(member, who) == GangServer.OWN_GANG && !GangServer.turned(member)) {
+            GangServer.struckOwn(member, now); // 4.1.52: their reputation down a little
             return; // 4.1.50: one of its own's blows: never held against them, nobody called
         }
         if (source instanceof LivingEntity attacker && attacker != npc) {

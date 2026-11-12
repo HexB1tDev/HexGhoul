@@ -32,7 +32,7 @@ public final class NpcTalkClient {
             labels.add(label.isEmpty() ? choice.text() : label);
         }
         NpcTalkView.Model model = new NpcTalkView.Model(message.name(), message.temper(), message.regard(), message.ally(), message.line(), choices,
-            labels);
+            labels, message.standing());
         if (minecraft.f_91080_ instanceof NpcTalkScreen screen && screen.npc == message.npc()) {
             screen.page(model);
             return;

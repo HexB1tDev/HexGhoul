@@ -118,7 +118,13 @@ public final class GhoulNpcTalk {
             scene(player, npc, who, context, scene, scene.first(), SceneServer.context(player, npc, now), pending.line());
             return;
         }
-        main(player, npc, who, context, NpcTalk.open(context).line());
+        String line = NpcTalk.open(context).line();
+        // 4.1.52 (the owner: "high reputation means you're feared, they react to it"): one of the player's own gang greets them by where
+        // they stand in it.
+        if (GangServer.stance(player, who) == GangServer.OWN_GANG) {
+            line = com.hex.kagune.control.npc.GangTalk.greet(GangServer.reputation(player), who.seed() + (int)(now / 200L));
+        }
+        main(player, npc, who, context, line);
     }
 
     /** 1.3.29: its first page: its own answers, and (one who walks with them) something to talk about. */
@@ -209,7 +215,7 @@ public final class GhoulNpcTalk {
             shown[i] = i < labels.size() ? labels.get(i) : "";
         }
         ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), who.displayName(), who.temper().title(), context.regard(), context.ally(), who.skin(),
-            line, ordinals, shown));
+            line, ordinals, shown, GangServer.shown(player, com.hex.kagune.control.npc.GangPlayer.of(who))));
     }
 
     // ---------------------------------------------------------------- 4.0.2: at the hideout's gate

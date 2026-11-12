@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.52 (HexGhoul): the reputation bar (testing)
+
+See `.github/release-notes-4.1.52.md`. `npc/GangStanding` (pure: 0 .. 100 from 50, +3 CCG, +4 rival, -2 a blow on your own, -20 one killed, +10 a daily, 5 a day back toward 50, feared from 80, `yields` six in ten, at 0 warned then `turned` after 600 ticks in the hideout), `npc/GangTalk` (greetings by band), `GangServer` (kept in `PlayerPersisted`: HexGangRep/RepDay/Warned; `died`, `struckOwn`, `tick` once a second: the warning and TURNED; `inHideout` by the claimed mansion and tent; `shown`/`memberOf` for the talk page), `GhoulNpcBrain` (`wanted`: its own only when turned; `hurt`: blows cost reputation; `yields`: some step back from a feared member), `S2CNpcTalk.standing` and `NpcTalkView.reputation` (the meter under BOND, the gang's colour, a diamond), `UiPreview reputation`; `NpcTests.reputation`. Protocol 124.
+
 ## 4.1.51 (HexGhoul): the new CCG tower (testing)
 
 See `.github/release-notes-4.1.51.md`. The owner's furnished tower (`art/exploration/CCG.schematic`, MCEdit Alpha, 31 x 65 x 46) is the CCG building: `tools/ccg_tower.py` (their ids, signs renamed to the CCG's, banners, pots, paintings and item frames as 1.20.1 has them, `build/ccg/ccg_tower.schem`), `tools/exploration_structures.py` (site `ccg_building`, map 11, its hanging things written into the tile; `headquarters`: door and lift guards, receptionists, three at desks and one by the lift a floor, a patrol of six, the restaurant's staff humans, the General in the boss's office); the old building's map 6 in `village/RetiredSites`; `server/CcgLift` + `village/LiftRules` (a cabin's button: one floor up, from the top to the lobby; only in the world's CCG building); `HumanBrain`/`VillagePlace.indoors` (the staff keep indoors); `tools/interior_render.py` (shapes, light levels, cutaways, eye views); `NpcTests.ccgBuilding`. Protocol 123.

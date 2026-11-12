@@ -62,6 +62,7 @@ public final class NpcTests {
         onePerWorld();
         gangs();
         joining();
+        reputation();
         division();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
@@ -299,6 +300,72 @@ public final class NpcTests {
      * against hostiles. IF the player kills over 10 members of his own gang, he will be banned from joining, tag removed and will be
      * attacked on sight."): a player's gang.
      */
+    /**
+     * 4.1.52 (the owner: "New Reputation bar when talking to fellow gang members, high reputation means you're feared, they react to it,
+     * some stepping back to let you pass (just a little and not the leaders, they do not step back this also applies for official NPCS). /
+     * When the reputation bar reaches 0 the player is warned to leave the area (if within the hideout), the bar starts at 50%."; "They
+     * attack after a warning").
+     */
+    static void reputation() {
+        com.hex.kagune.control.npc.GangStanding fresh = com.hex.kagune.control.npc.GangStanding.joined(7L);
+        check(fresh.reputation() == 50 && com.hex.kagune.control.npc.GangStanding.START == 50 && fresh.day() == 7L && fresh.warnedAt() < 0L
+            && com.hex.kagune.control.npc.GangStanding.NEW.reputation() == 50, "the bar starts at 50% (a member from before 4.1.52 too)");
+        check(fresh.plus(80, 7L).reputation() == 100 && fresh.plus(-90, 7L).reputation() == 0 && fresh.plus(3, 7L).reputation() == 53,
+            "the bar runs from 0 to 100");
+        check(com.hex.kagune.control.npc.GangStanding.KILL_CCG > 0 && com.hex.kagune.control.npc.GangStanding.KILL_RIVAL > 0
+            && com.hex.kagune.control.npc.GangStanding.DAILY > 0 && com.hex.kagune.control.npc.GangStanding.HIT_OWN > 0
+            && com.hex.kagune.control.npc.GangStanding.KILL_OWN >= 5 * com.hex.kagune.control.npc.GangStanding.KILL_CCG,
+            "up for the CCG, rivals and dailies; down a little for a blow on your own, a lot for killing one");
+        com.hex.kagune.control.npc.GangStanding high = new com.hex.kagune.control.npc.GangStanding(90, 10L, -1L);
+        com.hex.kagune.control.npc.GangStanding low = new com.hex.kagune.control.npc.GangStanding(10, 10L, -1L);
+        check(high.drifted(10L).reputation() == 90 && high.drifted(12L).reputation() == 80 && high.drifted(40L).reputation() == 50
+            && low.drifted(13L).reputation() == 25 && low.drifted(100L).reputation() == 50 && high.drifted(12L).day() == 12L,
+            "back toward half over the days nothing happens, never past it");
+        check(high.feared() && !fresh.feared() && com.hex.kagune.control.npc.GangStanding.FEARED == 80, "feared from 80");
+        com.hex.kagune.control.npc.GangStanding empty = new com.hex.kagune.control.npc.GangStanding(0, 10L, -1L);
+        com.hex.kagune.control.npc.GangStanding warned = empty.warn(1000L);
+        long grace = com.hex.kagune.control.npc.GangStanding.GRACE;
+        check(empty.empty() && warned.warnedAt() == 1000L && warned.warn(5000L).warnedAt() == 1000L && grace == 600L
+            && !warned.turned(1000L + grace - 1L, true) && warned.turned(1000L + grace, true) && !warned.turned(1000L + grace, false)
+            && !empty.turned(99999L, true) && warned.secondsLeft(1000L) == 30 && warned.secondsLeft(1000L + grace) == 0,
+            "at 0 in the hideout: told to leave, turned on half a minute later; never outside it, never unwarned");
+        check(warned.calm().warnedAt() < 0L && warned.plus(5, 10L).warnedAt() < 0L && warned.plus(5, 10L).reputation() == 5
+            && !new com.hex.kagune.control.npc.GangStanding(5, 10L, -1L).turned(99999L, true), "out of it, or the bar up again: let go (not banned: it recovers)");
+        int yielding = 0;
+        for (int seed = 0; seed < 1000; seed++) {
+            yielding += com.hex.kagune.control.npc.GangStanding.yields(seed) ? 1 : 0;
+        }
+        check(yielding == 600, "some of a gang step back for a feared member, not all: " + yielding + " of 1000");
+        String[] bands = {"Unwanted", "Despised", "Doubted", "Known", "Respected", "Feared"};
+        int[] at = {0, 10, 30, 50, 70, 90};
+        boolean worded = true;
+        for (int i = 0; i < bands.length; i++) {
+            worded &= bands[i].equals(com.hex.kagune.control.npc.GangStanding.band(at[i]));
+            String[] lines = com.hex.kagune.control.npc.GangTalk.lines(at[i]);
+            worded &= lines.length >= 3;
+            for (String line : lines) {
+                worded &= !line.isBlank() && line.length() <= 140;
+            }
+            worded &= java.util.Arrays.asList(lines).contains(com.hex.kagune.control.npc.GangTalk.greet(at[i], 12345));
+        }
+        check(worded, "every band has its word and at least three lines of its own, the greeting one of them");
+        com.hex.kagune.control.network.S2CNpcTalk page = new com.hex.kagune.control.network.S2CNpcTalk(1, "a", "b", 0, false, 0, "c", new int[0], new String[0],
+            72 | com.hex.kagune.control.npc.GangPlayer.CLOWNS << 8);
+        com.hex.kagune.control.network.S2CNpcTalk none = new com.hex.kagune.control.network.S2CNpcTalk(1, "a", "b", 0, false, 0, "c", new int[0], new String[0]);
+        check(page.reputation() == 72 && page.gang() == com.hex.kagune.control.npc.GangPlayer.CLOWNS && none.reputation() == -1 && none.gang() == 0
+            && none.standing() == com.hex.kagune.control.network.S2CNpcTalk.NO_STANDING, "the talk page carries the bar only for one of the player's own gang");
+        String brain = read("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java");
+        String server = read("src/main/java/com/hex/kagune/control/server/GangServer.java");
+        String talk = read("src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java");
+        String eto = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+        check(brain.contains("return GangServer.turned(player);") && brain.contains("GangServer.struckOwn(member, now);")
+            && brain.contains("if (yields(npc, who, mind, level, now)) {") && server.contains("s.turned(now, inside)")
+            && server.contains("inHideout(player, g.gang())") && talk.contains("GangServer.shown(player, com.hex.kagune.control.npc.GangPlayer.of(who))")
+            && eto.contains("GangServer.shown(player, GangServer.memberOf(npc.persona()))"),
+            "turned on only after the warning, in the hideout; blows on their own counted; feared: some step back (ghoul NPCs only, never the "
+                + "leaders); the bar on the talk screen with their own gang and its leaders");
+    }
+
     static void joining() {
         com.hex.kagune.control.npc.GangPlayer g = com.hex.kagune.control.npc.GangPlayer.NEW;
         check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.killedDove().ccgKills() == 0, "no quest, no count");
@@ -348,11 +415,15 @@ public final class NpcTests {
                 check(image.getWidth() == 16 && image.getHeight() == 16 && drawn > 60, glyph + ": a 16 x 16 emblem (" + drawn + " pixels)");
             }
             String brain = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java")));
-            check(brain.indexOf("if (stance == GangServer.OWN_GANG) {\n                return false;") < brain.indexOf("Long until = mind.grudges.get(body.m_20148_());")
-                && brain.indexOf("if (GangServer.threatens(npc, who, body)) {") < brain.indexOf("Long until = mind.grudges.get(body.m_20148_());"),
-                "its own never gone for, grudge or not; the banned on sight; what goes for its own gone for");
-            check(brain.contains("if (source instanceof ServerPlayer member && GangServer.stance(member, who) == GangServer.OWN_GANG) {\n            return;"),
-                "its own's blows never held against them");
+            int own = brain.indexOf("if (stance == GangServer.OWN_GANG) {");
+            int grudge = brain.indexOf("Long until = mind.grudges.get(body.m_20148_());");
+            check(own > 0 && own < grudge && brain.indexOf("return GangServer.turned(player);", own) < grudge
+                && brain.indexOf("if (GangServer.threatens(npc, who, body)) {") < grudge,
+                "its own never gone for, grudge or not (4.1.52: unless the bar is empty and they stayed in the hideout past the warning); the banned "
+                    + "on sight; what goes for its own gone for");
+            check(brain.contains("GangServer.stance(member, who) == GangServer.OWN_GANG && !GangServer.turned(member)) {\n            GangServer.struckOwn(member, now);")
+                && brain.contains("GangServer.struckOwn(member, now); // 4.1.52: their reputation down a little\n            return;"),
+                "its own's blows never held against them (4.1.52: they cost reputation)");
             String server = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java")));
             check(server.contains("public static void name(PlayerEvent.NameFormat event) {") && server.contains("player.refreshDisplayName();")
                 && server.contains("k.m_128405_(GANG, g.gang());") && server.contains("root.m_128469_(\"PlayerPersisted\")"),
