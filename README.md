@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.49 (HexGhoul): Roma, the Clowns' leader (testing)
+
+See `.github/release-notes-4.1.49.md`. `Persona.ROMA` (Touka's size, skinny, slim, dates anyone, `kickMaster()`, `tendrils()` 4, purple), `RomaNpc`, `RomaScript`, `talk/roma.txt`, `Courtship.ROMA`, her lines in the shared tables; in the circus tent's middle. Her fight: Kick Master (`EtoOwl` by `Persona.kickMaster`) and `NpcTendrils` (four transplant tails on `GraftRig`: the string, `THORN_4`, `GraftMove.ROMA_IMPALE`, `ROMA_HURL`/`ROMA_THROW`), drawn by `GraftRenderer`'s companion pass. Her textures by `tools/companion_textures.py` (the owner's second skin; her eyes under her lashes by hand in `EYES`; `CHEEKS`, `"veins"` for hand-placed faces). Protocol 122.
+
 ## 4.1.48 (HexGhoul): the circus tent and its Clowns; Ayato and Noro on slim arms, builds evened out (testing)
 
 See `.github/release-notes-4.1.48.md`. The owner's `circus.schematic` (old MCEdit Alpha format) as `hexkagune:circus` ("One per world + clowns"): `tools/companion_structures.py` reads Alpha files (`alpha`, `ALPHA`), lays a dirt-path floor under the tent's ring (`floor`, grass under its plants), anchors it at the floor's middle (`hexkagune:circus_anchor`) and puts several people in one place (`people`: four `hexkagune:ghoul` with `HexCircus`, `HexCircusMask` 1-4, `HexGang` -1); a one-of-a-kind dry place (`DryLand.PLACES`, `CIRCUS_SALT`, `PlaceClaims`, `ControlStructures.ONE_OF_A_KIND`); `GhoulNpcBrain.circus`/`atCircus`/`clearWay` (a Clown in its mask, keeping to its spot); `Gang.rival` ("Yes, rivals": Clowns and Gas Masks fight on sight). Ayato and Noro `slim()` (Noro's texture `narrow_arms`), `AYATO_SHARE` 0.42, `NORO_SHARE` 0.52, `PLAYER_SHARE` 0.52 ("the same as Noro"). `tools/structure_render.py` renders any template.

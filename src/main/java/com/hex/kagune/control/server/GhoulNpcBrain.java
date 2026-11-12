@@ -545,21 +545,6 @@ public final class GhoulNpcBrain {
         if (body instanceof Player player && player.m_5833_()) {
             return false;
         }
-        // 4.1.50 (the owner: "the gang will never attack the player again, even when hit, they will however help the player and defend him
-        // against hostiles. IF the player kills over 10 members of his own gang, he will be banned from joining, tag removed and will be
-        // attacked on sight"): its own never (grudge or not), the banned on sight, and what goes for its own.
-        if (body instanceof ServerPlayer player && !player.m_7500_()) {
-            int stance = GangServer.stance(player, who);
-            if (stance == GangServer.OWN_GANG) {
-                return false;
-            }
-            if (stance == GangServer.OUTCAST) {
-                return true;
-            }
-        }
-        if (GangServer.threatens(npc, who, body)) {
-            return true;
-        }
         Long until = mind.grudges.get(body.m_20148_());
         if (until != null && until > now) {
             // 1.3.39: even a player in creative who hit it: it fights back (its kagune out, as the owner tests them), though its blows
@@ -1035,9 +1020,6 @@ public final class GhoulNpcBrain {
         long now = npc.m_9236_().m_46467_();
         mind.hurtAt = now;
         Entity source = event.getSource().m_7639_();
-        if (source instanceof ServerPlayer member && GangServer.stance(member, who) == GangServer.OWN_GANG) {
-            return; // 4.1.50: one of its own's blows: never held against them, nobody called
-        }
         if (source instanceof LivingEntity attacker && attacker != npc) {
             int grudge = who.temper().grudge();
             boolean holds = true;

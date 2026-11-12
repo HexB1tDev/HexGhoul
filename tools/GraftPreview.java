@@ -1753,6 +1753,11 @@ public final class GraftPreview {
                     eye, look, tris));
             }
         }
+        java.awt.image.BufferedImage skin = javax.imageio.ImageIO.read(new File(ROOT + "/src/main/resources/assets/hexkagune/textures/entity/roma/roma.png"));
+        for (ArtPreview.Shot shot : shots) {
+            ArtPreview.SKINS.put(shot, skin); // her own skin, on the slim arms
+            ArtPreview.SLIM.add(shot);
+        }
         ArtPreview.sheet(file, "Roma's four Rinkaku tendrils (4.1.49): at rest, then her moves (yellow: where the server hits)", shots, 4, 360, 300);
     }
 

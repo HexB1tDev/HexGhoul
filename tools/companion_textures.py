@@ -44,6 +44,8 @@ COMPANIONS = {
     # 4.1.5: the General (the owner's skin, sent with "use this skin for the general": art/exploration/General_skin.png, slim arms). A
     # human: no eye of his ever turns (his kakugan textures are empty).
     "general": {"turns": (), "slim": True},
+    # 4.1.49: Roma (the owner's skin, art/exploration/Roma_skin.png, slim arms): both eyes turn.
+    "roma": {"turns": ("right", "left"), "slim": True},
 }
 # Eye pixels by hand, if detection is wrong for a skin: {key: {"right": [(x, y), ...], "left": [...], "white": [...]}} in 64px face
 # coordinates (0..7 across the face front, 0..7 down).
@@ -67,7 +69,14 @@ EYES.update({
     "noro": {"right": [(1, 5), (2, 5)], "left": [(5, 5), (6, 5)], "white": [], "lash": []},
     # 4.1.5: the General's eyes are one row (the face's row 4: the white outside, the blue iris inside), under his brows (row 3).
     "general": {"right": [(1, 4), (2, 4)], "left": [(5, 4), (6, 4)], "white": [(1, 4), (6, 4)], "lash": []},
+    # 4.1.49: Roma's eyes are on row 6 under her black clown paint (rows 4 and 5): a white and a grey iris each.
+    # 4.1.49: Roma (the owner's second skin, "Should be easier to map the face"): under her lashes (row 5), each eye the two pixels on row 6,
+    # the outer one the white, the inner (grey) the iris.
+    "roma": {"right": [(1, 6), (2, 6)], "left": [(5, 6), (6, 6)], "white": [(1, 6), (6, 6)], "lash": [(0, 5), (1, 5), (2, 5), (5, 5), (6, 5), (7, 5)]},
 })
+# 4.1.49: a blush placed by hand, where a face's own isn't under its eyes ({key: [(x, y), ...]} in 64px face coordinates). None now (Roma's
+# first skin had one; her second's blush is under her eyes, as everyone's).
+CHEEKS = {}
 
 # 4.1.16 (the owner: "adapt all eyes to make sure that they all look like eyes ... Some eyes are clearly a little fucked on the skins", and
 # Ayato's first): face pixels repainted in the game's copy of a skin (the owner's file in art/ is never changed) so each eye reads as an
@@ -257,13 +266,14 @@ def build(key, config, preview):
                     colour = DEEP if y == top and len({yy for xx, yy in irises}) > 1 else RED
                     face.put(kakugan, x, y, colour)
                     face.put(glow, x, y, GLOW if colour is RED else LIGHT)
-            # A thin vein down from the outer corner.
-            outer = min(x for x, y in pixels) if side == "right" else max(x for x, y in pixels)
-            bottom = max(y for x, y in pixels)
-            vx = max(0, outer - 1) if side == "right" else min(7, outer + 1)
-            if bottom + 1 <= 7:
-                face.put(kakugan, outer, bottom + 1, VEIN)
-            face.put(kakugan, vx, bottom, VEIN)
+            # A thin vein down from the outer corner (4.1.49: none for a face whose eyes the owner placed to the pixel: "veins": False).
+            if config.get("veins", True):
+                outer = min(x for x, y in pixels) if side == "right" else max(x for x, y in pixels)
+                bottom = max(y for x, y in pixels)
+                vx = max(0, outer - 1) if side == "right" else min(7, outer + 1)
+                if bottom + 1 <= 7:
+                    face.put(kakugan, outer, bottom + 1, VEIN)
+                face.put(kakugan, vx, bottom, VEIN)
         # Shut (1.3.30, where the owner marked it): the skin's own lashes kept as they are, the row under them skin, and one black line a
         # pixel lower (the shut lid); the rest of the eye painted over in skin.
         bottom = max(y for x, y in pixels)
@@ -275,6 +285,10 @@ def build(key, config, preview):
         cheek = min(7, bottom + 1)
         for x in sorted({x for x, y in pixels}):
             face.put(blush, x, cheek, BLUSH)
+    if key in CHEEKS:
+        blush = blank()
+        for x, y in CHEEKS[key]:
+            face.put(blush, x, y, BLUSH)
     # 4.1.16: nothing under the hair (a face pixel its outer layer paints over, opaque): the game draws that layer half a pixel out and 9/8
     # the size, so red or a lid line under it peeks out round the hair in slivers (Touka's eye under her fringe turned, her cheek streaked).
     for overlay in (kakugan, glow, closed, blush):

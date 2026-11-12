@@ -569,22 +569,6 @@ public final class EtoServer {
             show(player, npc, c, script.gifts(c, script.giftsAsked(c.seed())), Kind.GIFTS);
             return;
         }
-        if (key.startsWith("gang")) {
-            // 4.1.50: joining their gang (Ayato's Aogiri, Roma's Clowns), or how it stands; a joke told to Roma.
-            GangServer.Said said = GangServer.talk(player, npc.persona(), key, c.seed());
-            if (said.jokes() != null) {
-                List<EtoTalk.Option> jokes = new java.util.ArrayList<>();
-                NpcTalk.Choice[] slots = {NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3};
-                for (int i = 0; i < said.jokes().size() && i < slots.length; i++) {
-                    jokes.add(new EtoTalk.Option(slots[i], said.jokes().get(i)[0], said.jokes().get(i)[1]));
-                }
-                jokes.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
-                show(player, npc, c, new EtoTalk.Page(said.line(), jokes), Kind.SCENE);
-            } else {
-                show(player, npc, context(player, npc), script.main(context(player, npc), said.line()), Kind.MAIN);
-            }
-            return;
-        }
         if (key.equals("dates")) {
             // 2.1.2: where to go together.
             if (c.dating()) {
@@ -1303,26 +1287,6 @@ public final class EtoServer {
      * 1.3.41: Touka's first page offers her cookbook ("Got any recipes? For ghouls.") once she likes you
      * ({@link com.hex.kagune.control.kitchen.Cookbook#REGARD}), before the goodbye, if there is room. She asks two cocoa beans for it.
      */
-    /** 4.1.50: Ayato's and Roma's first page: their gang (joining it, how it stands), before the way out. */
-    private static EtoTalk.Page withGang(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
-        if (!GangServer.leads(npc.persona()) || page.options().size() >= S2CNpcTalk.MOST) {
-            return page;
-        }
-        int at = page.options().size();
-        for (int i = 0; i < page.options().size(); i++) {
-            NpcTalk.Choice choice = page.options().get(i).choice();
-            if (choice == NpcTalk.Choice.SAY_3) {
-                return page;
-            }
-            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
-                at = Math.min(at, i);
-            }
-        }
-        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
-        out.add(at, new EtoTalk.Option(NpcTalk.Choice.SAY_3, GangServer.ask(player, npc.persona()), "gang"));
-        return new EtoTalk.Page(page.line(), out);
-    }
-
     private static EtoTalk.Page withCookbook(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
         if (npc.persona() != com.hex.kagune.control.npc.Persona.TOUKA || page.options().size() >= S2CNpcTalk.MOST
             || QuestServer.bond(player, npc.persona().key()).regard() < com.hex.kagune.control.kitchen.Cookbook.REGARD) {
@@ -1359,7 +1323,6 @@ public final class EtoServer {
             page = withHome(player, npc, page);
             page = withCookbook(player, npc, page);
             page = withLesson(player, npc, page);
-            page = withGang(player, npc, page);
         }
         List<EtoTalk.Option> options = page.options().size() > S2CNpcTalk.MOST ? page.options().subList(0, S2CNpcTalk.MOST) : page.options();
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(options), kind));

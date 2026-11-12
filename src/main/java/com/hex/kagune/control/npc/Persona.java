@@ -1440,8 +1440,8 @@ public abstract class Persona {
     }
 
     /** 4.1.49: Roma's colours (her skin's hair, eyes and skin; a child of hers takes them) and her tendrils' purple. */
-    static final int ROMA_HAIR = 0x3A2A4A;
-    static final int ROMA_EYES = 0x7A3FA0;
-    static final int ROMA_SKIN = 0xF2DDD2;
+    static final int ROMA_HAIR = 0x8EA1A6; // her grey-teal hair (the owner's skin)
+    static final int ROMA_EYES = 0xBDB6B9;
+    static final int ROMA_SKIN = 0xF9E2D4;
     public static final int ROMA_KAGUNE = 0x8B3FD9;
 }
