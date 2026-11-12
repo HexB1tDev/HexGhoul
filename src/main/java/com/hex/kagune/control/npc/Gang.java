@@ -8,11 +8,21 @@ import java.util.List;
  * gas masks)"): the roaming gangs of ghouls (pure, tested). Each gang walks together, {@link #SMALLEST} to {@link #LARGEST} of them, every
  * one in a different mask of its gang's ({@link #masks}) and nothing else; they start nothing, but whoever hurts one of them (or goes for
  * one) has all of them on him. Sent and saved by ordinal (in the ghoul's identity: 0 is none).
+ *
+ * <p>4.1.46 (the owner: "New Re CCG Ghoul division (Normal ccg agents (HUMANS not ghouls), they have RC cells which means they get a
+ * random kagune, they are not ghouls and are members of the CCG, they are never attacked by the ccg, have no kakugan, they are basically
+ * wild ghouls with CCG armor and a Kagune (NO kakugan), they spawn in trios"): {@link #CCG_DIVISION}, three humans of the CCG's in its
+ * Formal Outfit, each with a kagune of its own and no kakugan, going for what an investigator goes for ({@link #ccg}).
  */
 public enum Gang {
     NONE("", List.of()),
     CLOWNS("Clowns", List.of("mask_clown", "mask_clown_v2", "mask_clown_v3", "mask_clown_v4", "mask_clown_v5")),
-    GAS_MASKS("Gas Masks", List.of("mask_gas", "mask_gas_v2", "mask_gas_v3", "mask_gas_v4", "mask_gas_v5"));
+    GAS_MASKS("Gas Masks", List.of("mask_gas", "mask_gas_v2", "mask_gas_v3", "mask_gas_v4", "mask_gas_v5")),
+    /** 4.1.46: the CCG's ghoul division: no mask (the Formal Outfit), never a roaming gang ({@link #roaming}). */
+    CCG_DIVISION("CCG Ghoul Division", List.of());
+
+    /** 4.1.46: how many of the CCG's ghoul division walk together. */
+    public static final int TRIO = 3;
 
     /** How many walk together. */
     public static final int SMALLEST = 3;
@@ -28,6 +38,11 @@ public enum Gang {
 
     public String title() {
         return this.title;
+    }
+
+    /** 4.1.46: true for the CCG's own: never attacked by the CCG nor attacking it, no kakugan, the Formal Outfit. */
+    public boolean ccg() {
+        return this == CCG_DIVISION;
     }
 
     /** Its masks, each a different one (a variant draws its base's model in its own paint: Outfits.geometryOf). */
@@ -61,6 +76,9 @@ public enum Gang {
      */
     public int[] faces(int size, java.util.function.DoubleSupplier roll) {
         int n = this.masks.size();
+        if (n == 0) {
+            return new int[Math.max(0, size)]; // 4.1.46: no masks (the CCG's division): none for each
+        }
         int[] order = new int[n];
         for (int i = 0; i < n; i++) {
             order[i] = i + 1;

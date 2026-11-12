@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.46 (HexGhoul): the CCG's ghoul division (testing)
+
+See `.github/release-notes-4.1.46.md`. "New Re CCG Ghoul division ... they spawn in trios": `Gang.CCG_DIVISION` (ordinal 3, `ccg()`, `TRIO`), `NpcIdentity.ccg()`/`kakugan()`, `AgentBrain.ccg(Entity)` (the CCG's on both sides: `wanted`, `attacked`, `hurt`, sweeps, `AgentArms.foes`, Eto), `GhoulNpcBrain.division` (as `AgentBrain.wanted`), `called` both ways, Formal Outfit, human meat, no dawn slip, `AgentSpawner.division` (`DIVISION_CHANCE` 0.35, three or none), no kakugan (`GhoulNpcRenderer.Eyes`), a CCG word for a right click. Protocol 120.
+
 ## 4.1.45 (HexGhoul): roaming gangs, the Clowns and the Gas Masks (testing)
 
 See `.github/release-notes-4.1.45.md`. "roaming gangs, such as the clowns, 3-5 roaming ghouls walking together": `npc.Gang` (CLOWNS, GAS_MASKS; 3 to 5, each a different mask: `faces`), `NpcIdentity.gang` (bits 44-45, `ganged`), `GhoulNpcSpawner.gang` (`GANG_CHANCE` 0.3 of the night's ghouls), `GhoulNpcBrain` (`roam`: one leads, the rest keep up; `wanted`: only what goes for one of them; `hurt`: every mate within `GANG_CALL` 24 takes the grudge), masks drawn on the face (`OutfitLayer.faction`, variants on their base's model: `Outfits.geometryOf`), eight new paints (`tools/gang_masks.py`). Protocol 119.

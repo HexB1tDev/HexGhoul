@@ -278,6 +278,9 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
             try {
                 note(npc);
                 GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());
+                if (view != null && !view.identity().kakugan()) {
+                    return; // 4.1.46: the CCG's ghoul division: a kagune and no kakugan (the owner: "NO kakugan")
+                }
                 float intensity = GhoulNpcClient.deploy(view, PaleClient.clock(partialTick));
                 if (view != null && view.eyes()) {
                     intensity = 1.0F; // 1.3.68: a wild ghoul prowling at night: its kakugan on, its kagune not yet

@@ -115,7 +115,8 @@ public final class GhoulNpcSpawner {
         int crowd = 0;
         double y = level.m_6924_(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)Math.floor(x), (int)Math.floor(z));
         AABB area = new AABB(x - NpcRules.CROWD, y - NpcRules.CROWD, z - NpcRules.CROWD, x + NpcRules.CROWD, y + NpcRules.CROWD, z + NpcRules.CROWD);
-        List<GhoulNpc> others = level.m_6443_(GhoulNpc.class, area, npc -> npc.m_6084_());
+        // 4.1.46: the CCG's ghoul division is no ghoul: it leaves room for them (AgentSpawner spaces it as the CCG).
+        List<GhoulNpc> others = level.m_6443_(GhoulNpc.class, area, npc -> npc.m_6084_() && !AgentBrain.ccg(npc));
         for (GhoulNpc other : others) {
             double dx = other.m_20185_() - x;
             double dz = other.m_20189_() - z;

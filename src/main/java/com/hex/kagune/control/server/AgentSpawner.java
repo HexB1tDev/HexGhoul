@@ -38,12 +38,56 @@ public final class AgentSpawner {
         for (ServerPlayer player : new ArrayList<>(level.m_6907_())) {
             if (!player.m_5833_() && player.m_217043_().m_188500_() < AgentRules.SPAWN_CHANCE) {
                 try {
-                    near(level, player);
+                    // 4.1.46: now and then three of its ghoul division instead of a pair.
+                    if (player.m_217043_().m_188500_() < DIVISION_CHANCE) {
+                        division(level, player);
+                    } else {
+                        near(level, player);
+                    }
                 } catch (RuntimeException failure) {
                     com.hex.kagune.control.Safety.caught(failure, "a pair of investigators turning up");
                 }
             }
         }
+    }
+
+    /** 4.1.46: the share of the CCG's turning up that is three of its ghoul division. */
+    static final double DIVISION_CHANCE = 0.35;
+
+    /**
+     * 4.1.46 (the owner: "New Re CCG Ghoul division (Normal ccg agents (HUMANS not ghouls) ... they get a random kagune ... they spawn in
+     * trios"): three of the CCG's ghoul division near {@code player}, where a pair would be ({@link #clear}): each a human of the CCG's in
+     * its Formal Outfit with a kagune of its own (rolled as a ghoul met there would be: its kind, its rank), no kakugan, the three of one
+     * squad (its number in each one's saved data) walking together. Always three: fewer placed and none are. The three (empty if none).
+     */
+    static java.util.List<com.hex.kagune.control.npc.GhoulNpc> division(ServerLevel level, ServerPlayer player) {
+        java.util.List<com.hex.kagune.control.npc.GhoulNpc> made = new ArrayList<>();
+        int mastery = com.hex.kagune.data.KaguneProfile.isUnlocked(player) ? com.hex.kagune.data.KaguneProfile.mastery(player) : 0;
+        int number = 1 + player.m_217043_().m_188503_(Integer.MAX_VALUE - 1);
+        for (int attempt = 0; attempt < 4 && made.isEmpty(); attempt++) {
+            double angle = player.m_217043_().m_188500_() * Math.PI * 2.0;
+            double distance = AgentRules.SPAWN_NEAREST + (AgentRules.SPAWN_FARTHEST - AgentRules.SPAWN_NEAREST) * player.m_217043_().m_188500_();
+            double x = player.m_20185_() + Math.cos(angle) * distance;
+            double z = player.m_20189_() + Math.sin(angle) * distance;
+            if (!clear(level, x, z)) {
+                continue;
+            }
+            for (int i = 0; i < com.hex.kagune.control.npc.Gang.TRIO; i++) {
+                com.hex.kagune.control.npc.NpcIdentity who = com.hex.kagune.control.npc.NpcIdentity.roll(mastery, () -> player.m_217043_().m_188500_())
+                    .ganged(com.hex.kagune.control.npc.Gang.CCG_DIVISION, 0);
+                double side = i * Math.PI * 2.0 / com.hex.kagune.control.npc.Gang.TRIO;
+                com.hex.kagune.control.npc.GhoulNpc one = GhoulNpcSpawner.place(level, x + (i == 0 ? 0.0 : Math.cos(side) * AgentRules.PAIR_APART),
+                    z + (i == 0 ? 0.0 : Math.sin(side) * AgentRules.PAIR_APART), who, number);
+                if (one != null) {
+                    made.add(one);
+                }
+            }
+            if (made.size() < com.hex.kagune.control.npc.Gang.TRIO) {
+                made.forEach(com.hex.kagune.control.npc.GhoulNpc::m_146870_); // never fewer than three
+                made.clear();
+            }
+        }
+        return made;
     }
 
     /** A pair near {@code player}, if a place for them is found on the first few tries (false if not). */
@@ -85,6 +129,11 @@ public final class AgentSpawner {
         double r = AgentRules.ALONE;
         double nearest = Double.MAX_VALUE;
         for (CcgAgent other : level.m_6443_(CcgAgent.class, new AABB(x - r, y - r, z - r, x + r, y + r, z + r), CcgAgent::m_6084_)) {
+            nearest = Math.min(nearest, Math.hypot(other.m_20185_() - x, other.m_20189_() - z));
+        }
+        // 4.1.46: the CCG's ghoul division counts as the CCG's.
+        for (com.hex.kagune.control.npc.GhoulNpc other : level.m_6443_(com.hex.kagune.control.npc.GhoulNpc.class, new AABB(x - r, y - r, z - r, x + r, y + r, z + r),
+            g -> g.m_6084_() && AgentBrain.ccg(g))) {
             nearest = Math.min(nearest, Math.hypot(other.m_20185_() - x, other.m_20189_() - z));
         }
         return AgentRules.spaced(nearest);

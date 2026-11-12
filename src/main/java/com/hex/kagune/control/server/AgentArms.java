@@ -530,7 +530,7 @@ final class AgentArms {
     /** Its foes within {@code range} of it (and {@code prey}, whoever it is): never a bystander, never another investigator. */
     private static java.util.List<LivingEntity> foes(CcgAgent agent, AgentBrain.Mind mind, LivingEntity prey, double range) {
         return agent.m_9236_().m_6443_(LivingEntity.class, agent.m_20191_().m_82400_(range), body -> body != agent && body.m_6084_()
-            && !(body instanceof CcgAgent) && (body == prey || body.m_19879_() == mind.prey || AgentBrain.foe(agent, body)));
+            && !AgentBrain.ccg(body) && (body == prey || body.m_19879_() == mind.prey || AgentBrain.foe(agent, body))); // 4.1.46: nor its division
     }
 
     /** True if {@code body} is within {@code reach} of it and inside the {@code arc} (degrees, the whole of it) about {@code look}. */

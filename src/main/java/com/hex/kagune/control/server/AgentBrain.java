@@ -985,7 +985,7 @@ public final class AgentBrain {
         float damage = AgentRules.REAPER_BLADE_DAMAGE * AgentRules.REAPER_BLADE_WEIGHT[step] * AgentRules.power(mind.rank, mind.superior);
         boolean hit = false;
         for (LivingEntity body : level.m_6443_(LivingEntity.class, agent.m_20191_().m_82400_(AgentRules.REAPER_BLADE_REACH + 1.0),
-            b -> b != agent && b.m_6084_() && !(b instanceof CcgAgent))) {
+            b -> b != agent && b.m_6084_() && !ccg(b))) {
             Vec3 to = body.m_20182_().m_82546_(agent.m_20182_());
             double gap = Math.sqrt(body.m_20280_(agent)) - (body.m_20205_() + agent.m_20205_()) * 0.5;
             Vec3 flat = UkakuFire.horizontal(to);
@@ -1123,7 +1123,7 @@ public final class AgentBrain {
             // What its partner fights, it fights.
             Mind theirs = partner == null ? null : partner.mind;
             if (theirs != null && theirs.prey != 0 && level.m_6815_(theirs.prey) instanceof LivingEntity shared && shared.m_6084_()
-                && shared.m_20280_(agent) <= AgentRules.LEASH * AgentRules.LEASH && !(shared instanceof CcgAgent)) {
+                && shared.m_20280_(agent) <= AgentRules.LEASH * AgentRules.LEASH && !ccg(shared)) {
                 current = shared;
             } else {
                 double best = Double.MAX_VALUE;
@@ -1161,7 +1161,7 @@ public final class AgentBrain {
                 continue;
             }
             Entity by = level.m_8791_(human.mind.hurtBy);
-            if (by instanceof LivingEntity living && living.m_6084_() && !(living instanceof CcgAgent) && !(living instanceof Player p && p.m_7500_())
+            if (by instanceof LivingEntity living && living.m_6084_() && !ccg(living) && !(living instanceof Player p && p.m_7500_())
                 && living.m_20280_(agent) < bestDistance) {
                 best = living;
                 bestDistance = living.m_20280_(agent);
@@ -1183,8 +1183,8 @@ public final class AgentBrain {
      * investigator, nor anyone else's companion or child unless they struck first.
      */
     static boolean wanted(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity body, long now, boolean current) {
-        if (body == agent || !body.m_6084_() || body instanceof CcgAgent || body.m_5833_() || ReviveForget.presumedDead(body, now)) {
-            return false; // 2.4.2: and never one thought dead
+        if (body == agent || !body.m_6084_() || ccg(body) || body.m_5833_() || ReviveForget.presumedDead(body, now)) {
+            return false; // 2.4.2: and never one thought dead (4.1.46: nor one of the CCG's ghoul division)
         }
         if (body instanceof Player player && player.m_7500_()) {
             return false;
@@ -1228,8 +1228,7 @@ public final class AgentBrain {
             // 1.3.65: a final kakuja (War, Peace, the Dragon: the kagune itself in) shows what they are as much as a kagune.
             FinalSight sight = Sightings.seen(player);
             // 4.0.7: kakugan behind a full mask is not seen (Sightings.masked); a kagune or a kakuja still is.
-            boolean shown = KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player) && !Sightings.masked(player)
-                || Sightings.last(player) != com.hex.kagune.control.npc.Display.NONE; // 1.3.70: their eyes on too
+            boolean shown = shows(player); // 1.3.70: their eyes on too
             boolean seen = agent.m_142582_(player);
             if (!AgentRules.revealed(KaguneProfile.isUnlocked(player), shown, distance, seen)) {
                 continue;
@@ -2752,7 +2751,7 @@ public final class AgentBrain {
                 agent.swing(CcgAgent.END, now);
             }
         }
-        if (!(event.getSource().m_7639_() instanceof LivingEntity attacker) || attacker instanceof CcgAgent || attacker == agent) {
+        if (!(event.getSource().m_7639_() instanceof LivingEntity attacker) || ccg(attacker) || attacker == agent) {
             return;
         }
         if (attacker instanceof Player player && player.m_7500_()) {
@@ -2772,6 +2771,47 @@ public final class AgentBrain {
                 }
             }
         }
+        GhoulNpcBrain.called(attacker, agent, until); // 4.1.46: and the CCG's ghoul division near
+    }
+
+    /**
+     * 4.1.46: true for the CCG's own: an investigator, or one of its ghoul division (a ghoul NPC of {@code Gang.CCG_DIVISION}, read off its
+     * saved identity: on the server). Never attacked by the CCG; never attacking it.
+     */
+    public static boolean ccg(Entity body) {
+        return body instanceof CcgAgent || body instanceof GhoulNpc ghoul && ghoul.identity() != null && ghoul.identity().ccg();
+    }
+
+    /** 4.1.46: every investigator within {@link GhoulNpcBrain#GANG_CALL} of {@code near} goes for {@code attacker} (one of the division was struck). */
+    static void called(LivingEntity attacker, LivingEntity near, long until) {
+        if (ccg(attacker) || attacker instanceof Player player && player.m_7500_()) {
+            return;
+        }
+        for (CcgAgent other : near.m_9236_().m_6443_(CcgAgent.class, near.m_20191_().m_82400_(GhoulNpcBrain.GANG_CALL), a -> a.m_6084_() && a.mind != null)) {
+            mark(other.mind, attacker.m_20148_(), until);
+            other.mind.preySought = Long.MIN_VALUE;
+        }
+    }
+
+    /** 4.1.46: true if an investigator within 48 blocks of {@code near} holds something against {@code player} (marked, struck). */
+    static boolean marked(LivingEntity near, ServerPlayer player, long now) {
+        for (CcgAgent other : near.m_9236_().m_6443_(CcgAgent.class, near.m_20191_().m_82400_(48.0), a -> a.m_6084_() && a.mind != null)) {
+            Long until = other.mind.grudges.get(player.m_20148_());
+            if (until != null && until > now) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * True if {@code player} shows what they are (as an investigator tells): their kagune out, a final kakuja, their kakugan unmasked or
+     * their eyes on (4.1.46: shared with the CCG's ghoul division).
+     */
+    static boolean shows(ServerPlayer player) {
+        FinalSight sight = Sightings.seen(player);
+        return KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player) && !Sightings.masked(player)
+            || Sightings.last(player) != com.hex.kagune.control.npc.Display.NONE;
     }
 
     /**
@@ -2781,8 +2821,8 @@ public final class AgentBrain {
      */
     @SubscribeEvent
     public static void attacked(LivingAttackEvent event) {
-        if (event.getEntity() instanceof CcgAgent && event.getSource().m_7639_() instanceof CcgAgent) {
-            event.setCanceled(true);
+        if (ccg(event.getEntity()) && ccg(event.getSource().m_7639_())) {
+            event.setCanceled(true); // 4.1.46: the CCG's ghoul division is the CCG's too (either way)
             return;
         }
         if (untouchable(event.getEntity()) && !com.hex.kagune.control.GhoulTank.bypasses(event.getSource().m_19385_())) {

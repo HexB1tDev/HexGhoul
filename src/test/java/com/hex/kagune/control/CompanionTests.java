@@ -841,8 +841,8 @@ public final class CompanionTests {
             "behind a full mask a ghoul is a human to him");
         String brain = read("src/main/java/com/hex/kagune/control/server/EtoBrain.java");
         check(brain.contains("dress(npc);") && brain.contains("OutfitServer.dress(npc, pieces);") && brain.contains("armor.m_22100_(OutfitServer.armour(npc, npc.persona().armor()));")
-            && brain.contains("if (npc.persona().human() && current instanceof com.hex.kagune.control.npc.CcgAgent) {\n                current = null;"),
-            "dressed as he wakes (as hard to hurt as he was made); never against one of his own investigators");
+            && brain.contains("if (npc.persona().human() && AgentBrain.ccg(current)) { // 4.1.46: nor one of its ghoul division\n                current = null;"),
+            "dressed as he wakes (as hard to hurt as he was made); never against one of his own investigators (4.1.46: nor its ghoul division)");
         java.util.List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of("general");
         check(chapters.size() == com.hex.kagune.control.npc.Courtship.CHAPTERS
             && chapters.get(0).task() == com.hex.kagune.control.npc.Courtship.Task.VILLAGE_GHOUL

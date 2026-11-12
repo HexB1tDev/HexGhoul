@@ -74,6 +74,10 @@ public final class GhoulNpcTalk {
         AogiriGuard.forget(event.getEntity().m_20148_());
     }
 
+    /** 4.1.46: what one of the CCG's ghoul division says to a right click. */
+    static final String[] CCG_WORDS = {"CCG business. Keep moving.", "Stay back. There are ghouls around here.", "Seen anything strange? Report it to the CCG.",
+        "Don't stare. It's still a kagune, but it's the CCG's.", "Go home. It isn't safe out here tonight."};
+
     /** 1.3.29: true while {@code player} has a talk with a ghoul open. */
     static boolean talking(ServerPlayer player) {
         return TALKS.containsKey(player.m_20148_());
@@ -84,6 +88,11 @@ public final class GhoulNpcTalk {
         GhoulNpcBrain.Mind mind = npc.mind;
         long now = player.m_9236_().m_46467_();
         if (who == null || mind == null || !npc.m_6084_()) {
+            return;
+        }
+        if (who.ccg()) {
+            // 4.1.46: one of the CCG's ghoul division is the CCG's: no ghoul's talk, no friend made, a word as an investigator would.
+            player.m_5661_(Component.m_237113_(who.displayName() + ": \"" + CCG_WORDS[Math.floorMod(who.seed() + (int)(now / 200L), CCG_WORDS.length)] + "\""), true);
             return;
         }
         if (!GhoulNpcBrain.talks(npc, who, mind, player, now)) {

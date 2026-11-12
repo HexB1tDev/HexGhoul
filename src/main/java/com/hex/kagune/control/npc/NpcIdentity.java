@@ -124,6 +124,16 @@ public record NpcIdentity(Kind kind, NpcTemper temper, int tier, int skin, int n
         return Gang.byOrdinal(this.gang);
     }
 
+    /** 4.1.46: one of the CCG's ghoul division (a human of the CCG's with a kagune). */
+    public boolean ccg() {
+        return gangOf().ccg();
+    }
+
+    /** 4.1.46: true if a kakugan opens on its face with its kagune (the CCG's division: never; the owner: "NO kakugan"). */
+    public boolean kakugan() {
+        return !ccg();
+    }
+
     /**
      * 4.0.0: an Aogiri Tree member (its faction's mask, {@link com.hex.kagune.control.outfit.Outfits#AOGIRI_MASKS}, 1-based), its temper
      * Aogiri's own (the pack: violent, loyal to its own), of rank C to S.

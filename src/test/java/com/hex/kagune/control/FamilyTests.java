@@ -2742,7 +2742,7 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         String life = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/HomeLife.java"));
         check(life.contains("mind.talking != null && now >= mind.drowsyUntil"), "a hand on her shoulder only half wakes her");
         String brain = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java"));
-        check(brain.contains("body instanceof com.hex.kagune.control.npc.CcgAgent"), "an investigator by the house is a threat a parent gets up for");
+        check(brain.contains("|| AgentBrain.ccg(body)))) {"), "an investigator by the house is a threat a parent gets up for (4.1.46: or the CCG's ghoul division)");
         String server = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoServer.java"));
         check(server.contains("\"sleep:back\"") && server.contains("\"sleep:kiss\"") && server.contains("\"sleep:up\""), "the drowsy page's three answers");
     }

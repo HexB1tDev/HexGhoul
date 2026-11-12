@@ -523,7 +523,7 @@ public final class EtoBrain {
         if (current == null && now % 5L == 0L) {
             current = seek(npc, mind, level, home, now);
             // 4.1.5: a human of the CCG never goes for one of its investigators (a ghoul's home has no worse a threat; his has none in them).
-            if (npc.persona().human() && current instanceof com.hex.kagune.control.npc.CcgAgent) {
+            if (npc.persona().human() && AgentBrain.ccg(current)) { // 4.1.46: nor one of its ghoul division
                 current = null;
             }
             if (current != null) {
@@ -744,7 +744,7 @@ public final class EtoBrain {
         // 1.3.37: and a CCG investigator anywhere near the house: a ghoul's home has no worse a threat (the owner: "if it senses a mob or
         // a CCG agent nearby, it will get up to fight").
         for (LivingEntity body : level.m_6443_(LivingEntity.class, ground, body -> body.m_6084_()
-            && (body instanceof Enemy && hostile(body) || body instanceof com.hex.kagune.control.npc.CcgAgent))) {
+            && (body instanceof Enemy && hostile(body) || AgentBrain.ccg(body)))) { // 4.1.46: the CCG's ghoul division too
             double toHouse = body.m_20238_(new Vec3(c.m_123341_() + 0.5, c.m_123342_(), c.m_123343_() + 0.5));
             boolean after = body instanceof net.minecraft.world.entity.Mob mob && mob.m_5448_() != null
                 && (mob.m_5448_() == partner || mob.m_5448_() instanceof com.hex.kagune.control.npc.ChildNpc || mob.m_5448_() == npc);

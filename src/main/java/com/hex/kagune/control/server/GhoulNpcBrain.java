@@ -159,6 +159,67 @@ public final class GhoulNpcBrain {
     static final double GANG_KEEP = 48.0;
     static final double GANG_CLOSE = 4.5;
 
+    /** 4.1.46: every one of the CCG's ghoul division within {@link #GANG_CALL} of {@code near} goes for {@code attacker} (an investigator was struck). */
+    static void called(LivingEntity attacker, LivingEntity near, long until) {
+        if (AgentBrain.ccg(attacker) || attacker instanceof Player player && player.m_7500_()) {
+            return;
+        }
+        for (GhoulNpc one : near.m_9236_().m_6443_(GhoulNpc.class, near.m_20191_().m_82400_(GANG_CALL),
+            o -> o.m_6084_() && o.mind != null && o.identity() != null && o.identity().ccg())) {
+            Long was = one.mind.grudges.get(attacker.m_20148_());
+            one.mind.grudges.put(attacker.m_20148_(), was == null ? until : Math.max(was, until));
+            one.mind.preySought = Long.MIN_VALUE;
+        }
+    }
+
+    /**
+     * 4.1.46 (the owner chose "Like CCG agents": "hunt ghoul NPCs, attack ghoul players who show their kagune or are marked; fight with their
+     * kagune; never attacked by CCG and never attack humans"): what one of the CCG's ghoul division goes for unprovoked, as an investigator
+     * does ({@link AgentBrain#wanted}): a wild ghoul in sight once it shows what it is (its eyes on, its kagune out), a player who shows
+     * what they are (marking them for the three of them, told so as the CCG tells them) or whom an investigator near holds something
+     * against, a mob after it or one of its own, a monster too close. Never the CCG's, a human, Eto, a child or a thrall.
+     */
+    static boolean division(GhoulNpc npc, Mind mind, LivingEntity body, long now) {
+        if (AgentBrain.ccg(body) || body instanceof com.hex.kagune.control.npc.HumanNpc || body instanceof com.hex.kagune.control.npc.EtoNpc
+            || body instanceof com.hex.kagune.control.npc.ChildNpc || body instanceof com.hex.kagune.control.npc.FleshThrall) {
+            return false;
+        }
+        double distance = Math.sqrt(body.m_20280_(npc));
+        boolean current = body.m_19879_() == mind.prey;
+        if (body instanceof ServerPlayer player) {
+            if (AgentBrain.marked(npc, player, now)) {
+                return true;
+            }
+            boolean seen = npc.m_142582_(player);
+            if (!com.hex.kagune.control.npc.AgentRules.revealed(KaguneProfile.isUnlocked(player), AgentBrain.shows(player), distance, seen)) {
+                return false;
+            }
+            Long was = mind.grudges.get(player.m_20148_());
+            if (was == null || was <= now) {
+                player.m_5661_(Component.m_237113_("\u00a7cThe CCG has seen what you are."), true);
+            }
+            long until = now + com.hex.kagune.control.npc.AgentRules.MARKED;
+            mind.grudges.put(player.m_20148_(), until);
+            for (GhoulNpc mate : npc.m_9236_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(GANG_KEEP),
+                other -> other != npc && other.m_6084_() && other.mind != null && mates(npc, other))) {
+                Long theirs = mate.mind.grudges.get(player.m_20148_());
+                mate.mind.grudges.put(player.m_20148_(), theirs == null ? until : Math.max(theirs, until));
+            }
+            return true;
+        }
+        if (body instanceof Player) {
+            return false;
+        }
+        if (body instanceof GhoulNpc ghoul) {
+            boolean shows = ghoul.mind != null && (ghoul.mind.out || ghoul.mind.eyes);
+            return current || shows && distance <= com.hex.kagune.control.npc.AgentRules.GHOUL_RANGE;
+        }
+        if (body instanceof Mob mob && (mob.m_5448_() == npc || mob.m_5448_() instanceof GhoulNpc target && mates(npc, target))) {
+            return true;
+        }
+        return body instanceof Enemy && (current || com.hex.kagune.control.npc.AgentRules.tooClose(distance));
+    }
+
     /** 4.1.45: true if {@code a} and {@code b} walk in the same gang (its kind and its number, kept in each one's saved data). */
     static boolean mates(GhoulNpc a, GhoulNpc b) {
         NpcIdentity x = a.identity();
@@ -243,8 +304,8 @@ public final class GhoulNpcBrain {
             return;
         }
         regen(npc, mind, now);
-        if (dawn(npc, level, now)) {
-            return;
+        if (!who.ccg() && dawn(npc, level, now)) {
+            return; // 4.1.46: the CCG's ghoul division keeps the day as the investigators do (gone when far from everyone)
         }
         if (BikakuDevour.held(npc)) {
             // 3.6.3: being devoured: its kagune in at once, it does nothing at all.
@@ -308,6 +369,8 @@ public final class GhoulNpcBrain {
         }
         if (who.aogiri()) {
             OutfitServer.dress(npc, com.hex.kagune.control.outfit.Outfits.CRIMSON_SET);
+        } else if (who.ccg()) {
+            OutfitServer.dress(npc, com.hex.kagune.control.outfit.Outfits.FORMAL_SET); // 4.1.46: the CCG's armour (the owner: "CCG armor")
         } else if (who.gang() == 0 && who.maskItem() != null) {
             OutfitServer.mask(npc, who.maskItem());
         } // 4.1.45: a gang's own mask is drawn on its face (its identity tells every client which), nothing else on it
@@ -329,11 +392,15 @@ public final class GhoulNpcBrain {
         return mind != null && npc.m_9236_().m_46467_() < mind.frenzyUntil ? base * 1.35F : base;
     }
 
-    /** What it leaves when it dies: Ghoul Meat. */
+    /** What it leaves when it dies: Ghoul Meat (4.1.46: one of the CCG's ghoul division is human: a human's meat). */
     public static void drop(GhoulNpc npc) {
         NpcIdentity who = npc.identity();
-        int pieces = NpcRules.meat(who == null ? 0 : who.tier(), npc.m_217043_().m_188500_());
-        npc.m_19983_(new ItemStack(ControlItems.GHOUL_MEAT.get(), pieces));
+        if (who != null && who.ccg()) {
+            HumanBrain.drop(npc, 0);
+        } else {
+            int pieces = NpcRules.meat(who == null ? 0 : who.tier(), npc.m_217043_().m_188500_());
+            npc.m_19983_(new ItemStack(ControlItems.GHOUL_MEAT.get(), pieces));
+        }
         if (npc.mind != null) {
             GhoulNpcCombat.fizzleAll(npc, npc.mind);
             ServerPlayer owner = owner(npc, npc.mind);
@@ -400,6 +467,9 @@ public final class GhoulNpcBrain {
         if (body instanceof Player player && player.m_7500_()) {
             return false;
         }
+        if (who.ccg()) {
+            return division(npc, mind, body, now); // 4.1.46: as an investigator
+        }
         if (who.gang() != 0) {
             // 4.1.45 (the owner: "protect eachother) (Non-hostile unless provoked)"): a gang starts nothing: only what hurt one of them
             // (a grudge, above, the whole gang's: hurt) or is going for one of them.
@@ -434,16 +504,16 @@ public final class GhoulNpcBrain {
         if (body instanceof ServerPlayer player) {
             return attitude(npc, who, player) == NpcTemper.Attitude.HOSTILE;
         }
-        if (body instanceof com.hex.kagune.control.npc.CcgAgent) {
-            return true; // 1.3.27: the CCG: whenever a wild ghoul and an investigator meet, they fight
+        if (AgentBrain.ccg(body)) {
+            return true; // 1.3.27: the CCG: whenever a wild ghoul and an investigator meet, they fight (4.1.46: or one of its ghoul division)
         }
         return body instanceof GhoulNpc other && other.identity() != null && who.temper().hunts(other.identity().temper());
     }
 
     /** 4.0.0: true for what an Aogiri member goes for unprovoked: an investigator, or anything going for one of Aogiri's own. */
     static boolean aogiriFoe(LivingEntity body) {
-        if (body instanceof com.hex.kagune.control.npc.CcgAgent) {
-            return true;
+        if (AgentBrain.ccg(body)) {
+            return true; // 4.1.46: the CCG's ghoul division is the CCG
         }
         return body instanceof Mob mob && mob.m_5448_() instanceof GhoulNpc target && target.identity() != null && target.identity().aogiri()
             && !(body instanceof GhoulNpc kin && kin.identity() != null && kin.identity().aogiri());
@@ -885,14 +955,19 @@ public final class GhoulNpcBrain {
                 }
             }
             if (who.gang() != 0) {
-                // 4.1.45: a gang always defends its own: whoever hurt one of them has every one near on him.
-                holds = true;
+                // 4.1.45: a gang always defends its own: whoever hurt one of them has every one near on him. 4.1.46: never one of its own
+                // (a stray blow), nor, for the CCG's ghoul division, one of the CCG's; the investigators near take up its fight.
+                boolean own = attacker instanceof GhoulNpc kin && mates(npc, kin) || who.ccg() && AgentBrain.ccg(attacker);
+                holds = !own;
                 grudge = GANG_GRUDGE;
-                if (!(attacker instanceof GhoulNpc kin && mates(npc, kin))) {
+                if (!own) {
                     for (GhoulNpc mate : npc.m_9236_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(GANG_CALL),
                         other -> other != npc && other.m_6084_() && other.mind != null && mates(npc, other))) {
                         mate.mind.grudges.put(attacker.m_20148_(), now + GANG_GRUDGE);
                         mate.mind.preySought = Long.MIN_VALUE;
+                    }
+                    if (who.ccg()) {
+                        AgentBrain.called(attacker, npc, now + GANG_GRUDGE);
                     }
                 }
             }

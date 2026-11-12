@@ -61,6 +61,7 @@ public final class NpcTests {
         worldgen();
         onePerWorld();
         gangs();
+        division();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -293,10 +294,11 @@ public final class NpcTests {
     static void gangs() {
         com.hex.kagune.control.npc.Gang clowns = com.hex.kagune.control.npc.Gang.CLOWNS;
         com.hex.kagune.control.npc.Gang gas = com.hex.kagune.control.npc.Gang.GAS_MASKS;
-        check(com.hex.kagune.control.npc.Gang.values().length == 3 && com.hex.kagune.control.npc.Gang.byOrdinal(0) == com.hex.kagune.control.npc.Gang.NONE
+        check(com.hex.kagune.control.npc.Gang.values().length == 4 && com.hex.kagune.control.npc.Gang.byOrdinal(0) == com.hex.kagune.control.npc.Gang.NONE
             && com.hex.kagune.control.npc.Gang.byOrdinal(1) == clowns && com.hex.kagune.control.npc.Gang.byOrdinal(2) == gas
-            && com.hex.kagune.control.npc.Gang.byOrdinal(3) == com.hex.kagune.control.npc.Gang.NONE
-            && com.hex.kagune.control.npc.Gang.byOrdinal(-1) == com.hex.kagune.control.npc.Gang.NONE, "none, the clowns, the gas masks (by ordinal)");
+            && com.hex.kagune.control.npc.Gang.byOrdinal(3) == com.hex.kagune.control.npc.Gang.CCG_DIVISION
+            && com.hex.kagune.control.npc.Gang.byOrdinal(4) == com.hex.kagune.control.npc.Gang.NONE
+            && com.hex.kagune.control.npc.Gang.byOrdinal(-1) == com.hex.kagune.control.npc.Gang.NONE, "none, the clowns, the gas masks, the CCG's division (by ordinal: the identity's two bits)");
         check(com.hex.kagune.control.npc.Gang.roaming(0.0) == clowns && com.hex.kagune.control.npc.Gang.roaming(0.49) == clowns
             && com.hex.kagune.control.npc.Gang.roaming(0.5) == gas && com.hex.kagune.control.npc.Gang.roaming(0.999) == gas, "either gang, even odds");
         int[] sizes = new int[6];
@@ -331,6 +333,9 @@ public final class NpcTests {
         // Kept in the identity (every client is told which gang and which mask): bits 44 and 45, under the rank's flag.
         for (com.hex.kagune.control.npc.Gang gang : com.hex.kagune.control.npc.Gang.values()) {
             for (int mask = 0; mask <= 5; mask++) {
+                if (gang.ccg() && mask > 0) {
+                    continue;
+                }
                 for (int tier = 0; tier < NpcIdentity.TIERS; tier++) {
                     NpcIdentity who = new NpcIdentity(NpcIdentity.Kind.RINKAKU, NpcTemper.DRIFTER, tier, 13, 21, 0xBEEF, mask, false, gang.ordinal());
                     check(NpcIdentity.unpack(who.pack()).equals(who) && NpcIdentity.unpack(who.pack()).gangOf() == gang, "a gang's own saved and read back: " + who);
@@ -411,8 +416,9 @@ public final class NpcTests {
                 && brain.indexOf("if (who.gang() != 0) {\n            // 4.1.45") < brain.indexOf("if (who.aogiri()) {\n            // 4.0.0 (the owner: \"Its members must ONLY"),
                 "a gang goes for nothing but what goes for one of them (before any other rule: no prey, no player)");
             check(brain.contains("if (who.aogiri() || who.gang() != 0) {\n            return false;"), "and its blows land only on what it is fighting");
-            check(brain.contains("mate.mind.grudges.put(attacker.m_20148_(), now + GANG_GRUDGE);") && brain.contains("holds = true;\n                grudge = GANG_GRUDGE;")
-                && brain.contains("if (!(attacker instanceof GhoulNpc kin && mates(npc, kin))) {"), "whoever hurts one of them has every one near on him");
+            check(brain.contains("mate.mind.grudges.put(attacker.m_20148_(), now + GANG_GRUDGE);") && brain.contains("holds = !own;\n                grudge = GANG_GRUDGE;")
+                && brain.contains("boolean own = attacker instanceof GhoulNpc kin && mates(npc, kin) || who.ccg() && AgentBrain.ccg(attacker);")
+                && brain.contains("holds = !own;"), "whoever hurts one of them has every one near on him (4.1.46: a stray blow of their own's is nothing)");
             check(brain.contains("if (who.gang() != 0 && roam(npc, mind, level, now)) {") && brain.contains("mind.wanderAt = Long.MAX_VALUE; // never its own way while it follows")
                 && brain.contains("&& a.getPersistentData().m_128451_(GANG_ID) == b.getPersistentData().m_128451_(GANG_ID);"),
                 "they walk together: one leads, the rest keep up (only with their own gang)");
@@ -423,6 +429,79 @@ public final class NpcTests {
                 && spawner.contains("if (!clear(level, x, z)) {\n                continue;"), "now and then a gang at night, where one ghoul could be, its number on each");
             check(layer.contains("(view.identity().aogiri() || view.identity().gang() != 0) ? view.identity().maskItem() : null;")
                 && models2.contains("loaded.get(Outfits.geometryOf(id))"), "every client draws a gang's mask on its face");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
+    }
+
+    /**
+     * 4.1.46 (the owner: "New Re CCG Ghoul division (Normal ccg agents (HUMANS not ghouls), they have RC cells which means they get a random
+     * kagune, they are not ghouls and are members of the CCG, they are never attacked by the ccg, have no kakugan, they are basically wild
+     * ghouls with CCG armor and a Kagune (NO kakugan), they spawn in trios"; asked how they behave: "Like CCG agents"): the division kept in
+     * the identity, no kakugan, the Formal Outfit, three at a time with the CCG's spawns, the CCG's on both sides of every rule.
+     */
+    static void division() {
+        com.hex.kagune.control.npc.Gang division = com.hex.kagune.control.npc.Gang.CCG_DIVISION;
+        check(division.ccg() && !com.hex.kagune.control.npc.Gang.CLOWNS.ccg() && !com.hex.kagune.control.npc.Gang.GAS_MASKS.ccg()
+            && !com.hex.kagune.control.npc.Gang.NONE.ccg() && division.masks().isEmpty() && division.mask(1) == null
+            && com.hex.kagune.control.npc.Gang.TRIO == 3, "the CCG's division: its own, no masks, three");
+        check(java.util.Arrays.equals(division.faces(3, () -> 0.5), new int[3]), "no masks to hand out (and no division by zero)");
+        java.util.Random random = new java.util.Random(4146);
+        boolean never = true;
+        for (int i = 0; i < 2000; i++) {
+            never &= !com.hex.kagune.control.npc.Gang.roaming(random.nextDouble()).ccg();
+        }
+        check(never, "never one of the roaming gangs");
+        java.util.Set<NpcIdentity.Kind> kinds = java.util.EnumSet.noneOf(NpcIdentity.Kind.class);
+        for (int i = 0; i < 600; i++) {
+            NpcIdentity rolled = NpcIdentity.roll(i % 800, random::nextDouble);
+            NpcIdentity one = rolled.ganged(division, 0);
+            kinds.add(one.kind());
+            check(one.ccg() && !one.kakugan() && one.gangOf() == division && one.maskItem() == null && !one.aogiri() && one.kind() == rolled.kind()
+                && one.tier() == rolled.tier(), "one of the division: the CCG's, no kakugan, no mask, the kagune rolled: " + one);
+            check(NpcIdentity.unpack(one.pack()).equals(one) && NpcIdentity.unpack(one.pack()).ccg(), "kept in its saved data, told to every client: " + one);
+            check(one.tagName().endsWith("-rank (CCG Ghoul Division)"), "its name tag says so: " + one.tagName());
+            check(rolled.kakugan() && rolled.ganged(com.hex.kagune.control.npc.Gang.CLOWNS, 1).kakugan(), "every other ghoul has its kakugan");
+        }
+        check(kinds.size() == NpcIdentity.Kind.values().length, "a random kagune: every kind turns up " + kinds);
+        try {
+            String agent = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java")));
+            String arms = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/AgentArms.java")));
+            String eto = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java")));
+            String brain = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java")));
+            String ghoulSpawner = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcSpawner.java")));
+            String agentSpawner = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/AgentSpawner.java")));
+            String renderer = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/render/GhoulNpcRenderer.java")));
+            String talk = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java")));
+            check(agent.contains("return body instanceof CcgAgent || body instanceof GhoulNpc ghoul && ghoul.identity() != null && ghoul.identity().ccg();")
+                && agent.contains("if (body == agent || !body.m_6084_() || ccg(body) || body.m_5833_()") && !agent.contains("|| body instanceof CcgAgent ||")
+                && agent.contains("&& shared.m_20280_(agent) <= AgentRules.LEASH * AgentRules.LEASH && !ccg(shared)) {")
+                && agent.contains("if (by instanceof LivingEntity living && living.m_6084_() && !ccg(living)")
+                && agent.contains("b -> b != agent && b.m_6084_() && !ccg(b))) {")
+                && arms.contains("&& !AgentBrain.ccg(body) && (body == prey"), "an investigator never goes for one of the division, nor lands a blow on one");
+            check(agent.contains("if (ccg(event.getEntity()) && ccg(event.getSource().m_7639_())) {\n            event.setCanceled(true);")
+                && agent.contains("|| ccg(attacker) || attacker == agent) {"), "nothing of the CCG's hurts the CCG's (either way), nor is held against it");
+            check(agent.contains("GhoulNpcBrain.called(attacker, agent, until);") && brain.contains("AgentBrain.called(attacker, npc, now + GANG_GRUDGE);"),
+                "strike an investigator and the division near comes for you; strike one of the division and the investigators near do");
+            check(brain.contains("if (who.ccg()) {\n            return division(npc, mind, body, now);") && brain.indexOf("return division(npc, mind, body, now);") > 0
+                && brain.indexOf("return division(npc, mind, body, now);") < brain.indexOf("// 4.1.45 (the owner: \"protect eachother)"),
+                "the division goes for what an investigator goes for (before a gang's rule)");
+            check(brain.contains("if (AgentBrain.ccg(body) || body instanceof com.hex.kagune.control.npc.HumanNpc")
+                && brain.contains("boolean shows = ghoul.mind != null && (ghoul.mind.out || ghoul.mind.eyes);\n            return current || shows && distance <= com.hex.kagune.control.npc.AgentRules.GHOUL_RANGE;")
+                && brain.contains("if (AgentBrain.marked(npc, player, now)) {") && brain.contains("AgentRules.revealed(KaguneProfile.isUnlocked(player), AgentBrain.shows(player), distance, seen)"),
+                "never the CCG's or a human; a ghoul once it shows itself; a player who shows what they are or whom the CCG holds something against");
+            check(agent.contains("boolean shown = shows(player); // 1.3.70: their eyes on too"), "the investigators tell it the same way");
+            check(brain.contains("if (AgentBrain.ccg(body)) {\n            return true; // 1.3.27") && brain.contains("static boolean aogiriFoe(LivingEntity body) {\n        if (AgentBrain.ccg(body)) {")
+                && eto.contains("if (npc.persona().human() && AgentBrain.ccg(current)) {") && eto.contains("|| AgentBrain.ccg(body)))) {"),
+                "a wild ghoul, Aogiri and a ghoul's home take it for the CCG; the CCG's own people don't go for it");
+            check(brain.contains("if (!who.ccg() && dawn(npc, level, now)) {") && brain.contains("OutfitServer.dress(npc, com.hex.kagune.control.outfit.Outfits.FORMAL_SET);")
+                && brain.contains("if (who != null && who.ccg()) {\n            HumanBrain.drop(npc, 0);"), "it keeps the day, wears the Formal Outfit, leaves a human's meat");
+            check(ghoulSpawner.contains("npc -> npc.m_6084_() && !AgentBrain.ccg(npc));") && agentSpawner.contains("if (player.m_217043_().m_188500_() < DIVISION_CHANCE) {\n                        division(level, player);")
+                && agentSpawner.contains(".ganged(com.hex.kagune.control.npc.Gang.CCG_DIVISION, 0);") && agentSpawner.contains("if (made.size() < com.hex.kagune.control.npc.Gang.TRIO) {")
+                && agentSpawner.contains("g -> g.m_6084_() && AgentBrain.ccg(g))) {"), "three at a time with the CCG's own, spaced as the CCG, never fewer");
+            check(renderer.contains("if (view != null && !view.identity().kakugan()) {\n                    return;"), "every client: no kakugan on it, ever");
+            check(talk.contains("if (who.ccg()) {") && talk.indexOf("if (who.ccg()) {") < talk.indexOf("if (!GhoulNpcBrain.talks(npc, who, mind, player, now)) {"),
+                "no ghoul's talk with it (no friend made of it): a word as the CCG's");
         } catch (java.io.IOException failure) {
             check(false, "read the sources: " + failure);
         }
