@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.53 (HexGhoul): the gangs' traits and daily quests (testing)
+
+See `.github/release-notes-4.1.53.md`. `npc/GangDaily` (pure: one job a game day, Noro's three and Roma's three, goals, kills counted or things brought in hand, two rewards each, +10 reputation), `GangServer` (dailies kept in `PlayerPersisted`: HexDaily*; `gives`/`dailyAsk`/`daily`/`dailyKill`; `fought`: Strength I for Aogiri against the CCG and other gangs, Jump Boost II for the Clowns against the CCG; `vanish`: a Clown at 30% health invisible 5 s every 5 minutes; `giveMask`: the Laughing Mask or a clown mask on joining, HexGangMask), `EtoServer.withDaily` and its "daily" answer, `GhoulNpcBrain.wanted` (wild ghouls leave Aogiri alone unless provoked), `PlayerLayers.clownVanished` (nothing of a vanished Clown drawn); `UiPreview dailies`; `NpcTests.dailies`. Protocol 124.
+
 ## 4.1.52 (HexGhoul): the reputation bar (testing)
 
 See `.github/release-notes-4.1.52.md`. `npc/GangStanding` (pure: 0 .. 100 from 50, +3 CCG, +4 rival, -2 a blow on your own, -20 one killed, +10 a daily, 5 a day back toward 50, feared from 80, `yields` six in ten, at 0 warned then `turned` after 600 ticks in the hideout), `npc/GangTalk` (greetings by band), `GangServer` (kept in `PlayerPersisted`: HexGangRep/RepDay/Warned; `died`, `struckOwn`, `tick` once a second: the warning and TURNED; `inHideout` by the claimed mansion and tent; `shown`/`memberOf` for the talk page), `GhoulNpcBrain` (`wanted`: its own only when turned; `hurt`: blows cost reputation; `yields`: some step back from a feared member), `S2CNpcTalk.standing` and `NpcTalkView.reputation` (the meter under BOND, the gang's colour, a diamond), `UiPreview reputation`; `NpcTests.reputation`. Protocol 124.

@@ -63,6 +63,7 @@ public final class NpcTests {
         gangs();
         joining();
         reputation();
+        dailies();
         division();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
@@ -364,6 +365,73 @@ public final class NpcTests {
             && eto.contains("GangServer.shown(player, GangServer.memberOf(npc.persona()))"),
             "turned on only after the warning, in the hideout; blows on their own counted; feared: some step back (ghoul NPCs only, never the "
                 + "leaders); the bar on the talk screen with their own gang and its leaders");
+    }
+
+    /**
+     * 4.1.53 (the owner: "Noro gives Daily quests (missions with item rewards such as ores, ghoul meat,  human meat, reputation etc...)";
+     * the Clowns' leader "gives daily quests as well with clown related rewards, and reputation"; the gangs' traits; "Joining gives the
+     * mask").
+     */
+    static void dailies() {
+        boolean all = true;
+        for (int gang : new int[] {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS}) {
+            java.util.Set<com.hex.kagune.control.npc.GangDaily.Job> seen = new java.util.HashSet<>();
+            for (long day = 0; day < 200; day++) {
+                for (long seed = 0; seed < 5; seed++) {
+                    com.hex.kagune.control.npc.GangDaily d = com.hex.kagune.control.npc.GangDaily.give(gang, day, seed);
+                    com.hex.kagune.control.npc.GangDaily.Job job = d.job();
+                    seen.add(job);
+                    all &= job.gang == gang && d.goal() >= job.least && d.goal() <= job.most && d.count() == 0 && d.day() == day && !d.claimed()
+                        && d.today(day) && !d.today(day + 1) && !d.done() && d.equals(com.hex.kagune.control.npc.GangDaily.give(gang, day, seed));
+                    java.util.List<com.hex.kagune.control.npc.GangDaily.Pay> pay = d.pay(seed);
+                    all &= pay.size() == 2 && !pay.get(0).item().equals(pay.get(1).item()) && pay.get(0).count() > 0 && pay.get(1).count() > 0
+                        && !pay.get(0).text().isBlank();
+                }
+            }
+            all &= seen.equals(new java.util.HashSet<>(com.hex.kagune.control.npc.GangDaily.Job.of(gang))) && seen.size() == 3;
+        }
+        check(all, "one daily a game day from the gang's giver, the same all day, a new one each; each job's goal in its range; two rewards; "
+            + "every job comes up");
+        com.hex.kagune.control.npc.GangDaily d = new com.hex.kagune.control.npc.GangDaily(com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_CCG.ordinal(), 3, 0, 4L, false);
+        com.hex.kagune.control.npc.GangDaily three = d.counted().counted().counted();
+        check(three.done() && three.count() == 3 && three.counted().count() == 3 && !three.claimed() && three.paid().claimed()
+            && three.paid().counted().equals(three.paid()), "kills counted to the goal, no further; paid once");
+        com.hex.kagune.control.npc.GangDaily meat = new com.hex.kagune.control.npc.GangDaily(com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_MEAT.ordinal(), 5, 0, 4L, false);
+        check(!meat.brought(4).done() && meat.brought(5).done() && meat.brought(9).done() && meat.job().brought, "things brought: enough of them, in hand");
+        java.util.Set<String> aogiri = new java.util.HashSet<>();
+        java.util.Set<String> clowns = new java.util.HashSet<>();
+        for (long seed = 0; seed < 400; seed++) {
+            for (com.hex.kagune.control.npc.GangDaily.Pay pay : com.hex.kagune.control.npc.GangDaily.give(com.hex.kagune.control.npc.GangPlayer.AOGIRI, seed, seed).pay(seed)) {
+                aogiri.add(pay.item());
+            }
+            for (com.hex.kagune.control.npc.GangDaily.Pay pay : com.hex.kagune.control.npc.GangDaily.give(com.hex.kagune.control.npc.GangPlayer.CLOWNS, seed, seed).pay(seed)) {
+                clowns.add(pay.item());
+            }
+        }
+        check(aogiri.containsAll(java.util.List.of("minecraft:raw_iron", "minecraft:raw_gold", "minecraft:diamond", com.hex.kagune.control.npc.GangDaily.GHOUL_MEAT,
+                com.hex.kagune.control.npc.GangDaily.MEAT)) && clowns.containsAll(java.util.List.of("minecraft:cake", "minecraft:firework_rocket",
+                com.hex.kagune.control.npc.GangDaily.CLOWN_MASK)) && com.hex.kagune.control.npc.GangStanding.DAILY == 10,
+            "Noro pays in ores, Ghoul Meat, human meat; Roma in clown things (a cake, fireworks, a clown mask); both in reputation (+10%)");
+        String server = read("src/main/java/com/hex/kagune/control/server/GangServer.java");
+        String brain = read("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java");
+        String eto = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+        String layers = read("src/main/java/com/hex/kagune/control/client/render/PlayerLayers.java");
+        check(server.contains("persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS")
+            && eto.contains("page = withDaily(player, npc, page);") && eto.contains("GangServer.daily(player, npc.persona(), c.seed())")
+            && server.contains("reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);"),
+            "Noro gives Aogiri's, Roma the Clowns', from their first page; done, it pays its items and reputation");
+        check(brain.contains("who.gang() == 0 && !who.aogiri() && GangServer.of(player).member(com.hex.kagune.control.npc.GangPlayer.AOGIRI)")
+            && brain.indexOf("Long until = mind.grudges.get(body.m_20148_());") < brain.indexOf("GangServer.of(player).member(com.hex.kagune.control.npc.GangPlayer.AOGIRI)"),
+            "Aogiri: wild ghouls no longer attack unless provoked (a grudge still holds)");
+        check(server.contains("MobEffects.f_19600_, FIGHT_BOOST, 0") && server.contains("MobEffects.f_19603_, FIGHT_BOOST, 1")
+            && server.contains("g.member(GangPlayer.AOGIRI) && (ccg || gang)") && server.contains("g.member(GangPlayer.CLOWNS) && ccg"),
+            "Aogiri gains strength fighting the CCG and other gangs; the Clowns jump boost fighting the CCG");
+        check(server.contains("MobEffects.f_19609_, VANISH, 0") && com.hex.kagune.control.server.GangServer.VANISH == 100
+            && com.hex.kagune.control.server.GangServer.VANISH_REST == 6000L && com.hex.kagune.control.server.GangServer.VANISH_AT <= 0.35F
+            && layers.contains("if (vanished(player) || clownVanished(player)) {"),
+            "the Clowns: fully invisible (kagune, body, armour) for 5 seconds at low health, every 5 minutes at most");
+        check(server.contains("\"hexkagune:mask_bin_brothers\"") && server.contains("giveMask(player, gang); // 4.1.53")
+            && server.contains("giveMask(player, g.gang()); // 4.1.53: a member from before it got theirs"), "joining gives the gang's mask (once a gang)");
     }
 
     static void joining() {

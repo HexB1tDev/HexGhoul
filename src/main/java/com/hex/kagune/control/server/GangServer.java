@@ -2,6 +2,7 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CGangName;
+import com.hex.kagune.control.npc.GangDaily;
 import com.hex.kagune.control.npc.GangPlayer;
 import com.hex.kagune.control.npc.GangStanding;
 import com.hex.kagune.control.npc.GhoulNpc;
@@ -21,6 +22,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -192,6 +194,14 @@ public final class GangServer {
                     by = -GangStanding.KILL_OWN;
                 }
             }
+            // 4.1.53: today's daily quest's kills.
+            if (was.gang() != GangPlayer.NONE) {
+                NpcIdentity who = dead instanceof GhoulNpc ghoul ? ghoul.identity() : null;
+                boolean ccg = AgentBrain.ccg(dead) || who != null && who.ccg();
+                boolean gas = who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS;
+                boolean rival = who != null && !ccg && (who.aogiri() || who.gang() != 0) && !was.member(GangPlayer.of(who));
+                dailyKill(player, ccg, rival, gas);
+            }
             if (now.equals(was)) {
                 if (by != 0) {
                     reputation(player, by);
@@ -341,6 +351,10 @@ public final class GangServer {
                 return;
             }
             long now = player.m_9236_().m_46467_();
+            vanish(player, now); // 4.1.53
+            if (kept(player).m_128451_(MASK) != g.gang()) {
+                giveMask(player, g.gang()); // 4.1.53: a member from before it got theirs
+            }
             GangStanding was = standing(player);
             GangStanding s = was.drifted(now / GangStanding.DAY);
             boolean inside = inHideout(player, g.gang());
@@ -372,6 +386,228 @@ public final class GangServer {
         } catch (RuntimeException | LinkageError failure) {
             Safety.caught(failure, "GangServer.tick");
         }
+    }
+
+    // ---------------------------------------------------------------- 4.1.53: daily quests
+
+    private static final String DAILY_KIND = "HexDailyKind";
+    private static final String DAILY_GOAL = "HexDailyGoal";
+    private static final String DAILY_COUNT = "HexDailyCount";
+    private static final String DAILY_DAY = "HexDailyDay";
+    private static final String DAILY_PAID = "HexDailyPaid";
+
+    /** {@code player}'s daily quest as kept. */
+    public static GangDaily daily(ServerPlayer player) {
+        CompoundTag k = kept(player);
+        if (!k.m_128441_(DAILY_KIND)) {
+            return GangDaily.NONE;
+        }
+        return new GangDaily(k.m_128451_(DAILY_KIND), k.m_128451_(DAILY_GOAL), k.m_128451_(DAILY_COUNT), k.m_128454_(DAILY_DAY), k.m_128471_(DAILY_PAID));
+    }
+
+    static void daily(ServerPlayer player, GangDaily d) {
+        CompoundTag k = kept(player);
+        k.m_128405_(DAILY_KIND, d.kind());
+        k.m_128405_(DAILY_GOAL, d.goal());
+        k.m_128405_(DAILY_COUNT, d.count());
+        k.m_128356_(DAILY_DAY, d.day());
+        k.m_128379_(DAILY_PAID, d.claimed());
+    }
+
+    /** 4.1.53: the gang whose daily quests {@code persona} gives (the owner: Noro for Aogiri; Roma, the Clowns' leader), or none. */
+    static int gives(Persona persona) {
+        return persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : GangPlayer.NONE;
+    }
+
+    /** What asking {@code persona} for today's job is called (one of their gang only), or null. */
+    static String dailyAsk(ServerPlayer player, Persona persona) {
+        int gang = gives(persona);
+        if (gang == GangPlayer.NONE || !of(player).member(gang)) {
+            return null;
+        }
+        GangDaily d = daily(player);
+        if (d.today(today(player)) && !d.claimed()) {
+            return d.done() || d.job().brought ? "About today's job..." : "Today's job: how far?";
+        }
+        return gang == GangPlayer.AOGIRI ? "Any work for me today?" : "Got a job for me, boss?";
+    }
+
+    /** One of today's kills counted for {@code player}'s daily quest (an investigator, one of another gang, a Gas Mask). */
+    static void dailyKill(ServerPlayer player, boolean ccg, boolean rival, boolean gas) {
+        GangDaily d = daily(player);
+        if (!d.today(today(player)) || d.claimed() || d.done() || d.job().brought) {
+            return;
+        }
+        GangDaily.Job job = d.job();
+        boolean counts = switch (job) {
+            case AOGIRI_CCG, CLOWNS_CCG -> ccg;
+            case AOGIRI_RIVALS -> rival;
+            case CLOWNS_GAS -> gas;
+            default -> false;
+        };
+        if (!counts) {
+            return;
+        }
+        GangDaily after = d.counted();
+        daily(player, after);
+        String giver = job.gang == GangPlayer.AOGIRI ? "Noro" : "Roma";
+        player.m_5661_(Component.m_237113_(colour(job.gang) + "Daily: §f" + job.text(after.goal()) + " §7(" + after.count() + "/" + after.goal() + ")"
+            + (after.done() ? " §a- done, go back to " + giver : "")), true);
+    }
+
+    /**
+     * Asking {@code persona} for today's job: one given if there is none today (one a day), how it goes, the things it asks for handed
+     * over from the hand, or, done, paid (its items and {@link com.hex.kagune.control.npc.GangStanding#DAILY} reputation).
+     */
+    static String daily(ServerPlayer player, Persona persona, int seed) {
+        int gang = gives(persona);
+        if (gang == GangPlayer.NONE || !of(player).member(gang)) {
+            return persona == Persona.NORO ? "..." : "Jobs are for Clowns, sweetheart. Join first.";
+        }
+        boolean noro = gang == GangPlayer.AOGIRI;
+        long today = today(player);
+        GangDaily d = daily(player);
+        if (!d.today(today)) {
+            GangDaily fresh = GangDaily.give(gang, today, player.m_20148_().getLeastSignificantBits());
+            daily(player, fresh);
+            player.m_5661_(Component.m_237113_(colour(gang) + "Daily: §f" + fresh.job().text(fresh.goal()) + " §7(0/" + fresh.goal() + ")"), false);
+            String what = fresh.job().text(fresh.goal()).toLowerCase(java.util.Locale.ROOT);
+            return noro ? pick(seed, "*tilts his head* ...Work. " + capFirst(what) + ". Today.", "Aogiri needs this done. " + capFirst(what) + ".",
+                "...You came. Good. " + capFirst(what) + ". Then come back.")
+                : pick(seed, "A job! For you! " + capFirst(what) + ". Make it funny.", "Today's act: " + what + ". Break a leg. Theirs, preferably.",
+                    "*claps* Ooh, homework! " + capFirst(what) + ". Chop chop.");
+        }
+        if (d.claimed()) {
+            return noro ? pick(seed, "...Done for today. Rest.", "Tomorrow.") : pick(seed, "You already did today's act! Encores are tomorrow.",
+                "Shoo. Come back tomorrow, I'll have something awful.");
+        }
+        if (!d.done() && d.job().brought) {
+            net.minecraft.world.item.ItemStack held = player.m_21205_();
+            net.minecraft.world.item.Item wanted = com.hex.kagune.control.ControlItems.vanilla(d.job() == GangDaily.Job.AOGIRI_MEAT ? GangDaily.MEAT
+                : "minecraft:allium");
+            int have = wanted != null && !held.m_41619_() && held.m_41720_() == wanted ? held.m_41613_() : 0;
+            GangDaily got = d.brought(have);
+            if (got.done()) {
+                if (!player.m_7500_()) {
+                    held.m_41774_(d.goal());
+                }
+                d = got;
+            } else {
+                return noro ? "...Not enough. " + d.goal() + ". In your hand." : "I said " + d.goal() + "! In your hand, where I can see them. I count everything.";
+            }
+        }
+        if (!d.done()) {
+            return noro ? d.count() + " of " + d.goal() + ". ...Keep going." : d.count() + " of " + d.goal() + "! The suspense is killing me. Not literally. Yet.";
+        }
+        daily(player, d.paid());
+        StringBuilder paid = new StringBuilder();
+        for (GangDaily.Pay pay : d.pay(player.m_20148_().getLeastSignificantBits())) {
+            net.minecraft.world.item.Item item = com.hex.kagune.control.ControlItems.vanilla(pay.item());
+            if (item == null) {
+                continue;
+            }
+            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, pay.count());
+            paid.append(paid.length() == 0 ? "" : ", ").append(pay.text());
+            if (!player.m_36356_(stack)) {
+                player.m_36176_(stack, false);
+            }
+        }
+        reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);
+        player.m_5661_(Component.m_237113_(colour(gang) + "Daily done: §f" + paid + " §7(+" + com.hex.kagune.control.npc.GangStanding.DAILY
+            + "% reputation)"), false);
+        return noro ? pick(seed, "...Good. *hands it over without a word*", "Aogiri remembers this. Take it.")
+            : pick(seed, "*throws confetti made of something* Bravo! Take your prize!", "What a show! Here, a little something. Don't eat the confetti.");
+    }
+
+    private static String capFirst(String text) {
+        return text.isEmpty() ? text : Character.toUpperCase(text.charAt(0)) + text.substring(1);
+    }
+
+    // ---------------------------------------------------------------- 4.1.53: the gang's mask
+
+    private static final String MASK = "HexGangMask";
+
+    /**
+     * 4.1.53 (the owner: "Joining gives the mask"): a new member's gang mask, a wearable head piece (Aogiri's rank and file's Laughing Mask,
+     * a Clown's mask): into their inventory (dropped at their feet if it is full), once for each gang they join.
+     */
+    static void giveMask(ServerPlayer player, int gang) {
+        String id = gang == GangPlayer.AOGIRI ? "hexkagune:mask_bin_brothers" : gang == GangPlayer.CLOWNS ? GangDaily.CLOWN_MASK : null;
+        net.minecraft.world.item.Item item = id == null ? null : com.hex.kagune.control.ControlItems.vanilla(id);
+        kept(player).m_128405_(MASK, gang);
+        if (item == null) {
+            return;
+        }
+        net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, 1);
+        if (!player.m_36356_(stack)) {
+            player.m_36176_(stack, false);
+        }
+        player.m_5661_(Component.m_237113_(colour(gang) + cap(GangPlayer.title(gang)) + ": §fyour mask. §7Wear it with pride (on your head)."), false);
+    }
+
+    // ---------------------------------------------------------------- 4.1.53: the gangs' traits
+
+    /** How long (ticks) a fight's strength or jump lasts after the last blow (refreshed while the fight goes on). */
+    static final int FIGHT_BOOST = 200;
+    /** 4.1.53: the Clowns' vanishing: at this share of health or under, for this long (ticks), once every so often (the owner: 5 s, 5 min). */
+    public static final float VANISH_AT = 0.3F;
+    public static final int VANISH = 100;
+    public static final long VANISH_REST = 6000L;
+    /** When each Clown last vanished (the world's game time). */
+    private static final Map<UUID, Long> VANISHED = WorldTimes.map();
+
+    /**
+     * 4.1.53 (the owner): "Aogiri - Wild ghouls no longer attack unless provoked, gain strength when fighting CCG and other gangs" (the
+     * strength here, the ghouls in GhoulNpcBrain); the Clowns "Gain Jump boost when fighting CCG". Either way round: a blow given or taken.
+     */
+    @SubscribeEvent
+    public static void fought(LivingHurtEvent event) {
+        try {
+            LivingEntity hurt = event.getEntity();
+            net.minecraft.world.entity.Entity source = event.getSource().m_7639_();
+            if (source instanceof ServerPlayer player && source != hurt) {
+                boost(player, hurt);
+            }
+            if (hurt instanceof ServerPlayer player && source instanceof LivingEntity other && source != hurt) {
+                boost(player, other);
+            }
+        } catch (RuntimeException | LinkageError failure) {
+            Safety.caught(failure, "GangServer.fought");
+        }
+    }
+
+    /** {@code player} fighting {@code other}: Aogiri's strength against the CCG and the other gangs, the Clowns' jump against the CCG. */
+    static void boost(ServerPlayer player, LivingEntity other) {
+        GangPlayer g = of(player);
+        if (g.gang() == GangPlayer.NONE) {
+            return;
+        }
+        NpcIdentity who = other instanceof GhoulNpc ghoul ? ghoul.identity() : null;
+        boolean ccg = AgentBrain.ccg(other) || who != null && who.ccg();
+        boolean gang = who != null && !ccg && (who.aogiri() || who.gang() != 0) && !g.member(GangPlayer.of(who));
+        if (g.member(GangPlayer.AOGIRI) && (ccg || gang)) {
+            player.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19600_, FIGHT_BOOST, 0, false, true, true));
+        } else if (g.member(GangPlayer.CLOWNS) && ccg) {
+            player.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19603_, FIGHT_BOOST, 1, false, true, true));
+        }
+    }
+
+    /**
+     * 4.1.53 (the owner, of the Clowns: "kagune, player and armor become fully invisible for 5 seconds when at low HP (5 minute cooldown)"):
+     * checked once a second; the invisibility is the game's own (every client sees it), and a Clown's hides everything of them
+     * ({@code PlayerLayers.hidden}: armour, what they hold, their kagune).
+     */
+    static void vanish(ServerPlayer player, long now) {
+        if (!of(player).member(GangPlayer.CLOWNS) || !player.m_6084_() || player.m_21223_() > player.m_21233_() * VANISH_AT) {
+            return;
+        }
+        Long last = VANISHED.get(player.m_20148_());
+        if (last != null && now >= last && now - last < VANISH_REST) {
+            return;
+        }
+        VANISHED.put(player.m_20148_(), now);
+        player.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19609_, VANISH, 0, false, false, true));
+        player.m_5661_(Component.m_237113_("§9The Clowns: §fnow you see me... §7(5 s; again in 5 minutes)"), true);
     }
 
     static String colour(int gang) {
@@ -524,6 +760,7 @@ public final class GangServer {
 
     private static void joined(ServerPlayer player, int gang) {
         standing(player, GangStanding.joined(today(player))); // 4.1.52: the bar starts at half
+        giveMask(player, gang); // 4.1.53
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.levelup", 0.8F, 0.7F);
         player.m_5661_(Component.m_237113_((gang == GangPlayer.AOGIRI ? "§4" : "§9") + "You joined " + GangPlayer.title(gang)
             + ". §7They will never go for you again, and they will fight for you."), false);

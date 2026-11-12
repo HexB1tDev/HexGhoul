@@ -610,6 +610,11 @@ public final class GhoulNpcBrain {
             return NpcRules.prowls(true, day);
         }
         if (body instanceof ServerPlayer player) {
+            // 4.1.53 (the owner: "Aogiri - Wild ghouls no longer attack unless provoked"): one of Aogiri is left alone (what hurt it,
+            // the grudge above, it still goes for).
+            if (who.gang() == 0 && !who.aogiri() && GangServer.of(player).member(com.hex.kagune.control.npc.GangPlayer.AOGIRI)) {
+                return false;
+            }
             return attitude(npc, who, player) == NpcTemper.Attitude.HOSTILE;
         }
         if (AgentBrain.ccg(body)) {

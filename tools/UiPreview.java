@@ -464,6 +464,33 @@ public class UiPreview {
             java.util.List.of("Who are you?", "Talk to me.", "How's Aogiri?", "Leave."), 67 | aogiri), com.hex.kagune.control.client.NpcTalkView.Motion.still(30));
     }
 
+    /** 4.1.53: Noro and Roma giving today's job to one of their gang (the option on their first page, the job given, the reputation bar). */
+    static void dailiesTalk(File dir) throws Exception {
+        java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
+            com.hex.kagune.control.npc.NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.NpcTalk.Choice.SAY_2, com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE);
+        com.hex.kagune.control.npc.GangDaily noroJob = com.hex.kagune.control.npc.GangDaily.give(com.hex.kagune.control.npc.GangPlayer.AOGIRI, 3L, 11L);
+        com.hex.kagune.control.npc.GangDaily romaJob = com.hex.kagune.control.npc.GangDaily.give(com.hex.kagune.control.npc.GangPlayer.CLOWNS, 3L, 4L);
+        etoFrame(new File(dir, "daily-noro.png"), face("noro/noro.png"), new com.hex.kagune.control.client.NpcTalkView.Model("Noro", "Aogiri's - quiet", 20, false,
+            "*tilts his head* ...Work. " + noroJob.job().text(noroJob.goal()) + ". Today.", page,
+            java.util.List.of("Talk to me.", "How's Aogiri?", "Any work for me today?", "Leave."), 61 | com.hex.kagune.control.npc.GangPlayer.AOGIRI << 8),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(20));
+        etoFrame(new File(dir, "daily-roma.png"), face("roma/roma.png"), new com.hex.kagune.control.client.NpcTalkView.Model("Roma", "Your ringmaster - giddy", 45,
+            false, "A job! For you! " + romaJob.job().text(romaJob.goal()) + ". Make it funny.", page,
+            java.util.List.of("Talk to me.", "How are the Clowns?", "Got a job for me, boss?", "Leave."), 54 | com.hex.kagune.control.npc.GangPlayer.CLOWNS << 8),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(45));
+    }
+
+    /** A companion's face from their skin (128 pixels read at 64). */
+    static BufferedImage face(String path) throws Exception {
+        BufferedImage skin = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/" + path));
+        if (skin.getWidth() == 64) {
+            return skin;
+        }
+        BufferedImage half = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        half.getGraphics().drawImage(skin, 0, 0, 64, 64, null);
+        return half;
+    }
+
     static void etoFrame(File out, BufferedImage face, com.hex.kagune.control.client.NpcTalkView.Model model,
                          com.hex.kagune.control.client.NpcTalkView.Motion motion) throws Exception {
         int w = 960;
@@ -575,6 +602,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("reputation")) {
             reputationTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("dailies")) {
+            dailiesTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("king")) {

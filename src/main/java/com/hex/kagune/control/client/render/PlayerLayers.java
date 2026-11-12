@@ -162,7 +162,7 @@ public final class PlayerLayers {
         if (!(event.getEntity() instanceof AbstractClientPlayer player)) {
             return;
         }
-        if (vanished(player)) {
+        if (vanished(player) || clownVanished(player)) {
             // 6.0.0: vanished in the wind (the kakuja's passive): nothing of him is drawn, not even his armour or what he holds.
             // 6.0.5: for himself too, in third person (until now his own view still showed his armour and what he held, as a
             // potion of invisibility leaves them).
@@ -189,6 +189,15 @@ public final class PlayerLayers {
         com.hex.kagune.client.KaguneClientState.View view = com.hex.kagune.client.KaguneClientState.get(player);
         return view.active() && (com.hex.kagune.control.client.UkakuClient.blade(player, com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) > 0.0
             || view.form() == com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA);
+    }
+
+    /**
+     * 4.1.53 (the owner, of the Clowns: "kagune, player and armor become fully invisible for 5 seconds when at low HP"): true while one of
+     * the Clowns is invisible (their gang as the server told every client, {@code S2CGangName}): nothing of them is drawn.
+     */
+    public static boolean clownVanished(AbstractClientPlayer player) {
+        return player.m_20145_() && Integer.valueOf(com.hex.kagune.control.npc.GangPlayer.CLOWNS)
+            .equals(com.hex.kagune.control.server.GangServer.SEEN.get(player.m_20148_()));
     }
 
     /** Before {@code KakuganLayer.OuterLayer.post} gives the held-back second layer back, so the kakugan layer still draws it. */

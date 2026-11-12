@@ -585,6 +585,11 @@ public final class EtoServer {
             }
             return;
         }
+        if (key.equals("daily")) {
+            // 4.1.53: today's job from Noro (Aogiri) or Roma (the Clowns): given, how it goes, handed in, paid.
+            show(player, npc, context(player, npc), script.main(context(player, npc), GangServer.daily(player, npc.persona(), c.seed())), Kind.MAIN);
+            return;
+        }
         if (key.equals("dates")) {
             // 2.1.2: where to go together.
             if (c.dating()) {
@@ -1323,6 +1328,31 @@ public final class EtoServer {
         return new EtoTalk.Page(page.line(), out);
     }
 
+    /** 4.1.53: Noro's (Aogiri's) and Roma's (the Clowns') first page: today's job, for one of their gang, before the way out. */
+    private static EtoTalk.Page withDaily(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        String ask = GangServer.dailyAsk(player, npc.persona());
+        if (ask == null || page.options().size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        java.util.Set<NpcTalk.Choice> used = new java.util.HashSet<>();
+        int at = page.options().size();
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            used.add(choice);
+            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        for (NpcTalk.Choice slot : NpcTalk.Choice.SAYS) {
+            if (!used.contains(slot)) {
+                List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+                out.add(at, new EtoTalk.Option(slot, ask, "daily"));
+                return new EtoTalk.Page(page.line(), out);
+            }
+        }
+        return page;
+    }
+
     private static EtoTalk.Page withCookbook(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
         if (npc.persona() != com.hex.kagune.control.npc.Persona.TOUKA || page.options().size() >= S2CNpcTalk.MOST
             || QuestServer.bond(player, npc.persona().key()).regard() < com.hex.kagune.control.kitchen.Cookbook.REGARD) {
@@ -1360,6 +1390,7 @@ public final class EtoServer {
             page = withCookbook(player, npc, page);
             page = withLesson(player, npc, page);
             page = withGang(player, npc, page);
+            page = withDaily(player, npc, page);
         }
         List<EtoTalk.Option> options = page.options().size() > S2CNpcTalk.MOST ? page.options().subList(0, S2CNpcTalk.MOST) : page.options();
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(options), kind));
