@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.56 (HexGhoul): the Ukaku menu in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.56.md`. `client/QuestFrame` (new: the quest menu's pieces for every menu: `plate`, `header`, `chipLeft`, `tabs`/`Tab`, `card`/`Card`/`Icon`, `section`, `story`, `checkRow`, `row`, `button` (gold or red, disabled: no hit), `road`/`Node`/`Tip` (`maxStep`), `tooltip`, `stamp`, `badge`); `UkakuMenuView` redone on it (`BOX_WIDTH` 740 x `BOX_HEIGHT` 440; `Tab` ORGAN/MUTATIONS; `Model` + `tab`, `picked` ("stage:", "unlock:", "pick:"), old constructors kept; `stageCard`, `stageDetail`, `preview`, `unlockRoad`, `mutationCard`, `mutationDetail` with `effects` and the UNLOCK button "mutation:N" only while it can be spent, `milestoneRoad`, `stageGlyph`/`wing`/`tentacle`, `mutationGlyph`; `comboName` for every Ukaku style, `roman` to VIII); `UkakuMenuScreen` (no overlay, sized from the box, keeps tab and pick); `PathSilhouette.ukakuKakuja` (six armoured tentacles; the final's needles and fire). `QuestTests.ukakuMenu`. `tools/UiPreview.java ukaku`. Render `docs/handoff/ukaku-menu-4.1.56.png`. Protocol 125.
+
 ## 4.1.55 (HexGhoul): the talk screen in the quest menu's style (testing)
 
 See `.github/release-notes-4.1.55.md`. `client/NpcTalkView.draw` redone on the quest menu's pieces: `QuestStyle.backdrop` (a new overload placing its honeycomb), the header (face tile, title, mood chip, bond and reputation meters), the words as a quest's story, `section` ("ANSWERS" and its rule and hint), `card` (key-cap number, words, `mark` by `Kind`), sized from the whole page and anchored low; `Model.label` falls back to the answer's own words. `tools/UiPreview.java` draws a skin of any size's face and hat. `EtoTests.talkBox`. Render `docs/handoff/talk-screen-4.1.55.png`. Protocol 125.

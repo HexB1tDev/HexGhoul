@@ -162,22 +162,73 @@ public class UiPreview {
 
     /** The Ukaku menu as it fits a 1080p window at GUI scale 2 (960 x 540), at a given mastery. */
     static void menu(File out, int mastery, WingForm form, double mouseX, double mouseY) throws Exception {
+        menu(out, mastery, form, mouseX, mouseY, UkakuMenuView.Tab.ORGAN, null, true, com.hex.kagune.control.client.QuestLocks.ALL);
+    }
+
+    /**
+     * 4.1.56: the Ukaku menu as the game draws it at 1080p, GUI scale 2 (960 x 540, at 2x): the quest menu's box over a stand-in daylit
+     * scene, at {@code mastery}, {@code form} out (or in), the tab and pick given, the mouse at ({@code mouseX}, {@code mouseY}) in the box.
+     */
+    static void menu(File out, int mastery, WingForm form, double mouseX, double mouseY, UkakuMenuView.Tab tab, String picked, boolean active,
+                     com.hex.kagune.control.client.QuestLocks quests) throws Exception {
         int w = 960;
         int h = 540;
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = graphics(image, 2);
         ImageCanvas c = new ImageCanvas(g, false);
-        c.gradient(0, 0, w, h, 0xE8070A08, 0xF0160A0B);
-        float scale = Math.min(1.0F, Math.min((w - 12.0F) / UkakuMenuView.UI_WIDTH, (h - 12.0F) / UkakuMenuView.UI_HEIGHT));
-        float ox = (w - UkakuMenuView.UI_WIDTH * scale) * 0.5F;
-        float oy = (h - UkakuMenuView.UI_HEIGHT * scale) * 0.5F;
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        for (int i = 0; i < w; i += 40) {
+            c.fill(i, h * 6 / 10 - 20 - (i * 37 % 60), i + 40, h * 6 / 10, 0xFF4E8834);
+        }
+        float scale = Math.min(1.0F, Math.min((w - 24.0F) / UkakuMenuView.BOX_WIDTH, (h - 24.0F) / UkakuMenuView.BOX_HEIGHT));
+        float ox = (w - UkakuMenuView.BOX_WIDTH * scale) * 0.5F;
+        float oy = (h - UkakuMenuView.BOX_HEIGHT * scale) * 0.5F;
+        UkakuMenuView.Model model = new UkakuMenuView.Model(mastery, active, form, KakuganEyes.DEFAULT, MUTATIONS, quests, tab, picked);
+        double time = Double.parseDouble(System.getProperty("ui.time", "1.3"));
+        if (mouseY < 0) {
+            // The mouse on the first area whose name starts with "mutation:" (the UNLOCK button): found by drawing once off screen.
+            BufferedImage scratch = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for (java.util.Map.Entry<String, UkakuMenuView.Rect> hit : UkakuMenuView.draw(new ImageCanvas(graphics(scratch, 1), false), model, -1, -1,
+                time).entrySet()) {
+                if (hit.getKey().startsWith("mutation:")) {
+                    mouseX = hit.getValue().x() + hit.getValue().width() * 0.6;
+                    mouseY = hit.getValue().y() + hit.getValue().height() * 0.5;
+                }
+            }
+        }
         c.push();
         c.translate(ox, oy);
         c.scale(scale);
-        UkakuMenuView.draw(c, new UkakuMenuView.Model(mastery, true, form, KakuganEyes.DEFAULT, MUTATIONS), mouseX, mouseY, 1.3);
+        UkakuMenuView.draw(c, model, mouseX, mouseY, time);
         c.pop();
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);
+    }
+
+    /**
+     * 4.1.56: the Ukaku menu in the quest menu's style: the organ's tab at a few masteries (a stage picked, a step of the road under the
+     * mouse), a stage ahead picked, the mutations' tab (one ready under the mouse, one waiting for its quest, one had).
+     */
+    static void ukaku(File dir) throws Exception {
+        UkakuMenuView.Tab organ = UkakuMenuView.Tab.ORGAN;
+        UkakuMenuView.Tab mutations = UkakuMenuView.Tab.MUTATIONS;
+        com.hex.kagune.control.client.QuestLocks all = com.hex.kagune.control.client.QuestLocks.ALL;
+        MUTATIONS = 0;
+        menu(new File(dir, "ukaku-organ-0.png"), 0, WingForm.RABBIT, 0, 0, organ, null, false, all);
+        menu(new File(dir, "ukaku-organ-300.png"), 300, WingForm.TWIN, 107, 116, organ, null, true, all);
+        menu(new File(dir, "ukaku-organ-760.png"), 760, WingForm.KAKUJA, 244 + 10 + 33 * 10, 405, organ, null, true, all);
+        menu(new File(dir, "ukaku-organ-ahead.png"), 300, WingForm.TWIN, 0, 0, organ, "stage:KAKUJA_I", true, all);
+        menu(new File(dir, "ukaku-organ-1000.png"), 1000, WingForm.FINAL_KAKUJA, 0, 0, organ, "stage:KAKUJA_II", true, all);
+        MUTATIONS = com.hex.kagune.control.ukaku.UkakuMutation.FIRE_DASH.bit();
+        java.util.Set<com.hex.kagune.control.quest.Gate> open = java.util.EnumSet.noneOf(com.hex.kagune.control.quest.Gate.class);
+        com.hex.kagune.control.client.QuestLocks quests = new com.hex.kagune.control.client.QuestLocks(open::contains, 1);
+        menu(new File(dir, "ukaku-mutations-ready.png"), 760, WingForm.TWIN, 330, -1, mutations, null, true, quests);
+        menu(new File(dir, "ukaku-mutations-quest.png"), 760, WingForm.TWIN, 100, 230, mutations, "pick:4", true, quests);
+        menu(new File(dir, "ukaku-mutations-owned.png"), 760, WingForm.TWIN, 0, 0, mutations, "pick:1", true, quests);
+        MUTATIONS = com.hex.kagune.control.ukaku.UkakuMutation.all();
+        menu(new File(dir, "ukaku-mutations-all.png"), 1000, WingForm.TWIN, 0, 0, mutations, null, false, all);
+        MUTATIONS = 0;
     }
 
     /** 6.1.0: the Pale menu (960 x 540 at 2x), at {@code mastery}, her base form out or in, the mouse at ({@code mouseX}, {@code mouseY}). */
@@ -660,6 +711,10 @@ public class UiPreview {
         if (args.length > 1 && args[1].equals("graft")) {
             graftMenu(new File(dir, "graft-menu-300.png"), 300, 0, 0, 0);
             graftMenu(new File(dir, "graft-menu-900.png"), 900, com.hex.kagune.control.graft.GraftMutation.NOT_THAT_EASILY.bit(), 400, 300);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("ukaku")) {
+            ukaku(dir);
             return;
         }
         menu(new File(dir, "ukaku-menu-0.png"), 0, WingForm.TWIN, 0, 0);

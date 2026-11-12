@@ -43,6 +43,7 @@ public final class QuestTests {
         forGood();
         forGoodLater();
         journal();
+        ukakuMenu();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -130,6 +131,173 @@ public final class QuestTests {
         } catch (java.io.IOException failure) {
             check(false, "the journal's source: " + failure);
         }
+    }
+
+    /**
+     * 4.1.56 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+     * Dialog, mastery menus ALL OF THEM"): the Ukaku menu is the quest menu's box: compact (the world round it), both tabs there to click,
+     * every stage a card and every step of the road a node to click, everything clickable and every word inside the box, nothing clickable
+     * over anything else; a mutation spent only by its UNLOCK button, drawn only while a point can be spent on the one picked; the screen
+     * keeps no overlay and spends only on that button.
+     */
+    static void ukakuMenu() {
+        java.util.List<int[]> texts = new java.util.ArrayList<>();
+        java.util.List<String> words = new java.util.ArrayList<>();
+        float[] at = {0.0F, 0.0F, 1.0F};
+        java.util.Deque<float[]> stack = new java.util.ArrayDeque<>();
+        com.hex.kagune.control.client.ui.UiCanvas canvas = new com.hex.kagune.control.client.ui.UiCanvas() {
+            public void fill(int x0, int y0, int x1, int y1, int argb) {
+            }
+
+            public void gradient(int x0, int y0, int x1, int y1, int top, int bottom) {
+            }
+
+            public void text(String text, int x, int y, int argb, boolean shadow) {
+                texts.add(new int[] {Math.round(at[0] + x * at[2]), Math.round(at[1] + y * at[2]), Math.round(this.width(text) * at[2])});
+                words.add(text);
+            }
+
+            public void centered(String text, int centerX, int y, int argb) {
+                this.text(text, centerX - this.width(text) / 2, y, argb, false);
+            }
+
+            public int width(String text) {
+                return text.length() * 6;
+            }
+
+            public void face(int x, int y, int size) {
+            }
+
+            public void hat(int x, int y, int size, int[] hole) {
+            }
+
+            public void push() {
+                stack.push(at.clone());
+            }
+
+            public void translate(float x, float y) {
+                at[0] += x * at[2];
+                at[1] += y * at[2];
+            }
+
+            public void scale(float factor) {
+                at[2] *= factor;
+            }
+
+            public void pop() {
+                float[] back = stack.pop();
+                System.arraycopy(back, 0, at, 0, 3);
+            }
+
+            public void batch(Runnable draw) {
+                draw.run();
+            }
+        };
+        int width = com.hex.kagune.control.client.UkakuMenuView.BOX_WIDTH;
+        int height = com.hex.kagune.control.client.UkakuMenuView.BOX_HEIGHT;
+        long[] seen = {0L, 0L};
+        check(width <= 760 && height <= 460 && width < com.hex.kagune.control.client.UkakuMenuView.UI_WIDTH,
+            "the Ukaku menu a compact box, the world seen round it");
+        java.util.Set<com.hex.kagune.control.quest.Gate> none = java.util.EnumSet.noneOf(com.hex.kagune.control.quest.Gate.class);
+        com.hex.kagune.control.client.QuestLocks[] locks = {com.hex.kagune.control.client.QuestLocks.ALL,
+            new com.hex.kagune.control.client.QuestLocks(none::contains, 1)};
+        String[] picks = {null, "stage:ONE_WING", "stage:KAKUJA_II", "unlock:RUSHING_DEATH", "pick:0", "pick:1", "pick:3", "pick:4", "nonsense"};
+        int[] masks = {0, com.hex.kagune.control.ukaku.UkakuMutation.FIRE_DASH.bit(), com.hex.kagune.control.ukaku.UkakuMutation.all()};
+        for (com.hex.kagune.control.client.UkakuMenuView.Tab tab : com.hex.kagune.control.client.UkakuMenuView.Tab.values()) {
+            for (int mastery : new int[] {0, 99, 300, 760, 1000}) {
+                for (com.hex.kagune.control.ukaku.WingForm form : com.hex.kagune.control.ukaku.WingForm.values()) {
+                    for (int mask : masks) {
+                        for (com.hex.kagune.control.client.QuestLocks lock : locks) {
+                            for (String pick : picks) {
+                                for (double time : new double[] {0.0, 0.1, 3.0}) {
+                                    texts.clear();
+                                    words.clear();
+                                    com.hex.kagune.control.client.UkakuMenuView.Model model = new com.hex.kagune.control.client.UkakuMenuView.Model(mastery,
+                                        mastery > 0, form, com.hex.kagune.control.kakugan.KakuganEyes.DEFAULT, mask, lock, tab, pick);
+                                    java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits =
+                                        com.hex.kagune.control.client.UkakuMenuView.draw(canvas, model, 300, 200, time);
+                                    String where = tab + " at " + mastery + " (" + form + ", " + pick + ", t " + time + ")";
+                                    check(hits.containsKey("tab:ORGAN") && hits.containsKey("tab:MUTATIONS"), where + ": both tabs there to click");
+                                    java.util.List<com.hex.kagune.control.client.UkakuMenuView.Rect> rects = new java.util.ArrayList<>(hits.values());
+                                    for (int a = 0; a < rects.size(); a++) {
+                                        com.hex.kagune.control.client.UkakuMenuView.Rect r = rects.get(a);
+                                        check(r.x() >= 0 && r.y() >= 0 && r.x() + r.width() <= width && r.y() + r.height() <= height,
+                                            where + ": everything to click inside the box");
+                                        for (int b = a + 1; b < rects.size(); b++) {
+                                            com.hex.kagune.control.client.UkakuMenuView.Rect o = rects.get(b);
+                                            check(r.x() + r.width() <= o.x() || o.x() + o.width() <= r.x() || r.y() + r.height() <= o.y()
+                                                || o.y() + o.height() <= r.y(), where + ": nothing to click over anything else to click");
+                                        }
+                                    }
+                                    for (int i = 0; i < texts.size(); i++) {
+                                        int[] t = texts.get(i);
+                                        check(t[0] >= 8 && t[0] + t[2] <= width - 8 && t[1] >= 4 && t[1] + 8 <= height - 4,
+                                            where + ": the words inside the box: \"" + words.get(i) + "\"");
+                                    }
+                                    long buttons = hits.keySet().stream().filter(k -> k.startsWith("mutation:")).count();
+                                    seen[0] += texts.size();
+                                    seen[1] += buttons;
+                                    if (tab == com.hex.kagune.control.client.UkakuMenuView.Tab.ORGAN) {
+                                        check(hits.containsKey("eyes"), where + ": the kakugan button");
+                                        check(buttons == 0, where + ": nothing on the organ's tab spends a point");
+                                        for (com.hex.kagune.control.UkakuStage stage : com.hex.kagune.control.UkakuStage.values()) {
+                                            check(hits.containsKey("stage:" + stage.name()), where + ": " + stage + " a card to click");
+                                        }
+                                        for (com.hex.kagune.control.ukaku.UkakuUnlock unlock : com.hex.kagune.control.ukaku.UkakuUnlock.values()) {
+                                            check(hits.containsKey("unlock:" + unlock.name()), where + ": " + unlock + " on the road, to click");
+                                        }
+                                    } else {
+                                        for (com.hex.kagune.control.ukaku.UkakuMutation mutation : com.hex.kagune.control.ukaku.UkakuMutation.values()) {
+                                            check(hits.containsKey("pick:" + mutation.ordinal()), where + ": " + mutation + " a card to click");
+                                        }
+                                        com.hex.kagune.control.ukaku.UkakuMutation shown = null;
+                                        for (com.hex.kagune.control.ukaku.UkakuMutation mutation : com.hex.kagune.control.ukaku.UkakuMutation.values()) {
+                                            if (pick != null && pick.equals("pick:" + mutation.ordinal())) {
+                                                shown = mutation;
+                                            }
+                                        }
+                                        check(buttons <= 1, where + ": one UNLOCK button at most");
+                                        if (shown != null) {
+                                            boolean can = lock.passes(com.hex.kagune.control.quest.Gates.ukaku(shown))
+                                                && com.hex.kagune.control.ukaku.UkakuMutation.canUnlock(mastery, mask, shown, lock.points());
+                                            check(hits.containsKey("mutation:" + shown.ordinal()) == can && buttons == (can ? 1 : 0),
+                                                where + ": the UNLOCK button only for the one picked, only while a point can be spent on it");
+                                        }
+                                        for (String key : hits.keySet()) {
+                                            if (key.startsWith("mutation:")) {
+                                                com.hex.kagune.control.ukaku.UkakuMutation mutation = com.hex.kagune.control.ukaku.UkakuMutation.byOrdinal(
+                                                    Integer.parseInt(key.substring(9)));
+                                                check(mutation != null && !mutation.in(mask) && lock.passes(com.hex.kagune.control.quest.Gates.ukaku(mutation))
+                                                    && com.hex.kagune.control.ukaku.UkakuMutation.canUnlock(mastery, mask, mutation, lock.points()),
+                                                    where + ": an UNLOCK button only where a point can be spent");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(seen[0] > 100000 && seen[1] > 100, "the menu's words and its UNLOCK buttons were all drawn and checked (" + seen[0] + ", " + seen[1] + ")");
+        try {
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/UkakuMenuScreen.java"));
+            String view = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/UkakuMenuView.java"));
+            check(!screen.contains("this.m_280273_(graphics)") && !screen.contains("graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_"),
+                "no full-screen overlay: the world seen round the box");
+            check(screen.contains("UkakuMenuView.BOX_WIDTH") && screen.contains("UkakuMenuView.BOX_HEIGHT"), "the screen sized from the box");
+            check(screen.indexOf("C2SUkakuAction.MUTATE") > screen.indexOf("key.startsWith(\"mutation:\")")
+                && screen.split("C2SUkakuAction.MUTATE", -1).length == 2, "the screen spends a point only on the UNLOCK button's key");
+            int draw = view.indexOf("public static Map<String, Rect> draw(");
+            check(draw > 0 && !view.substring(draw, view.indexOf("// ------------------------------------------------------------------ drawing (as"))
+                .contains("organicPanel(") && view.contains("QuestFrame.plate("), "the organic board gone from the Ukaku menu: the quest menu's plate");
+        } catch (java.io.IOException failure) {
+            check(false, "the Ukaku menu's source: " + failure);
+        }
+        com.hex.kagune.control.client.UkakuMenuView.Model at760 = new com.hex.kagune.control.client.UkakuMenuView.Model(760, true,
+            com.hex.kagune.control.ukaku.WingForm.TWIN, com.hex.kagune.control.kakugan.KakuganEyes.DEFAULT, 0);
+        check(at760.tab() == com.hex.kagune.control.client.UkakuMenuView.Tab.ORGAN && at760.picked() == null, "an old model opens on the organ");
     }
 
     /**

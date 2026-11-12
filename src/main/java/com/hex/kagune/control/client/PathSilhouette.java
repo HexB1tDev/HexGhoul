@@ -199,6 +199,82 @@ public final class PathSilhouette {
      * The largest length (up to {@code wanted}) that keeps every unit-curve point, scaled from the root, inside the box,
      * including stroke thickness: every mark is at most {@code unitHalf * length + fixedHalf} thick on each side.
      */
+    /** 4.1.56: the kakuja's armour (dark plates), its seams, the final kakuja's needles and its fire. */
+    public static final int KAKUJA_PLATE = 0x641C24;
+    public static final int KAKUJA_SEAM = 0xC8402A;
+    public static final int KAKUJA_NEEDLE = 0xE8D2C8;
+    public static final int KAKUJA_FIRE = 0xFF8A2A;
+    public static final int KAKUJA_FIRE_CORE = 0xFFD86A;
+
+    /**
+     * 4.1.56: Ukaku's kakuja for the menu's preview (his first: "six armored tentacles grow from his shoulder blades"; the final: "three of them
+     * as needle tentacles and ... the other three into fire tendrils"): seen from the front, three tentacles from each shoulder blade fanned
+     * up and out, writhing, in armour plates with vermilion seams; the final's needle tentacles on his right (the viewer's left) ending in
+     * pale needles, its fire tendrils on his left flickering orange to gold.
+     */
+    public static List<Mark> ukakuKakuja(PathChoiceLayout.Box box, double time, float intensity, boolean finalForm, int bg) {
+        List<Mark> marks = new ArrayList<>();
+        Figure f = Figure.in(box, 0.52F);
+        float rootY = f.shoulderY + f.size * 0.05F;
+        double[] angles = {12.0, 42.0, 72.0};
+        float[][][] curves = new float[6][][];
+        float[][][] envelope = new float[6 * 16][][];
+        for (int i = 0; i < 6; i++) {
+            int side = i < 3 ? -1 : 1;
+            double angle = Math.toRadians(angles[i % 3]);
+            curves[i] = tendril(side, angle, time * (finalForm && side > 0 ? 3.2 : 1.4) + i * 1.1);
+            for (int j = 0; j < 16; j++) {
+                envelope[i * 16 + j] = tendril(side, angle, j * Math.PI / 8.0);
+            }
+        }
+        float rootOffset = f.shoulderHalf * 0.55F;
+        float length = Math.min(fit(box, f.cx - rootOffset, rootY, box.width() * 0.5F, 0.05F, 1.0F, java.util.Arrays.copyOfRange(envelope, 0, 48)),
+            fit(box, f.cx + rootOffset, rootY, box.width() * 0.5F, 0.05F, 1.0F, java.util.Arrays.copyOfRange(envelope, 48, 96)));
+        float fade = 0.45F + 0.55F * Math.max(0.0F, Math.min(1.0F, intensity));
+        for (int i = 0; i < 6; i++) {
+            boolean left = i < 3;
+            float rootX = f.cx + (left ? -rootOffset : rootOffset);
+            boolean fire = finalForm && !left;
+            boolean needle = finalForm && left;
+            float[][] points = curves[i];
+            float root = Math.max(2.0F, length * (fire ? 0.08F : 0.11F));
+            for (int s = 0; s + 1 < points.length; s++) {
+                float a = s / (float)(points.length - 1);
+                float b = (s + 1) / (float)(points.length - 1);
+                float x0 = rootX + points[s][0] * length;
+                float y0 = rootY + points[s][1] * length;
+                float x1 = rootX + points[s + 1][0] * length;
+                float y1 = rootY + points[s + 1][1] * length;
+                float t0 = root + (0.8F - root) * a;
+                float t1 = root + (0.8F - root) * b;
+                if (fire) {
+                    float flicker = 0.5F + 0.5F * (float)Math.sin(time * 9.0 + s * 0.9 + i);
+                    marks.add(new Stroke(x0, y0, x1, y1, t0 * (1.0F + 0.25F * flicker), t1 * (1.0F + 0.25F * flicker),
+                        blend(bg, blend(KAKUJA_FIRE, KAKUJA_FIRE_CORE, a * 0.8F * flicker), fade)));
+                    continue;
+                }
+                // Armour plates with a seam of vermilion between them (every other segment), a needle's pale point at the end.
+                int plate = needle && s >= points.length - 4 ? KAKUJA_NEEDLE : KAKUJA_PLATE;
+                marks.add(new Stroke(x0, y0, x1, y1, t0, t1, blend(bg, plate, fade)));
+                if (s % 3 == 2 && plate == KAKUJA_PLATE) {
+                    // A seam: a thin vermilion band across the plate's end.
+                    float dx = x1 - x0;
+                    float dy = y1 - y0;
+                    float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+                    float half = t1 * 0.5F;
+                    marks.add(new Stroke(x1 - dy / d * half, y1 + dx / d * half, x1 + dy / d * half, y1 - dx / d * half, 1.2F, 1.2F,
+                        blend(bg, KAKUJA_SEAM, fade)));
+                }
+                if (plate == KAKUJA_PLATE) {
+                    // The plate's lit ridge down its middle.
+                    marks.add(new Stroke(x0, y0, x1, y1, Math.max(0.6F, t0 * 0.25F), Math.max(0.6F, t1 * 0.25F), blend(bg, KAKUJA_SEAM, fade * 0.7F)));
+                }
+            }
+        }
+        figure(marks, f, bg, intensity);
+        return marks;
+    }
+
     private static float fit(PathChoiceLayout.Box box, float rootX, float rootY, float wanted, float unitHalf, float fixedHalf,
                              float[][][] curves) {
         float pad = FIT_MARGIN + fixedHalf;
