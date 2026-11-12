@@ -1,4 +1,4 @@
-# Next AI: after 4.1.53 (4.1.53: the gangs' traits and daily quests; 4.1.52: the reputation bar; 4.1.51: the new CCG tower, the owner's furnished CCG.schematic, a working lift; 4.1.50: joining gangs). Before: after 4.1.47, 4.1.48 half done (4.1.48 WIP: Ayato and Noro on slim arms with builds 0.42/0.52, in docs/handoff/wip-4.1.48.patch; 4.1.47: the ghouls' arm blade rebuilt as the owner's picture, four slashes, a living stance, protocol 121; 4.1.46: the CCG's ghoul division, protocol 120; 4.1.45: roaming gangs, the Clowns and the Gas Masks, protocol 119; 4.1.44: the hideout and the CCG building spawn again; 4.1.43: the one-of-a-kind claim taken as the place is built, never two Etos; 4.1.42: structures once per world, flat, never floating, spread out; 4.1.41: the Reaper's blade turned over about its length; 4.1.40: older worlds' townspeople keep their maps, "complete all" reopens gates at login; 4.1.39: Small City fixes, humans kept in their village, the city ground cached, protocol 118; 4.1.38: two minutes after a fight the Reaper puts his jacket back on; 4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.53, handoff (4.1.54 the Gas Masks/Banjou next: its first step in docs/handoff/wip-4.1.54.patch; 4.1.53: the gangs' traits and daily quests; 4.1.52: the reputation bar; 4.1.51: the new CCG tower, the owner's furnished CCG.schematic, a working lift; 4.1.50: joining gangs). Before: after 4.1.47, 4.1.48 half done (4.1.48 WIP: Ayato and Noro on slim arms with builds 0.42/0.52, in docs/handoff/wip-4.1.48.patch; 4.1.47: the ghouls' arm blade rebuilt as the owner's picture, four slashes, a living stance, protocol 121; 4.1.46: the CCG's ghoul division, protocol 120; 4.1.45: roaming gangs, the Clowns and the Gas Masks, protocol 119; 4.1.44: the hideout and the CCG building spawn again; 4.1.43: the one-of-a-kind claim taken as the place is built, never two Etos; 4.1.42: structures once per world, flat, never floating, spread out; 4.1.41: the Reaper's blade turned over about its length; 4.1.40: older worlds' townspeople keep their maps, "complete all" reopens gates at login; 4.1.39: Small City fixes, humans kept in their village, the city ground cached, protocol 118; 4.1.38: two minutes after a fight the Reaper puts his jacket back on; 4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -9,7 +9,66 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
-## START HERE (newest, after 4.1.53): the Gas Masks (Banjou) next
+## START HERE (newest, after 4.1.53, handoff): the Gas Masks (Banjou, 4.1.54), its first step saved as a patch
+
+The owner stopped the session ("prompt + handoff please"). **Pushed this session** (each after a full build EXIT 0 on its exact commit, jar
+sent): 4.1.50 joining gangs (`2732d8ba`), 4.1.51 the new CCG tower (`f607d42f`), 4.1.52 the reputation bar (`c856404a`), 4.1.53 the gangs'
+traits and daily quests (`c9e49da3`). The commit carrying this section changes only docs/ (the build's code is 4.1.53's).
+
+**Rules learned this session:** a server map of game times must be `WorldTimes.map()` (ControlTests fails the full build otherwise); the
+build runs every `*Tests` suite alphabetically, so before a full build run at least ControlTests, NpcTests and whatever reads the sources
+you changed in the quick loop. `tools/interior_render.py` renders any structure in true block shapes and light levels (cutaways, eye views,
+`dark` spawnable spots): use it for every structure. `tools/UiPreview.java` modes `reputation` and `dailies` render the talk screen.
+
+**4.1.54 so far:** `git apply docs/handoff/wip-4.1.54.patch` (binary) gives Banjou's skin (`art/banjou_skin.png`, an unchanged copy of the
+owner's `art/exploration/Banjou_skin.png`) and his textures (`tools/companion_textures.py` "banjou": slim, `narrow` like Noro's, EYES on
+the face's row 4; `textures/entity/banjou/*`, faces judged right). Delete the patch file in the 4.1.54 commit. Nothing else is written.
+
+**The owner's answer this session (quoted exactly):** Banjou's home in `GasMask_hideout.schem` is "The cottage" (the main cherry house with
+the pink roof, not the little crimson-roofed garden house). Render of the hideout: build it with `tools/exploration_structures.load` and
+`tools/interior_render.py` (28 x 24 x 19; 109 signs, 11 lecterns, 4 beds).
+
+**4.1.54 plan (worked out, not written):**
+- **Persona `BANJOU`** modelled on the General (male, `likes(woman)` -> woman: "Romanceable (Only females)", `slim()` true, `muscle()` 0:
+  "just alex model by the way, not muscled at all") and Ayato (`wings()`): key "banjou", colour "§a", size 1.0, hair 0x6B4E36, eyes
+  0x87A7B6, skin 0xF7CAA5 (from the skin), `mask()` "mask_gas" with a new `maskAtNight()` read in `OutfitLayer.faction` ("puts on the
+  mask at night"), home "the cottage". Append to `Persona.ALL` (CompanionTests ~line 810 pins Roma last: update it).
+- **Registration as Roma's** (commit `1e3bd752` shows every file): `BanjouNpc`, `ControlEntities.BANJOU` (+ attributes, `EtoRenderer`,
+  `UniqueNpcs.kind`), `Teaching.BANJOU`, `ControlCommands` summon.
+- **His voice** (the owner: "wants to be tough but truly isnt, is aware of how weak he truly is"; "Daily quest giver, Chat, Romanceable
+  (Only females)"): `BanjouScript` (RomaScript's methods), `talk/banjou.txt`, `Courtship.BANJOU`, and his lines everywhere Roma has hers
+  (MoodActs, MoodKiss, NightWords, Tolerance, Drowsy, SceneWords' ROMANCE_SCRIPTS/RELATED, SceneServer, EtoBrain's bed line, Chores/Kitchen).
+- **His fight** ("super small blue Ukaku wing (singular) cannot shoot projectiles, only uses basic m1s with it"): companions already draw
+  one wing (`WingRules.companion`, SIDE); in `UkakuWingRenderer`'s companion loop scale his carry down (~0.55) and colour it from
+  `persona.kaguneColour()` (blue) instead of `KaguneColours.DEFAULT`; no shots (a persona flag that makes `NpcWings` choose nothing); his M1
+  a string of one-wing slaps from `WingRig.Motion` (SLAP_RIGHT, SWING_RIGHT, RISE_RIGHT, SLAM_RIGHT: the player's 4.1.2 slams): a strike
+  start and motion on `S2CNpcWings` (protocol 125), drawn by the renderer, damage on the server when the slap lands. Render front, side,
+  and the slaps, and judge them.
+- **The hideout:** `tools/companion_structures.py` PLACES "gas_hideout" from `exploration/GasMask_hideout.schem` (Sponge), Banjou in the
+  cottage, three or four Gas Masks about it (a flag like `HexCircus`, turned into `ganged(Gang.GAS_MASKS, mask)` by `GhoulNpcBrain`, kept
+  near home as `atCircus` does); worldgen as the circus's (structure, structure_set, template_pool, `DryLand.PLACES` + salt,
+  `PlaceClaims.ONE_OF_A_KIND`, `ControlStructures.ONE_OF_A_KIND` and its name; NpcTests pins those lists).
+- **The gang for players:** `GangPlayer.GAS_MASKS = 3` (banned bit, title "the Gas Masks", `named`: a toxic emblem U+E002 from
+  `tools/gang_emblems.py` in the font json, the name "§a" green: "Toxic logo, green name"), `GangPlayer.of` for Gas Mask NPCs; in
+  `GangServer`: `leads/gangOf/memberOf/gives` for Banjou, the joining chain ("Short chain, like Roma": talk him up (an answer that takes him
+  seriously), kill 3 Clowns, bring him a clown mask), `giveMask` "mask_gas", `inHideout` by the claimed "gas_hideout" (~40 blocks), his
+  daily jobs in `GangDaily` (rewards of the gang's), traits in `tick` ("While wearing the gas Mask, gain night vision": Night Vision while a
+  mask_gas* is on the head; "Gain speed 2 when at low HP": Speed II at 30% health or under). `NpcTalkView.GANG_COLOURS[3]` is green already.
+- Then the order stays: the new to-do items (Ayato/Touka marriage reactions, spouse reactions to gang life, "Quit the gang", the marriage
+  and membership rules) -> every menu redone like the quest menu, the talk screen first.
+
+**Prompt for the next session:**
+
+> Continue HexGhoul on branch claude/admiring-johnson-8df58h (fast-forward your session branch onto it first). Read
+> docs/handoff/next-ai-4.1.9.md first: the "START HERE (newest, after 4.1.53, handoff)" section, and CLAUDE.md (render and judge
+> everything you change; tests passing is not the bar). Then do 4.1.54, the Gas Masks with Banjou: git apply
+> docs/handoff/wip-4.1.54.patch (his skin and textures), then everything in that section's plan (his persona, voice, courtship for women
+> only, his single small blue Ukaku wing with M1 slaps only, his gas mask at night, his hideout with him in the cottage, the gang for
+> players with its toxic emblem, green name, joining chain, mask, dailies and traits), delete the patch file in the same commit, run the
+> full build in an isolated copy, push on EXIT 0 to both branches, send the jar. Then the new to-do items, then the menus (the talk
+> screen first). One version at a time, each complete; show renders in chat; quote the owner exactly; never claim in-game testing.
+
+## START HERE (after 4.1.53): the Gas Masks (Banjou) next
 
 **Pushed:** 4.1.52 the reputation bar (`c856404a`, full build EXIT 0, jar sent). 4.1.53 the traits and daily quests: its commit carries
 this section (release notes, README row).
