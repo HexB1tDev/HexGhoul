@@ -9,6 +9,38 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
+## START HERE (after 4.1.48): Roma (4.1.49) waits on her skin; joining gangs (4.1.50) done in code
+
+**Pushed:** 4.1.48 (`c9887594`, full build EXIT 0 on its exact commit; jar sent): the circus tent and its four Clowns, Clowns vs Gas Masks,
+Ayato/Noro slim, and (the owner, mid-session, quoted exactly) "Reduce the player's muscle size to be the same as Noro." (`PLAYER_SHARE`
+0.52). The commit carrying this note changes only docs/ (the build's code is 4.1.48's).
+
+**Not pushed, saved as a patch:** `git apply docs/handoff/wip-4.1.49-4.1.50.patch` (binary: textures, the tent template) on top of 4.1.48.
+It holds two versions' work, both compiling, the API verifier and Companion/Npc/Graft/Scene/Dialogue/Family/Eto/BikakuWorm tests passing
+(quick_check), **the full build not run on either**:
+- **4.1.49 Roma** (everything but her skin): `Persona.ROMA` (Touka's size, skinny: curves 0.75, legs 0.7, build 0.94; slim; dates anyone;
+  `kickMaster()`, `tendrils()` 4, purple `ROMA_KAGUNE`), `RomaNpc`, `ControlEntities.ROMA` (+ attributes, `UniqueNpcs.kind`), renderer,
+  `RomaScript` (her voice: death jokes, delighted by everything, sincere when it counts), `talk/roma.txt` (her scenes, five courtship
+  moments, three dates), `Courtship.ROMA` (doves, a village walk at night, her tent in the dead of night, the Pack, dawn), her lines in
+  MoodActs/MoodKiss/Tolerance/NightWords/Drowsy/SceneServer/EtoBrain, SceneWords, chores and kitchen as Touka's, `/kagune` summon; placed in
+  the tent's middle (38, 1, 24). Her fight: Kick Master by `Persona.kickMaster` in `EtoOwl` (the General's too), and `NpcTendrils` (four
+  transplant tails on the Graft rig, two a side: `GraftRig` TRANSPLANT limb 2/3 lower roots and `TAIL_LOW`; the Rinkaku string, the
+  Fourfold Pierce, `GraftMove.ROMA_IMPALE` (run through, lifted on it, torn out), `ROMA_HURL`/`ROMA_THROW` (the lower pair tear up a chunk,
+  hold it, whip it: `RinkakuHurl`'s numbers, drawn by `HurlClient` from `S2CHurl` under her id)); drawn by `GraftRenderer`'s companion pass
+  in her purple (`S2CGhoulNpc` under her id). Render judged: `docs/handoff/roma-tendrils-4.1.49.png`. Protocol 122.
+  **Missing: her skin.** The owner sent it as a picture in chat twice; it never reached the container. When it arrives: copy it to
+  `art/roma_skin.png`, add `"roma"` to `tools/companion_textures.py` COMPANIONS (slim; which eyes turn), run it, set `ROMA_HAIR/EYES/SKIN`
+  from the skin, render her (front, side, three-quarters, with the tendrils), then release notes/README/table row and the full build.
+- **4.1.50 joining gangs**: `GangPlayer` (pure: member, banned bits, Aogiri's quest 5 CCG, the Clowns' chain: Roma laughs at the right
+  joke (`GangServer.JOKES[FUNNY]`), 3 Gas Masks, a quinque case; over 10 of their own killed: banned, out), `GangServer` (kept in
+  `PlayerPersisted`; `LivingDeathEvent` counts; `PlayerEvent.NameFormat` puts "(emblem) (space) (name)" on the name, server and clients;
+  `S2CGangName` message 57; Ayato's and Roma's first page get a "gang" option, SAY_3, `EtoServer.withGang`), `GhoulNpcBrain.wanted` (its own
+  never, the banned on sight, what goes for its own: `GangServer.threatens`) and `hurt` (no grudge for its own's blows). The emblems:
+  `tools/gang_emblems.py` (16 x 16, in `assets/minecraft/font/default.json` as U+E000 the tree, U+E001 the clown); shown to the owner:
+  `docs/handoff/gang-emblems-4.1.50.png` (their answer not yet in). Forge's NameFormat and `Player.refreshDisplayName` stubbed and
+  allowlisted from Forge 1.20.1's sources. `NpcTests.joining`. Protocol 123.
+  **Open to the owner:** how a player joins the Gas Masks (never asked); whether the emblems are right.
+
 ## START HERE (after 4.1.47): finish 4.1.48, then Roma (4.1.49), then joining gangs (4.1.50)
 
 The owner stopped the session ("Stop, prompt and handoff, Now"). **Pushed** (each after a full build with EXIT 0 on its exact commit):
