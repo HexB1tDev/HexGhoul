@@ -59,6 +59,7 @@ public final class NpcTests {
         smallCity();
         cityFixes();
         worldgen();
+        sitePrep();
         onePerWorld();
         gangs();
         joining();
@@ -2529,10 +2530,14 @@ public final class NpcTests {
             check(adopt.contains("if (taken == null) {\n                    claim(place, at.f_45578_, at.f_45579_);")
                 && adopt.contains("ONE_OF_A_KIND = {\"aogiri_hideout\", \"ccg_building\", \"anteiku\", \"library\", \"cyber_tower\", \"reaper_mansion\",\n        \"circus\", \"gas_hideout\"}"),
                 "a one-of-a-kind place already standing is the world's one");
-            // 4.1.17 (the owner: "they are spawning under the ground, which cannot happen ... always at the top max area"): every jigsaw
-            // place is lifted onto the highest ground of its footprint; the tower starts on the ground, not at y 63.
-            check(structures.contains("return Optional.of(raised(best, DryLand.lift(ground, bestAt[0], bestAt[1], bestAt[2], bestAt[3], bestAt[4], bestAt[5])));")
-                && structures.contains("made.m_192781_(lift);"), "a place stands on the highest ground of its footprint");
+            // 4.1.17 (the owner: "they are spawning under the ground, which cannot happen ... always at the top max area"): no place under
+            // the ground; 4.1.57 (the owner: "CLEAR ALL BLOCKS OR TREES, AND THEN PLACE IT DIRECTLY ON THE FLOOR, NOT FLYING, NOT HOVERING
+            // OVER THE FLOOR"): it stands on its footprint's own floor, moved there, everything over that floor cleared before it (so never
+            // under the ground either), no longer lifted onto its highest ground (a plinth over its low side). The tower starts on the
+            // ground, not at y 63.
+            check(structures.contains("return Optional.of(settled(best, floor - ground.surface(bestAt[0], bestAt[1]), context.f_226625_(),")
+                && structures.contains("made.m_192781_(shift);") && !structures.contains("DryLand.lift("),
+                "a place stands on its footprint's own floor, its site cleared over it: never under the ground, never on a plinth");
             String tower = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json")));
             check(tower.contains("\"project_start_to_heightmap\": \"WORLD_SURFACE_WG\"") && !tower.contains("\"absolute\": 63"), "Ken's tower starts on the ground");
             for (String place : new String[] {"anteiku", "library", "cyber_tower", "reaper_mansion", "circus", "gas_hideout"}) {
@@ -2682,6 +2687,177 @@ public final class NpcTests {
      * the foundation's column on made-up columns (a floor over air filled down to the ground, a floor on the ground left), places kept apart,
      * and the wiring: /place alone builds outside the world's one, every structure of ours on a foundation.
      */
+    /**
+     * 4.1.57 (the owner: "FIX THE FUCKING STRUCTURE SPAWNING PLACEMENT, i asked multiple times to fix it, CLEAR THE FUCKING AREA OF SPAWN,
+     * CLEAR ALL BLOCKS OR TREES, AND THEN PLACE IT DIRECTLY ON THE FLOOR, NOT FLYING, NOT HOVERING OVER THE FLOOR, I SAID ON IT."): a place
+     * stands on its footprint's own floor (the middle of its ground, never the highest: no plinth); its clearing's tiles take every block
+     * over that floor across the footprint, and over the bank's top round it, never the floor itself, never past the start's reach; the bank
+     * round it is flat by the place, then a block a block; every place is built after the trees (the last step) and its clearing laid before
+     * its own pieces; the clearing template is a cube of air.
+     */
+    static void sitePrep() {
+        int clear = com.hex.kagune.control.village.SitePrep.CLEAR;
+        java.util.Random random = new java.util.Random(4157);
+        boolean covered = true;
+        boolean within = true;
+        boolean few = true;
+        for (int trial = 0; trial < 400; trial++) {
+            int minX = random.nextInt(400) - 200;
+            int minZ = random.nextInt(400) - 200;
+            int maxX = minX + random.nextInt(trial < 50 ? 20 : 120);
+            int maxZ = minZ + random.nextInt(trial < 50 ? 20 : 120);
+            int fromY = 40 + random.nextInt(40);
+            int topY = fromY + random.nextInt(70);
+            java.util.List<com.hex.kagune.control.village.SitePrep.Tile> tiles = com.hex.kagune.control.village.SitePrep.tiles(minX, minZ, maxX, maxZ,
+                fromY, topY);
+            for (com.hex.kagune.control.village.SitePrep.Tile t : tiles) {
+                within &= t.x() >= minX && t.z() >= minZ && t.y() >= fromY;
+            }
+            int across = ((maxX - minX) / clear + 2) * ((maxZ - minZ) / clear + 2) * ((topY - fromY) / clear + 2);
+            few &= tiles.size() <= across;
+            for (int k = 0; k < 60; k++) {
+                int x = minX + random.nextInt(maxX - minX + 1);
+                int z = minZ + random.nextInt(maxZ - minZ + 1);
+                int y = fromY + random.nextInt(topY - fromY + 1);
+                boolean in = false;
+                for (com.hex.kagune.control.village.SitePrep.Tile t : tiles) {
+                    in |= x >= t.x() && x < t.x() + clear && z >= t.z() && z < t.z() + clear && y >= t.y() && y < t.y() + clear;
+                }
+                covered &= in;
+            }
+        }
+        check(covered, "the clearing's tiles take every block of what they clear");
+        check(within, "no tile starts before what it clears (never under a floor, never past a footprint's near edge)");
+        check(few, "no more tiles than the run needs");
+
+        // A place's clearing: its footprint from over its floor, the whole site from over its bank; never its floor; within its start's reach.
+        int floor = 63;
+        int top = 120;
+        int minX = 1000;
+        int minZ = 2000;
+        int maxX = 1027;
+        int maxZ = 2018;
+        int margin = com.hex.kagune.control.village.SitePrep.MARGIN;
+        int bank = com.hex.kagune.control.village.SitePrep.bank();
+        java.util.List<com.hex.kagune.control.village.SitePrep.Tile> site = com.hex.kagune.control.village.SitePrep.clearing(minX, minZ, maxX, maxZ,
+            1008, 2000, floor, top);
+        java.util.function.Predicate<int[]> taken = p -> {
+            for (com.hex.kagune.control.village.SitePrep.Tile t : site) {
+                if (p[0] >= t.x() && p[0] < t.x() + clear && p[1] >= t.y() && p[1] < t.y() + clear && p[2] >= t.z() && p[2] < t.z() + clear) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        boolean footprint = true;
+        boolean ring = true;
+        boolean keepsFloor = true;
+        for (int x = minX - margin; x <= maxX + margin; x++) {
+            for (int z = minZ - margin; z <= maxZ + margin; z++) {
+                boolean in = x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+                keepsFloor &= !taken.test(new int[] {x, floor, z});
+                for (int y = floor + 1; y <= top; y++) {
+                    if (in) {
+                        footprint &= taken.test(new int[] {x, y, z});
+                    } else if (y > floor + bank) {
+                        ring &= taken.test(new int[] {x, y, z});
+                    }
+                }
+            }
+        }
+        check(footprint, "everything over the floor across the footprint cleared before the place: hills, trunks, leaves");
+        check(ring, "everything over the bank's top round it cleared too (trees round it)");
+        check(keepsFloor, "the floor itself never cleared: the place stands on the ground");
+        java.util.List<com.hex.kagune.control.village.SitePrep.Tile> far = com.hex.kagune.control.village.SitePrep.clearing(1000, 2000, 1271, 2262,
+            1008 + 64, 2000 + 64, floor, top);
+        boolean reach = true;
+        for (com.hex.kagune.control.village.SitePrep.Tile t : far) {
+            reach &= t.x() >= 1072 - com.hex.kagune.control.village.SitePrep.REACH_BACK && t.x() + clear - 1 <= 1072 + com.hex.kagune.control.village.SitePrep.REACH_ON
+                && t.z() >= 2064 - com.hex.kagune.control.village.SitePrep.REACH_BACK && t.z() + clear - 1 <= 2064 + com.hex.kagune.control.village.SitePrep.REACH_ON;
+        }
+        check(reach && !far.isEmpty(), "a big place's clearing never reaches past what its start chunk places (the hideout's)");
+
+        // The floor: the middle of the footprint's ground, never its highest (no plinth over the low side) nor its lowest.
+        com.hex.kagune.control.village.DryLand.Ground slope = Land.of((x, z) -> 64 + (x - minX) / 3);
+        int settled = com.hex.kagune.control.village.SitePrep.floor(slope, minX, minZ, maxX, maxZ);
+        int highest = com.hex.kagune.control.village.SitePrep.highest(slope, minX, minZ, maxX, maxZ);
+        check(settled >= 67 && settled <= 70 && highest == 73, "on a slope from 64 to 73 it stands at its middle (" + settled
+            + "), under its highest ground (" + highest + "): no plinth");
+        check(com.hex.kagune.control.village.SitePrep.floor(Land.of((x, z) -> 70), minX, minZ, maxX, maxZ) == 70, "on flat land, on it");
+        check(com.hex.kagune.control.village.SitePrep.samples(0, 0, 271, 262).length <= 30 * 30, "a big footprint's samples kept few");
+
+        // The bank: flat by the place, then a block a block, to the margin's edge; the fill and the apron.
+        int flat = com.hex.kagune.control.village.SitePrep.FLAT;
+        boolean banked = true;
+        for (int d = 0; d <= margin; d++) {
+            int rise = com.hex.kagune.control.village.SitePrep.rise(d);
+            banked &= rise == (d <= flat ? 0 : d - flat) && com.hex.kagune.control.village.SitePrep.cut(floor, d) == floor + 1 + rise
+                && com.hex.kagune.control.village.SitePrep.fill(floor, d) == floor - rise;
+        }
+        check(banked && bank == margin - flat, "flat by the place, then a block up or down a block out: never a cliff");
+        check(java.util.Arrays.equals(com.hex.kagune.control.village.SitePrep.apron(floor, 0, floor - 5, 24), new int[] {floor - 4, floor}),
+            "a yard over lower ground filled up to the floor");
+        check(com.hex.kagune.control.village.SitePrep.apron(floor, 0, floor, 24) == null, "ground at the floor: nothing to fill");
+        check(java.util.Arrays.equals(com.hex.kagune.control.village.SitePrep.apron(floor, 5, floor - 9, 24), new int[] {floor - 8, floor - 3}),
+            "the bank built up to its own height out there");
+        check(com.hex.kagune.control.village.SitePrep.apron(floor, 0, floor - 30, 24) == null, "a ravine left as it is");
+        boolean grounded = true;
+        for (com.hex.kagune.control.village.SitePrep.Tile t : site) {
+            int delta = com.hex.kagune.control.village.SitePrep.groundDelta(floor, t.y());
+            grounded &= delta <= 0 && t.y() + delta == floor + 1;
+        }
+        check(grounded, "every clearing tile's ground the place's floor (the game's beard carves the site down to it, never builds a rim up)");
+        check(com.hex.kagune.control.village.SitePrep.distance(minX - 3, minZ + 4, minX, minZ, maxX, maxZ) == 3
+            && com.hex.kagune.control.village.SitePrep.distance(minX + 3, minZ + 4, minX, minZ, maxX, maxZ) == 0
+            && com.hex.kagune.control.village.SitePrep.distance(maxX + 2, maxZ + 5, minX, minZ, maxX, maxZ) == 5, "how far out of the footprint");
+
+        try {
+            String code = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java"));
+            int stub = code.indexOf("Structure.GenerationStub stub(Structure.GenerationContext context, int turns");
+            check(stub > 0 && code.indexOf("clearing(templates,", stub) > 0 && code.indexOf("clearing(templates,", stub)
+                < code.indexOf("for (int i = 0; i < site.across(); i++)", stub), "the CCG building's and the hideout's site cleared before their tiles");
+            int settledAt = code.indexOf("static Structure.GenerationStub settled(");
+            check(settledAt > 0 && code.indexOf("clearing(templates,", settledAt) < code.indexOf("for (StructurePiece piece : made.m_192780_()", settledAt),
+                "every other place's site cleared before its pieces");
+            check(!code.contains("DryLand.lift(") && code.contains("SitePrep.floor(ground,"), "no place lifted onto its highest ground any more");
+            check(code.contains("new PoolElementStructurePiece(templates, element, at, com.hex.kagune.control.village.SitePrep.groundDelta(floor, tile.y()),")
+                && code.contains("pool.m_72647_() > 0"), "the clearing's tiles laid with their ground at the floor, and told apart by it");
+            check(code.split("apron\\(level, box, pieces\\)", -1).length == 3, "every place graded round after it is built");
+            int apron = code.indexOf("static void apron(WorldGenLevel level, BoundingBox chunk, PiecesContainer pieces) {");
+            check(apron > 0 && code.indexOf("if (inside(own, x, z)) {\n                    // Under the place itself only its foundation fills", apron) > 0,
+                "the grading never fills under the place itself (its pool, its stairwell kept)");
+            for (String name : new String[] {"anteiku", "aogiri_hideout", "ccg_building", "circus", "cyber_tower", "gas_hideout", "library",
+                "reaper_mansion"}) {
+                String json = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/" + name + ".json"));
+                check(json.contains("\"step\": \"top_layer_modification\""), name + ": built after the trees (the last step), so none grows through it");
+            }
+            byte[] raw;
+            try (java.util.zip.GZIPInputStream in = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(
+                java.nio.file.Path.of("src/main/resources/data/hexkagune/structures/clearing.nbt")))) {
+                raw = in.readAllBytes();
+            }
+            String text = new String(raw, java.nio.charset.StandardCharsets.ISO_8859_1);
+            int names = text.split("Name", -1).length - 1;
+            int positions = text.split("\u0003pos", -1).length - 1;
+            check(names == 1 && text.contains("minecraft:air") && positions == clear * clear * clear,
+                "the clearing template a cube of air " + clear + " on a side (" + names + " block, " + positions + " positions)");
+        } catch (java.io.IOException failure) {
+            check(false, "the places' sources: " + failure);
+        }
+        // 4.1.57 (the owner: "Be careful with the glass placement on the structures, the CCG building has all glass pannels unconnected and
+        // not attached to eachother!"): every pane and bar in every template joined to what it touches, as the game joins them
+        // (tools/join_panes.py, one rule for the fix and this check).
+        try {
+            Process check = new ProcessBuilder("python3", "tools/join_panes.py", "--check").redirectErrorStream(true).start();
+            String said = new String(check.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            int code = check.waitFor();
+            check(code == 0 && said.contains("ccg_building: 3134 panes and bars, 0 to join"),
+                "every pane in every template joined to its neighbours, the CCG building's 3134 too: " + said.replace('\n', ' '));
+        } catch (java.io.IOException | InterruptedException failure) {
+            check(false, "the panes' check could not run: " + failure);
+        }
+    }
+
     static void worldgen() {
         int minX = 1000;
         int minZ = -2000;

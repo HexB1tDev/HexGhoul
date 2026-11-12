@@ -1,7 +1,7 @@
 {
   "type": "hexkagune:dry_place",
   "biomes": "#hexkagune:overworld",
-  "step": "surface_structures",
+  "step": "top_layer_modification",
   "spawn_overrides": {},
   "terrain_adaptation": "beard_box",
   "start_pool": "hexkagune:gas_hideout/start",

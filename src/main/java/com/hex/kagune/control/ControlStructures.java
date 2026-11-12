@@ -267,6 +267,9 @@ public final class ControlStructures {
      */
     static void foundation(WorldGenLevel level, BoundingBox chunk, PiecesContainer pieces) {
         for (StructurePiece piece : pieces.f_192741_()) {
+            if (clearing(piece)) {
+                continue; // 4.1.57: the site's clearing (air) has no floor to stand on: the apron fills round the place
+            }
             BoundingBox b = piece.m_73547_();
             int x0 = Math.max(b.m_162395_(), chunk.m_162395_());
             int x1 = Math.min(b.m_162399_(), chunk.m_162399_());
@@ -286,7 +289,9 @@ public final class ControlStructures {
                     int[] fill = DryLand.footing(y -> {
                         BlockPos at = new BlockPos(cx, y, cz);
                         BlockState state = level.m_8055_(at);
-                        return state.m_60795_() || !state.m_60819_().m_76178_() ? DryLand.GAP : holds(level, state, at) ? DryLand.SOLID : DryLand.SOFT;
+                        // 4.1.57: a tree's trunk or leaves under the floor are no ground: filled over as a gap is.
+                        return state.m_60795_() || !state.m_60819_().m_76178_() || tree(state) ? DryLand.GAP
+                            : holds(level, state, at) ? DryLand.SOLID : DryLand.SOFT;
                     }, bottom, layers, Math.max(LOWEST, bottom - FOUNDATION));
                     if (fill == null) {
                         continue;
@@ -298,6 +303,180 @@ public final class ControlStructures {
                 }
             }
         }
+    }
+
+    /**
+     * 4.1.57 (the owner: "CLEAR THE FUCKING AREA OF SPAWN, CLEAR ALL BLOCKS OR TREES, AND THEN PLACE IT DIRECTLY ON THE FLOOR, NOT FLYING, NOT
+     * HOVERING OVER THE FLOOR, I SAID ON IT."): the clearing template, a cube of air {@link com.hex.kagune.control.village.SitePrep#CLEAR} on a
+     * side (data/hexkagune/structures/clearing.nbt). Its tiles are laid over a site before the place's own pieces (a structure places its
+     * pieces in each chunk in their order), so whatever the world had over the floor there, hill, trunk or leaves, is air before the place
+     * is built; they are the game's own pieces (a single pool element), saved and loaded as any.
+     */
+    static final String CLEARING = "hexkagune:clearing";
+    /** 4.1.57: the world's top (its highest block), which no clearing passes. */
+    static final int CEILING = 319;
+    /** 4.1.57: the deepest the apron round a place is filled down to its ground (a ravine deeper is left as it is). */
+    static final int APRON_DEEP = 24;
+    /** 4.1.57: the world's tree blocks (a trunk, leaves): never ground to stand on or to copy. */
+    static final net.minecraft.tags.TagKey<?> LOGS = net.minecraft.tags.TagKey.m_203882_(Registries.f_256747_,
+        net.minecraft.resources.ResourceLocation.m_214293_("minecraft", "logs"));
+    static final net.minecraft.tags.TagKey<?> LEAVES = net.minecraft.tags.TagKey.m_203882_(Registries.f_256747_,
+        net.minecraft.resources.ResourceLocation.m_214293_("minecraft", "leaves"));
+
+    /** 4.1.57: true for a trunk or leaves. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static boolean tree(BlockState state) {
+        return state.m_204336_((net.minecraft.tags.TagKey)LOGS) || state.m_204336_((net.minecraft.tags.TagKey)LEAVES);
+    }
+
+    /**
+     * 4.1.57: true for a tile of a site's clearing: a single pool element laid unturned whose ground is at or under its foot (none over it;
+     * a place's own pieces have one: a jigsaw's 1, a site's tiles their ground's), {@link com.hex.kagune.control.village.SitePrep#CLEAR} on
+     * every side.
+     */
+    static boolean clearing(StructurePiece piece) {
+        if (!(piece instanceof PoolElementStructurePiece pool) || pool.m_72647_() > 0) {
+            return false;
+        }
+        BoundingBox b = piece.m_73547_();
+        int size = com.hex.kagune.control.village.SitePrep.CLEAR;
+        return b.m_162399_() - b.m_162395_() + 1 == size && b.m_162401_() - b.m_162398_() + 1 == size;
+    }
+
+    /**
+     * 4.1.57: the clearing's tiles for a place whose footprint is {@code minX}..{@code maxX}, {@code minZ}..{@code maxZ} (and
+     * {@link com.hex.kagune.control.village.SitePrep#MARGIN} round it, within its start chunk's reach from ({@code cornerX}, {@code cornerZ})),
+     * from over its floor ({@code floor}: its ground block) to {@code top}, given to {@code add} (before the place's own pieces).
+     */
+    static void clearing(net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager templates,
+                         java.util.function.Consumer<StructurePiece> add, int minX, int minZ, int maxX, int maxZ, int cornerX, int cornerZ, int floor,
+                         int top) {
+        net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement element =
+            net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement.m_210526_(CLEARING)
+                .apply(net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool.Projection.RIGID);
+        net.minecraft.world.level.block.Rotation none = net.minecraft.world.level.block.Rotation.NONE;
+        for (com.hex.kagune.control.village.SitePrep.Tile tile : com.hex.kagune.control.village.SitePrep.clearing(minX, minZ, maxX, maxZ, cornerX,
+            cornerZ, floor, top)) {
+            BlockPos at = new BlockPos(tile.x(), tile.y(), tile.z());
+            // Every tile's ground is the place's floor (a tile over the bank's top is told it stands that far down): the game's own shaping
+            // of the land round a structure (its beard) then carves the site down to the floor and slopes it away, never building a rim of
+            // land up to a tile's foot round the place.
+            add.accept(new PoolElementStructurePiece(templates, element, at, com.hex.kagune.control.village.SitePrep.groundDelta(floor, tile.y()), none,
+                element.m_214015_(templates, at, none)));
+        }
+    }
+
+    /** 4.1.57: snow and what anything may grow or settle over (grass, flowers, vines, a snow layer): never ground to copy. */
+    static final net.minecraft.tags.TagKey<?> SNOW = net.minecraft.tags.TagKey.m_203882_(Registries.f_256747_,
+        net.minecraft.resources.ResourceLocation.m_214293_("minecraft", "snow"));
+    static final net.minecraft.tags.TagKey<?> REPLACEABLE = net.minecraft.tags.TagKey.m_203882_(Registries.f_256747_,
+        net.minecraft.resources.ResourceLocation.m_214293_("minecraft", "replaceable"));
+
+    /** 4.1.57: true for the world's ground under a site: something solid to stand on that is no tree, no snow, nothing that grows over it. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static boolean ground(WorldGenLevel level, BlockState state, BlockPos at) {
+        return !state.m_60795_() && state.m_60819_().m_76178_() && !tree(state) && !state.m_204336_((net.minecraft.tags.TagKey)SNOW)
+            && !state.m_204336_((net.minecraft.tags.TagKey)REPLACEABLE) && holds(level, state, at);
+    }
+
+    /**
+     * 4.1.57: the site graded round the place, in {@code chunk} (its clearing's columns, after the place itself): within
+     * {@link com.hex.kagune.control.village.SitePrep#FLAT} of its footprint the ground flat at its floor, then a bank a block up or down a
+     * block out to the land round it (cut into a hill, built up over a dip: never a cliff or a ledge), no tree left on any of it (under the
+     * place itself, its foundation and the game's beard fill: a gap at its floor may be its own, a pool or a stairwell). The ground is the world's own,
+     * the first under the gap copied up (stone under stone, grass under grass), a tree's trunk or leaves or snow never taken for it.
+     */
+    static void apron(WorldGenLevel level, BoundingBox chunk, PiecesContainer pieces) {
+        int floor = Integer.MAX_VALUE;
+        java.util.List<BoundingBox> clear = new java.util.ArrayList<>();
+        java.util.List<BoundingBox> own = new java.util.ArrayList<>();
+        int minX = Integer.MAX_VALUE;
+        int minZ = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxZ = Integer.MIN_VALUE;
+        for (StructurePiece piece : pieces.f_192741_()) {
+            BoundingBox b = piece.m_73547_();
+            if (clearing(piece)) {
+                clear.add(b);
+                floor = Math.min(floor, b.m_162396_() - 1);
+            } else {
+                own.add(b);
+                minX = Math.min(minX, b.m_162395_());
+                minZ = Math.min(minZ, b.m_162398_());
+                maxX = Math.max(maxX, b.m_162399_());
+                maxZ = Math.max(maxZ, b.m_162401_());
+            }
+        }
+        if (clear.isEmpty() || own.isEmpty()) {
+            return;
+        }
+        BlockState air = Blocks.f_50016_.m_49966_();
+        int bankTop = floor + com.hex.kagune.control.village.SitePrep.bank();
+        for (int x = chunk.m_162395_(); x <= chunk.m_162399_(); x++) {
+            for (int z = chunk.m_162398_(); z <= chunk.m_162401_(); z++) {
+                if (!inside(clear, x, z)) {
+                    continue;
+                }
+                int d;
+                if (inside(own, x, z)) {
+                    // Under the place itself only its foundation fills (and the game's beard under its foot): a gap at its floor may be its
+                    // own (a pool, a stairwell), never to be filled.
+                    continue;
+                } else {
+                    d = com.hex.kagune.control.village.SitePrep.distance(x, z, minX, minZ, maxX, maxZ);
+                    int cut = com.hex.kagune.control.village.SitePrep.cut(floor, d);
+                    int low = com.hex.kagune.control.village.SitePrep.fill(floor, d);
+                    BlockState skin = null; // the ground's own top (grass on grassland) where the bank is cut through it
+                    for (int y = bankTop; y > low; y--) {
+                        BlockPos at = new BlockPos(x, y, z);
+                        BlockState state = level.m_8055_(at);
+                        if (state.m_60795_()) {
+                            continue;
+                        }
+                        if (skin == null && ground(level, state, at)) {
+                            skin = state;
+                        }
+                        if (y >= cut || tree(state)) {
+                            level.m_7731_(at, air, 2);
+                        }
+                    }
+                    BlockPos under = new BlockPos(x, cut - 1, z);
+                    if (skin != null && ground(level, level.m_8055_(under), under)) {
+                        level.m_7731_(under, skin, 2);
+                    }
+                }
+                int top = com.hex.kagune.control.village.SitePrep.fill(floor, d);
+                int deepest = floor - APRON_DEEP - 1;
+                int found = Integer.MIN_VALUE;
+                BlockState copy = null;
+                for (int y = top; y >= deepest; y--) {
+                    BlockPos at = new BlockPos(x, y, z);
+                    BlockState state = level.m_8055_(at);
+                    if (ground(level, state, at)) {
+                        found = y;
+                        copy = state;
+                        break;
+                    }
+                }
+                int[] fill = com.hex.kagune.control.village.SitePrep.apron(floor, d, found, APRON_DEEP);
+                if (fill == null || copy == null) {
+                    continue;
+                }
+                for (int y = fill[0]; y <= fill[1]; y++) {
+                    level.m_7731_(new BlockPos(x, y, z), copy, 2);
+                }
+            }
+        }
+    }
+
+    /** 4.1.57: true if column ({@code x}, {@code z}) is under any of {@code boxes}. */
+    static boolean inside(java.util.List<BoundingBox> boxes, int x, int z) {
+        for (BoundingBox b : boxes) {
+            if (x >= b.m_162395_() && x <= b.m_162399_() && z >= b.m_162398_() && z <= b.m_162401_()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** 4.1.42: the deepest a foundation goes (blocks), and the overworld's floor. */
@@ -596,7 +775,14 @@ public final class ControlStructures {
             net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager templates = context.f_226625_();
             com.hex.kagune.control.village.SiteMaps.Site site = this.site;
             BlockPos start = new BlockPos(minX + sizeX / 2, base + site.ground() + 1, minZ + sizeZ / 2);
+            // 4.1.57: its site cleared first, from over its ground block (one under its middle) up past the highest ground's trees.
+            int margin = com.hex.kagune.control.village.SitePrep.MARGIN;
+            int top = com.hex.kagune.control.village.SitePrep.top(com.hex.kagune.control.village.SitePrep.highest(ground(context), minX - margin,
+                minZ - margin, minX + sizeX - 1 + margin, minZ + sizeZ - 1 + margin), Math.min(CEILING, base + site.height()), CEILING);
+            ChunkPos home = context.f_226628_();
             return new Structure.GenerationStub(start, builder -> {
+                clearing(templates, piece -> builder.m_142679_(piece), minX, minZ, minX + sizeX - 1, minZ + sizeZ - 1, home.m_45604_(),
+                    home.m_45605_(), middle - 1, top);
                 for (int i = 0; i < site.across(); i++) {
                     for (int j = 0; j < site.down(); j++) {
                         int[] corner = VillageRules.turn(site.xEdges()[i], site.zEdges()[j], turns);
@@ -760,6 +946,7 @@ public final class ControlStructures {
                               ChunkPos chunk, PiecesContainer pieces) {
             try {
                 foundation(level, box, pieces);
+                apron(level, box, pieces);
             } catch (RuntimeException | LinkageError failure) {
                 Safety.caught(failure, "ControlStructures.Site.foundation");
             }
@@ -1185,22 +1372,33 @@ public final class ControlStructures {
             if (best == null || bestRough > PLACE_FLAT) {
                 return Optional.empty();
             }
-            return Optional.of(raised(best, DryLand.lift(ground, bestAt[0], bestAt[1], bestAt[2], bestAt[3], bestAt[4], bestAt[5])));
+            // 4.1.57 (the owner: "PLACE IT DIRECTLY ON THE FLOOR, NOT FLYING, NOT HOVERING OVER THE FLOOR"): on its footprint's own floor (the
+            // middle of its ground), no longer lifted onto its highest ground (4.1.17), which left it on a plinth over its low side; its site
+            // cleared over that floor first (the high side cut down to it, trees and all) and its apron filled up to it.
+            int margin = com.hex.kagune.control.village.SitePrep.MARGIN;
+            int floor = com.hex.kagune.control.village.SitePrep.floor(ground, bestAt[2], bestAt[3], bestAt[4], bestAt[5]);
+            int highest = com.hex.kagune.control.village.SitePrep.highest(ground, bestAt[2] - margin, bestAt[3] - margin, bestAt[4] + margin,
+                bestAt[5] + margin);
+            return Optional.of(settled(best, floor - ground.surface(bestAt[0], bestAt[1]), context.f_226625_(), bestAt[2], bestAt[3], bestAt[4],
+                bestAt[5], home.m_45604_(), home.m_45605_(), floor - 1, com.hex.kagune.control.village.SitePrep.top(highest, Integer.MIN_VALUE, CEILING)));
         }
 
         /**
-         * 4.1.17 (the owner: "It should be always spawning above ground, always at the top max area"): {@code stub} lifted {@code lift}
-         * blocks, onto the highest ground of its footprint ({@link DryLand#lift}). A jigsaw's stub makes its pieces afresh each time they
-         * are asked for, so the lifted one makes them and moves them up every time.
+         * 4.1.57: {@code stub} moved {@code shift} blocks (up or down) onto its floor, and its site's clearing laid before its own pieces (its
+         * footprint {@code minX}..{@code maxX}, {@code minZ}..{@code maxZ}, its ground block {@code floor}, cleared up to {@code top}, within its
+         * start chunk's reach from ({@code cornerX}, {@code cornerZ})). A jigsaw's stub makes its pieces afresh each time they are asked for,
+         * so the settled one makes them and moves them every time. (4.1.17 lifted it onto its highest ground instead.)
          */
-        static Structure.GenerationStub raised(Structure.GenerationStub stub, int lift) {
-            if (lift <= 0) {
-                return stub;
-            }
+        static Structure.GenerationStub settled(Structure.GenerationStub stub, int shift,
+                                                net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager templates, int minX,
+                                                int minZ, int maxX, int maxZ, int cornerX, int cornerZ, int floor, int top) {
             BlockPos at = stub.f_226669_();
-            return new Structure.GenerationStub(new BlockPos(at.m_123341_(), at.m_123342_() + lift, at.m_123343_()), builder -> {
+            return new Structure.GenerationStub(new BlockPos(at.m_123341_(), at.m_123342_() + shift, at.m_123343_()), builder -> {
                 net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder made = stub.m_226677_();
-                made.m_192781_(lift);
+                if (shift != 0) {
+                    made.m_192781_(shift);
+                }
+                clearing(templates, piece -> builder.m_142679_(piece), minX, minZ, maxX, maxZ, cornerX, cornerZ, floor, top);
                 for (StructurePiece piece : made.m_192780_().f_192741_()) {
                     builder.m_142679_(piece);
                 }
@@ -1218,6 +1416,7 @@ public final class ControlStructures {
                               ChunkPos chunk, PiecesContainer pieces) {
             try {
                 foundation(level, box, pieces);
+                apron(level, box, pieces);
             } catch (RuntimeException | LinkageError failure) {
                 Safety.caught(failure, "ControlStructures.DryPlace.foundation");
             }
