@@ -1084,6 +1084,174 @@ public final class PathSilhouette {
         }
     }
 
+    /**
+     * 4.1.61: Owl DNA's kakuja, the Owl, for the Pale menu's preview, from the front as the game builds it ({@code OwlModel}): a gaunt,
+     * hunched thing in a long tattered robe, bone bands round her chest and long curled claws; the long bone-white mask tapering to a
+     * pointed chin, a crown of horns over it, one great red eye in the brow with a black slash out from it each side, a grin of teeth; a
+     * burst of red flares and white bone spikes off her nape; and four limbs off her shoulders, two a side, dark crimson flesh plated like
+     * bark arching up to a knuckle, then a long glossy navy blade to a needle point, the outer pair down beside her like a spider's legs.
+     */
+    public static List<Mark> owl(PathChoiceLayout.Box box, double time, float intensity, int bg) {
+        List<Mark> marks = new ArrayList<>();
+        float fade = 0.45F + 0.55F * Math.max(0.0F, Math.min(1.0F, intensity));
+        float m = FIT_MARGIN + 2.0F;
+        float left = box.x() + m;
+        float right = box.right() - m;
+        float topY = box.y() + m;
+        float bottom = box.bottom() - m;
+        float w = right - left;
+        float hgt = bottom - topY;
+        float cx = (left + right) / 2.0F;
+        float h = hgt * 0.7F; // her height, hunched
+        float top = bottom - h;
+        float sway = (float)Math.sin(time * 1.3) * hgt * 0.02F;
+        // The limbs, behind her: the outer pair long, down beside her; the inner pair higher, off her shoulder blades.
+        for (int side = -1; side <= 1; side += 2) {
+            for (int pair = 1; pair >= 0; pair--) {
+                boolean outer = pair == 1;
+                float rx = cx + side * h * (outer ? 0.12F : 0.07F);
+                float ry = top + h * 0.3F;
+                float kx = cx + side * w * (outer ? 0.33F : 0.2F) + side * sway;
+                float ky = topY + hgt * (outer ? 0.12F : 0.02F) + (outer ? sway : -sway) * 0.5F + h * 0.03F;
+                float px = cx + side * w * (outer ? 0.47F : 0.38F);
+                float py = outer ? bottom - hgt * 0.08F : topY + hgt * 0.6F;
+                float qx = rx + side * w * 0.04F;
+                float qy = ky + hgt * 0.02F;
+                float r0 = Math.max(1.6F, h * (outer ? 0.045F : 0.038F));
+                float r1 = Math.max(1.2F, h * 0.03F);
+                int steps = 10;
+                float[] lx = new float[steps + 1];
+                float[] ly = new float[steps + 1];
+                for (int s = 0; s <= steps; s++) {
+                    float t = s / (float)steps;
+                    float u = 1.0F - t;
+                    lx[s] = u * u * rx + 2.0F * u * t * qx + t * t * kx;
+                    ly[s] = u * u * ry + 2.0F * u * t * qy + t * t * ky;
+                }
+                for (int pass = 0; pass < 3; pass++) {
+                    int colour = pass == 0 ? 0x35060C : pass == 1 ? 0x8A1622 : 0xC8343F;
+                    float share = pass == 0 ? 1.0F : pass == 1 ? 0.62F : 0.22F;
+                    float shift = pass == 0 ? 0.0F : pass == 1 ? -0.2F : -0.45F;
+                    for (int s = 0; s < steps; s++) {
+                        float ra = (r0 + (r1 - r0) * s / steps) * share;
+                        float rb = (r0 + (r1 - r0) * (s + 1) / steps) * share;
+                        tube(marks, lx[s] + side * shift * ra, ly[s] + shift * ra, lx[s + 1] + side * shift * rb, ly[s + 1] + shift * rb, Math.max(0.6F, ra),
+                            Math.max(0.6F, rb), blend(bg, colour, fade), s + 1 == steps);
+                    }
+                }
+                // The bark's ridges across the upper.
+                for (int s = 2; s < steps; s += 2) {
+                    float dx = lx[s + 1] - lx[s - 1];
+                    float dy = ly[s + 1] - ly[s - 1];
+                    float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+                    float rr = (r0 + (r1 - r0) * s / steps) * 0.85F;
+                    marks.add(new Stroke(lx[s] - dy / d * rr, ly[s] + dx / d * rr, lx[s] + dy / d * rr, ly[s] - dx / d * rr, 1.0F, 1.0F,
+                        blend(bg, 0x1A0306, fade)));
+                }
+                // The knuckle, then the blade: glossy navy, a pale gloss down its edge, the point black.
+                marks.add(new Disc(kx, ky, r1 * 1.25F, blend(bg, 0xC8343F, fade)));
+                float bx = kx + side * w * 0.02F;
+                float by = ky + hgt * 0.02F;
+                float mx = (bx + px) / 2.0F + side * w * 0.05F;
+                float my = (by + py) / 2.0F - hgt * 0.04F;
+                float blade = Math.max(2.0F, h * 0.055F);
+                marks.add(new Stroke(bx, by, mx, my, blade, blade * 0.7F, blend(bg, 0x27305A, fade)));
+                marks.add(new Stroke(mx, my, px, py, blade * 0.7F, 0.8F, blend(bg, 0x27305A, fade)));
+                marks.add(new Stroke(bx - side * blade * 0.25F, by, mx - side * blade * 0.2F, my, Math.max(0.8F, blade * 0.2F), 0.8F, blend(bg, 0x6A7CC4, fade)));
+                marks.add(new Stroke(mx - side * blade * 0.15F, my, px, py, 0.8F, 0.6F, blend(bg, 0xC4D0FF, fade * 0.8F)));
+                float tx = px - (px - mx) * 0.12F;
+                float ty = py - (py - my) * 0.12F;
+                marks.add(new Stroke(tx, ty, px, py, 1.2F, 0.6F, blend(bg, 0x040508, fade)));
+            }
+        }
+        // The crest off her nape, behind her head: red flares and white bone spikes.
+        float headY = top + h * 0.13F;
+        for (int k = -3; k <= 3; k++) {
+            double a = -Math.PI / 2.0 + k * 0.32 + Math.sin(time * 2.0 + k) * 0.04;
+            float len = h * (0.2F + 0.05F * (3 - Math.abs(k))) * (k % 2 == 0 ? 1.0F : 0.75F);
+            float flicker = 0.75F + 0.25F * (float)Math.sin(time * 7.0 + k * 1.7);
+            marks.add(new Stroke(cx, headY, cx + (float)Math.cos(a) * len, headY + (float)Math.sin(a) * len, Math.max(1.4F, h * 0.04F), 0.6F,
+                blend(bg, k % 2 == 0 ? 0xE8121E : 0xE8E0D2, fade * (k % 2 == 0 ? flicker : 1.0F))));
+        }
+        // The robe, hunched shoulders to a ragged hem; bone bands round her chest.
+        float shoulderY = top + h * 0.28F;
+        float hemY = bottom - h * 0.03F;
+        float sh = h * 0.11F;
+        float hem = h * 0.25F;
+        marks.add(new Shape(new float[] {cx - sh, cx + sh, cx + hem, cx - hem}, new float[] {shoulderY, shoulderY, hemY, hemY},
+            0xFF000000 | blend(bg, 0x2A1F21, fade)));
+        marks.add(new Stroke(cx - sh, shoulderY, cx - hem, hemY, 1.2F, 1.2F, blend(bg, 0x4E3F41, fade)));
+        marks.add(new Stroke(cx + sh, shoulderY, cx + hem, hemY, 1.2F, 1.2F, blend(bg, 0x4E3F41, fade)));
+        for (int k = 0; k < 7; k++) {
+            float hx = cx - hem + (k + 0.5F) * hem * 2.0F / 7.0F;
+            float len = h * (0.03F + 0.03F * (float)Math.abs(Math.sin(k * 2.3)));
+            marks.add(new Stroke(hx, hemY - 1.0F, hx + (k % 2 == 0 ? 1.0F : -1.0F), Math.min(bottom, hemY + len), 2.0F, 0.6F, blend(bg, 0x2A1F21, fade)));
+        }
+        marks.add(new Stroke(cx - hem * 0.25F, shoulderY + h * 0.2F, cx + hem * 0.15F, hemY - h * 0.02F, 1.0F, 1.0F, blend(bg, 0x4E0E14, fade)));
+        // Its folds, falling from her ribs.
+        for (int k = -1; k <= 1; k += 2) {
+            marks.add(new Stroke(cx + k * sh * 0.4F, shoulderY + h * 0.18F, cx + k * hem * 0.55F, hemY - 1.0F, 1.0F, 1.0F, blend(bg, 0x140D0E, fade)));
+        }
+        for (int k = 0; k < 2; k++) {
+            float by = shoulderY + h * (0.07F + 0.07F * k);
+            float bw = sh + (hem - sh) * (by - shoulderY) / (hemY - shoulderY);
+            marks.add(new Stroke(cx - bw, by, cx + bw, by, Math.max(1.2F, h * 0.025F), Math.max(1.2F, h * 0.025F), blend(bg, 0xD8D0C4, fade)));
+        }
+        // Her arms hanging out from her hunched shoulders, sleeves ragged at the wrist, bone bands round them, long curled claws.
+        for (int side = -1; side <= 1; side += 2) {
+            float ax = cx + side * sh;
+            float ex = cx + side * (sh + h * 0.1F);
+            float ey = shoulderY + h * 0.2F;
+            float hx = cx + side * (sh + h * 0.13F);
+            float hy = shoulderY + h * 0.42F;
+            float arm = Math.max(1.6F, h * 0.055F);
+            marks.add(new Stroke(ax, shoulderY + 1.0F, ex, ey, arm + 2.0F, arm + 2.0F, blend(bg, 0x0D090A, fade)));
+            marks.add(new Stroke(ex, ey, hx, hy, arm + 2.0F, arm * 0.8F + 2.0F, blend(bg, 0x0D090A, fade)));
+            marks.add(new Stroke(ax, shoulderY + 1.0F, ex, ey, arm, arm, blend(bg, 0x3E3134, fade)));
+            marks.add(new Stroke(ex, ey, hx, hy, arm, arm * 0.8F, blend(bg, 0x3E3134, fade)));
+            marks.add(new Stroke(ex - arm * 0.6F, ey, ex + arm * 0.6F, ey, 1.2F, 1.2F, blend(bg, 0xD8D0C4, fade)));
+            for (int k = -1; k <= 1; k++) {
+                float fx = hx + k * h * 0.018F;
+                float mx = fx + side * h * 0.01F;
+                float my = hy + h * 0.06F;
+                marks.add(new Stroke(fx, hy, mx, my, 1.4F, 1.0F, blend(bg, 0xE8E0D2, fade)));
+                marks.add(new Stroke(mx, my, mx - side * h * 0.025F, my + h * 0.025F, 1.0F, 0.6F, blend(bg, 0xB8AE9E, fade)));
+            }
+        }
+        // The cowl, then the mask: bone white, tapering to its pointed chin; the crown of horns; the eye, its slashes, the grin.
+        marks.add(new Disc(cx, headY + h * 0.02F, h * 0.12F, blend(bg, 0x241E22, fade)));
+        float maskTop = headY - h * 0.08F;
+        float maskHalf = h * 0.075F;
+        float chinY = headY + h * 0.17F;
+        marks.add(new Shape(new float[] {cx - maskHalf, cx + maskHalf, cx + maskHalf * 0.8F, cx - maskHalf * 0.8F},
+            new float[] {maskTop, maskTop, headY + h * 0.07F, headY + h * 0.07F}, 0xFF000000 | blend(bg, 0xE8E0D2, fade)));
+        marks.add(new Shape(new float[] {cx - maskHalf * 0.8F, cx + maskHalf * 0.8F, cx}, new float[] {headY + h * 0.07F, headY + h * 0.07F, chinY},
+            0xFF000000 | blend(bg, 0xE8E0D2, fade)));
+        marks.add(new Shape(new float[] {cx + maskHalf * 0.35F, cx + maskHalf, cx + maskHalf * 0.8F, cx + maskHalf * 0.3F},
+            new float[] {maskTop, maskTop, headY + h * 0.07F, headY + h * 0.07F}, 0xFF000000 | blend(bg, 0xB8AE9E, fade)));
+        for (int k = -2; k <= 2; k++) {
+            float bx = cx + k * maskHalf * 0.45F;
+            marks.add(new Stroke(bx, maskTop + 1.0F, bx + k * maskHalf * 0.35F, maskTop - h * (0.07F - Math.abs(k) * 0.012F), Math.max(1.2F, h * 0.02F), 0.6F,
+                blend(bg, k % 2 == 0 ? 0xE8E0D2 : 0x8A8070, fade)));
+        }
+        float eyeY = maskTop + h * 0.05F;
+        for (int side = -1; side <= 1; side += 2) {
+            marks.add(new Stroke(cx + side * h * 0.02F, eyeY, cx + side * maskHalf * 0.9F, eyeY + h * 0.035F, Math.max(1.0F, h * 0.016F), 0.6F,
+                blend(bg, 0x0A0608, fade)));
+        }
+        float glow = 0.8F + 0.2F * (float)Math.sin(time * 3.0);
+        marks.add(new Disc(cx, eyeY, Math.max(1.2F, h * 0.028F), blend(bg, 0xE8121E, fade * glow)));
+        marks.add(new Disc(cx, eyeY, Math.max(0.6F, h * 0.012F), blend(bg, 0xFFA088, fade)));
+        float grinY = headY + h * 0.09F;
+        marks.add(new Stroke(cx - maskHalf * 0.7F, grinY, cx + maskHalf * 0.7F, grinY, Math.max(1.4F, h * 0.025F), Math.max(1.4F, h * 0.025F),
+            blend(bg, 0x0A0608, fade)));
+        for (int k = -2; k <= 2; k++) {
+            marks.add(new Stroke(cx + k * maskHalf * 0.28F, grinY - h * 0.01F, cx + k * maskHalf * 0.28F, grinY + h * 0.01F, 1.0F, 1.0F,
+                blend(bg, 0xF2EEE4, fade)));
+        }
+        return marks;
+    }
+
     /** 3.4.9, Bikaku: the worm's crimson-purple flesh, its dark folds, its red veins and its grey fangs. */
     public static final int BIKAKU = 0x8A1A3E;
     public static final int BIKAKU_DARK = 0x3C0716;

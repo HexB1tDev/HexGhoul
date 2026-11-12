@@ -349,6 +349,85 @@ public class UiPreview {
         }
     }
 
+    /** 4.1.61: the Pale menu as the game draws it: the quest menu's box over a stand-in scene; the mouse on the first area named {@code over}. */
+    static void paleBox(File out, com.hex.kagune.control.client.PaleMenuView.Model model, String over) throws Exception {
+        int w = 960;
+        int h = 540;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        for (int i = 0; i < w; i += 40) {
+            c.fill(i, h * 6 / 10 - 20 - (i * 37 % 60), i + 40, h * 6 / 10, 0xFF4E8834);
+        }
+        int bw = com.hex.kagune.control.client.PaleMenuView.BOX_WIDTH;
+        int bh = com.hex.kagune.control.client.PaleMenuView.BOX_HEIGHT;
+        double mx = -1;
+        double my = -1;
+        if (over != null) {
+            BufferedImage scratch = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for (java.util.Map.Entry<String, UkakuMenuView.Rect> hit : com.hex.kagune.control.client.PaleMenuView.draw(new ImageCanvas(graphics(scratch, 1),
+                false), model, -1, -1, 1.3).entrySet()) {
+                if (hit.getKey().startsWith(over)) {
+                    mx = hit.getValue().x() + hit.getValue().width() * 0.6;
+                    my = hit.getValue().y() + hit.getValue().height() * 0.5;
+                    break;
+                }
+            }
+        }
+        c.push();
+        c.translate((w - bw) / 2.0F, (h - bh) / 2.0F);
+        com.hex.kagune.control.client.PaleMenuView.draw(c, model, mx, my, 1.3);
+        c.pop();
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
+    /** 4.1.61: the Pale menu: the base form, her moves, the Owl, the mutations (one ready to unlock, Witness This's switch). */
+    static void paleQuest(File dir) throws Exception {
+        KakuganEyes right = KakuganEyes.DEFAULT.withGhoul(KakuganEyes.RIGHT);
+        com.hex.kagune.control.client.PaleMenuView.Tab form = com.hex.kagune.control.client.PaleMenuView.Tab.FORM;
+        com.hex.kagune.control.client.PaleMenuView.Tab moves = com.hex.kagune.control.client.PaleMenuView.Tab.MOVES;
+        com.hex.kagune.control.client.PaleMenuView.Tab owl = com.hex.kagune.control.client.PaleMenuView.Tab.OWL;
+        com.hex.kagune.control.client.PaleMenuView.Tab mutations = com.hex.kagune.control.client.PaleMenuView.Tab.MUTATIONS;
+        int revive = com.hex.kagune.control.pale.PaleMutation.NOT_THAT_EASILY.bit();
+        int witness = com.hex.kagune.control.pale.PaleMutation.WITNESS_THIS.bit() | revive;
+        paleBox(new File(dir, "pale-form.png"), new com.hex.kagune.control.client.PaleMenuView.Model(320, true, right, 0, 0L, form, null), "step:350");
+        paleBox(new File(dir, "pale-form-ahead.png"), new com.hex.kagune.control.client.PaleMenuView.Model(320, false, right, 0, 0L, form, "pick:s:2"),
+            null);
+        paleBox(new File(dir, "pale-moves.png"), new com.hex.kagune.control.client.PaleMenuView.Model(420, true, right, 0, 0L, moves, "pick:m:BLITZ"),
+            "pick:m:GRAB");
+        paleBox(new File(dir, "pale-moves-hammer.png"), new com.hex.kagune.control.client.PaleMenuView.Model(720, true, right, 0, 0L, moves,
+            "pick:m:HAMMER"), null);
+        paleBox(new File(dir, "pale-owl.png"), new com.hex.kagune.control.client.PaleMenuView.Model(820, true, right, revive, 0L, owl, null), null);
+        paleBox(new File(dir, "pale-owl-move.png"), new com.hex.kagune.control.client.PaleMenuView.Model(700, true, right, 0, 0L, owl, "pick:o:WHIRL"),
+            null);
+        paleBox(new File(dir, "pale-mutations.png"), new com.hex.kagune.control.client.PaleMenuView.Model(910, true, right, revive, 1200L, mutations,
+            null), "mutation:");
+        paleBox(new File(dir, "pale-mutations-witness.png"), new com.hex.kagune.control.client.PaleMenuView.Model(1000, true, right, witness, 0L,
+            mutations, "pick:u:witness_this"), null);
+        // The Owl and the base form alone, larger, at the tile's own size in GUI pixels.
+        int tw = 190 - 16;
+        int th = 150 - 30;
+        BufferedImage strip = new BufferedImage((tw + 8) * 3 * 4, (th + 8) * 4, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(strip, 4), false);
+        c.fill(0, 0, (tw + 8) * 3, th + 8, 0xFF0B090B);
+        for (int i = 0; i < 3; i++) {
+            com.hex.kagune.control.client.PathChoiceLayout.Box box = new com.hex.kagune.control.client.PathChoiceLayout.Box(i * (tw + 8) + 4, 4, tw, th);
+            c.fill(box.x() - 1, box.y() - 1, box.x() + tw + 1, box.y() + th + 1, 0xFF3A1A20);
+            c.fill(box.x(), box.y(), box.x() + tw, box.y() + th, 0xFF0B090B);
+            java.util.List<com.hex.kagune.control.client.PathSilhouette.Mark> marks = i == 0
+                ? com.hex.kagune.control.client.PathSilhouette.pale(box, 1.3, 1.0F, true, 0x0B090B)
+                : com.hex.kagune.control.client.PathSilhouette.owl(box, i == 1 ? 0.0 : 2.4, 1.0F, 0x0B090B);
+            for (com.hex.kagune.control.client.PathSilhouette.Mark mark : marks) {
+                UkakuMenuView.draw(c, mark);
+            }
+        }
+        File out = new File(dir, "pale-owl-tiles.png");
+        ImageIO.write(strip, "png", out);
+        System.out.println("wrote " + out);
+    }
+
     /** 4.1.59: the Bikaku menu as the game draws it: the quest menu's box over a stand-in scene; the mouse on the first area named {@code over}. */
     static void bikakuBox(File out, com.hex.kagune.control.client.BikakuMenuView.Model model, String over) throws Exception {
         int w = 960;
@@ -964,6 +1043,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("graft-menu")) {
             graftQuest(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("pale-menu")) {
+            paleQuest(dir);
             return;
         }
         menu(new File(dir, "ukaku-menu-0.png"), 0, WingForm.TWIN, 0, 0);

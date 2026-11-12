@@ -47,6 +47,7 @@ public final class QuestTests {
         rinkakuMenu();
         bikakuMenu();
         graftMenu();
+        paleMenu();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -361,6 +362,124 @@ public final class QuestTests {
                 && screen.contains("key.startsWith(\"mutation:\")"), "the screen sized from the box; a stage grown into and a mutation unlocked only by their buttons");
         } catch (java.io.IOException failure) {
             check(false, "the Graft screen's source: " + failure);
+        }
+    }
+
+    /**
+     * 4.1.61 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+     * Dialog, mastery menus ALL OF THEM"): the Pale menu is the quest menu's box: its four tabs; every stage, move, the Owl and its moves,
+     * every mutation and step a card or node to click; everything clickable and every word inside the box, apart; UNLOCK drawn only for the
+     * mutation picked and only while the server would spend a point on it (PaleRevive.unlock: not had, a point left); Instant Big Punch's
+     * switch only once Witness This is hers (PaleRevive.instantPunch); the Owl drawn inside its tile; the screen keeps no overlay.
+     */
+    static void paleMenu() {
+        Recorder canvas = new Recorder();
+        int width = com.hex.kagune.control.client.PaleMenuView.BOX_WIDTH;
+        int height = com.hex.kagune.control.client.PaleMenuView.BOX_HEIGHT;
+        check(width <= 760 && height <= 460, "the Pale menu a compact box, the world seen round it");
+        com.hex.kagune.control.kakugan.KakuganEyes eyes = com.hex.kagune.control.kakugan.KakuganEyes.DEFAULT;
+        int witness = com.hex.kagune.control.pale.PaleMutation.WITNESS_THIS.bit();
+        int[] masks = {0, com.hex.kagune.control.pale.PaleMutation.NOT_THAT_EASILY.bit(), witness, witness | com.hex.kagune.control.pale.PaleMutation.INSTANT_PUNCH,
+            com.hex.kagune.control.pale.PaleMutation.all()};
+        java.util.List<String> picks = new java.util.ArrayList<>(java.util.Arrays.asList(null, "junk", "pick:s:0", "pick:s:2", "pick:s:9", "step:350",
+            "step:750", "milestone:900", "pick:m:BLITZ", "pick:m:HAMMER", "pick:m:ARM", "pick:o:OWL", "pick:o:WHIRL", "pick:o:HAND"));
+        for (com.hex.kagune.control.pale.PaleMutation mutation : com.hex.kagune.control.pale.PaleMutation.values()) {
+            picks.add("pick:u:" + mutation.id());
+        }
+        long seen = 0;
+        int unlocks = 0;
+        int switches = 0;
+        for (com.hex.kagune.control.client.PaleMenuView.Tab tab : com.hex.kagune.control.client.PaleMenuView.Tab.values()) {
+            for (int mastery : new int[] {0, 120, 320, 520, 720, 820, 910, 1000}) {
+                for (int mask : masks) {
+                    for (long revive : new long[] {0L, 1300L}) {
+                        for (String pick : picks) {
+                            canvas.clear();
+                            com.hex.kagune.control.client.PaleMenuView.Model model = new com.hex.kagune.control.client.PaleMenuView.Model(mastery,
+                                mastery % 2 == 0, eyes, mask, revive, tab, pick);
+                            java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits =
+                                com.hex.kagune.control.client.PaleMenuView.draw(canvas, model, 300, 200, 0.5 + (mastery + mask) % 5); // (after the cards slide in)
+                            String where = "pale " + tab + " at " + mastery + " (" + Integer.toHexString(mask) + ", " + pick + ")";
+                            seen += canvas.texts.size();
+                            for (com.hex.kagune.control.client.PaleMenuView.Tab each : com.hex.kagune.control.client.PaleMenuView.Tab.values()) {
+                                check(hits.containsKey("tab:" + each.name()), where + ": the " + each + " tab");
+                            }
+                            boxed(hits, canvas, width, height, where);
+                            java.util.List<String> unlock = hits.keySet().stream().filter(k -> k.startsWith("mutation:")).toList();
+                            check(unlock.size() <= 1, where + ": one UNLOCK at most");
+                            for (String key : unlock) {
+                                com.hex.kagune.control.pale.PaleMutation mutation = com.hex.kagune.control.pale.PaleMutation.byOrdinal(Integer.parseInt(key.substring(9)));
+                                unlocks++;
+                                check(tab == com.hex.kagune.control.client.PaleMenuView.Tab.MUTATIONS && mutation != null
+                                    && com.hex.kagune.control.pale.PaleMutation.canUnlock(mastery, mask, mutation),
+                                    where + ": UNLOCK only for a mutation the server would unlock (" + key + ")");
+                            }
+                            if (hits.containsKey("instant")) {
+                                switches++;
+                                check(tab == com.hex.kagune.control.client.PaleMenuView.Tab.MUTATIONS && com.hex.kagune.control.pale.PaleMutation.WITNESS_THIS.in(mask),
+                                    where + ": Instant Big Punch's switch only once Witness This is hers");
+                            }
+                            switch (tab) {
+                                case FORM -> {
+                                    check(hits.containsKey("eyes"), where + ": the kakugan");
+                                    for (int i = 0; i < 3; i++) {
+                                        check(hits.containsKey("pick:s:" + i), where + ": stage " + i + " a card to click");
+                                    }
+                                    for (Integer step : com.hex.kagune.control.client.PaleMenuView.steps().keySet()) {
+                                        check(hits.containsKey("step:" + step), where + ": the step at " + step);
+                                    }
+                                }
+                                case MOVES, OWL -> {
+                                    String prefix = tab == com.hex.kagune.control.client.PaleMenuView.Tab.OWL ? "pick:o:" : "pick:m:";
+                                    long cards = hits.keySet().stream().filter(k -> k.startsWith(prefix)).count();
+                                    check(cards >= 8, where + ": every move a card to click (" + cards + ")");
+                                    check(hits.keySet().stream().noneMatch(k -> k.startsWith(tab == com.hex.kagune.control.client.PaleMenuView.Tab.OWL ? "pick:m:"
+                                        : "pick:o:")), where + ": only this tab's moves");
+                                }
+                                default -> {
+                                    for (com.hex.kagune.control.pale.PaleMutation mutation : com.hex.kagune.control.pale.PaleMutation.values()) {
+                                        check(hits.containsKey("pick:u:" + mutation.id()), where + ": " + mutation + " a card to click");
+                                    }
+                                    for (int milestone : com.hex.kagune.control.pale.PaleMutation.MILESTONES) {
+                                        check(hits.containsKey("milestone:" + milestone), where + ": the milestone at " + milestone);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(seen > 50000 && unlocks > 50 && switches > 20, "the Pale menu's words and its buttons all drawn and checked (" + seen + ", " + unlocks + ", "
+            + switches + ")");
+        // The Owl in its tile: every mark inside, at every size it is drawn and as it moves.
+        for (int[] size : new int[][] {{174, 120}, {120, 80}, {300, 200}, {80, 140}}) {
+            for (double time = 0.0; time < 10.0; time += 0.9) {
+                com.hex.kagune.control.client.PathChoiceLayout.Box box = new com.hex.kagune.control.client.PathChoiceLayout.Box(6, 9, size[0], size[1]);
+                java.util.List<com.hex.kagune.control.client.PathSilhouette.Mark> marks = com.hex.kagune.control.client.PathSilhouette.owl(box, time, 1.0F, 0x0B090B);
+                check(marks.size() > 60, "the Owl drawn at " + size[0] + "x" + size[1] + " (" + marks.size() + " marks)");
+                for (com.hex.kagune.control.client.PathSilhouette.Mark mark : marks) {
+                    float[] r = reach(mark);
+                    check(r[0] >= box.x() && r[1] >= box.y() && r[2] <= box.x() + box.width() && r[3] <= box.y() + box.height(),
+                        "the Owl at " + size[0] + "x" + size[1] + ", " + time + " s: every mark inside its tile " + java.util.Arrays.toString(r));
+                }
+            }
+        }
+        // The stages the menu shows are the ones the game names.
+        int[] starts = {0, 250, 500};
+        for (int i = 0; i < starts.length; i++) {
+            check(com.hex.kagune.control.pale.PaleUnlock.stageName(starts[i]).equals(com.hex.kagune.control.pale.PaleUnlock.stageName(starts[i] + 249 - (i == 2 ? 0 : 0)))
+                && (i == 0 || !com.hex.kagune.control.pale.PaleUnlock.stageName(starts[i] - 1).equals(com.hex.kagune.control.pale.PaleUnlock.stageName(starts[i]))),
+                "the menu's stage " + i + " begins where the game's does (" + starts[i] + ")");
+        }
+        try {
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/PaleMenuScreen.java"));
+            check(!screen.contains("this.m_280273_(graphics)") && !screen.contains("graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_"),
+                "no full-screen overlay round the Pale menu");
+            check(screen.contains("PaleMenuView.BOX_WIDTH") && screen.contains("this.picked = key;") && screen.contains("key.startsWith(\"mutation:\")")
+                && screen.contains("key.equals(\"instant\")"), "the screen sized from the box; a mutation unlocked and the switch flipped only by their buttons");
+        } catch (java.io.IOException failure) {
+            check(false, "the Pale screen's source: " + failure);
         }
     }
 

@@ -1,275 +1,636 @@
 package com.hex.kagune.control.client;
 
 import com.hex.kagune.control.client.ui.UiCanvas;
+import com.hex.kagune.control.kakugan.KakuganEyes;
+import com.hex.kagune.control.pale.ArmRules;
+import com.hex.kagune.control.pale.OwlRules;
 import com.hex.kagune.control.pale.PaleMutation;
 import com.hex.kagune.control.pale.PaleRules;
 import com.hex.kagune.control.pale.PaleStrike;
 import com.hex.kagune.control.pale.PaleUnlock;
-import com.hex.kagune.control.kakugan.KakuganEyes;
+import com.hex.kagune.control.pale.WatchRules;
+import com.hex.kagune.control.quest.QuestLog;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
- * The Pale path's kagune menu (the menu key; 6.1.0), drawn on any {@link UiCanvas}: the same 960 x 520 board and organic style
- * as the Rinkaku and Ukaku menus, in her colours (pale flesh and bandage white over deep ink, the one red eye). It shows her
- * organ and stage, her mastery and the track of what it brings, a live preview of the pale flesh, her combat readout, her one
- * kakugan (and the button to place it), her mutations, and her kakuja, the Owl (6.2.0: her only one; the sealed V2 is gone).
+ * The Pale path's kagune menu (the menu key; 6.1.0): Owl DNA's organ and stage, mastery and the track of what it brings, the pale flesh,
+ * her moves, her one kakugan, her mutations (6.2.0) and her kakuja, the Owl.
+ *
+ * <p>4.1.61 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+ * Dialog, mastery menus ALL OF THEM"): the quest menu's box ({@link QuestFrame}), as the Ukaku, Rinkaku, Bikaku and Graft menus. Tabs BASE
+ * FORM, MOVES, THE OWL and MUTATIONS, each a column of quest cards, the one picked shown on the right as a quest (its story, what it is
+ * in numbers, what it waits for), the road of every step at the foot. A mutation is unlocked only by its UNLOCK button, drawn only while
+ * the server would spend a point on it (PaleRevive.unlock: {@link PaleMutation#canUnlock}); Witness This's Instant Big Punch switch is
+ * its own button.
  */
 public final class PaleMenuView {
-    public static final int UI_WIDTH = 960;
-    public static final int UI_HEIGHT = 520;
-
-    // Pale's palette: bandage and bone over a deep ink-plum, flesh pinks, and the kakugan's red for what matters.
-    static final int PANEL_FILL = 0xF3100C12;
-    static final int PANEL_EDGE = 0xFF5A4A4C;
-    static final int INNER_FILL = 0xF20A080C;
-    static final int INNER_EDGE = 0xFF2C2228;
-    static final int VEIN = 0xFF6A4E4E;
-    static final int VEIN_BRIGHT = 0xFF463536;
-    static final int TITLE = 0xFFF6EEE6;
-    static final int SUBTITLE = 0xFFB89A8E;
-    static final int HEADER = 0xFFEAC2B0;
-    static final int LABEL = 0xFF9A8580;
-    static final int VALUE = 0xFFF2E8E0;
-    static final int TRAIT = 0xFFE2D4CA;
-    static final int MUTED = 0xFF9A8A86;
-    static final int FAINT = 0xFF6A5C5C;
-    static final int BAR_BACK = 0xFF2E2426;
-    static final int BAR = 0xFFE4C8B8;
+    /** The old board's virtual size (kept for what still scales by it). */
+    public static final int UI_WIDTH = UkakuMenuView.UI_WIDTH;
+    public static final int UI_HEIGHT = UkakuMenuView.UI_HEIGHT;
+    /** 4.1.61: the box's size: the other mastery menus'. */
+    public static final int BOX_WIDTH = UkakuMenuView.BOX_WIDTH;
+    public static final int BOX_HEIGHT = UkakuMenuView.BOX_HEIGHT;
+    static final int DETAIL_WIDTH = UkakuMenuView.DETAIL_WIDTH;
+    static final int ROAD_Y = UkakuMenuView.ROAD_Y;
+    static final int TILE_WIDTH = UkakuMenuView.TILE_WIDTH;
+    static final int TILE_HEIGHT = UkakuMenuView.TILE_HEIGHT;
+    /** Her kakugan's red, for what matters. */
     static final int EYE = 0xFFE8283C;
-    static final int PREVIEW_FILL = 0xC6141012;
-    static final int PREVIEW_EDGE = 0xFF4E4040;
-    static final int PREVIEW_INNER = 0xE20A080A;
-    static final int PREVIEW_INNER_EDGE = 0xFF2A2224;
-    static final int SEALED = 0xFF8A7A96;
+
+    /** 4.1.61: the menu's tabs. */
+    public enum Tab {
+        FORM("BASE FORM"), MOVES("MOVES"), OWL("THE OWL"), MUTATIONS("MUTATIONS");
+
+        final String label;
+
+        Tab(String label) {
+            this.label = label;
+        }
+    }
 
     /**
-     * What the menu shows (6.2.0: her mutations, a bitmask of {@link PaleMutation}, and how many ticks until her death that does
-     * not take is ready again, 0 when it is).
+     * What the menu shows: her mastery, whether her flesh is out, her eyes, her mutations (a bitmask of {@link PaleMutation}, with
+     * {@link PaleMutation#INSTANT_PUNCH}), the ticks until her death that does not take is ready again (0 when it is); 4.1.61, the tab
+     * open and what is picked ("pick:s:N" a stage, "pick:m:NAME" a move, "pick:o:NAME" the Owl or one of its moves, "pick:u:ID" a
+     * mutation, "step:N" a step of the road; null: the tab's first).
      */
-    public record Model(int mastery, boolean active, KakuganEyes eyes, int mutations, long reviveIn) {
+    public record Model(int mastery, boolean active, KakuganEyes eyes, int mutations, long reviveIn, Tab tab, String picked) {
+        public Model {
+            tab = tab == null ? Tab.FORM : tab;
+        }
+
         public Model(int mastery, boolean active, KakuganEyes eyes) {
             this(mastery, active, eyes, 0, 0L);
         }
-    }
 
-    /** A clickable area on the board (virtual 960 x 520 coordinates). */
-    public record Rect(int x, int y, int width, int height) {
-        public boolean contains(double px, double py) {
-            return px >= this.x && px <= this.x + this.width && py >= this.y && py <= this.y + this.height;
+        /** As before 4.1.61. */
+        public Model(int mastery, boolean active, KakuganEyes eyes, int mutations, long reviveIn) {
+            this(mastery, active, eyes, mutations, reviveIn, Tab.FORM, null);
         }
     }
+
+    /** Her base form's stages as it grows ({@link PaleUnlock#stageName}): the mastery each begins at. */
+    static final int[] STAGES = {0, 250, 500};
+
+    /**
+     * One of her moves: its card's name, the key, the mastery it needs, its cooldown (ticks), its RC, its story; the Owl's own are
+     * {@code owl}.
+     */
+    record Move(String id, String name, String key, int mastery, int cooldown, float cost, boolean owl, String story) {
+    }
+
+    static final List<Move> MOVES = List.of(
+        new Move("BLITZ", "Speed Blitz", "M1", 0, 0, 0.0F, false,
+            "Her fists faster than the eye: a string of strikes that grows with her, jab to liver shot, then the uppercut and the blinking "
+                + "palm, then the spinning backfist and the twin palms to end it."),
+        new Move("FLIPS", "Flips", "RMB", 0, PaleRules.FLIP_COOLDOWN, PaleRules.FLIP_COST, false,
+            "Right click with W, A, S or D: she flips that way, over a blow or out of reach, and lands ready."),
+        new Move("PUNCH", "Big Punch!", "Z", 0, PaleRules.PUNCH_COOLDOWN, 0.0F, false,
+            "Z held, she winds up; let go, the blitz, the punch to the gut, and whatever it hits is sent flying."),
+        new Move("SWIPE", "Flesh Swipe", "J", PaleRules.SWIPE_MASTERY, PaleRules.SWIPE_COOLDOWN, PaleRules.SWIPE_COST, false,
+            "J tapped: the pale flesh erupts out of her upper back and sweeps across in front of her."),
+        new Move("KICK", "Speed Kick", "V", PaleRules.KICK_MASTERY, PaleRules.KICK_COOLDOWN, PaleRules.KICK_COST, false,
+            "V tapped: a kick too fast to see, there and gone."),
+        new Move("GRAB", "Flesh Grab", "J held", PaleRules.GRAB_MASTERY, PaleRules.GRAB_COOLDOWN, PaleRules.GRAB_COST, false,
+            "J held: the flesh reaches out for what she looks at and holds it while J stays down; let go, it is whipped round and thrown."),
+        new Move("HAMMER", "Flesh Hammer", "V held", PaleRules.HAMMER_MASTERY, PaleRules.HAMMER_COOLDOWN, PaleRules.HAMMER_START_COST, false,
+            "V held: her leg rises and a club of flesh grows round it; let go, the axe kick slams it into the ground."),
+        new Move("WATCH", "Watch This", "B", PaleRules.WATCH_MASTERY, WatchRules.COOLDOWN, WatchRules.COST, false,
+            "B: her arms thrown out in a cross, two tentacles burst out of her back and run through what is in front of her."),
+        new Move("ARM", "Mutated Arm", "N", ArmRules.MASTERY, ArmRules.COOLDOWN, ArmRules.COST, false,
+            "N: the arm swells, grabs and drags; held, it crushes everything round her in a sphere."));
+
+    static final List<Move> OWL = List.of(
+        new Move("OWL", "The Owl", "K", PaleRules.KAKUJA_V1_MASTERY, OwlRules.COOLDOWN, OwlRules.COST, true,
+            "Her kakuja: a gaunt, hunched thing in a tattered robe, an owl's mask of bone with one burning eye, four limbs off her "
+                + "shoulders ending in giant navy blades. K grows it; K again, she turns back."),
+        new Move("REND", "Rend", "M1", PaleRules.KAKUJA_V1_MASTERY, 0, OwlRules.REND_COST[0], true,
+            "Four cuts of the giant blades, one after another, the last the heaviest."),
+        new Move("POUNCE", "Pounce", "RMB", PaleRules.KAKUJA_V1_MASTERY, OwlRules.LEAP_COOLDOWN, OwlRules.LEAP_COST, true,
+            "A bound, and as she lands both blades are driven into the ground ahead of her."),
+        new Move("OWL_PUNCH", "The Owl's Big Punch", "Z", PaleRules.KAKUJA_V1_MASTERY, PaleRules.PUNCH_COOLDOWN, 0.0F, true,
+            "Z held, she sinks under the giant arm; let go, her fist and its elbow together, flying level through whatever is in the way."),
+        new Move("OWL_KICK", "Speed Kick, Fissure", "V", PaleRules.KAKUJA_V1_MASTERY, PaleRules.KICK_COOLDOWN, PaleRules.KICK_COST, true,
+            "V tapped: the dash, a blade through it, the spinning heel. V held: both blades raised high and brought down, the ground split."),
+        new Move("WHIRL", "Whirl, Crystal Spikes", "J", PaleRules.KAKUJA_V1_MASTERY, PaleRules.SWIPE_COOLDOWN, OwlRules.WHIRL_COST, true,
+            "J tapped: a whole turn with both giant arms out, reaping all round her. J held: fans of crystal spears off its crest that pin "
+                + "what they hit."),
+        new Move("LANCES", "Watch This", "B", PaleRules.KAKUJA_V1_MASTERY, WatchRules.COOLDOWN, WatchRules.COST, true,
+            "Hunched, then reared up as its lances burst out of her back."),
+        new Move("HAND", "Great Hand", "N", PaleRules.KAKUJA_V1_MASTERY, OwlRules.GRAB_COOLDOWN, OwlRules.GRAB_COST, true,
+            "N: its great hand reaches for what she looks at and holds it up before its jaws while N stays down; let go, slammed into "
+                + "the ground."));
 
     private PaleMenuView() {
     }
 
     /**
-     * Draws the board at virtual size (the caller scales the canvas) and returns its clickable areas by name ("eyes",
-     * "kakuja:V1", "mutation:N"). {@code mouseX}/{@code mouseY} are in board coordinates, for hovering and the tooltip.
+     * Draws the box at its own size and returns its clickable areas: "tab:NAME", "pick:...", "step:N", "milestone:N", "eyes",
+     * "mutation:N" (UNLOCK, N the ordinal: only while a point may be spent on it) and "instant" (Witness This's switch, once it is hers).
      */
-    public static Map<String, Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time) {
-        Map<String, Rect> hits = new LinkedHashMap<>();
-        int panelWidth = 930;
-        int panelHeight = 500;
-        int centerX = UI_WIDTH / 2;
-        int centerY = UI_HEIGHT / 2;
-        int left = centerX - panelWidth / 2;
-        int top = centerY - panelHeight / 2;
-        c.batch(() -> {
-            UkakuMenuView.organicPanel(c, centerX, centerY, panelWidth / 2, panelHeight / 2, PANEL_FILL, PANEL_EDGE);
-            UkakuMenuView.organicPanel(c, centerX, centerY, panelWidth / 2 - 5, panelHeight / 2 - 5, INNER_FILL, INNER_EDGE);
-            UkakuMenuView.drawVein(c, left + 262, top + 44, left + 280, centerY, left + 250, top + panelHeight - 45, VEIN, 3);
-            UkakuMenuView.drawVein(c, left + 535, top + 42, left + 520, centerY, left + 550, top + panelHeight - 42, VEIN, 3);
-            UkakuMenuView.drawVein(c, left + 18, top + 74, centerX, top + 32, left + panelWidth - 18, top + 74, VEIN_BRIGHT, 2);
-        });
-        c.centered("O N E - E Y E D   O W L", centerX, top + 18, TITLE);
-        c.centered("RC CELL / PALE FLESH MATRIX", centerX, top + 34, SUBTITLE);
-        c.centered("Ctrl+R form  •  M1 blitz  •  RMB flips  •  Z punch  •  J flesh  •  V kicks  •  B watch this  •  N arm  •  K owl", centerX, top + 51,
-            0xFFA48C84);
-
-        identity(c, model, left + 24, top + 68);
-        preview(c, model, left + 295, top + 76, 220, 190, time);
-        stats(c, model, hits, left + 295, top + 285);
-        mutations(c, model, hits, left + 566, top + 66);
-        kakuja(c, model, hits, left + 566, top + 300, time);
-
-        c.centered(model.active() ? "R  RETRACT" : "ALT + R  BASE FORM", centerX, top + panelHeight - 16, model.active() ? EYE : 0xFFB49486);
-
-        String tip = tooltip(hits, mouseX, mouseY, model);
-        if (tip != null) {
-            int width = c.width(tip) + 8;
-            int x = (int)Math.min(UI_WIDTH - width - 4, mouseX + 10);
-            int y = (int)Math.max(4, mouseY - 16);
-            c.fill(x - 1, y - 1, x + width + 1, y + 13, PANEL_EDGE);
-            c.fill(x, y, x + width, y + 12, 0xF0120E12);
-            c.text(tip, x + 4, y + 2, VALUE, false);
+    public static Map<String, UkakuMenuView.Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time) {
+        Map<String, UkakuMenuView.Rect> hits = new LinkedHashMap<>();
+        QuestFrame.plate(c, BOX_WIDTH, BOX_HEIGHT, time, 292, 6, 170, 38);
+        header(c, model, time);
+        int points = PaleMutation.available(model.mastery(), model.mutations());
+        List<QuestFrame.Tab> tabs = new ArrayList<>();
+        for (Tab tab : Tab.values()) {
+            tabs.add(new QuestFrame.Tab(tab.name(), tab.label, tab == Tab.MUTATIONS ? points : 0, tab == Tab.MUTATIONS && points > 0));
         }
+        QuestFrame.tabs(c, tabs, model.tab().name(), hits, mouseX, mouseY, QuestFrame.LIST_X, QuestFrame.TABS_Y, time);
+        QuestFrame.Tip tip = switch (model.tab()) {
+            case MOVES -> movesTab(c, model, MOVES, "pick:m:", hits, mouseX, mouseY, time);
+            case OWL -> movesTab(c, model, OWL, "pick:o:", hits, mouseX, mouseY, time);
+            case MUTATIONS -> mutationsTab(c, model, hits, mouseX, mouseY, time);
+            default -> formTab(c, model, hits, mouseX, mouseY, time);
+        };
+        QuestFrame.tooltip(c, tip, 8, BOX_WIDTH - 8);
         return hits;
     }
 
-    // ------------------------------------------------------------------ sections
+    // ------------------------------------------------------------------ the header
 
-    private static void identity(UiCanvas c, Model model, int x, int y) {
+    private static void header(UiCanvas c, Model model, double time) {
         int mastery = model.mastery();
-        c.text("CURRENT ORGAN", x, y, HEADER, false);
-        row(c, "Ghoul", "Natural one-eyed", x, y + 25);
-        row(c, "Kagune", "Pale flesh, upper back", x, y + 43);
-        row(c, "Stage", PaleUnlock.stageName(mastery), x, y + 61);
-        row(c, "Kakugan", eyeText(model.eyes()) + " only", x, y + 79);
-        row(c, "Form", model.active() ? "Base form (out)" : "Base form (Ctrl+R)", x, y + 97);
-        row(c, "Blitz", PaleStrike.count(mastery) + " of " + PaleStrike.of(PaleStrike.Style.BLITZ).length + " strikes", x, y + 115);
-
-        c.text("MASTERY", x, y + 151, HEADER, false);
-        c.text(mastery + " / 1000", x + 126, y + 151, VALUE, false);
-        c.batch(() -> {
-            UkakuMenuView.capsule(c, x, y + 171, 205, 8, BAR_BACK);
-            UkakuMenuView.capsule(c, x, y + 171, Math.max(8, Math.round(205.0F * Math.min(1000, mastery) / 1000.0F)), 8, BAR);
-        });
-        c.text(nextMilestone(mastery), x, y + 185, MUTED, false);
-
-        c.text("UNLOCKS", x, y + 202, HEADER, false);
-        int rowY = y + 223;
-        for (PaleUnlock unlock : track(mastery)) {
-            boolean reached = unlock.reached(mastery);
-            int colour = reached ? TRAIT : MUTED;
-            c.text(Integer.toString(unlock.mastery()), x + 5, rowY, MUTED, false);
-            c.text(c.fit(unlock.text(), 200), x + 34, rowY, colour, false);
-            rowY += 16;
+        TreeMap<Integer, String> steps = steps();
+        Integer next = steps.ceilingKey(mastery + 1);
+        Integer from = steps.floorKey(mastery);
+        int start = from == null ? 0 : from;
+        float share = next == null ? 1.0F : (mastery - start) / (float)Math.max(1, next - start);
+        String goal = next == null ? "Every step of Owl DNA reached" : mastery + " / " + next + "  ·  next: " + steps.get(next);
+        QuestFrame.header(c, BOX_WIDTH, "OWL DNA", "PALE FLESH  ·  " + PaleUnlock.stageName(mastery).toUpperCase(java.util.Locale.ROOT)
+            + "  ·  MASTERY " + mastery, share, next == null, goal, time);
+        int right = BOX_WIDTH - 12;
+        boolean out = model.active();
+        right = QuestFrame.chipLeft(c, right, 56, out ? "FLESH OUT  ·  R RETRACTS" : "FLESH IN  ·  CTRL + R", out ? 0xFF2A0A10 : 0xFF181012,
+            out ? QuestStyle.RED_DARK : QuestStyle.GREY_DARK, out ? 0xFFFF8A7A : QuestJournalView.MUTED);
+        int points = PaleMutation.available(mastery, model.mutations());
+        if (points > 0) {
+            QuestFrame.chipLeft(c, right, 56, points + (points == 1 ? " PT" : " PTS"), QuestFrame.GOLD_FILL, QuestStyle.GOLD_DARK, QuestStyle.GOLD);
         }
     }
 
-    /** The live preview: the pale flesh rearing out of her back, breathing, steam off her shoulders. */
-    private static void preview(UiCanvas c, Model model, int x, int y, int width, int height, double time) {
-        c.batch(() -> {
-            UkakuMenuView.organicPanel(c, x + width / 2, y + height / 2, width / 2, height / 2, PREVIEW_FILL, PREVIEW_EDGE);
-            UkakuMenuView.organicPanel(c, x + width / 2, y + height / 2, width / 2 - 5, height / 2 - 5, PREVIEW_INNER, PREVIEW_INNER_EDGE);
-        });
-        c.centered("LIVE RC RESPONSE", x + width / 2, y + 10, HEADER);
-        PathChoiceLayout.Box box = new PathChoiceLayout.Box(x + 12, y + 22, width - 24, 124);
-        List<PathSilhouette.Mark> marks = PathSilhouette.pale(box, time, 1.0F, model.active(), 0x0B090B);
+    /** Every step of Owl DNA by its mastery ({@link PaleUnlock}), in words. */
+    public static TreeMap<Integer, String> steps() {
+        TreeMap<Integer, List<String>> parts = new TreeMap<>();
+        for (PaleUnlock unlock : PaleUnlock.values()) {
+            parts.computeIfAbsent(unlock.mastery(), k -> new ArrayList<>()).add(unlock.text());
+        }
+        TreeMap<Integer, String> out = new TreeMap<>();
+        parts.forEach((m, words) -> out.put(m, m == 0 ? "From the start: " + words.size() + " moves and the base form" : String.join(", ", words)));
+        return out;
+    }
+
+    // ------------------------------------------------------------------ the base form's tab
+
+    private static QuestFrame.Tip formTab(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, double time) {
+        int picked = pickedStage(model);
+        int y = QuestFrame.CONTENT_Y;
+        for (int i = 0; i < STAGES.length; i++) {
+            QuestFrame.card(c, stageCard(model, i), QuestFrame.LIST_X, y, QuestFrame.LIST_WIDTH, i == picked, hits, mouseX, mouseY, time, i);
+            y += QuestFrame.CARD_HEIGHT + QuestFrame.CARD_GAP;
+        }
+        int ry = QuestFrame.section(c, "THE ORGAN", QuestFrame.LIST_X, y + 6, QuestFrame.LIST_WIDTH);
+        int ink = QuestFrame.VALUE;
+        QuestFrame.row(c, "Ghoul", "Natural, one-eyed", QuestFrame.LIST_X, ry, 66, QuestFrame.LIST_WIDTH, ink);
+        QuestFrame.row(c, "Kagune", "Pale flesh, upper back", QuestFrame.LIST_X, ry + 12, 66, QuestFrame.LIST_WIDTH, ink);
+        QuestFrame.row(c, "Form", model.active() ? "Base form, out" : "Base form (Ctrl + R)", QuestFrame.LIST_X, ry + 24, 66, QuestFrame.LIST_WIDTH, ink);
+        QuestFrame.row(c, "Blitz", PaleStrike.count(model.mastery()) + " of " + PaleStrike.of(PaleStrike.Style.BLITZ).length + " strikes",
+            QuestFrame.LIST_X, ry + 36, 66, QuestFrame.LIST_WIDTH, ink);
+        int ky = QuestFrame.section(c, "KAKUGAN", QuestFrame.LIST_X, ry + 54, QuestFrame.LIST_WIDTH);
+        c.text(c.fit("One eye only: the " + eyeText(model.eyes()).toLowerCase(java.util.Locale.ROOT), QuestFrame.LIST_WIDTH), QuestFrame.LIST_X, ky,
+            QuestFrame.MUTED, false);
+        QuestFrame.button(c, "eyes", "ADJUST KAKUGAN", QuestFrame.LIST_X, ky + 14, QuestFrame.LIST_WIDTH, 16, true, false, hits, mouseX, mouseY, time);
+        stageDetail(c, model, picked, QuestFrame.DETAIL_X, QuestFrame.CONTENT_Y, DETAIL_WIDTH, time);
+        return road(c, model, hits, mouseX, mouseY, QuestFrame.DETAIL_X, ROAD_Y, DETAIL_WIDTH, time, STAGES[picked]);
+    }
+
+    /** The stage shown: the one picked (or the one a step of the road falls in), else hers now. */
+    static int pickedStage(Model model) {
+        String picked = model.picked();
+        if (picked != null && picked.startsWith("pick:s:")) {
+            try {
+                int i = Integer.parseInt(picked.substring(7));
+                if (i >= 0 && i < STAGES.length) {
+                    return i;
+                }
+            } catch (NumberFormatException wrong) {
+                // hers now
+            }
+        }
+        if (picked != null && picked.startsWith("step:")) {
+            try {
+                return stageAt(Integer.parseInt(picked.substring(5)));
+            } catch (NumberFormatException wrong) {
+                // hers now
+            }
+        }
+        return stageAt(model.mastery());
+    }
+
+    /** The stage {@code mastery} falls in. */
+    static int stageAt(int mastery) {
+        int at = 0;
+        for (int i = 0; i < STAGES.length; i++) {
+            if (mastery >= STAGES[i]) {
+                at = i;
+            }
+        }
+        return at;
+    }
+
+    static QuestLog.State stageState(Model model, int i) {
+        if (model.mastery() < STAGES[i]) {
+            return QuestLog.State.LOCKED;
+        }
+        return stageAt(model.mastery()) == i ? QuestLog.State.OPEN : QuestLog.State.DONE;
+    }
+
+    static QuestFrame.Card stageCard(Model model, int i) {
+        int mastery = model.mastery();
+        QuestLog.State state = stageState(model, i);
+        int from = i == 0 ? 0 : STAGES[i - 1];
+        boolean reached = state != QuestLog.State.LOCKED;
+        boolean next = !reached && mastery >= from;
+        float share = reached ? 1.0F : next ? Math.max(0.0F, Math.min(1.0F, (mastery - from) / (float)Math.max(1, STAGES[i] - from))) : 0.0F;
+        String chip = switch (state) {
+            case OPEN -> "NOW";
+            case DONE -> "GROWN PAST";
+            default -> "at mastery " + STAGES[i];
+        };
+        return new QuestFrame.Card("pick:s:" + i, PaleUnlock.stageName(STAGES[i]), !reached, chip, QuestStyle.colour(state), QuestStyle.dark(state),
+            next ? Math.round(share * 100.0F) + "%" : "", share, state == QuestLog.State.DONE ? QuestJournalView.BAR_DONE : QuestJournalView.BAR,
+            next && share >= 0.8F, (cc, x, y, size, back, t) -> stageGlyph(cc, i, reached ? QuestStyle.colour(state) : QuestStyle.mix(QuestStyle.colour(state),
+                back, 0.45F), x, y, size, back, t));
+    }
+
+    static String story(int stage) {
+        return switch (stage) {
+            case 0 -> "An experiment's first: the Owl's cells in a natural one-eyed ghoul. Her fists, her flips and the Big Punch; the pale "
+                + "flesh still sleeping under her skin.";
+            case 1 -> "The strain takes: the flesh answers her now, sweeping, reaching and throwing; her legs too fast to see.";
+            default -> "All of it hers: the hammer of flesh, the tentacles, the mutated arm, the Owl, and a mutation at every milestone.";
+        };
+    }
+
+    /** A stage, as the journal shows a quest: its story, the flesh in its tile, what it brings, and what she hits with. */
+    private static void stageDetail(UiCanvas c, Model model, int stage, int x, int y, int width, double time) {
+        int mastery = model.mastery();
+        QuestLog.State state = stageState(model, stage);
+        title(c, PaleUnlock.stageName(STAGES[stage]), STAGES[stage] == 0 ? "From the start" : "Mastery " + STAGES[stage], x, y, width);
+        int rowY = y + 16;
+        String standing = switch (state) {
+            case OPEN -> "Hers now" + (model.active() ? ", the flesh out" : "");
+            case DONE -> "Grown past";
+            default -> "Ahead of her: at mastery " + STAGES[stage] + "  (" + (STAGES[stage] - mastery) + " to go)";
+        };
+        c.text(c.fit(standing, width), x, rowY, state == QuestLog.State.OPEN ? QuestJournalView.OPEN : state == QuestLog.State.DONE ? QuestJournalView.DONE
+            : QuestFrame.MUTED, false);
+        rowY += 13;
+        rowY = QuestFrame.story(c, story(stage), x, rowY, width) + 8;
+        int tileY = rowY;
+        boolean locked = state == QuestLog.State.LOCKED;
+        tile(c, state, x, tileY, time);
+        PathChoiceLayout.Box box = new PathChoiceLayout.Box(x + 8, tileY + 6, TILE_WIDTH - 16, TILE_HEIGHT - 30);
+        List<PathSilhouette.Mark> marks = PathSilhouette.pale(box, time, locked ? 0.0F : 1.0F, stage > 0, 0x0B090B);
         c.batch(() -> {
             for (PathSilhouette.Mark mark : marks) {
                 UkakuMenuView.draw(c, mark);
             }
         });
-        c.centered(model.active() ? "base form / the flesh stirs under her skin" : "sheathed / Ctrl+R to wake it", x + width / 2, y + height - 40,
-            0xFF8E7670);
-        c.centered("kakuja: the Owl (K)", x + width / 2, y + height - 26, SEALED);
-    }
-
-    private static void stats(UiCanvas c, Model model, Map<String, Rect> hits, int x, int y) {
-        int mastery = model.mastery();
-        c.text("COMBAT READOUT", x, y, HEADER, false);
-        c.text(String.format("Fist            %.1f a strike", PaleRules.fist(mastery)), x, y + 23, TRAIT, false);
-        c.text(String.format("Big Punch      %.0f to %.0f, %.0f blocks", PaleRules.punchDamage(mastery, 0.0F), PaleRules.punchDamage(mastery, 1.0F),
-            PaleRules.punchRange(1.0F)), x, y + 40, TRAIT, false);
-        c.text(mastery >= PaleRules.SWIPE_MASTERY ? String.format("Flesh reach    %.0f blocks", PaleRules.SWIPE_REACH)
-            : "Flesh reach    at mastery " + PaleRules.SWIPE_MASTERY, x, y + 57, TRAIT, false);
-        c.text(mastery >= PaleRules.HAMMER_MASTERY ? String.format("Flesh Hammer  %.1f to %.1f blocks wide", PaleRules.hammerRadius(0.0F),
-            PaleRules.hammerRadius(1.0F)) : "Flesh Hammer  at mastery " + PaleRules.HAMMER_MASTERY, x, y + 74, TRAIT, false);
-        c.text("Smashes weak blocks; they grow back in 30 s", x, y + 91, MUTED, false);
-
-        c.text("KAKUGAN", x, y + 132, HEADER, false);
-        c.text("One eye only: the " + eyeText(model.eyes()).toLowerCase(java.util.Locale.ROOT), x, y + 146, MUTED, false);
-        Rect button = new Rect(x, y + 160, 214, 18);
-        c.fill(button.x(), button.y(), button.x() + button.width(), button.y() + button.height(), 0xFF8A3A3A);
-        c.fill(button.x() + 1, button.y() + 1, button.x() + button.width() - 1, button.y() + button.height() - 1, 0xFF3A1E20);
-        c.centered("ADJUST KAKUGAN", button.x() + button.width() / 2, button.y() + 5, 0xFFF2DED8);
-        hits.put("eyes", button);
-    }
-
-    /**
-     * Her kakuja, the Owl, as one wide slot (6.2.0: her only one; the sealed V2 is gone): its eye open once her mastery reaches it,
-     * what it is, the mastery it needs and its key.
-     */
-    private static void kakuja(UiCanvas c, Model model, Map<String, Rect> hits, int x, int y, double time) {
-        c.text("KAKUJA", x, y, HEADER, false);
-        int slotWidth = 335;
-        int slotHeight = 96;
-        int sx = x;
-        int sy = y + 16;
-        Rect slot = new Rect(sx, sy, slotWidth, slotHeight);
-        float pulse = (float)(0.5 + 0.5 * Math.sin(time * 1.6));
-        int edge = PathSilhouette.blend(0x3A2E40, 0x7A6488, 0.35F + 0.35F * pulse) | 0xFF000000;
-        c.fill(sx, sy, sx + slotWidth, sy + slotHeight, edge);
-        c.fill(sx + 2, sy + 2, sx + slotWidth - 2, sy + slotHeight - 2, 0xFF120E16);
-        // The Owl's eye: the lids closed over a thread of red until it is hers, then apart over a red kakugan.
-        int ex = sx + 62;
-        int ey = sy + 46;
-        boolean open = model.mastery() >= PaleRules.KAKUJA_V1_MASTERY;
-        c.batch(() -> {
-            for (int k = -26; k <= 26; k++) {
-                int lid = (int)Math.round(Math.sqrt(Math.max(0.0, 1.0 - (k / 26.0) * (k / 26.0))) * (open ? 14.0 : 6.0));
-                c.fill(ex + k, ey - lid, ex + k + 1, ey - lid + 2, 0xFF5E5068);
-                c.fill(ex + k, ey + lid - 1, ex + k + 1, ey + lid + 1, 0xFF3E3448);
-                if (open && lid > 2) {
-                    c.fill(ex + k, ey - lid + 2, ex + k + 1, ey + lid - 1, Math.abs(k) < 7 ? 0xFF1A0508 : 0xFFB0182A);
-                }
-            }
-            int glow = (int)(80 + 120 * pulse);
-            c.fill(ex - 16, ey, ex + 16, ey + 1, glow << 24 | 0xE8283C);
-        });
-        int tx = sx + 124;
-        c.text("THE OWL", tx, sy + 12, open ? TRAIT : SEALED, false);
-        c.text(open ? "K: grow it  /  K again: turn back" : "sealed until mastery " + PaleRules.KAKUJA_V1_MASTERY, tx, sy + 28, open ? 0xFFD8C8E2 : FAINT,
-            false);
-        c.text("Giant blades on red muscle", tx, sy + 46, MUTED, false);
-        c.text("An owl's mask, one burning eye", tx, sy + 60, MUTED, false);
-        c.text("mastery " + PaleRules.KAKUJA_V1_MASTERY, tx, sy + 76, open ? TRAIT : FAINT, false);
-        hits.put("kakuja:V1", slot);
-    }
-
-    /**
-     * 6.2.0: her mutations, as the other paths have theirs: each mastery milestone earns a point, spent here by clicking the mutation
-     * she wants ("mutation:N", N its ordinal); one she has shows whether it is ready. They have the top of the right column (the
-     * keys are on the line under the title).
-     */
-    private static void mutations(UiCanvas c, Model model, Map<String, Rect> hits, int x, int y) {
-        int points = PaleMutation.available(model.mastery(), model.mutations());
-        int next = PaleMutation.nextMilestone(model.mastery());
-        c.text("MUTATIONS", x, y, HEADER, false);
-        String status = points > 0 ? points + (points == 1 ? " point to spend: click it" : " points to spend: click one")
-            : next > 0 ? "a point at mastery " + next : "every point spent";
-        c.text(c.fit(status, 240), x + 86, y, points > 0 ? 0xFFF0B060 : MUTED, false);
-        // 6.2.0: four of them now, a little shorter each, so they all fit above her kakuja.
-        int width = 335;
-        int height = 44;
-        for (PaleMutation mutation : PaleMutation.values()) {
-            int top = y + 16 + mutation.ordinal() * (height + 6);
-            boolean owned = mutation.in(model.mutations());
-            boolean ready = PaleMutation.canUnlock(model.mastery(), model.mutations(), mutation);
-            int edge = owned ? 0xFFC8402A : ready ? 0xFFF0A040 : 0xFF3A2430;
-            int fill = owned ? 0xFF3A1A16 : ready ? 0xFF2E2016 : 0xFF1E161C;
-            c.fill(x, top, x + width, top + height, edge);
-            c.fill(x + 2, top + 2, x + width - 2, top + height - 2, fill);
-            boolean waits = mutation == PaleMutation.NOT_THAT_EASILY;
-            String tag = owned ? (waits ? reviveTag(model.reviveIn()) : "ON") : ready ? "CLICK TO UNLOCK" : "NEEDS A POINT";
-            int tagWidth = c.width(tag);
-            c.text(c.fit(mutation.displayName(), width - 26 - tagWidth), x + 8, top + 6, owned ? 0xFFFFD6C8 : ready ? 0xFFF7E3C8 : 0xFF8F7A80, false);
-            c.text(tag, x + width - 8 - tagWidth, top + 6, owned ? (waits && model.reviveIn() > 0 ? 0xFFB08A80 : 0xFFE86A4A) : ready ? 0xFFF0B060
-                : 0xFF6E5A62, false);
-            int line = 0;
-            for (String row : UkakuMenuView.wrap(c, mutation.description(), width - 16)) {
-                if (line < 2) {
-                    c.text(row, x + 8, top + 18 + line * 11, owned ? 0xFFD8B8B0 : 0xFF9C868E, false);
-                }
-                line++;
-            }
-            hits.put("mutation:" + mutation.ordinal(), new Rect(x, top, width, height));
-            if (owned && mutation == PaleMutation.WITNESS_THIS) {
-                // 6.2.2: its switch, Instant Big Punch: Z tapped is the full charge at once (and so the combo).
-                boolean on = (model.mutations() & PaleMutation.INSTANT_PUNCH) != 0;
-                String label = "INSTANT BIG PUNCH: " + (on ? "ON" : "OFF");
-                int bw = c.width(label) + 10;
-                int bx = x + width - 8 - tagWidth - 6 - bw;
-                c.fill(bx, top + 3, bx + bw, top + 16, on ? 0xFFE86A4A : 0xFF6E5A62);
-                c.fill(bx + 1, top + 4, bx + bw - 1, top + 15, on ? 0xFF5A2018 : 0xFF241A20);
-                c.text(label, bx + 5, top + 5, on ? 0xFFFFD6C8 : 0xFFB8A0A8, false);
-                hits.put("instant", new Rect(bx, top + 3, bw, 13));
+        veil(c, locked, x, tileY);
+        c.centered(stage == 0 ? "the flesh asleep" : stage == 1 ? "the flesh answers" : "the flesh unbound", x + TILE_WIDTH / 2,
+            tileY + TILE_HEIGHT - 15, locked ? QuestFrame.FAINT : 0xFFB0767A, false);
+        int rx = x + TILE_WIDTH + 12;
+        int rw = width - TILE_WIDTH - 12;
+        int end = stage + 1 < STAGES.length ? STAGES[stage + 1] : Integer.MAX_VALUE;
+        List<PaleUnlock> brings = new ArrayList<>();
+        for (PaleUnlock unlock : PaleUnlock.values()) {
+            if (unlock.mastery() >= STAGES[stage] && unlock.mastery() < end) {
+                brings.add(unlock);
             }
         }
+        int got = 0;
+        for (PaleUnlock unlock : brings) {
+            got += unlock.reached(mastery) ? 1 : 0;
+        }
+        int ry = QuestFrame.section(c, "WHAT IT BRINGS", got + " / " + brings.size(), rx, tileY, rw);
+        for (PaleUnlock unlock : brings) {
+            QuestFrame.checkRow(c, unlock.reached(mastery), !unlock.reached(mastery), unlock.text(), String.valueOf(unlock.mastery()), rx, ry, rw);
+            ry += 14;
+        }
+        int cy = QuestFrame.section(c, "HER BLOWS", x, Math.max(tileY + TILE_HEIGHT, ry) + 6, width);
+        int half = (width - 16) / 2;
+        String[][] rows = {
+            {"Fist", String.format(java.util.Locale.ROOT, "%.1f a strike", PaleRules.fist(mastery))},
+            {"Big Punch", String.format(java.util.Locale.ROOT, "%.0f to %.0f, %.0f blocks", PaleRules.punchDamage(mastery, 0.0F),
+                PaleRules.punchDamage(mastery, 1.0F), PaleRules.punchRange(1.0F))},
+            {"Flesh reach", mastery >= PaleRules.SWIPE_MASTERY ? String.format(java.util.Locale.ROOT, "%.0f blocks", PaleRules.SWIPE_REACH)
+                : "at mastery " + PaleRules.SWIPE_MASTERY},
+            {"Flesh Hammer", mastery >= PaleRules.HAMMER_MASTERY ? String.format(java.util.Locale.ROOT, "%.1f to %.1f blocks wide",
+                PaleRules.hammerRadius(0.0F), PaleRules.hammerRadius(1.0F)) : "at mastery " + PaleRules.HAMMER_MASTERY}};
+        for (int i = 0; i < rows.length; i++) {
+            QuestFrame.row(c, rows[i][0], rows[i][1], x + (i % 2) * (half + 16), cy + (i / 2) * 13, 76, half, QuestFrame.VALUE);
+        }
+    }
+
+    // ------------------------------------------------------------------ the moves' tabs (hers and the Owl's)
+
+    private static QuestFrame.Tip movesTab(UiCanvas c, Model model, List<Move> moves, String prefix, Map<String, UkakuMenuView.Rect> hits,
+                                           double mouseX, double mouseY, double time) {
+        Move picked = pickedMove(model, moves, prefix);
+        int y = QuestFrame.CONTENT_Y;
+        int index = 0;
+        for (Move move : moves) {
+            QuestFrame.card(c, moveCard(model, move, prefix), QuestFrame.LIST_X, y, QuestFrame.LIST_WIDTH, move == picked, hits, mouseX, mouseY, time,
+                index++);
+            y += QuestFrame.CARD_HEIGHT + QuestFrame.CARD_GAP;
+        }
+        moveDetail(c, model, picked, QuestFrame.DETAIL_X, QuestFrame.CONTENT_Y, DETAIL_WIDTH, time);
+        return road(c, model, hits, mouseX, mouseY, QuestFrame.DETAIL_X, ROAD_Y, DETAIL_WIDTH, time, picked.mastery());
+    }
+
+    /** The move shown: the one picked (or the first a step of the road brings), else the tab's first. */
+    static Move pickedMove(Model model, List<Move> moves, String prefix) {
+        String picked = model.picked();
+        if (picked != null) {
+            for (Move move : moves) {
+                if (picked.equals(prefix + move.id())) {
+                    return move;
+                }
+            }
+            if (picked.startsWith("step:")) {
+                for (Move move : moves) {
+                    if (picked.equals("step:" + move.mastery())) {
+                        return move;
+                    }
+                }
+            }
+        }
+        return moves.get(0);
+    }
+
+    static boolean had(Model model, Move move) {
+        return model.mastery() >= move.mastery();
+    }
+
+    static QuestFrame.Card moveCard(Model model, Move move, String prefix) {
+        boolean had = had(model, move);
+        QuestLog.State state = had ? QuestLog.State.DONE : QuestLog.State.LOCKED;
+        String chip = had ? move.key() + (move.cooldown() > 0 ? "  ·  " + format(move.cooldown() / 20.0F) + " S" : "") : "at mastery " + move.mastery();
+        int ink = had ? QuestStyle.GREEN : QuestStyle.colour(state);
+        return new QuestFrame.Card(prefix + move.id(), move.name(), !had, chip, ink, QuestStyle.dark(state), "", -1.0F, 0, false,
+            (cc, x, y, size, back, t) -> keyGlyph(cc, move, had ? (move.owl() ? EYE : QuestStyle.GREEN) : QuestStyle.mix(ink, back, 0.45F), x, y, size, back,
+                !had));
+    }
+
+    /** A move, as the journal shows a quest: its story, its numbers in two columns, what it waits for; the flesh or the Owl in its tile. */
+    private static void moveDetail(UiCanvas c, Model model, Move move, int x, int y, int width, double time) {
+        boolean had = had(model, move);
+        title(c, move.name(), "Key " + move.key(), x, y, width);
+        int rowY = y + 16;
+        boolean kakuja = move.id().equals("OWL");
+        String standing = had ? (kakuja ? "Hers: K grows it, K again turns back" : move.owl() ? "Hers, in the Owl" : "Hers")
+            : "Ahead of her: at mastery " + move.mastery() + "  (" + (move.mastery() - model.mastery()) + " to go)";
+        c.text(c.fit(standing, width), x, rowY, had ? QuestJournalView.DONE : QuestFrame.MUTED, false);
+        rowY += 13;
+        rowY = QuestFrame.story(c, move.story(), x, rowY, width) + 10;
+        rowY = QuestFrame.section(c, kakuja ? "THE KAKUJA" : "THE MOVE", x, rowY, width);
+        List<String[]> rows = new ArrayList<>();
+        rows.add(new String[] {"Key", move.key()});
+        rows.add(new String[] {"Mastery", String.valueOf(move.mastery())});
+        rows.add(new String[] {"Cooldown", move.cooldown() > 0 ? format(move.cooldown() / 20.0F) + " s" : "none"});
+        rows.add(new String[] {"RC", move.cost() > 0.0F ? format(move.cost()) + (kakuja ? " to grow it" : "") : "none"});
+        rows.addAll(extra(model, move));
+        int half = (width - 16) / 2;
+        for (int i = 0; i < rows.size(); i++) {
+            QuestFrame.row(c, rows.get(i)[0], rows.get(i)[1], x + (i % 2) * (half + 16), rowY + (i / 2) * 13, 70, half,
+                had ? QuestFrame.VALUE : QuestFrame.MUTED);
+        }
+        rowY += ((rows.size() + 1) / 2) * 13 + 8;
+        if (!had) {
+            int ly = rowY;
+            c.batch(() -> QuestStyle.lock(c, x, ly, 12, QuestStyle.GOLD, QuestJournalView.INNER));
+            c.text(c.fit("Waits for mastery " + move.mastery() + "  (" + (move.mastery() - model.mastery()) + " to go)", width - 20), x + 17, rowY + 3,
+                QuestFrame.FAINT, false);
+            rowY += 18;
+        }
+        if (rowY + TILE_HEIGHT > ROAD_Y - 4) {
+            return; // no room for the picture
+        }
+        int tileY = rowY;
+        tile(c, had ? QuestLog.State.DONE : QuestLog.State.LOCKED, x, tileY, time);
+        PathChoiceLayout.Box box = new PathChoiceLayout.Box(x + 8, tileY + 6, TILE_WIDTH - 16, TILE_HEIGHT - 30);
+        List<PathSilhouette.Mark> marks = move.owl() ? PathSilhouette.owl(box, time, had ? 1.0F : 0.0F, 0x0B090B)
+            : PathSilhouette.pale(box, time, had ? 1.0F : 0.0F, move.mastery() >= PaleRules.SWIPE_MASTERY, 0x0B090B);
+        c.batch(() -> {
+            for (PathSilhouette.Mark mark : marks) {
+                UkakuMenuView.draw(c, mark);
+            }
+        });
+        c.centered(move.owl() ? "the Owl" : "her base form", x + TILE_WIDTH / 2, tileY + TILE_HEIGHT - 15, had ? 0xFFB0767A : QuestFrame.FAINT, false);
+        int rx = x + TILE_WIDTH + 12;
+        int rw = width - TILE_WIDTH - 12;
+        if (move.id().equals("BLITZ")) {
+            PaleStrike[] strikes = PaleStrike.of(PaleStrike.Style.BLITZ);
+            int ry = QuestFrame.section(c, "ITS STRIKES", PaleStrike.count(model.mastery()) + " / " + strikes.length, rx, tileY, rw);
+            for (PaleStrike strike : strikes) {
+                boolean got = model.mastery() >= strike.mastery;
+                QuestFrame.checkRow(c, got, !got, strikeName(strike) + (strike.finisher() ? "  (ends it)" : ""), String.valueOf(strike.mastery), rx, ry, rw);
+                ry += 14;
+            }
+        } else if (kakuja) {
+            int ry = QuestFrame.section(c, "IN IT", rx, tileY, rw);
+            String[][] in = {{"Hurt", Math.round(OwlRules.TAKEN * 100.0F) + "% of every blow reaches her"}, {"Grows", "in " + format(OwlRules.GROW_TICKS
+                / 20.0F) + " s"}, {"Her keys", "its own moves (this tab)"}};
+            for (String[] r : in) {
+                QuestFrame.row(c, r[0], r[1], rx, ry, 56, rw, had ? QuestFrame.VALUE : QuestFrame.MUTED);
+                ry += 13;
+            }
+        }
+    }
+
+    /** What else a move is in numbers. */
+    static List<String[]> extra(Model model, Move move) {
+        int mastery = Math.max(model.mastery(), move.mastery());
+        List<String[]> rows = new ArrayList<>();
+        switch (move.id()) {
+            case "BLITZ" -> rows.add(new String[] {"Fist", String.format(java.util.Locale.ROOT, "%.1f a strike", PaleRules.fist(mastery))});
+            case "PUNCH" -> {
+                rows.add(new String[] {"Hits", String.format(java.util.Locale.ROOT, "%.0f to %.0f", PaleRules.punchDamage(mastery, 0.0F),
+                    PaleRules.punchDamage(mastery, 1.0F))});
+                rows.add(new String[] {"Sends", String.format(java.util.Locale.ROOT, "%.0f blocks", PaleRules.punchRange(1.0F))});
+            }
+            case "SWIPE" -> rows.add(new String[] {"Reach", String.format(java.util.Locale.ROOT, "%.0f blocks", PaleRules.SWIPE_REACH)});
+            case "HAMMER" -> {
+                rows.add(new String[] {"Wide", String.format(java.util.Locale.ROOT, "%.1f to %.1f blocks", PaleRules.hammerRadius(0.0F),
+                    PaleRules.hammerRadius(1.0F))});
+                rows.add(new String[] {"Blocks", "weak ones smashed, back in 30 s"});
+            }
+            case "ARM" -> rows.add(new String[] {"Sphere", format(ArmRules.SPHERE_COST) + " RC held"});
+            case "REND" -> rows.add(new String[] {"Cuts", OwlRules.REND_STAGES + ", the last the heaviest"});
+            default -> {
+            }
+        }
+        return rows;
+    }
+
+    /** A blitz strike's name. */
+    static String strikeName(PaleStrike strike) {
+        return switch (strike) {
+            case JAB -> "Jab";
+            case CROSS -> "Cross";
+            case HOOK -> "Hook";
+            case LIVER -> "Liver shot";
+            case UPPERCUT -> "Uppercut";
+            case BLINK_PALM -> "Blinking palm";
+            case BACKFIST -> "Spinning backfist";
+            case TWIN_PALM -> "Twin palms";
+            default -> strike.name().charAt(0) + strike.name().substring(1).toLowerCase(java.util.Locale.ROOT).replace('_', ' ');
+        };
+    }
+
+    // ------------------------------------------------------------------ the mutations' tab
+
+    enum Standing {
+        OWNED, READY, POINT
+    }
+
+    static Standing standing(Model model, PaleMutation mutation) {
+        if (mutation.in(model.mutations())) {
+            return Standing.OWNED;
+        }
+        return PaleMutation.canUnlock(model.mastery(), model.mutations(), mutation) ? Standing.READY : Standing.POINT;
+    }
+
+    static PaleMutation pickedMutation(Model model) {
+        if (model.picked() != null) {
+            for (PaleMutation mutation : PaleMutation.values()) {
+                if (model.picked().equals("pick:u:" + mutation.id())) {
+                    return mutation;
+                }
+            }
+            if (model.picked().startsWith("milestone:")) {
+                for (int i = 0; i < PaleMutation.MILESTONES.length && i < PaleMutation.values().length; i++) {
+                    if (model.picked().equals("milestone:" + PaleMutation.MILESTONES[i])) {
+                        return PaleMutation.values()[i];
+                    }
+                }
+            }
+        }
+        for (Standing wanted : new Standing[] {Standing.READY, Standing.POINT}) {
+            for (PaleMutation mutation : PaleMutation.values()) {
+                if (standing(model, mutation) == wanted) {
+                    return mutation;
+                }
+            }
+        }
+        return PaleMutation.values()[0];
+    }
+
+    private static QuestFrame.Tip mutationsTab(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, double time) {
+        PaleMutation picked = pickedMutation(model);
+        int y = QuestFrame.CONTENT_Y;
+        int index = 0;
+        for (PaleMutation mutation : PaleMutation.values()) {
+            QuestFrame.card(c, mutationCard(model, mutation), QuestFrame.LIST_X, y, QuestFrame.LIST_WIDTH, mutation == picked, hits, mouseX, mouseY, time,
+                index++);
+            y += QuestFrame.CARD_HEIGHT + QuestFrame.CARD_GAP;
+        }
+        int mastery = model.mastery();
+        int points = PaleMutation.available(mastery, model.mutations());
+        int py = QuestFrame.section(c, "POINTS", QuestFrame.LIST_X, y + 6, QuestFrame.LIST_WIDTH);
+        c.push();
+        c.translate(QuestFrame.LIST_X, py - 2);
+        c.scale(1.6F);
+        c.text(String.valueOf(points), 0, 0, points > 0 ? QuestStyle.GOLD : QuestFrame.MUTED, true);
+        c.pop();
+        c.text(points == 1 ? "point to spend" : "points to spend", QuestFrame.LIST_X + 22, py + 2, points > 0 ? QuestStyle.GOLD : QuestFrame.MUTED, false);
+        int next = PaleMutation.nextMilestone(mastery);
+        QuestFrame.row(c, "Earned", PaleMutation.earned(mastery) + " of " + PaleMutation.MILESTONES.length + ", one at each milestone", QuestFrame.LIST_X,
+            py + 18, 66, QuestFrame.LIST_WIDTH, QuestFrame.VALUE);
+        QuestFrame.row(c, "Spent", String.valueOf(PaleMutation.unlocked(model.mutations())), QuestFrame.LIST_X, py + 30, 66, QuestFrame.LIST_WIDTH,
+            QuestFrame.VALUE);
+        QuestFrame.row(c, "Next", next > 0 ? "at mastery " + next : "every one earned", QuestFrame.LIST_X, py + 42, 66, QuestFrame.LIST_WIDTH,
+            QuestFrame.VALUE);
+        mutationDetail(c, model, picked, hits, mouseX, mouseY, QuestFrame.DETAIL_X, QuestFrame.CONTENT_Y, DETAIL_WIDTH, time);
+        return milestones(c, model, hits, mouseX, mouseY, QuestFrame.DETAIL_X, ROAD_Y, DETAIL_WIDTH, time);
+    }
+
+    static QuestFrame.Card mutationCard(Model model, PaleMutation mutation) {
+        Standing standing = standing(model, mutation);
+        String chip = switch (standing) {
+            case OWNED -> mutation == PaleMutation.NOT_THAT_EASILY ? reviveTag(model.reviveIn()) : "ON";
+            case READY -> "READY  ·  1 POINT";
+            default -> "NEEDS A POINT";
+        };
+        int ink = standing == Standing.OWNED ? QuestStyle.GREEN : standing == Standing.READY ? QuestStyle.GOLD : QuestStyle.colour(QuestLog.State.LOCKED);
+        int dark = standing == Standing.OWNED ? QuestStyle.GREEN_DARK : standing == Standing.READY ? QuestStyle.GOLD_DARK : QuestStyle.GREY_DARK;
+        return new QuestFrame.Card("pick:u:" + mutation.id(), mutation.displayName(), standing == Standing.POINT, chip, ink, dark, "", -1.0F, 0,
+            standing == Standing.READY, (cc, x, y, size, back, t) -> mutationGlyph(cc, mutation, standing == Standing.POINT ? QuestStyle.mix(ink, back, 0.45F)
+                : ink, x, y, size, back, t));
+    }
+
+    /** A mutation, as a quest: what it does, its cost and UNLOCK (only while a point may be spent on it), or ON (and its switch). */
+    private static void mutationDetail(UiCanvas c, Model model, PaleMutation mutation, Map<String, UkakuMenuView.Rect> hits, double mouseX,
+                                       double mouseY, int x, int y, int width, double time) {
+        Standing standing = standing(model, mutation);
+        title(c, mutation.displayName(), "Mutation", x, y, width);
+        int rowY = y + 16;
+        int next = PaleMutation.nextMilestone(model.mastery());
+        String line = switch (standing) {
+            case OWNED -> mutation == PaleMutation.NOT_THAT_EASILY && model.reviveIn() > 0L ? "Hers: regrowing, ready in "
+                + reviveTag(model.reviveIn()).substring(10) : "Hers, on";
+            case READY -> "A point to spend: unlock it below";
+            default -> next > 0 ? "Her next point comes at mastery " + next : "Every point is spent";
+        };
+        c.text(c.fit(line, width), x, rowY, standing == Standing.OWNED ? QuestJournalView.DONE : standing == Standing.READY ? QuestJournalView.OPEN
+            : QuestFrame.MUTED, false);
+        rowY += 13;
+        rowY = QuestFrame.story(c, mutation.description(), x, rowY, width) + 10;
+        if (standing == Standing.OWNED) {
+            QuestFrame.stamp(c, x, rowY, "ON", QuestStyle.GREEN, QuestStyle.GREEN_DARK);
+            rowY += 40;
+            if (mutation == PaleMutation.WITNESS_THIS) {
+                boolean on = (model.mutations() & PaleMutation.INSTANT_PUNCH) != 0;
+                rowY = QuestFrame.section(c, "INSTANT BIG PUNCH", on ? "on" : "off", x, rowY, width);
+                rowY = QuestFrame.story(c, on ? "Z tapped is the full-charge punch at once, straight into the combo." : "Z held to charge as usual; "
+                    + "switched on, a tap is the full punch and the combo.", x, rowY, width) + 6;
+                QuestFrame.button(c, "instant", on ? "SWITCH IT OFF" : "SWITCH IT ON", x, rowY, 200, 22, true, !on, hits, mouseX, mouseY, time);
+            }
+            return;
+        }
+        rowY = QuestFrame.section(c, "COST", x, rowY, width);
+        QuestFrame.badge(c, 'p', "1 mutation point", true, x, rowY);
+        rowY += 22;
+        QuestFrame.button(c, "mutation:" + mutation.ordinal(), standing == Standing.READY ? "UNLOCK  ·  SPEND 1 POINT" : "NEEDS A POINT", x, rowY, 200,
+            22, standing == Standing.READY, true, hits, mouseX, mouseY, time);
+        int points = PaleMutation.available(model.mastery(), model.mutations());
+        c.text(c.fit(points > 0 ? points + (points == 1 ? " point to spend" : " points to spend") : next > 0 ? "a point at mastery " + next
+            : "every point spent", width - 212), x + 212, rowY + 8, points > 0 ? QuestStyle.GOLD : QuestFrame.MUTED, false);
+    }
+
+    /** The milestones that pay a point, on the road: earned ticked, the next beating. */
+    private static QuestFrame.Tip milestones(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y,
+                                             int width, double time) {
+        int mastery = model.mastery();
+        y = QuestFrame.section(c, "POINTS ON HER ROAD", "a point at each", x, y, width);
+        int next = PaleMutation.nextMilestone(mastery);
+        List<QuestFrame.Node> nodes = new ArrayList<>();
+        int reached = -1;
+        for (int i = 0; i < PaleMutation.MILESTONES.length; i++) {
+            int milestone = PaleMutation.MILESTONES[i];
+            boolean got = mastery >= milestone;
+            reached = got ? i : reached;
+            nodes.add(new QuestFrame.Node("milestone:" + milestone, String.valueOf(milestone), "Mastery " + milestone + ": a mutation point  ·  "
+                + (got ? "earned" : "at mastery " + milestone), got ? QuestLog.State.DONE : milestone == next ? QuestLog.State.OPEN : QuestLog.State.LOCKED,
+                false));
+        }
+        return QuestFrame.road(c, nodes, reached, hits, mouseX, mouseY, x, y, width, 400, time);
     }
 
     /** Ready, or how long until it is (m:ss). */
@@ -281,83 +642,121 @@ public final class PaleMenuView {
         return String.format(java.util.Locale.ROOT, "REGROWING %d:%02d", seconds / 60L, seconds % 60L);
     }
 
-    // ------------------------------------------------------------------ text
-
-    private static void row(UiCanvas c, String label, String value, int x, int y) {
-        c.text(label, x, y, LABEL, false);
-        c.text(c.fit(value, 140), x + 76, y, VALUE, false);
-    }
+    // ------------------------------------------------------------------ shared pieces
 
     /** Which eye turns: her chosen one, or (never both on her path) the right. */
     static String eyeText(KakuganEyes eyes) {
         return eyes != null && eyes.ghoul() == KakuganEyes.LEFT ? "Left eye" : "Right eye";
     }
 
-    static String nextMilestone(int mastery) {
-        PaleUnlock next = PaleUnlock.next(mastery);
-        if (next == null) {
-            return "EVOLUTION COMPLETE";
-        }
-        return "NEXT UNLOCK  " + next.mastery() + "  (" + (next.mastery() - mastery) + " mastery)";
+    private static String format(float value) {
+        return value == Math.round(value) ? Integer.toString(Math.round(value)) : String.format(java.util.Locale.ROOT, "%.1f", value);
     }
 
-    /** Rows of the unlock track shown: the last few steps reached, then the next few, {@link #TRACK_ROWS} in all. */
-    static final int TRACK_ROWS = 7;
-
-    static List<PaleUnlock> track(int mastery) {
-        PaleUnlock[] all = PaleUnlock.values();
-        PaleUnlock next = PaleUnlock.next(mastery);
-        int reached = next == null ? all.length : next.ordinal();
-        int start = Math.max(0, Math.min(all.length - TRACK_ROWS, reached - TRACK_ROWS / 2));
-        List<PaleUnlock> rows = new ArrayList<>();
-        for (int i = start; i < Math.min(all.length, start + TRACK_ROWS); i++) {
-            rows.add(all[i]);
-        }
-        return rows;
+    private static void title(UiCanvas c, String name, String chip, int x, int y, int width) {
+        c.push();
+        c.translate(x, y);
+        c.scale(1.25F);
+        c.text(c.fit(name, Math.round((width - c.width(chip) - 30) / 1.25F)), 0, 0, QuestStyle.WHITE, true);
+        c.pop();
+        QuestStyle.chip(c, x + width - c.width(chip) - 12, y, chip, 0xFF1E0A0E, QuestStyle.RED_DARK, QuestFrame.MUTED);
     }
 
-    private static String tooltip(Map<String, Rect> hits, double x, double y, Model model) {
-        Rect instant = hits.get("instant");
-        if (instant != null && instant.contains(x, y)) {
-            return (model.mutations() & PaleMutation.INSTANT_PUNCH) != 0
-                ? "Instant Big Punch: on. Z tapped is the full-charge punch at once, straight into the combo (click: off)"
-                : "Instant Big Punch: off. Z held to charge as usual (click: on, a tap is the full punch and the combo)";
+    private static void tile(UiCanvas c, QuestLog.State state, int x, int y, double time) {
+        int edge = state == QuestLog.State.OPEN ? QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, 0.5F + 0.5F * (float)Math.sin(time * 2.2))
+            : state == QuestLog.State.DONE ? QuestStyle.GREEN_DARK : QuestStyle.TILE_EDGE;
+        c.batch(() -> {
+            QuestStyle.box(c, x, y, TILE_WIDTH, TILE_HEIGHT, QuestStyle.TILE, edge);
+            c.gradient(x + 2, y + 2, x + TILE_WIDTH - 2, y + TILE_HEIGHT - 2, 0xFF120A0E, 0xFF070506);
+        });
+    }
+
+    private static void veil(UiCanvas c, boolean locked, int x, int y) {
+        if (!locked) {
+            return;
         }
-        for (Map.Entry<String, Rect> entry : hits.entrySet()) {
-            if (!entry.getValue().contains(x, y)) {
-                continue;
-            }
-            String key = entry.getKey();
-            if (key.equals("kakuja:V1")) {
-                return model.mastery() >= PaleRules.KAKUJA_V1_MASTERY ? "The Owl (K): M1 claws, kagune, bite  J tap whirl, hold spikes  N grab  V lunge, hold slam  Z fist  RMB pounce"
-                    : "The Owl: unlocks at mastery " + PaleRules.KAKUJA_V1_MASTERY;
-            }
-            if (key.startsWith("mutation:")) {
-                PaleMutation mutation = PaleMutation.byOrdinal(Integer.parseInt(key.substring(9)));
-                if (mutation == null) {
-                    return null;
+        c.batch(() -> {
+            c.fill(x + 2, y + 2, x + TILE_WIDTH - 2, y + TILE_HEIGHT - 2, 0xA0080306);
+            QuestStyle.lock(c, x + TILE_WIDTH / 2 - 13, y + (TILE_HEIGHT - 26) / 2 - 12, 26, QuestStyle.mix(QuestStyle.GOLD, QuestStyle.TILE, 0.2F),
+                0xFF0A0405);
+        });
+    }
+
+    /** Every step of Owl DNA on the quest road: reached ticked, the next beating; {@code lit}'s ringed. */
+    private static QuestFrame.Tip road(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y,
+                                       int width, double time, int lit) {
+        int mastery = model.mastery();
+        y = QuestFrame.section(c, "HER ROAD", "a step opens what it brings", x, y, width);
+        TreeMap<Integer, String> steps = steps();
+        Integer next = steps.ceilingKey(mastery + 1);
+        List<QuestFrame.Node> nodes = new ArrayList<>();
+        int reached = -1;
+        int i = 0;
+        for (Map.Entry<Integer, String> step : steps.entrySet()) {
+            boolean got = mastery >= step.getKey();
+            reached = got ? i : reached;
+            QuestLog.State state = got ? QuestLog.State.DONE : next != null && step.getKey().equals(next) ? QuestLog.State.OPEN : QuestLog.State.LOCKED;
+            nodes.add(new QuestFrame.Node("step:" + step.getKey(), String.valueOf(step.getKey()), step.getValue() + "  ·  "
+                + (got ? "reached" : "at mastery " + step.getKey()), state, step.getKey() == lit));
+            i++;
+        }
+        return QuestFrame.road(c, nodes, reached, hits, mouseX, mouseY, x, y, width, 64, time);
+    }
+
+    // ------------------------------------------------------------------ glyphs
+
+    /** A stage: her one eye, opening wider as she grows (a lid, then the iris, then the eye wide and burning). */
+    static void stageGlyph(UiCanvas c, int stage, int ink, int x, int y, int size, int back, double time) {
+        int cx = x + size / 2;
+        int cy = y + size / 2;
+        float open = stage == 0 ? 0.35F : stage == 1 ? 0.65F : 1.0F;
+        int w = Math.round(size * 0.42F);
+        for (int k = -w; k <= w; k++) {
+            int lid = (int)Math.round(Math.sqrt(Math.max(0.0, 1.0 - (k / (double)w) * (k / (double)w))) * size * 0.26F * open);
+            c.fill(cx + k, cy - lid - 1, cx + k + 1, cy - lid + 1, ink);
+            c.fill(cx + k, cy + lid - 1, cx + k + 1, cy + lid + 1, ink);
+        }
+        if (stage > 0) {
+            QuestStyle.circle(c, cx, cy, Math.max(1, Math.round(size * 0.13F * open)), stage == 2 ? EYE : ink);
+        }
+    }
+
+    /** A move: its key in a keycap. */
+    static void keyGlyph(UiCanvas c, Move move, int ink, int x, int y, int size, int back, boolean dim) {
+        String key = move.key().replace(" held", "+");
+        int w = Math.max(size - 4, c.width(key) + 4);
+        int left = x + (size - w) / 2;
+        c.batch(() -> QuestStyle.box(c, left, y + 3, w, size - 6, QuestStyle.mix(back, ink, 0.12F), ink));
+        c.centered(key, x + size / 2, y + size / 2 - 4, ink, false);
+    }
+
+    static void mutationGlyph(UiCanvas c, PaleMutation mutation, int ink, int x, int y, int size, int back, double time) {
+        float s = size;
+        switch (mutation) {
+            case NOT_THAT_EASILY -> UkakuMenuView.mutationGlyph(c, com.hex.kagune.control.ukaku.UkakuMutation.NOT_THAT_EASILY, ink, x, y, size, back, time);
+            case UP_WE_GO -> {
+                for (int k = 0; k < 2; k++) {
+                    float oy = y + s * (0.62F - k * 0.28F);
+                    QuestStyle.line(c, x + s * 0.24F, oy + s * 0.14F, x + s * 0.5F, oy - s * 0.1F, 1.6F, ink);
+                    QuestStyle.line(c, x + s * 0.5F, oy - s * 0.1F, x + s * 0.76F, oy + s * 0.14F, 1.6F, ink);
                 }
-                if (mutation.in(model.mutations())) {
-                    if (mutation == PaleMutation.UP_WE_GO) {
-                        return mutation.displayName() + ": on (right click: your flips soar)";
-                    }
-                    if (mutation == PaleMutation.TRUE_ANONYMITY) {
-                        return mutation.displayName() + ": on (V held: the spiked club grows on past its full size)";
-                    }
-                    if (mutation == PaleMutation.WITNESS_THIS) {
-                        return mutation.displayName() + ": on (Z held to the full charge: the combo follows the punch)";
-                    }
-                    return model.reviveIn() > 0 ? mutation.displayName() + ": regrowing, ready in " + reviveTag(model.reviveIn()).substring(10)
-                        : mutation.displayName() + ": ready";
-                }
-                int next = PaleMutation.nextMilestone(model.mastery());
-                return PaleMutation.canUnlock(model.mastery(), model.mutations(), mutation) ? "Click to unlock " + mutation.displayName()
-                    : next > 0 ? "A mutation point comes at mastery " + next : "Every mutation point is spent";
             }
-            if (key.equals("eyes")) {
-                return "Move your kakugan onto your skin's eyes (Owl DNA turns one eye only)";
+            case TRUE_ANONYMITY -> {
+                QuestStyle.circle(c, x + size / 2, y + size / 2, Math.round(s * 0.24F), ink);
+                for (int k = 0; k < 8; k++) {
+                    double a = Math.PI * 2.0 * k / 8;
+                    QuestStyle.line(c, x + s * 0.5F + (float)Math.cos(a) * s * 0.24F, y + s * 0.5F + (float)Math.sin(a) * s * 0.24F,
+                        x + s * 0.5F + (float)Math.cos(a) * s * 0.42F, y + s * 0.5F + (float)Math.sin(a) * s * 0.42F, 1.2F, ink);
+                }
+            }
+            default -> {
+                // Witness This: a fist and the blow's lines.
+                c.fill(x + Math.round(s * 0.3F), y + Math.round(s * 0.36F), x + Math.round(s * 0.62F), y + Math.round(s * 0.66F), ink);
+                c.fill(x + Math.round(s * 0.34F), y + Math.round(s * 0.4F), x + Math.round(s * 0.58F), y + Math.round(s * 0.44F), back);
+                for (int k = -1; k <= 1; k++) {
+                    QuestStyle.line(c, x + s * 0.68F, y + s * (0.5F + k * 0.12F), x + s * 0.86F, y + s * (0.5F + k * 0.18F), 1.2F, ink);
+                }
             }
         }
-        return null;
     }
 }
