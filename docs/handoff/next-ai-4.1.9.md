@@ -9,6 +9,42 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
+## START HERE (newest): the owner's new list (after 4.1.48), with their answers
+
+**State:** the branch holds 4.1.48 (pushed, EXIT 0) and, on top, the work in progress of 4.1.49 (Roma) and 4.1.50 (joining gangs) as
+commits (`1e3bd752`.., the last `9dfc8d6a` built with EXIT 0, pushed; not versions yet: VERSION is still 4.1.48, no release notes). Roma
+still has **no skin**: the owner's last picture was Banjou's, not hers. Ask for hers as a file.
+
+**The owner's new list (quoted exactly):** "News and reworks: / New CCG schematic, map it out with sitting areas, offices and etc. / New
+Reputation bar when talking to fellow gang members, high reputation means you're feared, they react to it, some stepping back to let you
+pass (just a little and not the leaders, they do not step back this also applies for official NPCS). / When the reputation bar reaches 0
+the player is warned to leave the area (if within the hideout), the bar starts at 50%. / new Menus: Every single menu in the game is to
+mimic and look like the quest menu, and be as interactable as it is, Dialog, mastery menus ALL OF THEM. / Gang Traits: / Aogiri - Wild
+ghouls no longer attack unless provoked, gain strength when fighting CCG and other gangs. / Noro gives Daily quests (missions with item
+rewards such as ores, ghoul meat,  human meat, reputation etc...) / Clowns Traits: / Gain Jump boost when fighting CCG, kagune, player and
+armor become fully invisible for 5 seconds when at low HP (5 minute cooldown). / The leader gives daily quests as well with clown related
+rewards, and reputation. / New gang: / Gas Masks - Toxic logo, green name. / Leader - Banjou / Personality - wants to be tough but truly
+isnt, is aware of how weak he truly is. / Kagune - super small blue Ukaku wing (singular) cannot shoot projectiles, only uses basic m1s
+with it. / Dialog - Daily quest giver, Chat, Romanceable (Only females). / Lives in the small house in the schematic. / Gang Bonuses: /
+While wearing the gas Mask, gain night vision. / Gain speed 2 when at low HP. / Reputation". Then: "The gas mask leader puts on the mask
+at night and is just alex model by the way,  not muscled at all".
+
+**Their files (never alter them):** `art/exploration/New_CCG.schematic` (MCEdit Alpha, 43 x 58 x 37: a ~14-floor office tower, its
+inside to be furnished: lobby seating, offices, etc.), `art/exploration/GasMask_hideout.schem` (Sponge, DataVersion 3465 = 1.20.1, 28 x 24
+x 19: a cherry/crimson house with a walled garden; Banjou lives in the house), `art/exploration/Banjou_skin.png` (painted for WIDE arms:
+the game copy narrowed as Noro's, `narrow_arms`; he is slim and muscle 0).
+
+**Their answers:** Gas Masks are joined through Banjou by "Short chain, like Roma" (talk him up, kill 3 Clowns, bring him something
+proving it); "Joining gives the mask" (each gang's mask a wearable head item on joining; the gas mask's night vision only while worn);
+reputation is raised by daily quests and by killing the CCG and rivals, lowered by hitting your own (kills cost a lot; the 10-kill ban
+stays), and drifts back toward 50% over days away; at 0, warned to leave the hideout, and "They attack after a warning" (~30 s; not
+banned, it can recover). The emblems (`docs/handoff/gang-emblems-4.1.50.png`) got no comment yet.
+
+**Agreed order (told to the owner):** 4.1.49 Roma (her skin) -> 4.1.50 joining gangs -> the new CCG tower furnished -> the reputation bar
+-> Aogiri's and the Clowns' traits and daily quests (Noro, Roma) -> the Gas Masks (Banjou, his hideout, traits, the toxic emblem, green
+names, his small single blue Ukaku wing, M1 only) -> every menu redone like the quest menu, one screen per version, the talk screen first
+(some mastery screens are the original jar's: patching them is riskier, say so before starting).
+
 ## START HERE (after 4.1.48): Roma (4.1.49) waits on her skin; joining gangs (4.1.50) done in code
 
 **Pushed:** 4.1.48 (`c9887594`, full build EXIT 0 on its exact commit; jar sent): the circus tent and its four Clowns, Clowns vs Gas Masks,
