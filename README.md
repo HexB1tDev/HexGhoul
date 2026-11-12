@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.62 (HexGhoul): the kakugan screen in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.62.md`. `KakuganScreenLayout` lays everything inside `box` (the quest menu's size at most, `OUTSIDE` 8 round it on small screens), with `ruleY` (under the header) and `tile` (the face's frame); `MAX_CELL` 36. `KakuganView` draws the box (`QuestStyle.backdrop`, the menus' title and rule), the face's tile, quest-style buttons, the which-eye box as a quest card dimming only the box. `KakuganTests.screen` checks the box on screen, everything in it and under the rule. `tools/UiPreview.java kakugan-menu`. Render `docs/handoff/kakugan-screen-4.1.62.png`. Protocol 125.
+
 ## 4.1.61 (HexGhoul): the Pale menu in the quest menu's style (testing)
 
 See `.github/release-notes-4.1.61.md`. `PaleMenuView` redone on `QuestFrame` (box; `Tab` FORM/MOVES/OWL/MUTATIONS; `Model` + `tab`, `picked` ("pick:s:N", "pick:m:ID", "pick:o:ID", "pick:u:ID", "step:N", "milestone:N"), old constructors kept; `STAGES` (0, 250, 500 as `PaleUnlock.stageName`); `steps()` from `PaleUnlock`; `Move` records `MOVES`/`OWL` (keys, mastery, cooldowns and RC as the server spends them: `PaleRules`, `OwlRules`, `WatchRules`, `ArmRules`); `stageCard`/`stageDetail`, `moveCard`/`moveDetail` (the blitz's strikes, the Owl's tile), `mutationCard`/`mutationDetail` (UNLOCK "mutation:N" only while `PaleMutation.canUnlock`; "instant" only once Witness This is hers), `milestones`, glyphs); `PaleMenuScreen` (no overlay, the box, tab and pick; `Rect` is `UkakuMenuView.Rect`); `PathSilhouette.owl` (the Owl from the front, after `OwlModel`); `QuestTests.paleMenu`. `tools/UiPreview.java pale-menu`. Renders `docs/handoff/pale-menu-4.1.61.png`, `docs/handoff/pale-owl-4.1.61.png`. Protocol 125.

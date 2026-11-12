@@ -492,18 +492,25 @@ public final class KakuganTests {
                 KakuganScreenLayout layout = KakuganScreenLayout.of(width, height);
                 Box screen = new Box(0, 0, width, height);
                 Box header = new Box(0, layout.titleY, width, layout.subtitleY + layout.subtitleLines * KakuganScreenLayout.LINE - layout.titleY);
-                Box[] boxes = {layout.face, layout.mirror, layout.eyeHeight, layout.iris, layout.oneEye, layout.outer, layout.reset, layout.done,
+                // 4.1.62: the quest menu's box, on screen, everything in it (the face's tile too), the header's rule above it all.
+                Box[] boxes = {layout.tile, layout.mirror, layout.eyeHeight, layout.iris, layout.oneEye, layout.outer, layout.reset, layout.done,
                     layout.later};
+                check(layout.box.inside(screen) && layout.box.width() <= KakuganScreenLayout.BOX_WIDTH && layout.box.height() <= KakuganScreenLayout.BOX_HEIGHT,
+                    "the box on screen, no bigger than the menus'" + at + ": " + layout.box);
+                check(layout.face.inside(layout.tile) && layout.choice.inside(layout.box) && layout.ruleY > layout.subtitleY, "the face in its tile, the which-eye box"
+                    + " in the box" + at);
                 for (int i = 0; i < boxes.length; i++) {
                     check(boxes[i].inside(screen), "everything is on screen" + at + ": " + boxes[i]);
+                    check(boxes[i].inside(layout.box), "everything is in the box" + at + ": " + boxes[i] + " " + layout.box);
+                    check(boxes[i].y() > layout.ruleY, "everything under the header's rule" + at + ": " + boxes[i]);
                     check(!boxes[i].overlaps(header), "nothing covers the title" + at);
                     for (int j = i + 1; j < boxes.length; j++) {
                         check(!boxes[i].overlaps(boxes[j]), "nothing overlaps" + at + ": " + boxes[i] + " " + boxes[j]);
                     }
                 }
                 check(layout.choice.inside(screen), "the which-eye box is on screen" + at);
-                check(!layout.choice.overlaps(layout.face) && layout.choice.width() >= 130, "the which-eye box leaves the face in sight" + at
-                    + ": " + layout.choice + " " + layout.face);
+                check(!layout.choice.overlaps(layout.tile) && layout.choice.width() >= 130, "the which-eye box leaves the face in sight" + at
+                    + ": " + layout.choice + " " + layout.tile);
                 Box[] picks = {layout.choiceRight, layout.choiceLeft, layout.choiceBoth};
                 for (int i = 0; i < picks.length; i++) {
                     check(picks[i].inside(layout.choice) && picks[i].width() >= 40, "its buttons are in it and wide enough to read" + at);

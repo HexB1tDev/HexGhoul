@@ -958,6 +958,21 @@ public class UiPreview {
         System.out.println("wrote " + out);
     }
 
+    /** 4.1.62: the kakugan screen over a stand-in scene at a GUI size ({@code w} x {@code h}, drawn {@code zoom} times). */
+    static void kakuganBox(File out, int w, int h, KakuganEyes eyes, String hovered, boolean choosing, int zoom) throws Exception {
+        BufferedImage image = new BufferedImage(w * zoom, h * zoom, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(image, zoom), false);
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        for (int i = 0; i < w; i += 40) {
+            c.fill(i, h * 6 / 10 - 20 - (i * 37 % 60), i + 40, h * 6 / 10, 0xFF4E8834);
+        }
+        KakuganScreenLayout layout = KakuganScreenLayout.of(w, h);
+        KakuganView.draw(c, layout, new KakuganView.State(eyes, 0, eyes.mirrored(), true, hovered, false, 1.0, 0L, 0L, true, choosing));
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
     /** 1.3.9: the gender screen at a GUI size, with a pick and the mouse over something. */
     static void gender(File out, int w, int h, com.hex.kagune.control.Gender picked, String hovered) throws Exception {
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
@@ -1047,6 +1062,14 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("pale-menu")) {
             paleQuest(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("kakugan-menu")) {
+            // 4.1.62: the kakugan screen in the quest menu's box, at GUI scale 2 and 4 of 1080p, the which-eye box open, a narrow screen.
+            kakuganBox(new File(dir, "kakugan-960.png"), 960, 540, KakuganEyes.DEFAULT, "mirror", false, 2);
+            kakuganBox(new File(dir, "kakugan-480.png"), 480, 270, KakuganEyes.DEFAULT, "right", false, 4);
+            kakuganBox(new File(dir, "kakugan-choice.png"), 960, 540, KakuganEyes.DEFAULT, "pick-left", true, 2);
+            kakuganBox(new File(dir, "kakugan-narrow.png"), 340, 300, KakuganEyes.DEFAULT.withGhoul(KakuganEyes.LEFT), "done", false, 3);
             return;
         }
         menu(new File(dir, "ukaku-menu-0.png"), 0, WingForm.TWIN, 0, 0);

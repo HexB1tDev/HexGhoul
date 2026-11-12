@@ -58,26 +58,36 @@ public final class KakuganView {
 
     public static void draw(UiCanvas c, KakuganScreenLayout layout, State state) {
         int width = layout.width;
-        int height = layout.height;
-        c.fill(0, 0, width, height, 0xF0000000 | BACKGROUND);
-        c.gradient(0, 0, width, height / 3, 0x70000000, 0x00000000);
-        c.gradient(0, height * 2 / 3, width, height, 0x00000000, 0x90000000);
+        // 4.1.62: the quest menu's box over the world (no overlay round it), its title and lines, a rule under them.
+        Box frame = layout.box;
+        QuestStyle.backdrop(c, frame.x(), frame.y(), frame.width(), frame.height(), state.time(), frame.right() - 190, frame.y() + 6, 170,
+            Math.max(10, layout.ruleY - frame.y() - 10));
         c.push();
-        c.translate(width / 2.0F, layout.titleY);
-        c.scale(1.5F);
-        c.centered(TITLE, 0, 0, opaque(BONE));
+        c.translate(frame.x() + 16, layout.titleY);
+        c.scale(1.4F);
+        c.text(TITLE, 0, 0, QuestJournalView.TITLE, true);
         c.pop();
+        int textWidth = frame.width() - 32;
         if (layout.subtitleLines > 1) {
-            c.centered(c.fit(SUBTITLE, width - 2 * KakuganScreenLayout.MARGIN), width / 2, layout.subtitleY, opaque(MUTED));
-            c.centered(c.fit(SUBTITLE_TWO, width - 2 * KakuganScreenLayout.MARGIN), width / 2, layout.subtitleY + KakuganScreenLayout.LINE,
-                opaque(MUTED));
+            c.text(c.fit(SUBTITLE, textWidth), frame.x() + 16, layout.subtitleY, QuestJournalView.SUBTITLE, false);
+            c.text(c.fit(SUBTITLE_TWO, textWidth), frame.x() + 16, layout.subtitleY + KakuganScreenLayout.LINE, QuestFrame.MUTED, false);
         } else {
-            c.centered(c.fit(SUBTITLE_TWO, width - 2 * KakuganScreenLayout.MARGIN), width / 2, layout.subtitleY, opaque(MUTED));
+            c.text(c.fit(SUBTITLE_TWO, textWidth), frame.x() + 16, layout.subtitleY, QuestJournalView.SUBTITLE, false);
         }
+        int ruleY = layout.ruleY;
+        c.batch(() -> {
+            for (int i = 0; i < 40; i++) {
+                float t = i / 39.0F;
+                int alpha = Math.round(190 * (1.0F - Math.abs(t - 0.5F) * 2.0F));
+                int x0 = frame.x() + 12 + Math.round((frame.width() - 24) * i / 40.0F);
+                c.fill(x0, ruleY, x0 + (frame.width() - 24) / 40 + 1, ruleY + 1, alpha << 24 | 0xE8323E);
+            }
+        });
 
         Box face = layout.face;
-        c.fill(face.x() - 3, face.y() - 3, face.right() + 3, face.bottom() + 3, opaque(blend(BACKGROUND, ACCENT, 0.35F)));
-        c.fill(face.x() - 2, face.y() - 2, face.right() + 2, face.bottom() + 2, opaque(PANEL));
+        Box tile = layout.tile;
+        int pulse = QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, 0.35F + 0.25F * (float)Math.sin(state.time() * 2.2));
+        c.batch(() -> QuestStyle.box(c, tile.x(), tile.y(), tile.width(), tile.height(), QuestStyle.TILE, pulse));
         c.face(face.x(), face.y(), face.width());
         // As others will see it: the kakugan on the face, the skin's second layer over it (glass blending over the ghoul
         // eyes), and the kakugan on that layer's opaque pixels over an eye.
@@ -118,7 +128,7 @@ public final class KakuganView {
         button(c, layout.done, "Next", true, "done".equals(state.hovered()));
         button(c, layout.later, "Later", false, "later".equals(state.hovered()));
         if (layout.hintY >= 0) {
-            c.centered(c.fit(HINT, width - 2 * KakuganScreenLayout.MARGIN), width / 2, layout.hintY, opaque(blend(BACKGROUND, MUTED, 0.7F)));
+            c.centered(c.fit(HINT, frame.width() - 2 * KakuganScreenLayout.MARGIN), frame.centerX(), layout.hintY, QuestFrame.FAINT);
         }
         if (state.choosing()) {
             choice(c, layout, state);
@@ -142,12 +152,14 @@ public final class KakuganView {
      */
     private static void choice(UiCanvas c, KakuganScreenLayout layout, State state) {
         // Everything dimmed but the face, which stays lit so the pick shows on it.
-        Box face = layout.face;
+        // 4.1.62: only the box dims (the world round it stays as it is), the face's tile left lit.
+        Box face = layout.tile;
+        Box frame = layout.box;
         int dim = 0xB0000000;
-        c.fill(0, 0, layout.width, face.y() - 3, dim);
-        c.fill(0, face.bottom() + 3, layout.width, layout.height, dim);
-        c.fill(0, face.y() - 3, face.x() - 3, face.bottom() + 3, dim);
-        c.fill(face.right() + 3, face.y() - 3, layout.width, face.bottom() + 3, dim);
+        c.fill(frame.x(), frame.y(), frame.right(), face.y(), dim);
+        c.fill(frame.x(), face.bottom(), frame.right(), frame.bottom(), dim);
+        c.fill(frame.x(), face.y(), face.x(), face.bottom(), dim);
+        c.fill(face.right(), face.y(), frame.right(), face.bottom(), dim);
         KakuganEyes eyes = state.eyes();
         String hovered = state.hovered();
         // The face's eyes stay visible through the dimming, the one under the mouse ringed.
@@ -160,10 +172,9 @@ public final class KakuganView {
             }
         }
         Box box = layout.choice;
-        c.fill(box.x() - 1, box.y() - 1, box.right() + 1, box.bottom() + 1, opaque(blend(BACKGROUND, ACCENT, 0.6F)));
-        c.fill(box.x(), box.y(), box.right(), box.bottom(), opaque(PANEL));
-        c.centered(c.fit(CHOICE_TITLE, box.width() - 8), box.centerX(), box.y() + 6, opaque(BONE));
-        c.centered(c.fit(CHOICE_SUBTITLE, box.width() - 8), box.centerX(), box.y() + 17, opaque(MUTED));
+        c.batch(() -> QuestStyle.box(c, box.x(), box.y(), box.width(), box.height(), QuestJournalView.ROW_PICKED, QuestStyle.RED));
+        c.centered(c.fit(CHOICE_TITLE, box.width() - 8), box.centerX(), box.y() + 6, QuestStyle.WHITE);
+        c.centered(c.fit(CHOICE_SUBTITLE, box.width() - 8), box.centerX(), box.y() + 17, QuestFrame.MUTED);
         button(c, layout.choiceRight, "Right eye", eyes.ghoul() == KakuganEyes.RIGHT, "pick-right".equals(hovered));
         button(c, layout.choiceLeft, "Left eye", eyes.ghoul() == KakuganEyes.LEFT, "pick-left".equals(hovered));
         if (state.bothAllowed()) {
@@ -229,11 +240,19 @@ public final class KakuganView {
         return Math.round(max * 0.8F) << 24 | Math.round(r * scale) << 16 | Math.round(g * scale) << 8 | Math.round(b * scale);
     }
 
+    /** 4.1.62: a button as the quest menu's: a box lifted under the mouse, {@code primary} (on, or the way on) lit red, its bar under it. */
     private static void button(UiCanvas c, Box box, String label, boolean primary, boolean hovered) {
-        int border = primary ? (hovered ? ACCENT : blend(BACKGROUND, ACCENT, 0.75F)) : (hovered ? BONE : blend(BACKGROUND, MUTED, 0.45F));
-        c.fill(box.x() - 1, box.y() - 1, box.right() + 1, box.bottom() + 1, opaque(border));
-        c.fill(box.x(), box.y(), box.right(), box.bottom(), opaque(primary ? blend(BUTTON, ACCENT, 0.18F) : BUTTON));
-        c.centered(c.fit(label, box.width() - 6), box.centerX(), box.y() + (box.height() - 8) / 2, opaque(hovered || primary ? BONE : MUTED));
+        int lift = hovered ? -1 : 0;
+        int edge = hovered ? QuestStyle.RED : primary ? QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, 0.45F) : QuestStyle.TILE_EDGE;
+        int fill = hovered || primary ? QuestJournalView.ROW_PICKED : QuestJournalView.ROW;
+        c.batch(() -> {
+            QuestStyle.box(c, box.x(), box.y() + lift, box.width(), box.height(), fill, edge);
+            if (hovered) {
+                c.fill(box.x() + 4, box.bottom() + 1, box.right() - 4, box.bottom() + 2, QuestStyle.RED);
+            }
+        });
+        c.centered(c.fit(label, box.width() - 6), box.centerX(), box.y() + (box.height() - 8) / 2 + 1 + lift, hovered ? QuestStyle.WHITE : primary
+            ? QuestFrame.VALUE : QuestFrame.MUTED);
     }
 
     private static void outline(UiCanvas c, int x0, int y0, int x1, int y1, int argb) {
