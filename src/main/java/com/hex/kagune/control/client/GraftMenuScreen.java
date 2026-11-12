@@ -15,6 +15,10 @@ import net.minecraft.network.chat.Component;
 /**
  * 7.0.0: Graft DNA's kagune menu (the menu key), drawn by {@link GraftMenuView}: the base stage picked (the server checks the
  * mastery), the kakugan placement, and every stage's moves on their keys.
+ *
+ * <p>4.1.60 (the owner: "Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is"): the quest
+ * menu's box with the world round it (no overlay), its tabs, what is picked kept while it is open; a stage grown into only by its GROW INTO
+ * IT button, a mutation bought only by its UNLOCK button.
  */
 public final class GraftMenuScreen extends Screen {
     private final long openedAt = System.currentTimeMillis();
@@ -22,6 +26,8 @@ public final class GraftMenuScreen extends Screen {
     private float scale = 1.0F;
     private float originX;
     private float originY;
+    private GraftMenuView.Tab tab = GraftMenuView.Tab.STAGES;
+    private String picked;
 
     public GraftMenuScreen() {
         super(Component.m_237113_("HexKagune Graft"));
@@ -29,19 +35,18 @@ public final class GraftMenuScreen extends Screen {
 
     @Override
     public void m_88315_(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.m_280273_(graphics);
-        graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_, 0xE8080506, 0xF0180608);
-        this.scale = Math.max(0.25F, Math.min(1.0F, Math.min((this.f_96543_ - 12.0F) / GraftMenuView.UI_WIDTH,
-            (this.f_96544_ - 12.0F) / GraftMenuView.UI_HEIGHT)));
-        this.originX = (this.f_96543_ - GraftMenuView.UI_WIDTH * this.scale) * 0.5F;
-        this.originY = (this.f_96544_ - GraftMenuView.UI_HEIGHT * this.scale) * 0.5F;
+        // 4.1.60: as the quest menu: no overlay over the world, only the box and its shadow round it.
+        this.scale = Math.max(0.25F, Math.min(1.0F, Math.min((this.f_96543_ - 24.0F) / GraftMenuView.BOX_WIDTH,
+            (this.f_96544_ - 24.0F) / GraftMenuView.BOX_HEIGHT)));
+        this.originX = (this.f_96543_ - GraftMenuView.BOX_WIDTH * this.scale) * 0.5F;
+        this.originY = (this.f_96544_ - GraftMenuView.BOX_HEIGHT * this.scale) * 0.5F;
         Minecraft minecraft = Minecraft.m_91087_();
         LocalPlayer player = minecraft.f_91074_;
         GuiCanvas canvas = new GuiCanvas(graphics, minecraft.f_91062_, player == null ? null : player.m_108560_());
         KaguneClientState.View state = KaguneClientState.self();
         GraftClient.View view = GraftClient.get(player);
         GraftMenuView.Model model = new GraftMenuView.Model(state.mastery(), state.active(), view.stage(), view.kakuja(), state.energy(),
-            KaguneProfile.MAX_ENERGY, view.mutations(), QuestLocks.live());
+            KaguneProfile.MAX_ENERGY, view.mutations(), QuestLocks.live(), this.tab, this.picked);
         canvas.push();
         canvas.translate(this.originX, this.originY);
         canvas.scale(this.scale);
@@ -66,6 +71,16 @@ public final class GraftMenuScreen extends Screen {
                 Minecraft.m_91087_().m_91152_(new KakuganScreen());
                 return true;
             }
+            if (key.startsWith("tab:")) {
+                this.tab = GraftMenuView.Tab.valueOf(key.substring(4));
+                this.picked = null;
+                return true;
+            }
+            if (key.startsWith("pick:") || key.startsWith("step:")) {
+                this.picked = key; // 4.1.60: a card, a stage's pill or a step looked at; nothing changes in the game
+                return true;
+            }
+            // 4.1.60: only the UNLOCK button carries "mutation:", only GROW INTO IT "stage:" (each drawn only while it may be used).
             if (key.startsWith("mutation:")) {
                 com.hex.kagune.control.graft.GraftMutation mutation = com.hex.kagune.control.graft.GraftMutation.fromId(key.substring(9));
                 if (mutation != null) {

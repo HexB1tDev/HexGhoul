@@ -242,6 +242,113 @@ public class UiPreview {
         System.out.println("wrote " + out);
     }
 
+    /** 4.1.60: the Graft menu as the game draws it: the quest menu's box over a stand-in scene; the mouse on the first area named {@code over}. */
+    static void graftBox(File out, com.hex.kagune.control.client.GraftMenuView.Model model, String over) throws Exception {
+        int w = 960;
+        int h = 540;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        for (int i = 0; i < w; i += 40) {
+            c.fill(i, h * 6 / 10 - 20 - (i * 37 % 60), i + 40, h * 6 / 10, 0xFF4E8834);
+        }
+        int bw = com.hex.kagune.control.client.GraftMenuView.BOX_WIDTH;
+        int bh = com.hex.kagune.control.client.GraftMenuView.BOX_HEIGHT;
+        double mx = -1;
+        double my = -1;
+        if (over != null) {
+            BufferedImage scratch = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for (java.util.Map.Entry<String, UkakuMenuView.Rect> hit : com.hex.kagune.control.client.GraftMenuView.draw(new ImageCanvas(graphics(scratch, 1),
+                false), model, -1, -1, 1.3).entrySet()) {
+                if (hit.getKey().startsWith(over)) {
+                    mx = hit.getValue().x() + hit.getValue().width() * 0.6;
+                    my = hit.getValue().y() + hit.getValue().height() * 0.5;
+                    break;
+                }
+            }
+        }
+        c.push();
+        c.translate((w - bw) / 2.0F, (h - bh) / 2.0F);
+        com.hex.kagune.control.client.GraftMenuView.draw(c, model, mx, my, 1.3);
+        c.pop();
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
+    /** 4.1.60: the Graft menu: a stage to grow into under the mouse, the kakuja, a stage waiting for its quest, the moves, the mutations. */
+    static void graftQuest(File dir) throws Exception {
+        com.hex.kagune.control.client.QuestLocks all = com.hex.kagune.control.client.QuestLocks.ALL;
+        java.util.Set<com.hex.kagune.control.quest.Gate> open = java.util.EnumSet.of(com.hex.kagune.control.quest.Gate.GRAFT_CENTIPEDE);
+        com.hex.kagune.control.client.QuestLocks some = new com.hex.kagune.control.client.QuestLocks(open::contains, 1);
+        com.hex.kagune.control.graft.GraftStage centipede = com.hex.kagune.control.graft.GraftStage.CENTIPEDE;
+        com.hex.kagune.control.graft.GraftStage dragon = com.hex.kagune.control.graft.GraftStage.DRAGON;
+        com.hex.kagune.control.client.GraftMenuView.Tab stages = com.hex.kagune.control.client.GraftMenuView.Tab.STAGES;
+        com.hex.kagune.control.client.GraftMenuView.Tab moves = com.hex.kagune.control.client.GraftMenuView.Tab.MOVES;
+        com.hex.kagune.control.client.GraftMenuView.Tab mutations = com.hex.kagune.control.client.GraftMenuView.Tab.MUTATIONS;
+        int revive = com.hex.kagune.control.graft.GraftMutation.NOT_THAT_EASILY.bit();
+        graftBox(new File(dir, "graft-stages-grow.png"), new com.hex.kagune.control.client.GraftMenuView.Model(760, true, centipede, false, 64.0F, 100.0F, 0,
+            all, stages, "pick:s:dragon"), "stage:");
+        graftBox(new File(dir, "graft-stages-kakuja.png"), new com.hex.kagune.control.client.GraftMenuView.Model(950, true, dragon, true, 70.0F, 100.0F, 0,
+            all, stages, null), "step:980");
+        graftBox(new File(dir, "graft-stages-quest.png"), new com.hex.kagune.control.client.GraftMenuView.Model(760, true, centipede, false, 64.0F, 100.0F, 0,
+            some, stages, "pick:s:thorns"), null);
+        graftBox(new File(dir, "graft-moves.png"), new com.hex.kagune.control.client.GraftMenuView.Model(600, true, centipede, false, 64.0F, 100.0F, 0, all,
+            moves, "pick:m:HUNGRY_MAW"), "pick:s:thorns");
+        graftBox(new File(dir, "graft-moves-string.png"), new com.hex.kagune.control.client.GraftMenuView.Model(760, true, dragon, false, 64.0F, 100.0F, 0, some,
+            moves, "pick:m:CRESCENT_1"), null);
+        graftBox(new File(dir, "graft-moves-shut.png"), new com.hex.kagune.control.client.GraftMenuView.Model(760, true, centipede, false, 64.0F, 100.0F, 0, some,
+            moves, "pick:m:CRUCIFIXION"), null);
+        graftBox(new File(dir, "graft-mutations.png"), new com.hex.kagune.control.client.GraftMenuView.Model(900, true, dragon, false, 64.0F, 100.0F, revive,
+            some, mutations, null), "mutation:");
+        // Every stage's preview, in the menu and alone, larger, at the tile's own size in GUI pixels.
+        for (com.hex.kagune.control.graft.GraftStage stage : com.hex.kagune.control.graft.GraftStage.values()) {
+            graftBox(new File(dir, "graft-stage-" + stage.id() + ".png"), new com.hex.kagune.control.client.GraftMenuView.Model(1000, true,
+                stage.kakuja() ? dragon : stage, stage.kakuja(), 80.0F, 100.0F, 0, all, stages, "pick:s:" + stage.id()), null);
+        }
+        int tw = 190 - 16; // the menu's tile less its frame and its caption
+        int th = 150 - 30;
+        com.hex.kagune.control.graft.GraftStage[] all5 = com.hex.kagune.control.graft.GraftStage.values();
+        String yaws = System.getProperty("graft.yaws", "");
+        for (String yawText : yaws.isEmpty() ? new String[0] : yaws.split(",")) {
+            double yaw = Double.parseDouble(yawText);
+            BufferedImage strip = new BufferedImage((tw + 8) * all5.length * 4, (th + 8) * 4, BufferedImage.TYPE_INT_RGB);
+            ImageCanvas c = new ImageCanvas(graphics(strip, 4), false);
+            c.fill(0, 0, (tw + 8) * all5.length, th + 8, 0xFF0C080E);
+            for (int i = 0; i < all5.length; i++) {
+                com.hex.kagune.control.client.PathChoiceLayout.Box box = new com.hex.kagune.control.client.PathChoiceLayout.Box(i * (tw + 8) + 4, 4, tw, th);
+                c.fill(box.x() - 1, box.y() - 1, box.x() + tw + 1, box.y() + th + 1, 0xFF3A1A20);
+                c.fill(box.x(), box.y(), box.x() + tw, box.y() + th, 0xFF0C080E);
+                for (com.hex.kagune.control.client.PathSilhouette.Mark mark : com.hex.kagune.control.client.PathSilhouette.graftForm(box, 0.0, 1.0F,
+                    all5[i], 1000, 0x0C080E, yaw)) {
+                    UkakuMenuView.draw(c, mark);
+                }
+            }
+            File out = new File(dir, "graft-yaw-" + yawText + ".png");
+            ImageIO.write(strip, "png", out);
+            System.out.println("wrote " + out);
+        }
+        for (double time : new double[] {0.0, 2.7}) {
+            BufferedImage strip = new BufferedImage((tw + 8) * all5.length * 4, (th + 8) * 2 * 4, BufferedImage.TYPE_INT_RGB);
+            ImageCanvas c = new ImageCanvas(graphics(strip, 4), false);
+            c.fill(0, 0, (tw + 8) * all5.length, (th + 8) * 2, 0xFF0C080E);
+            for (int i = 0; i < all5.length; i++) {
+                for (int row = 0; row < 2; row++) {
+                    int mastery = row == 0 ? all5[i].mastery() : 1000;
+                    com.hex.kagune.control.client.PathChoiceLayout.Box box = new com.hex.kagune.control.client.PathChoiceLayout.Box(i * (tw + 8) + 4, row * (th + 8) + 4, tw, th);
+                    c.fill(box.x() - 1, box.y() - 1, box.x() + tw + 1, box.y() + th + 1, 0xFF3A1A20);
+                    c.fill(box.x(), box.y(), box.x() + tw, box.y() + th, 0xFF0C080E);
+                    for (com.hex.kagune.control.client.PathSilhouette.Mark mark : com.hex.kagune.control.client.PathSilhouette.graftForm(box, time, 1.0F, all5[i], mastery, 0x0C080E)) {
+                        UkakuMenuView.draw(c, mark);
+                    }
+                }
+            }
+            File out = new File(dir, "graft-forms-" + (time == 0.0 ? "a" : "b") + ".png");
+            ImageIO.write(strip, "png", out);
+            System.out.println("wrote " + out);
+        }
+    }
+
     /** 4.1.59: the Bikaku menu as the game draws it: the quest menu's box over a stand-in scene; the mouse on the first area named {@code over}. */
     static void bikakuBox(File out, com.hex.kagune.control.client.BikakuMenuView.Model model, String over) throws Exception {
         int w = 960;
@@ -853,6 +960,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("bikaku-menu")) {
             bikakuQuest(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("graft-menu")) {
+            graftQuest(dir);
             return;
         }
         menu(new File(dir, "ukaku-menu-0.png"), 0, WingForm.TWIN, 0, 0);

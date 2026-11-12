@@ -371,14 +371,23 @@ final class QuestFrame {
         if (gate == null) {
             return "its quest";
         }
-        String quests = com.hex.kagune.control.quest.QuestBook.openersText(gate);
+        // 4.1.60: a quest by its title in quotes ("the quest \"Four Thorns\""), never mistaken for the stage or form it opens.
+        java.util.List<com.hex.kagune.control.quest.Quest> quests = new java.util.ArrayList<>(com.hex.kagune.control.quest.QuestBook.openers(gate));
+        quests.removeIf(quest -> com.hex.kagune.control.quest.QuestBook.giver(quest) == com.hex.kagune.control.quest.QuestBook.Giver.RETIRED);
         if (!quests.isEmpty()) {
-            return quests;
+            StringBuilder text = new StringBuilder("the quest ");
+            for (int i = 0; i < quests.size(); i++) {
+                if (i > 0) {
+                    text.append(i == quests.size() - 1 ? " or " : ", ");
+                }
+                text.append('"').append(quests.get(i).title()).append('"');
+            }
+            return text.toString();
         }
         for (com.hex.kagune.control.npc.Teaching.Lesson lesson : com.hex.kagune.control.npc.Teaching.ALL) {
             if (lesson.gate() == gate && !lesson.teacher().isEmpty()) {
                 String teacher = Character.toUpperCase(lesson.teacher().charAt(0)) + lesson.teacher().substring(1);
-                return teacher + "'s " + (lesson.kind() == com.hex.kagune.control.npc.Teaching.Kind.TRIAL ? "trial" : "lesson") + ", " + lesson.name();
+                return teacher + "'s " + (lesson.kind() == com.hex.kagune.control.npc.Teaching.Kind.TRIAL ? "trial" : "lesson") + " \"" + lesson.name() + "\"";
             }
         }
         return "its quest";

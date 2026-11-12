@@ -970,7 +970,7 @@ public final class UkakuMenuView {
     }
 
     /** A silhouette mark as GUI fills (as the starting screen draws them). */
-    static void draw(UiCanvas c, PathSilhouette.Mark mark) {
+    public static void draw(UiCanvas c, PathSilhouette.Mark mark) {
         if (mark instanceof PathSilhouette.Stroke stroke) {
             float dx = stroke.x1() - stroke.x0();
             float dy = stroke.y1() - stroke.y0();

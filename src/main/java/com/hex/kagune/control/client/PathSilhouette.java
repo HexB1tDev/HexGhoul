@@ -565,6 +565,525 @@ public final class PathSilhouette {
         return points;
     }
 
+    /**
+     * 4.1.60: one of Graft DNA's stages for the menu's preview, as the game draws it: every limb's resting line is the game's own
+     * ({@link com.hex.kagune.control.graft.GraftRig#pose}, breathing as it does in the world), seen from behind him and drawn to scale
+     * with him, so the thorns dwarf him and the many-eyed mass towers to his right; each limb in its stage's look (the
+     * {@link com.hex.kagune.control.graft.GraftModel} limbs): Rize's muscular tails with a vein of light; armoured centipedes, spiked
+     * down both flanks, the first with its mouth; thorned giants ringed in black ridges; crescents of black flesh full of white eyes that
+     * blink; the kakuja's colossi with their heads and mandibles, and him in its black hide, his crown of spikes and the two burning
+     * sockets in his back. Limbs reaching forward round him pass behind him.
+     */
+    public static List<Mark> graftForm(PathChoiceLayout.Box box, double time, float intensity, com.hex.kagune.control.graft.GraftStage stage, int mastery,
+                                       int bg) {
+        return graftForm(box, time, intensity, stage, mastery, bg, GRAFT_YAW);
+    }
+
+    /** {@link #graftForm} seen from {@code yaw} round from straight behind him (toward his left; for previews of the angle). */
+    public static List<Mark> graftForm(PathChoiceLayout.Box box, double time, float intensity, com.hex.kagune.control.graft.GraftStage stage, int mastery,
+                                       int bg, double yaw) {
+        List<Mark> marks = new ArrayList<>();
+        int n = stage.limbs(mastery);
+        double length = stage.length(mastery);
+        double half = stage.width(mastery);
+        double ticks = time * 20.0;
+        // The scale: every limb at rest over a stretch of its breathing, with its girth, and him; so the scene keeps its size.
+        double minX = -0.5;
+        double maxX = 0.5;
+        double minY = 0.0;
+        double maxY = 2.1;
+        for (int sample = 0; sample < 6; sample++) {
+            for (int limb = 0; limb < n; limb++) {
+                for (double[] p : graftLimb(stage, n, limb, length, sample * 37.0)) {
+                    double sx = graftX(p, yaw);
+                    minX = Math.min(minX, sx - half * 1.6);
+                    maxX = Math.max(maxX, sx + half * 1.6);
+                    minY = Math.min(minY, p[1] - half * 1.6);
+                    maxY = Math.max(maxY, p[1] + half * 1.6);
+                }
+            }
+        }
+        float room = FIT_MARGIN + 2.0F;
+        double scale = Math.min((box.width() - 2.0 * room) / (maxX - minX), (box.height() - 2.0 * room) / (maxY - minY)) * 0.94;
+        if (scale <= 0.5) {
+            return marks;
+        }
+        float originX = (float)(box.x() + box.width() / 2.0 - (minX + maxX) / 2.0 * scale);
+        float originY = (float)(box.y() + box.height() / 2.0 + (minY + maxY) / 2.0 * scale);
+        float fade = 0.45F + 0.55F * Math.max(0.0F, Math.min(1.0F, intensity));
+        // Each limb as runs of segments behind him (reaching forward round him) or in front of him (toward the viewer).
+        List<float[]> order = new ArrayList<>(); // {depth, run index}
+        List<List<Mark>> runs = new ArrayList<>();
+        for (int limb = 0; limb < n; limb++) {
+            double[][] spine = smoothLine(graftLimb(stage, n, limb, length, ticks), 6);
+            int count = spine.length;
+            float[] x = new float[count];
+            float[] y = new float[count];
+            float[] w = new float[count];
+            float[] s = new float[count];
+            double total = 0.0;
+            double[] along = new double[count];
+            for (int i = 1; i < count; i++) {
+                total += Math.hypot(Math.hypot(spine[i][0] - spine[i - 1][0], spine[i][1] - spine[i - 1][1]), spine[i][2] - spine[i - 1][2]);
+                along[i] = total;
+            }
+            for (int i = 0; i < count; i++) {
+                s[i] = (float)(along[i] / Math.max(1.0E-6, total));
+                x[i] = originX + (float)(graftX(spine[i], yaw) * scale);
+                y[i] = originY - (float)(spine[i][1] * scale);
+                w[i] = (float)(half * graftWidth(stage, s[i]) * scale);
+            }
+            int start = 0;
+            while (start < count - 1) {
+                boolean behind = graftDepth(spine[start], spine[start + 1], yaw) > 0.2;
+                int end = start + 1;
+                while (end < count - 1 && (graftDepth(spine[end], spine[end + 1], yaw) > 0.2) == behind) {
+                    end++;
+                }
+                List<Mark> run = new ArrayList<>();
+                graftRun(run, stage, limb, x, y, w, s, start, end, time, bg, fade);
+                double depth = 0.0;
+                for (int i = start; i <= end; i++) {
+                    depth += graftDepth(spine[i], spine[i], yaw);
+                }
+                order.add(new float[] {(float)(depth / (end - start + 1)) + (behind ? 10.0F : 0.0F), runs.size()});
+                runs.add(run);
+                start = end;
+            }
+        }
+        // His body, to scale: feet on the ground line, two blocks tall.
+        float size = (float)(2.0 * scale);
+        float footY = originY;
+        float top = footY - size;
+        float headR = Math.max(1.5F, size * 0.075F);
+        Figure f = new Figure(originX, top + headR + 1.0F, headR, top + size * 0.22F, size * 0.13F, top + size * 0.56F, footY, size);
+        List<Mark> body = new ArrayList<>();
+        if (stage.kakuja()) {
+            kakujaHide(body, f, time, bg, fade);
+        } else {
+            figure(body, f, bg, intensity);
+        }
+        order.add(new float[] {5.0F, runs.size()});
+        runs.add(body);
+        order.sort((a, b) -> Float.compare(b[0], a[0]));
+        for (float[] o : order) {
+            marks.addAll(runs.get((int)o[1]));
+        }
+        return marks;
+    }
+
+    /** A limb's resting line this frame (rig space, root first), from the game's rig. */
+    private static double[][] graftLimb(com.hex.kagune.control.graft.GraftStage stage, int limbs, int limb, double length, double ticks) {
+        com.hex.kagune.control.graft.GraftRig.Body still = new com.hex.kagune.control.graft.GraftRig.Body(0.0, false, 0.0, true, 0.0, 0.0, ticks);
+        return com.hex.kagune.control.graft.GraftRig.pose(new com.hex.kagune.control.graft.GraftRig.Input(stage, limbs, limb, length, still,
+            com.hex.kagune.control.graft.GraftMove.NONE, 0.0, null, null, null, 0.3)).points();
+    }
+
+    /** Seen from behind him and a little to his left: rig x (his right) across, a touch of depth so what curls forward shows. */
+    private static final double GRAFT_YAW = 0.7;
+
+    private static double graftX(double[] p, double yaw) {
+        return p[0] * Math.cos(yaw) + p[2] * Math.sin(yaw);
+    }
+
+    /** How far in front of him (away from the viewer) the middle of a segment is. */
+    private static double graftDepth(double[] a, double[] b, double yaw) {
+        double x = (a[0] + b[0]) / 2.0;
+        double z = (a[2] + b[2]) / 2.0;
+        return z * Math.cos(yaw) - x * Math.sin(yaw);
+    }
+
+    /** A limb's half-width along it (share of the thickest), as the game's model shapes it. */
+    private static double graftWidth(com.hex.kagune.control.graft.GraftStage stage, double s) {
+        return switch (stage) {
+            case TRANSPLANT -> com.hex.kagune.control.graft.GraftModel.rinkakuWidth(s);
+            case CENTIPEDE -> com.hex.kagune.control.graft.GraftModel.centipedeWidth(s) * (s > 0.9 ? Math.max(0.15, (1.0 - s) / 0.1) : 1.0);
+            case THORNS -> com.hex.kagune.control.graft.GraftModel.thornWidth(s) * (s > 0.82 ? Math.max(0.05, (1.0 - s) / 0.18) : 1.0);
+            case DRAGON -> com.hex.kagune.control.graft.GraftModel.crescentWidth(s);
+            case KAKUJA -> com.hex.kagune.control.graft.GraftModel.colossusWidth(s) * (s > 0.97 ? 0.7 : 1.0);
+        };
+    }
+
+    /** A Catmull-Rom line through {@code points}, {@code per} samples between each two. */
+    private static double[][] smoothLine(double[][] points, int per) {
+        int n = points.length;
+        if (n < 2) {
+            return points;
+        }
+        double[][] out = new double[(n - 1) * per + 1][];
+        int k = 0;
+        for (int i = 0; i + 1 < n; i++) {
+            double[] p0 = points[Math.max(0, i - 1)];
+            double[] p1 = points[i];
+            double[] p2 = points[i + 1];
+            double[] p3 = points[Math.min(n - 1, i + 2)];
+            for (int j = 0; j < per; j++) {
+                double t = j / (double)per;
+                double t2 = t * t;
+                double t3 = t2 * t;
+                double[] p = new double[3];
+                for (int d = 0; d < 3; d++) {
+                    p[d] = 0.5 * (2.0 * p1[d] + (-p0[d] + p2[d]) * t + (2.0 * p0[d] - 5.0 * p1[d] + 4.0 * p2[d] - p3[d]) * t2
+                        + (-p0[d] + 3.0 * p1[d] - 3.0 * p2[d] + p3[d]) * t3);
+                }
+                out[k++] = p;
+            }
+        }
+        out[k] = points[n - 1].clone();
+        return out;
+    }
+
+    // Graft DNA's colours for the 2D preview, the game model's (GraftModel), lifted a little so they read against the tile's black.
+    private static final int G_FLESH_DEEP = 0x30040A;
+    private static final int G_FLESH = 0x6C0C16;
+    private static final int G_FLESH_HI = 0x98202A;
+    private static final int G_FLESH_SHEEN = 0xD04A50;
+    private static final int G_FLESH_EDGE = 0x1A0206;
+    private static final int G_VEIN = 0xFF3A30;
+    private static final int G_SHELL_DARK = 0x120608;
+    private static final int G_SHELL = 0x2A1016;
+    private static final int G_SHELL_HI = 0x4E1C24;
+    private static final int G_SHELL_SHEEN = 0x8A3440;
+    private static final int G_SHELL_EDGE = 0x5A1820;
+    private static final int G_SPIKE = 0x9A3038;
+    private static final int G_SPIKE_TIP = 0x3A0E14;
+    private static final int G_MASS = 0x140508;
+    private static final int G_MASS_HI = 0x2E0A10;
+    private static final int G_CREASE = 0x6A0C18;
+    private static final int G_EYE = 0xF3EEE2;
+    private static final int G_IRIS = 0xB0101C;
+    private static final int G_TOOTH = 0xE8DECC;
+    /** The light falls from the upper left of the tile. */
+    private static final float LIGHT_X = -0.6F;
+    private static final float LIGHT_Y = -0.8F;
+
+    /**
+     * Segments {@code from}..{@code to} of one limb, in its stage's look: drawn as a lit tube (an outline round the whole run, the
+     * dark of its far side, its body, and a sheen on the side the light falls on), then what its stage carries.
+     */
+    private static void graftRun(List<Mark> marks, com.hex.kagune.control.graft.GraftStage stage, int limb, float[] x, float[] y, float[] w, float[] s,
+                                 int from, int to, double time, int bg, float fade) {
+        boolean maw = com.hex.kagune.control.graft.GraftRig.maw(stage, limb);
+        int last = x.length - 1;
+        boolean colossus = stage.kakuja();
+        int edge;
+        int dark;
+        int body;
+        int sheen;
+        switch (stage) {
+            case TRANSPLANT -> {
+                edge = G_FLESH_EDGE;
+                dark = G_FLESH_DEEP;
+                body = G_FLESH;
+                sheen = G_FLESH_SHEEN;
+            }
+            case THORNS -> {
+                edge = G_FLESH_EDGE;
+                dark = G_FLESH_DEEP;
+                body = G_FLESH_HI;
+                sheen = G_FLESH_SHEEN;
+            }
+            case DRAGON -> {
+                edge = G_CREASE;
+                dark = G_MASS;
+                body = G_MASS_HI;
+                sheen = 0x4A0E16;
+            }
+            default -> {
+                edge = G_SHELL_EDGE;
+                dark = G_SHELL_DARK;
+                body = G_SHELL;
+                sheen = G_SHELL_SHEEN;
+            }
+        }
+        // The tube as chains of discs, round everywhere: a thick stroke is drawn in squares, whose corners show where a limb comes at the
+        // viewer or a run ends.
+        for (int i = from; i < to; i++) {
+            tube(marks, x[i], y[i], x[i + 1], y[i + 1], w[i] + 1.0F, w[i + 1] + 1.0F, blend(bg, edge, fade), i + 1 == to);
+        }
+        for (int i = from; i < to; i++) {
+            tube(marks, x[i], y[i], x[i + 1], y[i + 1], w[i], w[i + 1], blend(bg, dark, fade), i + 1 == to);
+        }
+        for (int pass = 0; pass < 2; pass++) {
+            for (int i = from; i < to; i++) {
+                float dx = x[i + 1] - x[i];
+                float dy = y[i + 1] - y[i];
+                float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+                float nx = -dy / d;
+                float ny = dx / d;
+                float lit = nx * LIGHT_X + ny * LIGHT_Y; // how far the light side lies along the normal
+                float shift = pass == 0 ? 0.22F : 0.5F;
+                float share = pass == 0 ? 0.68F : 0.22F;
+                float ox0 = nx * lit * w[i] * shift;
+                float oy0 = ny * lit * w[i] * shift;
+                float ox1 = nx * lit * w[i + 1] * shift;
+                float oy1 = ny * lit * w[i + 1] * shift;
+                int colour = pass == 0 ? body : sheen;
+                if (stage == com.hex.kagune.control.graft.GraftStage.TRANSPLANT && pass == 0) {
+                    // Bundles of muscle swelling along it.
+                    colour = blend(G_FLESH, G_FLESH_HI, (float)(0.5 + 0.5 * Math.sin(s[i] * 30.0 + limb)) * 0.7F);
+                }
+                if (stage == com.hex.kagune.control.graft.GraftStage.THORNS && s[i] > com.hex.kagune.control.graft.GraftModel.POINT) {
+                    colour = pass == 0 ? G_SHELL : G_SHELL_SHEEN; // the point: black, honed
+                }
+                if (stage == com.hex.kagune.control.graft.GraftStage.TRANSPLANT && s[i] > 0.78F) {
+                    colour = blend(colour, G_FLESH_EDGE, Math.min(1.0F, (s[i] - 0.78F) / 0.2F) * 0.75F); // the point darkens, honed
+                }
+                float min = pass == 0 ? 0.5F : 0.3F;
+                tube(marks, x[i] + ox0, y[i] + oy0, x[i + 1] + ox1, y[i + 1] + oy1, Math.max(min, w[i] * share), Math.max(min, w[i + 1] * share),
+                    blend(bg, colour, fade), i + 1 == to);
+            }
+        }
+        for (int i = from; i < to; i++) {
+            float dx = x[i + 1] - x[i];
+            float dy = y[i + 1] - y[i];
+            float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+            float nx = -dy / d;
+            float ny = dx / d;
+            float hw = w[i + 1];
+            switch (stage) {
+                case CENTIPEDE, KAKUJA -> {
+                    boolean head = colossus && s[i] > com.hex.kagune.control.graft.GraftModel.COLOSSUS_HEAD;
+                    if (i % 3 != 2 || head || s[i] < 0.08F || s[i] > 0.93F) {
+                        break;
+                    }
+                    // Where two plates overlap: a dark line across, red light in the seam.
+                    float glow = 0.7F + 0.3F * (float)Math.sin(time * 3.0 + i * 0.7);
+                    marks.add(new Stroke(x[i + 1] - nx * hw, y[i + 1] - ny * hw, x[i + 1] + nx * hw, y[i + 1] + ny * hw, 1.4F, 1.4F,
+                        blend(bg, G_SHELL_DARK, fade)));
+                    marks.add(new Stroke(x[i + 1] - nx * hw * 0.8F + dx / d, y[i + 1] - ny * hw * 0.8F + dy / d, x[i + 1] + nx * hw * 0.8F + dx / d,
+                        y[i + 1] + ny * hw * 0.8F + dy / d, 0.8F, 0.8F, blend(bg, GRAFT_GLOW, fade * glow * 0.8F)));
+                    // A spike off each flank, raked back toward the root (a colossus's twice as long).
+                    float spike = hw * (colossus ? 0.95F : 0.7F) + 2.0F;
+                    for (int side = -1; side <= 1; side += 2) {
+                        float bx = x[i + 1] + side * nx * hw;
+                        float by = y[i + 1] + side * ny * hw;
+                        marks.add(new Stroke(bx, by, bx + side * nx * spike - dx / d * spike * 0.45F, by + side * ny * spike - dy / d * spike * 0.45F,
+                            Math.max(1.0F, hw * 0.28F), 0.6F, blend(bg, G_SPIKE, fade)));
+                    }
+                }
+                case THORNS -> {
+                    if (i % 4 != 1 || s[i] < 0.06F || s[i] > com.hex.kagune.control.graft.GraftModel.POINT) {
+                        break;
+                    }
+                    // A black armoured ridge ringing the core, its rim lit, a long thorn off each side curving toward the point.
+                    float ring = hw * 1.16F;
+                    marks.add(new Stroke(x[i + 1] - nx * ring, y[i + 1] - ny * ring, x[i + 1] + nx * ring, y[i + 1] + ny * ring, 2.6F, 2.6F,
+                        blend(bg, G_SHELL_DARK, fade)));
+                    marks.add(new Stroke(x[i + 1] - nx * ring - dx / d, y[i + 1] - ny * ring - dy / d, x[i + 1] + nx * ring - dx / d,
+                        y[i + 1] + ny * ring - dy / d, 0.8F, 0.8F, blend(bg, G_SHELL_EDGE, fade)));
+                    // A thorn off every other ridge, sides taking turns: few, long and hooked, never a centipede's legs.
+                    if ((i / 4) % 2 == 1) {
+                        break;
+                    }
+                    float thorn = hw * 1.7F + 5.0F;
+                    for (int side = -1; side <= 1; side += 2) {
+                        if (side != ((i / 8) % 2 == 0 ? 1 : -1)) {
+                            continue;
+                        }
+                        float lean = 1.0F;
+                        float bx = x[i + 1] + side * nx * ring;
+                        float by = y[i + 1] + side * ny * ring;
+                        float mx = bx + side * nx * thorn * 0.62F * lean + dx / d * thorn * 0.3F;
+                        float my = by + side * ny * thorn * 0.62F * lean + dy / d * thorn * 0.3F;
+                        float tx = mx + dx / d * thorn * 0.5F + side * nx * thorn * 0.12F;
+                        float ty = my + dy / d * thorn * 0.5F + side * ny * thorn * 0.12F;
+                        marks.add(new Stroke(bx, by, mx, my, Math.max(2.0F, hw * 0.6F), Math.max(1.2F, hw * 0.3F), blend(bg, G_SHELL_EDGE, fade)));
+                        marks.add(new Stroke(mx, my, tx, ty, Math.max(1.2F, hw * 0.3F), 0.6F, blend(bg, G_SHELL_SHEEN, fade)));
+                    }
+                }
+                case DRAGON -> {
+                    // Its crease, crimson along the top of the crescent.
+                    float up = ny < 0 ? 1.0F : -1.0F;
+                    marks.add(new Stroke(x[i] + up * nx * w[i] * 0.72F, y[i] + up * ny * w[i] * 0.72F, x[i + 1] + up * nx * hw * 0.72F,
+                        y[i + 1] + up * ny * hw * 0.72F, 1.0F, 1.0F, blend(bg, G_CREASE, fade)));
+                }
+                case TRANSPLANT -> {
+                    if (s[i] < 0.08F || s[i] > 0.76F) {
+                        break;
+                    }
+                    // The striations between its bundles of muscle, running along it.
+                    for (float k : new float[] {-0.52F, 0.4F}) {
+                        marks.add(new Stroke(x[i] + nx * w[i] * k, y[i] + ny * w[i] * k, x[i + 1] + nx * hw * k, y[i + 1] + ny * hw * k, 1.0F, 1.0F,
+                            blend(bg, blend(G_FLESH, G_FLESH_DEEP, 0.75F), fade)));
+                    }
+                }
+            }
+            if (stage == com.hex.kagune.control.graft.GraftStage.THORNS && s[i] > com.hex.kagune.control.graft.GraftModel.POINT && i % 4 == 0
+                && s[i] < 0.96F) {
+                // The point's serrations, a few teeth down each edge.
+                for (int side = -1; side <= 1; side += 2) {
+                    float bx = x[i] + side * nx * w[i];
+                    float by = y[i] + side * ny * w[i];
+                    marks.add(new Stroke(bx, by, bx + side * nx * 2.0F - dx / d * 1.5F, by + side * ny * 2.0F - dy / d * 1.5F, 1.2F, 0.6F,
+                        blend(bg, G_SHELL_EDGE, fade)));
+                }
+            }
+        }
+        // The veins of light along the transplant's tails.
+        if (stage == com.hex.kagune.control.graft.GraftStage.TRANSPLANT) {
+            float pulse = 0.6F + 0.4F * (float)Math.sin(time * 2.6 + limb);
+            for (int i = from; i < to; i++) {
+                if (s[i] < 0.06 || s[i] > 0.8) {
+                    continue;
+                }
+                float off = 0.3F * (float)Math.sin(s[i] * 9.0 + limb);
+                float dx = x[i + 1] - x[i];
+                float dy = y[i + 1] - y[i];
+                float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+                marks.add(new Stroke(x[i] - dy / d * w[i] * off, y[i] + dx / d * w[i] * off, x[i + 1] - dy / d * w[i + 1] * off, y[i + 1] + dx / d * w[i + 1] * off,
+                    1.0F, 1.0F, blend(bg, G_VEIN, fade * pulse)));
+            }
+        }
+        // The many eyes, along every crescent, blinking each in its own time.
+        if (stage == com.hex.kagune.control.graft.GraftStage.DRAGON) {
+            float[] at = {0.3F, 0.52F, 0.72F};
+            for (int e = 0; e < at.length; e++) {
+                int i = index(s, at[e]);
+                if (i < from || i >= to || w[i] < 2.5F) {
+                    continue;
+                }
+                double seed = Math.sin((limb * 7 + e * 3 + 1) * 12.9898) * 43758.5453;
+                seed -= Math.floor(seed);
+                double cycle = (time + seed * 6.0) % (3.5 + seed * 3.0);
+                float open = cycle < 0.18 ? (float)Math.abs(cycle - 0.09) / 0.09F : 1.0F;
+                almond(marks, x, y, w, i, open, time, seed, bg, fade);
+            }
+        }
+        // The heads: the centipede's mouth and the colossi's.
+        if (to == last && maw) {
+            mouth(marks, x, y, w, last, stage.kakuja(), time, bg, fade);
+        } else if (to == last && stage == com.hex.kagune.control.graft.GraftStage.CENTIPEDE) {
+            // The barbed stinger.
+            float dx = x[last] - x[last - 2];
+            float dy = y[last] - y[last - 2];
+            float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+            for (int side = -1; side <= 1; side += 2) {
+                marks.add(new Stroke(x[last], y[last], x[last] - dx / d * 4.0F - dy / d * side * 3.0F, y[last] - dy / d * 4.0F + dx / d * side * 3.0F, 1.4F, 0.6F,
+                    blend(bg, G_SPIKE, fade)));
+            }
+        }
+    }
+
+    /** One length of a tube as discs close enough to read as one round shape (radius {@code r0} at its start, {@code r1} at its end). */
+    private static void tube(List<Mark> marks, float x0, float y0, float x1, float y1, float r0, float r1, int rgb, boolean end) {
+        if (Math.max(r0, r1) < 1.0F) {
+            marks.add(new Stroke(x0, y0, x1, y1, r0 * 2.0F, r1 * 2.0F, rgb));
+            return;
+        }
+        float length = (float)Math.hypot(x1 - x0, y1 - y0);
+        int steps = Math.max(1, (int)Math.ceil(length / Math.max(0.75F, Math.min(r0, r1) * 0.5F)));
+        for (int k = 0; k < (end ? steps + 1 : steps); k++) {
+            float t = k / (float)steps;
+            marks.add(new Disc(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, Math.max(0.6F, r0 + (r1 - r0) * t), rgb));
+        }
+    }
+
+    /** The sample nearest {@code s} along a limb. */
+    private static int index(float[] s, float at) {
+        int best = 0;
+        for (int i = 0; i < s.length; i++) {
+            if (Math.abs(s[i] - at) < Math.abs(s[best] - at)) {
+                best = i;
+            }
+        }
+        return Math.min(best, s.length - 2);
+    }
+
+    /** A great almond eye on a crescent: a black rim, the white ball, the pupil ringed in red; shut, a black line. */
+    private static void almond(List<Mark> marks, float[] x, float[] y, float[] w, int i, float open, double time, double seed, int bg, float fade) {
+        float dx = x[i + 1] - x[i];
+        float dy = y[i + 1] - y[i];
+        float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+        float ux = dx / d;
+        float uy = dy / d;
+        float cx = x[i];
+        float cy = y[i];
+        float halfLong = w[i] * 1.1F;
+        float tall = Math.max(1.0F, w[i] * 0.9F * open);
+        marks.add(new Stroke(cx, cy, cx - ux * (halfLong + 1.5F), cy - uy * (halfLong + 1.5F), tall + 2.5F, 1.0F, blend(bg, 0x050203, fade)));
+        marks.add(new Stroke(cx, cy, cx + ux * (halfLong + 1.5F), cy + uy * (halfLong + 1.5F), tall + 2.5F, 1.0F, blend(bg, 0x050203, fade)));
+        if (open < 0.3F) {
+            return;
+        }
+        marks.add(new Stroke(cx, cy, cx - ux * halfLong, cy - uy * halfLong, tall, 0.6F, blend(bg, G_EYE, fade)));
+        marks.add(new Stroke(cx, cy, cx + ux * halfLong, cy + uy * halfLong, tall, 0.6F, blend(bg, G_EYE, fade)));
+        // The pupil rolls along the eye, looking about.
+        float look = (float)Math.sin(time * 0.7 + seed * 10.0) * halfLong * 0.35F;
+        float r = Math.max(1.0F, tall * 0.42F);
+        marks.add(new Disc(cx + ux * look, cy + uy * look, r, blend(bg, G_IRIS, fade)));
+        marks.add(new Disc(cx + ux * look, cy + uy * look, Math.max(0.6F, r * 0.55F), blend(bg, 0x050203, fade)));
+    }
+
+    /** A mouth at a limb's end: two hooked jaws opening and closing, pale teeth, the red of its throat. */
+    private static void mouth(List<Mark> marks, float[] x, float[] y, float[] w, int last, boolean colossus, double time, int bg, float fade) {
+        float dx = x[last] - x[last - 3];
+        float dy = y[last] - y[last - 3];
+        float d = Math.max(0.001F, (float)Math.sqrt(dx * dx + dy * dy));
+        float ux = dx / d;
+        float uy = dy / d;
+        float hw = Math.max(2.0F, w[last - 3]);
+        float open = (float)(0.55 + 0.35 * Math.sin(time * 2.2));
+        float hx = x[last];
+        float hy = y[last];
+        marks.add(new Disc(hx, hy, hw * 0.55F * open + 0.8F, blend(bg, GRAFT_GLOW, fade)));
+        for (int side = -1; side <= 1; side += 2) {
+            float bx = hx - uy * side * hw * 0.7F;
+            float by = hy + ux * side * hw * 0.7F;
+            float reach = hw * (colossus ? 1.5F : 1.1F);
+            float mx = bx + ux * reach - uy * side * reach * 0.35F * open;
+            float my = by + uy * reach + ux * side * reach * 0.35F * open;
+            marks.add(new Stroke(bx, by, mx, my, Math.max(1.4F, hw * 0.45F), Math.max(1.0F, hw * 0.25F), blend(bg, G_SHELL_EDGE, fade)));
+            marks.add(new Stroke(mx, my, mx + uy * side * reach * 0.45F + ux * reach * 0.15F, my - ux * side * reach * 0.45F + uy * reach * 0.15F,
+                Math.max(1.0F, hw * 0.25F), 0.6F, blend(bg, G_SPIKE, fade)));
+            marks.add(new Disc(bx + ux * reach * 0.35F, by + uy * reach * 0.35F, Math.max(0.6F, hw * 0.14F), blend(bg, G_TOOTH, fade)));
+        }
+        if (colossus) {
+            // Its oversized eyes, glowing, behind the jaws.
+            for (int side = -1; side <= 1; side += 2) {
+                float ex = hx - ux * hw * 1.2F - uy * side * hw * 0.55F;
+                float ey = hy - uy * hw * 1.2F + ux * side * hw * 0.55F;
+                marks.add(new Disc(ex, ey, Math.max(1.0F, hw * 0.28F), blend(bg, 0xFF3B2A, fade)));
+            }
+        }
+    }
+
+    /**
+     * Him in the kakuja's black hide, from behind: red whorls over it, a wild crown of black spikes off his head, the two sockets in
+     * his lower back the colossi grow out of, burning.
+     */
+    private static void kakujaHide(List<Mark> marks, Figure f, double time, int bg, float fade) {
+        int hide = blend(bg, 0x1E0C12, fade);
+        int whorl = blend(bg, 0x6E0C16, fade);
+        float limb = Math.max(1.0F, f.size * 0.07F);
+        marks.add(new Disc(f.cx, f.headY, f.headR * 1.1F, hide));
+        marks.add(new Stroke(f.cx, f.headY + f.headR, f.cx, f.shoulderY, f.headR * 0.9F, f.headR * 0.9F, hide));
+        marks.add(new Stroke(f.cx, f.shoulderY + 1.0F, f.cx, f.waistY, f.shoulderHalf * 2.2F, f.size * 0.19F, hide));
+        marks.add(new Stroke(f.cx - f.shoulderHalf, f.shoulderY + 1.0F, f.cx + f.shoulderHalf, f.shoulderY + 1.0F, limb, limb, hide));
+        for (int side = -1; side <= 1; side += 2) {
+            marks.add(new Stroke(f.cx + side * f.shoulderHalf, f.shoulderY + 1.0F, f.cx + side * (f.shoulderHalf + f.size * 0.05F),
+                f.waistY + f.size * 0.06F, limb, limb * 0.9F, hide));
+            // Claws over the hands.
+            float hx = f.cx + side * (f.shoulderHalf + f.size * 0.05F);
+            float hy = f.waistY + f.size * 0.06F;
+            marks.add(new Stroke(hx, hy, hx + side * 1.0F, hy + f.size * 0.06F, 1.2F, 0.6F, blend(bg, G_SPIKE, fade)));
+            marks.add(new Stroke(f.cx + side * f.size * 0.05F, f.waistY, f.cx + side * f.size * 0.07F, f.footY, limb * 1.4F, limb, hide));
+            // A whorl on each shoulder blade.
+            marks.add(new Stroke(f.cx + side * f.shoulderHalf * 0.2F, f.shoulderY + f.size * 0.08F, f.cx + side * f.shoulderHalf * 0.75F,
+                f.shoulderY + f.size * 0.14F, 1.0F, 1.0F, whorl));
+            // The sockets the colossi grow out of.
+            float glow = 0.75F + 0.25F * (float)Math.sin(time * 4.0 + side);
+            marks.add(new Disc(f.cx + side * f.size * 0.045F, f.waistY - f.size * 0.03F, Math.max(1.0F, f.size * 0.035F), blend(bg, GRAFT_GLOW, fade * glow)));
+        }
+        // The crown of black spikes sweeping back off his head.
+        for (int k = -2; k <= 2; k++) {
+            float bx = f.cx + k * f.headR * 0.4F;
+            float by = f.headY - f.headR * 0.5F;
+            marks.add(new Stroke(bx, by, bx + k * f.headR * 0.5F, by - f.headR * (1.3F - Math.abs(k) * 0.25F), Math.max(1.0F, f.headR * 0.45F), 0.6F,
+                blend(bg, k % 2 == 0 ? 0x2A0E14 : G_SHELL_EDGE, fade)));
+        }
+    }
+
     /** 3.4.9, Bikaku: the worm's crimson-purple flesh, its dark folds, its red veins and its grey fangs. */
     public static final int BIKAKU = 0x8A1A3E;
     public static final int BIKAKU_DARK = 0x3C0716;

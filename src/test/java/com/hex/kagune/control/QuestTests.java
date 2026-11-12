@@ -46,6 +46,7 @@ public final class QuestTests {
         ukakuMenu();
         rinkakuMenu();
         bikakuMenu();
+        graftMenu();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -210,6 +211,178 @@ public final class QuestTests {
             int[] t = canvas.texts.get(i);
             check(t[0] >= 8 && t[0] + t[2] <= width - 8 && t[1] >= 4 && t[1] + 8 <= height - 4, where + ": the words inside the box: \"" + canvas.words.get(i) + "\"");
         }
+    }
+
+    /**
+     * 4.1.60 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+     * Dialog, mastery menus ALL OF THEM"): the Graft menu is the quest menu's box: its three tabs; every stage, move, mutation and step a card
+     * or node to click, and every stage's pill on the moves; everything clickable and every word inside the box, apart; GROW INTO IT drawn
+     * only for the stage picked and only while the server would take it (GraftServer.pickStage: its mastery, its quest, never the kakuja,
+     * never the stage he is in); UNLOCK only while the server would spend a point on it (GraftServer: not had, a point, its quest); what opens
+     * a gate named; the moves of a stage still waiting for its quest never ticked; the screen keeps no overlay.
+     */
+    static void graftMenu() {
+        Recorder canvas = new Recorder();
+        int width = com.hex.kagune.control.client.GraftMenuView.BOX_WIDTH;
+        int height = com.hex.kagune.control.client.GraftMenuView.BOX_HEIGHT;
+        check(width <= 760 && height <= 460, "the Graft menu a compact box, the world seen round it");
+        java.util.Set<com.hex.kagune.control.quest.Gate> none = java.util.EnumSet.noneOf(com.hex.kagune.control.quest.Gate.class);
+        java.util.Set<com.hex.kagune.control.quest.Gate> some = java.util.EnumSet.of(com.hex.kagune.control.quest.Gate.GRAFT_CENTIPEDE);
+        com.hex.kagune.control.client.QuestLocks[] locks = {com.hex.kagune.control.client.QuestLocks.ALL,
+            new com.hex.kagune.control.client.QuestLocks(none::contains, 0), new com.hex.kagune.control.client.QuestLocks(some::contains, 2)};
+        int[] masks = {0, com.hex.kagune.control.graft.GraftMutation.NOT_THAT_EASILY.bit(), com.hex.kagune.control.graft.GraftMutation.all()};
+        java.util.List<String> picks = new java.util.ArrayList<>(java.util.Arrays.asList(null, "junk", "pick:s:nope", "step:450", "step:900", "step:0"));
+        for (com.hex.kagune.control.graft.GraftStage stage : com.hex.kagune.control.graft.GraftStage.values()) {
+            picks.add("pick:s:" + stage.id());
+        }
+        for (String move : new String[] {"LASH_1", "RIP_1", "HUNGRY_MAW", "CRUCIFIXION", "CURTAIN", "CHECKMATE", "PERFORMANCE", "STEP"}) {
+            picks.add("pick:m:" + move);
+        }
+        for (com.hex.kagune.control.graft.GraftMutation mutation : com.hex.kagune.control.graft.GraftMutation.values()) {
+            picks.add("pick:u:" + mutation.id());
+        }
+        long seen = 0;
+        int grows = 0;
+        int unlocks = 0;
+        int shut = 0;
+        for (com.hex.kagune.control.client.GraftMenuView.Tab tab : com.hex.kagune.control.client.GraftMenuView.Tab.values()) {
+            for (int mastery : new int[] {0, 260, 500, 760, 950, 1000}) {
+                for (com.hex.kagune.control.graft.GraftStage in : new com.hex.kagune.control.graft.GraftStage[] {com.hex.kagune.control.graft.GraftStage.TRANSPLANT,
+                    com.hex.kagune.control.graft.GraftStage.CENTIPEDE, com.hex.kagune.control.graft.GraftStage.DRAGON}) {
+                    for (boolean kakuja : new boolean[] {false, true}) {
+                        if (kakuja && mastery < com.hex.kagune.control.graft.GraftStage.KAKUJA.mastery()) {
+                            continue;
+                        }
+                        for (com.hex.kagune.control.client.QuestLocks lock : locks) {
+                            for (int mask : masks) {
+                                for (String pick : picks) {
+                                    canvas.clear();
+                                    com.hex.kagune.control.client.GraftMenuView.Model model = new com.hex.kagune.control.client.GraftMenuView.Model(mastery,
+                                        mastery > 0, in, kakuja, 64.0F, 100.0F, mask, lock, tab, pick);
+                                    java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits =
+                                        com.hex.kagune.control.client.GraftMenuView.draw(canvas, model, 300, 200, (mastery + mask) % 7);
+                                    String where = "graft " + tab + " at " + mastery + " in " + in + (kakuja ? " (kakuja)" : "") + " (" + pick + ")";
+                                    seen += canvas.texts.size();
+                                    for (com.hex.kagune.control.client.GraftMenuView.Tab each : com.hex.kagune.control.client.GraftMenuView.Tab.values()) {
+                                        check(hits.containsKey("tab:" + each.name()), where + ": the " + each + " tab");
+                                    }
+                                    boxed(hits, canvas, width, height, where);
+                                    for (String word : canvas.words) {
+                                        check(!word.endsWith("quest: ") && !word.endsWith("quest:") && !word.endsWith("with ") && !word.endsWith("for ")
+                                            && !word.contains("its quest"), where + ": what opens it named: \"" + word + "\"");
+                                    }
+                                    java.util.List<String> grow = hits.keySet().stream().filter(k -> k.startsWith("stage:")).toList();
+                                    check(grow.size() <= 1, where + ": one GROW INTO IT at most");
+                                    for (String key : grow) {
+                                        com.hex.kagune.control.graft.GraftStage stage = com.hex.kagune.control.graft.GraftStage.fromId(key.substring(6));
+                                        grows++;
+                                        check(tab == com.hex.kagune.control.client.GraftMenuView.Tab.STAGES && stage != null && !stage.kakuja() && stage != in
+                                            && stage.unlocked(mastery) && lock.passes(com.hex.kagune.control.quest.Gates.graft(stage)),
+                                            where + ": GROW INTO IT only for a stage the server would take (" + key + ")");
+                                    }
+                                    java.util.List<String> unlock = hits.keySet().stream().filter(k -> k.startsWith("mutation:")).toList();
+                                    check(unlock.size() <= 1, where + ": one UNLOCK at most");
+                                    for (String key : unlock) {
+                                        com.hex.kagune.control.graft.GraftMutation mutation = com.hex.kagune.control.graft.GraftMutation.fromId(key.substring(9));
+                                        unlocks++;
+                                        check(tab == com.hex.kagune.control.client.GraftMenuView.Tab.MUTATIONS && mutation != null && !mutation.in(mask)
+                                            && com.hex.kagune.control.graft.GraftMutation.canUnlock(mastery, mask, mutation, lock.points())
+                                            && lock.passes(com.hex.kagune.control.quest.Gates.graft(mutation)),
+                                            where + ": UNLOCK only for a mutation the server would unlock (" + key + ")");
+                                    }
+                                    switch (tab) {
+                                        case STAGES -> {
+                                            check(hits.containsKey("eyes"), where + ": the kakugan");
+                                            for (com.hex.kagune.control.graft.GraftStage stage : com.hex.kagune.control.graft.GraftStage.values()) {
+                                                check(hits.containsKey("pick:s:" + stage.id()), where + ": " + stage + " a card to click");
+                                            }
+                                            for (Integer step : com.hex.kagune.control.client.GraftMenuView.steps().keySet()) {
+                                                check(hits.containsKey("step:" + step), where + ": the step at " + step);
+                                            }
+                                            // A stage waiting for its quest: none of its moves ticked, whatever the mastery.
+                                            if (pick != null && pick.startsWith("pick:s:")) {
+                                                com.hex.kagune.control.graft.GraftStage looked = com.hex.kagune.control.graft.GraftStage.fromId(pick.substring(7));
+                                                if (looked != null && looked.unlocked(mastery) && !lock.passes(com.hex.kagune.control.quest.Gates.graft(looked))) {
+                                                    shut++;
+                                                    check(canvas.words.stream().anyMatch(w -> w.equals("0 / " + 6) || w.matches("0 / \\d+")),
+                                                        where + ": a stage still shut has none of its moves");
+                                                }
+                                            }
+                                        }
+                                        case MOVES -> {
+                                            for (com.hex.kagune.control.graft.GraftStage stage : com.hex.kagune.control.graft.GraftStage.values()) {
+                                                check(hits.containsKey("pick:s:" + stage.id()), where + ": " + stage + "'s pill to click");
+                                            }
+                                            check(hits.keySet().stream().filter(k -> k.startsWith("pick:m:")).count() >= 5, where + ": the stage's moves to click");
+                                        }
+                                        default -> {
+                                            for (com.hex.kagune.control.graft.GraftMutation mutation : com.hex.kagune.control.graft.GraftMutation.values()) {
+                                                check(hits.containsKey("pick:u:" + mutation.id()), where + ": " + mutation + " a card to click");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(seen > 100000 && grows > 100 && unlocks > 50 && shut > 20,
+            "the Graft menu's words and its buttons all drawn and checked (" + seen + ", " + grows + ", " + unlocks + ", " + shut + ")");
+        // The previews: every stage its own picture, every mark inside its tile, at every size the menu draws and as it breathes.
+        java.util.Set<Integer> looks = new java.util.HashSet<>();
+        for (com.hex.kagune.control.graft.GraftStage stage : com.hex.kagune.control.graft.GraftStage.values()) {
+            for (int[] size : new int[][] {{174, 120}, {120, 80}, {300, 200}}) {
+                for (int mastery : new int[] {stage.mastery(), 1000}) {
+                    for (double time = 0.0; time < 12.0; time += 0.7) {
+                        com.hex.kagune.control.client.PathChoiceLayout.Box box = new com.hex.kagune.control.client.PathChoiceLayout.Box(10, 20, size[0], size[1]);
+                        java.util.List<com.hex.kagune.control.client.PathSilhouette.Mark> marks =
+                            com.hex.kagune.control.client.PathSilhouette.graftForm(box, time, 1.0F, stage, mastery, 0x0C080E);
+                        check(marks.size() > 40, stage + " at " + size[0] + "x" + size[1] + ": drawn (" + marks.size() + " marks)");
+                        for (com.hex.kagune.control.client.PathSilhouette.Mark mark : marks) {
+                            float[] r = reach(mark);
+                            check(r[0] >= box.x() && r[1] >= box.y() && r[2] <= box.x() + box.width() && r[3] <= box.y() + box.height(),
+                                stage + " at " + size[0] + "x" + size[1] + ", " + time + " s: every mark inside its tile " + java.util.Arrays.toString(r));
+                        }
+                        if (time == 0.0 && size[0] == 174 && mastery == 1000) {
+                            looks.add(marks.size() * 31 + marks.hashCode());
+                        }
+                    }
+                }
+            }
+        }
+        check(looks.size() == com.hex.kagune.control.graft.GraftStage.values().length, "every stage drawn as itself, none sharing a picture");
+        try {
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/GraftMenuScreen.java"));
+            check(!screen.contains("this.m_280273_(graphics)") && !screen.contains("graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_"),
+                "no full-screen overlay round the Graft menu");
+            check(screen.contains("GraftMenuView.BOX_WIDTH") && screen.contains("this.picked = key;") && screen.contains("key.startsWith(\"stage:\")")
+                && screen.contains("key.startsWith(\"mutation:\")"), "the screen sized from the box; a stage grown into and a mutation unlocked only by their buttons");
+        } catch (java.io.IOException failure) {
+            check(false, "the Graft screen's source: " + failure);
+        }
+    }
+
+    /** How far a mark reaches: {left, top, right, bottom}, its thickness included (as the menus draw it, to the pixel). */
+    static float[] reach(com.hex.kagune.control.client.PathSilhouette.Mark mark) {
+        if (mark instanceof com.hex.kagune.control.client.PathSilhouette.Stroke s) {
+            float half = Math.max(Math.max(s.t0(), s.t1()), 1.0F) / 2.0F + 0.5F;
+            return new float[] {Math.min(s.x0(), s.x1()) - half, Math.min(s.y0(), s.y1()) - half, Math.max(s.x0(), s.x1()) + half, Math.max(s.y0(), s.y1()) + half};
+        }
+        if (mark instanceof com.hex.kagune.control.client.PathSilhouette.Disc d) {
+            float r = Math.max(1.0F, d.r()) + 0.5F;
+            return new float[] {d.cx() - r, d.cy() - r, d.cx() + r, d.cy() + r};
+        }
+        com.hex.kagune.control.client.PathSilhouette.Shape shape = (com.hex.kagune.control.client.PathSilhouette.Shape)mark;
+        float[] r = {Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
+        for (int i = 0; i < shape.x().length; i++) {
+            r[0] = Math.min(r[0], shape.x()[i]);
+            r[1] = Math.min(r[1], shape.y()[i]);
+            r[2] = Math.max(r[2], shape.x()[i]);
+            r[3] = Math.max(r[3], shape.y()[i]);
+        }
+        return r;
     }
 
     /**
