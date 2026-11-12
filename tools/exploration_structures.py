@@ -57,20 +57,27 @@ SITES = [
      "posts": [(152, 10, True), (168, 10, False), (152, 252, True), (168, 252, False)],
      "loop": (30, 290, 55, 195), "building": (42, 278, 72, 180), "top_floor": 27,
      "rooms": {"hexkagune:noro": (118, 26, 88), "hexkagune:ayato": (262, 14, 105)}},
-    # 4.1.4 (the owner: "CCG building, tons of ccg agents guard and patrol the area, sit in their offices"; "this is it, also like the others
-    # only 1 of them spawns"): 39 x 39, an L of seven floors (one every 8 blocks: its floor, 5 blocks of room, a ceiling of lamps) on a
-    # stone plate, a yard in the L's arm. Its file is 68 tall with nothing above its roof (y 57): those empty layers are left off. Its door
-    # is the gap in its south wall (x 9-10). Two guards stand either side of the door and two in the yard; a patrol of six walks round the
-    # L, a block or two out from its walls (the yard's plate, and the world's ground beside the plate: its terrain adaptation levels it);
-    # on every floor three sit at desks (a chair is a quartz or dark oak stair with nothing over it) and one stands in the hall.
-    {"id": "ccg_building", "source": "ccg_building.schem", "map": 6, "crop_x": None, "kind": "ccg_hq", "houses": 0, "agents": 0,
-     "ring": (0, 0), "loot_every": 0, "ground": 0, "top": 58, "storey": 8, "floors": 7, "seats": 3,
-     "posts": [(7, 37, 0.0), (12, 37, 0.0), (22, 16, -90.0), (33, 16, 180.0)],
-     "loop": [(0, 37), (0, 26), (0, 14), (0, 2), (0, -2), (9, -2), (18, -2), (19, 8), (19, 19), (29, 19), (40, 19), (40, 28), (40, 37),
-              (30, 38), (20, 38)],
-     "patrol": [(1, 37), (1, 26), (1, 14), (19, 8), (29, 19), (30, 37)], "hall": (13, 28),
-     # 4.1.5: the General, in the north-west office of the top floor (the owner's x, floor y, z).
-     "rooms": {"hexkagune:general": (9, 49, 5)}},
+    # 4.1.51 (the owner: "New CCG schematic, map it out with sitting areas, offices and etc."; then "I'll get you a new one fully
+    # furnished"): their furnished tower (art/exploration/CCG.schematic, MCEdit Alpha; tools/ccg_tower.py writes it as build/ccg/
+    # ccg_tower.schem, its signs the CCG's, its paintings and item frames kept), 31 x 65 x 46: a lobby (feet y 4: the reception counter,
+    # the restaurant, its kitchen) and nine office floors over it, one every 6 blocks (feet y 10 .. 58), a lift between them (server/
+    # CcgLift). Its ground y 3 (a pavement round it); its door the gap in its north front (x 15). Two guards outside the door and two either
+    # side of the lift in the lobby; the two receptionists at the counter; a patrol of six round it (the walk between its hedges and its
+    # glass, then the world's ground two blocks out, which its terrain adaptation levels); on every office floor three at their desks
+    # (their chairs: a stair with nothing over it, a desk or a table before it) and one by the lift; the restaurant's staff, the mod's
+    # humans where its four villagers stood (the owner chose "Restaurant staff humans"), keeping indoors; the General in the top floor's
+    # boss's office (the one with "Rule 1: Boss is always right" over its chair). Its map is 11: the old building's people (map 6) keep
+    # theirs (village/RetiredSites).
+    {"id": "ccg_building", "source": "ccg_tower", "map": 11, "crop_x": None, "kind": "ccg_hq", "houses": 0, "agents": 0,
+     "ring": (0, 0), "loot_every": 0, "ground": 3, "storey": 6, "floors": 10, "seats": 3, "hanging": True,
+     "posts": [(14, 1, 180.0), (16, 1, 180.0)],
+     "lobby_posts": [(14, 12, 180.0), (16, 12, 180.0)],
+     "lobby_seats": [(21, 5), (21, 7)],
+     "loop": [(-2, -2), (8, -2), (15, -2), (22, -2), (32, -2), (32, 8), (32, 18), (32, 28), (32, 38), (32, 47), (22, 47), (15, 47),
+              (8, 47), (-2, 47), (-2, 38), (-2, 28), (-2, 18), (-2, 8)],
+     "patrol": [(2, 9), (2, 24), (2, 39), (28, 9), (28, 24), (28, 39)], "hall": (12, 10),
+     # The General, standing before the boss's desk on the top floor (x, feet y, z); no investigator takes a chair of that office.
+     "rooms": {"hexkagune:general": (23, 58, 25)}, "boss_office": (22, 24, 26, 31)},
 ]
 
 # 4.1.35 (the owner: "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City""): the city, 544 x 544,
@@ -255,8 +262,29 @@ def block_entity(kind, inner, loot, seed):
     return L.compound(**out)
 
 
+def load_hanging(path):
+    """4.1.51: the things hung on its walls (paintings, item frames) a Sponge v3 schematic keeps in its Entities: [(their block, nbt)]."""
+    root = {k: val(v) for k, v in val(L.read(path)).items()}
+    if "Schematic" in root:
+        root = {k: val(v) for k, v in root["Schematic"].items()}
+    out = []
+    for t in val(root.get("Entities", (L.COMPOUND, [])))[1]:
+        t = {k: v for k, v in val(t).items()}
+        x, y, z = (int(math.floor(c)) for c in val(t["Pos"])[1])
+        out.append(((x, y, z), dict(id=t["Id"], **{k: v for k, v in val(t["Data"]).items()})))
+    return out
+
+
 def build(site, registry):
-    w, h, d, by_index, ids, raw_entities = load(ART / site["source"])
+    staff = []
+    path = ART / site["source"]
+    if site["source"] == "ccg_tower":
+        # 4.1.51: the CCG's tower, written from the owner's Alpha schematic first; where its restaurant's staff stand.
+        import ccg_tower
+        staff = ccg_tower.make()
+        path = ccg_tower.PATH
+    w, h, d, by_index, ids, raw_entities = load(path)
+    hanging = load_hanging(path) if site.get("hanging") else []
     if "top" in site:
         # 4.1.4: the layers over its roof (empty in the owner's file) left off: the file's layers are y, then z, then x.
         assert all(by_index[i].split("[")[0] in AIR for i in ids[site["top"] * d * w:]), site["id"]
@@ -363,7 +391,7 @@ def build(site, registry):
             spot = spread(streets, [p[1] for p in people], middle, hi + 8)
         people.append(("hexkagune:ccg_investigator", spot, -1, {}))
     if site["kind"] == "ccg_hq":
-        people += headquarters(site, cells, stands, width, d, h, street)
+        people += headquarters(site, cells, stands, width, d, h, street, staff)
         route = [(x, street, z) for x, z in site["loop"]]
     elif site["kind"] == "aogiri" and "posts" in site:
         people += mansion(site, cells, stands, roofed, streets, placed, width, d, h, street, middle)
@@ -381,7 +409,7 @@ def build(site, registry):
 
     rng = random.Random(site["id"])
     loot = LOOT.get(site["kind"])
-    tiles = write_tiles(site, out, entities, people, middle, width, d, h, loot, rng)
+    tiles = write_tiles(site, out, entities, people, middle, width, d, h, loot, rng, hanging)
     return {"site": site, "width": width, "depth": d, "height": h, "ground": ground, "middle": middle, "streets": streets, "route": route,
             "homes": homes, "tiles": tiles, "people": people, "blocks": sum(1 for c in out.values()), "cells": cells, "top": top}
 
@@ -480,56 +508,92 @@ def mansion(site, cells, stands, roofed, streets, placed, width, d, h, street, m
     return people
 
 
-def headquarters(site, cells, stands, width, d, h, street):
+def headquarters(site, cells, stands, width, d, h, street, staff=()):
     """4.1.4: the CCG building's people: the guards at their posts (each looking the way given), the patrol on its loop, and on every floor
-    investigators at desks (HexCcgSeat: the chair's block is where they are placed; HexCcgYaw the way they sit facing) and one in the hall."""
+    investigators at desks (HexCcgSeat: the chair's block is where they are placed; HexCcgYaw the way they sit facing) and one by the lift.
+    4.1.51: the new tower's: the lobby's two at the lift and two at the reception counter, its restaurant's staff (the mod's humans), and
+    the General in the top floor's boss's office (none of his chairs taken)."""
     people, taken = [], []
 
     def agent(spot, **tags):
+        assert spot is not None and spot not in taken, (spot, tags)
         people.append(("hexkagune:ccg_investigator", spot, -1, tags))
         taken.append(spot)
 
+    def exact(x, y, z):
+        spot = standing(stands, x, y, z, 0)
+        assert spot == (x, y, z), ("no room to stand", (x, y, z), spot)
+        return spot
+
     for kind, (x, y, z) in site.get("rooms", {}).items():
-        spot = standing(stands, x, y, z, 3)
-        assert spot is not None and spot[1] == y, kind
+        spot = exact(x, y, z)
         people.append((kind, spot, -1, {}))
         taken.append(spot)
-    for x, z, yaw in site["posts"]:
-        agent(standing(stands, x, street, z), HexCcgPost=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, int(yaw)))
+    for x, z, yaw in site["posts"] + site.get("lobby_posts", []):
+        agent(exact(x, street, z), HexCcgPost=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, int(yaw)))
     for x, z in site["patrol"]:
-        # Placed on the plate, out of doors, by the loop (some of the loop's own spots lie on the world's ground beside the plate).
-        agent(standing(stands, x, street, z))
-    def back(p):
-        """Nothing over a seat, or an office chair's back: a trapdoor stood open against its tall side."""
-        c = cells.get(p)
-        return c is None or c[0].endswith("_trapdoor") and c[1].get("open") == "true"
+        # Placed out of doors, by the loop (the loop itself goes round on the world's ground beside the building).
+        agent(exact(x, street, z))
 
     # The way someone sat on a stair looks: away from its tall side (south is yaw 0, west 90, north 180, east -90).
     looks = {"north": 0.0, "east": 90.0, "south": 180.0, "west": -90.0}
-    for floor in range(site["floors"]):
+    step = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}
+    table = ("_planks", "_slab", "_carpet", "_fence", "minecraft:piston_head")
+
+    def chair(x, y, z):
+        """The way one sits on the stair at (x, y, z), or None: a stair's low step with nothing over it, room before it (open floor, a
+        carpet, a desk or a table: the legs go under it), a floor under it."""
+        c = cells.get((x, y, z))
+        if c is None or not c[0].endswith("_stairs") or c[1].get("half") != "bottom" or c[1].get("shape") != "straight":
+            return None
+        over = cells.get((x, y + 1, z))
+        if over is not None and not (over[0].endswith("_trapdoor") and over[1].get("open") == "true") or (x, y + 2, z) in cells:
+            return None
+        f = step[c[1]["facing"]]
+        front = cells.get((x - f[0], y, z - f[1]))
+        if front is not None and not any(front[0].endswith(t) for t in table):
+            return None
+        if (x, y - 1, z) not in cells:
+            return None
+        return looks[c[1]["facing"]]
+
+    for x, z in site.get("lobby_seats", []):
+        yaw = chair(x, street, z)
+        assert yaw is not None, ("not a chair", (x, street, z))
+        agent((x, street, z), HexCcgSeat=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, int(yaw)))
+    boss = site.get("boss_office")
+    for floor in range(1, site["floors"]):
         y = street + floor * site["storey"]
         seats = []
-        for (x, yy, z), (n, props) in cells.items():
-            if yy == y and n in ("minecraft:smooth_quartz_stairs", "minecraft:dark_oak_stairs") and props.get("half") == "bottom" \
-                    and props.get("shape") == "straight" and back((x, y + 1, z)) and (x, y + 2, z) not in cells:
-                f = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}[props["facing"]]
-                # Room for the knees: nothing solid before the seat at its own height but a table's leg (a fence) under its top.
-                front = cells.get((x - f[0], y, z - f[1]))
-                if front is None or front[0].endswith("_fence"):
-                    seats.append(((x, y, z), looks[props["facing"]]))
-        # An office chair first (dark oak: the north-west offices'), then each as far as can be from those taken.
-        seats.sort(key=lambda s: (cells[s[0]][0] != "minecraft:dark_oak_stairs", s[0][2], s[0][0]))
-        chosen = []
-        for _ in range(min(site["seats"], len(seats))):
-            free = [s for s in seats if s not in chosen]
-            pick = free[0] if not chosen else max(free, key=lambda s: min((s[0][0] - c[0][0]) ** 2 + (s[0][2] - c[0][2]) ** 2 for c in chosen))
-            chosen.append(pick)
-        for spot, yaw in chosen:
+        for (x, yy, z) in sorted(cells):
+            if yy != y:
+                continue
+            yaw = chair(x, y, z)
+            if yaw is None:
+                continue
+            if boss and floor == site["floors"] - 1 and boss[0] <= x <= boss[2] and boss[1] <= z <= boss[3]:
+                continue
+            # A desk's chair first: a stair with a desk (planks) one or two blocks before it.
+            f = step[cells[(x, y, z)][1]["facing"]]
+            desk = any(cells.get((x - k * f[0], y, z - k * f[1]), ("", {}))[0].endswith("_planks") for k in (1, 2))
+            seats.append(((x, y, z), yaw, desk))
+        desks = [s for s in seats if s[2]] or seats
+        # Each floor its own three (the floors are alike): the first by the floor's number, then each as far as can be from those taken.
+        chosen = [desks[(floor * 7) % len(desks)]]
+        while len(chosen) < min(site["seats"], len(desks)):
+            free = [s for s in desks if s not in chosen]
+            chosen.append(max(free, key=lambda s: min((s[0][0] - c[0][0]) ** 2 + (s[0][2] - c[0][2]) ** 2 for c in chosen)))
+        for spot, yaw, _ in chosen:
             agent(spot, HexCcgSeat=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, int(yaw)))
-        # The hall: by the stairs, looking down it (south).
-        spot = standing(stands, site["hall"][0], y, site["hall"][1], 4)
-        if spot is not None and spot[1] == y:
-            agent(spot, HexCcgPost=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, 0))
+        # By the lift, looking down the hall (south).
+        agent(exact(site["hall"][0], y, site["hall"][1]), HexCcgPost=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, 0))
+    # 4.1.51 (the owner chose "Restaurant staff humans"): where the restaurant's four villagers stood, the mod's humans (each its own
+    # home number: its own look and name); they keep indoors (server/HumanBrain, by the building's map).
+    for k, (x, y, z) in enumerate(staff):
+        spot = standing(stands, x, y, z, 1)
+        assert spot is not None and spot[1] == y and spot not in taken, ("the staff's spot", (x, y, z), spot)
+        people.append(("hexkagune:human", spot, k, {}))
+        taken.append(spot)
     return people
 
 
@@ -577,7 +641,7 @@ def splits(n):
     return [round(i * n / count) for i in range(count + 1)]
 
 
-def write_tiles(site, out, entities, people, middle, width, depth, height, loot, rng):
+def write_tiles(site, out, entities, people, middle, width, depth, height, loot, rng, hanging=()):
     xs, zs = splits(width), splits(depth)
     folder = DATA / "structures" / site["id"]
     folder.mkdir(parents=True, exist_ok=True)
@@ -615,6 +679,12 @@ def write_tiles(site, out, entities, people, middle, width, depth, height, loot,
         nbt = L.compound(id=L.s(kind), PersistenceRequired=L.Tag(L.BYTE, 1), Rotation=L.floats(0.0, 0.0), Motion=L.doubles(0.0, 0.0, 0.0),
                          OnGround=L.Tag(L.BYTE, 1), ForgeData=L.compound(**forge))
         ents[key].append({"blockPos": L.ints(lx, py, lz), "pos": L.doubles(lx + 0.5, float(py), lz + 0.5), "nbt": nbt})
+    # 4.1.51: what hangs on its walls, each at its block's middle (the game hangs a painting or a frame in the block its position is in).
+    for (hx, hy, hz), nbt in hanging:
+        key = (tile_of(hx, xs), tile_of(hz, zs))
+        lx, lz = hx - xs[key[0]], hz - zs[key[1]]
+        tag = dict(nbt, TileX=L.Tag(L.INT, lx), TileY=L.Tag(L.INT, hy), TileZ=L.Tag(L.INT, lz))
+        ents[key].append({"blockPos": L.ints(lx, hy, lz), "pos": L.doubles(lx + 0.5, hy + 0.5, lz + 0.5), "nbt": L.compound(**tag)})
     for (i, j), cellmap in sorted(pieces.items()):
         palette, index, blocks = [], {}, []
         for (x, y, z), (bn, props) in sorted(cellmap.items(), key=lambda kv: (kv[0][1], kv[0][2], kv[0][0])):

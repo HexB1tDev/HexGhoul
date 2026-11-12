@@ -680,6 +680,14 @@ public final class HumanBrain {
         }
         mind.nextWander = now + com.hex.kagune.control.village.VillageRules.STROLL_EVERY
             + human.m_217043_().m_188503_(com.hex.kagune.control.village.VillageRules.STROLL_MORE);
+        // 4.1.51 (the owner chose "Restaurant staff humans"): the CCG tower's restaurant staff stay in it: a few steps about their own spot
+        // (where they were placed), never out to the streets.
+        if (place.indoors()) {
+            int reach = com.hex.kagune.control.village.VillageRules.STAFF_REACH;
+            human.m_21573_().m_26519_(place.homeX() + 0.5 + human.m_217043_().m_188503_(2 * reach + 1) - reach, place.homeY(),
+                place.homeZ() + 0.5 + human.m_217043_().m_188503_(2 * reach + 1) - reach, com.hex.kagune.control.village.VillageRules.STROLL);
+            return;
+        }
         int[][] streets = place.streets();
         double reach = com.hex.kagune.control.village.VillageRules.STROLL_REACH;
         for (int tries = 0; tries < 12; tries++) {

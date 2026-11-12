@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.51 (HexGhoul): the new CCG tower (testing)
+
+See `.github/release-notes-4.1.51.md`. The owner's furnished tower (`art/exploration/CCG.schematic`, MCEdit Alpha, 31 x 65 x 46) is the CCG building: `tools/ccg_tower.py` (their ids, signs renamed to the CCG's, banners, pots, paintings and item frames as 1.20.1 has them, `build/ccg/ccg_tower.schem`), `tools/exploration_structures.py` (site `ccg_building`, map 11, its hanging things written into the tile; `headquarters`: door and lift guards, receptionists, three at desks and one by the lift a floor, a patrol of six, the restaurant's staff humans, the General in the boss's office); the old building's map 6 in `village/RetiredSites`; `server/CcgLift` + `village/LiftRules` (a cabin's button: one floor up, from the top to the lobby; only in the world's CCG building); `HumanBrain`/`VillagePlace.indoors` (the staff keep indoors); `tools/interior_render.py` (shapes, light levels, cutaways, eye views); `NpcTests.ccgBuilding`. Protocol 123.
+
 ## 4.1.50 (HexGhoul): joining gangs (testing)
 
 See `.github/release-notes-4.1.50.md`. `GangPlayer` (pure: member, banned, Aogiri's 5 CCG, the Clowns' joke, 3 Gas Masks and a quinque case, banned past 10 own kills; `named`: emblem, space, coloured name), `GangServer` (`PlayerPersisted`, `LivingDeathEvent` counts, `PlayerEvent.NameFormat`, `S2CGangName` message 57 to every client, the "gang" option on Ayato's and Roma's first page via `EtoServer.withGang`), `GhoulNpcBrain.wanted`/`hurt` (its own never, the banned on sight, its own's foes); emblems `tools/gang_emblems.py` into `assets/minecraft/font/default.json` (U+E000, U+E001); Forge's NameFormat and `Player.refreshDisplayName` allowlisted; `NpcTests.joining`. Protocol 123.

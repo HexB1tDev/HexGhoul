@@ -26,6 +26,12 @@ final class VillagePlace {
             return this.map >= 3 ? com.hex.kagune.control.village.SiteMaps.byMap(this.map) : null;
         }
 
+        /** 4.1.51: the CCG tower's (its restaurant's staff, the mod's humans, keep to it: a few steps about their own spot). */
+        boolean indoors() {
+            com.hex.kagune.control.village.SiteMaps.Site site = this.site();
+            return site != null && site.id().equals("ccg_building");
+        }
+
         /** 2.0.1: its village's streets, patrol and perimeter (the new village's; a Brick Village's, built before 2.0.1, its own). */
         int[][] streets() {
             com.hex.kagune.control.village.SiteMaps.Site site = this.site();

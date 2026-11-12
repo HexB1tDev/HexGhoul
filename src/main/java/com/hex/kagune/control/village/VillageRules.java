@@ -16,6 +16,8 @@ public final class VillageRules {
     public static final int STROLL_MORE = 200;
     /** How far (blocks) from where it stands a human picks the next street spot to walk to. */
     public static final double STROLL_REACH = 22.0;
+    /** 4.1.51: how far (blocks, each way) the CCG tower's restaurant staff stroll from their own spot. */
+    public static final int STAFF_REACH = 3;
     /** How near (blocks) a waypoint counts as reached. */
     public static final double REACHED = 1.8;
     /** Walking paces (a mob's movement modifier): a human's stroll, its way home, an investigator's patrol. */

@@ -2732,14 +2732,18 @@ public final class NpcTests {
 
     static void ccgBuilding() {
         com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of("ccg_building");
-        check(site != null && site.width() == 39 && site.depth() == 39 && site.height() == 58 && site.ground() == 0 && site.map() == 6
-            && site.across() == 1 && site.down() == 1 && com.hex.kagune.control.village.SiteMaps.byMap(6) == site,
-            "the building is the owner's (39 x 39, 58 tall: the empty layers over its roof left off), one tile, its own map");
+        check(site != null && site.width() == 31 && site.depth() == 46 && site.height() == 65 && site.ground() == 3 && site.map() == 11
+            && site.across() == 1 && site.down() == 1 && com.hex.kagune.control.village.SiteMaps.byMap(11) == site,
+            "4.1.51: the building is the owner's furnished tower (31 x 46, 65 tall, its ground 3), one tile, its own map (11)");
+        com.hex.kagune.control.village.SiteMaps.Site old = com.hex.kagune.control.village.SiteMaps.byMap(6);
+        check(old != null && old != site && "ccg_building".equals(old.id()) && old.width() == 39 && old.depth() == 39 && old.route().length == 15
+            && !java.util.Arrays.asList(com.hex.kagune.control.village.SiteMaps.ALL).contains(old),
+            "4.1.51: the old building's map (6) is kept for its people in a world made before (their patrol), never built again");
         check(com.hex.kagune.control.village.SiteMaps.ALL.length == 6 && com.hex.kagune.control.village.SiteMaps.of("aogiri_hideout").map() == 5
             && com.hex.kagune.control.village.SiteMaps.of("village_1") == null && com.hex.kagune.control.village.SiteMaps.of("village_2") == null
             && com.hex.kagune.control.village.SiteMaps.byMap(3) != null && com.hex.kagune.control.village.SiteMaps.byMap(4) != null,
             "the hideout keeps its map; the two towns are gone (4.1.36), their maps kept for an older world's people (4.1.40)");
-        // Its patrol: a loop round the L, a block or two out from its walls, all of it within its perimeter.
+        // Its patrol: a loop round the tower, two blocks out from its walls (the world's ground, levelled by its terrain adaptation).
         int[][] route = site.route();
         boolean round = route.length >= 12;
         int west = 0;
@@ -2750,12 +2754,12 @@ public final class NpcTests {
             int[] a = route[i];
             int[] b = route[(i + 1) % route.length];
             round &= Math.hypot(a[0] - b[0], a[2] - b[2]) <= 24.0 && a[1] == 0 && Math.abs(a[0]) <= site.perimeter() && Math.abs(a[2]) <= site.perimeter();
-            west += a[0] <= -19 ? 1 : 0;
-            east += a[0] >= 19 ? 1 : 0;
-            north += a[2] <= -19 ? 1 : 0;
-            south += a[2] >= 17 ? 1 : 0;
+            west += a[0] <= -17 ? 1 : 0;
+            east += a[0] >= 17 ? 1 : 0;
+            north += a[2] <= -25 ? 1 : 0;
+            south += a[2] >= 24 ? 1 : 0;
         }
-        check(round && west >= 3 && east >= 2 && north >= 2 && south >= 3, "its patrol goes round it: stops on every side, none far from the next, at street level");
+        check(round && west >= 3 && east >= 3 && north >= 3 && south >= 3, "its patrol goes round it: stops on every side, none far from the next, at street level");
         // Its offers: the game's own for its set, none near a spot of the mansion's; never the hideout's own offers.
         long[] seeds = {0L, 1L, -7L, 123456789L, 8675309L, Long.MIN_VALUE + 5L, 4242424242L};
         int fewest = Integer.MAX_VALUE;
@@ -2782,8 +2786,8 @@ public final class NpcTests {
                     + " chunks of a spot of the mansion's");
         }
         check(fewest >= 6, "every world has several spots to try (the fewest of these seeds: " + fewest + ")");
-        // 12 chunks: the mansion and the towns reach 136 blocks from their middle, the building and its patrol 28.
-        check(com.hex.kagune.control.village.DryLand.CCG_APART * 16 >= 136 + 28 + 16 && com.hex.kagune.control.village.DryLand.CCG_SALT != com.hex.kagune.control.village.DryLand.SALT
+        // 12 chunks: the mansion and the towns reach 136 blocks from their middle, the tower and its patrol 27 (4.1.51).
+        check(site.perimeter() <= 28 && com.hex.kagune.control.village.DryLand.CCG_APART * 16 >= 136 + 28 + 16 && com.hex.kagune.control.village.DryLand.CCG_SALT != com.hex.kagune.control.village.DryLand.SALT
             && com.hex.kagune.control.village.DryLand.CCG_SALT != com.hex.kagune.control.village.DryLand.CITY_SALT, "far enough that they never touch; its own salt");
         check(com.hex.kagune.control.village.DryLand.near(5L, 100, 100, 1000, 40, 20, 77) && !com.hex.kagune.control.village.DryLand.near(5L, 100, 100, 0, 40, 20, 77),
             "near: anything within a great reach, nothing within none");
@@ -2813,7 +2817,7 @@ public final class NpcTests {
                 template = (java.util.Map<String, Object>)nbt(in, 10);
             }
             List<Object> size = (List<Object>)template.get("size");
-            check(size.equals(List.of(39, 58, 39)), "the template's size is the site's " + size);
+            check(size.equals(List.of(31, 65, 46)), "the template's size is the site's " + size);
             List<Object> palette = (List<Object>)template.get("palette");
             java.util.Map<List<Object>, String> blocks = new java.util.HashMap<>();
             for (Object block : (List<Object>)template.get("blocks")) {
@@ -2824,7 +2828,12 @@ public final class NpcTests {
             int posts = 0;
             int walkers = 0;
             int generals = 0;
+            int staff = 0;
+            int paintings = 0;
+            int frames = 0;
             boolean sound = true;
+            boolean hung = true;
+            int street = site.ground() + 1;
             java.util.Set<Integer> seatFloors = new java.util.HashSet<>();
             java.util.Set<Integer> postFloors = new java.util.HashSet<>();
             java.util.Set<List<Object>> spots = new java.util.HashSet<>();
@@ -2832,64 +2841,108 @@ public final class NpcTests {
             for (Object entity : entities) {
                 java.util.Map<String, Object> e = (java.util.Map<String, Object>)entity;
                 java.util.Map<String, Object> tag = (java.util.Map<String, Object>)e.get("nbt");
-                java.util.Map<String, Object> forge = (java.util.Map<String, Object>)tag.get("ForgeData");
-                java.util.Map<String, Object> village = (java.util.Map<String, Object>)forge.get("HexVillage");
                 List<Object> at = (List<Object>)e.get("blockPos");
                 int x = (Integer)at.get(0);
                 int y = (Integer)at.get(1);
                 int z = (Integer)at.get(2);
-                if ("hexkagune:general".equals(tag.get("id"))) {
-                    // 4.1.5: the General, in his office on the top floor.
-                    generals++;
-                    sound &= y == 49 && spots.add(at) && blocks.get(at) == null && blocks.get(List.of(x, y - 1, z)) != null
-                        && !forge.containsKey(com.hex.kagune.control.npc.HqRules.SEAT) && !forge.containsKey(com.hex.kagune.control.npc.HqRules.POST);
+                if ("minecraft:painting".equals(tag.get("id")) || "minecraft:item_frame".equals(tag.get("id"))) {
+                    // 4.1.51: the owner's paintings and item frames, each in the block it hung in (its position that block's middle), on
+                    // a wall (a solid block behind it).
+                    List<Object> pos = (List<Object>)e.get("pos");
+                    boolean painting = "minecraft:painting".equals(tag.get("id"));
+                    paintings += painting ? 1 : 0;
+                    frames += painting ? 0 : 1;
+                    int face = ((Number)tag.get(painting ? "facing" : "Facing")).intValue();
+                    // A painting's facing is 2D (0 south, 1 west, 2 north, 3 east), a frame's 3D (2 north, 3 south, 4 west, 5 east).
+                    int[] back = painting ? new int[][] {{0, -1}, {1, 0}, {0, 1}, {-1, 0}}[face]
+                        : face == 2 ? new int[] {0, 1} : face == 3 ? new int[] {0, -1} : face == 4 ? new int[] {1, 0} : new int[] {-1, 0};
+                    String wall = blocks.get(List.of(x + back[0], y, z + back[1]));
+                    hung &= ((Number)pos.get(0)).doubleValue() == x + 0.5 && ((Number)pos.get(1)).doubleValue() == y + 0.5
+                        && ((Number)pos.get(2)).doubleValue() == z + 0.5 && wall != null && !"minecraft:air".equals(wall)
+                        && (painting ? tag.get("variant") != null : tag.get("Item") != null) && !tag.containsKey("ForgeData");
                     continue;
                 }
-                sound &= "hexkagune:ccg_investigator".equals(tag.get("id")) && Byte.valueOf((byte)1).equals(tag.get("PersistenceRequired"))
-                    && Integer.valueOf(6).equals(village.get("Map")) && spots.add(at)
-                    && (Integer)village.get("CentreX") == site.middleX() - x && (Integer)village.get("CentreZ") == site.middleZ() - z
-                    && (Integer)village.get("CentreY") == 1 - y;
+                java.util.Map<String, Object> forge = (java.util.Map<String, Object>)tag.get("ForgeData");
+                java.util.Map<String, Object> village = (java.util.Map<String, Object>)forge.get("HexVillage");
                 String here = blocks.get(at);
                 String over = blocks.get(List.of(x, y + 1, z));
                 String under = blocks.get(List.of(x, y - 1, z));
+                boolean free = (here == null || "minecraft:air".equals(here) || here.endsWith("_carpet")) && (over == null || "minecraft:air".equals(over))
+                    && under != null && !"minecraft:air".equals(under);
+                if ("hexkagune:general".equals(tag.get("id"))) {
+                    // 4.1.5: the General; 4.1.51: in the top floor's boss's office.
+                    generals++;
+                    sound &= y == street + 9 * 6 && spots.add(at) && free
+                        && !forge.containsKey(com.hex.kagune.control.npc.HqRules.SEAT) && !forge.containsKey(com.hex.kagune.control.npc.HqRules.POST);
+                    continue;
+                }
+                sound &= Integer.valueOf(11).equals(village.get("Map")) && spots.add(at) && Byte.valueOf((byte)1).equals(tag.get("PersistenceRequired"))
+                    && (Integer)village.get("CentreX") == site.middleX() - x && (Integer)village.get("CentreZ") == site.middleZ() - z
+                    && (Integer)village.get("CentreY") == street - y;
+                if ("hexkagune:human".equals(tag.get("id"))) {
+                    // 4.1.51 (the owner chose "Restaurant staff humans"): in the lobby, where its villagers stood, each its own home.
+                    staff++;
+                    sound &= y == street && free && (Integer)village.get("Home") >= 0 && !forge.containsKey(com.hex.kagune.control.npc.HqRules.SEAT);
+                    continue;
+                }
+                sound &= "hexkagune:ccg_investigator".equals(tag.get("id"));
                 boolean seat = forge.containsKey(com.hex.kagune.control.npc.HqRules.SEAT);
                 boolean post = forge.containsKey(com.hex.kagune.control.npc.HqRules.POST);
                 if (seat) {
                     seats++;
-                    seatFloors.add((y - 1) / 8);
+                    seatFloors.add((y - street) / 6);
                     int yaw = (Integer)forge.get(com.hex.kagune.control.npc.HqRules.YAW);
-                    // On a chair (a stair) with nothing over it but an office chair's back, a floor's own height; the block it looks to free
-                    // at knee height or a table's leg.
+                    // On a chair (a stair) with nothing over it, a floor's own height; before it open floor, a carpet, or a desk or a table
+                    // the legs go under.
                     double[] looks = {-Math.sin(Math.toRadians(yaw)), Math.cos(Math.toRadians(yaw))};
                     String front = blocks.get(List.of(x + (int)Math.round(looks[0]), y, z + (int)Math.round(looks[1])));
-                    sound &= !post && here != null && here.endsWith("_stairs") && (over == null || over.endsWith("_trapdoor")) && (y - 1) % 8 == 0
-                        && yaw % 90 == 0 && (front == null || "minecraft:air".equals(front) || front.endsWith("_fence"))
+                    sound &= !post && here != null && here.endsWith("_stairs") && (over == null || over.endsWith("_trapdoor")) && (y - street) % 6 == 0
+                        && yaw % 90 == 0 && (front == null || "minecraft:air".equals(front) || front.endsWith("_carpet") || front.endsWith("_fence")
+                            || front.endsWith("_planks") || front.endsWith("_slab") || "minecraft:piston_head".equals(front))
                         && blocks.get(List.of(x, y + 2, z)) == null;
                 } else {
-                    sound &= (here == null || "minecraft:air".equals(here)) && (over == null || "minecraft:air".equals(over)) && under != null
-                        && !"minecraft:air".equals(under);
+                    sound &= free;
                     if (post) {
                         posts++;
-                        postFloors.add((y - 1) / 8);
+                        postFloors.add((y - street) / 6);
                         sound &= forge.containsKey(com.hex.kagune.control.npc.HqRules.YAW);
                     } else {
                         walkers++;
-                        sound &= y <= 2; // out of doors on the plate
+                        sound &= y == street; // out of doors, between its hedges and its glass
                     }
                 }
             }
-            check(sound, "every one of its people: an investigator of this building, kept, alone on its spot, a seat on a chair with room for its knees, "
+            check(sound, "every one of its people: of this building (its map), kept, alone on its spot, a seat on a chair with room for its knees, "
                 + "the rest with a floor under them and room to stand");
             check(generals == 1, "4.1.5: the General, once, on the top floor");
-            check(entities.size() == 39 && seats == 21 && posts == 11 && walkers == 6, "38 investigators: 21 at desks, 11 at posts (4 outside, 7 in the halls), "
-                + "6 on patrol (" + entities.size() + ", " + seats + ", " + posts + ", " + walkers + ")");
-            check(seatFloors.equals(java.util.Set.of(0, 1, 2, 3, 4, 5, 6)) && postFloors.equals(java.util.Set.of(0, 1, 2, 3, 4, 5, 6)),
-                "desks and a hall guard on every one of its seven floors");
-            int signs = 0;
-            for (String name : blocks.values()) {
-                signs += name.endsWith("_sign") ? 1 : 0;
+            check(seats == 29 && posts == 13 && walkers == 6 && staff == 4, "4.1.51: 48 investigators: 29 seated (the two receptionists, three on each "
+                + "office floor), 13 at posts (two at the door, two at the lift, one by the lift on each floor), 6 on patrol; the restaurant's "
+                + "4 staff (" + seats + ", " + posts + ", " + walkers + ", " + staff + ")");
+            java.util.Set<Integer> floors = new java.util.HashSet<>();
+            for (int f = 0; f < 10; f++) {
+                floors.add(f);
             }
-            check(signs == 164, "the owner's file's signs are all there (its builder's credit among them): " + signs);
+            check(seatFloors.equals(floors) && postFloors.equals(floors), "someone at a desk and someone on guard on every one of its ten floors");
+            check(hung && paintings == 26 && frames == 30 && entities.size() == 48 + 1 + 4 + 26 + 30,
+                "4.1.51: the owner's 26 paintings and 30 item frames, each on its wall (" + paintings + ", " + frames + ")");
+            int signs = 0;
+            int buttons = 0;
+            for (java.util.Map.Entry<List<Object>, String> block : blocks.entrySet()) {
+                signs += block.getValue().endsWith("_sign") ? 1 : 0;
+            }
+            for (int f = 0; f < 10; f++) {
+                buttons += "minecraft:stone_button".equals(blocks.get(List.of(16, street + 1 + f * com.hex.kagune.control.village.LiftRules.STOREY, 14))) ? 1 : 0;
+            }
+            check(signs == 145, "the owner's file's signs are all there: " + signs);
+            check(buttons == 10, "4.1.51: a lift button in every floor's cabin, one over the other, a storey apart: " + buttons);
+            check(com.hex.kagune.control.village.LiftRules.ride(1, 0) == 6 && com.hex.kagune.control.village.LiftRules.ride(8, 1) == 6
+                && com.hex.kagune.control.village.LiftRules.ride(0, 9) == -54 && com.hex.kagune.control.village.LiftRules.ride(0, 0) == 0
+                && com.hex.kagune.control.village.LiftRules.floor(0) == 1 && com.hex.kagune.control.village.LiftRules.floor(9) == 10
+                && com.hex.kagune.control.village.LiftRules.aboard(1.5, 1.5) && !com.hex.kagune.control.village.LiftRules.aboard(3.0, 0.0),
+                "4.1.51: the lift does what its signs say: one floor up, from the top back to the lobby; a lone button goes nowhere; ridden from its cabin");
+            String lift = read("src/main/java/com/hex/kagune/control/server/CcgLift.java");
+            check(lift.contains("PlaceClaims.claimed(\"ccg_building\")") && lift.contains("instanceof ButtonBlock") && lift.contains("LiftRules.aboard(dx, dz)")
+                && lift.contains("event.getHand() != InteractionHand.MAIN_HAND"), "the lift only in the world's CCG building, only for one in its cabin, once a press");
         } catch (java.io.IOException failure) {
             check(false, "read the building's files: " + failure);
         }

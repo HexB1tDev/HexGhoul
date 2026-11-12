@@ -10,6 +10,13 @@ public class PlayerInteractEvent extends PlayerEvent {
     public static class RightClickItem extends PlayerInteractEvent {
     }
 
+    /** 4.1.51: the block a player uses (the CCG tower's lift buttons). */
+    public net.minecraft.core.BlockPos getPos() { throw new UnsupportedOperationException(); }
+
+    /** 4.1.51: a block used (pressed, opened) with a hand. */
+    public static class RightClickBlock extends PlayerInteractEvent {
+    }
+
     public static class EntityInteract extends PlayerInteractEvent {
         public net.minecraft.world.entity.Entity getTarget() { throw new UnsupportedOperationException(); }
     }

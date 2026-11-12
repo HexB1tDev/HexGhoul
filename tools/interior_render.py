@@ -191,6 +191,9 @@ class Scene:
         if n == "ladder":
             return [{"north": box(0, 0, 13, 16, 16, 16), "south": box(0, 0, 0, 16, 16, 3), "west": box(13, 0, 0, 16, 16, 16),
                      "east": box(0, 0, 0, 3, 16, 16)}[f]]
+        if n.endswith("_wall_banner"):
+            return [{"north": box(0, 0, 14, 16, 16, 16), "south": box(0, 0, 0, 16, 16, 2), "west": box(14, 0, 0, 16, 16, 16),
+                     "east": box(0, 0, 0, 2, 16, 16)}[f]]
         if n.endswith("_wall_sign"):
             return [{"north": box(0, 4, 14, 16, 12, 16), "south": box(0, 4, 0, 16, 12, 2), "west": box(14, 4, 0, 16, 12, 16),
                      "east": box(0, 4, 0, 2, 12, 16)}[f]]
@@ -376,6 +379,7 @@ class Scene:
             elif n.endswith("_pane"):
                 clear[i] = 0.55
         bright_self = np.array([EMIT.get(n, 0) for n in self.states], np.float32)
+        is_solid = np.array([bool(i) and opaque(n) for i, n in enumerate(self.states)])
         shape = np.array(sub.shape)
         o = (origins - np.array(offset, np.float64)) * R
         dvec = dirs.astype(np.float64)
@@ -444,8 +448,11 @@ class Scene:
             face = np.where(ax == 1, np.where(stp < 0, 1.0, 0.5), np.where(ax == 2, 0.8, 0.6)).astype(np.float32)
             # Light of the block the ray came from (the face's own open side).
             pb = prev[sidx] // R + np.array(offset)
+            outside = np.any((pb < 0) | (pb >= np.array([self.w, self.h, self.d])), axis=1)
             pb = np.clip(pb, 0, np.array([self.w - 1, self.h - 1, self.d - 1]))
             lvl = light_day[pb[:, 0], pb[:, 1], pb[:, 2]]
+            # Past the scene, or a solid block the cut left out (a cutaway's wall tops): lit as open sky.
+            lvl = np.where(outside | is_solid[self.grid[pb[:, 0], pb[:, 1], pb[:, 2]]], 15.0, lvl)
             lvl = np.maximum(lvl, bright_self[vs])
             b = lvl / 15.0
             curve = b / (4.0 - 3.0 * b)
