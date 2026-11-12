@@ -103,6 +103,21 @@ public final class Outfits {
     }
 
     /** The mask {@code index} names among {@link #GENERIC_MASKS} (1-based: 0 is none), or null. */
+    /**
+     * 4.1.45: the model a mask {@code id} is drawn with: a gang's variant ("mask_clown_v3") its base's ("mask_clown"), in its own paint
+     * (textures/outfit/{@code id}.png); any other mask its own.
+     */
+    public static String geometryOf(String id) {
+        if (id == null) {
+            return null;
+        }
+        int v = id.lastIndexOf("_v");
+        if (id.startsWith("mask_") && v > 0 && v + 2 < id.length() && id.substring(v + 2).chars().allMatch(Character::isDigit)) {
+            return id.substring(0, v);
+        }
+        return id;
+    }
+
     public static String generic(int index) {
         return index >= 1 && index <= GENERIC_MASKS.size() ? GENERIC_MASKS.get(index - 1) : null;
     }

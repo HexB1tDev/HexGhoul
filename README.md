@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.45 (HexGhoul): roaming gangs, the Clowns and the Gas Masks (testing)
+
+See `.github/release-notes-4.1.45.md`. "roaming gangs, such as the clowns, 3-5 roaming ghouls walking together": `npc.Gang` (CLOWNS, GAS_MASKS; 3 to 5, each a different mask: `faces`), `NpcIdentity.gang` (bits 44-45, `ganged`), `GhoulNpcSpawner.gang` (`GANG_CHANCE` 0.3 of the night's ghouls), `GhoulNpcBrain` (`roam`: one leads, the rest keep up; `wanted`: only what goes for one of them; `hurt`: every mate within `GANG_CALL` 24 takes the grudge), masks drawn on the face (`OutfitLayer.faction`, variants on their base's model: `Outfits.geometryOf`), eight new paints (`tools/gang_masks.py`). Protocol 119.
+
 ## 4.1.44 (HexGhoul): the Aogiri hideout and the CCG building spawn again (testing)
 
 See `.github/release-notes-4.1.44.md`. "Im 99% sure the Aogiri place IS not spawning at all, same with the CCG building": the hideout judged by `DryLand.land` (`HIDEOUT_FLAT` 14, shallow water allowed), the CCG building the flattest of 25 spots, `offered` no longer required (a mod moving the spots made every place never). Protocol 118.

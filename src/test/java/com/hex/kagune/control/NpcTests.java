@@ -60,6 +60,7 @@ public final class NpcTests {
         cityFixes();
         worldgen();
         onePerWorld();
+        gangs();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -281,6 +282,150 @@ public final class NpcTests {
         check("mask_gas".equals(masked.maskItem()) && masked.tagName().endsWith("S-rank"), "a wild one's mask is generic: " + masked.maskItem());
         NpcIdentity member = masked.member(1, NpcRules.B);
         check(member.aogiri() && "mask_bin_brothers".equals(member.maskItem()) && member.tagName().contains("Aogiri"), "a member's mask is its faction's");
+    }
+
+    /**
+     * 4.1.45 (the owner: "roaming gangs, such as the clowns, 3-5 roaming ghouls walking together ... Clowns (all ghouls wear different clown
+     * masks (nothing else) and protect eachother) (Non-hostile unless provoked) ... Gas Masks"): three to five of them, each in a different
+     * mask of their gang's (its own paint on its base's model), kept in the identity every client is told; they start nothing and stand
+     * together.
+     */
+    static void gangs() {
+        com.hex.kagune.control.npc.Gang clowns = com.hex.kagune.control.npc.Gang.CLOWNS;
+        com.hex.kagune.control.npc.Gang gas = com.hex.kagune.control.npc.Gang.GAS_MASKS;
+        check(com.hex.kagune.control.npc.Gang.values().length == 3 && com.hex.kagune.control.npc.Gang.byOrdinal(0) == com.hex.kagune.control.npc.Gang.NONE
+            && com.hex.kagune.control.npc.Gang.byOrdinal(1) == clowns && com.hex.kagune.control.npc.Gang.byOrdinal(2) == gas
+            && com.hex.kagune.control.npc.Gang.byOrdinal(3) == com.hex.kagune.control.npc.Gang.NONE
+            && com.hex.kagune.control.npc.Gang.byOrdinal(-1) == com.hex.kagune.control.npc.Gang.NONE, "none, the clowns, the gas masks (by ordinal)");
+        check(com.hex.kagune.control.npc.Gang.roaming(0.0) == clowns && com.hex.kagune.control.npc.Gang.roaming(0.49) == clowns
+            && com.hex.kagune.control.npc.Gang.roaming(0.5) == gas && com.hex.kagune.control.npc.Gang.roaming(0.999) == gas, "either gang, even odds");
+        int[] sizes = new int[6];
+        java.util.Random random = new java.util.Random(4145);
+        for (int i = 0; i < 3000; i++) {
+            int size = com.hex.kagune.control.npc.Gang.size(random.nextDouble());
+            check(size >= 3 && size <= 5, "a gang of " + size);
+            sizes[Math.max(0, Math.min(5, size))]++;
+        }
+        check(sizes[3] > 800 && sizes[4] > 800 && sizes[5] > 800, "three, four and five about as often: " + java.util.Arrays.toString(sizes));
+        check(com.hex.kagune.control.npc.Gang.size(0.0) == 3 && com.hex.kagune.control.npc.Gang.size(0.9999) == 5
+            && com.hex.kagune.control.npc.Gang.size(1.0) == 5 && com.hex.kagune.control.npc.Gang.size(-1.0) == 3, "never fewer than three nor more than five");
+        int[] first = new int[6];
+        for (com.hex.kagune.control.npc.Gang gang : new com.hex.kagune.control.npc.Gang[] {clowns, gas}) {
+            check(gang.masks().size() == 5 && new java.util.HashSet<>(gang.masks()).size() == 5, gang.title() + ": five masks, all different");
+            check(gang.mask(0) == null && gang.mask(6) == null && gang.masks().get(0).equals(gang.mask(1)), gang.title() + ": its masks counted from one");
+            for (int i = 0; i < 400; i++) {
+                int size = com.hex.kagune.control.npc.Gang.size(random.nextDouble());
+                int[] faces = gang.faces(size, random::nextDouble);
+                java.util.Set<Integer> seen = new java.util.HashSet<>();
+                for (int face : faces) {
+                    check(face >= 1 && face <= 5, gang.title() + ": a mask of its own: " + face);
+                    seen.add(face);
+                }
+                check(faces.length == size && seen.size() == size, gang.title() + ": every one of " + size + " in a different mask " + java.util.Arrays.toString(faces));
+                if (gang == clowns) {
+                    first[faces[0]]++;
+                }
+            }
+        }
+        check(first[1] > 30 && first[2] > 30 && first[3] > 30 && first[4] > 30 && first[5] > 30, "any of them leads in any mask: " + java.util.Arrays.toString(first));
+        // Kept in the identity (every client is told which gang and which mask): bits 44 and 45, under the rank's flag.
+        for (com.hex.kagune.control.npc.Gang gang : com.hex.kagune.control.npc.Gang.values()) {
+            for (int mask = 0; mask <= 5; mask++) {
+                for (int tier = 0; tier < NpcIdentity.TIERS; tier++) {
+                    NpcIdentity who = new NpcIdentity(NpcIdentity.Kind.RINKAKU, NpcTemper.DRIFTER, tier, 13, 21, 0xBEEF, mask, false, gang.ordinal());
+                    check(NpcIdentity.unpack(who.pack()).equals(who) && NpcIdentity.unpack(who.pack()).gangOf() == gang, "a gang's own saved and read back: " + who);
+                }
+            }
+        }
+        NpcIdentity rolled = NpcIdentity.roll(300, new java.util.Random(7)::nextDouble);
+        NpcIdentity clown = rolled.ganged(clowns, 3);
+        check(clown.gangOf() == clowns && clown.temper() == NpcTemper.DRIFTER && !clown.aogiri() && clown.tier() == rolled.tier()
+            && clown.kind() == rolled.kind() && clown.skin() == rolled.skin() && clown.name() == rolled.name(), "one of a gang: the ghoul rolled, a drifter (starts nothing)");
+        check("mask_clown_v3".equals(clown.maskItem()) && clown.tagName().endsWith("-rank (Clowns)"), "its mask its gang's, its name tag says so: " + clown.tagName());
+        check("mask_gas".equals(rolled.ganged(gas, 1).maskItem()) && "mask_gas_v5".equals(rolled.ganged(gas, 5).maskItem())
+            && rolled.ganged(gas, 2).tagName().endsWith("(Gas Masks)"), "the gas masks' own");
+        check(clown.ranked(NpcRules.S).gangOf() == clowns && clown.ranked(NpcRules.S).mask() == 3, "ranked again, still of its gang");
+        check(new NpcIdentity(NpcIdentity.Kind.UKAKU, NpcTemper.FERAL, NpcRules.S, 1, 2, 3, 2, false).gang() == 0, "every one before is of no gang");
+        for (int old = 0; old < 3; old++) {
+            long packed = 1L | 2L << 1 | (long)old << 4 | 3L << 6 | 17L << 10 | 4242L << 18 | 1L << 35 | 1L << 44 | 1L << 45;
+            check(NpcIdentity.unpack(packed).gang() == 0, "an old save's ghoul (no rank flag) is of no gang, whatever its high bits");
+        }
+        check(new NpcIdentity(NpcIdentity.Kind.UKAKU, NpcTemper.DRIFTER, 1, 1, 1, 1, 1, false, 9).gang() == 3
+            && new NpcIdentity(NpcIdentity.Kind.UKAKU, NpcTemper.DRIFTER, 1, 1, 1, 1, 1, false, -2).gang() == 0, "its gang held to the two bits");
+        // Each mask its own paint on its base's model (drawn on the face: no item, nothing else on it).
+        check("mask_clown".equals(com.hex.kagune.control.outfit.Outfits.geometryOf("mask_clown_v3"))
+            && "mask_gas".equals(com.hex.kagune.control.outfit.Outfits.geometryOf("mask_gas_v5"))
+            && "mask_clown".equals(com.hex.kagune.control.outfit.Outfits.geometryOf("mask_clown"))
+            && "formal".equals(com.hex.kagune.control.outfit.Outfits.geometryOf("formal"))
+            && "mask_v".equals(com.hex.kagune.control.outfit.Outfits.geometryOf("mask_v"))
+            && "mask_clown_vx".equals(com.hex.kagune.control.outfit.Outfits.geometryOf("mask_clown_vx"))
+            && com.hex.kagune.control.outfit.Outfits.geometryOf(null) == null, "a variant drawn with its base's model, any other mask with its own");
+        java.util.Map<String, com.hex.kagune.control.outfit.OutfitModels.Model> models = java.util.Map.of();
+        try (java.io.InputStream in = java.nio.file.Files.newInputStream(java.nio.file.Path.of("src/main/resources" + com.hex.kagune.control.outfit.OutfitModels.RESOURCE))) {
+            models = com.hex.kagune.control.outfit.OutfitModels.read(in);
+        } catch (java.io.IOException failure) {
+            check(false, "read the outfit models: " + failure);
+        }
+        java.io.File paints = new java.io.File("src/main/resources/assets/hexkagune/textures/outfit");
+        for (com.hex.kagune.control.npc.Gang gang : new com.hex.kagune.control.npc.Gang[] {clowns, gas}) {
+            String base = gang.masks().get(0);
+            com.hex.kagune.control.outfit.OutfitModels.Model model = models.get(base);
+            check(model != null && !model.on(com.hex.kagune.control.outfit.OutfitModels.HEAD, -1).isEmpty(), base + ": its model, on the head");
+            java.util.Set<String> looks = new java.util.HashSet<>();
+            for (String mask : gang.masks()) {
+                check(!models.containsKey(mask) || mask.equals(base), mask + ": no model of its own (its base's)");
+                check(com.hex.kagune.control.outfit.Outfits.geometryOf(mask).equals(base), mask + ": drawn with " + base + "'s model");
+                try {
+                    java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(new java.io.File(paints, mask + ".png"));
+                    java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(new java.io.File(paints, base + ".png"));
+                    check(image != null && original != null && image.getWidth() == original.getWidth() && image.getHeight() == original.getHeight(),
+                        mask + ": its paint, the size of its base's");
+                    if (image == null || original == null) {
+                        continue;
+                    }
+                    StringBuilder print = new StringBuilder();
+                    int changed = 0;
+                    for (int y = 0; y < image.getHeight(); y++) {
+                        for (int x = 0; x < image.getWidth(); x++) {
+                            int a = image.getRGB(x, y);
+                            int b = original.getRGB(x, y);
+                            check((a >>> 24 == 0) == (b >>> 24 == 0), mask + ": clear where its base is clear (" + x + ", " + y + ")");
+                            changed += a != b ? 1 : 0;
+                            print.append(Integer.toHexString(a));
+                        }
+                    }
+                    check(mask.equals(base) || changed > 300, mask + ": a paint of its own (" + changed + " texels differ from " + base + "'s)");
+                    looks.add(print.toString());
+                } catch (java.io.IOException failure) {
+                    check(false, mask + ": read its paint: " + failure);
+                }
+            }
+            check(looks.size() == 5, gang.title() + ": five different looks");
+        }
+        try {
+            String brain = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java")));
+            String spawner = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcSpawner.java")));
+            String layer = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java")));
+            String models2 = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/outfit/OutfitModels.java")));
+            check(brain.contains("return body instanceof Mob mob && mob.m_5448_() instanceof GhoulNpc target && mates(npc, target)")
+                && brain.indexOf("if (who.gang() != 0) {\n            // 4.1.45") < brain.indexOf("if (who.aogiri()) {\n            // 4.0.0 (the owner: \"Its members must ONLY"),
+                "a gang goes for nothing but what goes for one of them (before any other rule: no prey, no player)");
+            check(brain.contains("if (who.aogiri() || who.gang() != 0) {\n            return false;"), "and its blows land only on what it is fighting");
+            check(brain.contains("mate.mind.grudges.put(attacker.m_20148_(), now + GANG_GRUDGE);") && brain.contains("holds = true;\n                grudge = GANG_GRUDGE;")
+                && brain.contains("if (!(attacker instanceof GhoulNpc kin && mates(npc, kin))) {"), "whoever hurts one of them has every one near on him");
+            check(brain.contains("if (who.gang() != 0 && roam(npc, mind, level, now)) {") && brain.contains("mind.wanderAt = Long.MAX_VALUE; // never its own way while it follows")
+                && brain.contains("&& a.getPersistentData().m_128451_(GANG_ID) == b.getPersistentData().m_128451_(GANG_ID);"),
+                "they walk together: one leads, the rest keep up (only with their own gang)");
+            check(brain.contains("boolean wild = mind.owner == null && !who.aogiri() && who.gang() == 0;"), "a gang neither prowls nor hides: it walks the night");
+            check(brain.contains("} else if (who.gang() == 0 && who.maskItem() != null) {"), "nothing put on a gang's own: its mask is drawn on its face");
+            check(spawner.contains("if (player.m_217043_().m_188500_() < GANG_CHANCE) {\n                    gang(level, player);")
+                && spawner.contains(".ganged(gang, faces[i]);") && spawner.contains("npc.getPersistentData().m_128405_(GhoulNpcBrain.GANG_ID, gang);")
+                && spawner.contains("if (!clear(level, x, z)) {\n                continue;"), "now and then a gang at night, where one ghoul could be, its number on each");
+            check(layer.contains("(view.identity().aogiri() || view.identity().gang() != 0) ? view.identity().maskItem() : null;")
+                && models2.contains("loaded.get(Outfits.geometryOf(id))"), "every client draws a gang's mask on its face");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
     }
 
     /**

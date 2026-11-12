@@ -47,7 +47,8 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
     static String faction(LivingEntity wearer) {
         if (wearer instanceof com.hex.kagune.control.npc.GhoulNpc) {
             com.hex.kagune.control.client.GhoulNpcClient.View view = com.hex.kagune.control.client.GhoulNpcClient.get(wearer.m_19879_());
-            return view != null && view.identity().aogiri() ? view.identity().maskItem() : null;
+            // 4.1.45: and a gang member's own (a variant of its gang's mask: Outfits.geometryOf, its own paint).
+            return view != null && (view.identity().aogiri() || view.identity().gang() != 0) ? view.identity().maskItem() : null;
         }
         if (wearer instanceof com.hex.kagune.control.npc.EtoNpc npc && npc.persona().mask() != null) {
             // 4.0.0: Noro never shows his face; Ayato's respirator goes on when his kagune comes out.

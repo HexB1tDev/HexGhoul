@@ -151,6 +151,57 @@ public final class GhoulNpcBrain {
         return new NpcIdentity(rolled.kind(), NpcTemper.PACK, rank, rolled.skin(), rolled.name(), rolled.seed(), mask, true);
     }
 
+    /** 4.1.45: a gang's own (which one in its saved data), how far one hurt calls the rest, how long they hold it against whoever did it. */
+    static final String GANG_ID = "HexGang";
+    static final double GANG_CALL = 24.0;
+    static final int GANG_GRUDGE = 2400;
+    /** 4.1.45: how far a gang's members look for each other, how close they keep to the one leading. */
+    static final double GANG_KEEP = 48.0;
+    static final double GANG_CLOSE = 4.5;
+
+    /** 4.1.45: true if {@code a} and {@code b} walk in the same gang (its kind and its number, kept in each one's saved data). */
+    static boolean mates(GhoulNpc a, GhoulNpc b) {
+        NpcIdentity x = a.identity();
+        NpcIdentity y = b.identity();
+        return x != null && y != null && x.gang() != 0 && x.gang() == y.gang()
+            && a.getPersistentData().m_128451_(GANG_ID) == b.getPersistentData().m_128451_(GANG_ID);
+    }
+
+    /**
+     * 4.1.45: walking with its gang: the one of them with the least id near leads (any of them, if the first is gone), wandering as any
+     * ghoul does; each other keeps up with it, a few blocks off it at its own side. True while it is keeping up (nothing else to do).
+     */
+    static boolean roam(GhoulNpc npc, Mind mind, ServerLevel level, long now) {
+        if (now % 10L != Math.floorMod(npc.m_19879_(), 10)) {
+            return mind.wanderAt == Long.MAX_VALUE; // a follower does nothing else between looks (no stopping for passers-by)
+        }
+        GhoulNpc leader = npc;
+        for (GhoulNpc other : level.m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(GANG_KEEP), o -> o != npc && o.m_6084_() && mates(npc, o))) {
+            if (other.m_20148_().compareTo(leader.m_20148_()) < 0) {
+                leader = other;
+            }
+        }
+        if (leader == npc) {
+            if (mind.wanderAt == Long.MAX_VALUE) {
+                mind.wanderAt = now; // it led no one a moment ago: its own way now
+            }
+            return false;
+        }
+        mind.wanderAt = Long.MAX_VALUE; // never its own way while it follows
+        double side = (Math.floorMod(npc.m_20148_().hashCode(), 360)) * Math.PI / 180.0;
+        double x = leader.m_20185_() + Math.cos(side) * 2.5;
+        double z = leader.m_20189_() + Math.sin(side) * 2.5;
+        double distance = Math.sqrt(npc.m_20280_(leader));
+        if (distance <= GANG_CLOSE && !leader.m_21573_().m_26571_()) {
+            npc.m_21573_().m_26519_(x, leader.m_20186_(), z, 0.75); // walking on together
+        } else if (distance > GANG_CLOSE) {
+            npc.m_21573_().m_26519_(x, leader.m_20186_(), z, distance > 12.0 ? 1.0 : 0.85);
+        } else {
+            npc.m_21573_().m_26573_();
+        }
+        return true;
+    }
+
     /** Where an ally's player and whether it waits are kept in its saved data. */
     static final String ALLY = "HexGhoulAlly";
     static final String WAITS = "HexGhoulWaits";
@@ -215,7 +266,8 @@ public final class GhoulNpcBrain {
         }
         LivingEntity prey = prey(npc, who, mind, level, now);
         // 1.3.68: a wild ghoul prowls by night (its kakugan on) and hides what it is by day: anything it would fight, it runs from instead.
-        boolean wild = mind.owner == null && !who.aogiri(); // 4.0.0: Aogiri's own neither prowl nor hide: they hold their hideout
+        // 4.0.0: Aogiri's own neither prowl nor hide: they hold their hideout. 4.1.45: nor a gang: they walk the night together.
+        boolean wild = mind.owner == null && !who.aogiri() && who.gang() == 0;
         boolean eyes = NpcRules.prowls(wild, level.m_46468_());
         if (eyes != mind.eyes) {
             mind.eyes = eyes;
@@ -256,9 +308,9 @@ public final class GhoulNpcBrain {
         }
         if (who.aogiri()) {
             OutfitServer.dress(npc, com.hex.kagune.control.outfit.Outfits.CRIMSON_SET);
-        } else if (who.maskItem() != null) {
+        } else if (who.gang() == 0 && who.maskItem() != null) {
             OutfitServer.mask(npc, who.maskItem());
-        }
+        } // 4.1.45: a gang's own mask is drawn on its face (its identity tells every client which), nothing else on it
         for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[] {net.minecraft.world.entity.EquipmentSlot.HEAD,
             net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET}) {
             npc.m_21409_(slot, com.hex.kagune.control.outfit.Outfits.DROP_CHANCE);
@@ -348,6 +400,12 @@ public final class GhoulNpcBrain {
         if (body instanceof Player player && player.m_7500_()) {
             return false;
         }
+        if (who.gang() != 0) {
+            // 4.1.45 (the owner: "protect eachother) (Non-hostile unless provoked)"): a gang starts nothing: only what hurt one of them
+            // (a grudge, above, the whole gang's: hurt) or is going for one of them.
+            return body instanceof Mob mob && mob.m_5448_() instanceof GhoulNpc target && mates(npc, target)
+                && !(body instanceof GhoulNpc kin && mates(npc, kin));
+        }
         if (who.aogiri()) {
             // 4.0.0 (the owner: "Its members must ONLY attack CCG investigators and entities that are actively hostile toward them"): no
             // neutral human, no peaceful NPC, no player who has not provoked them (a grudge, above, is provocation). 4.0.2: nor one kept
@@ -413,8 +471,8 @@ public final class GhoulNpcBrain {
         if (wanted(npc, who, mind, body, now)) {
             return true;
         }
-        if (who.aogiri()) {
-            return false; // 4.0.0: an Aogiri member's blows land only on what it is fighting
+        if (who.aogiri() || who.gang() != 0) {
+            return false; // 4.0.0: an Aogiri member's blows land only on what it is fighting (4.1.45: a gang's too)
         }
         if (body instanceof ServerPlayer player) {
             return !player.m_7500_() && !player.equals(owner(npc, mind)) && attitude(npc, who, player) != NpcTemper.Attitude.FRIENDLY;
@@ -525,6 +583,10 @@ public final class GhoulNpcBrain {
         }
         // 4.0.2: an Aogiri member at the hideout at its work: at its post, asking a newcomer their business, on patrol, about its floor.
         if (who.aogiri() && AogiriGuard.idle(npc, mind, level, now)) {
+            return;
+        }
+        // 4.1.45: a gang walks together: one leads (wandering as any ghoul does), the rest keep up with it.
+        if (who.gang() != 0 && roam(npc, mind, level, now)) {
             return;
         }
         if (who.temper() == NpcTemper.ANTEIKU || who.temper() == NpcTemper.DRIFTER) {
@@ -819,6 +881,18 @@ public final class GhoulNpcBrain {
                         other -> other != npc && other.m_6084_() && other.identity() != null && other.identity().aogiri() && other.mind != null)) {
                         comrade.mind.grudges.put(attacker.m_20148_(), now + AOGIRI_GRUDGE);
                         comrade.mind.preySought = Long.MIN_VALUE;
+                    }
+                }
+            }
+            if (who.gang() != 0) {
+                // 4.1.45: a gang always defends its own: whoever hurt one of them has every one near on him.
+                holds = true;
+                grudge = GANG_GRUDGE;
+                if (!(attacker instanceof GhoulNpc kin && mates(npc, kin))) {
+                    for (GhoulNpc mate : npc.m_9236_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(GANG_CALL),
+                        other -> other != npc && other.m_6084_() && other.mind != null && mates(npc, other))) {
+                        mate.mind.grudges.put(attacker.m_20148_(), now + GANG_GRUDGE);
+                        mate.mind.preySought = Long.MIN_VALUE;
                     }
                 }
             }

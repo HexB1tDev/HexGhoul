@@ -1,4 +1,4 @@
-# Next AI: after 4.1.44 (4.1.44: the hideout and the CCG building spawn again; 4.1.43: the one-of-a-kind claim taken as the place is built, never two Etos; 4.1.42: structures once per world, flat, never floating, spread out; 4.1.41: the Reaper's blade turned over about its length; 4.1.40: older worlds' townspeople keep their maps, "complete all" reopens gates at login; 4.1.39: Small City fixes, humans kept in their village, the city ground cached, protocol 118; 4.1.38: two minutes after a fight the Reaper puts his jacket back on; 4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.45 (4.1.45: roaming gangs, the Clowns and the Gas Masks, protocol 119; 4.1.44: the hideout and the CCG building spawn again; 4.1.43: the one-of-a-kind claim taken as the place is built, never two Etos; 4.1.42: structures once per world, flat, never floating, spread out; 4.1.41: the Reaper's blade turned over about its length; 4.1.40: older worlds' townspeople keep their maps, "complete all" reopens gates at login; 4.1.39: Small City fixes, humans kept in their village, the city ground cached, protocol 118; 4.1.38: two minutes after a fight the Reaper puts his jacket back on; 4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -8,6 +8,29 @@ passing is not the bar. It is also in `CLAUDE.md`.
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
+
+## START HERE (after 4.1.45): the gangs, then the CCG division and joining gangs
+
+The owner asked (quoted exactly): "Next up we're adding roaming gangs, such as the clowns, 3-5 roaming ghouls walking together. Gangs
+needed: Clowns (all ghouls wear different clown masks (nothing else) and protect eachother) (Non-hostile unless provoked); CCG (already in
+game); Gas Masks (... protect eachother) (Non-hostile unless provoked) (they wear nothing but gas masks); New Re CCG Ghoul division (Normal
+ccg agents (HUMANS not ghouls), they have RC cells which means they get a random kagune, they are not ghouls and are members of the CCG,
+they are never attacked by the ccg, have no kakugan, they are basically wild ghouls with CCG armor and a Kagune (NO kakugan), they spawn in
+trios. Players are now able to join gangs as well, dialog with Ayato and with a quest you can join Aogiri tree, the player's name turns dark
+red with a symbol on the left (symbol) (space) (name)".
+
+Their answers to the questions asked: the Aogiri quest is **"Kill 5 CCG"**; joining "(this applies for all of them), the gang will never
+attack the player again, even when hit, they will however help the player and defend him against hostiles. IF the player kills over 10
+members of his own gang, he will be banned from joining, tag removed and will be attacked on sight."; the symbol is **a custom tree emblem
+(render it first and show them)**; the CCG division **behaves like CCG agents**.
+
+1. **4.1.45 done** (the Clowns and the Gas Masks; see its "what and where"). Masks judged in `docs/handoff/gang-masks-4.1.45.png`.
+2. **4.1.46 next: the CCG ghoul division.** Human CCG agents (`CcgAgent`, CCG armour, the CCG never attacks them, they behave like CCG
+   agents) with a random kagune and NO kakugan, spawning as trios. Render them (front, side, kagune out) and judge before pushing.
+3. **4.1.47: joining gangs.** Aogiri through a dialog with Ayato and the "kill 5 CCG" quest; the member's name dark red with the tree emblem
+   on its left ("(symbol) (space) (name)"): draw the glyph, render it in a name tag and chat, show the owner first. Membership is generic
+   (all gangs): never attacked by their gang even when hitting it, defended by it; over 10 of their own gang killed: banned, tag removed,
+   attacked on sight. How a player joins the Clowns or the Gas Masks was not asked yet: ask the owner.
 
 ## START HERE (after 4.1.42): structures were broken in game; check the new world
 
@@ -210,6 +233,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.45 | Roaming gangs: `npc.Gang` (CLOWNS, GAS_MASKS, 3-5, `faces` all different), `NpcIdentity.gang` bits 44-45 (`ganged`: a DRIFTER), `GhoulNpcSpawner.gang` (`GANG_CHANCE` 0.3, `GANG_ID` number in saved data), `GhoulNpcBrain` `roam`/`mates`/`wanted`/`hurt` (`GANG_CALL` 24, `GANG_GRUDGE` 2400), masks on the face (`OutfitLayer.faction`, `Outfits.geometryOf`), 8 paints (`tools/gang_masks.py`), preview `tools/GangPreview.java`; `NpcTests.gangs`; protocol 119 | pushed, EXIT 0 |
 | 4.1.44 | The hideout by `DryLand.land` (city-like: 9 x 9, `HIDEOUT_FLAT` 14, `DEEP` water, no sea/steep), the CCG building the flattest of 25 spots (±2 chunks), `offered` dropped from the hideout, CCG and jigsaw places (the claim keeps them one); `NpcTests.worldgen` hideout land | pushed, EXIT 0 |
 | 4.1.43 | Duplicates for good: `ControlStructures.onlyIfClaimed` (the claim taken in the stub's pieces generator: built only if claimed; `making` removed), `/place` through `claimed` (sites and places), `EtoBrain` second body leaves while hers answered within 400 ticks; CI's queue stuck: jars delivered from `downloads/` | pushed, EXIT 0 |
 | 4.1.42 | Worldgen: `Site.onPurpose` needs the live world (the duplicates); `ControlStructures.foundation` (`afterPlace` of City, Site, DryPlace; `DryLand.footing`); `DryPlace.flattest` (25 nearest shifts, `roughness` <= `PLACE_FLAT` 6), `dryGround` <= `flatFor(size)`; `CityPlan.land` (pure: 17 x 17, `FLAT` 10, sea/steep/deep); `STEEP` tag; `TakenPlaces.takeApart`/`crowded`, `PlaceClaims.APART` 32; `NpcTests.worldgen` (made-up land) | pushed, EXIT 0 |
@@ -571,6 +595,24 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.45, what and where (roaming gangs: the Clowns and the Gas Masks)
+
+- `npc/Gang.java` (pure): NONE, CLOWNS, GAS_MASKS (by ordinal, in the identity); each five masks (the owner's `mask_clown` / `mask_gas`
+  and four repaints, `_v2` .. `_v5`); `size` 3..5, `roaming` even odds, `faces` a shuffle so every member's mask differs.
+- `npc/NpcIdentity.java`: a ninth field `gang` (bits 44-45, read only under the rank flag: older saves are of no gang); `ganged(gang,
+  mask)` makes a DRIFTER of no faction; `maskItem` the gang's mask; `tagName` "(Clowns)".
+- `outfit/Outfits.geometryOf`, `OutfitModels.get`: a variant ("mask_clown_v3") is drawn with its base's model in its own texture
+  (`textures/outfit/mask_clown_v3.png`). `tools/gang_masks.py` made the paints (texels sorted into materials by colour, each given the
+  variant's colour at its own light). Gas v4 was first white with a red filter and read as a hockey mask: repainted slate with red lenses.
+- `client/render/OutfitLayer.faction`: a gang member's mask drawn on its face from its identity (no item: nothing to drop, nothing else on).
+- `server/GhoulNpcSpawner.gang`: with `GANG_CHANCE` (0.3) of a night's spawn, a gang round one spot judged as one ghoul's (`clear`: the
+  crowd rule then keeps others away while it is there), its number in each one's saved data (`GhoulNpcBrain.GANG_ID`).
+- `server/GhoulNpcBrain`: `mates` (same gang and number); `roam` (in `idle`, after Aogiri's guard: the least UUID within 48 leads and
+  wanders; followers go to a spot 2.5 blocks off it at their own angle and do nothing else); `wanted` (a gang goes only for a mob going for
+  a mate: no prey, no player); `fair` (its blows only on what it fights); `hurt` (whoever hurt one has a 2400-tick grudge from every mate
+  within 24, not a mate hitting a mate); not `wild` (no prowling, no hiding); `dress` puts nothing on them.
+- Not done: their own sounds or lines; joining them (4.1.47).
 
 ## 4.1.40, what and where (older worlds' townspeople; "complete all" and later quests)
 

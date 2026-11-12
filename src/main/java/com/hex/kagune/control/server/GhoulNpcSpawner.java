@@ -39,9 +39,49 @@ public final class GhoulNpcSpawner {
         }
         for (ServerPlayer player : new ArrayList<>(level.m_6907_())) {
             if (!player.m_5833_() && player.m_217043_().m_188500_() < NpcRules.SPAWN_CHANCE) {
-                near(level, player);
+                // 4.1.45: now and then a roaming gang instead of one ghoul on its own.
+                if (player.m_217043_().m_188500_() < GANG_CHANCE) {
+                    gang(level, player);
+                } else {
+                    near(level, player);
+                }
             }
         }
+    }
+
+    /** 4.1.45: the share of the night's ghouls that turn up as a roaming gang (its first spot judged as one ghoul's). */
+    static final double GANG_CHANCE = 0.3;
+
+    /**
+     * 4.1.45 (the owner: "roaming gangs, such as the clowns, 3-5 roaming ghouls walking together"): a gang near {@code player}: the clowns or
+     * the gas masks, three to five of them round one spot (as one ghoul's is found), each in a different mask of theirs and nothing else,
+     * of the ranks one ghoul met there would be, all of one gang (its number kept in each one's saved data). The members placed (none if no
+     * spot was found).
+     */
+    static List<GhoulNpc> gang(ServerLevel level, ServerPlayer player) {
+        List<GhoulNpc> made = new ArrayList<>();
+        com.hex.kagune.control.npc.Gang gang = com.hex.kagune.control.npc.Gang.roaming(player.m_217043_().m_188500_());
+        int size = com.hex.kagune.control.npc.Gang.size(player.m_217043_().m_188500_());
+        int[] faces = gang.faces(size, () -> player.m_217043_().m_188500_());
+        int number = 1 + player.m_217043_().m_188503_(Integer.MAX_VALUE - 1);
+        int mastery = KaguneProfile.isUnlocked(player) ? KaguneProfile.mastery(player) : 0;
+        for (int attempt = 0; attempt < 4 && made.isEmpty(); attempt++) {
+            double[] offset = NpcRules.around(player.m_217043_().m_188500_(), player.m_217043_().m_188500_());
+            double x = player.m_20185_() + offset[0];
+            double z = player.m_20189_() + offset[1];
+            if (!clear(level, x, z)) {
+                continue;
+            }
+            for (int i = 0; i < size; i++) {
+                NpcIdentity who = NpcIdentity.roll(mastery, () -> player.m_217043_().m_188500_()).ganged(gang, faces[i]);
+                double angle = i * Math.PI * 2.0 / size;
+                GhoulNpc member = place(level, x + (i == 0 ? 0.0 : Math.cos(angle) * 2.5), z + (i == 0 ? 0.0 : Math.sin(angle) * 2.5), who, number);
+                if (member != null) {
+                    made.add(member);
+                }
+            }
+        }
+        return made;
     }
 
     /** One near {@code player}, if a place for it is found on the first few tries (null if not). */
@@ -90,6 +130,11 @@ public final class GhoulNpcSpawner {
 
     /** {@code who} on the surface at {@code x, z}: on solid ground, out of any fluid, with room to stand (null if not). */
     public static GhoulNpc place(ServerLevel level, double x, double z, NpcIdentity who) {
+        return place(level, x, z, who, 0);
+    }
+
+    /** As {@link #place}, of the gang numbered {@code gang} (4.1.45: kept in its saved data; 0 for none). */
+    static GhoulNpc place(ServerLevel level, double x, double z, NpcIdentity who, int gang) {
         int bx = (int)Math.floor(x);
         int bz = (int)Math.floor(z);
         int y = level.m_6924_(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz);
@@ -106,6 +151,9 @@ public final class GhoulNpcSpawner {
             return null;
         }
         npc.identify(who);
+        if (gang != 0 && who.gang() != 0) {
+            npc.getPersistentData().m_128405_(GhoulNpcBrain.GANG_ID, gang);
+        }
         GhoulNpcBrain.dress(npc);
         level.m_7967_(npc);
         return npc;

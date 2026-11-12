@@ -89,7 +89,9 @@ public final class OutfitModels {
             }
             loaded = all;
         }
-        return loaded.get(id);
+        Model model = loaded.get(id);
+        // 4.1.45: a gang's mask variant is its base's model (its paint is its own texture).
+        return model != null || id == null ? model : loaded.get(Outfits.geometryOf(id));
     }
 
     /** Every model in a baked stream. */
