@@ -42,6 +42,98 @@ public final class EtoTests {
         }
     }
 
+    /**
+     * 4.1.55 (the owner: "Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is, Dialog
+     * ..."): the talk screen as the quest menu's box: low on the screen (the one talking in sight above it), every answer a card inside the
+     * box and the screen, none on another, one to twelve of them; none clickable while the words come; an answer with no words of its own
+     * shows its own; each answer's mark by its kind.
+     */
+    static void talkBox() {
+        com.hex.kagune.control.client.ui.UiCanvas canvas = new com.hex.kagune.control.client.ui.UiCanvas() {
+            public void fill(int x0, int y0, int x1, int y1, int argb) {
+            }
+
+            public void gradient(int x0, int y0, int x1, int y1, int top, int bottom) {
+            }
+
+            public void text(String text, int x, int y, int argb, boolean shadow) {
+            }
+
+            public void centered(String text, int centerX, int y, int argb) {
+            }
+
+            public int width(String text) {
+                return text.length() * 6;
+            }
+
+            public void face(int x, int y, int size) {
+            }
+
+            public void hat(int x, int y, int size, int[] hole) {
+            }
+
+            public void push() {
+            }
+
+            public void translate(float x, float y) {
+            }
+
+            public void scale(float factor) {
+            }
+
+            public void pop() {
+            }
+
+            public void batch(Runnable draw) {
+                draw.run();
+            }
+        };
+        com.hex.kagune.control.npc.NpcTalk.Choice[] all = com.hex.kagune.control.npc.NpcTalk.Choice.values();
+        String line = "I hate asking. Could you bring me eight charcoal, for the filters? I'd do it myself, but you'd do it better, and the boys "
+            + "would never let me hear the end of it if I came back with nothing again. Again. Like last week.";
+        for (int n = 1; n <= com.hex.kagune.control.network.S2CNpcTalk.MOST; n++) {
+            java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> choices = new java.util.ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                choices.add(all[i]);
+            }
+            for (boolean ranked : new boolean[] {false, true}) {
+                com.hex.kagune.control.client.NpcTalkView.Model model = new com.hex.kagune.control.client.NpcTalkView.Model("Banjou", "The Gas Masks' leader - happy",
+                    40, false, line, choices, java.util.Collections.nCopies(n, "An answer of some length, as long as most are"), ranked ? 58 | 3 << 8 : -1);
+                java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits = com.hex.kagune.control.client.NpcTalkView.draw(canvas, model, -1, -1,
+                    1.0, com.hex.kagune.control.client.NpcTalkView.Motion.still(40));
+                check(hits.size() == n, n + " answers: every one clickable");
+                java.util.List<com.hex.kagune.control.client.UkakuMenuView.Rect> rects = new java.util.ArrayList<>(hits.values());
+                for (int a = 0; a < rects.size(); a++) {
+                    com.hex.kagune.control.client.UkakuMenuView.Rect r = rects.get(a);
+                    check(r.x() >= 0 && r.x() + r.width() <= com.hex.kagune.control.client.NpcTalkView.UI_WIDTH && r.y() >= com.hex.kagune.control.client.NpcTalkView.UI_HEIGHT / 3
+                        && r.y() + r.height() <= com.hex.kagune.control.client.NpcTalkView.UI_HEIGHT - 8 && r.width() >= 200, n + " answers: card " + a + " in the box, low");
+                    for (int b = a + 1; b < rects.size(); b++) {
+                        com.hex.kagune.control.client.UkakuMenuView.Rect o = rects.get(b);
+                        check(r.x() + r.width() <= o.x() || o.x() + o.width() <= r.x() || r.y() + r.height() <= o.y() || o.y() + o.height() <= r.y(),
+                            n + " answers: cards " + a + " and " + b + " apart");
+                    }
+                }
+                check(com.hex.kagune.control.client.NpcTalkView.draw(canvas, model, -1, -1, 1.0, new com.hex.kagune.control.client.NpcTalkView.Motion(1.0, 0.2, 40.0F, 0,
+                    9.0)).isEmpty(), n + " answers: nothing to click while the words still come");
+            }
+        }
+        com.hex.kagune.control.client.NpcTalkView.Model blank = new com.hex.kagune.control.client.NpcTalkView.Model("Hana", "", 0, false, "Hi.",
+            java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE), java.util.List.of(""));
+        check(blank.label(0).equals(com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE.text()), "an answer with no words of its own shows its own");
+        check(com.hex.kagune.control.client.NpcTalkView.kind(com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE) == com.hex.kagune.control.client.NpcTalkView.Kind.LEAVE
+            && com.hex.kagune.control.client.NpcTalkView.kind(com.hex.kagune.control.npc.NpcTalk.Choice.INSULT) == com.hex.kagune.control.client.NpcTalkView.Kind.CRUEL
+            && com.hex.kagune.control.client.NpcTalkView.kind(com.hex.kagune.control.npc.NpcTalk.Choice.KISS) == com.hex.kagune.control.client.NpcTalkView.Kind.SWEET
+            && com.hex.kagune.control.client.NpcTalkView.kind(com.hex.kagune.control.npc.NpcTalk.Choice.LESSON) == com.hex.kagune.control.client.NpcTalkView.Kind.LESSON
+            && com.hex.kagune.control.client.NpcTalkView.kind(com.hex.kagune.control.npc.NpcTalk.Choice.SAY_3) == com.hex.kagune.control.client.NpcTalkView.Kind.WORD,
+            "each answer's mark by its kind");
+        try {
+            String view = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/NpcTalkView.java"));
+            check(view.contains("QuestStyle.backdrop(c, x, y, BOARD_WIDTH, h, time,") && !view.contains("organicPanel"), "the quest menu's box, not the old board");
+        } catch (java.io.IOException failure) {
+            check(false, "read the talk screen: " + failure);
+        }
+    }
+
     public static void main(String[] args) {
         night();
         blink();
@@ -296,6 +388,7 @@ public final class EtoTests {
         student();
         topics();
         typing();
+        talkBox(); // 4.1.55
     }
 
     /** A full context, as the server makes one. */

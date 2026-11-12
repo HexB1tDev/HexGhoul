@@ -13,6 +13,10 @@ import java.util.Map;
  * the screen so the ghoul stays in sight above it: its face, its name, its temper and how it stands with the player (a bar from
  * enemy to friend), what it says, and the answers, numbered (a click or the number key picks one).
  *
+ * <p>4.1.55 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+ * Dialog, mastery menus ALL OF THEM"): the quest menu's box ({@link QuestStyle}), the face in a tile as a quest's icon, the name as its
+ * title, the words as a quest's story, the answers as the quest list's cards under their heading ({@link #card}).
+ *
  * <p>1.3.3: alive. The board rises into place; the name is large, and the mood (any temper after " - ") sits beside it as a tag of its
  * own colour. How they stand is a bond meter of five bands, enemy to friend, a heart on it that glides to where they now stand, and
  * what an answer did to it floats up off the heart ("+3"). What is said is typed out ({@link #revealed}: quick, but pausing at a comma,
@@ -21,12 +25,8 @@ import java.util.Map;
 public final class NpcTalkView {
     public static final int UI_WIDTH = UkakuMenuView.UI_WIDTH;
     public static final int UI_HEIGHT = UkakuMenuView.UI_HEIGHT;
-    /** The board (an oval) and the content laid inside it, a rectangle whose corners stay within the oval. */
-    static final int BOX_WIDTH = 940;
-    static final int BOX_HEIGHT = 300;
-    static final int CONTENT_WIDTH = 700;
-    static final int CONTENT_HEIGHT = 200;
-    static final int FACE = 64;
+    /** The face's size on the board. */
+    static final int FACE = 56;
     /** The bond meter's width, and each band's colour (enemy, cold, stranger, friendly, friend). */
     static final int METER = 210;
     static final int[] BANDS = {0xFFD01E2E, 0xFF8E3A4C, 0xFF7C7482, 0xFF56A86A, 0xFFE0607E};
@@ -55,9 +55,10 @@ public final class NpcTalkView {
             return this.standing >= 0;
         }
 
-        /** The words shown for answer {@code i}. */
+        /** The words shown for answer {@code i} (4.1.55: the answer's own words when none are given, as the client fills them in). */
         public String label(int i) {
-            return i < this.labels.size() ? this.labels.get(i) : this.choices.get(i).text();
+            String label = i < this.labels.size() ? this.labels.get(i) : "";
+            return label == null || label.isEmpty() ? this.choices.get(i).text() : label;
         }
     }
 
@@ -83,94 +84,104 @@ public final class NpcTalkView {
     /** Draws the conversation as it is now ({@code m}), and returns its clickable areas: "choice:N" (only the answers already in). */
     public static Map<String, UkakuMenuView.Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time, Motion m) {
         Map<String, UkakuMenuView.Rect> hits = new LinkedHashMap<>();
-        int rise = (int)Math.round((1.0 - ease(m.opened() / RISE)) * 36.0);
-        int centerX = UI_WIDTH / 2;
-        int centerY = UI_HEIGHT - 8 - BOX_HEIGHT / 2 + rise;
-        int left = centerX - CONTENT_WIDTH / 2;
-        int right = centerX + CONTENT_WIDTH / 2;
-        int top = centerY - CONTENT_HEIGHT / 2;
-        int bottom = centerY + CONTENT_HEIGHT / 2;
-        c.batch(() -> {
-            UkakuMenuView.organicPanel(c, centerX, centerY, BOX_WIDTH / 2, BOX_HEIGHT / 2, GraftMenuView.PANEL_FILL, GraftMenuView.PANEL_EDGE);
-            UkakuMenuView.organicPanel(c, centerX, centerY, BOX_WIDTH / 2 - 5, BOX_HEIGHT / 2 - 5, GraftMenuView.INNER_FILL, GraftMenuView.INNER_EDGE);
-        });
         String text = model.line() == null ? "" : model.line();
-        int shown = revealed(text, m.typed());
-        boolean talking = shown < text.length();
-
-        // The face, framed in flesh; the frame breathes while it talks.
-        int faceX = left + 4;
-        int faceY = top + 4;
-        int glow = talking ? (int)Math.round(40 + 40 * Math.sin(time * 9.0)) : 0;
-        c.fill(faceX - 4, faceY - 4, faceX + FACE + 4, faceY + FACE + 4, mix(0xFF4A0E18, 0xFFB8304A, glow / 255.0F));
-        c.fill(faceX - 2, faceY - 2, faceX + FACE + 2, faceY + FACE + 2, 0xFF120408);
-        c.face(faceX, faceY, FACE);
-        c.hat(faceX, faceY, FACE, null);
-
-        // The name, large; the mood beside it; who they are to each other under it.
-        int textX = faceX + FACE + 20;
-        int textWidth = right - textX;
-        String[] temper = temper(model.temper());
-        c.push();
-        c.translate(textX, top);
-        c.scale(1.5F);
-        c.text(model.name(), 0, 0, QuestJournalView.TITLE, true);
-        c.pop();
-        int nameRight = textX + (int)Math.ceil(c.width(model.name()) * 1.5);
-        if (!temper[1].isEmpty()) {
-            mood(c, temper[1], nameRight + 8, top + 2, time);
-        }
-        NpcBonds.Band band = NpcBonds.band(model.regard());
-        String standing = model.ally() ? "WALKS WITH YOU" : band.label().toUpperCase(java.util.Locale.ROOT);
-        c.text(temper[0].toUpperCase(java.util.Locale.ROOT), textX, top + 18, QuestJournalView.SUBTITLE, false);
-        meter(c, right - METER, top + 1, m, standing, time);
-        // 4.1.52 (the owner: "New Reputation bar when talking to fellow gang members"): under the bond, where they stand in the gang.
-        int lower = model.ranked() ? RANK_ROOM : 0;
-        if (model.ranked()) {
-            reputation(c, right - METER, top + 27, model.standing() & 0xFF, model.standing() >> 8, time);
-        }
-
-        // A vein under the heading.
-        c.fill(textX, top + 31 + lower, right, top + 32 + lower, 0x55B83A44);
-        c.fill(textX, top + 31 + lower, textX + (int)((right - textX) * Math.min(1.0, m.opened() / 0.5)), top + 32 + lower, 0xAAB83A44);
-
-        // The answers: one column, or two when there are many; in only once the words are all said, one after another.
         List<NpcTalk.Choice> choices = model.choices();
         boolean two = choices.size() > 4;
         int rows = two ? (choices.size() + 1) / 2 : choices.size();
-        int columnWidth = two ? (CONTENT_WIDTH - 8) / 2 : CONTENT_WIDTH;
-        int lowest = bottom - rows * 19;
+        int inner = BOARD_WIDTH - PAD * 2;
+        List<String> lines = wrap(c, text, inner - QUOTE_IN - 4);
+        // The box's size from everything it will hold (never from what is out yet: it does not jump as the answers come in).
+        int quoteLines = Math.max(2, Math.min(MOST_LINES, lines.size()));
+        int height = HEADER + quoteLines * LINE + 14 + 15 + rows * (ROW_HEIGHT + ROW_GAP) + 10;
+        int rise = (int)Math.round((1.0 - ease(m.opened() / RISE)) * 36.0);
+        int x = (UI_WIDTH - BOARD_WIDTH) / 2;
+        int y = UI_HEIGHT - 8 - height + rise;
+        int shown = revealed(text, m.typed());
+        boolean talking = shown < text.length();
 
-        // What it says, typed out: as many lines as fit above the answers.
-        int y = top + 40 + lower;
-        List<String> lines = wrap(c, text, textWidth);
-        int fit = Math.max(3, (lowest - 4 - y) / 12);
-        // 1.3.4: the answers in the middle of the room left under the words (not down against the board's edge).
-        int saidTo = y + Math.min(fit, lines.size()) * 12;
-        int choicesTop = Math.max(saidTo + 10, Math.min(lowest, saidTo + (bottom - saidTo - rows * 19) / 2));
+        // 4.1.55 (the owner: "Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is, Dialog
+        // ..."): the quest menu's own plate (QuestStyle.backdrop: its cut corners, its bright brackets, its honeycomb), low on the screen so
+        // the one talking stays in sight above it; the same red rule fading out at both ends under the header.
+        int h = height;
+        c.batch(() -> {
+            // Its honeycomb in the header's empty middle, between the name and the meters (under the answers it showed between the cards).
+            QuestStyle.backdrop(c, x, y, BOARD_WIDTH, h, time, x + 300, y + 8, 150, HEADER - 20);
+            for (int i = 0; i < 40; i++) {
+                float t = i / 39.0F;
+                int alpha = Math.round(190 * (1.0F - Math.abs(t - 0.5F) * 2.0F));
+                int x0 = x + 12 + Math.round((BOARD_WIDTH - 24) * i / 40.0F);
+                c.fill(x0, y + HEADER - 8, x0 + (BOARD_WIDTH - 24) / 40 + 1, y + HEADER - 7, alpha << 24 | 0xE8323E);
+            }
+        });
+
+        // The face in a tile as a quest's icon is (its edge lit while it talks), the name large as the menu's title, the mood a chip beside
+        // it, who they are to each other under it in red.
+        int faceX = x + PAD;
+        int faceY = y + 12;
+        float speaking = talking ? 0.5F + 0.5F * (float)Math.sin(time * 9.0) : 0.0F;
+        c.batch(() -> {
+            QuestStyle.box(c, faceX, faceY, FACE + 6, FACE + 6, QuestStyle.TILE, QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, speaking));
+            c.fill(faceX + 2, faceY + 2, faceX + FACE + 4, faceY + FACE + 4, 0xFF120408);
+        });
+        c.face(faceX + 3, faceY + 3, FACE);
+        c.hat(faceX + 3, faceY + 3, FACE, null);
+        int textX = faceX + FACE + 18;
+        String[] temper = temper(model.temper());
+        c.push();
+        c.translate(textX, y + 14);
+        c.scale(1.4F);
+        c.text(model.name(), 0, 0, QuestJournalView.TITLE, true);
+        c.pop();
+        int nameRight = textX + (int)Math.ceil(c.width(model.name()) * 1.4);
+        if (!temper[1].isEmpty()) {
+            mood(c, temper[1], nameRight + 8, y + 15, time);
+        }
+        c.text(temper[0].toUpperCase(java.util.Locale.ROOT), textX, y + 33, QuestJournalView.SUBTITLE, false);
+        if (model.ally()) {
+            QuestStyle.chip(c, textX, y + 46, "WALKS WITH YOU", 0xFF0E2214, QuestStyle.GREEN_DARK, QuestStyle.GREEN);
+        }
+        // How they stand: the bond (and, 4.1.52, the player's reputation in their gang) on the right, as the menu's progress is.
+        NpcBonds.Band band = NpcBonds.band(model.regard());
+        String standing = model.ally() ? "WALKS WITH YOU" : band.label().toUpperCase(java.util.Locale.ROOT);
+        int meterX = x + BOARD_WIDTH - PAD - METER;
+        meter(c, meterX, y + 14, m, standing, time);
+        if (model.ranked()) {
+            reputation(c, meterX, y + 40, model.standing() & 0xFF, model.standing() >> 8, time);
+        }
+
+        // What they say, set off as a quest's story is: a red bar down its side (bright, beating, while the words come), typed out.
+        int quoteX = x + PAD;
+        int quoteY = y + HEADER + 2;
+        int quoteBottom = quoteY + quoteLines * LINE + 2;
+        int bar = talking ? QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, speaking) : QuestStyle.RED_DARK;
+        c.fill(quoteX, quoteY - 2, quoteX + 2, quoteBottom, bar);
+        int lineY = quoteY;
         int left0 = shown;
-        for (int i = 0; i < Math.min(fit, lines.size()) && left0 > 0; i++) {
+        for (int i = 0; i < Math.min(quoteLines, lines.size()) && left0 > 0; i++) {
             String line = lines.get(i);
             String part = line.substring(0, Math.min(line.length(), left0));
             left0 -= line.length() + 1;
-            if (i == fit - 1 && lines.size() > fit && !talking) {
-                part = c.fit(part + " ...", textWidth);
+            if (i == quoteLines - 1 && lines.size() > quoteLines && !talking) {
+                part = c.fit(part + " ...", inner - QUOTE_IN - 4);
             }
-            c.text(part, textX, y, QuestJournalView.VALUE, false);
-            if (talking && left0 <= 0) {
+            c.text(part, quoteX + QUOTE_IN, lineY, 0xFFDCAEB2, false);
+            if (talking && left0 <= 0 && (int)(time * 4.0) % 2 == 0) {
                 // The caret where the words are coming from.
-                if ((int)(time * 4.0) % 2 == 0) {
-                    int caret = textX + c.width(part) + 1;
-                    c.fill(caret, y, caret + 4, y + 8, 0xAAE8B8C0);
-                }
+                int caret = quoteX + QUOTE_IN + c.width(part) + 1;
+                c.fill(caret, lineY, caret + 4, lineY + 8, 0xAAE8B8C0);
             }
-            y += 12;
+            lineY += LINE;
         }
+
+        // The answers under their heading, as the quest list's cards.
+        int answersY = quoteBottom + 12;
+        int cardsY = section(c, "ANSWERS", quoteX, answersY, inner, talking ? "" : "click, or press its number");
         if (talking) {
-            String hint = "click to skip  »";
-            c.text(hint, right - c.width(hint), bottom - 10, (int)(140 + 80 * Math.sin(time * 3.0)) << 24 | 0x946268, false);
+            String hint = "click to skip  \u00bb";
+            c.text(hint, x + BOARD_WIDTH - PAD - c.width(hint), cardsY + 2, (int)(140 + 80 * Math.sin(time * 3.0)) << 24 | 0x946268, false);
             return hits;
         }
+        int columnWidth = two ? (inner - 8) / 2 : inner;
         double since = m.typed() == Double.POSITIVE_INFINITY ? 10.0 : m.typed() - duration(text);
         for (int i = 0; i < choices.size(); i++) {
             float in = (float)ease((since - i * STAGGER) / FADE);
@@ -179,26 +190,136 @@ public final class NpcTalkView {
             }
             int column = two ? i / rows : 0;
             int row = two ? i % rows : i;
-            int slide = Math.round((1.0F - in) * 14.0F);
-            int x = left + column * (columnWidth + 8) + slide;
-            int rowY = choicesTop + row * 19;
-            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, rowY, columnWidth - slide, 17);
+            int slide = Math.round((1.0F - in) * -18.0F);
+            int cardX = quoteX + column * (columnWidth + 8);
+            int cardY = cardsY + row * (ROW_HEIGHT + ROW_GAP);
+            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(cardX, cardY, columnWidth, ROW_HEIGHT);
             boolean hover = in > 0.95F && rect.contains(mouseX, mouseY);
-            NpcTalk.Choice choice = choices.get(i);
-            boolean hostile = choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.PART;
-            int alpha = Math.round(255 * in);
-            c.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), fade(hover ? QuestJournalView.ROW_PICKED : QuestJournalView.ROW, in));
-            // An accent down the left: red for a cruel word, grey for leaving, the flesh's own for the rest; brighter under the pointer.
-            int accent = hostile ? 0xFFB06070 : choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.BACK ? 0xFF64444A : 0xFFB83A44;
-            c.fill(rect.x(), rect.y(), rect.x() + (hover ? 3 : 2), rect.y() + rect.height(), fade(hover ? 0xFFF0B8C4 : accent, in));
-            c.text(String.valueOf(i + 1), x + 8, rowY + 5, alpha << 24 | (hover ? QuestJournalView.HEADER : QuestJournalView.MUTED) & 0xFFFFFF, false);
-            int colour = hover ? QuestJournalView.VALUE : hostile ? 0xFFB06070 : choice == NpcTalk.Choice.LEAVE ? QuestJournalView.MUTED : 0xFFD8B8B8;
-            c.text(c.fit(model.label(i), columnWidth - 34 - slide), x + 22 + (hover ? 2 : 0), rowY + 5, alpha << 24 | colour & 0xFFFFFF, false);
+            card(c, model, i, cardX + slide + (hover ? 3 : 0), cardY, columnWidth, hover, in, time);
             if (in > 0.95F) {
                 hits.put("choice:" + i, rect);
             }
         }
         return hits;
+    }
+
+    /** 4.1.55: the box's width, its padding, the header's height (to the rule), a line of the words, the words' indent, the most lines. */
+    static final int BOARD_WIDTH = 680;
+    static final int PAD = 16;
+    static final int HEADER = 82;
+    static final int LINE = 12;
+    static final int QUOTE_IN = 10;
+    static final int MOST_LINES = 5;
+    /** 4.1.55: an answer's card, and the room between two. */
+    static final int ROW_HEIGHT = 18;
+    static final int ROW_GAP = 3;
+
+    /** 4.1.55: a section's heading and a thin rule after it (the quest menu's), a hint at its right end; the next row's y. */
+    static int section(UiCanvas c, String title, int x, int y, int width, String hint) {
+        c.text(title, x, y, QuestJournalView.HEADER, false);
+        int after = x + c.width(title) + 8;
+        int end = hint.isEmpty() ? x + width : x + width - c.width(hint) - 8;
+        c.fill(after, y + 4, end, y + 5, QuestStyle.RED_DARK);
+        if (!hint.isEmpty()) {
+            c.text(hint, x + width - c.width(hint), y, QuestJournalView.FAINT, false);
+        }
+        return y + 15;
+    }
+
+    /**
+     * 4.1.55: answer {@code i} as a card of the quest list: a plate (lit and edged red under the pointer, a bar down its side), its number in
+     * a key cap, the words, and a small mark at its right end for what kind of answer it is (a word, something sweet, a gift, a lesson, a
+     * favour, going with them, leaving, a cruel word). It slides in from the left as the answers come.
+     */
+    static void card(UiCanvas c, Model model, int i, int x, int y, int width, boolean hover, float in, double time) {
+        NpcTalk.Choice choice = model.choices().get(i);
+        Kind kind = kind(choice);
+        boolean hostile = kind == Kind.CRUEL;
+        int edge = hover ? QuestStyle.RED : hostile ? 0xFF5A1A24 : QuestStyle.TILE_EDGE;
+        int fill = hover ? QuestJournalView.ROW_PICKED : QuestJournalView.ROW;
+        c.batch(() -> {
+            QuestStyle.box(c, x, y, width, ROW_HEIGHT, fade(fill, in), fade(edge, in));
+            if (hover) {
+                c.fill(x, y + 3, x + 3, y + ROW_HEIGHT - 3, QuestStyle.RED);
+            }
+            QuestStyle.box(c, x + 4, y + 2, 14, 14, fade(QuestStyle.TILE, in), fade(hover ? QuestStyle.RED : QuestStyle.RED_DARK, in));
+        });
+        int alpha = Math.round(255 * in);
+        String number = String.valueOf(i + 1);
+        c.text(number, x + 11 - c.width(number) / 2, y + 5, alpha << 24 | (hover ? QuestJournalView.VALUE : QuestJournalView.MUTED) & 0xFFFFFF, false);
+        int colour = hover ? QuestJournalView.VALUE : hostile ? 0xFFB06070 : kind == Kind.LEAVE ? QuestJournalView.MUTED : 0xFFD8B8B8;
+        c.text(c.fit(model.label(i), width - 46), x + 24, y + 5, alpha << 24 | colour & 0xFFFFFF, false);
+        mark(c, kind, x + width - 16, y + 4, fade(hover ? markColour(kind, true) : markColour(kind, false), in), time);
+    }
+
+    /** 4.1.55: what kind of answer a choice is (its mark on its card). */
+    public enum Kind { WORD, SWEET, GIFT, LESSON, FAVOUR, GO, LEAVE, CRUEL }
+
+    public static Kind kind(NpcTalk.Choice choice) {
+        return switch (choice) {
+            case KISS, HUG, SWEET, ASK_OUT, PROPOSE, NIGHT, HOME, TEASE -> Kind.SWEET;
+            case GIFT, BOOK, FLOWER, PUPPY, LETTER -> Kind.GIFT;
+            case LESSON, TRIAL, SURGERY -> Kind.LESSON;
+            case FAVOUR, ACCEPT, INVITE -> Kind.FAVOUR;
+            case FOLLOW, STAY -> Kind.GO;
+            case LEAVE, BACK, DECLINE, PART -> Kind.LEAVE;
+            case INSULT -> Kind.CRUEL;
+            default -> Kind.WORD;
+        };
+    }
+
+    static int markColour(Kind kind, boolean lit) {
+        int colour = switch (kind) {
+            case SWEET -> 0xFFE0607E;
+            case GIFT, LESSON, FAVOUR -> QuestStyle.GOLD;
+            case GO -> QuestStyle.GREEN;
+            case CRUEL -> 0xFFD03A4A;
+            case LEAVE -> QuestStyle.GREY;
+            default -> 0xFFB86A74;
+        };
+        return lit ? QuestStyle.mix(colour, 0xFFFFFFFF, 0.25F) : QuestStyle.mix(colour, 0xFF000000, 0.15F);
+    }
+
+    /** 4.1.55: an answer's mark, about 11 pixels square at {@code x, y}. */
+    static void mark(UiCanvas c, Kind kind, int x, int y, int colour, double time) {
+        switch (kind) {
+            case SWEET -> heart(c, x + 2, y + 2, QuestStyle.mix(colour, 0xFFFFFFFF, 0.5F), colour);
+            case GIFT -> {
+                // A little parcel: its box, its ribbon, its bow.
+                c.fill(x + 1, y + 4, x + 10, y + 11, colour);
+                c.fill(x + 5, y + 4, x + 6, y + 11, 0xFF1C0A0E);
+                c.fill(x, y + 3, x + 11, y + 5, colour);
+                c.fill(x + 3, y + 1, x + 5, y + 3, colour);
+                c.fill(x + 6, y + 1, x + 8, y + 3, colour);
+            }
+            case LESSON -> QuestStyle.rewardGlyph(c, 'm', x, y, colour, QuestJournalView.ROW);
+            case FAVOUR -> QuestStyle.rewardGlyph(c, 'p', x, y, colour, QuestJournalView.ROW);
+            case GO -> {
+                // On together: a chevron, twice.
+                QuestStyle.line(c, x + 1, y + 2, x + 4.5F, y + 5.5F, 1.6F, colour);
+                QuestStyle.line(c, x + 4.5F, y + 5.5F, x + 1, y + 9, 1.6F, colour);
+                QuestStyle.line(c, x + 6, y + 2, x + 9.5F, y + 5.5F, 1.6F, colour);
+                QuestStyle.line(c, x + 9.5F, y + 5.5F, x + 6, y + 9, 1.6F, colour);
+            }
+            case LEAVE -> {
+                // Away: an arrow back to the left.
+                QuestStyle.line(c, x + 1, y + 5.5F, x + 10, y + 5.5F, 1.6F, colour);
+                QuestStyle.line(c, x + 1, y + 5.5F, x + 4.5F, y + 2, 1.6F, colour);
+                QuestStyle.line(c, x + 1, y + 5.5F, x + 4.5F, y + 9, 1.6F, colour);
+            }
+            case CRUEL -> {
+                QuestStyle.line(c, x + 2, y + 2, x + 9, y + 9, 1.8F, colour);
+                QuestStyle.line(c, x + 9, y + 2, x + 2, y + 9, 1.8F, colour);
+            }
+            default -> {
+                // A word: a speech bubble, its tail at the bottom left.
+                QuestStyle.box(c, x, y + 1, 11, 7, colour, colour);
+                c.polygon(new float[] {x + 2, x + 5, x + 2}, new float[] {y + 7.5F, y + 7.5F, y + 10.5F}, colour);
+                c.fill(x + 2, y + 4, x + 3, y + 5, 0xFF1C0A0E);
+                c.fill(x + 5, y + 4, x + 6, y + 5, 0xFF1C0A0E);
+                c.fill(x + 8, y + 4, x + 9, y + 5, 0xFF1C0A0E);
+            }
+        }
     }
 
     /** "Your date - giddy": the title, and the mood ("" for none). */
@@ -282,8 +403,6 @@ public final class NpcTalkView {
         }
     }
 
-    /** 4.1.52: how far the words come down to make room for the reputation meter. */
-    static final int RANK_ROOM = 20;
     /** 4.1.52: each gang's colour on its meter (none, Aogiri's dark red, the Clowns' blue, the Gas Masks' green). */
     static final int[] GANG_COLOURS = {0xFF8A8A8A, 0xFFC4283A, 0xFF4F78E8, 0xFF58C050};
 

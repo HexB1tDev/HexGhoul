@@ -185,6 +185,11 @@ final class QuestStyle {
      * a faint honeycomb of RC cells in a corner, a soft rule under its header. {@code x, y, width, height}: the board.
      */
     static void backdrop(UiCanvas c, int x, int y, int width, int height, double time) {
+        backdrop(c, x, y, width, height, time, x + 12, y + height - 84, 140, 70);
+    }
+
+    /** 4.1.55: the same board with its honeycomb in the box {@code hx, hy, hw, hh} (where nothing is drawn over it: the talk box's header). */
+    static void backdrop(UiCanvas c, int x, int y, int width, int height, double time, int hx, int hy, int hw, int hh) {
         // A soft shadow round the box (the world seen past it).
         for (int k = 8; k >= 1; k--) {
             int a = Math.max(0, 0x22 - k * 3) << 24;
@@ -200,7 +205,7 @@ final class QuestStyle {
         c.polygon(ixs, iys, 0xF20C0507);
         c.gradient(x + cut, y + 2, x + width - cut, y + 80, 0x30E8323E, 0x00E8323E);
         // The honeycomb of RC cells, faint, in the bottom left (under the list, where it runs out).
-        honeycomb(c, x + 12, y + height - 84, 140, 70, 0x14E8323E, time + 2.0);
+        honeycomb(c, hx, hy, hw, hh, 0x14E8323E, time + 2.0);
         // Bright brackets at the corners.
         int arm = 22;
         int bright = mix(RED_DARK, RED, 0.7F + 0.3F * (float)Math.sin(time * 1.6));

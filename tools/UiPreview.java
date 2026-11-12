@@ -83,10 +83,13 @@ public class UiPreview {
         public void face(int x, int y, int size) {
             int cell = size / 8;
             if (SKIN != null) {
-                // 7.0.2: a real skin's face (u 8..16, v 8..16).
+                // 7.0.2: a real skin's face (u 8..16, v 8..16). 4.1.55: of a skin of any size (a villager's are 512 across), as the game
+                // draws it by its share of the texture.
+                int k = Math.max(1, SKIN.getWidth() / 64);
                 for (int v = 0; v < 8; v++) {
                     for (int u = 0; u < 8; u++) {
-                        this.fill(x + u * cell, y + v * cell, x + (u + 1) * cell, y + (v + 1) * cell, 0xFF000000 | SKIN.getRGB(8 + u, 8 + v));
+                        this.fill(x + u * cell, y + v * cell, x + (u + 1) * cell, y + (v + 1) * cell, 0xFF000000 | SKIN.getRGB((8 + u) * k + k / 2,
+                            (8 + v) * k + k / 2));
                     }
                 }
                 return;
@@ -101,9 +104,10 @@ public class UiPreview {
         public void hat(int x, int y, int size, int[] hole) {
             if (SKIN != null) {
                 int cell = size / 8;
+                int k = Math.max(1, SKIN.getWidth() / 64); // 4.1.55: a skin of any size
                 for (int v = 0; v < 8; v++) {
                     for (int u = 0; u < 8; u++) {
-                        int argb = SKIN.getRGB(40 + u, 8 + v);
+                        int argb = SKIN.getRGB((40 + u) * k + k / 2, (8 + v) * k + k / 2);
                         if ((argb >>> 24) >= 128) {
                             this.fill(x + u * cell, y + v * cell, x + (u + 1) * cell, y + (v + 1) * cell, 0xFF000000 | argb);
                         }
