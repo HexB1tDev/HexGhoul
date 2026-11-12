@@ -55,6 +55,14 @@ public enum Gang {
         return index >= 1 && index <= this.masks.size() ? this.masks.get(index - 1) : null;
     }
 
+    /**
+     * 4.1.48 (asked whether the Clowns and the Gas Masks are rivals, the owner chose "Yes, rivals"): true if this gang and {@code other} fight
+     * on sight (the Clowns and the Gas Masks, either way round).
+     */
+    public boolean rival(Gang other) {
+        return this == CLOWNS && other == GAS_MASKS || this == GAS_MASKS && other == CLOWNS;
+    }
+
     public static Gang byOrdinal(int ordinal) {
         Gang[] all = values();
         return ordinal >= 0 && ordinal < all.length ? all[ordinal] : NONE;

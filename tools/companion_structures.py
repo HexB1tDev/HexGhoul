@@ -6,6 +6,11 @@
   art/anteiku.schem     -> src/main/resources/data/hexkagune/structures/anteiku.nbt      Touka behind the café's bar counter
   art/exploration/Ken_tower.litematic -> src/main/resources/data/hexkagune/structures/cyber_tower.nbt  Ken sitting on the top of his tower
   art/reaper/arima_mansion.schem -> src/main/resources/data/hexkagune/structures/reaper_mansion.nbt  4.1.24: Arima in its garden
+  art/exploration/circus.schematic -> src/main/resources/data/hexkagune/structures/circus.nbt  4.1.48: four Clowns in the tent
+
+4.1.48: the circus tent is the old MCEdit "Alpha" format (numeric block ids and data in Blocks/Data: alpha() maps the few it has to 1.20.1's
+states). It has no floor (it stood on its world's ground): a floor of dirt path is laid under everything inside its outer ring (floor()),
+grass under its tufts and its flower; the anchor is the floor's middle. Several people can live in one place ("people").
 
 4.0.9 (the owner: "I sent you a replacement for the Ken tower as well, make sure he sits on the top."): Ken's tower is their new one, a
 Litematica file (saved by 1.21.4): 73 x 310 x 73, a podium, four glass tiers stepping in, a star-shaped roof deck behind a parapet and a
@@ -42,6 +47,15 @@ ART = ROOT / "art"
 OUT = ROOT / "src" / "main" / "resources" / "data" / "hexkagune" / "structures"
 DATA_VERSION = 3465  # 1.20.1
 
+#: 4.1.48: the saved data of the circus's Clown wearing mask {@code mask} (1..5): GhoulNpcBrain.CIRCUS, CIRCUS_MASK, GANG_ID (the
+#: circus's own gang number, -1: a roaming gang's is never under 1), kept with the world.
+CIRCUS_GANG = -1
+
+
+def CLOWN(mask):
+    return {"HexCircus": ("byte", 1), "HexCircusMask": ("int", mask), "HexGang": ("int", CIRCUS_GANG)}
+
+
 PLACES = {
     "anteiku": {
         "source": "anteiku.schem",
@@ -59,6 +73,18 @@ PLACES = {
         # the lawn is filled (dirt, then stone), or the ground would be left hollow under it. The anchor (on the lawn's layer, at the
         # middle) puts that layer on the ground and centres it on its chunk (121 blocks long).
         "keep_air": False, "crop": (1, 28), "fill_below": 6, "anchor": (39, 6, 60), "anchor_name": "hexkagune:mansion_anchor",
+    },
+    "circus": {
+        "source": "exploration/circus.schematic",
+        # 4.1.48 (the owner chose "One per world + clowns"): four of the Clowns inside the tent, each in a different mask, all of one gang
+        # (HexGang: a fixed number, so they are each other's: GhoulNpcBrain.mates), kept with the world; each strolls about its spot.
+        "people": [
+            {"who": "hexkagune:ghoul", "at": (22, 0, 8), "yaw": 0.0, "who_data": CLOWN(1)},
+            {"who": "hexkagune:ghoul", "at": (54, 0, 8), "yaw": 0.0, "who_data": CLOWN(2)},
+            {"who": "hexkagune:ghoul", "at": (28, 0, 32), "yaw": 180.0, "who_data": CLOWN(3)},
+            {"who": "hexkagune:ghoul", "at": (48, 0, 18), "yaw": 90.0, "who_data": CLOWN(4)},
+        ],
+        "keep_air": False, "crop": None, "floor": "minecraft:dirt_path", "anchor": (38, -1, 24), "anchor_name": "hexkagune:circus_anchor",
     },
     "cyber_tower": {
         "source": "exploration/Ken_tower.litematic",
@@ -177,10 +203,66 @@ def litematic(path):
     return width, height, length, by_index, cells
 
 
+#: 4.1.48: the circus tent's blocks (id, data) as 1.20.1's states (an Alpha schematic's numbers; every other air).
+ALPHA = {
+    (35, 0): "minecraft:white_wool",
+    (35, 14): "minecraft:red_wool",
+    (89, 0): "minecraft:glowstone",
+    (17, 1): "minecraft:spruce_log[axis=y]",  # spruce (1), upright (the axis bits 0)
+    (31, 1): "minecraft:grass",               # tall grass's grass: 1.20.1's grass
+    (37, 0): "minecraft:dandelion",
+}
+PLANTS = {"minecraft:grass", "minecraft:dandelion"}
+
+
+def alpha(path):
+    """4.1.48: (width, height, length, palette by index (state text), cells x-fastest then z then y): an MCEdit Alpha schematic."""
+    root = read(path)
+    width, height, length = root["Width"].value, root["Height"].value, root["Length"].value
+    ids, data = root["Blocks"].value, root["Data"].value
+    by_index, index, cells = {0: "minecraft:air"}, {}, []
+    for i in range(width * height * length):
+        b, d = ids[i] & 0xFF, data[i] & 0x0F
+        if b == 0:
+            cells.append(0)
+            continue
+        assert (b, d) in ALPHA, f"{path.name}: no 1.20.1 state for block {b}:{d}"
+        if (b, d) not in index:
+            index[(b, d)] = len(by_index)
+            by_index[len(by_index)] = ALPHA[(b, d)]
+        cells.append(index[(b, d)])
+    return width, height, length, by_index, cells
+
+
+def floor(width, height, length, by_index, cells):
+    """
+    4.1.48: the cells (x, z) a floor is laid under: everything the tent covers (any of its blocks but its plants, at any height, seen from
+    above) and everything those close in (what can't be reached from the edge of the schematic without crossing it).
+    """
+    covered = set()
+    for y in range(height):
+        for z in range(length):
+            row = (y * length + z) * width
+            for x in range(width):
+                state = by_index[cells[row + x]]
+                if state not in AIR and state not in PLANTS:
+                    covered.add((x, z))
+    outside, todo = set(), [(x, z) for x in range(width) for z in (0, length - 1)] + [(x, z) for z in range(length) for x in (0, width - 1)]
+    while todo:
+        x, z = todo.pop()
+        if not (0 <= x < width and 0 <= z < length) or (x, z) in outside or (x, z) in covered:
+            continue
+        outside.add((x, z))
+        todo += [(x + 1, z), (x - 1, z), (x, z + 1), (x, z - 1)]
+    return {(x, z) for x in range(width) for z in range(length) if (x, z) not in outside}
+
+
 def build(key, place, registry):
     source = ART / place["source"]
     entities = {}
-    if source.suffix == ".litematic":
+    if source.suffix == ".schematic":
+        width, height, length, by_index, cells = alpha(source)
+    elif source.suffix == ".litematic":
         width, height, length, by_index, cells = litematic(source)
     else:
         schem = read(source)
@@ -214,7 +296,27 @@ def build(key, place, registry):
     anchor = place.get("anchor")
     blocks = io.BytesIO()
     count = 0
-    for out_y, y in enumerate(layers):
+    lift = 0
+    if place.get("floor"):
+        # 4.1.48: the floor, a layer of its own under the schematic's bottom one (grass under a plant: it would not stand on a path).
+        under = floor(width, height, length, by_index, cells)
+        plants = {(x, z) for z in range(length) for x in range(width) if by_index[cells[z * width + x]] in PLANTS}
+        for z in range(length):
+            for x in range(width):
+                if (x, z) not in under and (x, z) not in plants:
+                    continue
+                c = ("minecraft:grass_block", {"snowy": "false"}) if (x, z) in plants else (place["floor"], {})
+                nbt = None
+                if anchor and (x, -1, z) == anchor:
+                    final = text(*c)
+                    c = ("minecraft:jigsaw", {"orientation": "up_north"})
+                    nbt = {"id": Tag(STRING, "minecraft:jigsaw"), "name": Tag(STRING, place["anchor_name"]), "target": Tag(STRING, "minecraft:empty"),
+                           "pool": Tag(STRING, "minecraft:empty"), "final_state": Tag(STRING, final), "joint": Tag(STRING, "rollable")}
+                write_block(blocks, state_index(*c), (x, 0, z), nbt)
+                count += 1
+        assert anchor is None or (anchor[0], anchor[2]) in under, f"{key}: the anchor is off the floor"
+        lift = 1
+    for out_y, y in enumerate(layers, start=lift):
         for z in range(length):
             row = (y * length + z) * width
             for x in range(width):
@@ -239,25 +341,34 @@ def build(key, place, registry):
                         nbt = entities[(x, y, z)]
                 write_block(blocks, i, (x, out_y, z), nbt)
                 count += 1
-    wx, wy, wz = place["at"]
-    assert by_index[cells[(wy * length + wz) * width + wx]] in AIR and by_index[cells[((wy + 1) * length + wz) * width + wx]] in AIR, \
-        f"{key}: {place['who']} would stand in a block"
-    assert by_index[cells[((wy - 1) * length + wz) * width + wx]] not in AIR, f"{key}: {place['who']} would stand on nothing"
-    assert wy in layers, f"{key}: {place['who']} is cut off"
-    wy_out = layers.index(wy)
-    who = {"id": Tag(STRING, place["who"]), "PersistenceRequired": Tag(BYTE, 1), "Rotation": Tag(LIST, (FLOAT, [place["yaw"], 0.0])),
-           "Motion": Tag(LIST, (DOUBLE, [0.0, 0.0, 0.0])), "OnGround": Tag(BYTE, 1)}
-    if "who_data" in place:
-        # 4.1.24: who they are, in Forge's saved data (Entity.getPersistentData: "ForgeData").
-        kinds = {"long": LONG, "int": INT, "byte": BYTE}
-        who["ForgeData"] = Tag(COMPOUND, {k: Tag(kinds[kind], v) for k, (kind, v) in place["who_data"].items()})
-    figure = {"blockPos": Tag(LIST, (INT, [wx, wy_out, wz])), "pos": Tag(LIST, (DOUBLE, [wx + 0.5, float(wy_out), wz + 0.5])),
-              "nbt": Tag(COMPOUND, who)}
-    size = (width, len(layers), length)
+    figures = []
+    for person in place.get("people", [place]):
+        wx, wy, wz = person["at"]
+        assert by_index[cells[(wy * length + wz) * width + wx]] in AIR and by_index[cells[((wy + 1) * length + wz) * width + wx]] in AIR, \
+            f"{key}: {person['who']} would stand in a block"
+        if wy == 0 and place.get("floor"):
+            assert (wx, wz) in under, f"{key}: {person['who']} at {person['at']} would stand off the floor"  # 4.1.48
+        else:
+            assert by_index[cells[((wy - 1) * length + wz) * width + wx]] not in AIR, f"{key}: {person['who']} would stand on nothing"
+        assert wy in layers, f"{key}: {person['who']} is cut off"
+        wy_out = layers.index(wy) + lift
+        who = {"id": Tag(STRING, person["who"]), "PersistenceRequired": Tag(BYTE, 1), "Rotation": Tag(LIST, (FLOAT, [person["yaw"], 0.0])),
+               "Motion": Tag(LIST, (DOUBLE, [0.0, 0.0, 0.0])), "OnGround": Tag(BYTE, 1)}
+        if "who_data" in person:
+            # 4.1.24: who they are, in Forge's saved data (Entity.getPersistentData: "ForgeData").
+            kinds = {"long": LONG, "int": INT, "byte": BYTE}
+            who["ForgeData"] = Tag(COMPOUND, {k: Tag(kinds[kind], v) for k, (kind, v) in person["who_data"].items()})
+        figures.append({"blockPos": Tag(LIST, (INT, [wx, wy_out, wz])), "pos": Tag(LIST, (DOUBLE, [wx + 0.5, float(wy_out), wz + 0.5])),
+                        "nbt": Tag(COMPOUND, who)})
+    size = (width, len(layers) + lift, length)
     path = OUT / (key + ".nbt")
-    write_template(path, size, palette, blocks.getvalue(), count, [figure])
+    write_template(path, size, palette, blocks.getvalue(), count, figures)
     print(f"{path.relative_to(ROOT)}: {size[0]}x{size[1]}x{size[2]}, {len(palette)} states, {count} blocks, "
-          f"{place['who']} at {(wx, wy_out, wz)}, {path.stat().st_size // 1024} KiB")
+          + ", ".join(f"{_who(f)} at {tuple(f['blockPos'].value[1])}" for f in figures) + f", {path.stat().st_size // 1024} KiB")
+
+
+def _who(figure):
+    return figure["nbt"].value["id"].value
 
 
 def name_bytes(name):
@@ -305,8 +416,10 @@ def main():
     registry = None
     if "--blocks" in sys.argv:
         registry = Registry(sys.argv[sys.argv.index("--blocks") + 1])
+    only = sys.argv[sys.argv.index("--only") + 1].split(",") if "--only" in sys.argv else None  # 4.1.48: some of them
     for key, place in PLACES.items():
-        build(key, place, registry)
+        if only is None or key in only:
+            build(key, place, registry)
 
 
 if __name__ == "__main__":

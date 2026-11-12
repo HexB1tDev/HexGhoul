@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.48 (HexGhoul): the circus tent and its Clowns; Ayato and Noro on slim arms, builds evened out (testing)
+
+See `.github/release-notes-4.1.48.md`. The owner's `circus.schematic` (old MCEdit Alpha format) as `hexkagune:circus` ("One per world + clowns"): `tools/companion_structures.py` reads Alpha files (`alpha`, `ALPHA`), lays a dirt-path floor under the tent's ring (`floor`, grass under its plants), anchors it at the floor's middle (`hexkagune:circus_anchor`) and puts several people in one place (`people`: four `hexkagune:ghoul` with `HexCircus`, `HexCircusMask` 1-4, `HexGang` -1); a one-of-a-kind dry place (`DryLand.PLACES`, `CIRCUS_SALT`, `PlaceClaims`, `ControlStructures.ONE_OF_A_KIND`); `GhoulNpcBrain.circus`/`atCircus`/`clearWay` (a Clown in its mask, keeping to its spot); `Gang.rival` ("Yes, rivals": Clowns and Gas Masks fight on sight). Ayato and Noro `slim()` (Noro's texture `narrow_arms`), `AYATO_SHARE` 0.42, `NORO_SHARE` 0.52, `PLAYER_SHARE` 0.52 ("the same as Noro"). `tools/structure_render.py` renders any template.
+
 ## 4.1.47 (HexGhoul): the ghouls' arm blade rebuilt, its moveset and stance (testing)
 
 See `.github/release-notes-4.1.47.md`. "Improve severely the kagune arm blade of the ghouls" (and the owner's picture, choice "B: blade turned over", "a proper moveset, slash attacks and a proper ambient stand"): `BladeArmModel` rebuilt (two ribbons wound round the arm with veins, one great single-edged blade with a glowing gleam, turned over: edge on z +), `BladeArm` four slashes (`SWEEP` cuts all before it, `FINISHER` the cleave; `BLADE_LENGTH` 26, reach 3.2), `BladeArmPose` new keys (each edge-first) and `stand` (alive, feet set while still), `GhoulNpcCombat.bladeCut`; `NpcTests.bladeLow` keeps every frame out of the ground. Protocol 121.

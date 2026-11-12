@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -151,6 +152,29 @@ public final class GhoulNpcBrain {
         return new NpcIdentity(rolled.kind(), NpcTemper.PACK, rank, rolled.skin(), rolled.name(), rolled.seed(), mask, true);
     }
 
+    /**
+     * 4.1.48 (the owner chose "One per world + clowns"): set (by the circus tent's template, tools/companion_structures.py) on the Clowns who
+     * live there: which mask each wears (1-based, each a different one); where each first woke is its home ({@link #CIRCUS_HOME_X}).
+     */
+    static final String CIRCUS = "HexCircus";
+    static final String CIRCUS_MASK = "HexCircusMask";
+    static final String CIRCUS_HOME_X = "HexCircusHomeX";
+    static final String CIRCUS_HOME_Y = "HexCircusHomeY";
+    static final String CIRCUS_HOME_Z = "HexCircusHomeZ";
+    /** 4.1.48: how far a circus Clown strolls from its spot; further than {@link #CIRCUS_LEASH} (a chase), it hurries back. */
+    static final double CIRCUS_STROLL = 7.0;
+    static final double CIRCUS_LEASH = 20.0;
+
+    /**
+     * 4.1.48: {@code rolled} made one of the circus's Clowns, in its mask {@code mask} (as its template set it; one picked with {@code roll} in
+     * 0..1 if that is none of theirs): a Clown as a roaming one is (it starts nothing; whoever hurts one has them all on him).
+     */
+    static NpcIdentity circus(NpcIdentity rolled, int mask, double roll) {
+        com.hex.kagune.control.npc.Gang clowns = com.hex.kagune.control.npc.Gang.CLOWNS;
+        int n = clowns.masks().size();
+        return rolled.ganged(clowns, mask >= 1 && mask <= n ? mask : 1 + Math.min(n - 1, (int)(Math.max(0.0, roll) * n)));
+    }
+
     /** 4.1.45: a gang's own (which one in its saved data), how far one hurt calls the rest, how long they hold it against whoever did it. */
     static final String GANG_ID = "HexGang";
     static final double GANG_CALL = 24.0;
@@ -263,6 +287,60 @@ public final class GhoulNpcBrain {
         return true;
     }
 
+    /**
+     * 4.1.48: a circus Clown at home (true; false for anyone else): walked back to its spot once further than {@link #CIRCUS_STROLL} (at a
+     * run past {@link #CIRCUS_LEASH}), else now and then a few steps to a spot near it that it can walk to in a straight line on the tent's
+     * floor ({@link #clearWay}: never at the tent's wall, so never a path round the outside).
+     */
+    static boolean atCircus(GhoulNpc npc, Mind mind, ServerLevel level, long now) {
+        CompoundTag saved = npc.getPersistentData();
+        if (!saved.m_128441_(CIRCUS_HOME_X)) {
+            return false;
+        }
+        double hx = saved.m_128451_(CIRCUS_HOME_X) + 0.5;
+        double hy = saved.m_128451_(CIRCUS_HOME_Y);
+        double hz = saved.m_128451_(CIRCUS_HOME_Z) + 0.5;
+        double dx = npc.m_20185_() - hx;
+        double dz = npc.m_20189_() - hz;
+        double away = Math.sqrt(dx * dx + dz * dz);
+        if (away > CIRCUS_STROLL + 2.0) {
+            if (now % 20L == 0L || npc.m_21573_().m_26571_()) {
+                npc.m_21573_().m_26519_(hx, hy, hz, away > CIRCUS_LEASH ? 1.0 : 0.7);
+            }
+            return true;
+        }
+        if (now < mind.wanderAt || !npc.m_21573_().m_26571_()) {
+            return true;
+        }
+        mind.wanderAt = now + 120L + (long)(npc.m_217043_().m_188500_() * 200.0);
+        for (int attempt = 0; attempt < 4; attempt++) {
+            double angle = npc.m_217043_().m_188500_() * Math.PI * 2.0;
+            double distance = 2.0 + npc.m_217043_().m_188500_() * (CIRCUS_STROLL - 2.0);
+            double x = hx + Math.cos(angle) * distance;
+            double z = hz + Math.sin(angle) * distance;
+            if (clearWay(level, hx, hy, hz, x, z)) {
+                npc.m_21573_().m_26519_(x, hy, z, 0.6);
+                break;
+            }
+        }
+        return true;
+    }
+
+    /** 4.1.48: true if the straight way from {@code x0, z0} to {@code x1, z1} at {@code y} is open (feet and head) over solid floor. */
+    static boolean clearWay(ServerLevel level, double x0, double y, double z0, double x1, double z1) {
+        int steps = Math.max(1, (int)Math.ceil(Math.sqrt((x1 - x0) * (x1 - x0) + (z1 - z0) * (z1 - z0)) * 2.0));
+        for (int i = 1; i <= steps; i++) {
+            double t = i / (double)steps;
+            double x = x0 + (x1 - x0) * t;
+            double z = z0 + (z1 - z0) * t;
+            if (!level.m_8055_(BlockPos.m_274561_(x, y + 0.5, z)).m_60795_() || !level.m_8055_(BlockPos.m_274561_(x, y + 1.5, z)).m_60795_()
+                || level.m_8055_(BlockPos.m_274561_(x, y - 0.5, z)).m_60795_()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** Where an ally's player and whether it waits are kept in its saved data. */
     static final String ALLY = "HexGhoulAlly";
     static final String WAITS = "HexGhoulWaits";
@@ -280,9 +358,18 @@ public final class GhoulNpcBrain {
         if (who == null) {
             // Summoned or hatched, not spawned at night: it becomes someone now.
             who = NpcIdentity.roll(0, () -> npc.m_217043_().m_188500_());
-            if (npc.getPersistentData().m_128471_(AOGIRI)) {
+            CompoundTag saved = npc.getPersistentData();
+            if (saved.m_128471_(AOGIRI)) {
                 // 4.0.0: one of Aogiri Tree's, placed with its hideout: the faction's own temper, mask and rank, its Crimson Outfit.
                 who = aogiri(who, npc.m_217043_().m_188500_(), npc.m_217043_().m_188500_());
+            } else if (saved.m_128471_(CIRCUS)) {
+                // 4.1.48: one of the Clowns, placed with the circus tent: its own mask (its template's), and where it woke its home.
+                who = circus(who, saved.m_128451_(CIRCUS_MASK), npc.m_217043_().m_188500_());
+                if (!saved.m_128441_(CIRCUS_HOME_X)) {
+                    saved.m_128405_(CIRCUS_HOME_X, (int)Math.floor(npc.m_20185_()));
+                    saved.m_128405_(CIRCUS_HOME_Y, (int)Math.floor(npc.m_20186_() + 0.01));
+                    saved.m_128405_(CIRCUS_HOME_Z, (int)Math.floor(npc.m_20189_()));
+                }
             }
             npc.identify(who);
             dress(npc);
@@ -470,6 +557,9 @@ public final class GhoulNpcBrain {
         if (who.ccg()) {
             return division(npc, mind, body, now); // 4.1.46: as an investigator
         }
+        if (who.gang() != 0 && body instanceof GhoulNpc other && other.identity() != null && who.gangOf().rival(other.identity().gangOf())) {
+            return true; // 4.1.48 (the owner chose "Yes, rivals"): a Clown and a Gas Mask fight on sight (it must see them: prey)
+        }
         if (who.gang() != 0) {
             // 4.1.45 (the owner: "protect eachother) (Non-hostile unless provoked)"): a gang starts nothing: only what hurt one of them
             // (a grudge, above, the whole gang's: hurt) or is going for one of them.
@@ -653,6 +743,10 @@ public final class GhoulNpcBrain {
         }
         // 4.0.2: an Aogiri member at the hideout at its work: at its post, asking a newcomer their business, on patrol, about its floor.
         if (who.aogiri() && AogiriGuard.idle(npc, mind, level, now)) {
+            return;
+        }
+        // 4.1.48: a circus Clown keeps to its tent: strolling about its spot, never walking off with the others.
+        if (atCircus(npc, mind, level, now)) {
             return;
         }
         // 4.1.45: a gang walks together: one leads (wandering as any ghoul does), the rest keep up with it.

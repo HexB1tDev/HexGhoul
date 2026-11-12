@@ -387,6 +387,23 @@ public final class CompanionTests {
         } catch (java.io.IOException failure) {
             check(false, "read the White Reaper's mansion: " + failure);
         }
+        // 4.1.48 (the owner sent circus.schematic; chose "One per world + clowns"): the circus tent, the owner's (77 x 46 x 49) on a floor of
+        // dirt path laid under it (a layer of its own: 47 tall), anchored at the floor's middle; four Clowns inside on the floor, each saved
+        // as one of the circus's in its own mask, all of one gang, kept with the world; only 1.20.1's blocks.
+        try {
+            byte[] tent = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(java.nio.file.Path.of(
+                "src/main/resources/data/hexkagune/structures/circus.nbt"))).readAllBytes();
+            String text = new String(tent, java.nio.charset.StandardCharsets.ISO_8859_1);
+            int[] size = ints(tent, "size");
+            int[] first = ints(tent, "blockPos");
+            check(size != null && size[0] == 77 && size[1] == 47 && size[2] == 49, "the circus tent, the owner's, on its floor: " + java.util.Arrays.toString(size));
+            check(text.split("hexkagune:ghoul", -1).length == 5 && text.split("HexCircusMask", -1).length == 5 && text.split("HexGang", -1).length == 5
+                && text.split("PersistenceRequired", -1).length == 5 && first != null && first[1] == 1, "four Clowns standing on its floor: " + java.util.Arrays.toString(first));
+            check(text.contains("hexkagune:circus_anchor") && text.contains("minecraft:dirt_path") && text.contains("minecraft:red_wool")
+                && text.contains("minecraft:white_wool") && !text.contains("minecraft:short_grass"), "anchored on its floor; only 1.20.1's blocks");
+        } catch (java.io.IOException failure) {
+            check(false, "read the circus tent: " + failure);
+        }
         // 4.1.0 (the owner: "after training with Ayato (Ukaku kakuja quest) the player gains a new pull out kagune animation sort of like Ken
         // gives the player. the player lifts both hands god like and then they're unleashed."): both arms out wide, palms up, chin up, up on
         // the toes, held as the wings come out, then down again; his way before Ken's, after Noro's.
@@ -1309,9 +1326,14 @@ public final class CompanionTests {
         }
         // 4.0.8 (the owner: "I sent you the new ayato skin, make him a little muscular but way less than the male player."): Ayato's build a
         // share of the White Reaper's, way less than a male player's; nobody else's changed; his skin wide-armed, as he is drawn.
-        check(Persona.AYATO.muscle() > 0.0 && Persona.AYATO.muscle() <= com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE / 2.0
-            && Persona.KEN.muscle() == 0.0 && Persona.NORO.muscle() == 0.0 && Persona.ETO.muscle() == 0.0 && !Persona.AYATO.slim() && Persona.KEN.slim(),
-            "Ayato a little muscular, way less than a male player; Ken as he was");
+        // 4.1.48 (the owner: "ayato is meant to have muscles they're gone? Also give some to Noro, both less than the player, noro more than
+        // ayato"; "Ayato and Noro should both be Alex models"): Ayato's build plainer, Noro's more; both slim. Then: "Reduce the player's
+        // muscle size to be the same as Noro.": a male player's is Noro's.
+        check(Persona.AYATO.muscle() >= 0.4 && Persona.NORO.muscle() > Persona.AYATO.muscle()
+            && Persona.NORO.muscle() == com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE
+            && com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE == 0.52
+            && Persona.KEN.muscle() == 0.0 && Persona.ETO.muscle() == 0.0 && Persona.AYATO.slim() && Persona.NORO.slim() && Persona.KEN.slim(),
+            "Ayato muscular, Noro more, a male player the same as Noro; both on the slim arms; Ken as he was");
         check(com.hex.kagune.control.npc.ReaperBuild.armOut(com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE) == com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT
             && com.hex.kagune.control.npc.ReaperBuild.armOut(com.hex.kagune.control.npc.ReaperBuild.AYATO_SHARE) < com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT,
             "his arms out round his chest, less than a male player's");

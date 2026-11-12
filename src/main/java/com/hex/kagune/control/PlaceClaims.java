@@ -62,7 +62,8 @@ public final class PlaceClaims {
     }
 
     /** 4.1.17: the one-of-a-kind places (their structure ids). */
-    static final String[] ONE_OF_A_KIND = {"aogiri_hideout", "ccg_building", "anteiku", "library", "cyber_tower", "reaper_mansion"};
+    static final String[] ONE_OF_A_KIND = {"aogiri_hideout", "ccg_building", "anteiku", "library", "cyber_tower", "reaper_mansion",
+        "circus"};
 
     @SubscribeEvent
     public static void stopped(ServerStoppedEvent event) {

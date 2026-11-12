@@ -37,8 +37,10 @@ COMPANIONS = {
     "ken": {"turns": ("left",), "slim": True},
     # 4.0.0: Ayato (the owner's skin, art/exploration/Ayato_skin.png): both eyes turn; Noro (Noro_skin.webp): his face is his stitched
     # mask, its two dark eye-holes turn red.
-    "ayato": {"turns": ("right", "left"), "slim": False},  # 4.0.8: the owner's new skin (art/exploration/Ayato_skin_2.png), wide arms
-    "noro": {"turns": ("right", "left"), "slim": True},
+    # 4.1.48 (the owner: "Ayato and Noro should both be Alex models"): both on the slim arms. Ayato's skin is painted for them already
+    # (its arms' fourth columns are clear); Noro's is painted for the wide arms: the game's copy has its arms narrowed (narrow_arms).
+    "ayato": {"turns": ("right", "left"), "slim": True},  # 4.0.8: the owner's new skin (art/exploration/Ayato_skin_2.png)
+    "noro": {"turns": ("right", "left"), "slim": True, "narrow": True},
     # 4.1.5: the General (the owner's skin, sent with "use this skin for the general": art/exploration/General_skin.png, slim arms). A
     # human: no eye of his ever turns (his kakugan textures are empty).
     "general": {"turns": (), "slim": True},
@@ -171,6 +173,41 @@ def find_eyes(face):
     return found, skin
 
 
+# 4.1.48: each arm's boxes in a 64px skin (its corner u, v): the right arm and its outer layer, the left arm and its outer layer.
+ARM_BOXES = [(40, 16), (40, 32), (32, 48), (48, 48)]
+
+
+def narrow_arms(skin):
+    """4.1.48: a skin painted for the wide (4 pixel) arms laid out for the slim (3 pixel) ones, as a slim model reads it: each arm face 4
+    wide is made 3 by leaving out one middle column (the front's third, the back's second: the same side of the arm), the sides as they
+    are; the slim layout's spare columns cleared. A 128px skin at twice the pixels."""
+    k = skin.size[0] // 64
+    out = skin.copy()
+    src = skin.load()
+    dst = out.load()
+
+    def face(u, v, w, h, keep, to_u):
+        for y in range(h * k):
+            for i, col in enumerate(keep):
+                for dx in range(k):
+                    dst[(to_u + i) * k + dx, v * k + y] = src[(u + col) * k + dx, v * k + y]
+
+    for u, v in ARM_BOXES:
+        # The box's whole area (16 x 16) cleared, then each face laid out again at the slim positions.
+        for y in range(16 * k):
+            for x in range(16 * k):
+                dst[u * k + x, v * k + y] = (0, 0, 0, 0)
+        front_keep = [0, 1, 3]
+        back_keep = [0, 2, 3]
+        face(u + 4, v, 4, 4, front_keep, u + 4)          # top (4 wide -> 3)
+        face(u + 8, v, 4, 4, front_keep, u + 7)          # bottom
+        face(u, v + 4, 4, 12, [0, 1, 2, 3], u)           # the outer side
+        face(u + 4, v + 4, 4, 12, front_keep, u + 4)     # the front
+        face(u + 8, v + 4, 4, 12, [0, 1, 2, 3], u + 7)   # the inner side
+        face(u + 12, v + 4, 4, 12, back_keep, u + 11)    # the back
+    return out
+
+
 def build(key, config, preview):
     source = ART / (key + "_skin.png")
     if not source.exists():
@@ -188,6 +225,8 @@ def build(key, config, preview):
             for x in (5, 6):
                 source_face.put(day, 7 - x, y, source_face.at(x, y))
         skin = day
+    if config.get("narrow"):
+        skin = narrow_arms(skin)
     if key in REPAINT:
         skin = skin.copy()
         painter = Face(skin)

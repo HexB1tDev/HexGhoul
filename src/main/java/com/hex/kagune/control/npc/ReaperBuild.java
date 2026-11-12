@@ -35,17 +35,22 @@ public final class ReaperBuild {
      * player's build, slimmer than the White Reaper's: the same shape ({@link #PROFILE}'s rows, the waist the same), but only
      * {@link #PLAYER_SHARE} of how far his stands out past the torso, across the shoulders and chest, in front and behind.
      */
-    public static final double PLAYER_SHARE = 0.6;
+    // 4.1.48 (the owner: "Reduce the player's muscle size to be the same as Noro."): Noro's, 0.52 (it was 0.6).
+    public static final double PLAYER_SHARE = 0.52;
     /** A male player's chest's outline: {@link #PROFILE}, {@link #PLAYER_SHARE} as far out past the torso (its waist row as his). */
     public static final double[][] PLAYER = slimmer(PROFILE, PLAYER_SHARE);
-    /** How much further out (pixels) a male player's arms hang, clear of his chest. */
-    public static final float PLAYER_ARM_OUT = 0.45F;
+    /** How much further out (pixels) a male player's arms hang, clear of his chest: {@link #armOut(double)} of his build (0.39). */
+    public static final float PLAYER_ARM_OUT = (float)(ARM_OUT * PLAYER_SHARE);
     /**
      * 4.0.8 (the owner: "I sent you the new ayato skin, make him a little muscular but way less than the male player."): Ayato's build, the
      * same shape, {@link #AYATO_SHARE} of how far the White Reaper's stands out past the torso (a male player's is {@link #PLAYER_SHARE}).
      */
-    public static final double AYATO_SHARE = 0.3;
+    // 4.1.48 (the owner: "ayato is meant to have muscles they're gone? Also give some to Noro, both less than the player, noro more than
+    // ayato"): 0.42 (0.3 was lost under his black jacket in game); Noro's NORO_SHARE more, a male player's the same as Noro's.
+    public static final double AYATO_SHARE = 0.42;
     public static final double[][] AYATO = slimmer(PROFILE, AYATO_SHARE);
+    /** 4.1.48: Noro's build, more than Ayato's; a male player's the same (the owner: "the same as Noro"). */
+    public static final double NORO_SHARE = PLAYER_SHARE;
 
     /**
      * 4.1.5 (the owner: "give him some muscles also less than the player"): the General's build, between Ayato's and a male player's.
@@ -57,7 +62,7 @@ public final class ReaperBuild {
         return share >= 1.0 ? PROFILE : share == PLAYER_SHARE ? PLAYER : share == AYATO_SHARE ? AYATO : slimmer(PROFILE, share);
     }
 
-    /** 4.0.8: how much further out (pixels) the arms of a build {@code share} of the Reaper's hang (his 0.75; a male player's 0.45). */
+    /** 4.0.8: how much further out (pixels) the arms of a build {@code share} of the Reaper's hang (his 0.75; a male player's 0.39). */
     public static float armOut(double share) {
         return (float)(ARM_OUT * share);
     }

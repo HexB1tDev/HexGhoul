@@ -404,12 +404,14 @@ public final class DryLand {
      * where the place itself stands once laid out and moved onto dry land as it always is ({@link #firstPlaced}), at least
      * {@link #PLACE_APART} chunks from every village offer and from the middle of every one-of-a-kind place chosen before it.
      */
-    public static final String[] PLACES = {"anteiku", "library", "cyber_tower", "reaper_mansion"};
+    public static final String[] PLACES = {"anteiku", "library", "cyber_tower", "reaper_mansion", "circus"};
     public static final int ANTEIKU_SALT = 1324066190;
     public static final int LIBRARY_SALT = 1300741852;
     public static final int TOWER_SALT = 1324066191;
     /** 4.1.24 (the owner: "I think we need a structure for him ... there's always only one of them also in the map"): Arima's mansion. */
     public static final int MANSION_SALT = 1324066192;
+    /** 4.1.48 (the owner chose "One per world + clowns"): the circus tent, the Clowns' home. */
+    public static final int CIRCUS_SALT = 1324066193;
     /** 4.1.9: how far (chunks) a one-of-a-kind place's middle keeps from a village's offer and from the places chosen before it. */
     public static final int PLACE_APART = 12;
     /** 4.1.9: how many offers that look like land are laid out in full before a world goes without the place (none on land). */
@@ -425,6 +427,7 @@ public final class DryLand {
             case "library" -> LIBRARY_SALT;
             case "cyber_tower" -> TOWER_SALT;
             case "reaper_mansion" -> MANSION_SALT;
+            case "circus" -> CIRCUS_SALT;
             default -> -1;
         };
     }

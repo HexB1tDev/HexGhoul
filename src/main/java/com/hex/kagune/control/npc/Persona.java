@@ -723,6 +723,15 @@ public abstract class Persona {
      * starts less, and means more by it.
      */
     private static final class Ayato extends Persona {
+        /**
+         * 4.1.48 (the owner: "Ayato and Noro should both be Alex models"): on the slim arms (Ayato's skin is painted for them; Noro's game
+         * copy has its arms narrowed: tools/companion_textures.py, narrow_arms). A man's body otherwise (no hips, no bust).
+         */
+        @Override
+        public boolean slim() {
+            return true;
+        }
+
         private Script script;
 
         /**
@@ -905,6 +914,21 @@ public abstract class Persona {
      * anyone. Bikaku: three worms, the whole of it, and a body that will not stay dead. A teacher, never a lover.
      */
     private static final class Noro extends Persona {
+        /** 4.1.48 (the owner: "give some to Noro, both less than the player, noro more than ayato"): {@link ReaperBuild#NORO_SHARE}. */
+        @Override
+        public double muscle() {
+            return ReaperBuild.NORO_SHARE;
+        }
+
+        /**
+         * 4.1.48 (the owner: "Ayato and Noro should both be Alex models"): on the slim arms (Ayato's skin is painted for them; Noro's game
+         * copy has its arms narrowed: tools/companion_textures.py, narrow_arms). A man's body otherwise (no hips, no bust).
+         */
+        @Override
+        public boolean slim() {
+            return true;
+        }
+
         private Script script;
 
         @Override
