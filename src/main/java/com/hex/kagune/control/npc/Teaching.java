@@ -70,6 +70,8 @@ public final class Teaching {
     public static final String NORO = "noro";
     /** 4.1.7: the General (Kick Master: to a human, or a ghoul he takes for one behind a full mask). */
     public static final String GENERAL = "general";
+    /** 4.1.49: Roma, the Clowns' leader. */
+    public static final String ROMA = "roma";
 
     /** Every lesson, in the order each teacher teaches them. */
     public static final List<Lesson> ALL = List.of(

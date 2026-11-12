@@ -83,6 +83,8 @@ PLACES = {
             {"who": "hexkagune:ghoul", "at": (54, 0, 8), "yaw": 0.0, "who_data": CLOWN(2)},
             {"who": "hexkagune:ghoul", "at": (28, 0, 32), "yaw": 180.0, "who_data": CLOWN(3)},
             {"who": "hexkagune:ghoul", "at": (48, 0, 18), "yaw": 90.0, "who_data": CLOWN(4)},
+            # 4.1.49 (the owner: Roma "spawns in this circus tent"): the ringmaster in the middle of the ring, facing the way in (south).
+            {"who": "hexkagune:roma", "at": (38, 0, 24), "yaw": 0.0},
         ],
         "keep_air": False, "crop": None, "floor": "minecraft:dirt_path", "anchor": (38, -1, 24), "anchor_name": "hexkagune:circus_anchor",
     },

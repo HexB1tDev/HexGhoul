@@ -189,6 +189,45 @@ public final class GraftRenderer {
                 PlayerLayers.failed("a wild ghoul's tails", failure);
             }
         }
+        // 4.1.49 (the owner: Roma "has a Rinkaku with 4 purple tendrils"): a companion's Rinkaku tendrils (Persona.tendrils), drawn as a wild
+        // Rinkaku ghoul's tails are, from the same message under her id (NpcTendrils): the transplant's tails, four of them two a side, in
+        // her purple, at her size, riding her body as it was drawn this frame.
+        for (com.hex.kagune.control.npc.EtoNpc npc : level.m_6443_(com.hex.kagune.control.npc.EtoNpc.class, self.m_20191_().m_82400_(64.0),
+            living -> living.m_6084_() && !living.m_20145_() && living.persona().tendrils() > 0)) {
+            try {
+                com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(npc.m_19879_());
+                float deploy = com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock);
+                if (seen == null || deploy <= 0.005F) {
+                    LIMBS.remove(npc.m_20148_());
+                    continue;
+                }
+                double distance = npc.m_20280_(self);
+                if (distance > MAX_DISTANCE_SQR) {
+                    continue;
+                }
+                int[] targets = new int[com.hex.kagune.control.network.S2CGraftState.TARGETS];
+                targets[0] = seen.prey();
+                GraftClient.View view = new GraftClient.View(GraftStage.TRANSPLANT, false, Long.MIN_VALUE, -1.0E6, seen.move(), seen.moveAt(),
+                    seen.moveBegan(), 0.0F, seen.x(), seen.y(), seen.z(), targets, 0, 0);
+                Limbs limbs = LIMBS.computeIfAbsent(npc.m_20148_(), id -> new Limbs());
+                limbs.seen = level.m_46467_();
+                limbs.stage = GraftStage.TRANSPLANT;
+                Frame frame = Frame.of(npc, partial, npc.persona().size());
+                GraftRig.Body body = body(npc, partial, clock, frame, prey(level, npc, limbs, partial, frame));
+                VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];
+                tint = npc.persona().kaguneColour();
+                try {
+                    drawSet(out, matrix, normals, level, npc, view, GraftStage.TRANSPLANT, limbs.base, deploy, view, body, frame, camera, clock, partial,
+                        seen.identity().lookMastery(), distance <= DETAIL_DISTANCE_SQR, null, EtoRenderer.drawn(npc.m_19879_(), clock),
+                        npc.persona().tendrils());
+                } finally {
+                    tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+                }
+            } catch (RuntimeException failure) {
+                LIMBS.remove(npc.m_20148_());
+                PlayerLayers.failed("a companion's tendrils", failure);
+            }
+        }
         // 1.3.43: the ghoul children in view with a Rinkaku tentacle of their own. 1.3.44 (the owner: "one tentacle, not two", and not the
         // graft's toothed tails): one, drawn as a Rinkaku player's is (the original's tube, KaguneWorldRenderer.emitTubeLegacy), curled over
         // its head at rest as a player's first tentacle is, lashing on the beats of its string, at its size, in the colour it took.
@@ -350,7 +389,16 @@ public final class GraftRenderer {
                                 GraftClient.View view, GraftStage stage, GraftMotion.Limb[] motion, double grown, GraftClient.View moving,
                                 GraftRig.Body body, Frame frame, Vec3 camera, double clock, float partial, int mastery, boolean fine,
                                 double[] eyeRig, com.hex.kagune.control.client.animation.RigPose posed) {
-        int n = Math.min(motion.length, stage.limbs(mastery));
+        drawSet(out, matrix, normals, level, player, view, stage, motion, grown, moving, body, frame, camera, clock, partial, mastery, fine, eyeRig,
+            posed, 0);
+    }
+
+    /** As above, with {@code count} limbs (4.1.49: Roma's four transplant tendrils; 0: the stage's own number). */
+    private static void drawSet(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, LivingEntity player,
+                                GraftClient.View view, GraftStage stage, GraftMotion.Limb[] motion, double grown, GraftClient.View moving,
+                                GraftRig.Body body, Frame frame, Vec3 camera, double clock, float partial, int mastery, boolean fine,
+                                double[] eyeRig, com.hex.kagune.control.client.animation.RigPose posed, int count) {
+        int n = Math.min(motion.length, count > 0 ? count : stage.limbs(mastery));
         double length = stage.length(mastery);
         double width = stage.width(mastery) * frame.scale(); // 1.3.43: a child's tails as thick as they are long, at its size
         GraftMove move = moving == null ? GraftMove.NONE : moving.move();
@@ -374,6 +422,10 @@ public final class GraftRenderer {
                 held = frame.rig(centre(entity, partial));
                 heldRadius = entity.m_20205_() * 0.5 + width * 0.6;
             }
+        } else if (move == GraftMove.ROMA_HURL && aim != null) {
+            // 4.1.49: Roma's Rubble Hurl: her lower pair wrapped round the chunk they tore up (its middle is the move's point).
+            held = aim;
+            heldRadius = 0.55;
         }
         // 7.0.2: the job running alongside (the crawl, the mouth dragging), on its own clock (never the kakuja's colossi).
         GraftMove job = moving == null || moving.job().stage() != stage ? GraftMove.NONE : moving.job();

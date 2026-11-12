@@ -207,13 +207,13 @@ public final class HurlServer {
     }
 
     /** A block a chunk can be torn from: something solid there, not unbreakable. */
-    private static boolean usable(ServerLevel level, BlockPos pos) {
+    static boolean usable(ServerLevel level, BlockPos pos) {
         BlockState state = level.m_8055_(pos);
         return !state.m_60795_() && !state.m_60812_(level, pos).m_83281_() && state.m_60800_(level, pos) >= 0.0F;
     }
 
     /** The item {@code state}'s chunk is drawn as (its block's own; a block with none, cobblestone). */
-    private static String item(BlockState state) {
+    static String item(BlockState state) {
         ItemStack stack = new ItemStack(state.m_60734_(), 1);
         ResourceLocation key = stack.m_41619_() ? null : ForgeRegistries.ITEMS.getKey(stack.m_41720_());
         return key == null ? "minecraft:cobblestone" : key.toString();

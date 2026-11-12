@@ -82,6 +82,8 @@ public final class EtoBrain {
         final NpcWings.State wings = new NpcWings.State();
         /** 4.0.0: Noro's three worms. */
         final NpcWorms.State worms = new NpcWorms.State();
+        /** 4.1.49: Roma's four Rinkaku tendrils ({@link NpcTendrils}). */
+        final NpcTendrils.State tendrils = new NpcTendrils.State();
         /** 1.3.49: a child of hers she is going after (ParentDuty), or null. */
         ParentDuty.Duty duty;
         /** 1.3.53: a talk she stays for (her children's, hers with them: Conversation), or null. */
@@ -389,6 +391,7 @@ public final class EtoBrain {
         NpcWings.tick(npc, mind, level, now);
         // 4.0.0: Noro's worms, his regeneration and his mend.
         NpcWorms.tick(npc, mind, level, now);
+        NpcTendrils.tick(npc, mind, level, now); // 4.1.49: Roma's tendrils, their chunk in flight, put away
         // Her partner about, she may wander as far as her leash to be near them.
         // 1.3.24: fighting, as far as the chase goes (it keeps after what it fights till it is dead or gone).
         int chase = (int)com.hex.kagune.control.npc.FightRules.CHASE;
@@ -599,6 +602,7 @@ public final class EtoBrain {
                     case "ken" -> "*lies down on his side of the bed* I kept your side warm.";
                     case "ayato" -> "*drops onto the bed, arms crossed* ...You coming, or do I have to drag you?";
                     case "general" -> "*hangs his coat on the chair, squares it, and sits on the edge of the bed* ...Lights out. Come to bed.";
+                    case "roma" -> "*flops onto the bed, mask on, then off* ...Lights out. Come to bed before I get bored.";
                     default -> "*curls up on her side of the bed* Come to bed, love. Don't make me wait.";
                 };
                 say(npc, partner, line);
@@ -972,6 +976,9 @@ public final class EtoBrain {
         }
         if (KenPeace.fight(npc, mind, target, level, now, phase)) {
             return; // 1.3.19: Ken in Peace
+        }
+        if (NpcTendrils.fight(npc, mind, target, level, now)) {
+            return; // 4.1.49: Roma's four tendrils (her legs, Kick Master, are EtoOwl's below)
         }
         EtoOwl.tick(npc, mind, target, level, now, phase);
     }
@@ -2000,6 +2007,7 @@ public final class EtoBrain {
         KenPeace.forget(npc);
         NpcWings.forget(npc, npc.mind);
         NpcWorms.forget(npc, npc.mind);
+        NpcTendrils.forget(npc, npc.mind);
         if (npc.mind != null) {
             EtoFlesh.release(level, npc.mind.owl);
             HomeChores.stop(npc, npc.mind, level); // 1.3.29: a chest's lid she had up, shut

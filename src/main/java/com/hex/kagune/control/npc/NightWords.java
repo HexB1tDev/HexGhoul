@@ -72,6 +72,9 @@ public final class NightWords {
             case "general" -> new String[] {"He folds his uniform with military precision. Then forgets to finish.",
                 "He sets his cap on the dresser and, for the first time all day, stops giving orders.",
                 "He clears his throat as if to say something formal. He doesn't."};
+            case "roma" -> new String[] {"She takes her mask off last and sets it face up on the pillow, grinning at the ceiling.",
+                "She does a little bow before getting into bed. Nobody claps. She does it anyway.",
+                "For once she doesn't say anything funny. She just reaches for you."};
             case "noro" -> new String[] {"The mask comes off last. He sets it face down, carefully.",
                 "He says nothing at all. He doesn't need to."};
             default -> new String[] {she + " takes your hand and leads the way.", she + " laughs softly and closes the door behind " + herself + ".",

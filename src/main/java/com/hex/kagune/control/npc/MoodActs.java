@@ -42,6 +42,7 @@ public final class MoodActs {
                 case "touka" -> new String[] {"Don't. I'm still mad.", "Touch me and lose a hand."};
                 case "ken" -> new String[] {"...Not right now. I'm sorry. Give me a little while.", "I need a moment first. Please."};
                 case "general" -> new String[] {"Not now. I'm in no temper for it. ...Give me a quarter of an hour.", "Stand off a moment. I'm still angry."};
+                case "roma" -> new String[] {"Ah-ah. No touching the angry clown. ...Give me ten minutes. I'll be hilarious again.", "Not now. I'm sulking. It's a whole act. Very dramatic."};
                 case "ayato" -> new String[] {"Don't touch me. I'm mad. ...Still mad.", "Back off. Give me five minutes. Ten."};
                 default -> new String[] {"Not now."};
             });
@@ -51,6 +52,7 @@ public final class MoodActs {
                 case "ken" -> new String[] {"...I saw you with someone else. I know it's stupid. I just need you to tell me it's me.",
                     "Can you tell me first? That it's me. Then yes."};
                 case "general" -> new String[] {"I saw who you were with. Don't. Not until I've stopped seeing it.", "Go and stand with them, then."};
+                case "roma" -> new String[] {"Who was THAT? ...No, really, I want a name. For my scrapbook.", "Go hug them, then. I'll be over here sharpening something. Kidding! ...Am I?"};
                 case "ayato" -> new String[] {"Go hug whoever that was.", "I saw you. Don't. Not until you tell me who's yours."};
                 default -> new String[] {"No."};
             });
@@ -65,6 +67,7 @@ public final class MoodActs {
             case "touka" -> new String[] {"...You'd better mean it. ...You mean it. Okay. Come here, idiot.", "Only me. Right. ...Right. Okay. I'm fine now."};
             case "ken" -> new String[] {"...Thank you. I needed to hear that more than I'd like to admit.", "Only me. ...I'm sorry I needed to ask."};
             case "general" -> new String[] {"...Only me. ...Good. I'm too old to share and too proud to ask twice.", "Say it again. ...Yes. All right. Come here."};
+            case "roma" -> new String[] {"...Only me? Say it in front of the whole circus. ...Okay. Okay. I'm smiling. Shut up.", "Good. I'd hate to make someone disappear. Ta-da."};
             case "ayato" -> new String[] {"...Good. Say it again. ...Okay. Come here, idiot.", "Only me. Right. ...If they come near you again, they lose an arm."};
             case "noro" -> new String[] {"*A slow nod.*"};
             default -> new String[] {"Okay."};

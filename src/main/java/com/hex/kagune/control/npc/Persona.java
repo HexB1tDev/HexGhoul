@@ -23,7 +23,14 @@ public abstract class Persona {
      * faces go by this order).
      */
     public static final Persona GENERAL = new General();
-    public static final List<Persona> ALL = List.of(ETO, TOUKA, KEN, AYATO, NORO, GENERAL);
+    /**
+     * 4.1.49 (the owner: "New Official NPC named \"Roma\", she is the leader of the clowns, can be romanced, has a messed up sense of humor
+     * but can be romatic when comes to it. She uses Kick master combat, has a Rinkaku with 4 purple tendrils ... She spawns in this circus
+     * tent, is the size of Touka, is female, can be romanced by both Females and Males. (Alex Model, skinny)"): Roma, the Clowns' leader,
+     * in the middle of their circus tent. After the others (the talk screen's faces go by this order).
+     */
+    public static final Persona ROMA = new Roma();
+    public static final List<Persona> ALL = List.of(ETO, TOUKA, KEN, AYATO, NORO, GENERAL, ROMA);
 
     /** Its key: its bond in each player's quest log, its memory, its one place in the world ({@code UniqueNpcs}), its textures. */
     public abstract String key();
@@ -184,6 +191,19 @@ public abstract class Persona {
 
     public boolean maskInFight() {
         return false;
+    }
+
+    /**
+     * 4.1.49: whether its body fights Kick Master's way (its string the kicks, its kick the twirling speed kick): the General's (a human's
+     * only style), and Roma's (the owner: "She uses Kick master combat").
+     */
+    public boolean kickMaster() {
+        return this.human();
+    }
+
+    /** 4.1.49: how many Rinkaku tendrils it fights with (Roma: four), drawn out of its back in a fight; 0 for none. */
+    public int tendrils() {
+        return 0;
     }
 
     /** True for Eto alone: the Owl DNA kit in a fight (the flesh, Watch This, the Mutated Arm, the Owl). */
@@ -1257,4 +1277,171 @@ public abstract class Persona {
             return "minecraft:cornflower".equals(id);
         }
     }
+
+    // ---------------------------------------------------------------- Roma: the Clowns' leader
+
+    /**
+     * 4.1.49: Roma, who leads the Clowns from their circus tent. A joker whose jokes are mostly about death, delighted by everything,
+     * impossible to embarrass, and then, when it counts, suddenly and completely sincere. Touka's size, a skinny woman's figure on the slim
+     * arms. Dates anyone. Fights with her legs (Kick Master) and four purple Rinkaku tendrils.
+     */
+    private static final class Roma extends Persona {
+        private Script script;
+
+        @Override
+        public String key() {
+            return Teaching.ROMA;
+        }
+
+        @Override
+        public String name() {
+            return "Roma";
+        }
+
+        @Override
+        public String colour() {
+            return "\u00a7d";
+        }
+
+        /** The owner: "is the size of Touka". */
+        @Override
+        public float size() {
+            return com.hex.kagune.control.FemaleBody.SIZE;
+        }
+
+        @Override
+        public boolean female() {
+            return true;
+        }
+
+        /** The owner: "(Alex Model, skinny)": less of the figure's curves than Eto's, narrower, thinner legs. */
+        @Override
+        public float curves() {
+            return 0.75F;
+        }
+
+        @Override
+        public float build() {
+            return 0.94F;
+        }
+
+        @Override
+        public float legs() {
+            return 0.7F;
+        }
+
+        @Override
+        public float health() {
+            return 280.0F;
+        }
+
+        /** Strong: she has run the Clowns a long time. */
+        @Override
+        public float might() {
+            return 0.7F;
+        }
+
+        @Override
+        public double armor() {
+            return 12.0;
+        }
+
+        @Override
+        public int hair() {
+            return ROMA_HAIR;
+        }
+
+        @Override
+        public int eyes() {
+            return ROMA_EYES;
+        }
+
+        @Override
+        public int skin() {
+            return ROMA_SKIN;
+        }
+
+        @Override
+        public boolean oneEyed() {
+            return false;
+        }
+
+        @Override
+        public boolean kickMaster() {
+            return true;
+        }
+
+        @Override
+        public int tendrils() {
+            return 4;
+        }
+
+        /** The owner: "4 purple tendrils". */
+        @Override
+        public int kaguneColour() {
+            return ROMA_KAGUNE;
+        }
+
+        /** She asks for a kiss the way she asks for everything: out of nowhere, grinning. */
+        @Override
+        public double kissing() {
+            return 1.3;
+        }
+
+        @Override
+        public double forward() {
+            return 1.4;
+        }
+
+        @Override
+        public String home() {
+            return "the circus tent";
+        }
+
+        @Override
+        public EtoGesture[] idles(EtoMood mood) {
+            return switch (mood) {
+                case GIDDY -> new EtoGesture[] {EtoGesture.LAUGH, EtoGesture.TWIRL, EtoGesture.GIGGLE, EtoGesture.DANCE, EtoGesture.HOP};
+                case SULKY, JEALOUS -> new EtoGesture[] {EtoGesture.POUT, EtoGesture.CROSS, EtoGesture.TAP, EtoGesture.HUFF};
+                case LONELY, BORED -> new EtoGesture[] {EtoGesture.TWIRL, EtoGesture.KICKS, EtoGesture.LOOK, EtoGesture.STRETCH, EtoGesture.HUM};
+                case CLINGY, AFFECTIONATE -> new EtoGesture[] {EtoGesture.GIGGLE, EtoGesture.HAIR, EtoGesture.LEAN, EtoGesture.TILT, EtoGesture.HUM};
+                case SLEEPY -> new EtoGesture[] {EtoGesture.YAWN, EtoGesture.STRETCH, EtoGesture.GIGGLE};
+                case BLOODTHIRSTY -> new EtoGesture[] {EtoGesture.LICK, EtoGesture.LAUGH, EtoGesture.KICKS, EtoGesture.CRACK};
+                case CLAIMED, WARY -> new EtoGesture[] {EtoGesture.TILT, EtoGesture.LAUGH, EtoGesture.TAP, EtoGesture.SHRUG};
+                default -> new EtoGesture[] {EtoGesture.LAUGH, EtoGesture.TWIRL, EtoGesture.KICKS, EtoGesture.TILT, EtoGesture.HUM};
+            };
+        }
+
+        @Override
+        public EtoGesture[] anyIdle() {
+            return new EtoGesture[] {EtoGesture.LAUGH, EtoGesture.TWIRL, EtoGesture.GIGGLE, EtoGesture.KICKS, EtoGesture.TILT, EtoGesture.STRETCH,
+                EtoGesture.DANCE, EtoGesture.SHRUG, EtoGesture.LOOK, EtoGesture.HOP};
+        }
+
+        @Override
+        public Script script() {
+            if (this.script == null) {
+                this.script = new RomaScript();
+            }
+            return this.script;
+        }
+
+        /** Fireworks: a show needs a bang. */
+        @Override
+        public boolean errandItem(String id) {
+            return "minecraft:firework_rocket".equals(id);
+        }
+
+        /** An allium: the one flower her colour. */
+        @Override
+        public boolean flower(String id) {
+            return "minecraft:allium".equals(id);
+        }
+    }
+
+    /** 4.1.49: Roma's colours (her skin's hair, eyes and skin; a child of hers takes them) and her tendrils' purple. */
+    static final int ROMA_HAIR = 0x3A2A4A;
+    static final int ROMA_EYES = 0x7A3FA0;
+    static final int ROMA_SKIN = 0xF2DDD2;
+    public static final int ROMA_KAGUNE = 0x8B3FD9;
 }

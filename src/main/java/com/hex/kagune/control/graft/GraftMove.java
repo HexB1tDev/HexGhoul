@@ -123,7 +123,15 @@ public enum GraftMove {
     /** His claws in the performance: one rake, either hand. */
     PERF_CLAW("The Final Performance", Slot.NONE, GraftStage.KAKUJA, 980, 5, 0.0F, 0),
     /** The performance's end: caught by one colossus, hauled to him, the other through it and his last blow. */
-    PERF_FINISH("The Final Performance", Slot.NONE, GraftStage.KAKUJA, 980, 26, 0.0F, 0);
+    PERF_FINISH("The Final Performance", Slot.NONE, GraftStage.KAKUJA, 980, 26, 0.0F, 0),
+    // --- 4.1.49: Roma's own (the owner: "a Rinkaku with 4 purple tendrils (can use all moves from Rinakaku, including impale, Debris Hurl,
+    // etc."): her four transplant tendrils' Rinkaku moves, an NPC's (no key, no cost) --------------------------------------------------
+    /** The Impale (as Rinkaku's, {@code RinkakuImpale}): one tendril shot out straight through what it is aimed at, lifted high on it, torn out. */
+    ROMA_IMPALE("Impale", Slot.NONE, GraftStage.TRANSPLANT, 0, 40, 0.0F, 0),
+    /** The Rubble Hurl (as Rinkaku's, {@code RinkakuHurl}): the lower pair tear a chunk of the ground out and hold it up before her. */
+    ROMA_HURL("Rubble Hurl", Slot.NONE, GraftStage.TRANSPLANT, 0, 22, 0.0F, 0),
+    /** The Rubble Hurl's throw: the lower pair whip the chunk at what she faces. */
+    ROMA_THROW("Rubble Hurl", Slot.NONE, GraftStage.TRANSPLANT, 0, 12, 0.0F, 0);
 
 
     /** Which key a move answers to. */
@@ -292,7 +300,7 @@ public enum GraftMove {
     /** True for the moves that carry a body (the puppet and what follows it, the counter's hook, the hunt's drag, the performance's end). */
     public boolean holds() {
         return this == HUMAN_PUPPET || this == PUPPET_THROW || this == PUPPET_STRIKE
-            || this == PUPPET_PULL || this == MOCKINGBIRD_COUNTER || this == HUNT_DRAG || this == PERF_FINISH;
+            || this == PUPPET_PULL || this == MOCKINGBIRD_COUNTER || this == HUNT_DRAG || this == PERF_FINISH || this == ROMA_IMPALE;
     }
 
     /** 7.0.2: true for a move only ever started by another (a counter, a dive, a puppet's follow-up): no key of its own. */
@@ -307,7 +315,7 @@ public enum GraftMove {
     public boolean follows() {
         return this == MOCKINGBIRD_COUNTER || this == OWLS_EXECUTION || this == HUMAN_PUPPET || this == PUPPET_STRIKE || this == PUPPET_PULL
             || this == AMBUSH || this == CARAPACE_SPRING || this == CARAPACE_BITE || this == CRUCIFIXION || this == KINGS_STRIKE || this == CHECKMATE
-            || this == HUNT || this == PERF_CLAW || this == PERF_FINISH;
+            || this == HUNT || this == PERF_CLAW || this == PERF_FINISH || this == ROMA_IMPALE;
     }
 
     /** 7.0.2: what the move's key does beyond starting it, for the ability panel ("" for nothing). */
@@ -580,6 +588,21 @@ public enum GraftMove {
             case VAULT_DIVE -> b.add(new Beat(ALL, Kind.DIVE, 0, 3, 30, 3.6, 0.0, 0.0, 0.0, 2.0F, STUN | HEAVY));
             // Human Puppet: caught and dragged in; then thrown, ripped by the other tail, or he hauls himself in on it.
             case HUMAN_PUPPET -> b.add(new Beat(0, Kind.SEIZE, 0, 5, 50, 9.0, 0.0, 0.0, 1.4, 0.5F, STUN));
+            // 4.1.49: Roma's. The Impale: her first tendril (high on her right) coiled back, shot through it, it lifted on it, torn out at
+            // its end. The Rubble Hurl: her lower pair down into the ground and up with a chunk of it held between them; then whipped.
+            case ROMA_IMPALE -> b.add(new Beat(0, Kind.SEIZE, 0, 5, 34, 10.0, 0.0, 0.0, 1.4, 1.2F, STUN | BLEED));
+            case ROMA_HURL -> {
+                b.add(new Beat(Math.min(2, n - 1), Kind.SEIZE, 0, 5, 22, 7.0, 0.0, 0.0, 0.6, 0.0F, 0));
+                if (n > 1) {
+                    b.add(new Beat(Math.min(3, n - 1), Kind.SEIZE, 1, 6, 22, 7.0, 0.0, 0.0, 0.6, 0.0F, 0));
+                }
+            }
+            case ROMA_THROW -> {
+                b.add(new Beat(Math.min(2, n - 1), Kind.WHIP, 0, 4, 10, 6.0, 0.0, 0.0, 1.4, 0.0F, 0));
+                if (n > 1) {
+                    b.add(new Beat(Math.min(3, n - 1), Kind.WHIP, 0, 5, 11, 6.0, 0.0, 0.0, 1.4, 0.0F, 0));
+                }
+            }
             case PUPPET_THROW -> b.add(new Beat(0, Kind.WHIP, 0, 5, 9, 4.0, 0.0, 0.0, 1.4, 1.1F, STUN | HEAVY));
             case PUPPET_STRIKE -> {
                 b.add(new Beat(0, Kind.SEIZE, 0, 0, 5, 9.0, 0.0, 0.0, 1.4, 0.0F, CARRY));

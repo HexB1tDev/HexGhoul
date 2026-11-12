@@ -220,7 +220,8 @@ final class EtoOwl {
             return;
         }
         // 4.1.7 (the owner: the General "teaches a new combat style ... (and uses it in self defense)"): his string is Kick Master's.
-        PaleStrike[] string = PaleStrike.of(npc.persona().human() ? PaleStrike.Style.KICKS : PaleStrike.Style.BLITZ);
+        // 4.1.49: and Roma's (the owner: "She uses Kick master combat"): Persona.kickMaster.
+        PaleStrike[] string = PaleStrike.of(npc.persona().kickMaster() ? PaleStrike.Style.KICKS : PaleStrike.Style.BLITZ);
         PaleStrike strike = string[Math.floorMod(f.strike, string.length)];
         npc.m_21573_().m_26573_();
         begin(npc, f, PaleMove.STRIKE, strike.ordinal(), target.m_19879_(), 0.0F, Vec3.f_82478_, now);
@@ -517,7 +518,7 @@ final class EtoOwl {
         int dash = PaleRules.kickDash(offset.m_82553_());
         npc.m_21573_().m_26573_();
         // 4.1.8: the General's is Kick Master's twirling kick, at its full charge.
-        begin(npc, f, PaleMove.KICK, npc.persona().human() ? PaleRules.twirlDetail(dash, 1.0F) : dash, target.m_19879_(), (float)lift, spot, now);
+        begin(npc, f, PaleMove.KICK, npc.persona().kickMaster() ? PaleRules.twirlDetail(dash, 1.0F) : dash, target.m_19879_(), (float)lift, spot, now);
         f.from = from;
         f.yaw = (float)Math.toDegrees(Math.atan2(-facing.f_82479_, facing.f_82481_));
         f.kickReady = now + EtoRules.cooldown(EtoRules.KICK_EVERY, phase);

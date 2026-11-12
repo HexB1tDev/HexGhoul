@@ -398,7 +398,8 @@ public final class CompanionTests {
             int[] first = ints(tent, "blockPos");
             check(size != null && size[0] == 77 && size[1] == 47 && size[2] == 49, "the circus tent, the owner's, on its floor: " + java.util.Arrays.toString(size));
             check(text.split("hexkagune:ghoul", -1).length == 5 && text.split("HexCircusMask", -1).length == 5 && text.split("HexGang", -1).length == 5
-                && text.split("PersistenceRequired", -1).length == 5 && first != null && first[1] == 1, "four Clowns standing on its floor: " + java.util.Arrays.toString(first));
+                && text.split("PersistenceRequired", -1).length == 6 && first != null && first[1] == 1, "four Clowns (4.1.49: and Roma) standing on its floor: "
+                + java.util.Arrays.toString(first));
             check(text.contains("hexkagune:circus_anchor") && text.contains("minecraft:dirt_path") && text.contains("minecraft:red_wool")
                 && text.contains("minecraft:white_wool") && !text.contains("minecraft:short_grass"), "anchored on its floor; only 1.20.1's blocks");
         } catch (java.io.IOException failure) {
@@ -551,6 +552,7 @@ public final class CompanionTests {
         check(dragon.ready() && dragon.next().gate() == Gate.RINKAKU_DRAGON, "and last, the Dragon");
         speedster();
         general();
+        roma();
         kickMaster();
         twirlKick();
     }
@@ -654,8 +656,9 @@ public final class CompanionTests {
         String input = read("src/main/java/com/hex/kagune/control/client/PaleInput.java");
         check(input.contains("if (twirlTaken || fights(minecraft.f_91077_)) {") && input.contains("instanceof LivingEntity body && !talks(body)")
             && input.contains("body instanceof com.hex.kagune.control.npc.GhoulNpc"), "the right click is the kick at the air or a body no one talks to");
-        check(read("src/main/java/com/hex/kagune/control/server/EtoOwl.java").contains("npc.persona().human() ? PaleRules.twirlDetail(dash, 1.0F) : dash"),
-            "the General throws it too");
+        // 4.1.49: by Persona.kickMaster (a human's, the General's; and Roma's).
+        check(read("src/main/java/com/hex/kagune/control/server/EtoOwl.java").contains("npc.persona().kickMaster() ? PaleRules.twirlDetail(dash, 1.0F) : dash")
+            && Persona.GENERAL.kickMaster() && Persona.ROMA.kickMaster() && !Persona.TOUKA.kickMaster(), "the General throws it too (and Roma)");
     }
 
     /**
@@ -763,8 +766,8 @@ public final class CompanionTests {
         String blitz = read("src/main/java/com/hex/kagune/control/server/PaleBlitz.java");
         check(blitz.contains("PaleStrike.next(previous, string == PaleStrike.Style.KICKS ? Integer.MAX_VALUE : mastery, string)")
             && blitz.contains("strike.kick() ? PaleRules.comboKickStand("), "the server throws the style's string, kicks from further out");
-        check(read("src/main/java/com/hex/kagune/control/server/EtoOwl.java").contains("PaleStrike.of(npc.persona().human() ? PaleStrike.Style.KICKS : PaleStrike.Style.BLITZ)"),
-            "the General fights with it");
+        check(read("src/main/java/com/hex/kagune/control/server/EtoOwl.java").contains("PaleStrike.of(npc.persona().kickMaster() ? PaleStrike.Style.KICKS : PaleStrike.Style.BLITZ)"),
+            "the General fights with it (4.1.49: and Roma)");
         check(read("src/main/java/com/hex/kagune/control/server/EtoServer.java").contains("boolean seenGhoul = ghoul && !(persona.human() && Sightings.masked(player));"),
             "he teaches as he sees: a full mask hides a ghoul from him");
         java.util.Map<com.hex.kagune.control.AbilityGuide.Key, String> keys = new java.util.EnumMap<>(com.hex.kagune.control.AbilityGuide.Key.class);
@@ -796,10 +799,92 @@ public final class CompanionTests {
      * is an official character ... Attitude: Tough, softens up when romanced, embarrased easily, proud of the CCG, has to be convinced to
      * love a ghoul, Only interested in woman players"; "use this skin for the general and give him all the formal outfit (but the hat)").
      */
+    /**
+     * 4.1.49 (the owner: "New Official NPC named \"Roma\", she is the leader of the clowns, can be romanced, has a messed up sense of humor
+     * but can be romatic when comes to it. She uses Kick master combat, has a Rinkaku with 4 purple tendrils (can use all moves from
+     * Rinakaku, including impale, Debris Hurl, etc. She spawns in this circus tent, is the size of Touka, is female, can be romanced by both
+     * Females and Males. (Alex Model, skinny)").
+     */
+    static void roma() {
+        Persona r = Persona.ROMA;
+        check(Persona.ALL.get(Persona.ALL.size() - 1) == r && r.key().equals("roma") && Persona.of("roma") == r && "Roma".equals(r.name()),
+            "Roma, after the others (their places on the talk screen kept)");
+        check(r.size() == Persona.TOUKA.size() && r.female() && r.slim() && r.curves() < 1.0F && r.legs() < Persona.TOUKA.legs() && r.build() < 1.0F,
+            "the size of Touka, a woman, on the slim arms, skinny");
+        check(r.romanceable() && r.likes(true) && r.likes(false) && !r.human() && !r.owlKit() && !r.wings() && !r.worms(),
+            "dated by women and men alike; a ghoul");
+        check(r.kickMaster() && r.tendrils() == 4 && r.kagune() == com.hex.kagune.control.family.KaguneGenes.TAILS,
+            "Kick Master, and a Rinkaku of four tendrils (her child takes the tails)");
+        int purple = r.kaguneColour();
+        int red = purple >> 16 & 255;
+        int green = purple >> 8 & 255;
+        int blue = purple & 255;
+        check(blue > green + 60 && red > green + 30 && blue >= red, "her tendrils purple: " + Integer.toHexString(purple));
+        java.util.List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of("roma");
+        check(chapters.size() == 5 && chapters.get(0).id().equals("roma_show") && chapters.get(chapters.size() - 1).task() == com.hex.kagune.control.npc.Courtship.Task.DAWN,
+            "her courtship: five chapters, a show first, the dawn last");
+        String scenes = read("src/main/resources/data/hexkagune/talk/roma.txt");
+        for (com.hex.kagune.control.npc.Courtship.Chapter chapter : chapters) {
+            check(scenes.contains("moment " + chapter.id() + "\n"), chapter.id() + ": its moment in her scenes");
+        }
+        check(scenes.split("\ndate roma_").length == 4, "three dates of her own");
+        // Her script: every voice, mood and page is checked with the others' (talk()); here her fight and kiss lines.
+        Script script = r.script();
+        check(script.kissed(1, false).length() > 5 && script.maniac(2).length() > 3 && script.won(0).length() > 3 && !script.busy().isEmpty(),
+            "her fight and kiss lines");
+        // Her four tendrils on the transplant's rig: two a side, the lower pair under the upper, each clear of her at rest, none on another.
+        com.hex.kagune.control.graft.GraftRig.Body body = new com.hex.kagune.control.graft.GraftRig.Body(0.0, false, 0.0, true, 0.0, 0.0, 0.0);
+        double length = com.hex.kagune.control.graft.GraftStage.TRANSPLANT.length(1000);
+        double[][] tips = new double[4][];
+        for (int limb = 0; limb < 4; limb++) {
+            double[] root = com.hex.kagune.control.graft.GraftRig.root(com.hex.kagune.control.graft.GraftStage.TRANSPLANT, 4, limb, false);
+            check(com.hex.kagune.control.graft.GraftRig.side(com.hex.kagune.control.graft.GraftStage.TRANSPLANT, 4, limb) == (limb % 2 == 0 ? 1 : -1)
+                && (limb < 2 ? root[1] > 0.9 : root[1] < 0.85), "tendril " + limb + ": two a side, the lower pair under the upper");
+            double[][] p = com.hex.kagune.control.graft.GraftRig.pose(new com.hex.kagune.control.graft.GraftRig.Input(com.hex.kagune.control.graft.GraftStage.TRANSPLANT,
+                4, limb, length, body, com.hex.kagune.control.graft.GraftMove.NONE, 0.0, null, null, null, 0.3)).points();
+            tips[limb] = p[p.length - 1];
+            check(Math.hypot(tips[limb][0], tips[limb][2]) > com.hex.kagune.control.graft.GraftRig.BODY_RADIUS, "tendril " + limb + ": clear of her at rest");
+        }
+        for (int a = 0; a < 4; a++) {
+            for (int b = a + 1; b < 4; b++) {
+                double gap = Math.sqrt(Math.pow(tips[a][0] - tips[b][0], 2) + Math.pow(tips[a][1] - tips[b][1], 2) + Math.pow(tips[a][2] - tips[b][2], 2));
+                check(gap > 0.6, "tendrils " + a + " and " + b + " never on one another at rest: " + gap);
+            }
+        }
+        // Her Rinkaku's moves: the Impale (one tendril, it carried on it), the Rubble Hurl (the lower pair up with it, then whipped).
+        check(com.hex.kagune.control.graft.GraftMove.ROMA_IMPALE.beats(4).size() == 1 && com.hex.kagune.control.graft.GraftMove.ROMA_IMPALE.holds()
+            && com.hex.kagune.control.graft.GraftMove.ROMA_IMPALE.beats(4).get(0).kind() == com.hex.kagune.control.graft.GraftMove.Kind.SEIZE
+            && com.hex.kagune.control.graft.GraftMove.ROMA_IMPALE.beats(4).get(0).reach() >= 10.0, "the Impale: one tendril, as far as ten blocks, carrying");
+        check(com.hex.kagune.control.graft.GraftMove.ROMA_HURL.beats(4).stream().allMatch(b -> b.limb() >= 2)
+            && com.hex.kagune.control.graft.GraftMove.ROMA_THROW.beats(4).stream().allMatch(b -> b.limb() >= 2 && b.kind() == com.hex.kagune.control.graft.GraftMove.Kind.WHIP),
+            "the Rubble Hurl: the lower pair lift it and whip it");
+        double[] early = com.hex.kagune.control.graft.GraftRules.heldPoint(com.hex.kagune.control.graft.GraftMove.ROMA_IMPALE, com.hex.kagune.control.graft.GraftMove.Kind.SEIZE, 0.0);
+        double[] late = com.hex.kagune.control.graft.GraftRules.heldPoint(com.hex.kagune.control.graft.GraftMove.ROMA_IMPALE, com.hex.kagune.control.graft.GraftMove.Kind.SEIZE, 20.0);
+        check(late[1] > early[1] + 2.0 && late[2] > 2.0, "impaled, lifted high on it before her");
+        String brain = read("src/main/java/com/hex/kagune/control/server/EtoBrain.java");
+        String tendrils = read("src/main/java/com/hex/kagune/control/server/NpcTendrils.java");
+        check(brain.indexOf("if (NpcTendrils.fight(npc, mind, target, level, now)) {") < brain.indexOf("EtoOwl.tick(npc, mind, target, level, now, phase);")
+            && brain.contains("NpcTendrils.tick(npc, mind, level, now);")
+            && tendrils.contains("if (mind.owl.move != PaleMove.NONE || now - st.outAt < NpcRules.DEPLOY_TICKS || now < st.readyAt) {"),
+            "her tendrils fight first, never over a kick of hers; her legs (Kick Master) otherwise");
+        check(read("src/main/java/com/hex/kagune/control/client/render/GraftRenderer.java").contains("living.persona().tendrils() > 0")
+            && read("src/main/java/com/hex/kagune/control/client/render/GraftRenderer.java").contains("tint = npc.persona().kaguneColour();"),
+            "every client draws her tendrils, in her purple");
+        // In the middle of the circus tent's ring.
+        try {
+            byte[] tent = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(java.nio.file.Path.of(
+                "src/main/resources/data/hexkagune/structures/circus.nbt"))).readAllBytes();
+            String text = new String(tent, java.nio.charset.StandardCharsets.ISO_8859_1);
+            check(text.split("hexkagune:roma", -1).length == 2, "Roma in the circus tent, one of her");
+        } catch (java.io.IOException failure) {
+            check(false, "read the circus tent: " + failure);
+        }
+    }
+
     static void general() {
         Persona g = Persona.GENERAL;
-        check(Persona.ALL.get(Persona.ALL.size() - 1) == g && Persona.ALL.indexOf(Persona.NORO) == 4 && g.key().equals("general") && Persona.of("general") == g,
-            "the General, after the others (their places on the talk screen kept)");
+        check(Persona.ALL.indexOf(g) == 5 && Persona.ALL.indexOf(Persona.NORO) == 4 && g.key().equals("general") && Persona.of("general") == g,
+            "the General, after the others (their places on the talk screen kept; 4.1.49: Roma after him)");
         check(g.human() && !g.female() && g.romanceable() && g.likes(true) && !g.likes(false) && !g.wings() && !g.worms() && !g.owlKit() && !g.kakuja()
             && g.mask() == null && g.kagune() == com.hex.kagune.control.family.KaguneGenes.NONE, "a human man, for women only, with no kagune to pass on");
         for (Persona other : Persona.ALL) {
@@ -1551,7 +1636,7 @@ public final class CompanionTests {
     }
 
     static void talk() {
-        for (Persona p : new Persona[] {Persona.TOUKA, Persona.KEN, Persona.AYATO}) {
+        for (Persona p : new Persona[] {Persona.TOUKA, Persona.KEN, Persona.AYATO, Persona.ROMA}) { // 4.1.49: and Roma
             Script script = p.script();
             Set<String> topicIds = new HashSet<>();
             int words = 0;

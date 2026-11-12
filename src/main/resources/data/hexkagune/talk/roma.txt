@@ -1,0 +1,132 @@
+# Roma's scenes (4.1.49). Read by SceneBook (see its comment for the form; SceneWords for every word allowed).
+# Her voice: the Clowns' leader, the ringmaster of their tent. The owner: "has a messed up sense of humor but can be romatic when comes to
+# it". She jokes about death the way other people talk about the weather, delights in everything, is impossible to embarrass; and then,
+# when it matters, the act drops all at once and she means every word.
+
+# =====================================================================================================================================
+# A FEW OF HER OWN
+# =====================================================================================================================================
+
+scene knife_trick
+who: friend
+say: *She's juggling three knives in the middle of the ring, humming, not looking at them.* Pick a number between one and three! Whatever you pick, that's how many fingers I lose. Go!
+> Two. | +2 -> two
+> Please stop. | +1
+  - *She catches all three without looking and pouts.* Boooring. You'd be a terrible audience. ...You'd be a great audience. You care.
+page two
+say: *She throws all three up at once, spins, and catches them behind her back.* Zero! Zero fingers lost! The house always wins. *She wiggles all ten at you.* ...You looked so worried. That's adorable.
+> You're insane. | +3 laugh
+  - *She bows deeply.* Thank you! Thank you! I'm here all week. Possibly forever.
+ignored: *She goes on juggling, and drops one, and laughs so hard she has to sit down.*
+
+scene masks
+who: friend
+say: *She's laying the Clowns' masks out on a crate in a row, polishing each one with her sleeve.* Every one of these is somebody's face for the night. Mine's the only one that doesn't come off. ...Kidding! It comes off. *She doesn't take it off.*
+> What's under it? | +2 -> under
+> They're beautiful. | +2
+  - *She beams.* I paint them all myself. That one's angry. That one's angry too, but sadder.
+page under
+say: *She leans in very close, so close you can see her eyes through it.* ...Another mask. *She cackles and pulls back.* No. Under it's just a girl who laughs too much so nobody asks why. *Brightly.* Anyway! Want to see a dead pigeon?
+> Why do you laugh so much? | +4 -> why
+> Absolutely not. | +1 laugh
+  - *She's delighted.* Your loss! It's a really good pigeon.
+page why
+say: *For a moment the grin goes still.* ...Because the world is very funny if you look at it right. And very sad if you look at it wrong. I pick funny. Every day. *Then it's back, brighter.* It takes practice! You can have lessons. First lesson: laugh.
+> *Laugh.* | +4 laugh
+  - *She laughs with you, and for once it sounds like she means it.*
+ignored: *She puts the masks back in their box one by one, still humming.*
+
+# =====================================================================================================================================
+# HER COURTSHIP'S MOMENTS
+# =====================================================================================================================================
+
+moment roma_show
+say: *She's sitting on the ring's edge kicking her heels, three investigators' cases lined up in front of her like trophies.* Three! THREE! Did you see their faces? *She drums on the cases.* A briefcase. To a fight. I'm going to put flowers in them.
+> It was for you. | +4 -> for
+> They had it coming. | +3 -> for
+ignored: *She opens a case, finds paperwork, and laughs until she cries.*
+page for
+say: *She stops drumming.* ...For me. *She tilts her head, the mask's painted grin and her real one at the same angle.* Nobody does things for the ringmaster. The ringmaster does things. *Then, quickly:* Walk with me tonight. The long way. I'll show you all my favourite dark windows.
+> It's a date. | +3 laugh
+  - *She claps.* It's a WALK. Dates are later. I have a whole programme. You're on page two.
+
+moment roma_walk
+say: *It's late and the streets are empty and she's walking on top of a wall with her arms out, narrating every lit window you pass.* That one's an old man and a cat. That one's a fight. That one's... oh. That one's a couple. *She goes quiet.* ...They're dancing. In the kitchen.
+> Come down here. | +4 -> down
+> *Hold out your hand.* | +4 hand
+  - *She looks at it a long moment, then hops down and takes it.* ...Huh. Okay. This is nice. I'm going to make a joke in a second.
+ignored: *She walks the whole wall to the end and jumps off with a bow nobody sees.*
+page down
+say: *She jumps down beside you, closer than she needs to.* ...I used to watch windows like that and laugh. Because I thought, that'll never be me, and that's hilarious. *Softer.* Sit with me in the tent some night. After the lights go out. I want to see if it's still funny.
+> I'll come. | +3 shy
+  - *She grins, and it wobbles a little at the edges.* Bring snacks. Human ones are fine. I'll eat them ironically.
+
+moment roma_tent
+say: *The tent's dark but for one glowstone. She's lying on her back in the middle of the ring, staring up at the stripes.* ...Shh. Listen. *There's nothing. Just the canvas breathing in the wind.* That's the best sound. No audience. No one waiting for the next joke.
+> *Lie down beside her.* | +4 -> beside
+> Is it lonely? | +3 -> beside
+ignored: *She falls asleep there, one hand open on the dirt.*
+page beside
+say: *She turns her head to look at you instead of the roof.* ...I keep waiting for this to get boring. It's not boring. *Very quietly.* There's a kind of ghoul who isn't funny at all. The Pack. They kill because they like the screaming. I'd like them gone. Three of them. That's not a bit. That's a favour.
+> Consider it done. | +4 chin
+  - *She doesn't joke. She just nods, once, and reaches over and squeezes your hand.*
+
+moment roma_pack
+say: *She's waiting outside the tent, no mask, no grin, arms wrapped round herself. When she sees you she runs the last few steps.* You're back. You're back. *She checks you over, every scratch, muttering.* I wrote you a eulogy. It was very funny. I hated every word.
+> I told you I'd come back. | +4 -> back
+> You were scared for me. | +5 -> back
+ignored: *She walks you inside without a word and won't let go of your sleeve.*
+page back
+say: *She presses her face into your shoulder for a second, then pulls back, and the grin is back, but softer.* Dawn. Be here at dawn. The Clowns sleep, nobody needs me, and nobody's watching the ringmaster. I want you to see what's left of me when I'm not performing.
+> I'll be here. | +4 shy
+  - *She laughs, and it cracks in the middle.* ...Good. Bring your nerve. It might be very boring. It might be just a girl.
+
+moment roma_dawn
+say: *The light comes in grey through the tent's entrance. She's sitting cross-legged in the middle of the ring with her mask in her lap, and she doesn't make a joke when you sit down. She just looks at you.* ...Hi.
+> Hi. | +4 -> hi
+> *Take her hand.* | +5 -> hi
+ignored: *She sits with the mask in her lap until the sun is fully up.*
+page hi
+say: *She turns the mask over in her hands.* I've been funny my whole life so nobody would notice I was scared. Of everything. Of this. *She sets the mask down, face to the dirt.* ...I'm not scared of this. Of you. I think that's the scariest thing that's ever happened to me. *A small, real laugh.* If you asked me something now, I'd say yes. And I wouldn't even make it a bit.
+> You don't have to be funny with me. | +5 shy
+  - *She leans her forehead against yours and closes her eyes.* ...Okay. Okay. Then ask. Before I ruin it with a pun.
+
+# =====================================================================================================================================
+# DATES
+# =====================================================================================================================================
+
+date roma_rooftops
+prompt: Run the rooftops with me. Last one to the tower dies. Metaphorically!
+who: together
+say: *She's already gone, a purple blur of tendrils over the gaps between the roofs, laughing the whole way. She waits at the top with her legs dangling over a hundred-block drop.* You came! I bet myself you'd chicken out. I lost. I owe myself a cake.
+> You're terrifying. | +3 -> scary
+> *Sit next to her.* | +3 cling
+  - *She leans her whole weight on you immediately.* Don't let me fall. Or do! It'd be a great ending. ...Don't.
+page scary
+say: *She swings her legs.* Terrifying is my brand. *She glances at you sideways.* ...But you're still here. Most people leave when they figure out I'm not kidding. *She bumps your shoulder.* I like that you stay.
+> I'm not going anywhere. | +4 shy
+  - *She opens her mouth for a joke, closes it, and just smiles at the city.*
+
+date roma_show_private
+prompt: A private show. One seat. Yours.
+who: together
+say: *The tent's lit up like a festival and there's exactly one chair in the middle of the ring. She bows to it.* Ladies and gentlemen! And you. Mostly you. Tonight the great Roma will perform the most dangerous trick in the world!
+> What's the trick? | +3 -> trick
+> *Applaud.* | +3 laugh
+  - *She bows so low her hair touches the dirt.* Thank you, thank you, you're too kind, you're the only one here.
+page trick
+say: *She walks right up to your chair, takes off her mask, and kisses you on the forehead.* ...Being sincere. *She bolts upright.* TA-DA! Nobody's ever survived it! *She's bright red under the paint.*
+> Do it again. | +4 shy
+  - *She points at you, scandalised and thrilled.* An encore?! At a sincerity show?! ...Okay. One.
+
+date roma_graveyard
+prompt: The graveyard. It's really pretty at night. Trust me.
+who: together
+say: *She's skipping between the headstones reading them out loud.* "Beloved husband." Boring. "Gone too soon." Aren't we all. Ooh, "He finally got his rest." That's a dig. That's definitely a dig. *She giggles.*
+> Pick one for me. | +3 -> pick
+> You're morbid. | +2 laugh
+  - *She curtsies.* Morbid and proud! Morbid and adorable!
+page pick
+say: *She stops and gets serious, which is somehow more alarming.* ...No. You don't get one. You stay up here, where it's loud. With me. *She hooks her arm through yours.* That's a rule. I'm the ringmaster. I make rules.
+> Yes, ringmaster. | +4 hand
+  - *She laughs, delighted, and doesn't let go of your arm the whole way back.*

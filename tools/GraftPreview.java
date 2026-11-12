@@ -68,6 +68,9 @@ public final class GraftPreview {
         if (wanted.contains("npc-fight")) {
             npcFight(new File(out, "ghoul-npc-fight.png"));
         }
+        if (wanted.contains("roma")) {
+            roma(new File(out, "roma-tendrils.png"));
+        }
         if (wanted.contains("npc-skins")) {
             npcSkins(new File(out, "ghoul-npc-skins.png"), false);
             npcSkins(new File(out, "ghoul-npc-faces.png"), true);
@@ -1619,12 +1622,17 @@ public final class GraftPreview {
         double[] prey;
 
         Simulated(GraftStage stage, int mastery, GraftMove move, double[] aim, double[][] targets) {
+            this(stage, mastery, move, aim, targets, stage.limbs(mastery));
+        }
+
+        /** 4.1.49: with {@code n} limbs of its own (Roma's four transplant tendrils). */
+        Simulated(GraftStage stage, int mastery, GraftMove move, double[] aim, double[][] targets, int n) {
             this.stage = stage;
             this.mastery = mastery;
             this.move = move;
             this.aim = aim;
             this.targets = targets;
-            this.n = stage.limbs(mastery);
+            this.n = n;
             this.legs = new com.hex.kagune.control.graft.GraftMotion.Limb[this.n];
             for (int i = 0; i < this.n; i++) {
                 this.legs[i] = new com.hex.kagune.control.graft.GraftMotion.Limb();
@@ -1691,6 +1699,74 @@ public final class GraftPreview {
             }
             return out;
         }
+    }
+
+    /**
+     * 4.1.49: Roma's four Rinkaku tendrils (the transplant's tails, two a side) in her purple, as every client draws them: at rest from in
+     * front, her right, behind and above; then her moves frame by frame (the string's lash, skewer and guillotine, the Fourfold Pierce,
+     * the Impale carrying its dummy up, the Rubble Hurl's chunk held up and whipped).
+     */
+    static void roma(File file) throws Exception {
+        GraftStage stage = GraftStage.TRANSPLANT;
+        int mastery = 1000;
+        int n = com.hex.kagune.control.npc.Persona.ROMA.tendrils();
+        int purple = com.hex.kagune.control.npc.Persona.ROMA.kaguneColour();
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        Simulated still = new Simulated(stage, mastery, GraftMove.NONE, null, null, n);
+        still.run(24.0);
+        RigPose rest = new RigPose();
+        double[][][] views = {{{0.0, 2.2, 7.5}}, {{-7.5, 2.4, 0.5}}, {{-3.0, 3.0, -6.5}}, {{0.5, 8.5, 1.5}}};
+        String[] names = {"front", "her right", "behind", "above"};
+        for (int i = 0; i < views.length; i++) {
+            shots.add(new ArtPreview.Shot("at rest: " + names[i], rest, ArtPreview.NO_WINGS, views[i][0], new double[] {0.0, 1.5, 0.0},
+                tinted(still.draw(rest, 24.0), purple)));
+        }
+        Object[][] moves = {{GraftMove.LASH_1, new double[] {4.0, 6.0, 8.0}}, {GraftMove.LASH_3, new double[] {3.0, 5.0, 8.0}},
+            {GraftMove.LASH_5, new double[] {5.0, 8.0, 12.0}}, {GraftMove.THORN_4, new double[] {4.0, 6.0, 9.0}},
+            {GraftMove.ROMA_IMPALE, new double[] {3.0, 5.0, 14.0, 30.0}}, {GraftMove.ROMA_HURL, new double[] {4.0, 7.0, 10.0, 20.0}},
+            {GraftMove.ROMA_THROW, new double[] {2.0, 4.0, 8.0}}};
+        for (Object[] row : moves) {
+            GraftMove move = (GraftMove)row[0];
+            boolean hurl = move == GraftMove.ROMA_HURL || move == GraftMove.ROMA_THROW;
+            double[] aim = hurl ? (move == GraftMove.ROMA_HURL ? com.hex.kagune.control.graft.GraftRules.heldPoint(move, GraftMove.Kind.SEIZE, 30.0)
+                : new double[] {0.0, 1.0, 9.0})
+                : move == GraftMove.ROMA_IMPALE ? new double[] {0.0, 1.0, 7.0} : frameAim(move, n);
+            Simulated sim = new Simulated(stage, mastery, move, aim, null, n);
+            double far = Math.max(0.0, aim[2] - 4.5);
+            double[] look = {0.0, 1.6, 2.2 + 0.5 * far};
+            double[] eye = {9.0 + 0.9 * far, 3.6, 3.4 + 0.5 * far};
+            for (double age : (double[])row[1]) {
+                sim.run(age);
+                List<WingPreview.Tri> tris = tinted(sim.draw(rest, age), purple);
+                double[] held = sim.held(age);
+                if (held != null && move == GraftMove.ROMA_IMPALE) {
+                    tris.addAll(PalePreview.dummyAt(new double[] {held[0], held[1] - 1.0, held[2]}));
+                } else if (move == GraftMove.ROMA_HURL) {
+                    double[] chunk = held != null ? held : com.hex.kagune.control.graft.GraftRules.heldPoint(move, GraftMove.Kind.SEIZE, 0.0);
+                    PalePreview.box(tris, new double[] {chunk[0] - 0.6, chunk[1] - 0.6, chunk[2] - 0.6}, new double[] {chunk[0] + 0.6, chunk[1] + 0.6,
+                        chunk[2] + 0.6}, 0xFF7A5A3A);
+                } else if (move != GraftMove.ROMA_THROW) {
+                    tris.addAll(PalePreview.dummyAt(new double[] {aim[0], 0.0, aim[2]}));
+                }
+                String landing = hits(tris, stage, n, stage.length(mastery), move, age, aim, null);
+                shots.add(new ArtPreview.Shot(move.displayName() + " t" + trim(age) + (landing.isEmpty() ? "" : " " + landing), rest, ArtPreview.NO_WINGS,
+                    eye, look, tris));
+            }
+        }
+        ArtPreview.sheet(file, "Roma's four Rinkaku tendrils (4.1.49): at rest, then her moves (yellow: where the server hits)", shots, 4, 360, 300);
+    }
+
+    /** Every colour of {@code tris} recoloured as the game tints a kagune ({@code KaguneTint.recolour}). */
+    static List<WingPreview.Tri> tinted(List<WingPreview.Tri> tris, int tint) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        for (WingPreview.Tri t : tris) {
+            int[] argb = new int[t.argb().length];
+            for (int i = 0; i < argb.length; i++) {
+                argb[i] = com.hex.kagune.control.KaguneTint.recolour(t.argb()[i], tint);
+            }
+            out.add(new WingPreview.Tri(t.p(), argb, t.n(), t.opaque(), t.additive(), t.uv(), t.tex()));
+        }
+        return out;
     }
 
     static double smooth(double v) {

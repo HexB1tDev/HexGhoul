@@ -266,6 +266,36 @@ public final class Courtship {
             "Dawn. Here. I'll be at the window, counting.",
             "Be with General Kuroda at dawn"));
 
+    /**
+     * 4.1.49 (the owner: Roma "has a messed up sense of humor but can be romatic when comes to it"): Roma's: a show for her (the CCG's
+     * investigators put down, three, her idea of a joke), the night walked with her, her tent sat in after dark, the Pack's killers stopped
+     * (the only thing she won't laugh at), and the sun coming up with her, the one time she drops the act.
+     */
+    static final List<Chapter> ROMA = List.of(
+        new Chapter("roma_show", "A show for the ringmaster", Task.DOVES, 3, Set.of(), "",
+            "You want to date the ringmaster? Then put on a show! Three doves. Investigators. The ones with the briefcases. ...What? It's "
+                + "funny. They bring a case to a fight. A CASE. Like they're going to file us.",
+            "{n} doves of three! The crowd's warming up! The crowd is me.",
+            "Kill three CCG investigators: {n} of {need}"),
+        new Chapter("roma_walk", "Walk me past the windows", Task.VILLAGE_NIGHT, 3, Set.of(), "",
+            "Walk me through a village. At night. The long way, past all the windows with the lights off. I like to guess which ones are "
+                + "already dead. ...Kidding! Mostly. Walk with me anyway.",
+            "{mm} minutes of {need}... keep walking, you're doing great, you haven't screamed once.",
+            "Walk Roma through a human village after dark: {mm} of {need} minutes"),
+        new Chapter("roma_tent", "After the lights go out", Task.DEEP, 1, Set.of(), "",
+            "Come to the tent in the dead of night. No show. No masks. Just the two of us and the echo. ...It's very spooky. You'll love it.",
+            "The dead of night. In the tent. Shh. Hear that? That's nothing. That's the point.",
+            "Be with Roma in her tent in the dead of night"),
+        new Chapter("roma_pack", "Not that kind of funny", Task.GHOUL_PACK, 3, Set.of(), "",
+            "...There's a kind of ghoul who kills for fun. The Pack. And I know, I KNOW, I joke about death all day. But they're not "
+                + "joking. They're just cruel. Three of them. Please. That one's not a bit.",
+            "{n} of three. ...Thank you. I mean it. Don't tell anyone I meant something.",
+            "Kill three ghouls of the Pack: {n} of {need}"),
+        new Chapter("roma_dawn", "When the circus sleeps", Task.DAWN, 1, Set.of(), "",
+            "Be with me at dawn. That's when the Clowns sleep and nobody needs me to be funny. ...I want to see what I'm like then. With you.",
+            "Dawn. Here. I'll be the one not wearing a mask.",
+            "Be with Roma at dawn"));
+
     /** {@code key}'s chapters, in order (none for one who has none). */
     public static List<Chapter> of(String key) {
         return switch (key == null ? "" : key) {
@@ -274,6 +304,7 @@ public final class Courtship {
             case "ken" -> KEN;
             case "ayato" -> AYATO;
             case "general" -> GENERAL;
+            case "roma" -> ROMA;
             default -> List.of();
         };
     }
@@ -450,6 +481,8 @@ public final class Courtship {
                 "Don't call it a date. ...Okay, it's a date. Where?"};
             case "general" -> new String[] {"An evening off. ...I haven't taken one in years. Where shall we go?",
                 "Out. With you. ...Yes. I'll leave the coat. No, I'll keep the coat. Where?", "I'll clear my evening. Name the place."};
+            case "roma" -> new String[] {"A date! Oh, I LOVE dates. Somewhere dramatic. Somewhere we could plausibly both die. Pick!",
+                "Out? With the ringmaster? Bold. Very bold. I'll wear my good face. Where?", "Yes yes yes. Where? Don't say a graveyard. ...Do say a graveyard."};
             default -> new String[] {"Where to?"};
         };
         return lines[Math.floorMod(seed, lines.length)];
@@ -465,6 +498,8 @@ public final class Courtship {
                 "Tomorrow. I want to have something to look forward to."};
             case "ayato" -> new String[] {"Twice in one day? Greedy. ...Tomorrow.", "Tomorrow. Don't forget. I won't."};
             case "general" -> new String[] {"Twice in a day and the bureau will notice. ...Tomorrow.", "Tomorrow. I'll be watching the clock."};
+            case "roma" -> new String[] {"Twice in one day? Greedy! I love it. No. Tomorrow. Leave them wanting more, that's showbiz.",
+                "Tomorrow, sweetheart. The ringmaster needs her beauty sleep. In a coffin. Kidding. It's a hammock."};
             default -> new String[] {"Tomorrow."};
         };
         return lines[Math.floorMod(seed, lines.length)];

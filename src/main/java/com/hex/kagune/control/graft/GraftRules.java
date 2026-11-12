@@ -362,6 +362,15 @@ public final class GraftRules {
         if (move == GraftMove.HUMAN_PUPPET || move == GraftMove.PUPPET_STRIKE) {
             return new double[] {0.4, 1.3, 3.4};
         }
+        if (move == GraftMove.ROMA_IMPALE) {
+            // 4.1.49: run through at her chest's height a few blocks out, then lifted high on the tendril, over her head's height.
+            return new double[] {0.5, 1.4 + 2.2 * smooth(since / 10.0), 3.4 - 0.6 * smooth(since / 10.0)};
+        }
+        if (move == GraftMove.ROMA_HURL) {
+            // 4.1.49: the chunk torn up out of the ground just before her, rising in a little arc to hang before and above her head.
+            double t = smooth(since / 7.0);
+            return new double[] {0.0, -0.4 + 3.2 * t + 0.5 * Math.sin(Math.PI * t), 2.2 - 0.4 * t};
+        }
         if (move == GraftMove.PUPPET_THROW) {
             return new double[] {0.45, 1.3 + 2.3 * smooth(since / 4.0), 3.4 - 1.3 * smooth(since / 4.0)};
         }

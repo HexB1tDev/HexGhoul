@@ -508,6 +508,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             event.registerEntityRenderer(ControlEntities.AYATO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.AYATO));
             event.registerEntityRenderer(ControlEntities.NORO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.NORO));
             event.registerEntityRenderer(ControlEntities.GENERAL.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.GENERAL));
+            event.registerEntityRenderer(ControlEntities.ROMA.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.ROMA)); // 4.1.49
         }
     }
 }

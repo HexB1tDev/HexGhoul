@@ -54,6 +54,11 @@ public final class ControlEntities {
         () -> EntityType.Builder.<com.hex.kagune.control.npc.NoroNpc>m_20704_(com.hex.kagune.control.npc.NoroNpc::new, MobCategory.CREATURE)
             .m_20699_(0.6F * com.hex.kagune.control.npc.Persona.NORO.size(), 1.8F * com.hex.kagune.control.npc.Persona.NORO.size()).m_20702_(10).m_20717_(1)
             .m_20712_(KaguneMod.id("noro").toString()));
+    /** 4.1.49: Roma, the Clowns' leader: a creature (never despawned), Touka's size. */
+    public static final RegistryObject<EntityType<com.hex.kagune.control.npc.RomaNpc>> ROMA = ENTITIES.register("roma",
+        () -> EntityType.Builder.<com.hex.kagune.control.npc.RomaNpc>m_20704_(com.hex.kagune.control.npc.RomaNpc::new, MobCategory.CREATURE)
+            .m_20699_(0.6F * com.hex.kagune.control.npc.Persona.ROMA.size(), 1.8F * com.hex.kagune.control.npc.Persona.ROMA.size()).m_20702_(10).m_20717_(1)
+            .m_20712_(KaguneMod.id("roma").toString()));
 
     /**
      * 1.3.10: a child: a creature (never despawned), boxed as a player and shrunk to its stage by the size event ({@code Genders}); its
@@ -94,6 +99,8 @@ public final class ControlEntities {
         com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.Persona.NORO.key(), NORO);
         // 4.1.5: the General: one, back in the CCG's building a day after he is killed.
         com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.Persona.GENERAL.key(), GENERAL);
+        // 4.1.49: Roma: one, back in the circus tent a day after she is killed.
+        com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.Persona.ROMA.key(), ROMA);
         // 1.3.10: births make children; each one's body made again at its home a day after it dies.
         com.hex.kagune.control.server.Children.init();
     }
@@ -113,6 +120,7 @@ public final class ControlEntities {
             event.put(AYATO.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.AYATO).m_22265_());
             event.put(NORO.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.NORO).m_22265_());
             event.put(GENERAL.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.GENERAL).m_22265_());
+            event.put(ROMA.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.ROMA).m_22265_());
             event.put(CHILD.get(), com.hex.kagune.control.npc.ChildNpc.attributes().m_22265_());
             event.put(AGENT.get(), com.hex.kagune.control.npc.CcgAgent.attributes().m_22265_());
             event.put(HUMAN.get(), com.hex.kagune.control.npc.HumanNpc.attributes().m_22265_());
