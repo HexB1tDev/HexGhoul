@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.64 (HexGhoul): the path choice in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.64.md`. New `PathChoiceView` (pure: `board`, `ruleY`, `draw` with `State(selected, mouse, time, hold)`): the board (`QuestStyle.backdrop`, the honeycomb right of the title only), title, rule, cards as quest cards in each path's accent, the stage strip, the Awaken button filling as held. `PathChoiceScreen` keeps picking and holding, draws through the view (its own drawing code removed). `PathChoiceLayout` unchanged. `PathScreenTests` (board holds everything, the rule never on a card; the screen draws through the view). `tools/UiPreview.java path-choice`. Render `docs/handoff/path-choice-4.1.64.png`. Protocol 125.
+
 ## 4.1.63 (HexGhoul): the gender screen in the quest menu's style (testing)
 
 See `.github/release-notes-4.1.63.md`. `GenderView.Layout` inside `box` (440 x 300 at most, `OUTSIDE` 8), `ruleY`; `GenderView.draw` the box (`QuestStyle.backdrop`, title, rule), the cards and buttons as the quest menu's. `FamilyTests.screen` checks the box on screen, everything in it. `tools/UiPreview.java gender` (now over a scene, and at 960 x 540). Render `docs/handoff/gender-screen-4.1.63.png`. Protocol 125.

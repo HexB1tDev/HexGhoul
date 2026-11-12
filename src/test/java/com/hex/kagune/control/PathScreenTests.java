@@ -27,6 +27,7 @@ public final class PathScreenTests {
     public static void main(String[] args) {
         layouts();
         hitTesting();
+        drawnByView();
         silhouettes();
         stages();
         framework();
@@ -93,6 +94,15 @@ public final class PathScreenTests {
             check(layout.compact == (height < PathChoiceLayout.COMPACT_BELOW_HEIGHT) && (layout.hintY < 0) == layout.compact,
                 "short screens drop the hint" + at);
 
+            // 4.1.64: the quest menu's board round all of it, the rule under the header never on a card nor on the title.
+            Box board = com.hex.kagune.control.client.PathChoiceView.board(layout);
+            int rule = com.hex.kagune.control.client.PathChoiceView.ruleY(layout);
+            for (Box box : boxes) {
+                check(box.inside(board), "everything on the board" + at + ": " + box);
+                check(box == layout.later || box == layout.confirm || rule <= box.y() - 3, "the rule never on a card" + at);
+            }
+            check(rule > layout.titleY + PathChoiceLayout.TITLE_HEIGHT && board.inside(screen), "the rule under the title, the board on screen" + at);
+            check(layout.hintY < 0 || layout.hintY + PathChoiceLayout.LINE <= board.bottom(), "the hint on the board" + at);
             for (Box card : cards) {
                 PathChoiceLayout.Card inner = layout.card(card);
                 check(inner.silhouette().inside(card), "silhouette is inside its card" + at);
@@ -129,6 +139,17 @@ public final class PathScreenTests {
         PathChoiceLayout roomy = PathChoiceLayout.of(640, 360);
         check(roomy.card(roomy.cards.get(1)).maxBullets() >= 5 && roomy.card(roomy.cards.get(1)).stripY() >= 0,
             "1080p at GUI scale 3 fits every Ukaku bullet and the progression strip");
+    }
+
+    /** 4.1.64: the screen draws through PathChoiceView (the renders are what the game shows), and puts no overlay over the world. */
+    private static void drawnByView() {
+        try {
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/PathChoiceScreen.java"));
+            check(screen.contains("PathChoiceView.draw(canvas, layout, this.cards") && !screen.contains("graphics.m_280509_(0, 0, width, height")
+                && !screen.contains("m_280024_"), "the path choice drawn by its view, no overlay over the world");
+        } catch (java.io.IOException failure) {
+            check(false, "the path choice screen's source: " + failure);
+        }
     }
 
     private static void hitTesting() {

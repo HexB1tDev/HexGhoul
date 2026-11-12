@@ -958,6 +958,28 @@ public class UiPreview {
         System.out.println("wrote " + out);
     }
 
+    /** 4.1.64: the path choice at a GUI size; the mouse on card {@code over} (-2: on Awaken, -1: nowhere), {@code hold} how far it is held. */
+    static void pathChoice(File out, int w, int h, KagunePath selected, int over, int unused, float hold, int zoom) throws Exception {
+        BufferedImage image = new BufferedImage(w * zoom, h * zoom, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(image, zoom), false);
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        com.hex.kagune.control.client.PathChoiceLayout layout = com.hex.kagune.control.client.PathChoiceLayout.of(w, h);
+        double mx = -10;
+        double my = -10;
+        if (over == -2) {
+            mx = layout.confirm.centerX();
+            my = layout.confirm.y() + 5;
+        } else if (over >= 0) {
+            mx = layout.cards.get(over).centerX();
+            my = layout.cards.get(over).y() + 10;
+        }
+        com.hex.kagune.control.client.PathChoiceView.draw(c, layout, com.hex.kagune.control.client.PathCards.choosable(),
+            new com.hex.kagune.control.client.PathChoiceView.State(selected, mx, my, 1.3, hold));
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
     /** 4.1.62: the kakugan screen over a stand-in scene at a GUI size ({@code w} x {@code h}, drawn {@code zoom} times). */
     static void kakuganBox(File out, int w, int h, KakuganEyes eyes, String hovered, boolean choosing, int zoom) throws Exception {
         BufferedImage image = new BufferedImage(w * zoom, h * zoom, BufferedImage.TYPE_INT_RGB);
@@ -1069,6 +1091,17 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("pale-menu")) {
             paleQuest(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("path-choice")) {
+            // 4.1.64: the path choice in the quest menu's look: nothing picked, a path picked with the pointer on Awaken, held half way,
+            // at GUI scale 2, 3 and 4 of 1080p and the smallest screen.
+            KagunePath first = com.hex.kagune.control.client.PathCards.choosable().get(0).path();
+            KagunePath second = com.hex.kagune.control.client.PathCards.choosable().get(1).path();
+            pathChoice(new File(dir, "path-960.png"), 960, 540, KagunePath.NONE, -1, -1, -1.0F, 2);
+            pathChoice(new File(dir, "path-640.png"), 640, 360, second, -2, 0, -1.0F, 3);
+            pathChoice(new File(dir, "path-480.png"), 480, 270, first, -2, 0, 0.5F, 4);
+            pathChoice(new File(dir, "path-320.png"), 320, 240, second, -1, -1, -1.0F, 4);
             return;
         }
         if (args.length > 1 && args[1].equals("kakugan-menu")) {
