@@ -22,7 +22,10 @@ public final class KingChoiceView {
     static final int PANEL_H = 500;
     static final int CARD_W = 330;
     static final int CARD_H = 300;
-    static final int CARD_Y = 96;
+    static final int CARD_Y = 66;
+    /** 4.1.65: the quest menu's box (the mastery menus' size), everything inside it. */
+    public static final int BOX_WIDTH = UkakuMenuView.BOX_WIDTH;
+    public static final int BOX_HEIGHT = UkakuMenuView.BOX_HEIGHT;
 
     /** What the screen shows: the card picked (NONE: none yet), how far the bar is held (0..1), and whether Peace can be chosen. */
     public record Model(KingForm picked, double hold, boolean peaceBuilt) {
@@ -33,28 +36,37 @@ public final class KingChoiceView {
 
     /** The card's box for {@code form}. */
     static UkakuMenuView.Rect card(KingForm form) {
-        int x = form == KingForm.WAR ? UI_WIDTH / 2 - 34 - CARD_W : UI_WIDTH / 2 + 34;
+        int x = form == KingForm.WAR ? BOX_WIDTH / 2 - 14 - CARD_W : BOX_WIDTH / 2 + 14;
         return new UkakuMenuView.Rect(x, CARD_Y, CARD_W, CARD_H);
     }
 
-    /** Draws the screen and returns its clickable areas: "card:war", "card:peace", "choose", "later". */
+    /**
+     * Draws the screen and returns its clickable areas: "card:war", "card:peace", "choose", "later". 4.1.65 (the owner: "new Menus: Every
+     * single menu in the game is to mimic and look like the quest menu, and be as interactable as it is, Dialog, mastery menus ALL OF THEM"):
+     * the quest menu's box ({@link #BOX_WIDTH} x {@link #BOX_HEIGHT}) over the world, its title, lines and rule; the two cards as they were;
+     * the bar held to choose as the quest menu's button, filling.
+     */
     public static Map<String, UkakuMenuView.Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time) {
         KingTheme t = KingTheme.RINKAKU;
         Map<String, UkakuMenuView.Rect> hits = new LinkedHashMap<>();
-        int centerX = UI_WIDTH / 2;
-        int centerY = UI_HEIGHT / 2;
-        int left = centerX - PANEL_W / 2;
-        int top = centerY - PANEL_H / 2;
+        int centerX = BOX_WIDTH / 2;
+        int ruleY = CARD_Y - 8;
+        QuestStyle.backdrop(c, 0, 0, BOX_WIDTH, BOX_HEIGHT, time, BOX_WIDTH - 200, 6, 186, ruleY - 12);
+        c.push();
+        c.translate(16, 11);
+        c.scale(1.4F);
+        c.text("What kind of King will you become?", 0, 0, QuestJournalView.TITLE, true);
+        c.pop();
+        c.text("THE DRAGON IS SPENT", 16, 29, QuestJournalView.SUBTITLE, false);
+        c.text("Click a card, then hold the button (or Enter) to become it: once, and never again", 16, 41, QuestFrame.MUTED, false);
         c.batch(() -> {
-            UkakuMenuView.organicPanel(c, centerX, centerY, PANEL_W / 2, PANEL_H / 2, t.panelFill(), t.panelEdge());
-            UkakuMenuView.organicPanel(c, centerX, centerY, PANEL_W / 2 - 5, PANEL_H / 2 - 5, t.innerFill(), t.innerEdge());
-            // The menu's veins: the arc under the title, and one down the middle between the two ways.
-            UkakuMenuView.drawVein(c, left + 18, top + 74, centerX, top + 32, left + PANEL_W - 18, top + 74, t.veinBright(), 2);
-            UkakuMenuView.drawVein(c, centerX, top + 82, centerX - 14, centerY, centerX + 6, CARD_Y + CARD_H + 4, t.vein(), 2);
+            for (int i = 0; i < 40; i++) {
+                float f = i / 39.0F;
+                int alpha = Math.round(190 * (1.0F - Math.abs(f - 0.5F) * 2.0F));
+                int x0 = 12 + Math.round((BOX_WIDTH - 24) * i / 40.0F);
+                c.fill(x0, ruleY, x0 + (BOX_WIDTH - 24) / 40 + 1, ruleY + 1, alpha << 24 | 0xE8323E);
+            }
         });
-        c.centered("W H A T   K I N D   O F   K I N G   W I L L   Y O U   B E C O M E ?", centerX, top + 18, t.title());
-        c.centered("THE DRAGON IS SPENT", centerX, top + 34, t.subtitle());
-        c.centered("Click a card  •  hold the bar (or Enter) to become it  •  once, and never again", centerX, top + 51, t.hint());
         for (KingForm form : new KingForm[] {KingForm.WAR, KingForm.PEACE}) {
             UkakuMenuView.Rect r = card(form);
             boolean sealed = form == KingForm.PEACE && !model.peaceBuilt();
@@ -67,24 +79,37 @@ public final class KingChoiceView {
             }
             hits.put("card:" + form.id(), r);
         }
-        // The bar, held to choose: the mastery bar's capsule, filling.
+        // The button held to choose: the quest menu's, filling red as it is held.
         boolean enabled = model.picked() != KingForm.NONE;
-        int barX = centerX - 150;
-        int barY = CARD_Y + CARD_H + 34;
-        UkakuMenuView.Rect bar = new UkakuMenuView.Rect(barX - 6, barY - 18, 312, 30);
+        UkakuMenuView.Rect bar = new UkakuMenuView.Rect(centerX - 160, CARD_Y + CARD_H + 10, 320, 22);
         boolean over = bar.contains(mouseX, mouseY);
-        String label = !enabled ? "PICK A CARD" : model.hold() > 0.0 ? "BECOMING " + model.picked().displayName().toUpperCase() + "..."
-            : "HOLD TO BECOME " + model.picked().displayName().toUpperCase();
-        c.text(label, barX, barY - 15, enabled ? (over ? t.title() : t.header()) : t.faint(), false);
-        String share = enabled ? Math.round(100.0 * Math.min(1.0, model.hold())) + "%" : "";
-        c.text(share, barX + 300 - c.width(share), barY - 15, t.value(), false);
-        UkakuMenuView.capsule(c, barX, barY, 300, 8, over && enabled ? t.buttonHover() : t.barBack());
-        if (model.hold() > 0.0) {
-            UkakuMenuView.capsule(c, barX, barY, Math.max(16, (int)Math.round(300 * Math.min(1.0, model.hold()))), 8, t.bar());
-        }
+        boolean holding = model.hold() > 0.0;
+        int lift = enabled && over && !holding ? -1 : 0;
+        int edge = !enabled ? QuestStyle.GREY_DARK : over || holding ? QuestStyle.RED : QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED,
+            0.15F + 0.15F * (float)Math.sin(time * 2.5));
+        int fill = !enabled ? 0xFF140A0C : over ? QuestJournalView.ROW_PICKED : QuestJournalView.ROW;
+        c.batch(() -> {
+            QuestStyle.box(c, bar.x(), bar.y() + lift, bar.width(), bar.height(), fill, edge);
+            if (holding) {
+                int filled = (int)Math.round((bar.width() - 2) * Math.min(1.0, model.hold()));
+                c.fill(bar.x() + 1, bar.y() + 1, bar.x() + 1 + filled, bar.y() + bar.height() - 1, QuestStyle.mix(QuestJournalView.ROW, QuestStyle.RED, 0.6F));
+            }
+            if (enabled && over) {
+                c.fill(bar.x() + 4, bar.y() + bar.height() + 1, bar.x() + bar.width() - 4, bar.y() + bar.height() + 2, QuestStyle.RED);
+            }
+        });
+        String label = !enabled ? "PICK A CARD" : holding ? "BECOMING " + model.picked().displayName().toUpperCase() + "...  "
+            + Math.round(100.0 * Math.min(1.0, model.hold())) + "%" : "HOLD TO BECOME " + model.picked().displayName().toUpperCase();
+        c.centered(c.fit(label, bar.width() - 8), centerX, bar.y() + 8 + lift, !enabled ? QuestStyle.GREY : over || holding ? QuestStyle.WHITE
+            : QuestFrame.VALUE);
         hits.put("choose", bar);
-        UkakuMenuView.Rect later = new UkakuMenuView.Rect(centerX - 60, top + PANEL_H - 22, 120, 14);
-        c.centered("DECIDE LATER", centerX, top + PANEL_H - 18, later.contains(mouseX, mouseY) ? t.on() : t.off());
+        UkakuMenuView.Rect later = new UkakuMenuView.Rect(centerX - 50, BOX_HEIGHT - 20, 100, 12);
+        boolean overLater = later.contains(mouseX, mouseY);
+        c.centered("Decide later", centerX, later.y() + 2, overLater ? QuestFrame.VALUE : QuestFrame.MUTED);
+        if (overLater) {
+            int half = c.width("Decide later") / 2;
+            c.fill(centerX - half, later.y() + 11, centerX + half, later.y() + 12, QuestStyle.RED);
+        }
         hits.put("later", later);
         return hits;
     }

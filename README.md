@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.65 (HexGhoul): the king's choice in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.65.md`. `KingChoiceView.draw` in the quest menu's box (`BOX_WIDTH` x `BOX_HEIGHT`: `QuestStyle.backdrop`, title, rule; `CARD_Y` 66; the cards side by side in the box; "choose" a quest button filling as held; "later"); `KingChoiceScreen` scales the box, no overlay. `QuestTests.kingChoice`. `tools/UiPreview.java king` (the cards over a scene). Render `docs/handoff/king-choice-4.1.65.png`. Protocol 125.
+
 ## 4.1.64 (HexGhoul): the path choice in the quest menu's style (testing)
 
 See `.github/release-notes-4.1.64.md`. New `PathChoiceView` (pure: `board`, `ruleY`, `draw` with `State(selected, mouse, time, hold)`): the board (`QuestStyle.backdrop`, the honeycomb right of the title only), title, rule, cards as quest cards in each path's accent, the stage strip, the Awaken button filling as held. `PathChoiceScreen` keeps picking and holding, draws through the view (its own drawing code removed). `PathChoiceLayout` unchanged. `PathScreenTests` (board holds everything, the rule never on a card; the screen draws through the view). `tools/UiPreview.java path-choice`. Render `docs/handoff/path-choice-4.1.64.png`. Protocol 125.

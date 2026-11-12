@@ -1360,16 +1360,23 @@ public class UiPreview {
         com.hex.kagune.control.king.KingForm none = com.hex.kagune.control.king.KingForm.NONE;
         com.hex.kagune.control.king.KingForm war = com.hex.kagune.control.king.KingForm.WAR;
         com.hex.kagune.control.king.KingForm peace = com.hex.kagune.control.king.KingForm.PEACE;
-        Object[][] cards = {{"king-cards.png", none, 0.0, 0.0, 0.0, false}, {"king-cards-war.png", war, 0.55, 300.0, 250.0, false},
-            {"king-cards-peace.png", peace, 0.0, 660.0, 250.0, true}};
+        // 4.1.65: the cards in the quest menu's box over a stand-in scene (mouse in box coordinates; on the button: 370, 386).
+        Object[][] cards = {{"king-cards.png", none, 0.0, -1.0, -1.0, false}, {"king-cards-war.png", war, 0.55, 370.0, 386.0, false},
+            {"king-cards-peace.png", peace, 0.0, 550.0, 200.0, true}, {"king-cards-war-hover.png", war, 0.0, 190.0, 200.0, false}};
         for (Object[] shot : cards) {
-            int w = com.hex.kagune.control.client.KingChoiceView.UI_WIDTH;
-            int h = com.hex.kagune.control.client.KingChoiceView.UI_HEIGHT;
+            int w = 960;
+            int h = 540;
+            int bw = com.hex.kagune.control.client.KingChoiceView.BOX_WIDTH;
+            int bh = com.hex.kagune.control.client.KingChoiceView.BOX_HEIGHT;
             BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
             ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
-            c.fill(0, 0, w, h, 0xFF0A0607);
+            c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+            c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+            c.push();
+            c.translate((w - bw) / 2.0F, (h - bh) / 2.0F);
             com.hex.kagune.control.client.KingChoiceView.draw(c, new com.hex.kagune.control.client.KingChoiceView.Model(
                 (com.hex.kagune.control.king.KingForm)shot[1], (Double)shot[2], (Boolean)shot[5]), (Double)shot[3], (Double)shot[4], 1.7);
+            c.pop();
             File out = new File(dir, (String)shot[0]);
             ImageIO.write(image, "png", out);
             System.out.println("wrote " + out);

@@ -48,6 +48,7 @@ public final class QuestTests {
         bikakuMenu();
         graftMenu();
         paleMenu();
+        kingChoice();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -480,6 +481,44 @@ public final class QuestTests {
                 && screen.contains("key.equals(\"instant\")"), "the screen sized from the box; a mutation unlocked and the switch flipped only by their buttons");
         } catch (java.io.IOException failure) {
             check(false, "the Pale screen's source: " + failure);
+        }
+    }
+
+    /**
+     * 4.1.65 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+     * Dialog, mastery menus ALL OF THEM"): the king's choice is the quest menu's box: both cards, the button held to choose and Decide later
+     * to click, inside the box and apart, every word inside it; the screen sized from the box, no overlay.
+     */
+    static void kingChoice() {
+        Recorder canvas = new Recorder();
+        int width = com.hex.kagune.control.client.KingChoiceView.BOX_WIDTH;
+        int height = com.hex.kagune.control.client.KingChoiceView.BOX_HEIGHT;
+        check(width <= 760 && height <= 460, "the king's choice a compact box, the world seen round it");
+        long seen = 0;
+        for (com.hex.kagune.control.king.KingForm picked : new com.hex.kagune.control.king.KingForm[] {com.hex.kagune.control.king.KingForm.NONE,
+            com.hex.kagune.control.king.KingForm.WAR, com.hex.kagune.control.king.KingForm.PEACE}) {
+            for (double hold : new double[] {0.0, 0.4, 1.0}) {
+                for (boolean peace : new boolean[] {false, true}) {
+                    for (double[] mouse : new double[][] {{-1, -1}, {190, 200}, {550, 200}, {370, 386}, {370, 426}}) {
+                        canvas.clear();
+                        java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits = com.hex.kagune.control.client.KingChoiceView.draw(canvas,
+                            new com.hex.kagune.control.client.KingChoiceView.Model(picked, hold, peace), mouse[0], mouse[1], 2.0);
+                        String where = "king's choice " + picked + " held " + hold + (peace ? "" : " (Peace sealed)");
+                        seen += canvas.texts.size();
+                        check(hits.containsKey("card:war") && hits.containsKey("card:peace") && hits.containsKey("choose") && hits.containsKey("later"),
+                            where + ": both cards, the button and Decide later to click");
+                        boxed(hits, canvas, width, height, where);
+                    }
+                }
+            }
+        }
+        check(seen > 500, "the king's choice's words drawn and checked (" + seen + ")");
+        try {
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/KingChoiceScreen.java"));
+            check(screen.contains("KingChoiceView.BOX_WIDTH") && !screen.contains("KingChoiceView.UI_WIDTH") && !screen.contains("m_280273_")
+                && !screen.contains("m_280024_"), "the king's choice sized from its box, no overlay over the world");
+        } catch (java.io.IOException failure) {
+            check(false, "the king's choice screen's source: " + failure);
         }
     }
 
