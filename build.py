@@ -24,7 +24,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "4.1.49"
+VERSION = "4.1.50"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -83,6 +83,8 @@ NEW_PREFIXES = (
     "assets/hexkagune/geo/",  # 3.6.5: GeckoLib models (Grand Devouring's inside)
     "assets/hexkagune/animations/",  # 3.6.5: GeckoLib animations
     "data/hexkagune/",
+    # 4.1.50: two private characters (U+E000, U+E001: the gangs' emblems) added to the game's own font; this one file, nothing else of it.
+    "assets/minecraft/font/default.json",
 )
 
 

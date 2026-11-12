@@ -128,6 +128,12 @@ M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles setRoll (F)V
 C net/minecraftforge/client/event/MovementInputUpdateEvent                           # [forge] fired from LocalPlayer.aiStep after input.tick (LocalPlayer.java.patch)
 M net/minecraftforge/client/event/MovementInputUpdateEvent getInput ()Lnet/minecraft/client/player/Input;  # [forge]
 M net/minecraftforge/event/entity/player/PlayerEvent getEntity ()Lnet/minecraft/world/entity/player/Player;  # [forge] PlayerEvent.java
+# 4.1.50: a gang member's name, its emblem before it (PlayerEvent.NameFormat, posted by ForgeEventFactory.getPlayerDisplayName from
+# Player.getDisplayName; Player.refreshDisplayName asks again: both Forge's own, never obfuscated)
+C net/minecraftforge/event/entity/player/PlayerEvent$NameFormat                       # [forge] 1.20.1 event/entity/player/PlayerEvent.java (class NameFormat)
+M net/minecraftforge/event/entity/player/PlayerEvent$NameFormat getDisplayname ()Lnet/minecraft/network/chat/Component;  # [forge] same
+M net/minecraftforge/event/entity/player/PlayerEvent$NameFormat setDisplayname (Lnet/minecraft/network/chat/Component;)V  # [forge] same
+M net/minecraft/world/entity/player/Player refreshDisplayName ()V                      # [forge] 1.20.1 patches/minecraft/net/minecraft/world/entity/player/Player.java.patch (public void refreshDisplayName)
 C net/minecraftforge/client/event/RegisterGuiOverlaysEvent                           # [forge] mod-bus event
 M net/minecraftforge/client/event/RegisterGuiOverlaysEvent registerBelowAll (Ljava/lang/String;Lnet/minecraftforge/client/gui/overlay/IGuiOverlay;)V  # [forge]
 C net/minecraftforge/client/gui/overlay/IGuiOverlay                                  # [forge]

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.50 (HexGhoul): joining gangs (testing)
+
+See `.github/release-notes-4.1.50.md`. `GangPlayer` (pure: member, banned, Aogiri's 5 CCG, the Clowns' joke, 3 Gas Masks and a quinque case, banned past 10 own kills; `named`: emblem, space, coloured name), `GangServer` (`PlayerPersisted`, `LivingDeathEvent` counts, `PlayerEvent.NameFormat`, `S2CGangName` message 57 to every client, the "gang" option on Ayato's and Roma's first page via `EtoServer.withGang`), `GhoulNpcBrain.wanted`/`hurt` (its own never, the banned on sight, its own's foes); emblems `tools/gang_emblems.py` into `assets/minecraft/font/default.json` (U+E000, U+E001); Forge's NameFormat and `Player.refreshDisplayName` allowlisted; `NpcTests.joining`. Protocol 123.
+
 ## 4.1.49 (HexGhoul): Roma, the Clowns' leader (testing)
 
 See `.github/release-notes-4.1.49.md`. `Persona.ROMA` (Touka's size, skinny, slim, dates anyone, `kickMaster()`, `tendrils()` 4, purple), `RomaNpc`, `RomaScript`, `talk/roma.txt`, `Courtship.ROMA`, her lines in the shared tables; in the circus tent's middle. Her fight: Kick Master (`EtoOwl` by `Persona.kickMaster`) and `NpcTendrils` (four transplant tails on `GraftRig`: the string, `THORN_4`, `GraftMove.ROMA_IMPALE`, `ROMA_HURL`/`ROMA_THROW`), drawn by `GraftRenderer`'s companion pass. Her textures by `tools/companion_textures.py` (the owner's second skin; her eyes under her lashes by hand in `EYES`; `CHEEKS`, `"veins"` for hand-placed faces). Protocol 122.
