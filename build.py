@@ -83,6 +83,8 @@ NEW_PREFIXES = (
     "assets/hexkagune/geo/",  # 3.6.5: GeckoLib models (Grand Devouring's inside)
     "assets/hexkagune/animations/",  # 3.6.5: GeckoLib animations
     "data/hexkagune/",
+    # 4.1.50: two private characters (U+E000, U+E001: the gangs' emblems) added to the game's own font; this one file, nothing else of it.
+    "assets/minecraft/font/default.json",
 )
 
 
