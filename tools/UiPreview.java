@@ -242,6 +242,67 @@ public class UiPreview {
         System.out.println("wrote " + out);
     }
 
+    /** 4.1.59: the Bikaku menu as the game draws it: the quest menu's box over a stand-in scene; the mouse on the first area named {@code over}. */
+    static void bikakuBox(File out, com.hex.kagune.control.client.BikakuMenuView.Model model, String over) throws Exception {
+        int w = 960;
+        int h = 540;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        for (int i = 0; i < w; i += 40) {
+            c.fill(i, h * 6 / 10 - 20 - (i * 37 % 60), i + 40, h * 6 / 10, 0xFF4E8834);
+        }
+        int bw = com.hex.kagune.control.client.BikakuMenuView.BOX_WIDTH;
+        int bh = com.hex.kagune.control.client.BikakuMenuView.BOX_HEIGHT;
+        double mx = -1;
+        double my = -1;
+        if (over != null) {
+            BufferedImage scratch = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for (java.util.Map.Entry<String, UkakuMenuView.Rect> hit : com.hex.kagune.control.client.BikakuMenuView.draw(new ImageCanvas(graphics(scratch, 1),
+                false), model, -1, -1, 1.3).entrySet()) {
+                if (hit.getKey().startsWith(over)) {
+                    mx = hit.getValue().x() + hit.getValue().width() * 0.6;
+                    my = hit.getValue().y() + hit.getValue().height() * 0.5;
+                    break;
+                }
+            }
+        }
+        c.push();
+        c.translate((w - bw) / 2.0F, (h - bh) / 2.0F);
+        com.hex.kagune.control.client.BikakuMenuView.draw(c, model, mx, my, 1.3);
+        c.pop();
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
+    /** 4.1.59: the Bikaku menu: its forms (one to take under the mouse, The Walker, one waiting for its quest), its moves, its kakuja, its mutations. */
+    static void bikakuQuest(File dir) throws Exception {
+        com.hex.kagune.control.client.QuestLocks all = com.hex.kagune.control.client.QuestLocks.ALL;
+        java.util.Set<com.hex.kagune.control.quest.Gate> open = java.util.EnumSet.of(com.hex.kagune.control.quest.Gate.BIKAKU_WORMS);
+        com.hex.kagune.control.client.QuestLocks some = new com.hex.kagune.control.client.QuestLocks(open::contains, 0);
+        int potential = com.hex.kagune.control.bikaku.BikakuMutation.POTENTIAL_UNLOCK.bit();
+        int devour = com.hex.kagune.control.bikaku.BikakuMutation.GRAND_DEVOURING.bit();
+        com.hex.kagune.control.client.BikakuMenuView.Tab forms = com.hex.kagune.control.client.BikakuMenuView.Tab.FORMS;
+        com.hex.kagune.control.client.BikakuMenuView.Tab moves = com.hex.kagune.control.client.BikakuMenuView.Tab.MOVES;
+        com.hex.kagune.control.client.BikakuMenuView.Tab kakuja = com.hex.kagune.control.client.BikakuMenuView.Tab.KAKUJA;
+        com.hex.kagune.control.client.BikakuMenuView.Tab mutations = com.hex.kagune.control.client.BikakuMenuView.Tab.MUTATIONS;
+        bikakuBox(new File(dir, "bikaku-forms-take.png"), new com.hex.kagune.control.client.BikakuMenuView.Model(600, true, 64.0F, 100.0F, 0, 0, 0L, all,
+            forms, "pick:f:THREE"), "form");
+        bikakuBox(new File(dir, "bikaku-forms-walker.png"), new com.hex.kagune.control.client.BikakuMenuView.Model(800, true, 210.0F, 300.0F, 3, potential,
+            0L, all, forms, null), "step:1000");
+        bikakuBox(new File(dir, "bikaku-forms-quest.png"), new com.hex.kagune.control.client.BikakuMenuView.Model(800, false, 80.0F, 100.0F, 2, 0, 0L, some,
+            forms, "pick:f:WALKER"), null);
+        bikakuBox(new File(dir, "bikaku-moves.png"), new com.hex.kagune.control.client.BikakuMenuView.Model(500, true, 64.0F, 100.0F, 1, 0, 0L, all, moves,
+            "pick:m:ERUPTION"), "step:600");
+        bikakuBox(new File(dir, "bikaku-kakuja.png"), new com.hex.kagune.control.client.BikakuMenuView.Model(1000, true, 64.0F, 100.0F, 2, 0, 0L, all,
+            kakuja, null), null);
+        bikakuBox(new File(dir, "bikaku-mutations.png"), new com.hex.kagune.control.client.BikakuMenuView.Model(700, true, 64.0F, 100.0F, 1, devour, 380L,
+            all, mutations, null), null);
+        bikakuBox(new File(dir, "bikaku-mutations-quest.png"), new com.hex.kagune.control.client.BikakuMenuView.Model(700, true, 64.0F, 100.0F, 1, devour,
+            0L, all, mutations, "pick:u:POTENTIAL_UNLOCK"), null);
+    }
+
     /** 4.1.58: the Rinkaku menu: its forms (one to wear under the mouse, a road step, one ahead), its passive, the final kakuja's states. */
     static void rinkaku(File dir) throws Exception {
         com.hex.kagune.gameplay.KaguneForm quad = com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD;
@@ -788,6 +849,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("rinkaku")) {
             rinkaku(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("bikaku-menu")) {
+            bikakuQuest(dir);
             return;
         }
         menu(new File(dir, "ukaku-menu-0.png"), 0, WingForm.TWIN, 0, 0);

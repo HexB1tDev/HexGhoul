@@ -6,7 +6,6 @@ import com.hex.kagune.control.client.ui.UiCanvas;
 import com.hex.kagune.control.kakugan.KakuganEyes;
 import com.hex.kagune.control.quest.Gate;
 import com.hex.kagune.control.quest.Gates;
-import com.hex.kagune.control.quest.QuestBook;
 import com.hex.kagune.control.quest.QuestLog;
 import com.hex.kagune.control.ukaku.UkakuMutation;
 import com.hex.kagune.control.ukaku.UkakuRules;
@@ -581,7 +580,7 @@ public final class UkakuMenuView {
         String line = switch (standing) {
             case OWNED -> "Unlocked: yours for good";
             case READY -> "A point to spend: unlock it below";
-            case QUEST -> "Opens with its quest: " + QuestBook.openersText(gate);
+            case QUEST -> "Opens with " + QuestFrame.opener(gate);
             case POINT -> next > 0 ? "Needs a point: the next comes at mastery " + next : "Needs a point: a quest can still pay one";
         };
         int ink = standing == Standing.OWNED ? QuestJournalView.DONE : standing == Standing.READY ? QuestJournalView.OPEN : QuestFrame.MUTED;
@@ -591,8 +590,7 @@ public final class UkakuMenuView {
         rowY = QuestFrame.section(c, "COST", x, rowY, width);
         int bx = x + QuestFrame.badge(c, 'p', "1 mutation point", true, x, rowY) + 5;
         if (gate != null) {
-            String quest = QuestBook.openersText(gate);
-            QuestFrame.badge(c, 'k', c.fit("Its quest: " + (quest.isEmpty() ? "given in the world" : quest), width - (bx - x) - 26), true, bx, rowY);
+            QuestFrame.badge(c, 'k', c.fit("Opens with " + QuestFrame.opener(gate), width - (bx - x) - 26), true, bx, rowY);
         }
         rowY += 24;
         rowY = QuestFrame.section(c, "WITH IT", standing == Standing.OWNED ? "yours now" : "now, then with it", x, rowY, width);

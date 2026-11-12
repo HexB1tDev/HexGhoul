@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.59 (HexGhoul): the Bikaku menu in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.59.md`. `BikakuMenuView` redone on `QuestFrame` (box; `Tab` FORMS/MOVES/KAKUJA/MUTATIONS; `Model` + `quests`, `tab`, `picked` ("pick:f:NAME", "pick:m:NAME"/"pick:m:M1", "pick:k:NAME"/"pick:k:KAKUJA", "pick:u:NAME", "step:N"), old constructors kept; the gates as `BikakuServer` asks them (`passes`, `gate`); `steps()`, `formCard`/`formDetail` (USE THIS FORM "formN" only while `takeable`), `moveCard`/`moveDetail` (`story(move)`), `mutationCard`/`mutationDetail`, `road`, glyphs); `BikakuMenuScreen` (no overlay, the box, tab and pick, quests); `PathSilhouette.bikakuForm` (1-3 worms in their lanes, The Walker's legs); `QuestFrame.opener` (a gate's quests, else the teacher's lesson or trial: used by the Ukaku, Rinkaku and Bikaku menus); `QuestTests.bikakuMenu`. `tools/UiPreview.java bikaku-menu`. Render `docs/handoff/bikaku-menu-4.1.59.png`. Protocol 125.
+
 ## 4.1.58 (HexGhoul): the Rinkaku menu in the quest menu's style (testing)
 
 See `.github/release-notes-4.1.58.md`. `RinkakuMenuView` redone on `QuestFrame` (`BOX_WIDTH`/`BOX_HEIGHT` the Ukaku menu's; `Tab` FORMS/KING; `Model` + `tab`, `picked` ("pick:ID", "pick:passive", "step:N", "pick:war", "pick:peace"), old constructors kept; `steps()` (forms and moves by mastery), `formCard`, `passiveCard`, `formDetail` (WEAR THIS FORM "form:ID" only while wearable), `passiveDetail`, `road`, `kingCard`, `kingDetail` (CHOOSE ON ITS CARDS "king:ID" only while choosable), `kingRoad`, `formGlyph`, `kingGlyph`, the chosen king's emblem in the header); `RinkakuMenuScreen` (no overlay, the box, tab and pick kept); `PathSilhouette.rinkakuForm` (1, 2, 4 tails; centipede legs; legs and tentacles); `KingChoiceView.warEye`/`peaceCross`/`WAR_ROWS`/`PEACE_ROWS` (shared, the cards unchanged); `QuestTests.rinkakuMenu` (`Recorder`, `boxed`). `tools/UiPreview.java rinkaku`. Render `docs/handoff/rinkaku-menu-4.1.58.png`. Protocol 125.

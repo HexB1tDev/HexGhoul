@@ -363,6 +363,27 @@ final class QuestFrame {
         return c.width(word) * 2 + 20;
     }
 
+    /**
+     * 4.1.59: what opens {@code gate}, in words: its quests by title; else the teacher's lesson that opens it ("Noro's trial, The Walker":
+     * a lesson is no quest of the book, and "its quest:" with nothing after it was all the menus said); else "its quest".
+     */
+    static String opener(com.hex.kagune.control.quest.Gate gate) {
+        if (gate == null) {
+            return "its quest";
+        }
+        String quests = com.hex.kagune.control.quest.QuestBook.openersText(gate);
+        if (!quests.isEmpty()) {
+            return quests;
+        }
+        for (com.hex.kagune.control.npc.Teaching.Lesson lesson : com.hex.kagune.control.npc.Teaching.ALL) {
+            if (lesson.gate() == gate && !lesson.teacher().isEmpty()) {
+                String teacher = Character.toUpperCase(lesson.teacher().charAt(0)) + lesson.teacher().substring(1);
+                return teacher + "'s " + (lesson.kind() == com.hex.kagune.control.npc.Teaching.Kind.TRIAL ? "trial" : "lesson") + ", " + lesson.name();
+            }
+        }
+        return "its quest";
+    }
+
     /** A reward chip as the journal's: a glyph ({@link QuestStyle#rewardGlyph}: m, k, p, d), its words; its width returned. */
     static int badge(UiCanvas c, char kind, String text, boolean gold, int x, int y) {
         int ink = gold ? QuestStyle.GOLD : VALUE;

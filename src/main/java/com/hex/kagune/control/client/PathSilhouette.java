@@ -643,6 +643,124 @@ public final class PathSilhouette {
         return marks;
     }
 
+    /**
+     * 4.1.59: one of Bikaku's forms for the menu's preview: {@code worms} worms out of the one root (the first over his right shoulder as the
+     * card's worm, the second mirrored over his left, the third rearing higher behind his head), each with its mouth of fangs; with
+     * {@code walker} The Walker's two walking tentacles out of the same root carrying him up off the ground, his own legs hanging still.
+     */
+    public static List<Mark> bikakuForm(PathChoiceLayout.Box box, double time, float intensity, boolean selected, int worms, boolean walker, int bg) {
+        List<Mark> marks = new ArrayList<>();
+        float lift = walker ? box.height() * 0.24F : 0.0F;
+        PathChoiceLayout.Box body = new PathChoiceLayout.Box(box.x(), box.y(), box.width(), Math.max(10, Math.round(box.height() - lift)));
+        Figure f = Figure.in(body, walker ? 0.42F : 0.46F);
+        float rootX = f.cx;
+        float rootY = f.waistY - f.size * 0.04F;
+        // Each worm's lane: how far it is turned from the first (radians, toward the middle), mirrored or not, and its own phase.
+        double[][] lanes = worms <= 1 ? new double[][] {{0.0, 1, 0.0}} : worms == 2 ? new double[][] {{-0.2, 1, 0.0}, {-0.2, -1, 1.9}}
+            : new double[][] {{-0.35, 1, 0.0}, {-0.35, -1, 1.9}, {0.45, 1, 3.4}};
+        float thin = worms <= 1 ? 1.0F : worms == 2 ? 0.72F : 0.58F;
+        float[][][] envelope = new float[lanes.length * 16][][];
+        for (int i = 0; i < lanes.length; i++) {
+            for (int j = 0; j < 16; j++) {
+                envelope[i * 16 + j] = lane(worm(j * Math.PI / 8.0), lanes[i]);
+            }
+        }
+        float length = fit(box, rootX, rootY, Math.min(box.width() * 0.9F, body.height() * 0.95F), 0.11F, 1.0F, envelope);
+        if (length <= 0.5F) {
+            figure(marks, f, bg, intensity);
+            return marks;
+        }
+        float strength = 0.45F + 0.55F * intensity;
+        if (walker) {
+            // The two walking tentacles: out of the root, bowed out to each side and down to the ground, banded, their tips planted.
+            for (int side = -1; side <= 1; side += 2) {
+                float footX = rootX + side * box.width() * 0.3F;
+                float footY = box.bottom() - 2.0F;
+                float kneeX = rootX + side * box.width() * 0.38F;
+                float kneeY = rootY - (footY - rootY) * 0.15F;
+                float px = rootX;
+                float py = rootY;
+                for (int k = 1; k <= 14; k++) {
+                    float t = k / 14.0F;
+                    float u = 1.0F - t;
+                    float nx = u * u * rootX + 2 * u * t * kneeX + t * t * footX;
+                    float ny = u * u * rootY + 2 * u * t * kneeY + t * t * footY;
+                    float w = length * (0.09F - 0.06F * t);
+                    marks.add(new Stroke(px, py, nx, ny, w + 0.6F, w, blend(bg, k % 3 == 0 ? BIKAKU_DARK : BIKAKU, strength)));
+                    px = nx;
+                    py = ny;
+                }
+            }
+        }
+        double speed = 0.8 + 1.0 * intensity;
+        List<float[][]> curves = new ArrayList<>();
+        for (int i = 0; i < lanes.length; i++) {
+            float[][] curve = lane(worm(time * speed + lanes[i][2]), lanes[i]);
+            curves.add(curve);
+            int n = curve.length;
+            for (int s = 0; s + 1 < n; s++) {
+                float a = s / (float)(n - 1);
+                float b = (s + 1) / (float)(n - 1);
+                float x0 = rootX + curve[s][0] * length;
+                float y0 = rootY + curve[s][1] * length;
+                float x1 = rootX + curve[s + 1][0] * length;
+                float y1 = rootY + curve[s + 1][1] * length;
+                float w0 = length * wormRadius(a) * thin;
+                float w1 = length * wormRadius(b) * thin;
+                marks.add(new Stroke(x0, y0, x1, y1, w0 * 2.0F, w1 * 2.0F, blend(bg, s % 3 == 0 ? BIKAKU_DARK : BIKAKU, strength)));
+                if (s % 3 == 1 && s > 1 && s < n - 4) {
+                    marks.add(new Stroke(x0, y0, x1, y1, Math.max(0.6F, w0 * 0.25F), Math.max(0.6F, w1 * 0.25F), blend(bg, BIKAKU_VEIN, strength * 0.8F)));
+                }
+            }
+        }
+        figure(marks, f, bg, intensity);
+        for (float[][] curve : curves) {
+            int n = curve.length;
+            float[] head = curve[n - 1];
+            float[] before = curve[n - 3];
+            double dx = head[0] - before[0];
+            double dy = head[1] - before[1];
+            double unit = Math.max(1.0E-6, Math.hypot(dx, dy));
+            dx /= unit;
+            dy /= unit;
+            float hx = rootX + head[0] * length;
+            float hy = rootY + head[1] * length;
+            float open = selected ? (float)(0.55 + 0.4 * Math.max(0.0, Math.sin(time * 1.6))) : 0.15F;
+            float lip = length * wormRadius(1.0F) * Math.max(0.75F, thin) * (1.0F + 0.35F * open);
+            marks.add(new Disc(hx, hy, lip, blend(bg, BIKAKU, strength)));
+            marks.add(new Disc(hx + (float)dx * lip * 0.25F, hy + (float)dy * lip * 0.25F, lip * (0.25F + 0.55F * open), blend(bg, 0x120205, strength)));
+            for (int k = 0; k < 6; k++) {
+                double angle = Math.PI * 2.0 * k / 6.0 + 0.4;
+                double cx = Math.cos(angle);
+                double sy = Math.sin(angle);
+                double px = -dy * cx * 0.9;
+                double py = dx * cx * 0.9;
+                float bx = hx + (float)(px * lip + dx * lip * 0.2 * sy);
+                float by = hy + (float)(py * lip + dy * lip * 0.2 * sy);
+                double ahead = 0.9 - 0.3 * open;
+                double out = -0.35 + 0.95 * open;
+                float tx = bx + (float)((dx * ahead + px * out) * lip * 1.2);
+                float ty = by + (float)((dy * ahead + py * out) * lip * 1.2);
+                marks.add(new Stroke(bx, by, tx, ty, Math.max(0.8F, lip * 0.32F), 0.5F, blend(bg, BIKAKU_FANG, strength)));
+            }
+        }
+        return marks;
+    }
+
+    /** A worm's line turned {@code lane[0]} radians toward the middle and mirrored if {@code lane[1]} is -1 (unit, about its root). */
+    private static float[][] lane(float[][] curve, double[] lane) {
+        double turn = -lane[0];
+        double cos = Math.cos(turn);
+        double sin = Math.sin(turn);
+        float[][] out = new float[curve.length][];
+        for (int i = 0; i < curve.length; i++) {
+            double x = curve[i][0] * cos - curve[i][1] * sin;
+            double y = curve[i][0] * sin + curve[i][1] * cos;
+            out[i] = new float[] {(float)(x * lane[1]), (float)y};
+        }
+        return out;
+    }
+
     /** The worm's thickness along it (unit, {@code a} 0 at his back .. 1 its mouth): thin out of the back, thick, a swollen head. */
     private static float wormRadius(float a) {
         float body = 0.02F + 0.035F * Math.min(1.0F, a * 6.0F);

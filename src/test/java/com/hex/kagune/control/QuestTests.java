@@ -45,6 +45,7 @@ public final class QuestTests {
         journal();
         ukakuMenu();
         rinkakuMenu();
+        bikakuMenu();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -208,6 +209,101 @@ public final class QuestTests {
         for (int i = 0; i < canvas.texts.size(); i++) {
             int[] t = canvas.texts.get(i);
             check(t[0] >= 8 && t[0] + t[2] <= width - 8 && t[1] >= 4 && t[1] + 8 <= height - 4, where + ": the words inside the box: \"" + canvas.words.get(i) + "\"");
+        }
+    }
+
+    /**
+     * 4.1.59 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+     * Dialog, mastery menus ALL OF THEM"): the Bikaku menu is the quest menu's box: its four tabs; every form, move, the kakuja's moves and
+     * every mutation a card to click; everything clickable and every word inside the box, apart; a form taken only by its USE THIS FORM
+     * button, drawn only for the form picked and only while the server would take it (its mastery, its quest, picked in the menu, not on);
+     * what opens a gate named (a quest or a teacher's lesson, never "its quest:" and nothing); the screen keeps no overlay.
+     */
+    static void bikakuMenu() {
+        Recorder canvas = new Recorder();
+        int width = com.hex.kagune.control.client.BikakuMenuView.BOX_WIDTH;
+        int height = com.hex.kagune.control.client.BikakuMenuView.BOX_HEIGHT;
+        check(width <= 760 && height <= 460, "the Bikaku menu a compact box, the world seen round it");
+        java.util.Set<com.hex.kagune.control.quest.Gate> none = java.util.EnumSet.noneOf(com.hex.kagune.control.quest.Gate.class);
+        java.util.Set<com.hex.kagune.control.quest.Gate> worms = java.util.EnumSet.of(com.hex.kagune.control.quest.Gate.BIKAKU_WORMS);
+        com.hex.kagune.control.client.QuestLocks[] locks = {com.hex.kagune.control.client.QuestLocks.ALL,
+            new com.hex.kagune.control.client.QuestLocks(none::contains, 0), new com.hex.kagune.control.client.QuestLocks(worms::contains, 0)};
+        int[] masks = {0, com.hex.kagune.control.bikaku.BikakuMutation.GRAND_DEVOURING.bit(), com.hex.kagune.control.bikaku.BikakuMutation.all()};
+        String[] picks = {null, "pick:f:ONE", "pick:f:WALKER", "pick:m:M1", "pick:m:REGENERATION", "pick:k:KAKUJA", "pick:k:UNDYING",
+            "pick:u:POTENTIAL_UNLOCK", "step:450", "step:750", "junk"};
+        long seen = 0;
+        int takes = 0;
+        for (com.hex.kagune.control.client.BikakuMenuView.Tab tab : com.hex.kagune.control.client.BikakuMenuView.Tab.values()) {
+            for (int mastery : new int[] {0, 300, 600, 800, 1000}) {
+                for (com.hex.kagune.control.bikaku.BikakuForm on : com.hex.kagune.control.bikaku.BikakuForm.values()) {
+                    for (com.hex.kagune.control.client.QuestLocks lock : locks) {
+                        for (int mask : masks) {
+                            for (String pick : picks) {
+                                for (double time : new double[] {0.0, 3.0}) {
+                                    canvas.clear();
+                                    com.hex.kagune.control.client.BikakuMenuView.Model model = new com.hex.kagune.control.client.BikakuMenuView.Model(mastery,
+                                        mastery > 0, 64.0F, 100.0F, on.ordinal(), mask, 120L, lock, tab, pick);
+                                    java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits =
+                                        com.hex.kagune.control.client.BikakuMenuView.draw(canvas, model, 300, 200, time);
+                                    String where = "bikaku " + tab + " at " + mastery + " in " + on + " (" + pick + ")";
+                                    seen += canvas.texts.size();
+                                    for (com.hex.kagune.control.client.BikakuMenuView.Tab each : com.hex.kagune.control.client.BikakuMenuView.Tab.values()) {
+                                        check(hits.containsKey("tab:" + each.name()), where + ": the " + each + " tab");
+                                    }
+                                    boxed(hits, canvas, width, height, where);
+                                    for (String word : canvas.words) {
+                                        check(!word.endsWith("quest: ") && !word.endsWith("quest:") && !word.endsWith("with "), where + ": what opens it named: \"" + word + "\"");
+                                    }
+                                    java.util.List<String> take = hits.keySet().stream().filter(k -> k.matches("form\\d+")).toList();
+                                    check(take.size() <= 1, where + ": one USE THIS FORM at most");
+                                    for (String key : take) {
+                                        com.hex.kagune.control.bikaku.BikakuForm form = com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(Integer.parseInt(key.substring(4)));
+                                        takes++;
+                                        boolean gated = form.worms() > 1 && !lock.passes(com.hex.kagune.control.quest.Gate.BIKAKU_WORMS);
+                                        check(tab == com.hex.kagune.control.client.BikakuMenuView.Tab.FORMS && form != on && form.unlocked(mastery) && form.picked()
+                                            && !gated, where + ": USE THIS FORM only for a form the server would take");
+                                    }
+                                    switch (tab) {
+                                        case FORMS -> {
+                                            check(hits.containsKey("eyes"), where + ": the kakugan");
+                                            for (com.hex.kagune.control.bikaku.BikakuForm form : com.hex.kagune.control.bikaku.BikakuForm.values()) {
+                                                check(hits.containsKey("pick:f:" + form.name()), where + ": " + form + " a card to click");
+                                            }
+                                            for (Integer step : com.hex.kagune.control.client.BikakuMenuView.steps().keySet()) {
+                                                check(hits.containsKey("step:" + step), where + ": the step at " + step);
+                                            }
+                                        }
+                                        case MOVES, KAKUJA -> {
+                                            boolean kakuja = tab == com.hex.kagune.control.client.BikakuMenuView.Tab.KAKUJA;
+                                            check(hits.containsKey(kakuja ? "pick:k:KAKUJA" : "pick:m:M1"), where + ": the first card");
+                                            for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+                                                if (move != com.hex.kagune.control.bikaku.BikakuMove.NONE && move.kakuja() == kakuja) {
+                                                    check(hits.containsKey((kakuja ? "pick:k:" : "pick:m:") + move.name()), where + ": " + move + " a card to click");
+                                                }
+                                            }
+                                        }
+                                        default -> {
+                                            for (com.hex.kagune.control.bikaku.BikakuMutation mutation : com.hex.kagune.control.bikaku.BikakuMutation.values()) {
+                                                check(hits.containsKey("pick:u:" + mutation.name()), where + ": " + mutation + " a card to click");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(seen > 100000 && takes > 100, "the Bikaku menu's words and its USE buttons all drawn and checked (" + seen + ", " + takes + ")");
+        try {
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/BikakuMenuScreen.java"));
+            check(!screen.contains("this.m_280273_(graphics)") && !screen.contains("graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_"),
+                "no full-screen overlay round the Bikaku menu");
+            check(screen.contains("BikakuMenuView.BOX_WIDTH") && screen.contains("this.picked = key;") && screen.contains("this.hits.get(\"form\" + form.ordinal())"),
+                "the screen sized from the box; a form taken only by its button; a card only looked at");
+        } catch (java.io.IOException failure) {
+            check(false, "the Bikaku screen's source: " + failure);
         }
     }
 

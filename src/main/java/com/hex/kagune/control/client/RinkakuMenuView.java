@@ -6,7 +6,6 @@ import com.hex.kagune.control.client.ui.UiCanvas;
 import com.hex.kagune.control.king.KingForm;
 import com.hex.kagune.control.quest.Gate;
 import com.hex.kagune.control.quest.Gates;
-import com.hex.kagune.control.quest.QuestBook;
 import com.hex.kagune.control.quest.QuestLog;
 import com.hex.kagune.control.ukaku.UkakuMutation;
 import com.hex.kagune.gameplay.KaguneForm;
@@ -339,7 +338,7 @@ public final class RinkakuMenuView {
         String standing = switch (state) {
             case OPEN -> "Worn now" + (model.active() ? ", out" : "");
             case DONE -> "Yours: wear it below";
-            case CLOSED -> "Opens with its quest: " + QuestBook.openersText(gate);
+            case CLOSED -> "Opens with " + QuestFrame.opener(gate);
             default -> "Ahead of you: at mastery " + form.requiredMastery();
         };
         c.text(c.fit(standing, width), x, rowY, state == QuestLog.State.OPEN ? QuestJournalView.OPEN : state == QuestLog.State.DONE
@@ -449,7 +448,7 @@ public final class RinkakuMenuView {
         c.pop();
         QuestStyle.chip(c, x + width - c.width("Passive") - 12, y, "Passive", 0xFF1E0A0E, QuestStyle.RED_DARK, QuestFrame.MUTED);
         int rowY = y + 16;
-        c.text(c.fit(owned ? "Yours for good: its quest is done" : "Opens with its quest: " + QuestBook.openersText(gate), width), x, rowY,
+        c.text(c.fit(owned ? "Yours for good: its quest is done" : "Opens with " + QuestFrame.opener(gate), width), x, rowY,
             owned ? QuestJournalView.DONE : QuestJournalView.OPEN, false);
         rowY += 13;
         rowY = QuestFrame.story(c, String.join(" ", PASSIVE_TEXT), x, rowY, width) + 10;
@@ -476,7 +475,7 @@ public final class RinkakuMenuView {
         } else {
             int ly = rowY;
             c.batch(() -> QuestStyle.lock(c, x, ly, 12, QuestStyle.GOLD, QuestJournalView.INNER));
-            c.text(c.fit("Waits for its quest: " + QuestBook.openersText(gate), width - 20), x + 17, rowY + 3, QuestFrame.FAINT, false);
+            c.text(c.fit("Waits for " + QuestFrame.opener(gate), width - 20), x + 17, rowY + 3, QuestFrame.FAINT, false);
         }
     }
 
