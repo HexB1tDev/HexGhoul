@@ -330,6 +330,13 @@ public final class FamilyTests {
                 inside &= box.x() >= 0 && box.y() >= 0 && box.right() <= size[0] && box.bottom() <= size[1] && box.width() > 0 && box.height() > 0;
             }
             check(inside, "everything on the gender screen fits" + at);
+            // 4.1.63: the quest menu's box, on screen, everything in it and under the rule of its header.
+            check(layout.box.inside(new Box(0, 0, size[0], size[1])) && layout.box.width() <= GenderView.Layout.BOX_WIDTH
+                && layout.box.height() <= GenderView.Layout.BOX_HEIGHT, "the gender screen's box on screen, no bigger than its size" + at);
+            for (Box box : boxes) {
+                check(box.inside(layout.box) && box.y() > layout.ruleY, "everything in the box, under its header" + at + ": " + box);
+            }
+            check(layout.hintY < 0 || layout.hintY + 8 <= layout.box.bottom(), "the hint in the box" + at);
             check(layout.male.right() < layout.female.x() && layout.male.bottom() < layout.done.y() && layout.done.right() < layout.back.x(),
                 "the cards side by side above the buttons, nothing overlapping" + at);
             check("male".equals(layout.at(layout.male.centerX(), layout.male.y() + 5)) && "female".equals(layout.at(layout.female.centerX(), layout.female.y() + 5))

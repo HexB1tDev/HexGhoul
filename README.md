@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.63 (HexGhoul): the gender screen in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.63.md`. `GenderView.Layout` inside `box` (440 x 300 at most, `OUTSIDE` 8), `ruleY`; `GenderView.draw` the box (`QuestStyle.backdrop`, title, rule), the cards and buttons as the quest menu's. `FamilyTests.screen` checks the box on screen, everything in it. `tools/UiPreview.java gender` (now over a scene, and at 960 x 540). Render `docs/handoff/gender-screen-4.1.63.png`. Protocol 125.
+
 ## 4.1.62 (HexGhoul): the kakugan screen in the quest menu's style (testing)
 
 See `.github/release-notes-4.1.62.md`. `KakuganScreenLayout` lays everything inside `box` (the quest menu's size at most, `OUTSIDE` 8 round it on small screens), with `ruleY` (under the header) and `tile` (the face's frame); `MAX_CELL` 36. `KakuganView` draws the box (`QuestStyle.backdrop`, the menus' title and rule), the face's tile, quest-style buttons, the which-eye box as a quest card dimming only the box. `KakuganTests.screen` checks the box on screen, everything in it and under the rule. `tools/UiPreview.java kakugan-menu`. Render `docs/handoff/kakugan-screen-4.1.62.png`. Protocol 125.

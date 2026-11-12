@@ -978,6 +978,12 @@ public class UiPreview {
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = graphics(image, 2);
         ImageCanvas c = new ImageCanvas(g, false);
+        // 4.1.63: the world round the box (a stand-in scene).
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        for (int i = 0; i < w; i += 40) {
+            c.fill(i, h * 6 / 10 - 20 - (i * 37 % 60), i + 40, h * 6 / 10, 0xFF4E8834);
+        }
         com.hex.kagune.control.client.GenderView.draw(c, new com.hex.kagune.control.client.GenderView.Layout(w, h), picked, hovered, 0.4);
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);
@@ -990,6 +996,7 @@ public class UiPreview {
             gender(new File(dir, "gender-unpicked.png"), 480, 270, com.hex.kagune.control.Gender.UNSET, "male");
             gender(new File(dir, "gender-female.png"), 480, 270, com.hex.kagune.control.Gender.FEMALE, "done");
             gender(new File(dir, "gender-small.png"), 320, 200, com.hex.kagune.control.Gender.MALE, null);
+            gender(new File(dir, "gender-960.png"), 960, 540, com.hex.kagune.control.Gender.FEMALE, "male");
             return;
         }
         if (args.length > 1 && args[1].equals("quests")) {

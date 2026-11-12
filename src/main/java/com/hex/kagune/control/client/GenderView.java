@@ -14,12 +14,20 @@ public final class GenderView {
     static final String SUBTITLE = "A woman is a little smaller, with Eto's own figure.";
     static final String HINT = "You can change it later: /kagune eyes, then Next.";
 
-    /** Where everything goes on a screen {@code width} x {@code height} (GUI pixels). */
+    /**
+     * Where everything goes on a screen {@code width} x {@code height} (GUI pixels). 4.1.63: inside the quest menu's box ({@link #box}, a
+     * small one: two cards and two buttons), the world seen round it.
+     */
     public static final class Layout {
+        public static final int BOX_WIDTH = 440;
+        public static final int BOX_HEIGHT = 300;
+        public static final int OUTSIDE = 8;
         public final int width;
         public final int height;
+        public final Box box;
         public final int titleY;
         public final int subtitleY;
+        public final int ruleY;
         public final Box male;
         public final Box female;
         public final Box done;
@@ -29,20 +37,26 @@ public final class GenderView {
         public Layout(int width, int height) {
             this.width = width;
             this.height = height;
-            boolean compact = height < 230;
-            this.titleY = compact ? 8 : 18;
-            this.subtitleY = this.titleY + 20;
-            this.hintY = compact ? -1 : height - 16;
-            int buttonsY = (this.hintY < 0 ? height - 8 : this.hintY - 6) - 20;
-            int top = this.subtitleY + 16;
+            int w = Math.max(0, Math.min(BOX_WIDTH, width - 2 * OUTSIDE));
+            int h = Math.max(0, Math.min(BOX_HEIGHT, height - 2 * OUTSIDE));
+            int ox = (width - w) / 2;
+            int oy = (height - h) / 2;
+            this.box = new Box(ox, oy, w, h);
+            boolean compact = h < 230;
+            this.titleY = oy + (compact ? 6 : 10);
+            this.subtitleY = this.titleY + 18;
+            this.ruleY = this.subtitleY + 12;
+            this.hintY = compact ? -1 : oy + h - 16;
+            int buttonsY = (this.hintY < 0 ? oy + h - 8 : this.hintY - 6) - 20;
+            int top = this.ruleY + (compact ? 5 : 8);
             int cardHeight = Math.max(60, Math.min(170, buttonsY - 10 - top));
-            int cardWidth = Math.max(70, Math.min(130, (width - 48) / 2));
-            int x = width / 2 - cardWidth - 8;
+            int cardWidth = Math.max(70, Math.min(130, (w - 48) / 2));
+            int centre = ox + w / 2;
             int y = top + Math.max(0, (buttonsY - 10 - top - cardHeight) / 2);
-            this.male = new Box(x, y, cardWidth, cardHeight);
-            this.female = new Box(width / 2 + 8, y, cardWidth, cardHeight);
-            this.done = new Box(width / 2 - 108, buttonsY, 110, 20);
-            this.back = new Box(width / 2 + 10, buttonsY, 80, 20);
+            this.male = new Box(centre - cardWidth - 8, y, cardWidth, cardHeight);
+            this.female = new Box(centre + 8, y, cardWidth, cardHeight);
+            this.done = new Box(centre - 108, buttonsY, 110, 20);
+            this.back = new Box(centre + 10, buttonsY, 80, 20);
         }
 
         /** What is under ({@code x}, {@code y}): "male", "female", "done", "back" or null. */
@@ -56,39 +70,55 @@ public final class GenderView {
     }
 
     public static void draw(UiCanvas c, Layout layout, Gender picked, String hovered, double time) {
-        int width = layout.width;
-        int height = layout.height;
-        c.fill(0, 0, width, height, 0xF0000000 | KakuganView.BACKGROUND);
-        c.gradient(0, 0, width, height / 3, 0x70000000, 0x00000000);
-        c.gradient(0, height * 2 / 3, width, height, 0x00000000, 0x90000000);
+        // 4.1.63: the quest menu's box over the world (no overlay round it), its title and line, a rule under them.
+        Box frame = layout.box;
+        QuestStyle.backdrop(c, frame.x(), frame.y(), frame.width(), frame.height(), time, frame.right() - 150, frame.y() + 6, 130,
+            Math.max(10, layout.ruleY - frame.y() - 10));
         c.push();
-        c.translate(width / 2.0F, layout.titleY);
-        c.scale(1.5F);
-        c.centered(TITLE, 0, 0, KakuganView.opaque(KakuganView.BONE));
+        c.translate(frame.x() + 16, layout.titleY);
+        c.scale(1.4F);
+        c.text(TITLE, 0, 0, QuestJournalView.TITLE, true);
         c.pop();
-        c.centered(c.fit(SUBTITLE, width - 16), width / 2, layout.subtitleY, KakuganView.opaque(KakuganView.MUTED));
+        c.text(c.fit(SUBTITLE, frame.width() - 32), frame.x() + 16, layout.subtitleY, QuestJournalView.SUBTITLE, false);
+        int ruleY = layout.ruleY;
+        c.batch(() -> {
+            for (int i = 0; i < 40; i++) {
+                float t = i / 39.0F;
+                int alpha = Math.round(190 * (1.0F - Math.abs(t - 0.5F) * 2.0F));
+                int x0 = frame.x() + 12 + Math.round((frame.width() - 24) * i / 40.0F);
+                c.fill(x0, ruleY, x0 + (frame.width() - 24) / 40 + 1, ruleY + 1, alpha << 24 | 0xE8323E);
+            }
+        });
         card(c, layout.male, "Male", false, picked == Gender.MALE, "male".equals(hovered), time);
         card(c, layout.female, "Female", true, picked == Gender.FEMALE, "female".equals(hovered), time);
         button(c, layout.done, picked.choice() ? "Done" : "Pick one", picked.choice(), picked.choice() && "done".equals(hovered));
         button(c, layout.back, "Back", false, "back".equals(hovered));
         if (layout.hintY >= 0) {
-            c.centered(c.fit(HINT, width - 16), width / 2, layout.hintY, KakuganView.opaque(KakuganView.blend(KakuganView.BACKGROUND, KakuganView.MUTED, 0.7F)));
+            c.centered(c.fit(HINT, frame.width() - 16), frame.centerX(), layout.hintY, QuestFrame.FAINT);
         }
     }
 
     /** One card: its figure, standing, breathing; its name under it; outlined red when picked. */
     private static void card(UiCanvas c, Box box, String name, boolean female, boolean picked, boolean hovered, double time) {
-        int border = picked ? KakuganView.ACCENT : hovered ? KakuganView.BONE : KakuganView.blend(KakuganView.BACKGROUND, KakuganView.MUTED, 0.45F);
-        c.fill(box.x() - 1, box.y() - 1, box.right() + 1, box.bottom() + 1, KakuganView.opaque(border));
-        c.fill(box.x(), box.y(), box.right(), box.bottom(), KakuganView.opaque(picked ? KakuganView.blend(KakuganView.PANEL, KakuganView.ACCENT, 0.16F)
-            : KakuganView.PANEL));
-        int label = box.bottom() - 14;
-        int room = label - box.y() - 8;
+        // 4.1.63: a quest card: lifted under the mouse, lit red and its bar beating once picked.
+        int lift = hovered && !picked ? -1 : 0;
+        int edge = picked ? QuestStyle.RED : hovered ? QuestStyle.RED_DARK : QuestStyle.TILE_EDGE;
+        int fill = picked ? QuestJournalView.ROW_PICKED : hovered ? QuestJournalView.ROW_HOVER : QuestJournalView.ROW;
+        int top = box.y() + lift;
+        c.batch(() -> {
+            QuestStyle.box(c, box.x(), top, box.width(), box.height(), fill, edge);
+            if (picked) {
+                float pulse = 0.6F + 0.4F * (float)Math.sin(time * 4.0);
+                c.fill(box.x() + 3, box.bottom() + lift - 3, box.right() - 3, box.bottom() + lift - 2, QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, pulse));
+            }
+        });
+        int label = box.bottom() + lift - 14;
+        int room = label - top - 8;
         // A player's body is 32 pixels tall (head 8, torso 12, legs 12); hers is FemaleBody.SIZE of that.
         float unit = Math.max(1.0F, (float)Math.floor(room / 34.0F));
         figure(c, box.centerX(), label - 4, unit * (female ? FemaleBody.SIZE : 1.0F), female, time,
             KakuganView.opaque(picked ? KakuganView.BONE : KakuganView.blend(KakuganView.PANEL, KakuganView.BONE, hovered ? 0.85F : 0.65F)));
-        c.centered(name, box.centerX(), label, KakuganView.opaque(picked || hovered ? KakuganView.BONE : KakuganView.MUTED));
+        c.centered(name, box.centerX(), label, picked || hovered ? QuestStyle.WHITE : QuestFrame.MUTED);
     }
 
     /** The body's silhouette, its feet at ({@code x}, {@code feet}), {@code unit} GUI pixels to a skin pixel; each part its own shade. */
@@ -136,13 +166,18 @@ public final class GenderView {
         c.fill(Math.round(x0), Math.round(y0), Math.round(x1), Math.round(y1), colour);
     }
 
+    /** 4.1.63: a button as the quest menu's: lifted under the mouse with a red bar under it, {@code primary} lit red. */
     private static void button(UiCanvas c, Box box, String label, boolean primary, boolean hovered) {
-        int border = primary ? (hovered ? KakuganView.ACCENT : KakuganView.blend(KakuganView.BACKGROUND, KakuganView.ACCENT, 0.75F))
-            : (hovered ? KakuganView.BONE : KakuganView.blend(KakuganView.BACKGROUND, KakuganView.MUTED, 0.45F));
-        c.fill(box.x() - 1, box.y() - 1, box.right() + 1, box.bottom() + 1, KakuganView.opaque(border));
-        c.fill(box.x(), box.y(), box.right(), box.bottom(), KakuganView.opaque(primary ? KakuganView.blend(KakuganView.BUTTON, KakuganView.ACCENT, 0.18F)
-            : KakuganView.BUTTON));
-        c.centered(c.fit(label, box.width() - 6), box.centerX(), box.y() + (box.height() - 8) / 2,
-            KakuganView.opaque(hovered || primary ? KakuganView.BONE : KakuganView.MUTED));
+        int lift = hovered ? -1 : 0;
+        int edge = hovered ? QuestStyle.RED : primary ? QuestStyle.mix(QuestStyle.RED_DARK, QuestStyle.RED, 0.45F) : QuestStyle.TILE_EDGE;
+        int fill = hovered || primary ? QuestJournalView.ROW_PICKED : QuestJournalView.ROW;
+        c.batch(() -> {
+            QuestStyle.box(c, box.x(), box.y() + lift, box.width(), box.height(), fill, edge);
+            if (hovered) {
+                c.fill(box.x() + 4, box.bottom() + 1, box.right() - 4, box.bottom() + 2, QuestStyle.RED);
+            }
+        });
+        c.centered(c.fit(label, box.width() - 6), box.centerX(), box.y() + (box.height() - 8) / 2 + 1 + lift, hovered ? QuestStyle.WHITE : primary
+            ? QuestFrame.VALUE : QuestFrame.MUTED);
     }
 }
