@@ -376,7 +376,7 @@ public final class NpcTests {
     static void dailies() {
         boolean all = true;
         for (int gang : new int[] {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS,
-            com.hex.kagune.control.npc.GangPlayer.GAS_MASKS}) { // 4.1.54: and Banjou's
+            com.hex.kagune.control.npc.GangPlayer.GAS_MASKS, com.hex.kagune.control.npc.GangPlayer.CCG}) { // 4.1.54: and Banjou's; 4.1.71: the General's
             java.util.Set<com.hex.kagune.control.npc.GangDaily.Job> seen = new java.util.HashSet<>();
             for (long day = 0; day < 200; day++) {
                 for (long seed = 0; seed < 5; seed++) {
@@ -438,7 +438,7 @@ public final class NpcTests {
         check(server.contains(": persona == Persona.BANJOU\n            ? GangPlayer.GAS_MASKS") && server.contains("MobEffects.f_19611_, MASK_SIGHT_TICKS, 0")
             && server.contains("item.piece().id().startsWith(\"mask_gas\")") && server.contains("MobEffects.f_19596_, 40, 1")
             && com.hex.kagune.control.server.GangServer.GAS_SPEED_AT <= 0.35F && server.contains("gasTraits(player, g); // 4.1.54")
-            && server.contains("case GAS_CLOWNS -> clown;") && server.contains("? GangDaily.GAS_MASK : null"),
+            && server.contains("case GAS_CLOWNS -> clown;") && server.contains(": gang == GangPlayer.GAS_MASKS ? GangDaily.GAS_MASK // 4.1.54"),
             "the Gas Masks: Banjou's dailies; night vision while their gas mask is worn (taken back when it comes off), Speed II at low health; "
                 + "joining gives the gas mask");
         check(brain.contains("who.gang() == 0 && !who.aogiri() && GangServer.of(player).member(com.hex.kagune.control.npc.GangPlayer.AOGIRI)")
@@ -506,7 +506,7 @@ public final class NpcTests {
             String bar = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/SharedBar.java"));
             String client = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/BikakuClient.java"));
             String hud = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/ReserveHud.java"));
-            check(server.contains("|| persona == Persona.KEN;") && server.contains(": persona == Persona.KEN ? GangPlayer.ANTEIKU : GangPlayer.NONE;")
+            check(server.contains("|| persona == Persona.KEN || persona == Persona.GENERAL;") && server.contains(": persona == Persona.KEN ? GangPlayer.ANTEIKU : persona == Persona.GENERAL")
                 && server.contains("persona == Persona.KEN || persona == Persona.TOUKA ? GangPlayer.ANTEIKU"), "Ken leads Anteiku; he and Touka are its own (their talk shows the bar)");
             check(server.contains("return ken(player, g, key, seed); // 4.1.70") && server.indexOf("return ken(player, g, key, seed);") > server.indexOf("return quit(player, g, gang, key, seed);"),
                 "talking with Ken about Anteiku goes through his chain, after the way out");
@@ -629,6 +629,97 @@ public final class NpcTests {
         }
     }
 
+    /**
+     * 4.1.71 (the owner: "CCG Faction: / Join through the general (quest) and now daily quests as well. / Traits: / CCG no longer attacks
+     * the player. / All ghouls but official NPCS are hostile towards the player. / Damage increased when fighting ghouls. / Looks:  Cyan Blue
+     * with a brief cafe symbol."): the General's chain step by step, the name, the division's membership, where the investigators' and the
+     * ghouls' choices sit, the damage, the hideout, the issued case, the dailies.
+     */
+    static void ccg() {
+        int ccg = com.hex.kagune.control.npc.GangPlayer.CCG;
+        com.hex.kagune.control.npc.GangPlayer g = com.hex.kagune.control.npc.GangPlayer.NEW;
+        check(ccg == 5 && com.hex.kagune.control.npc.GangPlayer.title(ccg).equals("the CCG"), "the CCG: gang 5");
+        check(g.killedGhoul().ghoulKills() == 0 && g.ccgDone() == false, "no ghoul counts before the General has asked why");
+        g = g.sworn();
+        check(g.generalStep() == com.hex.kagune.control.npc.GangPlayer.CCG_GHOULS && g.sworn() == g, "answered as the bureau would: ghouls next (once)");
+        for (int i = 0; i < 4; i++) {
+            g = g.killedGhoul();
+        }
+        check(g.ghoulKills() == 4 && !g.ccgDone() && g.killedGhoul().ccgDone() && com.hex.kagune.control.npc.GangPlayer.CCG_GHOUL_COUNT == 5,
+            "five ghouls, then sworn in");
+        g = g.killedGhoul();
+        check(g.killedGhoul() == g, "done: no more counted");
+        com.hex.kagune.control.npc.GangPlayer in = g.join(ccg);
+        check(in.member(ccg) && in.generalStep() == 0 && in.ghoulKills() == 0 && !in.member(com.hex.kagune.control.npc.GangPlayer.ANTEIKU), "sworn in: the CCG's");
+        com.hex.kagune.control.npc.GangPlayer out = in.quit();
+        check(out.gang() == 0 && !out.banned(ccg) && out.generalStep() == 0, "resigned: never banned; the way in from the start");
+        com.hex.kagune.control.npc.GangPlayer banned = in;
+        for (int i = 0; i < 11; i++) {
+            banned = banned.killedOwn();
+        }
+        check(banned.gang() == 0 && banned.banned(ccg), "past ten of their own (investigators or the division), banned as every gang");
+        com.hex.kagune.control.npc.GangPlayer half = com.hex.kagune.control.npc.GangPlayer.NEW.answered().beansBrought().sworn().killedGhoul();
+        check(half.anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_DOVES && half.ghoulKills() == 1 && half.join(ccg).anteikuStep() == half.anteikuStep()
+            && half.join(com.hex.kagune.control.npc.GangPlayer.ANTEIKU).ghoulKills() == 1, "Ken's way in and the General's keep apart");
+        check(com.hex.kagune.control.npc.GangPlayer.named(ccg, "Ken").equals("§f §bKen§r") && com.hex.kagune.control.npc.GangPlayer.BRIEFCASE.equals(""),
+            "the quinque case, a space, the name (plain text's nearest aqua; the tag itself cyan blue)");
+        int r = com.hex.kagune.control.npc.GangPlayer.CCG_CYAN >> 16 & 255;
+        int gr = com.hex.kagune.control.npc.GangPlayer.CCG_CYAN >> 8 & 255;
+        int b = com.hex.kagune.control.npc.GangPlayer.CCG_CYAN & 255;
+        check(b > gr && gr > r && b > 200 && gr > 140 && r < 90, "the CCG's colour is a cyan blue (blue over green over red, bright)");
+        NpcIdentity rolled = NpcIdentity.roll(300, new java.util.Random(13)::nextDouble);
+        NpcIdentity division = rolled.ganged(com.hex.kagune.control.npc.Gang.CCG_DIVISION, 1);
+        check(division.ccg() && com.hex.kagune.control.npc.GangPlayer.of(division) == ccg && com.hex.kagune.control.npc.GangPlayer.of(rolled) == 0,
+            "the CCG's ghoul division is the CCG's own (its stance, its reputation); a wild ghoul is no one's");
+        check(com.hex.kagune.control.npc.GangPlayer.CCG_DAMAGE > 1.2F && com.hex.kagune.control.npc.GangPlayer.CCG_DAMAGE <= 1.5F, "a member's blows on ghouls land harder");
+        check(com.hex.kagune.control.npc.GangWords.GENERAL_RIGHT == 2 && com.hex.kagune.control.npc.GangWords.GENERAL_WHY[2].startsWith("To protect people"),
+            "the reason the bureau takes is the third: to protect people");
+        java.util.Set<String> pays = new java.util.HashSet<>();
+        for (long seed = 0; seed < 400; seed++) {
+            for (com.hex.kagune.control.npc.GangDaily.Pay pay : com.hex.kagune.control.npc.GangDaily.give(ccg, seed, seed).pay(seed)) {
+                pays.add(pay.item());
+                check(!pay.text().contains("_"), "a reward named plainly: " + pay.text());
+            }
+        }
+        check(pays.contains("minecraft:iron_ingot") && pays.contains("minecraft:bread") && pays.contains("minecraft:diamond") && pays.size() == 6,
+            "the General pays in the bureau's things");
+        check(com.hex.kagune.control.npc.GangDaily.Job.CCG_PAPER.brought && com.hex.kagune.control.npc.GangDaily.Job.CCG_PAPER.asked(10).equals("bring me 10 sheets of paper, for the reports")
+            && com.hex.kagune.control.npc.GangDaily.Job.CCG_GHOULS.ordinal() > com.hex.kagune.control.npc.GangDaily.Job.GAS_CHARCOAL.ordinal(),
+            "the General's jobs appended (a kept job is kept by its place), his paperwork brought in hand");
+        try {
+            String server = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java"));
+            String agents = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+            String brain = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java"));
+            check(server.contains("|| persona == Persona.GENERAL;") && server.contains("persona == Persona.GENERAL ? GangPlayer.CCG : GangPlayer.NONE;")
+                && server.contains(": persona == Persona.GENERAL ? GangPlayer.CCG : GangPlayer.NONE; // 4.1.71"), "the General leads the CCG and gives its dailies");
+            int general = server.indexOf("static Said general(ServerPlayer player");
+            check(general > 0 && server.indexOf("set(player, g.sworn());", general) > 0 && server.indexOf("if (!g.ccgDone()) {", general) > 0
+                && server.indexOf("set(player, g.join(gang));", general) > server.indexOf("if (!g.ccgDone()) {", general), "the General's chain in order: why, five ghouls, sworn in");
+            check(server.contains("now = now.killedGhoul(); // 4.1.71") && server.contains("dead instanceof com.hex.kagune.control.npc.CcgAgent && was.member(GangPlayer.CCG)"),
+                "a ghoul counts for the General; an investigator killed is one of a member's own");
+            check(server.contains("by = AgentBrain.ccg(dead) ? -GangStanding.KILL_OWN : who != null ? GangStanding.KILL_RIVAL : 0;"),
+                "a member's reputation: up for ghouls, down a lot for the CCG");
+            check(server.contains("net.minecraft.network.chat.Style.f_131099_.m_178520_(GangPlayer.CCG_CYAN)"), "the tag: the case, then the name in cyan blue");
+            check(server.contains("event.setAmount(event.getAmount() * GangPlayer.CCG_DAMAGE);") && server.contains("if (of(player).member(GangPlayer.CCG) && ghoul(hurt)) {")
+                && server.contains("return npc.identity() == null || !npc.identity().ccg();") && server.contains("&& !named.persona().human();"),
+                "a member's blows land harder on any ghoul (not the division's, not the General)");
+            check(server.contains(": gang == GangPlayer.CCG ? \"ccg_building\" : \"gas_hideout\");") && server.contains("gang == GangPlayer.CCG ? GangDaily.ISSUED_CASE"),
+                "the tower is the CCG's hideout (an empty bar there turns it on them); a new member is issued a quinque");
+            int wanted = agents.indexOf("static boolean wanted(CcgAgent agent");
+            int stance = agents.indexOf("int stance = GangServer.ccgStance(player);", wanted);
+            int grudge = agents.indexOf("Long until = mind.grudges.get(body.m_20148_());", wanted);
+            check(wanted > 0 && stance > wanted && stance < grudge && agents.indexOf("return GangServer.turned(player);", stance) < grudge,
+                "an investigator never goes for one of the CCG, marked or struck, unless turned; one it banned, on sight");
+            check(agents.contains("|| GangServer.ccgStance(player) == GangServer.OWN_GANG) {\n                continue; // 4.1.71")
+                && agents.contains("GangServer.struckOwn(member, now); // 4.1.71"), "a member's kagune never marks them; their blows cost reputation, not a fight");
+            int hunted = brain.indexOf("if (body instanceof ServerPlayer player && !who.ccg() && GangServer.hunted(player)) {");
+            check(hunted > brain.indexOf("GangServer.neutral(player)) {") && hunted < brain.indexOf("if (who.ccg()) {\n            return division(")
+                && hunted > brain.indexOf("return GangServer.turned(player);"), "every ghoul NPC but the division goes for one of the CCG");
+        } catch (java.io.IOException failure) {
+            check(false, "read the CCG's files: " + failure);
+        }
+    }
+
     static void joining() {
         com.hex.kagune.control.npc.GangPlayer g = com.hex.kagune.control.npc.GangPlayer.NEW;
         check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.killedDove().ccgKills() == 0, "no quest, no count");
@@ -672,6 +763,7 @@ public final class NpcTests {
         check(m.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && m.banned(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS)
             && !m.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "the Gas Masks ban past ten of their own, as every gang");
         anteiku();
+        ccg();
         // 4.1.67 (the owner: "Add a new Quit the gang button to each leader whenever the player joins it."; "kicked from the gang if the
         // player marries another gang leader, but can still join if the player was already married before joining."): out, never banned.
         com.hex.kagune.control.npc.GangPlayer q = com.hex.kagune.control.npc.GangPlayer.NEW.laughed().join(com.hex.kagune.control.npc.GangPlayer.CLOWNS)
@@ -684,7 +776,7 @@ public final class NpcTests {
             "quitting: the way in begins again, and they may come back by it");
         check(com.hex.kagune.control.npc.GangPlayer.NEW.quit() == com.hex.kagune.control.npc.GangPlayer.NEW, "no gang: nothing to quit");
         int[] leaders = {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS, com.hex.kagune.control.npc.GangPlayer.GAS_MASKS,
-            com.hex.kagune.control.npc.GangPlayer.ANTEIKU};
+            com.hex.kagune.control.npc.GangPlayer.ANTEIKU, com.hex.kagune.control.npc.GangPlayer.CCG};
         java.util.Set<String> said = new java.util.HashSet<>();
         int demanded = 0;
         for (int leads : leaders) {
@@ -710,17 +802,17 @@ public final class NpcTests {
         for (int seed = 0; seed < 300; seed++) {
             demanded += com.hex.kagune.control.npc.GangWords.demands(seed) ? 1 : 0;
         }
-        check(said.size() == 12 && demanded == 200, "each leader their own words to go and to stay (4.1.70: Ken too); the spouse brings it up two "
-            + "times in three");
+        check(said.size() == 15 && demanded == 200, "each leader their own words to go and to stay (4.1.70: Ken too; 4.1.71: the General); the "
+            + "spouse brings it up two times in three");
         com.hex.kagune.control.npc.GangPlayer banned = m.join(com.hex.kagune.control.npc.GangPlayer.AOGIRI).quit();
         check(banned.banned(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS), "quitting never lifts a ban from before");
         try {
             String gangs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java"));
             String eto = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoServer.java"));
             String commands = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java"));
-            check(gangs.contains("return quit(player, g, gang, key, seed); // 4.1.67") && gangs.split("wayOut\\(gang\\)\\);", -1).length == 4
+            check(gangs.contains("return quit(player, g, gang, key, seed); // 4.1.67") && gangs.split("wayOut\\(gang\\)\\);", -1).length == 5
                 && gangs.contains("\"gang:quit:yes\"") && gangs.contains("\"gang:stay\"") && gangs.contains("set(player, g.quit());"),
-                "each leader's member talk offers the way out (Ayato, Roma, Banjou, 4.1.70: Ken), asked twice, then out");
+                "each leader's member talk offers the way out (Ayato, Roma, Banjou, 4.1.70: Ken, 4.1.71: the General), asked twice, then out");
             check(eto.contains("UniqueNpcs.pair(level, npc.persona().key(), player, Romance.Stage.MARRIED);\n        GangServer.married(player, npc.persona());")
                 && commands.contains("GangServer.married(player, persona);"), "a wedding to another gang's leader takes them out of theirs (by ring or by command)");
             check(gangs.contains("if (!leads(spouse) || g.gang() == GangPlayer.NONE || g.gang() == theirs) {"),

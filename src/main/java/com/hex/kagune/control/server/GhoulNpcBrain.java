@@ -599,6 +599,12 @@ public final class GhoulNpcBrain {
             // ghoul, a gang or Aogiri (nor its gate) otherwise. The CCG's ghouls (who.ccg) still hunt them.
             return false;
         }
+        if (body instanceof ServerPlayer player && !who.ccg() && GangServer.hunted(player)) {
+            // 4.1.71 (the owner, the CCG's traits: "All ghouls but official NPCS are hostile towards the player."): every ghoul NPC goes for one
+            // of the CCG, day or night, wild, ganged or Aogiri's (the named, Eto's kind, never: they are not these). The CCG's own division (its
+            // own's stance, above) never.
+            return true;
+        }
         if (who.ccg()) {
             return division(npc, mind, body, now); // 4.1.46: as an investigator
         }

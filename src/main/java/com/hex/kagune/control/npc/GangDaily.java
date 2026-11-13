@@ -24,7 +24,11 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
         // 4.1.54: Banjou's (appended: a job is kept by its place here).
         GAS_CLOWNS(GangPlayer.GAS_MASKS, "Kill %d Clowns", 3, 5, false),
         GAS_CCG(GangPlayer.GAS_MASKS, "Kill %d investigators", 2, 4, false),
-        GAS_CHARCOAL(GangPlayer.GAS_MASKS, "Bring Banjou %d charcoal", 6, 12, true);
+        GAS_CHARCOAL(GangPlayer.GAS_MASKS, "Bring Banjou %d charcoal", 6, 12, true),
+        // 4.1.71: the General's (the owner: "Join through the general (quest) and now daily quests as well.").
+        CCG_GHOULS(GangPlayer.CCG, "Kill %d ghouls", 4, 7, false),
+        CCG_GANGS(GangPlayer.CCG, "Kill %d of Aogiri, the Clowns or the Gas Masks", 2, 4, false),
+        CCG_PAPER(GangPlayer.CCG, "Bring the General %d paper", 8, 16, true);
 
         public final int gang;
         public final String asks;
@@ -49,6 +53,9 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
         public String asked(int goal) {
             if (this == GAS_CHARCOAL) {
                 return "bring me " + goal + " charcoal, for the filters";
+            }
+            if (this == CCG_PAPER) {
+                return "bring me " + goal + " sheets of paper, for the reports";
             }
             String text = this.text(goal);
             return text.isEmpty() ? text : Character.toLowerCase(text.charAt(0)) + text.substring(1);
@@ -80,6 +87,7 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
                 case MEAT -> "human meat";
                 case CLOWN_MASK -> "clown mask";
                 case GAS_MASK -> "gas mask";
+                case ISSUED_CASE -> "quinque case";
                 default -> this.item.substring(this.item.indexOf(':') + 1).replace('_', ' ');
             };
             return this.count == 1 ? (name.equals("cake") ? "a cake" : "a " + name) : this.count + " " + name;
@@ -92,6 +100,9 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
     public static final String CLOWN_MASK = "hexkagune:mask_clown";
     /** 4.1.54: the Gas Masks' own mask (the one a member is given, and one of Banjou's pay). */
     public static final String GAS_MASK = "hexkagune:mask_gas";
+    /** 4.1.71: what the General's job of things brought asks for (reports), and the quinque a new investigator is issued. */
+    public static final String PAPER = "minecraft:paper";
+    public static final String ISSUED_CASE = "hexkagune:quinque_case_bikaku";
     /** 4.1.54: what Banjou's job of things brought asks for (his men's filters). */
     public static final String CHARCOAL = "minecraft:charcoal";
 
@@ -148,6 +159,10 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
             // 4.1.54: the Gas Masks' (Banjou's): a mask, the filters' charcoal, iron, meat for the hungry, emeralds, now and then a golden apple.
             case GangPlayer.GAS_MASKS -> List.of(new Pay(GAS_MASK, 1), new Pay(CHARCOAL, 8 + random.nextInt(9)), new Pay("minecraft:iron_ingot",
                 4 + random.nextInt(5)), new Pay(GHOUL_MEAT, 3 + random.nextInt(4)), new Pay("minecraft:emerald", 2 + random.nextInt(4)),
+                new Pay("minecraft:golden_apple", 1));
+            // 4.1.71: the CCG's (the General's): the bureau's iron and pay, field rations, now and then a diamond or a golden apple.
+            case GangPlayer.CCG -> List.of(new Pay("minecraft:iron_ingot", 6 + random.nextInt(5)), new Pay("minecraft:emerald", 4 + random.nextInt(4)),
+                new Pay("minecraft:bread", 6 + random.nextInt(5)), new Pay("minecraft:gold_ingot", 2 + random.nextInt(3)), new Pay("minecraft:diamond", 1),
                 new Pay("minecraft:golden_apple", 1));
             default -> List.of(new Pay("minecraft:cake", 1), new Pay("minecraft:firework_rocket", 6 + random.nextInt(5)), new Pay(CLOWN_MASK, 1),
                 new Pay(GHOUL_MEAT, 3 + random.nextInt(4)), new Pay("minecraft:allium", 4 + random.nextInt(5)), new Pay("minecraft:gold_ingot",

@@ -1189,6 +1189,17 @@ public final class AgentBrain {
         if (body instanceof Player player && player.m_7500_()) {
             return false;
         }
+        if (body instanceof ServerPlayer player) {
+            // 4.1.71 (the owner, the CCG's traits: "CCG no longer attacks the player."): one of the CCG never, even struck or marked, unless
+            // their bar is empty and they stayed in the tower past the warning; one it banned, on sight.
+            int stance = GangServer.ccgStance(player);
+            if (stance == GangServer.OWN_GANG) {
+                return GangServer.turned(player);
+            }
+            if (stance == GangServer.OUTCAST) {
+                return true;
+            }
+        }
         Long until = mind.grudges.get(body.m_20148_());
         if (until != null && until > now) {
             return true;
@@ -1221,8 +1232,9 @@ public final class AgentBrain {
      */
     private static void reveal(CcgAgent agent, Mind mind, CcgAgent partner, ServerLevel level, long now) {
         for (ServerPlayer player : level.m_6907_()) {
-            if (player.m_5833_() || player.m_7500_() || player.m_20280_(agent) > AgentRules.REVEALED_RANGE * AgentRules.REVEALED_RANGE) {
-                continue;
+            if (player.m_5833_() || player.m_7500_() || player.m_20280_(agent) > AgentRules.REVEALED_RANGE * AgentRules.REVEALED_RANGE
+                || GangServer.ccgStance(player) == GangServer.OWN_GANG) {
+                continue; // 4.1.71: one of the CCG with a kagune is one of theirs
             }
             double distance = Math.sqrt(player.m_20280_(agent));
             // 1.3.65: a final kakuja (War, Peace, the Dragon: the kagune itself in) shows what they are as much as a kagune.
@@ -2756,6 +2768,10 @@ public final class AgentBrain {
         }
         if (attacker instanceof Player player && player.m_7500_()) {
             return; // (a creative player testing them)
+        }
+        if (attacker instanceof ServerPlayer member && GangServer.ccgStance(member) == GangServer.OWN_GANG && !GangServer.turned(member)) {
+            GangServer.struckOwn(member, now); // 4.1.71: one of their own's blow: never held against them (their reputation down a little)
+            return;
         }
         long until = now + AgentRules.GRUDGE;
         if (attacker instanceof ServerPlayer player && KaguneProfile.isUnlocked(player) && KaguneProfile.isActive(player)) {

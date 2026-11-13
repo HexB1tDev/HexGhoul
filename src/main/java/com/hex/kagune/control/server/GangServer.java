@@ -51,6 +51,9 @@ public final class GangServer {
     /** 4.1.70: Ken's way into Anteiku: its step, and the investigators killed for it. */
     private static final String ANTEIKU_STEP = "HexGangAnteikuStep";
     private static final String DOVES = "HexGangAnteikuDoves";
+    /** 4.1.71: the General's way into the CCG: its step, and the ghouls killed for it. */
+    private static final String GENERAL_STEP = "HexGangGeneralStep";
+    private static final String GHOULS = "HexGangGhoulKills";
     /** How far a gang's member is looked for round one of the gang that might defend them (blocks). */
     static final double DEFEND = 24.0;
     /** What a gang is to a player: nothing, theirs, or one that banned them. */
@@ -78,7 +81,8 @@ public final class GangServer {
     public static GangPlayer of(ServerPlayer player) {
         CompoundTag k = kept(player);
         return new GangPlayer(k.m_128451_(GANG), k.m_128451_(OWN), k.m_128451_(BANNED), k.m_128471_(AOGIRI_QUEST), k.m_128451_(CCG),
-            k.m_128451_(CLOWN_STEP), k.m_128451_(GAS), k.m_128451_(GAS_STEP), k.m_128451_(CLOWN_KILLS), k.m_128451_(ANTEIKU_STEP), k.m_128451_(DOVES));
+            k.m_128451_(CLOWN_STEP), k.m_128451_(GAS), k.m_128451_(GAS_STEP), k.m_128451_(CLOWN_KILLS), k.m_128451_(ANTEIKU_STEP), k.m_128451_(DOVES),
+            k.m_128451_(GENERAL_STEP), k.m_128451_(GHOULS));
     }
 
     /** {@code player}'s gang kept as {@code g}; a change of gang shown on their name everywhere. */
@@ -96,6 +100,8 @@ public final class GangServer {
         k.m_128405_(CLOWN_KILLS, g.clownKills());
         k.m_128405_(ANTEIKU_STEP, g.anteikuStep());
         k.m_128405_(DOVES, g.doveKills());
+        k.m_128405_(GENERAL_STEP, g.generalStep());
+        k.m_128405_(GHOULS, g.ghoulKills());
         if (was != g.gang()) {
             SEEN.put(player.m_20148_(), g.gang());
             player.refreshDisplayName();
@@ -188,6 +194,12 @@ public final class GangServer {
             if (AgentBrain.ccg(dead) || dead instanceof GhoulNpc investigator && investigator.identity() != null && investigator.identity().ccg()) {
                 now = now.droveDove(); // 4.1.70: Ken's chain (an investigator of either kind)
             }
+            if (dead instanceof GhoulNpc hunted && hunted.identity() != null && !hunted.identity().ccg()) {
+                now = now.killedGhoul(); // 4.1.71: the General's chain (any ghoul but the CCG's own)
+            }
+            if (dead instanceof com.hex.kagune.control.npc.CcgAgent && was.member(GangPlayer.CCG)) {
+                now = now.killedOwn(); // 4.1.71: an investigator is one of a member's own (the division's ghouls are, below)
+            }
             if (dead instanceof GhoulNpc ghoul && ghoul.identity() != null) {
                 NpcIdentity who = ghoul.identity();
                 if (who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS) {
@@ -202,7 +214,11 @@ public final class GangServer {
             }
             // 4.1.52: a member's reputation: up for the CCG and for other gangs killed, down a lot for one of their own.
             int by = 0;
-            if (was.gang() != GangPlayer.NONE) {
+            if (was.member(GangPlayer.CCG)) {
+                // 4.1.71: one of the CCG: up for any ghoul (but its own division's), down a lot for one of the CCG.
+                NpcIdentity who = dead instanceof GhoulNpc ghoul ? ghoul.identity() : null;
+                by = AgentBrain.ccg(dead) ? -GangStanding.KILL_OWN : who != null ? GangStanding.KILL_RIVAL : 0;
+            } else if (was.gang() != GangPlayer.NONE) {
                 NpcIdentity who = dead instanceof GhoulNpc ghoul ? ghoul.identity() : null;
                 if (AgentBrain.ccg(dead) || who != null && who.ccg()) {
                     by = GangStanding.KILL_CCG;
@@ -219,7 +235,9 @@ public final class GangServer {
                 boolean gas = who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS;
                 boolean clown = who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.CLOWNS;
                 boolean rival = who != null && !ccg && (who.aogiri() || who.gang() != 0) && !was.member(GangPlayer.of(who));
-                dailyKill(player, ccg, rival, gas, clown);
+                boolean ghoul = who != null && !who.ccg(); // 4.1.71: the General's jobs
+                boolean ganged = ghoul && (who.aogiri() || who.gang() != 0);
+                dailyKill(player, ccg, rival, gas, clown, ghoul, ganged);
             }
             if (now.equals(was)) {
                 if (by != 0) {
@@ -238,6 +256,10 @@ public final class GangServer {
             if (now.gasKills() != was.gasKills()) {
                 player.m_5661_(Component.m_237113_("§9The Clowns: §f" + Math.min(now.gasKills(), GangPlayer.CLOWN_GAS) + "/" + GangPlayer.CLOWN_GAS
                     + " Gas Masks" + (now.clownStep() == GangPlayer.CLOWN_CASE ? " §7(now a quinque case, for Roma)" : "")), true);
+            }
+            if (now.ghoulKills() != was.ghoulKills()) {
+                player.m_5661_(Component.m_237113_("§bThe CCG: §f" + Math.min(now.ghoulKills(), GangPlayer.CCG_GHOUL_COUNT) + "/" + GangPlayer.CCG_GHOUL_COUNT
+                    + " ghouls" + (now.ccgDone() ? " §7(report to the General)" : "")), true);
             }
             if (now.doveKills() != was.doveKills()) {
                 player.m_5661_(Component.m_237113_("§6Anteiku: §f" + Math.min(now.doveKills(), GangPlayer.ANTEIKU_CCG) + "/" + GangPlayer.ANTEIKU_CCG
@@ -276,6 +298,8 @@ public final class GangServer {
     static final double CLOWN_HIDEOUT = 70.0;
     /** 4.1.54: the Gas Masks' hideout (28 x 19, its garden walled): a little past its walls. */
     static final double GAS_HIDEOUT = 40.0;
+    /** 4.1.71: the CCG's tower (31 x 46, its forecourt round it). */
+    static final double CCG_HIDEOUT = 50.0;
     /** The members their gang has turned on (the bar empty, warned, still in its hideout), as of their last check. */
     private static final java.util.Set<UUID> TURNED = ConcurrentHashMap.newKeySet();
     /** When each member last had a blow on one of their own counted (the world's game time). */
@@ -349,20 +373,21 @@ public final class GangServer {
     }
 
     /**
-     * True if {@code player} is in their gang's hideout: Aogiri's mansion, the Clowns' tent, the Gas Masks' hideout (their claimed spots, in
-     * the overworld).
+     * True if {@code player} is in their gang's hideout: Aogiri's mansion, the Clowns' tent, the Gas Masks' hideout, 4.1.71: the CCG's tower
+     * (their claimed spots, in the overworld).
      */
     static boolean inHideout(ServerPlayer player, int gang) {
-        if (gang != GangPlayer.AOGIRI && gang != GangPlayer.CLOWNS && gang != GangPlayer.GAS_MASKS
+        if (gang != GangPlayer.AOGIRI && gang != GangPlayer.CLOWNS && gang != GangPlayer.GAS_MASKS && gang != GangPlayer.CCG
             || player.m_9236_().m_46472_() != net.minecraft.world.level.Level.f_46428_) {
             return false;
         }
         int[] chunk = com.hex.kagune.control.PlaceClaims.claimed(gang == GangPlayer.AOGIRI ? "aogiri_hideout" : gang == GangPlayer.CLOWNS ? "circus"
-            : "gas_hideout");
+            : gang == GangPlayer.CCG ? "ccg_building" : "gas_hideout");
         if (chunk == null) {
             return false;
         }
-        double reach = gang == GangPlayer.AOGIRI ? AOGIRI_HIDEOUT : gang == GangPlayer.CLOWNS ? CLOWN_HIDEOUT : GAS_HIDEOUT;
+        double reach = gang == GangPlayer.AOGIRI ? AOGIRI_HIDEOUT : gang == GangPlayer.CLOWNS ? CLOWN_HIDEOUT : gang == GangPlayer.CCG ? CCG_HIDEOUT
+            : GAS_HIDEOUT;
         double dx = player.m_20185_() - ((chunk[0] << 4) + 8);
         double dz = player.m_20189_() - ((chunk[1] << 4) + 8);
         return dx * dx + dz * dz <= reach * reach;
@@ -454,7 +479,8 @@ public final class GangServer {
     /** 4.1.53: the gang whose daily quests {@code persona} gives (the owner: Noro for Aogiri; Roma, the Clowns' leader), or none. */
     static int gives(Persona persona) {
         return persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : persona == Persona.BANJOU
-            ? GangPlayer.GAS_MASKS : GangPlayer.NONE; // 4.1.54: Banjou the Gas Masks' (the owner: "Daily quest giver")
+            ? GangPlayer.GAS_MASKS // 4.1.54: Banjou the Gas Masks' (the owner: "Daily quest giver")
+            : persona == Persona.GENERAL ? GangPlayer.CCG : GangPlayer.NONE; // 4.1.71: the General the CCG's ("and now daily quests as well")
     }
 
     /** What asking {@code persona} for today's job is called (one of their gang only), or null. */
@@ -468,11 +494,11 @@ public final class GangServer {
             return d.done() || d.job().brought ? "About today's job..." : "Today's job: how far?";
         }
         return gang == GangPlayer.AOGIRI ? "Any work for me today?" : gang == GangPlayer.GAS_MASKS ? "Anything the boys need today?"
-            : "Got a job for me, boss?";
+            : gang == GangPlayer.CCG ? "Orders for today, General?" : "Got a job for me, boss?";
     }
 
     /** One of today's kills counted for {@code player}'s daily quest (an investigator, one of another gang, a Gas Mask, a Clown). */
-    static void dailyKill(ServerPlayer player, boolean ccg, boolean rival, boolean gas, boolean clown) {
+    static void dailyKill(ServerPlayer player, boolean ccg, boolean rival, boolean gas, boolean clown, boolean ghoul, boolean ganged) {
         GangDaily d = daily(player);
         if (!d.today(today(player)) || d.claimed() || d.done() || d.job().brought) {
             return;
@@ -483,6 +509,8 @@ public final class GangServer {
             case AOGIRI_RIVALS -> rival;
             case CLOWNS_GAS -> gas;
             case GAS_CLOWNS -> clown;
+            case CCG_GHOULS -> ghoul; // 4.1.71: the General's
+            case CCG_GANGS -> ganged;
             default -> false;
         };
         if (!counts) {
@@ -490,7 +518,8 @@ public final class GangServer {
         }
         GangDaily after = d.counted();
         daily(player, after);
-        String giver = job.gang == GangPlayer.AOGIRI ? "Noro" : job.gang == GangPlayer.GAS_MASKS ? "Banjou" : "Roma";
+        String giver = job.gang == GangPlayer.AOGIRI ? "Noro" : job.gang == GangPlayer.GAS_MASKS ? "Banjou" : job.gang == GangPlayer.CCG ? "the General"
+            : "Roma";
         player.m_5661_(Component.m_237113_(colour(job.gang) + "Daily: §f" + job.text(after.goal()) + " §7(" + after.count() + "/" + after.goal() + ")"
             + (after.done() ? " §a- done, go back to " + giver : "")), true);
     }
@@ -503,10 +532,13 @@ public final class GangServer {
         int gang = gives(persona);
         if (gang == GangPlayer.NONE || !of(player).member(gang)) {
             return persona == Persona.NORO ? "..." : persona == Persona.BANJOU ? "Jobs are for the boys. ...Join first. Then I'll find you something."
-                : "Jobs are for Clowns, sweetheart. Join first.";
+                : persona == Persona.GENERAL ? "Orders are for investigators. You aren't one." : "Jobs are for Clowns, sweetheart. Join first.";
         }
         if (gang == GangPlayer.GAS_MASKS) {
             return banjouDaily(player, seed); // 4.1.54
+        }
+        if (gang == GangPlayer.CCG) {
+            return generalDaily(player, seed); // 4.1.71
         }
         boolean noro = gang == GangPlayer.AOGIRI;
         long today = today(player);
@@ -617,6 +649,62 @@ public final class GangServer {
         return pick(seed, "You did it. *hands it over with both hands* ...Thank you. Really.", "The boys will hear about this. Take it. You earned it.");
     }
 
+    /**
+     * 4.1.71 (the owner, of the CCG: "Join through the general (quest) and now daily quests as well."): the General's orders, as the others'
+     * (one a day; ghouls counted, paperwork handed over from the hand; paid in the bureau's things and {@link GangStanding#DAILY} reputation),
+     * in his words: clipped, dry, proud of his people.
+     */
+    static String generalDaily(ServerPlayer player, int seed) {
+        int gang = GangPlayer.CCG;
+        long today = today(player);
+        GangDaily d = daily(player);
+        if (!d.today(today)) {
+            GangDaily fresh = GangDaily.give(gang, today, player.m_20148_().getLeastSignificantBits());
+            daily(player, fresh);
+            player.m_5661_(Component.m_237113_(colour(gang) + "Daily: §f" + fresh.job().text(fresh.goal()) + " §7(0/" + fresh.goal() + ")"), false);
+            String what = fresh.job().asked(fresh.goal());
+            return pick(seed, "Today's orders: " + what + ". Report back when it's done.", "*He doesn't look up from the report.* " + capFirst(what)
+                + ". Dismissed.", "The ward needs this. " + capFirst(what) + ". Then come back here, in one piece.");
+        }
+        if (d.claimed()) {
+            return pick(seed, "You've done today's. Rest. Tired investigators make widows.", "Tomorrow, investigator. Go home.");
+        }
+        if (!d.done() && d.job().brought) {
+            net.minecraft.world.item.ItemStack held = player.m_21205_();
+            net.minecraft.world.item.Item wanted = com.hex.kagune.control.ControlItems.vanilla(GangDaily.PAPER);
+            int have = wanted != null && !held.m_41619_() && held.m_41720_() == wanted ? held.m_41613_() : 0;
+            GangDaily got = d.brought(have);
+            if (!got.done()) {
+                return d.goal() + " sheets of paper. In your hand. The bureau runs on reports, and reports run on paper.";
+            }
+            if (!player.m_7500_()) {
+                held.m_41774_(d.goal());
+            }
+            d = got;
+        }
+        if (!d.done()) {
+            return d.count() + " of " + d.goal() + ". Keep at it. Don't get careless near the end; that's when they get you.";
+        }
+        daily(player, d.paid());
+        StringBuilder paid = new StringBuilder();
+        for (GangDaily.Pay pay : d.pay(player.m_20148_().getLeastSignificantBits())) {
+            net.minecraft.world.item.Item item = com.hex.kagune.control.ControlItems.vanilla(pay.item());
+            if (item == null) {
+                continue;
+            }
+            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, pay.count());
+            paid.append(paid.length() == 0 ? "" : ", ").append(pay.text());
+            if (!player.m_36356_(stack)) {
+                player.m_36176_(stack, false);
+            }
+        }
+        reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);
+        player.m_5661_(Component.m_237113_(colour(gang) + "Daily done: §f" + paid + " §7(+" + com.hex.kagune.control.npc.GangStanding.DAILY
+            + "% reputation)"), false);
+        return pick(seed, "Good work. *He signs something without reading it, then reads it.* Take this. You earned it.",
+            "Noted in your file. *A short nod.* That's a good file to have. Here.");
+    }
+
     private static String lowerFirst(String text) {
         return text.isEmpty() ? text : Character.toLowerCase(text.charAt(0)) + text.substring(1);
     }
@@ -635,7 +723,8 @@ public final class GangServer {
      */
     static void giveMask(ServerPlayer player, int gang) {
         String id = gang == GangPlayer.AOGIRI ? "hexkagune:mask_bin_brothers" : gang == GangPlayer.CLOWNS ? GangDaily.CLOWN_MASK
-            : gang == GangPlayer.GAS_MASKS ? GangDaily.GAS_MASK : null; // 4.1.54: the Gas Masks' own
+            : gang == GangPlayer.GAS_MASKS ? GangDaily.GAS_MASK // 4.1.54: the Gas Masks' own
+            : gang == GangPlayer.CCG ? GangDaily.ISSUED_CASE : null; // 4.1.71: no mask for the CCG: a new investigator's quinque, in its case
         net.minecraft.world.item.Item item = id == null ? null : com.hex.kagune.control.ControlItems.vanilla(id);
         kept(player).m_128405_(MASK, gang);
         if (item == null) {
@@ -645,7 +734,8 @@ public final class GangServer {
         if (!player.m_36356_(stack)) {
             player.m_36176_(stack, false);
         }
-        player.m_5661_(Component.m_237113_(colour(gang) + cap(GangPlayer.title(gang)) + ": §fyour mask. §7Wear it with pride (on your head)."), false);
+        player.m_5661_(Component.m_237113_(gang == GangPlayer.CCG ? colour(gang) + "The CCG: §fyour quinque, standard issue. §7(a bikaku blade, in its case)"
+            : colour(gang) + cap(GangPlayer.title(gang)) + ": §fyour mask. §7Wear it with pride (on your head)."), false);
     }
 
     // ---------------------------------------------------------------- 4.1.53: the gangs' traits
@@ -670,6 +760,10 @@ public final class GangServer {
             net.minecraft.world.entity.Entity source = event.getSource().m_7639_();
             if (source instanceof ServerPlayer player && source != hurt) {
                 boost(player, hurt);
+                if (of(player).member(GangPlayer.CCG) && ghoul(hurt)) {
+                    // 4.1.71 (the owner, the CCG's traits: "Damage increased when fighting ghouls."): every blow on a ghoul lands harder.
+                    event.setAmount(event.getAmount() * GangPlayer.CCG_DAMAGE);
+                }
             }
             if (hurt instanceof ServerPlayer player && source instanceof LivingEntity other && source != hurt) {
                 boost(player, other);
@@ -677,6 +771,20 @@ public final class GangServer {
         } catch (RuntimeException | LinkageError failure) {
             Safety.caught(failure, "GangServer.fought");
         }
+    }
+
+    /**
+     * 4.1.71: true if {@code body} is a ghoul a CCG member's blows land harder on: a ghoul NPC (not of the CCG's own division), a ghoul player,
+     * a ghoul among the named (not the General, a human).
+     */
+    static boolean ghoul(LivingEntity body) {
+        if (body instanceof GhoulNpc npc) {
+            return npc.identity() == null || !npc.identity().ccg();
+        }
+        if (body instanceof ServerPlayer player) {
+            return com.hex.kagune.data.KaguneProfile.isUnlocked(player);
+        }
+        return body instanceof com.hex.kagune.control.npc.EtoNpc named && !named.persona().human();
     }
 
     /** {@code player} fighting {@code other}: Aogiri's strength against the CCG and the other gangs, the Clowns' jump against the CCG. */
@@ -752,7 +860,7 @@ public final class GangServer {
 
     static String colour(int gang) {
         return gang == GangPlayer.AOGIRI ? "§4" : gang == GangPlayer.CLOWNS ? "§9" : gang == GangPlayer.GAS_MASKS ? "§a" : gang == GangPlayer.ANTEIKU ? "§6"
-            : "§7";
+            : gang == GangPlayer.CCG ? "§b" : "§7";
     }
 
     // ---------------------------------------------------------------- the name
@@ -782,6 +890,11 @@ public final class GangServer {
         if (gang == GangPlayer.ANTEIKU) {
             return Component.m_237113_("§f" + GangPlayer.COFFEE + " ").m_7220_(Component.m_237113_(name).m_6270_(
                 net.minecraft.network.chat.Style.f_131099_.m_178520_(GangPlayer.ANTEIKU_BROWN)));
+        }
+        if (gang == GangPlayer.CCG) {
+            // 4.1.71 (the owner: "Cyan Blue with a brief cafe symbol"): the quinque case, then the name in the CCG's own cyan blue.
+            return Component.m_237113_("§f" + GangPlayer.BRIEFCASE + " ").m_7220_(Component.m_237113_(name).m_6270_(
+                net.minecraft.network.chat.Style.f_131099_.m_178520_(GangPlayer.CCG_CYAN)));
         }
         return Component.m_237113_(GangPlayer.named(gang, name));
     }
@@ -815,16 +928,17 @@ public final class GangServer {
 
     /**
      * True if {@code persona} is the way into a gang: Ayato (Aogiri), Roma (the Clowns), Banjou (4.1.54: the Gas Masks), Ken (4.1.70:
-     * Anteiku; so 4.1.67's rules are his too: marrying him takes a player out of another gang, and married to one in another he asks them out).
+     * Anteiku; so 4.1.67's rules are his too: marrying him takes a player out of another gang, and married to one in another he asks them out),
+     * the General (4.1.71: the CCG; the same rules).
      */
     static boolean leads(Persona persona) {
-        return persona == Persona.AYATO || persona == Persona.ROMA || persona == Persona.BANJOU || persona == Persona.KEN;
+        return persona == Persona.AYATO || persona == Persona.ROMA || persona == Persona.BANJOU || persona == Persona.KEN || persona == Persona.GENERAL;
     }
 
     /** The gang {@code persona} is the way into. */
     static int gangOf(Persona persona) {
         return persona == Persona.AYATO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : persona == Persona.BANJOU ? GangPlayer.GAS_MASKS
-            : persona == Persona.KEN ? GangPlayer.ANTEIKU : GangPlayer.NONE;
+            : persona == Persona.KEN ? GangPlayer.ANTEIKU : persona == Persona.GENERAL ? GangPlayer.CCG : GangPlayer.NONE;
     }
 
     /**
@@ -833,7 +947,8 @@ public final class GangServer {
      */
     static int memberOf(Persona persona) {
         return persona == Persona.AYATO || persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS
-            : persona == Persona.BANJOU ? GangPlayer.GAS_MASKS : persona == Persona.KEN || persona == Persona.TOUKA ? GangPlayer.ANTEIKU : GangPlayer.NONE;
+            : persona == Persona.BANJOU ? GangPlayer.GAS_MASKS : persona == Persona.KEN || persona == Persona.TOUKA ? GangPlayer.ANTEIKU
+            : persona == Persona.GENERAL ? GangPlayer.CCG : GangPlayer.NONE;
     }
 
     /** What asking {@code persona} about their gang is called on the talk screen, by where {@code player} stands. */
@@ -842,7 +957,12 @@ public final class GangServer {
         int gang = gangOf(persona);
         if (g.member(gang)) {
             return gang == GangPlayer.AOGIRI ? "How's Aogiri?" : gang == GangPlayer.GAS_MASKS ? "How are the boys?" : gang == GangPlayer.ANTEIKU
-                ? "How's Anteiku?" : "How are the Clowns?";
+                ? "How's Anteiku?" : gang == GangPlayer.CCG ? "How's the bureau, sir?" : "How are the Clowns?";
+        }
+        if (gang == GangPlayer.CCG) {
+            // 4.1.71: the General's chain.
+            return g.ccgDone() ? "It's done. Five ghouls." : g.generalStep() != GangPlayer.CCG_NOT_YET ? "About joining the CCG..."
+                : "I want to join the CCG.";
         }
         if (gang == GangPlayer.ANTEIKU) {
             // 4.1.70: Ken's chain: the beans in the hand once he has asked for them; the investigators done.
@@ -880,6 +1000,9 @@ public final class GangServer {
         }
         if (gang == GangPlayer.ANTEIKU) {
             return ken(player, g, key, seed); // 4.1.70
+        }
+        if (gang == GangPlayer.CCG) {
+            return general(player, g, key, seed); // 4.1.71
         }
         boolean ayato = gang == GangPlayer.AOGIRI;
         if (g.member(gang)) {
@@ -1053,6 +1176,72 @@ public final class GangServer {
     }
 
 
+    /**
+     * 4.1.71 (the owner: "CCG Faction: / Join through the general (quest)"): the General's way into the CCG. Why they want to serve (of three
+     * answers, {@code GangWords.GENERAL_RIGHT} is the bureau's own: to protect people, not to butcher, not for the pay), then
+     * {@link GangPlayer#CCG_GHOUL_COUNT} ghouls killed (any ghoul but the CCG's own division); then he swears them in. A ghoul may join too
+     * (the bureau has a division of them): he says so, flatly. He is a human, thirty years in the bureau: clipped, dry, proud of his people
+     * ({@code GeneralScript}).
+     */
+    static Said general(ServerPlayer player, GangPlayer g, String key, int seed) {
+        int gang = GangPlayer.CCG;
+        if (g.member(gang)) {
+            return new Said(pick(seed, "The bureau's holding. Fewer funerals this month. Keep it that way.",
+                "You're one of mine now. That means you come back alive. That's an order.",
+                "Paperwork's piling up and the coffee's terrible. So: normal. Anything to report?"), wayOut(gang));
+        }
+        if (g.banned(gang)) {
+            return new Said("You killed investigators. My investigators. *He doesn't raise his voice.* Get out of my building while you can still walk.",
+                null);
+        }
+        if (g.gang() != GangPlayer.NONE) {
+            return new Said("You run with " + GangPlayer.title(g.gang()) + ". The bureau doesn't take double agents. Leave them, then we'll talk.", null);
+        }
+        if (g.generalStep() == GangPlayer.CCG_NOT_YET) {
+            if (key.startsWith("gang:serve:")) {
+                int said = Integer.parseInt(key.substring("gang:serve:".length()));
+                if (said == com.hex.kagune.control.npc.GangWords.GENERAL_RIGHT) {
+                    set(player, g.sworn());
+                    player.m_5661_(Component.m_237113_("§bThe CCG: §fkill " + GangPlayer.CCG_GHOUL_COUNT + " ghouls §7(0/" + GangPlayer.CCG_GHOUL_COUNT + ")"),
+                        false);
+                    return new Said("*A short nod. Something close to approval.* ...Correct. Most people get that one wrong. Field test, then: five "
+                        + "ghouls. Not my division's. Come back and report.", null);
+                }
+                return new Said(said == 0 ? "*He doesn't blink.* Then you want to be a butcher. The bureau doesn't hire butchers. Dismissed."
+                    : "*Dryly.* It isn't. Ask anyone in this building. Try again when you have a real reason.", null);
+            }
+            String[] why = com.hex.kagune.control.npc.GangWords.GENERAL_WHY;
+            List<String[]> answers = new ArrayList<>(List.of(new String[] {why[0], "gang:serve:0"}, new String[] {why[1], "gang:serve:1"},
+                new String[] {why[2], "gang:serve:2"}));
+            java.util.Collections.rotate(answers, Math.floorMod(seed, answers.size()));
+            boolean ghoul = com.hex.kagune.data.KaguneProfile.isUnlocked(player);
+            return new Said((ghoul ? "You're a ghoul. *Flat, not unkind.* We have a division for that. The oath's the same. " : "")
+                + "You want to join the CCG. *He sets the pen down.* Why? One answer. Make it the true one.", answers);
+        }
+        if (!g.ccgDone()) {
+            return new Said(g.ghoulKills() + " of five. Work in pairs if you can. The ones who work alone don't come back.", null);
+        }
+        set(player, g.join(gang));
+        joined(player, gang);
+        return new Said("*He stands, which he doesn't do for many.* Investigator. Welcome to the Commission of Counter Ghoul. Your quinque's in the "
+            + "case. Look after it, and it'll look after you.", null);
+    }
+
+    /** 4.1.71: true if {@code player} is one of the CCG: every ghoul but the named ones goes for them (GhoulNpcBrain). */
+    public static boolean hunted(ServerPlayer player) {
+        return of(player).member(GangPlayer.CCG);
+    }
+
+    /**
+     * 4.1.71 (the owner: "CCG no longer attacks the player."): what the CCG's investigators are to {@code player} ({@link AgentBrain}): their
+     * own ({@link #OWN_GANG}: never gone for, even struck, unless {@link #turned}), an {@link #OUTCAST} (it banned them: on sight), or a
+     * {@link #STRANGER}.
+     */
+    static int ccgStance(ServerPlayer player) {
+        GangPlayer g = of(player);
+        return g.member(GangPlayer.CCG) ? OWN_GANG : g.banned(GangPlayer.CCG) ? OUTCAST : STRANGER;
+    }
+
     /** 4.1.70: true if {@code player} holds Ken's coffee beans (at least {@link GangPlayer#ANTEIKU_BEAN_COUNT} cocoa beans in the main hand). */
     static boolean holdsBeans(ServerPlayer player) {
         net.minecraft.world.item.ItemStack held = player.m_21205_();
@@ -1200,6 +1389,8 @@ public final class GangServer {
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.levelup", 0.8F, 0.7F);
         player.m_5661_(Component.m_237113_(colour(gang) + "You joined " + GangPlayer.title(gang) + (gang == GangPlayer.ANTEIKU
             ? ". §7Ghouls leave you be now, every gang too, unless you start it. The CCG won't. Your RC goes further." // 4.1.70
+            : gang == GangPlayer.CCG ? ". §7Investigators never go for you now. Every ghoul but the ones you know by name will, and you hit "
+                + "ghouls harder." // 4.1.71
             : ". §7They will never go for you again, and they will fight for you.")), false);
     }
 

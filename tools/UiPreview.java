@@ -871,6 +871,36 @@ public class UiPreview {
     }
 
     /**
+     * 4.1.71 (the owner: "CCG Faction: / Join through the general (quest) and now daily quests as well."): the General's pages: asked to join
+     * (why, three answers; a ghoul told of the division), sworn in, a member's page with the reputation meter in the CCG's cyan blue and
+     * today's orders, and the orders given.
+     */
+    static void ccgTalk(File dir) throws Exception {
+        int ccg = com.hex.kagune.control.npc.GangPlayer.CCG;
+        com.hex.kagune.control.npc.NpcTalk.Choice[] says = com.hex.kagune.control.npc.NpcTalk.Choice.SAYS;
+        com.hex.kagune.control.npc.NpcTalk.Choice back = com.hex.kagune.control.npc.NpcTalk.Choice.BACK;
+        com.hex.kagune.control.npc.NpcTalk.Choice leave = com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE;
+        com.hex.kagune.control.npc.NpcTalk.Choice chat = com.hex.kagune.control.npc.NpcTalk.Choice.CHAT;
+        BufferedImage general = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/general/general.png"));
+        String[] why = com.hex.kagune.control.npc.GangWords.GENERAL_WHY;
+        etoFrame(new File(dir, "ccg-general-why.png"), general, new com.hex.kagune.control.client.NpcTalkView.Model("General Kuroda", "The General", 30,
+            false, "You're a ghoul. *Flat, not unkind.* We have a division for that. The oath's the same. You want to join the CCG. *He sets the pen "
+                + "down.* Why? One answer. Make it the true one.", java.util.List.of(says[0], says[1], says[2], back), java.util.List.of(why[2], why[0],
+                why[1], "")), com.hex.kagune.control.client.NpcTalkView.Motion.still(30));
+        etoFrame(new File(dir, "ccg-general-sworn.png"), general, new com.hex.kagune.control.client.NpcTalkView.Model("General Kuroda", "The General", 48,
+            false, "*He stands, which he doesn't do for many.* Investigator. Welcome to the Commission of Counter Ghoul. Your quinque's in the case. "
+                + "Look after it, and it'll look after you.", java.util.List.of(chat, says[2], leave), java.util.List.of("", "How's the bureau, sir?", "")),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(48));
+        etoFrame(new File(dir, "ccg-general-member.png"), general, new com.hex.kagune.control.client.NpcTalkView.Model("General Kuroda", "The General", 55,
+            false, "You're one of mine now. That means you come back alive. That's an order.", java.util.List.of(says[0], back), java.util.List.of(
+                com.hex.kagune.control.npc.GangWords.wantOut(ccg), ""), 72 | ccg << 8), com.hex.kagune.control.client.NpcTalkView.Motion.still(55));
+        com.hex.kagune.control.npc.GangDaily orders = com.hex.kagune.control.npc.GangDaily.give(ccg, 9L, 3L);
+        etoFrame(new File(dir, "ccg-general-orders.png"), general, new com.hex.kagune.control.client.NpcTalkView.Model("General Kuroda", "The General", 55,
+            false, "Today's orders: " + orders.job().asked(orders.goal()) + ". Report back when it's done.", java.util.List.of(chat, says[2], says[5], leave),
+            java.util.List.of("", "How's the bureau, sir?", "Today's orders: how far?", ""), 72 | ccg << 8), com.hex.kagune.control.client.NpcTalkView.Motion.still(55));
+    }
+
+    /**
      * 4.1.70 (the owner: "Anteikou - Joinable through Ken (quest)"): Ken's pages for Anteiku: asked to join (why, three answers), the beans
      * in hand, taken in, and a member's page with the reputation meter in Anteiku's light brown.
      */
@@ -1340,6 +1370,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("gang-talk")) {
             gangTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("ccg")) {
+            ccgTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("anteiku")) {

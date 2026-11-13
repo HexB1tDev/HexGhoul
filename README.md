@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.71 (HexGhoul): the CCG, joined through the General (testing)
+
+See `.github/release-notes-4.1.71.md`. `GangPlayer.CCG` (5; `generalStep`, `ghoulKills`; `sworn`, `killedGhoul`, `ccgDone`; `BRIEFCASE` U+E004, `CCG_CYAN`, `CCG_DAMAGE`; `of`: the division is the CCG's); `GangServer` (`general()` the chain, `generalDaily`, `leads`/`gangOf`/`memberOf`/`gives` the General, `hunted`, `ccgStance`, `ghoul`, the damage in `fought`, `nameTag`, `inHideout` the tower, `giveMask` the issued case, `died` kills and reputation); `GangDaily` (`CCG_GHOULS`, `CCG_GANGS`, `CCG_PAPER`, the CCG's pay, `PAPER`, `ISSUED_CASE`); `GangWords` (the General's words, `GENERAL_WHY`); `AgentBrain.wanted`/`reveal`/`hurt`; `GhoulNpcBrain.wanted`; `NpcTalkView.GANG_COLOURS`; emblem `tools/gang_emblems.py`. `NpcTests.ccg`. `tools/UiPreview.java ccg`. Renders `docs/handoff/ccg-*-4.1.71.png`. Protocol 125.
+
 ## 4.1.70 (HexGhoul): Anteiku, joined through Ken (testing)
 
 See `.github/release-notes-4.1.70.md`. `GangPlayer.ANTEIKU` (4; `anteikuStep`, `doveKills`; `answered`, `beansBrought`, `droveDove`, `anteikuDone`; `COFFEE` U+E003, `ANTEIKU_BROWN`, `ANTEIKU_CAPACITY`); `GangServer` (`leads`/`gangOf`/`memberOf` Ken and Touka, `ken()` the chain, `holdsBeans`/`takeBeans`, `nameTag` with `Style.withColor`, `neutral`, `capacity`); `GangWords` (Ken's words, `KEN_WHY`); `GhoulNpcBrain.wanted`/`fair` (neutral to all but the CCG); `SharedBar.capacity`, `BikakuClient.capacity`/`potential`, `GangClient.anteiku`; `ReserveBarView` (tail length; `drawFine`, `FINE` 2, `ANTEIKU_TAIL` 153: on half pixels in the usual spot), `ReserveHud`; emblem `tools/gang_emblems.py`; new API `Style`, `MutableComponent.m_6270_`/`m_7220_`. `NpcTests.anteiku`. `tools/UiPreview.java anteiku`. Renders `docs/handoff/anteiku-*-4.1.70.png`. Protocol 125.

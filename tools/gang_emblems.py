@@ -106,10 +106,35 @@ COFFEE = [
 COFFEE_COLOURS = {"o": (78, 46, 24), "w": (236, 222, 196), "h": (255, 250, 238), "c": (110, 64, 32), "C": (186, 132, 82),
                   "s": (226, 226, 232)}
 
+# 4.1.71 (the owner, the CCG: "Cyan Blue with a brief cafe symbol"; their answer: "A briefcase (Recommended)"): an investigator's quinque
+# case, steel with rounded corners, its handle over a gap, two latches on a band of the CCG's cyan blue (o: outline, h: light, m: steel,
+# d: its shadow, c: cyan, l: the latches). Judged at 16 and 8 px against two others in the scratchpad: this one.
+CASE = [
+    "................",
+    "................",
+    ".....oooooo.....",
+    "....ohhhhhho....",
+    "....oo....oo....",
+    ".oooooooooooooo.",
+    "ohhhhhhhhhhhhhho",
+    "ommmmmmmmmmmmmmo",
+    "ommllmmmmmmllmmo",
+    "occllccccccllcco",
+    "occcccccccccccco",
+    "ommmmmmmmmmmmmmo",
+    "ommmmmmmmmmmmmmo",
+    "oddddddddddddddo",
+    ".oooooooooooooo.",
+    "................",
+]
+CASE_COLOURS = {"o": (28, 36, 46), "h": (214, 224, 234), "m": (150, 164, 180), "d": (98, 112, 128), "c": (56, 182, 240), "l": (240, 240, 244)}
+
 GLYPHS = [("aogiri_tree", TREE, TREE_COLOURS, ""), ("clown_face", CLOWN, CLOWN_COLOURS, ""),
-          ("gas_toxic", TOXIC, TOXIC_COLOURS, ""), ("anteiku_coffee", COFFEE, COFFEE_COLOURS, "\ue003")]
+          ("gas_toxic", TOXIC, TOXIC_COLOURS, ""), ("anteiku_coffee", COFFEE, COFFEE_COLOURS, "\ue003"),
+          ("ccg_case", CASE, CASE_COLOURS, "\ue004")]
 # The name's colour after each (the game's: Aogiri §4, the Clowns §9, the Gas Masks §a; 4.1.70: Anteiku's own light brown, GangPlayer.ANTEIKU_BROWN).
-NAME_COLOURS = {"aogiri_tree": (170, 0, 0), "clown_face": (85, 85, 255), "gas_toxic": (85, 255, 85), "anteiku_coffee": (200, 155, 109)}
+NAME_COLOURS = {"aogiri_tree": (170, 0, 0), "clown_face": (85, 85, 255), "gas_toxic": (85, 255, 85), "anteiku_coffee": (200, 155, 109),
+                "ccg_case": (56, 182, 240)}
 
 
 def image(rows, colours):
@@ -136,7 +161,7 @@ def write():
 def preview(out):
     """A mock (not the game's font): each emblem big, then in a name tag and a chat line at the game's sizes, scaled up 4 times."""
     scale = 4
-    W, H = 860, 580
+    W, H = 1060, 660
     sheet = Image.new("RGB", (W, H), (58, 68, 80))
     d = ImageDraw.Draw(sheet)
     try:
@@ -144,7 +169,7 @@ def preview(out):
         small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
     except OSError:
         font = small = ImageFont.load_default()
-    d.text((12, 8), "Gang emblems (4.1.50, 4.1.54, 4.1.70): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
+    d.text((12, 8), "Gang emblems (4.1.50, 4.1.54, 4.1.70, 4.1.71): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
     x = 20
     for name, rows, colours, _ in GLYPHS:
         big = image(rows, colours).resize((160, 160), Image.NEAREST)

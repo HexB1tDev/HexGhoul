@@ -35,6 +35,15 @@
       "chars": [
         "\ue003"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "hexkagune:font/ccg_case.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue004"
+      ]
     }
   ]
 }
