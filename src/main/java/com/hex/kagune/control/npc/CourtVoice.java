@@ -73,6 +73,38 @@ public final class CourtVoice {
         return lines[Math.floorMod(seed + n, lines.length)] + (n >= need ? " §7(that's all three: go and see Banjou)" : "");
     }
 
+    /** 4.1.81: {@code key} saying yes to a date at {@code spot}: they lead, she follows (and where, for the player). */
+    public static String lead(String key, DateSpot.Spot spot, int seed) {
+        String[] lines = switch (key == null ? "" : key) {
+            case "eto" -> new String[] {"Mm. Lead the way, then. I'll be right behind you, reading over your shoulder.", "Take me. I'm all yours. Mostly."};
+            case "touka" -> new String[] {"Fine. Go on, then. I'm right behind you.", "...Okay. Lead. Don't walk too fast."};
+            case "ken" -> new String[] {"I'd like that. Lead the way?", "Okay. I'll follow you. Wherever."};
+            case "ayato" -> new String[] {"Tch. Walk. I'm following. Don't make it weird.", "Fine. Lead. If you get us lost I'm leaving."};
+            case "general" -> new String[] {"After you. I'll keep up.", "Lead on. I've followed worse orders."};
+            case "roma" -> new String[] {"Lead on, sweetheart! I'll follow you anywhere. Literally. It's a problem.", "Ooh, a mystery tour! Go, go!"};
+            case "banjou" -> new String[] {"Okay! I'll follow you. Don't walk too fast. I trip.", "Lead the way! I'm right behind you. Right behind."};
+            default -> new String[] {"Lead the way."};
+        };
+        String her = Persona.of(key).her();
+        return lines[Math.floorMod(seed, lines.length)] + " (Take " + her + " to " + spot.words() + ", " + her + " following you.)"; // the talk
+        // screen draws a line as it is: no colour codes in it
+    }
+
+    /** 4.1.81: {@code key} when a date never got there (stood up). */
+    public static String stood(String key, int seed) {
+        String[] lines = switch (key == null ? "" : key) {
+            case "eto" -> new String[] {"...We never got there. I'll write it as a tragedy."};
+            case "touka" -> new String[] {"Forget it. We'll go another time. ...We'd better."};
+            case "ken" -> new String[] {"It's alright. Another day. I'll still want to."};
+            case "ayato" -> new String[] {"Tch. Forget it. ...Another day. Don't think I'll forget."};
+            case "general" -> new String[] {"We'll reschedule. I'm good at that. Too good."};
+            case "roma" -> new String[] {"Show cancelled! Refunds at the door! ...Another night, sweetheart."};
+            case "banjou" -> new String[] {"Oh. We didn't... that's okay. That's okay. Another day?"};
+            default -> new String[] {"Another day."};
+        };
+        return lines[Math.floorMod(seed, lines.length)];
+    }
+
     /** One of Banjou's boys handed a bowl a second time. */
     public static final String SERVED_TWICE = "*He waves you off, mouth full.* I had mine. Feed the others.";
 }

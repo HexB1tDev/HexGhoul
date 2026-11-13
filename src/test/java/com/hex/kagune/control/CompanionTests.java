@@ -150,6 +150,7 @@ public final class CompanionTests {
         talk();
         courtship();
         courtship480();
+        dates481();
         proofs();
         oneSpouse();
         jealous();
@@ -2056,6 +2057,92 @@ public final class CompanionTests {
             && near(join, "static void courted(", "SceneServer.approachMoment(companion, player,", 1200), "won: counted, and his moment brought at once");
         check(near(join, "static String court(", "start(player, companion, JoinTrial.Kind.SPAR, seed, companion.persona().key());", 120)
             && join.contains("live.courting = courting;"), "his spar marked his courtship's");
+    }
+
+    /**
+     * 4.1.81 (the plan: "real dates at real places"): every date of the scripts had somewhere, at a time; chosen, she follows them there and
+     * its scene plays when they arrive together; only places the world has offered; ten minutes to get there.
+     */
+    static void dates481() {
+        Set<String> dates = new HashSet<>();
+        java.util.Map<String, Set<com.hex.kagune.control.npc.DateSpot.Place>> kinds = new java.util.HashMap<>();
+        for (String key : new String[] {"eto", "touka", "ken", "ayato", "general", "roma", "banjou"}) {
+            String text = read("src/main/resources/data/hexkagune/talk/" + key + ".txt");
+            for (com.hex.kagune.control.npc.scene.Scene scene : com.hex.kagune.control.npc.scene.SceneBook.parse(key, text).scenes()) {
+                if (scene.kind() == com.hex.kagune.control.npc.scene.Scene.Kind.DATE) {
+                    dates.add(scene.id());
+                    com.hex.kagune.control.npc.DateSpot.Spot spot = com.hex.kagune.control.npc.DateSpot.of(scene.id());
+                    check(spot != null, scene.id() + ": had somewhere");
+                    if (spot != null) {
+                        kinds.computeIfAbsent(key, k -> new HashSet<>()).add(spot.place());
+                        check(spot.place().home == null || Persona.known(spot.place().home), scene.id() + ": at a place someone lives");
+                    }
+                }
+            }
+        }
+        check(dates.size() == 39, "39 dates in the scripts: " + dates.size());
+        check(com.hex.kagune.control.npc.DateSpot.SPOTS.keySet().equals(dates), "a spot for every date, and none for a date there isn't");
+        check(kinds.get("eto").size() >= 5 && kinds.get("touka").size() >= 5 && kinds.get("ken").size() >= 5 && kinds.get("ayato").size() >= 3,
+            "the many dates go many places: " + kinds);
+        Set<com.hex.kagune.control.npc.DateSpot.Place> all = new HashSet<>();
+        kinds.values().forEach(all::addAll);
+        check(all.equals(Set.of(com.hex.kagune.control.npc.DateSpot.Place.values())), "every kind of place is somebody's date: " + all);
+        check(com.hex.kagune.control.npc.DateSpot.of("touka_cafe_closed").equals(new com.hex.kagune.control.npc.DateSpot.Spot(
+            com.hex.kagune.control.npc.DateSpot.Place.CAFE, com.hex.kagune.control.npc.DateSpot.When.NIGHT))
+            && com.hex.kagune.control.npc.DateSpot.of("roma_show_private").place() == com.hex.kagune.control.npc.DateSpot.Place.CIRCUS
+            && com.hex.kagune.control.npc.DateSpot.of("touka_beach").place() == com.hex.kagune.control.npc.DateSpot.Place.WATER
+            && com.hex.kagune.control.npc.DateSpot.of("ken_night_library").equals(new com.hex.kagune.control.npc.DateSpot.Spot(
+            com.hex.kagune.control.npc.DateSpot.Place.LIBRARY, com.hex.kagune.control.npc.DateSpot.When.NIGHT)), "the cafe after hours, the circus, the sea, the Library");
+        check(com.hex.kagune.control.npc.DateSpot.of(null) == null && com.hex.kagune.control.npc.DateSpot.of("no_such_date") == null, "no date, no place");
+        check(com.hex.kagune.control.npc.DateSpot.When.NIGHT.at(18000L) && !com.hex.kagune.control.npc.DateSpot.When.NIGHT.at(6000L)
+            && com.hex.kagune.control.npc.DateSpot.When.DAY.at(6000L) && !com.hex.kagune.control.npc.DateSpot.When.DAY.at(18000L)
+            && com.hex.kagune.control.npc.DateSpot.When.ANY.at(18000L) && com.hex.kagune.control.npc.DateSpot.When.ANY.at(6000L), "by day, at night, any time");
+        check(com.hex.kagune.control.npc.DateSpot.high(95.0, 95) && com.hex.kagune.control.npc.DateSpot.high(90.0, 90)
+            && !com.hex.kagune.control.npc.DateSpot.high(89.9, 89) && !com.hex.kagune.control.npc.DateSpot.high(120.0, 140), "high: 90 or more, the sky over them");
+        check(com.hex.kagune.control.npc.DateSpot.field("minecraft:grass_block") && com.hex.kagune.control.npc.DateSpot.field("minecraft:moss_block")
+            && !com.hex.kagune.control.npc.DateSpot.field("minecraft:stone") && !com.hex.kagune.control.npc.DateSpot.field("minecraft:oak_planks")
+            && !com.hex.kagune.control.npc.DateSpot.field(null), "a field: grass underfoot, not a floor");
+        check(com.hex.kagune.control.npc.DateSpot.of("touka_beach").words().equals("the water (a river, a lake, the sea) by day")
+            && com.hex.kagune.control.npc.DateSpot.of("touka_cafe_closed").words().equals("Anteiku at night")
+            && com.hex.kagune.control.npc.DateSpot.of("eto_tea").words().equals("Anteiku"), "where, in words");
+        check(com.hex.kagune.control.npc.DateSpot.WAITS == 12000L && com.hex.kagune.control.npc.DateSpot.ALONG == 16.0, "ten minutes to get there; her within 16");
+        for (Persona p : Persona.ALL) {
+            if (!p.romanceable()) {
+                continue;
+            }
+            String lead = com.hex.kagune.control.npc.CourtVoice.lead(p.key(), com.hex.kagune.control.npc.DateSpot.of("touka_beach"), 1);
+            check(lead.contains("(Take " + p.her() + " to the water (a river, a lake, the sea) by day, " + p.her() + " following you.)")
+                && !lead.startsWith("Lead the way.") && !lead.contains("\u00a7") && !com.hex.kagune.control.npc.CourtVoice.stood(p.key(), 0).equals("Another day."),
+                p.key() + ": says yes and where in their own words, and when it never happened");
+        }
+        String eto = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+        check(near(eto, "com.hex.kagune.control.npc.DateSpot.Spot spot = com.hex.kagune.control.npc.DateSpot.of(scene.id());",
+            "if (spot != null && !CourtTrials.at(player, spot)) {\n            CourtTrials.dateOn(player, npc, scene, spot, now);", 200)
+            && near(eto, "CourtTrials.dateOn(player, npc, scene, spot, now);", "return;", 300), "a date somewhere else: led there, not played here");
+        check(near(eto, "        dated(player, npc);\n        EtoTalk.Context after = context(player, npc);", "SceneServer.page(scene, scene.first(), sc, null)", 300),
+            "already there (or nowhere in particular): had now");
+        check(near(eto, "static void dated(ServerPlayer player, EtoNpc npc) {", "NpcMemoryServer.set(player, persona, NpcMemory.DATE_DAY, day(player.m_284548_()));", 200)
+            && near(eto, "static void dated(ServerPlayer player, EtoNpc npc) {", "bond.regard(bond.regard() + DATE_REGARD)", 400), "had: today's date, its regard");
+        check(eto.contains("fit.removeIf(date -> !CourtTrials.exists(player, com.hex.kagune.control.npc.DateSpot.of(date.id())));"), "only places the world has offered");
+        String trials = read("src/main/java/com/hex/kagune/control/server/CourtTrials.java");
+        check(near(trials, "static void dateOn(", "npc.follow(player.m_20148_());", 300), "chosen: she follows them");
+        check(near(trials, "static boolean exists(", "spot == null || spot.place().home == null || GangServer.home(player.m_284548_(), spot.place().home) != null;", 200),
+            "a companion's place only where the world has it");
+        check(near(trials, "static boolean at(", "spot.when().at(Math.floorMod(player.m_9236_().m_46468_(), 24000L)) && place(player, spot.place());", 150),
+            "there: the place, at its time");
+        check(near(trials, "case HIGH ->", "DateSpot.high(player.m_20186_(), top(level, x, z));", 60) && trials.contains("case ROOF -> CourtshipServer.onRoof(player);")
+            && trials.contains("case WATER -> water(level, player);") && trials.contains("case VILLAGE -> CourtshipServer.villagers(player);")
+            && near(trials, "case RAIN ->", "level.m_46758_(", 30) && near(trials, "case FIELD ->", "player.m_20186_() >= top(level, x, z) - 0.5 && com.hex.kagune.control.npc.DateSpot.field(", 60)
+            && near(trials, "default -> CourtshipServer.near(", "GangServer.home(level, place.home), com.hex.kagune.control.npc.DateSpot.AT_HOME);", 60),
+            "every kind of place looked for as it is");
+        check(near(trials, "static boolean water(", "\"minecraft:water\".equals(block(level, new BlockPos(x + dx, y + dy, z + dz)))", 500)
+            && near(trials, "static boolean water(", "for (int dx = -r; dx <= r; dx++) {", 400), "water round them");
+        check(near(trials, "static void dating(", "if (now - d.began() > com.hex.kagune.control.npc.DateSpot.WAITS || now < d.began()) {", 300)
+            && near(trials, "boolean along = npc != null && player.m_20148_().equals(npc.following());", "if (along && at(player, d.spot())) {", 120)
+            && near(trials, "} else if (SceneServer.approachMoment(npc, player, scene, now)) {", "EtoServer.dated(player, npc);", 150),
+            "there together: she comes up with its scene, and it is had; too long: off");
+        check(near(trials, "public static void loggedOut(", "DATING.remove(event.getEntity().m_20148_());", 150), "logged out: off");
+        check(near(trials, "Dating d = DATING.get(player.m_20148_());", "if (d != null && player.f_19797_ % 20 == 0) {", 60), "looked at each second");
     }
 
     /** {@code p}'s courtship on chapter {@code closed} + 1 with {@code done} of it done and {@code held} of what it asks for in hand. */

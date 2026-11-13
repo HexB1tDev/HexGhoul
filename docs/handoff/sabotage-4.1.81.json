@@ -1,0 +1,205 @@
+[
+ {
+  "name": "a date with no spot",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "Map.entry(\"banjou_tea\",",
+  "new": "Map.entry(\"banjou_teas\",",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the cafe after hours by day",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "Map.entry(\"touka_cafe_closed\", new Spot(Place.CAFE, When.NIGHT)),",
+  "new": "Map.entry(\"touka_cafe_closed\", new Spot(Place.CAFE, When.DAY)),",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "night any time",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "case NIGHT -> EtoRules.night(time);",
+  "new": "case NIGHT -> true;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "day any time",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "case DAY -> Courtship.daylight(time);",
+  "new": "case DAY -> true;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "any time only by day",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "case ANY -> true;",
+  "new": "case ANY -> Courtship.daylight(time);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "high lower",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "public static final int HIGH = 90;",
+  "new": "public static final int HIGH = 80;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "high under a roof",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "return y >= HIGH && y >= topHere - 0.5;",
+  "new": "return y >= HIGH;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a field of stone",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "return \"minecraft:grass_block\".equals(under) ||",
+  "new": "return under != null ||",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "where without when",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "return this.place.name + this.when.words;",
+  "new": "return this.place.name;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "no time to get there",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "public static final long WAITS = 12000L;",
+  "new": "public static final long WAITS = 1200L;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the roof nobody's",
+  "file": "src/main/java/com/hex/kagune/control/npc/DateSpot.java",
+  "old": "Map.entry(\"general_roof\", new Spot(Place.ROOF, When.ANY)),",
+  "new": "Map.entry(\"general_roof\", new Spot(Place.TOWER, When.ANY)),",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "yes without where",
+  "file": "src/main/java/com/hex/kagune/control/npc/CourtVoice.java",
+  "old": "\" (Take \" + her + \" to \" + spot.words() + \", \" + her + \" following you.)\"; // the talk",
+  "new": "\"\"; // the talk",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "stood up in no one's words",
+  "file": "src/main/java/com/hex/kagune/control/npc/CourtVoice.java",
+  "old": "case \"touka\" -> new String[] {\"Forget it. We'll go another time. ...We'd better.\"};",
+  "new": "case \"touka\" -> new String[] {\"Another day.\"};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "every date here and now",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "if (spot != null && !CourtTrials.at(player, spot)) {",
+  "new": "if (false) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a date had, not today's",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "NpcMemoryServer.set(player, persona, NpcMemory.DATE_DAY, day(player.m_284548_()));",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "dates where the world has no place",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "fit.removeIf(date -> !CourtTrials.exists(player, com.hex.kagune.control.npc.DateSpot.of(date.id()))); // 4.1.81: only places the world has",
+  "new": "// none filtered",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "she stays put",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "npc.follow(player.m_20148_());",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "every place exists",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "spot == null || spot.place().home == null || GangServer.home(player.m_284548_(), spot.place().home) != null;",
+  "new": "true;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "there at any time",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "spot.when().at(Math.floorMod(player.m_9236_().m_46468_(), 24000L)) && place(player, spot.place());",
+  "new": "place(player, spot.place());",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "high indoors",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "case HIGH -> com.hex.kagune.control.npc.DateSpot.high(player.m_20186_(), top(level, x, z));",
+  "new": "case HIGH -> player.m_20186_() >= 90;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a field indoors",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "case FIELD -> player.m_20186_() >= top(level, x, z) - 0.5 && ",
+  "new": "case FIELD -> ",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "rain anywhere it rains",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "case RAIN -> level.m_46758_(",
+  "new": "case RAIN -> level.m_46471_() || level.m_46758_(",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "water only underfoot",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "for (int dx = -r; dx <= r; dx++) {",
+  "new": "for (int dx = 0; dx <= 0; dx++) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a date waits forever",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "if (now - d.began() > com.hex.kagune.control.npc.DateSpot.WAITS || now < d.began()) {",
+  "new": "if (false) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "she needn't be following",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "boolean along = npc != null && player.m_20148_().equals(npc.following());",
+  "new": "boolean along = npc != null;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "arrived, not had",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "                DATING.remove(player.m_20148_());\n                EtoServer.dated(player, npc);",
+  "new": "                DATING.remove(player.m_20148_());",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "logged out, still on",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "DATING.remove(event.getEntity().m_20148_());",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "never looked at",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "if (d != null && player.f_19797_ % 20 == 0) {",
+  "new": "if (d != null && player.f_19797_ % 20 == 99) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a home from anywhere",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "GangServer.home(level, place.home), com.hex.kagune.control.npc.DateSpot.AT_HOME);",
+  "new": "GangServer.home(level, place.home), 9999.0);",
+  "suite": "CompanionTests"
+ }
+]

@@ -1264,6 +1264,44 @@ public class UiPreview {
         }
     }
 
+    /**
+     * 4.1.81: dates at real places: each companion's dates page (four of their dates, as the server offers them) and their yes to one,
+     * where to take them (CourtVoice.lead, DateSpot's words).
+     */
+    static void datesTalk(File dir) throws Exception {
+        com.hex.kagune.control.npc.NpcTalk.Choice[] says = com.hex.kagune.control.npc.NpcTalk.Choice.SAYS;
+        com.hex.kagune.control.npc.NpcTalk.Choice back = com.hex.kagune.control.npc.NpcTalk.Choice.BACK;
+        String[][] who = {{"eto", "Eto", "Your girlfriend - happy", "eto/eto.png"}, {"touka", "Touka", "Your girlfriend - happy", "touka/touka.png"},
+            {"ken", "Ken", "Your boyfriend - happy", "ken/ken.png"}, {"ayato", "Ayato", "Your boyfriend - bored", "ayato/ayato.png"},
+            {"general", "The General", "Your boyfriend - happy", "general/general.png"}, {"roma", "Roma", "Your girlfriend - giddy", "roma/roma.png"},
+            {"banjou", "Banjou", "Your boyfriend - happy", "banjou/banjou.png"}};
+        for (String[] w : who) {
+            String text = new String(java.nio.file.Files.readAllBytes(new File("src/main/resources/data/hexkagune/talk/" + w[0] + ".txt").toPath()),
+                java.nio.charset.StandardCharsets.UTF_8);
+            java.util.List<com.hex.kagune.control.npc.scene.Scene> dates = new java.util.ArrayList<>();
+            for (com.hex.kagune.control.npc.scene.Scene one : com.hex.kagune.control.npc.scene.SceneBook.parse(w[0], text).scenes()) {
+                if (one.kind() == com.hex.kagune.control.npc.scene.Scene.Kind.DATE) {
+                    dates.add(one);
+                }
+            }
+            java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> choices = new java.util.ArrayList<>();
+            java.util.List<String> labels = new java.util.ArrayList<>();
+            for (int i = 0; i < dates.size() && i < 4; i++) {
+                choices.add(says[i]);
+                labels.add(dates.get(i).prompt());
+            }
+            choices.add(back);
+            labels.add("");
+            etoFrame(new File(dir, "dates-" + w[0] + ".png"), face(w[3]), new com.hex.kagune.control.client.NpcTalkView.Model(w[1], w[2], 92, false,
+                com.hex.kagune.control.npc.Courtship.datesAsked(w[0], 0), choices, labels, -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(92));
+            com.hex.kagune.control.npc.scene.Scene picked = dates.get(Math.min(1, dates.size() - 1));
+            etoFrame(new File(dir, "dates-" + w[0] + "-lead.png"), face(w[3]), new com.hex.kagune.control.client.NpcTalkView.Model(w[1], w[2], 92, false,
+                com.hex.kagune.control.npc.CourtVoice.lead(w[0], com.hex.kagune.control.npc.DateSpot.of(picked.id()), 0),
+                java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.KISS, com.hex.kagune.control.npc.NpcTalk.Choice.HUG, back),
+                java.util.List.of("*Kiss.*", "*Hug.*", ""), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(92));
+        }
+    }
+
     /** 4.1.53: Noro and Roma giving today's job to one of their gang (the option on their first page, the job given, the reputation bar). */
     static void dailiesTalk(File dir) throws Exception {
         java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
@@ -1515,6 +1553,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("romance")) {
             romanceTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("dates")) {
+            datesTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("dailies")) {

@@ -475,6 +475,7 @@ public final class EtoServer {
         com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, c);
         List<com.hex.kagune.control.npc.scene.Scene> fit = new java.util.ArrayList<>(com.hex.kagune.control.npc.scene.SceneBook.fitting(
             SceneServer.book(key), com.hex.kagune.control.npc.scene.Scene.Kind.DATE, sc));
+        fit.removeIf(date -> !CourtTrials.exists(player, com.hex.kagune.control.npc.DateSpot.of(date.id()))); // 4.1.81: only places the world has
         java.util.Collections.shuffle(fit, new java.util.Random(seed));
         List<EtoTalk.Option> out = new java.util.ArrayList<>();
         for (int i = 0; i < fit.size() && i < DATES_OFFERED; i++) {
@@ -499,14 +500,29 @@ public final class EtoServer {
             show(player, npc, c, npc.persona().script().sweet(c, com.hex.kagune.control.npc.Courtship.datedToday(persona, c.seed())), Kind.SWEET);
             return;
         }
-        NpcMemoryServer.set(player, persona, NpcMemory.DATE_DAY, today);
+        // 4.1.81 (the plan: "real dates at real places"): a date with a place is had there: they lead, she follows, its scene plays when
+        // they arrive together (CourtTrials); one where they already are, or with no place, plays now.
+        com.hex.kagune.control.npc.DateSpot.Spot spot = com.hex.kagune.control.npc.DateSpot.of(scene.id());
+        long now = player.m_284548_().m_46467_();
+        if (spot != null && !CourtTrials.at(player, spot)) {
+            CourtTrials.dateOn(player, npc, scene, spot, now);
+            show(player, npc, c, npc.persona().script().sweet(c, com.hex.kagune.control.npc.CourtVoice.lead(persona, spot, c.seed())), Kind.SWEET);
+            return;
+        }
+        dated(player, npc);
+        EtoTalk.Context after = context(player, npc);
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, after);
+        show(player, npc, after, SceneServer.page(scene, scene.first(), sc, null), Kind.SCENE);
+    }
+
+    /** 4.1.81: a date had with {@code npc} (begun now: here, or where they went together): today's, its regard, her delight. */
+    static void dated(ServerPlayer player, EtoNpc npc) {
+        String persona = npc.persona().key();
+        NpcMemoryServer.set(player, persona, NpcMemory.DATE_DAY, day(player.m_284548_()));
         QuestLog.Bond bond = QuestServer.bond(player, persona);
         QuestServer.bond(player, persona, bond.regard(bond.regard() + DATE_REGARD));
         RomanceServer.romanced(player, persona);
         EtoBrain.giddy(npc, player, player.m_284548_().m_46467_());
-        EtoTalk.Context after = context(player, npc);
-        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, after);
-        show(player, npc, after, SceneServer.page(scene, scene.first(), sc, null), Kind.SCENE);
     }
 
     /** Regard a date brings, before anything said on it. */

@@ -45,6 +45,117 @@ public final class CourtTrials {
     private CourtTrials() {
     }
 
+    // ---------------------------------------------------------------- 4.1.81: dates at real places
+
+    /** A date on its way: whose, its scene's key, where and when, since when. */
+    record Dating(String key, String scene, com.hex.kagune.control.npc.DateSpot.Spot spot, long began) {
+    }
+
+    /** Each player's date on its way (not saved: logged out, it is off). */
+    static final Map<UUID, Dating> DATING = new ConcurrentHashMap<>();
+
+    /** {@code npc}'s date {@code scene} begun for {@code player}: had at {@code spot}; she follows them there. */
+    static void dateOn(ServerPlayer player, EtoNpc npc, com.hex.kagune.control.npc.scene.Scene scene, com.hex.kagune.control.npc.DateSpot.Spot spot,
+                       long now) {
+        DATING.put(player.m_20148_(), new Dating(npc.persona().key(), scene.key(), spot, now));
+        npc.follow(player.m_20148_());
+    }
+
+    /** True if the world has {@code spot}'s place (a companion's home known; a kind of place is anywhere); a date with no place, always. */
+    static boolean exists(ServerPlayer player, com.hex.kagune.control.npc.DateSpot.Spot spot) {
+        return spot == null || spot.place().home == null || GangServer.home(player.m_284548_(), spot.place().home) != null;
+    }
+
+    /** True if {@code player} is at {@code spot} now (its place, at its time). */
+    static boolean at(ServerPlayer player, com.hex.kagune.control.npc.DateSpot.Spot spot) {
+        return spot.when().at(Math.floorMod(player.m_9236_().m_46468_(), 24000L)) && place(player, spot.place());
+    }
+
+    /** True if {@code player} is at {@code place}. */
+    static boolean place(ServerPlayer player, com.hex.kagune.control.npc.DateSpot.Place place) {
+        ServerLevel level = player.m_284548_();
+        int x = (int)Math.floor(player.m_20185_());
+        int z = (int)Math.floor(player.m_20189_());
+        return switch (place) {
+            case ROOF -> CourtshipServer.onRoof(player);
+            case HIGH -> com.hex.kagune.control.npc.DateSpot.high(player.m_20186_(), top(level, x, z));
+            case WATER -> water(level, player);
+            case FIELD -> player.m_20186_() >= top(level, x, z) - 0.5 && com.hex.kagune.control.npc.DateSpot.field(block(level,
+                BlockPos.m_274561_(player.m_20185_(), player.m_20186_() - 0.5, player.m_20189_())));
+            case RAIN -> level.m_46758_(BlockPos.m_274561_(player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_()));
+            case VILLAGE -> CourtshipServer.villagers(player);
+            default -> CourtshipServer.near(player, GangServer.home(level, place.home), com.hex.kagune.control.npc.DateSpot.AT_HOME);
+        };
+    }
+
+    /** The first open block over the column at x, z (the world's height map). */
+    static int top(ServerLevel level, int x, int z) {
+        return level.m_6924_(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+    }
+
+    /** The block at {@code at}, by name ("minecraft:grass_block"). */
+    static String block(ServerLevel level, BlockPos at) {
+        return com.hex.kagune.control.family.Chores.id(String.valueOf(level.m_8055_(at).m_60734_()));
+    }
+
+    /** True if water is within DateSpot.WATER_NEAR of {@code player} (round them, from under their feet to their head). */
+    static boolean water(ServerLevel level, ServerPlayer player) {
+        int r = com.hex.kagune.control.npc.DateSpot.WATER_NEAR;
+        int x = (int)Math.floor(player.m_20185_());
+        int y = (int)Math.floor(player.m_20186_());
+        int z = (int)Math.floor(player.m_20189_());
+        for (int dy = -2; dy <= 1; dy++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if ("minecraft:water".equals(block(level, new BlockPos(x + dx, y + dy, z + dz)))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A second of a date on its way: off after DateSpot.WAITS; there with her along (following them, near), its scene brought to them
+     * (she comes up with it) and the date had (EtoServer.dated); else, now and then, where to go in the action bar.
+     */
+    static void dating(ServerPlayer player, Dating d) {
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        Persona persona = Persona.of(d.key());
+        if (now - d.began() > com.hex.kagune.control.npc.DateSpot.WAITS || now < d.began()) {
+            DATING.remove(player.m_20148_());
+            player.m_5661_(Component.m_237113_(persona.colour() + persona.name() + ": §f" + CourtVoice.stood(d.key(), (int)(now & 0xFF))), false);
+            return;
+        }
+        EtoNpc npc = CourtshipServer.nearby(player, d.key(), com.hex.kagune.control.npc.DateSpot.ALONG);
+        boolean along = npc != null && player.m_20148_().equals(npc.following());
+        if (along && at(player, d.spot())) {
+            com.hex.kagune.control.npc.scene.Scene scene = SceneServer.scene(d.scene());
+            if (scene == null) {
+                DATING.remove(player.m_20148_());
+            } else if (SceneServer.approachMoment(npc, player, scene, now)) {
+                DATING.remove(player.m_20148_());
+                EtoServer.dated(player, npc);
+            }
+            return;
+        }
+        if (player.f_19797_ % 60 == 0) {
+            BlockPos home = d.spot().place().home == null ? null : GangServer.home(level, d.spot().place().home);
+            String way = home == null ? "" : ", " + com.hex.kagune.control.npc.JoinTrial.way(home.m_123341_() + 0.5 - player.m_20185_(),
+                home.m_123343_() + 0.5 - player.m_20189_());
+            player.m_5661_(Component.m_237113_(persona.colour() + "❤ A date with " + persona.name() + ": §f" + d.spot().words() + way
+                + (along ? "" : " §7(" + persona.she() + "'s not with you: ask " + persona.her() + " to follow)")), true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void loggedOut(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+        DATING.remove(event.getEntity().m_20148_());
+        PLANTING.remove(event.getEntity().m_20148_());
+    }
+
     @SubscribeEvent
     public static void clicked(PlayerInteractEvent.RightClickBlock event) {
         try {
@@ -133,6 +244,10 @@ public final class CourtTrials {
         try {
             if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) {
                 return;
+            }
+            Dating d = DATING.get(player.m_20148_());
+            if (d != null && player.f_19797_ % 20 == 0) {
+                dating(player, d); // 4.1.81
             }
             Planting p = PLANTING.get(player.m_20148_());
             if (p == null) {

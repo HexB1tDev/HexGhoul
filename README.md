@@ -9,6 +9,14 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.81 (HexGhoul): dates at real places: they follow you there, and the date happens when you arrive together (testing)
+
+See `.github/release-notes-4.1.81.md`. `DateSpot` (every date's `Place` and `When`: the companions' own places by their homes, and kinds of
+place: somewhere high, the water, a field, the rain, a village; `high`, `field`, `WAITS`, `ALONG`); `CourtVoice.lead`/`stood`;
+`CourtTrials` (`dateOn`, `exists`, `at`, `place`, `water`, `dating`: each second, there together, the scene brought to them);
+`EtoServer.date`/`dated` (a date somewhere else led there; the dates page only offers places the world has). `CompanionTests.dates481`,
+29 rules sabotaged (`docs/handoff/sabotage-4.1.81.json`). Render `docs/handoff/dates-4.1.81.png` (`tools/UiPreview.java <dir> dates`).
+
 ## 4.1.80 (HexGhoul): romance, each companion's courtship their own: ten chapters asking for something new (testing)
 
 See `.github/release-notes-4.1.80.md`. `Courtship.Task` (ten new: `SPAR`, `READING`, `ROOF`, `QUINQUE`, `VILLAGE_DAY`, `SHOW`, `ERRAND`, `QUIZ`,
