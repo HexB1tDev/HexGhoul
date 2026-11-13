@@ -138,9 +138,18 @@ public final class Tastes {
     }
 
     /** Names the game's ids don't make well ("writable_book": a book and quill). */
-    private static final Map<String, String> NAMES = Map.of("writable_book", "book and quill", "rabbit_hide", "rabbit hide", "ink_sac", "ink sac",
-        "glow_ink_sac", "glow ink sac", "anteiku_blend", "Anteiku Blend", "mask_eyepatch", "eyepatch mask", "jack_o_lantern", "jack o'lantern",
-        "mangrove_propagule", "mangrove propagule");
+    private static final Map<String, String> NAMES = Map.ofEntries(
+        Map.entry("writable_book", "book and quill"),
+        Map.entry("rabbit_hide", "rabbit hide"),
+        Map.entry("ink_sac", "ink sac"),
+        Map.entry("glow_ink_sac", "glow ink sac"),
+        Map.entry("anteiku_blend", "Anteiku Blend"),
+        Map.entry("mask_eyepatch", "eyepatch mask"),
+        Map.entry("jack_o_lantern", "jack o'lantern"),
+        Map.entry("mangrove_propagule", "mangrove propagule"),
+        Map.entry("rc_tonic", "RC tonic"),
+        Map.entry("rc_broth", "RC broth"),
+        Map.entry("rc_ramen", "RC ramen"));
 
     /** {@code item} as said aloud: "minecraft:writable_book" a "book and quill", "hexkagune:mask_touka" a "Touka mask". */
     public static String name(String item) {
@@ -164,9 +173,18 @@ public final class Tastes {
         return path.replace('_', ' ');
     }
 
-    /** {@code name} with its article: "a clock", "an ink sac" ({@code capital}: "A clock", "An ink sac"). */
+    /**
+     * {@code name} with its article: "a clock", "an ink sac", "an RC tonic" (an initialism said with a vowel), "some bread" (what isn't
+     * counted: bread, meat, flesh, a meal, beef, dye); {@code capital}: "A clock", "An ink sac", "Some bread".
+     */
     public static String an(String name, boolean capital) {
-        boolean vowel = !name.isEmpty() && "aeiouAEIOU".indexOf(name.charAt(0)) >= 0;
+        String first = name.contains(" ") ? name.substring(0, name.indexOf(' ')) : name;
+        if (name.equals("bread") || name.endsWith(" dye") || name.endsWith(" meat") || name.endsWith(" flesh") || name.endsWith(" meal")
+            || name.endsWith(" beef")) {
+            return (capital ? "Some " : "some ") + name;
+        }
+        boolean initials = first.length() >= 2 && first.equals(first.toUpperCase(java.util.Locale.ROOT)) && Character.isLetter(first.charAt(0));
+        boolean vowel = !name.isEmpty() && (initials ? "AEFHILMNORSX" : "aeiouAEIOU").indexOf(name.charAt(0)) >= 0;
         return (capital ? (vowel ? "An " : "A ") : (vowel ? "an " : "a ")) + name;
     }
 
@@ -244,6 +262,69 @@ public final class Tastes {
                 case LIKED -> one(seed, an(it, true) + "? Thank you. I'll find somewhere good for it.", together ? "You always think of me. ...Thank you." : "That's kind of you. Thank you.");
             };
             default -> taste == Taste.HATED ? "No, thank you." : "Thank you.";
+        };
+    }
+
+    /**
+     * 4.1.85 (romance's last step of the plan: "a small daily 'what do you want today?' once together"): what each may wish for on a day,
+     * things they love that can be had (none behind a boss or a deep mine), their wish of the day picked from them by the day. Not Noro's:
+     * no one is ever together with him (Persona: not romanceable).
+     */
+    public static final Map<String, List<String>> WISHES = Map.of(
+        "eto", List.of("hexkagune:anteiku_blend", "minecraft:ink_sac", "minecraft:feather", "minecraft:candle", "minecraft:writable_book"),
+        "touka", List.of("hexkagune:anteiku_blend", "minecraft:rabbit_hide", "minecraft:writable_book", "hexkagune:blood_latte"),
+        "ken", List.of("hexkagune:anteiku_blend", "minecraft:writable_book", "minecraft:lantern", "hexkagune:crimson_tea"),
+        "ayato", List.of("minecraft:black_dye", "minecraft:iron_sword", "hexkagune:rc_tonic"),
+        "general", List.of("minecraft:clock", "minecraft:bread", "minecraft:cooked_beef", "minecraft:writable_book", "minecraft:shield"),
+        "roma", List.of("minecraft:firework_star", "minecraft:slime_ball", "minecraft:jack_o_lantern", "minecraft:purple_dye", "minecraft:pink_dye"),
+        "banjou", List.of("minecraft:bone_meal", "minecraft:oak_sapling", "minecraft:flower_pot", "minecraft:cherry_sapling", "minecraft:poppy"));
+
+    /** 4.1.85: regard a wish granted brings on top of the present's own (a loved one: LOVED_REGARD). */
+    public static final int WISH_REGARD = 4;
+    /** 4.1.85: what the main page asks them, together. */
+    public static final String WISH_ASK = "What do you want today?";
+
+    /** 4.1.85: {@code key}'s wish on game day {@code day} (the same all that day, another most days after), or null for none of theirs. */
+    public static String wish(String key, long day) {
+        List<String> wishes = WISHES.get(key);
+        if (wishes == null || wishes.isEmpty()) {
+            return null;
+        }
+        long mixed = day * 0x9E3779B97F4A7C15L + key.hashCode();
+        return wishes.get((int)Math.floorMod(mixed ^ mixed >>> 29, (long)wishes.size()));
+    }
+
+    /** 4.1.85: what {@code key} says, asked what they want today: {@code item}, in their words. */
+    public static String wishSaid(String key, String item, int seed) {
+        String it = name(item);
+        return switch (key == null ? "" : key) {
+            case "eto" -> one(seed, "What do I want? Mm... " + an(it, false) + ". Bring me one and I'll put you in a chapter. A nice one.",
+                "Today? " + an(it, true) + ". Don't ask why. Writers have their reasons, and most of them are bad.");
+            case "touka" -> one(seed, "...Why are you asking? ...Fine. " + an(it, true) + ". Not that I'll be waiting for it.",
+                "Huh? Nothing. ...Okay, " + an(it, false) + ". Happy now?");
+            case "ken" -> one(seed, "Today? I'd like " + an(it, false) + ", I think. Only if it's no trouble.", an(it, true) + ". ...Sorry. It's silly. You asked.");
+            case "ayato" -> one(seed, "Tch. " + an(it, true) + ". Don't make it weird.", "Why do you care? ...Fine. " + an(it, true) + ". And hurry up.");
+            case "general" -> one(seed, "Today? ...I could use " + an(it, false) + ". That's an observation, not a request.",
+                an(it, true) + ". *He clears his throat.* If you happen to have it on you. On your way. No detours.");
+            case "roma" -> one(seed, "Ooh, wishes! I wish for " + an(it, false) + "! The shiniest you can find! Go, go, go!", an(it, true) + "! Bring me that and I'll do a trick. A good one!");
+            case "banjou" -> one(seed, "Me? Oh... " + an(it, false) + " would be nice. For the garden. If you're passing that way.",
+                "I've been wanting " + an(it, false) + ". Don't go out of your way. ...Unless you want to.");
+            default -> "Nothing, really.";
+        };
+    }
+
+    /** 4.1.85: what {@code key} says when the present is today's wish. */
+    public static String granted(String key, String item, int seed) {
+        String it = name(item);
+        return switch (key == null ? "" : key) {
+            case "eto" -> "*She laughs, delighted, holding the " + it + " up to the light.* You actually listened. Do you know how rare that is?";
+            case "touka" -> "...You actually brought it. *She looks away, going red.* Idiot. ...Thanks.";
+            case "ken" -> "You remembered. *He holds the " + it + " close.* ...Thank you. You don't know what that means to me.";
+            case "ayato" -> "...You remembered. *He tries not to look pleased, and fails.* Whatever. ...Thanks.";
+            case "general" -> "You... remembered. *He clears his throat twice.* That's very thoughtful. Very.";
+            case "roma" -> "My wish came true! Encore! Encore! You're my favourite audience in the WHOLE world!";
+            case "banjou" -> "You brought it! *His big face splits into a smile.* It's going in the garden today. You'll come and see?";
+            default -> "You remembered.";
         };
     }
 

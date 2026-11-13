@@ -154,6 +154,7 @@ public final class CompanionTests {
         bugs482();
         officials483();
         gifts484();
+        wish485();
         proofs();
         oneSpouse();
         jealous();
@@ -2459,6 +2460,11 @@ public final class CompanionTests {
         check(com.hex.kagune.control.npc.Tastes.offer("minecraft:clock").equals("Here. I want you to have this. (the clock in your hand)"), "offered by name");
         check(com.hex.kagune.control.npc.Tastes.an("ink sac", true).equals("An ink sac") && com.hex.kagune.control.npc.Tastes.an("clock", false).equals("a clock")
             && com.hex.kagune.control.npc.Tastes.an("Anteiku Blend", false).equals("an Anteiku Blend"), "a or an by the first letter");
+        check(com.hex.kagune.control.npc.Tastes.an(com.hex.kagune.control.npc.Tastes.name("hexkagune:rc_tonic"), true).equals("An RC tonic")
+            && com.hex.kagune.control.npc.Tastes.an("CCG badge", false).equals("a CCG badge")
+            && com.hex.kagune.control.npc.Tastes.an("bread", true).equals("Some bread") && com.hex.kagune.control.npc.Tastes.an("cooked beef", false).equals("some cooked beef")
+            && com.hex.kagune.control.npc.Tastes.an("black dye", true).equals("Some black dye") && com.hex.kagune.control.npc.Tastes.an("bone meal", false).equals("some bone meal")
+            && com.hex.kagune.control.npc.Tastes.an("rotten flesh", false).equals("some rotten flesh"), "an RC tonic; some of what isn't counted");
         // The server: offered on the gifts page, given once a day, hated pushed back.
         String eto = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
         check(near(eto, "static String present(ServerPlayer player, EtoNpc npc) {", "persona.errandItem(item) || persona.flower(item) || ControlItems.ghoulMeat(held) || EtoRules.letter(item)", 300)
@@ -2474,7 +2480,7 @@ public final class CompanionTests {
             && near(eto, "if (c.giftedToday()) {\n            carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.again(key, c.seed()), 0,", "return;", 200)
             && near(eto, "Tastes.Taste taste = com.hex.kagune.control.npc.Tastes.of(key, item);", "QuestServer.bond(player, key, EtoRules.gifted(", 150)
             && near(eto, "if (taste != com.hex.kagune.control.npc.Tastes.Taste.HATED) {", "player.m_21205_().m_41774_(1);", 80)
-            && near(eto, "player.m_21205_().m_41774_(1);", "com.hex.kagune.control.npc.Tastes.regard(taste), EtoTalk.Effect.NONE, com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);", 400)
+            && near(eto, "player.m_21205_().m_41774_(1);", "com.hex.kagune.control.npc.Tastes.regard(taste) + (wished ? com.hex.kagune.control.npc.Tastes.WISH_REGARD : 0), EtoTalk.Effect.NONE,\n            com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);", 1200)
             && eto.contains("if (key.equals(\"present\")) {\n            present(player, npc, c, choice); // 4.1.84"),
             "once a day (a hated one too), taken unless hated, regard and gesture by taste");
         // Every key used is a real item of the mod's (its model is there) or Minecraft's.
@@ -2486,6 +2492,59 @@ public final class CompanionTests {
                 check(new java.io.File("src/main/resources/assets/hexkagune/models/item/" + id.substring(10) + ".json").exists(), id + " is one of the mod's items");
             }
         }
+    }
+
+    /** 4.1.85, romance (the plan: "a small daily 'what do you want today?' once together"): each day's wish. */
+    static void wish485() {
+        for (com.hex.kagune.control.npc.Persona p : com.hex.kagune.control.npc.Persona.ALL) {
+            java.util.List<String> wishes = com.hex.kagune.control.npc.Tastes.WISHES.get(p.key());
+            if (!p.romanceable()) {
+                check(wishes == null && com.hex.kagune.control.npc.Tastes.wish(p.key(), 5L) == null, p.key() + ": no one is together with them: no wish");
+                continue;
+            }
+            check(wishes != null && wishes.size() >= 3, p.key() + ": three things or more to wish for");
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            int changed = 0;
+            String before = null;
+            for (long day = 0; day < 60; day++) {
+                String wish = com.hex.kagune.control.npc.Tastes.wish(p.key(), day);
+                check(wish != null && wishes.contains(wish) && wish.equals(com.hex.kagune.control.npc.Tastes.wish(p.key(), day)), p.key() + " day " + day + ": one of theirs, all day");
+                seen.add(wish);
+                changed += before != null && !before.equals(wish) ? 1 : 0;
+                before = wish;
+            }
+            check(seen.size() == wishes.size() && changed >= 25, p.key() + ": every wish comes up in two months, a different one most days: " + seen.size() + ", " + changed);
+            for (String wish : wishes) {
+                check(com.hex.kagune.control.npc.Tastes.of(p.key(), wish) == com.hex.kagune.control.npc.Tastes.Taste.LOVED, p.key() + " loves what they wish for: " + wish);
+                check(!wish.endsWith("_") && !wish.contains("netherite") && !wish.contains("diamond"), p.key() + ": a thing that can be had: " + wish);
+                if (wish.startsWith("hexkagune:")) {
+                    check(new java.io.File("src/main/resources/assets/hexkagune/models/item/" + wish.substring(10) + ".json").exists(), wish + " is the mod's");
+                }
+                for (int seed = 0; seed < 4; seed++) {
+                    String said = com.hex.kagune.control.npc.Tastes.wishSaid(p.key(), wish, seed);
+                    check(said.contains(com.hex.kagune.control.npc.Tastes.name(wish)) && !said.contains("\u00a7") && !said.equals("Nothing, really."),
+                        p.key() + ": says what they want, in their words: " + said);
+                }
+                String granted = com.hex.kagune.control.npc.Tastes.granted(p.key(), wish, 0);
+                check(!granted.equals("You remembered.") && !granted.contains("\u00a7"), p.key() + ": a wish granted, in their words: " + granted);
+            }
+        }
+        check(com.hex.kagune.control.npc.Tastes.wish("child:1", 3L) == null && com.hex.kagune.control.npc.Tastes.WISH_REGARD == 4
+            && com.hex.kagune.control.npc.Tastes.WISH_ASK.equals("What do you want today?"), "only the companions wish; a wish granted is worth more");
+        String eto = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+        check(near(eto, "static EtoTalk.Page withWish(", "if (!c.dating() || c.giftedToday() || com.hex.kagune.control.npc.Tastes.wish(key, today) == null || page.options().size() >= S2CNpcTalk.MOST) {", 400)
+            && near(eto, "static EtoTalk.Page withWish(", "main |= choice == NpcTalk.Choice.LEAVE;", 1100)
+            && near(eto, "static EtoTalk.Page withWish(", "for (NpcTalk.Choice slot : NpcTalk.Choice.SAYS) {\n            if (!used.contains(slot)) {", 1700)
+            && eto.contains("            page = withDaily(player, npc, page);\n            page = withWish(player, npc, context, page); // 4.1.85"),
+            "asked only of one they're together with, before today's gift, on a main page, in a free slot, after every other add-on");
+        check(near(eto, "if (key.equals(\"wish\")) {", "NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.WISH_DAY, day(player.m_284548_()));", 500)
+            && near(eto, "if (key.equals(\"wish\")) {", "Tastes.wishSaid(npc.persona().key(), wish, c.seed())", 700), "asked: told, and remembered for the day");
+        check(near(eto, "boolean wished = c.dating() && item.equals(com.hex.kagune.control.npc.Tastes.wish(key, today))", "&& NpcMemoryServer.of(player).get(key, NpcMemory.WISH_DAY, -1L) == today;", 120)
+            && near(eto, "if (wished) {", "NpcMemoryServer.set(player, key, NpcMemory.WISH_DAY, -1L);", 80)
+            && near(eto, "com.hex.kagune.control.npc.Tastes.regard(taste) + (wished ? com.hex.kagune.control.npc.Tastes.WISH_REGARD : 0)", "Kind.MAIN);", 300)
+            && near(eto, "new EtoTalk.Reply(wished ? com.hex.kagune.control.npc.Tastes.granted(key, item, c.seed())", "Tastes.said(key, taste, item, c.seed(), c.dating())", 200),
+            "brought, today's asked-for wish: their words for it, and more regard");
+        check(com.hex.kagune.control.npc.NpcMemory.WISH_DAY.equals("wishday"), "the day asked, kept with them");
     }
 
     /** The yaw (a Rotation list's first float) of the NBT list named Rotation at {@code at} in {@code nbt}. */

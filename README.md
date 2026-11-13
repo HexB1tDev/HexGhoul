@@ -9,6 +9,14 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.85 (HexGhoul): romance: the daily, "What do you want today?" (testing)
+
+See `.github/release-notes-4.1.85.md`. `Tastes.WISHES` (per companion they can be together with: loved things that can be had), `wish(key,
+day)`, `wishSaid`, `granted`, `WISH_REGARD`, `WISH_ASK`; `Tastes.an` takes "an" for an initialism said with a vowel and "some" for what isn't
+counted. `NpcMemory.WISH_DAY`. `EtoServer.withWish` (a main page, together, before today's gift, a free slot, last of the add-ons), the
+"wish" handler, the wish granted in `present`. `CompanionTests.wish485`, 20 rules sabotaged (`docs/handoff/sabotage-4.1.85.json`). Render
+`docs/handoff/wish-4.1.85.png` (`tools/UiPreview.java <dir> wish`).
+
 ## 4.1.84 (HexGhoul): romance: presents each companion loves or hates (testing)
 
 See `.github/release-notes-4.1.84.md`. `npc/Tastes` (pure: `Taste` LOVED/LIKED/HATED, `HUMAN_FOOD` every ghoul hates, `LOVES`/`HATES`

@@ -38,6 +38,8 @@ public final class NpcMemory {
     public static final String DATE_DAY = "dateday";
     /** 4.1.80: the game day of a wrong answer to Touka's homework (tried again the day after). */
     public static final String STUDIED = "studied";
+    /** 4.1.85: the game day they last asked them what they want today (their wish is that day's). */
+    public static final String WISH_DAY = "wishday";
 
     private final Map<String, Map<String, Long>> values = new LinkedHashMap<>();
 

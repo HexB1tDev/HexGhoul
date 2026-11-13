@@ -692,6 +692,16 @@ public final class EtoServer {
             present(player, npc, c, choice); // 4.1.84
             return;
         }
+        if (key.equals("wish")) {
+            // 4.1.85: "what do you want today?": today's wish, in their words; remembered for the day.
+            String wish = com.hex.kagune.control.npc.Tastes.wish(npc.persona().key(), day(player.m_284548_()));
+            if (wish != null) {
+                NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.WISH_DAY, day(player.m_284548_()));
+                carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.wishSaid(npc.persona().key(), wish, c.seed()), 0,
+                    EtoTalk.Effect.NONE), Kind.MAIN);
+            }
+            return;
+        }
         if (key.startsWith("gang")) {
             // 4.1.50: joining their gang (Ayato's Aogiri, Roma's Clowns), or how it stands; a joke told to Roma.
             GangServer.Said said = GangServer.talk(player, npc, npc.persona(), key, c.seed());
@@ -1581,12 +1591,56 @@ public final class EtoServer {
             return;
         }
         com.hex.kagune.control.npc.Tastes.Taste taste = com.hex.kagune.control.npc.Tastes.of(key, item);
-        QuestServer.bond(player, key, EtoRules.gifted(QuestServer.bond(player, key), day(player.m_284548_())));
+        long today = day(player.m_284548_());
+        QuestServer.bond(player, key, EtoRules.gifted(QuestServer.bond(player, key), today));
         if (taste != com.hex.kagune.control.npc.Tastes.Taste.HATED) {
             player.m_21205_().m_41774_(1);
         }
-        carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.said(key, taste, item, c.seed(), c.dating()),
-            com.hex.kagune.control.npc.Tastes.regard(taste), EtoTalk.Effect.NONE, com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);
+        // 4.1.85: today's wish, asked for today and brought: remembered, and more for it.
+        boolean wished = c.dating() && item.equals(com.hex.kagune.control.npc.Tastes.wish(key, today))
+            && NpcMemoryServer.of(player).get(key, NpcMemory.WISH_DAY, -1L) == today;
+        if (wished) {
+            NpcMemoryServer.set(player, key, NpcMemory.WISH_DAY, -1L);
+            EtoBrain.hearts(player.m_284548_(), npc, player, 5);
+        }
+        carry(player, npc, c, choice, new EtoTalk.Reply(wished ? com.hex.kagune.control.npc.Tastes.granted(key, item, c.seed())
+            : com.hex.kagune.control.npc.Tastes.said(key, taste, item, c.seed(), c.dating()),
+            com.hex.kagune.control.npc.Tastes.regard(taste) + (wished ? com.hex.kagune.control.npc.Tastes.WISH_REGARD : 0), EtoTalk.Effect.NONE,
+            com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);
+    }
+
+    /**
+     * 4.1.85 (romance: "a small daily 'what do you want today?' once together"): on the main page of one they are together with (dating or
+     * married), while today's wish isn't granted, "What do you want today?" in a free reply slot, while the page has room.
+     */
+    static EtoTalk.Page withWish(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, EtoTalk.Page page) {
+        String key = npc.persona().key();
+        long today = day(player.m_284548_());
+        if (!c.dating() || c.giftedToday() || com.hex.kagune.control.npc.Tastes.wish(key, today) == null || page.options().size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        java.util.Set<NpcTalk.Choice> used = new java.util.HashSet<>();
+        int at = page.options().size();
+        boolean main = false;
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            used.add(choice);
+            main |= choice == NpcTalk.Choice.LEAVE;
+            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        if (!main) {
+            return page;
+        }
+        for (NpcTalk.Choice slot : NpcTalk.Choice.SAYS) {
+            if (!used.contains(slot)) {
+                List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+                out.add(at, new EtoTalk.Option(slot, com.hex.kagune.control.npc.Tastes.WISH_ASK, "wish"));
+                return new EtoTalk.Page(page.line(), out);
+            }
+        }
+        return page;
     }
 
     private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, EtoTalk.Page page, Kind kind) {
@@ -1608,6 +1662,7 @@ public final class EtoServer {
             page = withLesson(player, npc, page);
             page = withGang(player, npc, page);
             page = withDaily(player, npc, page);
+            page = withWish(player, npc, context, page); // 4.1.85: last, in a slot none of the others takes
         }
         List<EtoTalk.Option> options = page.options().size() > S2CNpcTalk.MOST ? page.options().subList(0, S2CNpcTalk.MOST) : page.options();
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(options), kind));

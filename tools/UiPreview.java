@@ -1335,6 +1335,25 @@ public class UiPreview {
         }
     }
 
+    /** 4.1.85: each companion asked what they want today (their wish of a day), then the wish brought. */
+    static void wishTalk(File dir) throws Exception {
+        com.hex.kagune.control.npc.NpcTalk.Choice leave = com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE;
+        String[][] who = {{"eto", "Eto", "Your girlfriend - happy", "eto/eto.png"}, {"touka", "Touka", "Your girlfriend - happy", "touka/touka.png"},
+            {"ken", "Ken", "Your boyfriend - happy", "ken/ken.png"}, {"ayato", "Ayato", "Your boyfriend - bored", "ayato/ayato.png"},
+            {"general", "The General", "Your husband - happy", "general/general.png"},
+            {"roma", "Roma", "Your girlfriend - giddy", "roma/roma.png"}, {"banjou", "Banjou", "Your boyfriend - happy", "banjou/banjou.png"}};
+        for (String[] w : who) {
+            String wish = com.hex.kagune.control.npc.Tastes.wish(w[0], 7L);
+            etoFrame(new File(dir, "wish-" + w[0] + "-asked.png"), face(w[3]), new com.hex.kagune.control.client.NpcTalkView.Model(w[1], w[2], 80, false,
+                com.hex.kagune.control.npc.Tastes.wishSaid(w[0], wish, 1), java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
+                com.hex.kagune.control.npc.NpcTalk.Choice.SAY_2, leave), java.util.List.of("Talk to me.", com.hex.kagune.control.npc.Tastes.WISH_ASK, ""), -1),
+                com.hex.kagune.control.client.NpcTalkView.Motion.still(80));
+            etoFrame(new File(dir, "wish-" + w[0] + "-granted.png"), face(w[3]), new com.hex.kagune.control.client.NpcTalkView.Model(w[1], w[2], 90, false,
+                com.hex.kagune.control.npc.Tastes.granted(w[0], wish, 0), java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT, leave),
+                java.util.List.of("Talk to me.", ""), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(90));
+        }
+    }
+
     /** 4.1.53: Noro and Roma giving today's job to one of their gang (the option on their first page, the job given, the reputation bar). */
     static void dailiesTalk(File dir) throws Exception {
         java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
@@ -1594,6 +1613,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("gifts")) {
             giftsTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("wish")) {
+            wishTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("dailies")) {
