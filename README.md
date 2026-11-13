@@ -9,6 +9,13 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.78 (HexGhoul): the daily board: three jobs a day to choose from, eight per gang, Ken's dailies for Anteiku, better pay (testing)
+
+See `.github/release-notes-4.1.78.md`. `GangDaily.Kind` (KILL by tags, BRING, WATCH, STREAK), its `Job`s (40; the old 13 at their ordinals),
+`offers`, `take`, `best`, `streak`, `bonus`, `mastery`, `point`; `DailyVoice` (the givers' words); `GangServer.daily` (the board, as a `Said` of
+three choices), `dailyTags`, `dailyKill`, `run`, `watch`, `payDaily`, `can`, `home` (`UniqueNpcs.known`); `QuestServer.payGhoul`, `bare`;
+`QuestLog.grant`; `EtoServer` "daily:take:". `NpcTests.board`. Render `docs/handoff/daily-board-4.1.78.png` (`tools/UiPreview.java <dir> board`).
+
 ## 4.1.77 (HexGhoul): Arima looks at his broken blade, two seconds, then falls (testing)
 
 See `.github/release-notes-4.1.77.md`. `ReaperBladePose.look` (`RAISE`, `LOOK_ARM_*`, `LOOK_WRIST`, `LOOK_SAG`), `snapped` and `gaze` (his head

@@ -587,9 +587,21 @@ public final class EtoServer {
             }
             return;
         }
-        if (key.equals("daily")) {
-            // 4.1.53: today's job from Noro (Aogiri) or Roma (the Clowns): given, how it goes, handed in, paid.
-            show(player, npc, context(player, npc), script.main(context(player, npc), GangServer.daily(player, npc.persona(), c.seed())), Kind.MAIN);
+        if (key.equals("daily") || key.startsWith("daily:")) {
+            // 4.1.53: today's job from Noro (Aogiri) or Roma (the Clowns): given, how it goes, handed in, paid. 4.1.78: with none taken
+            // today, the board: three jobs to choose from (a page of their own, as Roma's jokes), the one chosen taken.
+            GangServer.Said said = GangServer.daily(player, npc.persona(), key, c.seed());
+            if (said.jokes() != null) {
+                List<EtoTalk.Option> board = new java.util.ArrayList<>();
+                NpcTalk.Choice[] slots = {NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3};
+                for (int i = 0; i < said.jokes().size() && i < slots.length; i++) {
+                    board.add(new EtoTalk.Option(slots[i], said.jokes().get(i)[0], said.jokes().get(i)[1]));
+                }
+                board.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+                show(player, npc, c, new EtoTalk.Page(said.line(), board), Kind.SCENE);
+            } else {
+                show(player, npc, context(player, npc), script.main(context(player, npc), said.line()), Kind.MAIN);
+            }
             return;
         }
         if (key.equals("dates")) {

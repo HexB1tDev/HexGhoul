@@ -174,6 +174,11 @@ public final class UniqueNpcs {
         return data(level).all.computeIfAbsent(key, ignored -> new UniqueNpc());
     }
 
+    /** 4.1.78: the NPC {@code key} as the world remembers her, or null if it never has (asking makes nothing: {@link #get} would). */
+    public static UniqueNpc known(ServerLevel level, String key) {
+        return data(level).all.get(key);
+    }
+
     /** What was changed of her is saved with the world. */
     public static void changed(ServerLevel level) {
         data(level).m_77762_();

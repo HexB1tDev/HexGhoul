@@ -208,6 +208,11 @@ public final class QuestLog {
         return this.points;
     }
 
+    /** 4.1.78: mutation points paid outside a quest (a gang's daily), spent as a quest's are. */
+    public void grant(int points) {
+        this.points += Math.max(0, points);
+    }
+
     /** How far the ghoul is on {@code side} (each quest for it adds one). */
     public int side(String side) {
         return this.sides.getOrDefault(side, 0);

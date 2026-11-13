@@ -107,6 +107,38 @@ public final class QuestServer {
         return cached(player).log;
     }
 
+    /**
+     * 4.1.78: mastery and mutation points paid outside a quest (a gang's daily), as {@link #complete} pays a quest's: a Rinkaku's or
+     * Bikaku's points as mastery ({@link Reward#RINKAKU_POINT_MASTERY} each), the rest into the log. A ghoul's only. What was paid, said
+     * ("40 mastery, 1 mutation point"), or empty.
+     */
+    static String payGhoul(ServerPlayer player, int mastery, int points) {
+        if (!KaguneProfile.isUnlocked(player)) {
+            return "";
+        }
+        boolean asMastery = PathServer.path(player) == KagunePath.RINKAKU || PathServer.path(player) == KagunePath.BIKAKU;
+        if (points > 0 && asMastery) {
+            mastery += points * Reward.RINKAKU_POINT_MASTERY;
+        }
+        if (mastery > 0) {
+            KaguneProfile.addMastery(player, mastery);
+            com.hex.kagune.network.KaguneNetwork.broadcast(player);
+        }
+        if (points > 0 && !asMastery) {
+            Cached cached = cached(player);
+            cached.log.grant(points);
+            write(player, cached);
+        }
+        StringBuilder said = new StringBuilder();
+        if (mastery > 0) {
+            said.append(mastery).append(" mastery");
+        }
+        if (points > 0 && !asMastery) {
+            said.append(said.length() > 0 ? ", " : "").append(points).append(" mutation point").append(points == 1 ? "" : "s");
+        }
+        return said.toString();
+    }
+
     private static void write(ServerPlayer player, Cached cached) {
         cached.saved = cached.log.save();
         KaguneProfile.root(player).m_128359_(KEY, cached.saved);
@@ -278,6 +310,24 @@ public final class QuestServer {
         }
         if (GhoulNpcBrain.allyNear(player)) {
             tags.add(Tags.ALLY);
+        }
+        if (!player.m_20096_() && !player.m_20069_()) {
+            tags.add(Tags.AIRBORNE);
+        }
+        if (player.m_21223_() <= player.m_21233_() / 3.0F) {
+            tags.add(Tags.LOW);
+        }
+        return tags;
+    }
+
+    /**
+     * 4.1.78: a human's state as they kill (a gang's daily: the CCG's are often human): the night, in the air, low on health. Nothing of a
+     * ghoul's read ({@link #context}'s PathServer.path would write a path into a human's profile).
+     */
+    static Set<String> bare(ServerPlayer player) {
+        Set<String> tags = new HashSet<>();
+        if (night(player)) {
+            tags.add(Tags.NIGHT);
         }
         if (!player.m_20096_() && !player.m_20069_()) {
             tags.add(Tags.AIRBORNE);

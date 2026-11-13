@@ -496,27 +496,151 @@ public final class NpcTests {
      * the Clowns' leader "gives daily quests as well with clown related rewards, and reputation"; the gangs' traits; "Joining gives the
      * mask").
      */
-    static void dailies() {
-        boolean all = true;
-        for (int gang : new int[] {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS,
-            com.hex.kagune.control.npc.GangPlayer.GAS_MASKS, com.hex.kagune.control.npc.GangPlayer.CCG}) { // 4.1.54: and Banjou's; 4.1.71: the General's
-            java.util.Set<com.hex.kagune.control.npc.GangDaily.Job> seen = new java.util.HashSet<>();
-            for (long day = 0; day < 200; day++) {
-                for (long seed = 0; seed < 5; seed++) {
-                    com.hex.kagune.control.npc.GangDaily d = com.hex.kagune.control.npc.GangDaily.give(gang, day, seed);
-                    com.hex.kagune.control.npc.GangDaily.Job job = d.job();
-                    seen.add(job);
-                    all &= job.gang == gang && d.goal() >= job.least && d.goal() <= job.most && d.count() == 0 && d.day() == day && !d.claimed()
-                        && d.today(day) && !d.today(day + 1) && !d.done() && d.equals(com.hex.kagune.control.npc.GangDaily.give(gang, day, seed));
-                    java.util.List<com.hex.kagune.control.npc.GangDaily.Pay> pay = d.pay(seed);
-                    all &= pay.size() == 2 && !pay.get(0).item().equals(pay.get(1).item()) && pay.get(0).count() > 0 && pay.get(1).count() > 0
-                        && !pay.get(0).text().isBlank();
+    /**
+     * 4.1.78 (the owner's to-do: "better the quests, to include everything in the mod + minecraft, daily and romance quest betterment, so
+     * it's more fun, less boring"): the daily board. Every giver (Noro, Roma, Banjou, the General, and now Ken for Anteiku) has eight jobs
+     * of at least three kinds; three are offered a day (the same all day, others the next), the ones the player can do (a ghoul's eyes, a
+     * place the world knows); one is taken. Kills count by their tags; a show by its best run; a watch by its seconds; things by the hand.
+     */
+    static void board() {
+        int[] gangs = {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS, com.hex.kagune.control.npc.GangPlayer.GAS_MASKS, com.hex.kagune.control.npc.GangPlayer.ANTEIKU, com.hex.kagune.control.npc.GangPlayer.CCG};
+        for (int gang : gangs) {
+            java.util.List<com.hex.kagune.control.npc.GangDaily.Job> jobs = com.hex.kagune.control.npc.GangDaily.Job.of(gang);
+            java.util.Set<com.hex.kagune.control.npc.GangDaily.Kind> kinds = java.util.EnumSet.noneOf(com.hex.kagune.control.npc.GangDaily.Kind.class);
+            for (com.hex.kagune.control.npc.GangDaily.Job job : jobs) {
+                kinds.add(job.kind);
+                check(job.gang == gang && job.least >= 1 && job.most >= job.least && !job.text(job.least).contains("%")
+                    && !job.text(job.least).isBlank() && job.text(1).equals(job.text(1).replace("1 cakes", "")), "job " + job + ": its words and range");
+                switch (job.kind) {
+                    case KILL -> check(!job.all.isEmpty() && job.items.isEmpty() && job.place == null, "job " + job + ": a kill asks for something");
+                    case BRING -> {
+                        check(!job.items.isEmpty() && job.brought && job.all.isEmpty(), "job " + job + ": things brought");
+                        for (String item : job.items) {
+                            check(item.matches("(minecraft|hexkagune):[a-z_]+"), "job " + job + ": a real item id: " + item);
+                        }
+                    }
+                    case WATCH -> check(job.place != null && java.util.Set.of("general", "banjou", "ken", "ayato", "roma", "noro", "eto").contains(job.place)
+                        && job.least >= 30, "job " + job + ": a night's watch at an official NPC's place");
+                    case STREAK -> check(job.least >= 3, "job " + job + ": a run worth calling a show");
                 }
             }
-            all &= seen.equals(new java.util.HashSet<>(com.hex.kagune.control.npc.GangDaily.Job.of(gang))) && seen.size() == 3;
+            check(jobs.size() >= 8 && kinds.size() >= 3, "giver of gang " + gang + ": eight jobs or more, of three kinds or more (" + jobs.size() + ", " + kinds + ")");
+            java.util.Set<com.hex.kagune.control.npc.GangDaily.Job> seen = new java.util.HashSet<>();
+            boolean daily = true;
+            for (long day = 0; day < 120; day++) {
+                for (long seed = 0; seed < 4; seed++) {
+                    java.util.List<com.hex.kagune.control.npc.GangDaily.Job> offered = com.hex.kagune.control.npc.GangDaily.offers(gang, day, seed, job -> true);
+                    seen.addAll(offered);
+                    daily &= offered.size() == 3 && new java.util.HashSet<>(offered).size() == 3
+                        && offered.equals(com.hex.kagune.control.npc.GangDaily.offers(gang, day, seed, job -> true)) && jobs.containsAll(offered);
+                    for (com.hex.kagune.control.npc.GangDaily.Job job : offered) {
+                        com.hex.kagune.control.npc.GangDaily taken = com.hex.kagune.control.npc.GangDaily.take(job, day, seed);
+                        daily &= (job.kind != com.hex.kagune.control.npc.GangDaily.Kind.WATCH || taken.goal() % 10 == 0)
+                            && !job.text(taken.goal()).matches(".*\\b1 [a-z].*") // "a quinque case", never "1 quinque case"
+                            && taken.job() == job && taken.goal() >= job.least && taken.goal() <= job.most && taken.count() == 0 && taken.today(day)
+                            && !taken.today(day + 1) && !taken.done() && !taken.claimed() && taken.equals(com.hex.kagune.control.npc.GangDaily.take(job, day, seed));
+                        java.util.List<com.hex.kagune.control.npc.GangDaily.Pay> pay = taken.pay(seed);
+                        daily &= pay.size() == 2 && !pay.get(0).item().equals(pay.get(1).item()) && pay.get(0).count() > 0 && !pay.get(0).text().contains("_");
+                    }
+                }
+            }
+            check(com.hex.kagune.control.npc.GangDaily.OFFERED == 3, "the owner's pick 1 of 3: three on the board");
+            check(daily, "gang " + gang + ": three different jobs offered, the same all day; taken, a goal in range; two things paid, named plainly");
+            check(seen.containsAll(jobs), "gang " + gang + ": every job comes up on the board");
+            boolean changes = false;
+            for (long day = 1; day < 20; day++) {
+                changes |= !com.hex.kagune.control.npc.GangDaily.offers(gang, day, 7L, job -> true).equals(com.hex.kagune.control.npc.GangDaily.offers(gang, day - 1, 7L, job -> true));
+            }
+            check(changes, "gang " + gang + ": a new board other days");
+            // Only what the player can do: no watch where the world has no place, nothing for a ghoul's eyes for a human.
+            for (long day = 0; day < 40; day++) {
+                for (com.hex.kagune.control.npc.GangDaily.Job job : com.hex.kagune.control.npc.GangDaily.offers(gang, day, 3L, j -> j.kind != com.hex.kagune.control.npc.GangDaily.Kind.WATCH && !j.ghoulOnly())) {
+                    check(job.kind != com.hex.kagune.control.npc.GangDaily.Kind.WATCH && !job.ghoulOnly(), "gang " + gang + " day " + day + ": only jobs they can do offered");
+                }
+            }
         }
-        check(all, "one daily a game day from the gang's giver, the same all day, a new one each; each job's goal in its range; two rewards; "
-            + "every job comes up");
+        check(com.hex.kagune.control.npc.GangDaily.Job.ANTEIKU_BLEND.gang == com.hex.kagune.control.npc.GangPlayer.ANTEIKU && com.hex.kagune.control.npc.GangDaily.Job.of(com.hex.kagune.control.npc.GangPlayer.ANTEIKU).size() >= 8, "Ken has Anteiku's dailies (it had none)");
+        // The jobs kept from before keep their places (saved by ordinal): new ones only after them.
+        check(com.hex.kagune.control.npc.GangDaily.Job.CCG_PAPER.ordinal() == 12 && com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_CCG.ordinal() == 1 && com.hex.kagune.control.npc.GangDaily.Job.GAS_CHARCOAL.ordinal() == 9
+            && com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_NIGHT_RAID.ordinal() == 13, "the jobs from before keep their saved places");
+        // Kills by their tags: the old jobs' meaning kept, the new ones' conditions.
+        check(com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_CCG.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.CCG_TAG)) && !com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_CCG.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.GAS_TAG))
+            && com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_GAS.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.GAS_TAG, "night")) && com.hex.kagune.control.npc.GangDaily.Job.GAS_CLOWNS.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.CLOWN_TAG))
+            && com.hex.kagune.control.npc.GangDaily.Job.CCG_GHOULS.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.GHOUL_TAG)) && com.hex.kagune.control.npc.GangDaily.Job.CCG_GANGS.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.GHOUL_TAG, com.hex.kagune.control.npc.GangDaily.GANGED_TAG))
+            && !com.hex.kagune.control.npc.GangDaily.Job.CCG_GANGS.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.GHOUL_TAG)) && com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_RIVALS.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.RIVAL_TAG)),
+            "the jobs from before count what they always did");
+        check(com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_NIGHT_RAID.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.CCG_TAG, "night")) && !com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_NIGHT_RAID.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.CCG_TAG))
+            && com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_EYES.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.CCG_TAG, "eyes")) && !com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_EYES.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.CCG_TAG, "kagune"))
+            && com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_EYES.ghoulOnly() && com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_ACROBAT.counts(java.util.Set.of("airborne", "mob:minecraft:zombie"))
+            && !com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_ACROBAT.counts(java.util.Set.of("mob:minecraft:zombie")) && com.hex.kagune.control.npc.GangDaily.Job.ANTEIKU_FERAL.counts(java.util.Set.of("temper:feral"))
+            && !com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_SCOUT.counts(java.util.Set.of(com.hex.kagune.control.npc.GangDaily.CCG_TAG)) && !com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_SHOW.counts(java.util.Set.of("hostile")),
+            "kills count by what they carry: at night, eyes alone, in mid-air, a feral ghoul; a watch or a show counts no kill");
+        com.hex.kagune.control.npc.GangDaily show = com.hex.kagune.control.npc.GangDaily.take(com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_SHOW, 3L, 9L);
+        check(show.best(2).count() == 2 && show.best(2).best(1).count() == 2 && show.best(99).done() && show.best(99).count() == show.goal(),
+            "a show counts its best run, never less, up to its goal");
+        com.hex.kagune.control.npc.GangDaily watch = com.hex.kagune.control.npc.GangDaily.take(com.hex.kagune.control.npc.GangDaily.Job.ANTEIKU_WATCH, 3L, 9L);
+        com.hex.kagune.control.npc.GangDaily seconds = watch;
+        for (int i = 0; i < watch.goal(); i++) {
+            seconds = seconds.counted();
+        }
+        check(!watch.counted().done() && seconds.done() && seconds.counted().count() == watch.goal(), "a watch counts its seconds to its goal");
+        com.hex.kagune.control.npc.GangDaily cake = com.hex.kagune.control.npc.GangDaily.take(com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_CAKE, 3L, 9L);
+        check(!cake.brought(cake.goal() - 1).done() && cake.brought(cake.goal()).done() && com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_CAKE.text(1).equals("Bring Roma a cake") && com.hex.kagune.control.npc.GangDaily.Job.ANTEIKU_FERAL.text(1).equals("Stop a feral ghoul")
+            && com.hex.kagune.control.npc.GangDaily.Job.CLOWNS_CAKE.text(2).equals("Bring Roma 2 cakes") && com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_CASE.items.size() == 10,
+            "things brought: enough of them, in hand; one or many named right; any quinque case for Noro");
+        // Streaks: days in a row; every third a little more, every seventh a mutation point.
+        check(com.hex.kagune.control.npc.GangDaily.streak(4, 9L, 10L) == 5 && com.hex.kagune.control.npc.GangDaily.streak(4, 10L, 10L) == 4 && com.hex.kagune.control.npc.GangDaily.streak(4, 7L, 10L) == 1 && com.hex.kagune.control.npc.GangDaily.streak(0, Long.MIN_VALUE / 2, 10L) == 1
+            && com.hex.kagune.control.npc.GangDaily.bonus(3) == com.hex.kagune.control.npc.GangDaily.EXTRA && com.hex.kagune.control.npc.GangDaily.bonus(6) == com.hex.kagune.control.npc.GangDaily.EXTRA && com.hex.kagune.control.npc.GangDaily.bonus(7) == com.hex.kagune.control.npc.GangDaily.POINT && com.hex.kagune.control.npc.GangDaily.bonus(14) == com.hex.kagune.control.npc.GangDaily.POINT
+            && com.hex.kagune.control.npc.GangDaily.bonus(1) == 0 && com.hex.kagune.control.npc.GangDaily.bonus(2) == 0 && com.hex.kagune.control.npc.GangDaily.bonus(0) == 0, "days in a row: each third a little more, each seventh a mutation point");
+        int points = 0;
+        for (long seed = 0; seed < 4000; seed++) {
+            points += com.hex.kagune.control.npc.GangDaily.take(com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_CCG, seed, seed).point(seed) ? 1 : 0;
+        }
+        check(points > 100 && points < 320 && com.hex.kagune.control.npc.GangDaily.take(com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_SCOUT, 1L, 1L).mastery() > com.hex.kagune.control.npc.GangDaily.take(com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_PEARLS, 1L, 1L).mastery(),
+            "now and then a mutation point (about one in twenty); a night's watch pays more mastery than an errand (" + points + ")");
+        java.util.Set<String> anteiku = new java.util.HashSet<>();
+        for (long seed = 0; seed < 400; seed++) {
+            for (com.hex.kagune.control.npc.GangDaily.Pay pay : com.hex.kagune.control.npc.GangDaily.take(com.hex.kagune.control.npc.GangDaily.Job.ANTEIKU_BLEND, seed, seed).pay(seed)) {
+                anteiku.add(pay.item());
+            }
+        }
+        check(anteiku.containsAll(java.util.List.of("hexkagune:anteiku_blend", com.hex.kagune.control.npc.GangDaily.GHOUL_MEAT, "hexkagune:blood_latte")), "Ken pays in the café's things");
+        // The server: the board in the talk, every giver's voice, kills as tags, a show's run, a night's watch, the pay.
+        String server = read("src/main/java/com/hex/kagune/control/server/GangServer.java");
+        String eto = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+        String quests = read("src/main/java/com/hex/kagune/control/server/QuestServer.java");
+        check(server.contains(": persona == Persona.KEN ? GangPlayer.ANTEIKU : GangPlayer.NONE;") && server.contains("\"Anything I can do for the café today?\""),
+            "Ken gives Anteiku's dailies");
+        check(eto.contains("if (key.equals(\"daily\") || key.startsWith(\"daily:\")) {") && eto.contains("board.add(new EtoTalk.Option(slots[i], said.jokes().get(i)[0], said.jokes().get(i)[1]));"),
+            "the board on a page of its own: three jobs to choose from");
+        check(server.contains("List<GangDaily.Job> offered = GangDaily.offers(gang, today, mine, job -> can(player, job));")
+            && server.contains("if (job != null && offered.contains(job)) {") && server.contains("board.add(new String[] {job.text(GangDaily.take(job, today, mine).goal()), \"daily:take:\" + job.ordinal()});"),
+            "only what is offered today, and the player can do, can be taken");
+        check(server.contains("if (job.ghoulOnly() && !com.hex.kagune.data.KaguneProfile.isUnlocked(player)) {")
+            && server.contains("return job.kind != GangDaily.Kind.WATCH || home(player.m_284548_(), job.place) != null;")
+            && server.contains("UniqueNpcs.known(level, key);"), "a human is never offered a ghoul's job; a watch only where the world has the place (asking makes no NPC)");
+        check(server.contains("tags.addAll(QuestServer.victim(dead));") && server.contains("com.hex.kagune.data.KaguneProfile.isUnlocked(player) ? QuestServer.context(player)\n                    : QuestServer.bare(player));")
+            && !quests.substring(quests.indexOf("static Set<String> bare(ServerPlayer player) {"), quests.indexOf("static boolean night(ServerPlayer player) {")).contains("PathServer")
+            && server.contains("dailyKill(player, tags, run(player, player.m_9236_().m_46467_()));"), "a kill's tags from the quest log's own, and the gangs'");
+        check(server.contains("watch(player); // 4.1.78") && server.contains("if (!QuestServer.night(player)) {") && server.contains("> WATCH_REACH * WATCH_REACH"),
+            "a watch counts each second near the place, at night only");
+        check(server.contains("String ghoul = QuestServer.payGhoul(player, d.mastery(), d.point(mine) || bonus == GangDaily.POINT ? 1 : 0);")
+            && quests.contains("cached.log.grant(points);") && quests.contains("mastery += points * Reward.RINKAKU_POINT_MASTERY;"),
+            "a ghoul paid mastery and now and then a mutation point (a Rinkaku's or Bikaku's as mastery, as a quest's)");
+        for (int gang : gangs) {
+            for (String moment : new String[] {"board", "took", "going", "short", "paid", "rested", "nothing", "outsider"}) {
+                for (int seed = 0; seed < 3; seed++) {
+                    String line = com.hex.kagune.control.npc.DailyVoice.voice(gang, moment, seed, "kill 4 investigators",
+                        com.hex.kagune.control.npc.GangDaily.take(com.hex.kagune.control.npc.GangDaily.Job.of(gang).get(0), 1L, 1L));
+                    check(line != null && !line.isBlank() && !line.contains("null"), "gang " + gang + " " + moment + ": said in their voice: " + line);
+                }
+            }
+        }
+    }
+
+    static void dailies() {
+        board();
+
         com.hex.kagune.control.npc.GangDaily d = new com.hex.kagune.control.npc.GangDaily(com.hex.kagune.control.npc.GangDaily.Job.AOGIRI_CCG.ordinal(), 3, 0, 4L, false);
         com.hex.kagune.control.npc.GangDaily three = d.counted().counted().counted();
         check(three.done() && three.count() == 3 && three.counted().count() == 3 && !three.claimed() && three.paid().claimed()
@@ -554,14 +678,14 @@ public final class NpcTests {
         String eto = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
         String layers = read("src/main/java/com/hex/kagune/control/client/render/PlayerLayers.java");
         check(server.contains("persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS")
-            && eto.contains("page = withDaily(player, npc, page);") && eto.contains("GangServer.daily(player, npc.persona(), c.seed())")
+            && eto.contains("page = withDaily(player, npc, page);") && eto.contains("GangServer.daily(player, npc.persona(), key, c.seed())")
             && server.contains("reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);"),
             "Noro gives Aogiri's, Roma the Clowns', from their first page; done, it pays its items and reputation");
         // 4.1.54 (the owner, the Gas Masks' "Gang Bonuses": "While wearing the gas Mask, gain night vision. / Gain speed 2 when at low HP.").
         check(server.contains(": persona == Persona.BANJOU\n            ? GangPlayer.GAS_MASKS") && server.contains("MobEffects.f_19611_, MASK_SIGHT_TICKS, 0")
             && server.contains("item.piece().id().startsWith(\"mask_gas\")") && server.contains("MobEffects.f_19596_, 40, 1")
             && com.hex.kagune.control.server.GangServer.GAS_SPEED_AT <= 0.35F && server.contains("gasTraits(player, g); // 4.1.54")
-            && server.contains("case GAS_CLOWNS -> clown;") && server.contains(": gang == GangPlayer.GAS_MASKS ? GangDaily.GAS_MASK // 4.1.54"),
+            && server.contains("tags.add(GangDaily.CLOWN_TAG);") && server.contains(": gang == GangPlayer.GAS_MASKS ? GangDaily.GAS_MASK // 4.1.54"),
             "the Gas Masks: Banjou's dailies; night vision while their gas mask is worn (taken back when it comes off), Speed II at low health; "
                 + "joining gives the gas mask");
         check(brain.contains("who.gang() == 0 && !who.aogiri() && GangServer.of(player).member(com.hex.kagune.control.npc.GangPlayer.AOGIRI)")
@@ -813,8 +937,8 @@ public final class NpcTests {
             String server = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java"));
             String agents = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
             String brain = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java"));
-            check(server.contains("|| persona == Persona.GENERAL;") && server.contains("persona == Persona.GENERAL ? GangPlayer.CCG : GangPlayer.NONE;")
-                && server.contains(": persona == Persona.GENERAL ? GangPlayer.CCG : GangPlayer.NONE; // 4.1.71"), "the General leads the CCG and gives its dailies");
+            check(server.contains("|| persona == Persona.GENERAL;") && server.contains(": persona == Persona.GENERAL ? GangPlayer.CCG // 4.1.71"),
+                "the General leads the CCG and gives its dailies");
             int general = server.indexOf("static Said general(ServerPlayer player");
             check(general > 0 && server.indexOf("set(player, g.sworn());", general) > 0 && server.indexOf("if (!g.ccgDone()) {", general) > 0
                 && server.indexOf("set(player, g.join(gang));", general) > server.indexOf("if (!g.ccgDone()) {", general), "the General's chain in order: why, five ghouls, sworn in");

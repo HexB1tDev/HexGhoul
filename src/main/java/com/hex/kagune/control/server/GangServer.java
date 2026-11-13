@@ -228,16 +228,15 @@ public final class GangServer {
                     by = -GangStanding.KILL_OWN;
                 }
             }
-            // 4.1.53: today's daily quest's kills.
+            // 4.1.53: today's daily quest's kills. 4.1.78: as tags (the quest log's: the victim's, the player's as they killed; and who
+            // the victim was to the gangs), so a job asks for any of them ("investigators at night", "with only your eyes", "in mid-air").
             if (was.gang() != GangPlayer.NONE) {
                 NpcIdentity who = dead instanceof GhoulNpc ghoul ? ghoul.identity() : null;
-                boolean ccg = AgentBrain.ccg(dead) || who != null && who.ccg();
-                boolean gas = who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS;
-                boolean clown = who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.CLOWNS;
-                boolean rival = who != null && !ccg && (who.aogiri() || who.gang() != 0) && !was.member(GangPlayer.of(who));
-                boolean ghoul = who != null && !who.ccg(); // 4.1.71: the General's jobs
-                boolean ganged = ghoul && (who.aogiri() || who.gang() != 0);
-                dailyKill(player, ccg, rival, gas, clown, ghoul, ganged);
+                java.util.Set<String> tags = new java.util.HashSet<>(com.hex.kagune.data.KaguneProfile.isUnlocked(player) ? QuestServer.context(player)
+                    : QuestServer.bare(player)); // a human's: nothing of a ghoul's read (or written)
+                tags.addAll(QuestServer.victim(dead));
+                tags.addAll(dailyTags(was, who, AgentBrain.ccg(dead)));
+                dailyKill(player, tags, run(player, player.m_9236_().m_46467_()));
             }
             if (now.equals(was)) {
                 if (by != 0) {
@@ -412,6 +411,7 @@ public final class GangServer {
             }
             long now = player.m_9236_().m_46467_();
             nag(player, g, now); // 4.1.67
+            watch(player); // 4.1.78: a night's watch for a daily
             vanish(player, now); // 4.1.53
             gasTraits(player, g); // 4.1.54
             if (kept(player).m_128451_(MASK) != g.gang()) {
@@ -450,13 +450,20 @@ public final class GangServer {
         }
     }
 
-    // ---------------------------------------------------------------- 4.1.53: daily quests
+    // ---------------------------------------------------------------- 4.1.53: daily quests (4.1.78: the board)
 
     private static final String DAILY_KIND = "HexDailyKind";
     private static final String DAILY_GOAL = "HexDailyGoal";
     private static final String DAILY_COUNT = "HexDailyCount";
     private static final String DAILY_DAY = "HexDailyDay";
     private static final String DAILY_PAID = "HexDailyPaid";
+    /** 4.1.78: days in a row with a daily done, and the last such day. */
+    private static final String DAILY_STREAK = "HexDailyStreak";
+    private static final String DAILY_LAST = "HexDailyLast";
+    /** 4.1.78: within this (blocks) of a place's official NPC's home, a night's watch counts. */
+    public static final double WATCH_REACH = 40.0;
+    /** 4.1.78: each player's run of kills: {the tick of the last, how many in a row} (a Clown's show). */
+    private static final Map<UUID, long[]> RUNS = new java.util.concurrent.ConcurrentHashMap<>();
 
     /** {@code player}'s daily quest as kept. */
     public static GangDaily daily(ServerPlayer player) {
@@ -476,11 +483,26 @@ public final class GangServer {
         k.m_128379_(DAILY_PAID, d.claimed());
     }
 
-    /** 4.1.53: the gang whose daily quests {@code persona} gives (the owner: Noro for Aogiri; Roma, the Clowns' leader), or none. */
+    /**
+     * 4.1.53: the gang whose daily quests {@code persona} gives (the owner: Noro for Aogiri; Roma, the Clowns' leader), or none. 4.1.78:
+     * Ken Anteiku's (it had none).
+     */
     static int gives(Persona persona) {
         return persona == Persona.NORO ? GangPlayer.AOGIRI : persona == Persona.ROMA ? GangPlayer.CLOWNS : persona == Persona.BANJOU
             ? GangPlayer.GAS_MASKS // 4.1.54: Banjou the Gas Masks' (the owner: "Daily quest giver")
-            : persona == Persona.GENERAL ? GangPlayer.CCG : GangPlayer.NONE; // 4.1.71: the General the CCG's ("and now daily quests as well")
+            : persona == Persona.GENERAL ? GangPlayer.CCG // 4.1.71: the General the CCG's ("and now daily quests as well")
+            : persona == Persona.KEN ? GangPlayer.ANTEIKU : GangPlayer.NONE;
+    }
+
+    /** 4.1.78: who gives {@code gang}'s dailies, by name. */
+    static String giver(int gang) {
+        return switch (gang) {
+            case GangPlayer.AOGIRI -> "Noro";
+            case GangPlayer.GAS_MASKS -> "Banjou";
+            case GangPlayer.CCG -> "the General";
+            case GangPlayer.ANTEIKU -> "Ken";
+            default -> "Roma";
+        };
     }
 
     /** What asking {@code persona} for today's job is called (one of their gang only), or null. */
@@ -494,133 +516,124 @@ public final class GangServer {
             return d.done() || d.job().brought ? "About today's job..." : "Today's job: how far?";
         }
         return gang == GangPlayer.AOGIRI ? "Any work for me today?" : gang == GangPlayer.GAS_MASKS ? "Anything the boys need today?"
-            : gang == GangPlayer.CCG ? "Orders for today, General?" : "Got a job for me, boss?";
+            : gang == GangPlayer.CCG ? "Orders for today, General?" : gang == GangPlayer.ANTEIKU ? "Anything I can do for the café today?"
+            : "Got a job for me, boss?";
     }
 
-    /** One of today's kills counted for {@code player}'s daily quest (an investigator, one of another gang, a Gas Mask, a Clown). */
-    static void dailyKill(ServerPlayer player, boolean ccg, boolean rival, boolean gas, boolean clown, boolean ghoul, boolean ganged) {
+    /** 4.1.78: true if {@code player} can do {@code job} now: a ghoul for the eyes alone; a watch where the world knows the place. */
+    static boolean can(ServerPlayer player, GangDaily.Job job) {
+        if (job.ghoulOnly() && !com.hex.kagune.data.KaguneProfile.isUnlocked(player)) {
+            return false;
+        }
+        return job.kind != GangDaily.Kind.WATCH || home(player.m_284548_(), job.place) != null;
+    }
+
+    /** 4.1.78: the home of the official NPC {@code key} (the heart of her place), or null if the world has none for her yet. */
+    static net.minecraft.core.BlockPos home(net.minecraft.server.level.ServerLevel level, String key) {
+        com.hex.kagune.control.npc.UniqueNpc npc = UniqueNpcs.known(level, key);
+        return npc == null || !npc.homed ? null : new net.minecraft.core.BlockPos(npc.homeX, npc.homeY, npc.homeZ);
+    }
+
+    /**
+     * 4.1.78: a kill counted for {@code player}'s daily ({@code tags}: the victim's, theirs as they killed, the gangs': GangDaily.CCG_TAG
+     * ...; {@code run}: their kills in a row): a KILL job's if it carries what it asks, a STREAK job's best run.
+     */
+    static void dailyKill(ServerPlayer player, java.util.Set<String> tags, int run) {
         GangDaily d = daily(player);
-        if (!d.today(today(player)) || d.claimed() || d.done() || d.job().brought) {
+        if (!d.today(today(player)) || d.claimed() || d.done()) {
             return;
         }
         GangDaily.Job job = d.job();
-        boolean counts = switch (job) {
-            case AOGIRI_CCG, CLOWNS_CCG, GAS_CCG -> ccg;
-            case AOGIRI_RIVALS -> rival;
-            case CLOWNS_GAS -> gas;
-            case GAS_CLOWNS -> clown;
-            case CCG_GHOULS -> ghoul; // 4.1.71: the General's
-            case CCG_GANGS -> ganged;
-            default -> false;
-        };
-        if (!counts) {
+        GangDaily after = job.kind == GangDaily.Kind.STREAK ? d.best(run) : job.counts(tags) ? d.counted() : d;
+        if (after.equals(d)) {
+            return;
+        }
+        daily(player, after);
+        progress(player, after);
+    }
+
+    /** 4.1.78: the daily's progress in the action bar ("Daily: Kill 4 investigators (2/4)"; done: who to go back to). */
+    private static void progress(ServerPlayer player, GangDaily d) {
+        GangDaily.Job job = d.job();
+        player.m_5661_(Component.m_237113_(colour(job.gang) + "Daily: §f" + job.text(d.goal()) + " §7(" + d.count() + "/" + d.goal() + ")"
+            + (d.done() ? " §a- done, go back to " + giver(job.gang) : "")), true);
+    }
+
+    /** 4.1.78: {@code player}'s run of kills in a row, counting this one at {@code now} (each within QuestLog.RAMPAGE_TICKS of the last). */
+    static int run(ServerPlayer player, long now) {
+        long[] r = RUNS.computeIfAbsent(player.m_20148_(), id -> new long[] {Long.MIN_VALUE / 2, 0L});
+        r[1] = now - r[0] <= com.hex.kagune.control.quest.QuestLog.RAMPAGE_TICKS ? r[1] + 1 : 1;
+        r[0] = now;
+        return (int)r[1];
+    }
+
+    /** 4.1.78: a second of a night's watch (every second, a member's): counted near the place, at night, till it is done. */
+    static void watch(ServerPlayer player) {
+        GangDaily d = daily(player);
+        if (!d.today(today(player)) || d.claimed() || d.done() || d.job().kind != GangDaily.Kind.WATCH) {
+            return;
+        }
+        net.minecraft.core.BlockPos home = home(player.m_284548_(), d.job().place);
+        if (home == null || player.m_20238_(new net.minecraft.world.phys.Vec3(home.m_123341_() + 0.5, home.m_123342_(), home.m_123343_() + 0.5)) > WATCH_REACH * WATCH_REACH) {
+            return;
+        }
+        if (!QuestServer.night(player)) {
+            player.m_5661_(Component.m_237113_(colour(d.job().gang) + "Daily: §7come back at night"), true);
             return;
         }
         GangDaily after = d.counted();
         daily(player, after);
-        String giver = job.gang == GangPlayer.AOGIRI ? "Noro" : job.gang == GangPlayer.GAS_MASKS ? "Banjou" : job.gang == GangPlayer.CCG ? "the General"
-            : "Roma";
-        player.m_5661_(Component.m_237113_(colour(job.gang) + "Daily: §f" + job.text(after.goal()) + " §7(" + after.count() + "/" + after.goal() + ")"
-            + (after.done() ? " §a- done, go back to " + giver : "")), true);
+        progress(player, after);
     }
 
     /**
-     * Asking {@code persona} for today's job: one given if there is none today (one a day), how it goes, the things it asks for handed
-     * over from the hand, or, done, paid (its items and {@link com.hex.kagune.control.npc.GangStanding#DAILY} reputation).
+     * 4.1.53: asking {@code persona} about today's job. 4.1.78: with none taken today, the board: three of the gang's jobs to choose from
+     * (GangDaily.offers), the one chosen ({@code key} "daily:take:" its ordinal) taken; with one taken, how it goes, the things it asks for
+     * handed over from the hand, or, done, paid (its items, a ghoul's mastery, now and then a mutation point, every third day in a row a
+     * little more and every seventh a mutation point, and {@link com.hex.kagune.control.npc.GangStanding#DAILY} reputation). In the giver's
+     * own words ({@link #voice}).
      */
-    static String daily(ServerPlayer player, Persona persona, int seed) {
+    static Said daily(ServerPlayer player, Persona persona, String key, int seed) {
         int gang = gives(persona);
         if (gang == GangPlayer.NONE || !of(player).member(gang)) {
-            return persona == Persona.NORO ? "..." : persona == Persona.BANJOU ? "Jobs are for the boys. ...Join first. Then I'll find you something."
-                : persona == Persona.GENERAL ? "Orders are for investigators. You aren't one." : "Jobs are for Clowns, sweetheart. Join first.";
+            return new Said(voice(gang == GangPlayer.NONE ? GangPlayer.AOGIRI : gang, "outsider", seed, "", null), null);
         }
-        if (gang == GangPlayer.GAS_MASKS) {
-            return banjouDaily(player, seed); // 4.1.54
-        }
-        if (gang == GangPlayer.CCG) {
-            return generalDaily(player, seed); // 4.1.71
-        }
-        boolean noro = gang == GangPlayer.AOGIRI;
         long today = today(player);
+        long mine = player.m_20148_().getLeastSignificantBits();
         GangDaily d = daily(player);
         if (!d.today(today)) {
-            GangDaily fresh = GangDaily.give(gang, today, player.m_20148_().getLeastSignificantBits());
-            daily(player, fresh);
-            player.m_5661_(Component.m_237113_(colour(gang) + "Daily: §f" + fresh.job().text(fresh.goal()) + " §7(0/" + fresh.goal() + ")"), false);
-            String what = lowerFirst(fresh.job().text(fresh.goal())); // 4.1.54: names kept ("Roma", "Clowns"), only its first letter
-            return noro ? pick(seed, "*tilts his head* ...Work. " + capFirst(what) + ". Today.", "Aogiri needs this done. " + capFirst(what) + ".",
-                "...You came. Good. " + capFirst(what) + ". Then come back.")
-                : pick(seed, "A job! For you! " + capFirst(what) + ". Make it funny.", "Today's act: " + what + ". Break a leg. Theirs, preferably.",
-                    "*claps* Ooh, homework! " + capFirst(what) + ". Chop chop.");
-        }
-        if (d.claimed()) {
-            return noro ? pick(seed, "...Done for today. Rest.", "Tomorrow.") : pick(seed, "You already did today's act! Encores are tomorrow.",
-                "Shoo. Come back tomorrow, I'll have something awful.");
-        }
-        if (!d.done() && d.job().brought) {
-            net.minecraft.world.item.ItemStack held = player.m_21205_();
-            net.minecraft.world.item.Item wanted = com.hex.kagune.control.ControlItems.vanilla(d.job() == GangDaily.Job.AOGIRI_MEAT ? GangDaily.MEAT
-                : "minecraft:allium");
-            int have = wanted != null && !held.m_41619_() && held.m_41720_() == wanted ? held.m_41613_() : 0;
-            GangDaily got = d.brought(have);
-            if (got.done()) {
-                if (!player.m_7500_()) {
-                    held.m_41774_(d.goal());
+            List<GangDaily.Job> offered = GangDaily.offers(gang, today, mine, job -> can(player, job));
+            if (key.startsWith("daily:take:")) {
+                GangDaily.Job job = jobOf(key.substring("daily:take:".length()));
+                if (job != null && offered.contains(job)) {
+                    GangDaily taken = GangDaily.take(job, today, mine);
+                    daily(player, taken);
+                    progress(player, taken);
+                    return new Said(voice(gang, "took", seed, job.asked(taken.goal()), taken), null);
                 }
-                d = got;
-            } else {
-                return noro ? "...Not enough. " + d.goal() + ". In your hand." : "I said " + d.goal() + "! In your hand, where I can see them. I count everything.";
             }
-        }
-        if (!d.done()) {
-            return noro ? d.count() + " of " + d.goal() + ". ...Keep going." : d.count() + " of " + d.goal() + "! The suspense is killing me. Not literally. Yet.";
-        }
-        daily(player, d.paid());
-        StringBuilder paid = new StringBuilder();
-        for (GangDaily.Pay pay : d.pay(player.m_20148_().getLeastSignificantBits())) {
-            net.minecraft.world.item.Item item = com.hex.kagune.control.ControlItems.vanilla(pay.item());
-            if (item == null) {
-                continue;
+            if (offered.isEmpty()) {
+                return new Said(voice(gang, "nothing", seed, "", null), null);
             }
-            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, pay.count());
-            paid.append(paid.length() == 0 ? "" : ", ").append(pay.text());
-            if (!player.m_36356_(stack)) {
-                player.m_36176_(stack, false);
+            List<String[]> board = new ArrayList<>();
+            for (GangDaily.Job job : offered) {
+                board.add(new String[] {job.text(GangDaily.take(job, today, mine).goal()), "daily:take:" + job.ordinal()});
             }
-        }
-        reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);
-        player.m_5661_(Component.m_237113_(colour(gang) + "Daily done: §f" + paid + " §7(+" + com.hex.kagune.control.npc.GangStanding.DAILY
-            + "% reputation)"), false);
-        return noro ? pick(seed, "...Good. *hands it over without a word*", "Aogiri remembers this. Take it.")
-            : pick(seed, "*throws confetti made of something* Bravo! Take your prize!", "What a show! Here, a little something. Don't eat the confetti.");
-    }
-
-    /**
-     * 4.1.54: Banjou's daily: as Noro's and Roma's (one a day; kills counted, charcoal handed over from the hand; paid in the Gas Masks'
-     * things and {@link com.hex.kagune.control.npc.GangStanding#DAILY} reputation), in his words.
-     */
-    static String banjouDaily(ServerPlayer player, int seed) {
-        int gang = GangPlayer.GAS_MASKS;
-        long today = today(player);
-        GangDaily d = daily(player);
-        if (!d.today(today)) {
-            GangDaily fresh = GangDaily.give(gang, today, player.m_20148_().getLeastSignificantBits());
-            daily(player, fresh);
-            player.m_5661_(Component.m_237113_(colour(gang) + "Daily: §f" + fresh.job().text(fresh.goal()) + " §7(0/" + fresh.goal() + ")"), false);
-            String what = fresh.job().asked(fresh.goal());
-            return pick(seed, "Okay. Today the boys need you to " + what + ". ...If you can. Please.", "Right. Boss voice. *clears his throat* I need you "
-                + "to " + what + ". ...That sounded good, right?", "I hate asking. Could you " + what + "? I'd do it myself, but you'd do it better.");
+            return new Said(voice(gang, "board", seed, "", null), board);
         }
         if (d.claimed()) {
-            return pick(seed, "You already did today's. Rest. That's an order. ...A request.", "Tomorrow. The boys are fine. Thanks to you.");
+            return new Said(voice(gang, "rested", seed, "", d), null);
         }
         if (!d.done() && d.job().brought) {
             net.minecraft.world.item.ItemStack held = player.m_21205_();
-            net.minecraft.world.item.Item wanted = com.hex.kagune.control.ControlItems.vanilla(GangDaily.CHARCOAL);
-            int have = wanted != null && !held.m_41619_() && held.m_41720_() == wanted ? held.m_41613_() : 0;
-            GangDaily got = d.brought(have);
+            boolean wanted = false;
+            for (String id : d.job().items) {
+                net.minecraft.world.item.Item item = com.hex.kagune.control.ControlItems.vanilla(id);
+                wanted |= item != null && !held.m_41619_() && held.m_41720_() == item;
+            }
+            GangDaily got = d.brought(wanted ? held.m_41613_() : 0);
             if (!got.done()) {
-                return d.goal() + " charcoal. In your hand, so I can count it. ...Sorry. I count everything. Filters run out fast.";
+                return new Said(voice(gang, "short", seed, "", d), null);
             }
             if (!player.m_7500_()) {
                 held.m_41774_(d.goal());
@@ -628,66 +641,69 @@ public final class GangServer {
             d = got;
         }
         if (!d.done()) {
-            return d.count() + " of " + d.goal() + ". You're doing great. Better than I would.";
+            return new Said(voice(gang, "going", seed, "", d), null);
         }
-        daily(player, d.paid());
-        StringBuilder paid = new StringBuilder();
-        for (GangDaily.Pay pay : d.pay(player.m_20148_().getLeastSignificantBits())) {
-            net.minecraft.world.item.Item item = com.hex.kagune.control.ControlItems.vanilla(pay.item());
-            if (item == null) {
-                continue;
-            }
-            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, pay.count());
-            paid.append(paid.length() == 0 ? "" : ", ").append(pay.text());
-            if (!player.m_36356_(stack)) {
-                player.m_36176_(stack, false);
-            }
+        payDaily(player, gang, d, mine);
+        return new Said(voice(gang, "paid", seed, "", d), null);
+    }
+
+    /** 4.1.78: the job saved as {@code ordinal}, or null. */
+    static GangDaily.Job jobOf(String ordinal) {
+        try {
+            int at = Integer.parseInt(ordinal);
+            return at > 0 && at < GangDaily.Job.values().length ? GangDaily.Job.values()[at] : null;
+        } catch (NumberFormatException bad) {
+            return null;
         }
-        reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);
-        player.m_5661_(Component.m_237113_(colour(gang) + "Daily done: §f" + paid + " §7(+" + com.hex.kagune.control.npc.GangStanding.DAILY
-            + "% reputation)"), false);
-        return pick(seed, "You did it. *hands it over with both hands* ...Thank you. Really.", "The boys will hear about this. Take it. You earned it.");
     }
 
     /**
-     * 4.1.71 (the owner, of the CCG: "Join through the general (quest) and now daily quests as well."): the General's orders, as the others'
-     * (one a day; ghouls counted, paperwork handed over from the hand; paid in the bureau's things and {@link GangStanding#DAILY} reputation),
-     * in his words: clipped, dry, proud of his people.
+     * 4.1.78: who a victim was to the gangs, as GangDaily's tags: an investigator (or the CCG's own ghouls), a Gas Mask, a Clown, a ghoul
+     * of another gang than {@code was}'s, any ghoul NPC not the CCG's (the General's), one of a gang (the General's).
      */
-    static String generalDaily(ServerPlayer player, int seed) {
-        int gang = GangPlayer.CCG;
-        long today = today(player);
-        GangDaily d = daily(player);
-        if (!d.today(today)) {
-            GangDaily fresh = GangDaily.give(gang, today, player.m_20148_().getLeastSignificantBits());
-            daily(player, fresh);
-            player.m_5661_(Component.m_237113_(colour(gang) + "Daily: §f" + fresh.job().text(fresh.goal()) + " §7(0/" + fresh.goal() + ")"), false);
-            String what = fresh.job().asked(fresh.goal());
-            return pick(seed, "Today's orders: " + what + ". Report back when it's done.", "*He doesn't look up from the report.* " + capFirst(what)
-                + ". Dismissed.", "The ward needs this. " + capFirst(what) + ". Then come back here, in one piece.");
+    static java.util.Set<String> dailyTags(GangPlayer was, NpcIdentity who, boolean agent) {
+        java.util.Set<String> tags = new java.util.HashSet<>();
+        boolean ccg = agent || who != null && who.ccg();
+        if (ccg) {
+            tags.add(GangDaily.CCG_TAG);
         }
-        if (d.claimed()) {
-            return pick(seed, "You've done today's. Rest. Tired investigators make widows.", "Tomorrow, investigator. Go home.");
+        if (who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS) {
+            tags.add(GangDaily.GAS_TAG);
         }
-        if (!d.done() && d.job().brought) {
-            net.minecraft.world.item.ItemStack held = player.m_21205_();
-            net.minecraft.world.item.Item wanted = com.hex.kagune.control.ControlItems.vanilla(GangDaily.PAPER);
-            int have = wanted != null && !held.m_41619_() && held.m_41720_() == wanted ? held.m_41613_() : 0;
-            GangDaily got = d.brought(have);
-            if (!got.done()) {
-                return d.goal() + " sheets of paper. In your hand. The bureau runs on reports, and reports run on paper.";
+        if (who != null && who.gangOf() == com.hex.kagune.control.npc.Gang.CLOWNS) {
+            tags.add(GangDaily.CLOWN_TAG);
+        }
+        if (who != null && !ccg && (who.aogiri() || who.gang() != 0) && !was.member(GangPlayer.of(who))) {
+            tags.add(GangDaily.RIVAL_TAG);
+        }
+        if (who != null && !who.ccg()) {
+            tags.add(GangDaily.GHOUL_TAG); // 4.1.71: the General's jobs
+            if (who.aogiri() || who.gang() != 0) {
+                tags.add(GangDaily.GANGED_TAG);
             }
-            if (!player.m_7500_()) {
-                held.m_41774_(d.goal());
-            }
-            d = got;
         }
-        if (!d.done()) {
-            return d.count() + " of " + d.goal() + ". Keep at it. Don't get careless near the end; that's when they get you.";
-        }
+        return tags;
+    }
+
+    /** 4.1.78: today's daily paid: its items, a ghoul's mastery and points, the streak's bonus, reputation; told in chat. */
+    private static void payDaily(ServerPlayer player, int gang, GangDaily d, long mine) {
         daily(player, d.paid());
+        CompoundTag k = kept(player);
+        int days = GangDaily.streak(k.m_128451_(DAILY_STREAK), k.m_128441_(DAILY_LAST) ? k.m_128454_(DAILY_LAST) : Long.MIN_VALUE / 2, d.day());
+        k.m_128405_(DAILY_STREAK, days);
+        k.m_128356_(DAILY_LAST, d.day());
+        int bonus = GangDaily.bonus(days);
+        List<GangDaily.Pay> pays = new ArrayList<>(d.pay(mine));
+        if (bonus == GangDaily.EXTRA) {
+            for (GangDaily.Pay more : d.pay(mine + 1L)) {
+                if (pays.stream().noneMatch(p -> p.item().equals(more.item()))) {
+                    pays.add(more);
+                    break;
+                }
+            }
+        }
         StringBuilder paid = new StringBuilder();
-        for (GangDaily.Pay pay : d.pay(player.m_20148_().getLeastSignificantBits())) {
+        for (GangDaily.Pay pay : pays) {
             net.minecraft.world.item.Item item = com.hex.kagune.control.ControlItems.vanilla(pay.item());
             if (item == null) {
                 continue;
@@ -698,11 +714,17 @@ public final class GangServer {
                 player.m_36176_(stack, false);
             }
         }
+        String ghoul = QuestServer.payGhoul(player, d.mastery(), d.point(mine) || bonus == GangDaily.POINT ? 1 : 0);
+        if (!ghoul.isEmpty()) {
+            paid.append(paid.length() == 0 ? "" : ", ").append(ghoul);
+        }
         reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);
         player.m_5661_(Component.m_237113_(colour(gang) + "Daily done: §f" + paid + " §7(+" + com.hex.kagune.control.npc.GangStanding.DAILY
-            + "% reputation)"), false);
-        return pick(seed, "Good work. *He signs something without reading it, then reads it.* Take this. You earned it.",
-            "Noted in your file. *A short nod.* That's a good file to have. Here.");
+            + "% reputation" + (days > 1 ? ", " + days + " days in a row" : "") + ")"), false);
+    }
+
+    static String voice(int gang, String moment, int seed, String what, GangDaily d) {
+        return com.hex.kagune.control.npc.DailyVoice.voice(gang, moment, seed, what, d);
     }
 
     private static String lowerFirst(String text) {

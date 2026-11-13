@@ -1075,6 +1075,40 @@ public class UiPreview {
             java.util.List.of("Who are you?", "Talk to me.", "How's Aogiri?", "Leave."), 67 | aogiri), com.hex.kagune.control.client.NpcTalkView.Motion.still(30));
     }
 
+    /**
+     * 4.1.78: the daily board as each giver shows it (Noro, Roma, Banjou, the General, Ken): their words, today's three jobs to choose from
+     * (GangDaily.offers, every job a player can do), the way back; then one taken, in their words (DailyVoice).
+     */
+    static void boardTalk(File dir) throws Exception {
+        java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> board = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.SAY_1,
+            com.hex.kagune.control.npc.NpcTalk.Choice.SAY_2, com.hex.kagune.control.npc.NpcTalk.Choice.SAY_3, com.hex.kagune.control.npc.NpcTalk.Choice.BACK);
+        String[][] givers = {{"Noro", "Aogiri's - quiet", "noro/noro.png"}, {"Roma", "Your ringmaster - giddy", "roma/roma.png"},
+            {"Banjou", "The Gas Masks' leader - happy", "banjou/banjou.png"}, {"The General", "The CCG - stern", "general/general.png"},
+            {"Ken", "Anteiku - warm", "ken/ken.png"}};
+        int[] gangs = {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS,
+            com.hex.kagune.control.npc.GangPlayer.GAS_MASKS, com.hex.kagune.control.npc.GangPlayer.CCG, com.hex.kagune.control.npc.GangPlayer.ANTEIKU};
+        for (int i = 0; i < gangs.length; i++) {
+            int gang = gangs[i];
+            long day = 5L + i;
+            java.util.List<com.hex.kagune.control.npc.GangDaily.Job> offered = com.hex.kagune.control.npc.GangDaily.offers(gang, day, 11L, job -> true);
+            java.util.List<String> labels = new java.util.ArrayList<>();
+            for (com.hex.kagune.control.npc.GangDaily.Job job : offered) {
+                labels.add(job.text(com.hex.kagune.control.npc.GangDaily.take(job, day, 11L).goal()));
+            }
+            labels.add("Back.");
+            String key = givers[i][0].toLowerCase().replace("the ", "");
+            etoFrame(new File(dir, "board-" + key + ".png"), face(givers[i][2]), new com.hex.kagune.control.client.NpcTalkView.Model(givers[i][0],
+                givers[i][1], 40, false, com.hex.kagune.control.npc.DailyVoice.voice(gang, "board", i, "", null), board, labels, 60 | gang << 8),
+                com.hex.kagune.control.client.NpcTalkView.Motion.still(40));
+            com.hex.kagune.control.npc.GangDaily taken = com.hex.kagune.control.npc.GangDaily.take(offered.get(1), day, 11L);
+            java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
+                com.hex.kagune.control.npc.NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE);
+            etoFrame(new File(dir, "board-" + key + "-taken.png"), face(givers[i][2]), new com.hex.kagune.control.client.NpcTalkView.Model(givers[i][0],
+                givers[i][1], 40, false, com.hex.kagune.control.npc.DailyVoice.voice(gang, "took", i, taken.job().asked(taken.goal()), taken), page,
+                java.util.List.of("Talk to me.", "Today's job: how far?", "Leave."), 60 | gang << 8), com.hex.kagune.control.client.NpcTalkView.Motion.still(40));
+        }
+    }
+
     /** 4.1.53: Noro and Roma giving today's job to one of their gang (the option on their first page, the job given, the reputation bar). */
     static void dailiesTalk(File dir) throws Exception {
         java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
@@ -1314,6 +1348,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("reputation")) {
             reputationTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("board")) {
+            boardTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("dailies")) {
