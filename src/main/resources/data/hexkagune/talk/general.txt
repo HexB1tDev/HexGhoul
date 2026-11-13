@@ -51,25 +51,25 @@ say: *There's a letter on his desk, in a villager's unsteady hand. He's read it 
 > I didn't ask them to. | +3 -> said
 ignored: *He puts the letter in his coat, on the inside, and says nothing more.*
 page said
-say: That you sat with them. That you came back. That they'd trust you with their children. *He looks up, and it's the look of a man doing a sum he's got wrong for thirty years.* ...The Pack is next. The ones who kill for sport. Three. Come back in one piece.
+say: That you sat with them. That you came back. That they'd trust you with their children. *He looks up, and it's the look of a man doing a sum he's got wrong for thirty years.* ...The Pack is next. The ones who kill for sport. Three, and with a quinque in your hand: one of ours. Come back in one piece.
 > I always do. | +3 chin
   - See that you do. ...That's the first order I've given this year that I'd mind being disobeyed.
 
 moment general_pack
-say: *He's standing when you come in, which he never is.* Three of the Pack. Do you know how many investigators I'd have had to send? *He stops.* ...You're hurt.
+say: *He's standing when you come in, which he never is.* Three of the Pack, and with one of ours in your hand. Do you know how many investigators I'd have had to send? *He stops.* ...You're hurt.
 > It's nothing. | +2 -> hurt
 > You were worried. | +4 -> hurt
 ignored: *He sends for the bureau's medic and waits by the door until she's done.*
 page hurt
 say: *He's found the medical kit before you've finished speaking, and he's kneeling to see to it himself, a general on the floor of his own office.* Hold still. ...I was not worried. I was informed. *His hands are very careful.* ...I was worried.
 > Thank you, Kuroda. | +4 shy
-  - *He ties it off and doesn't let go at once.* ...When that's healed, take me somewhere high. I've only ever seen my district on a map.
+  - *He ties it off and doesn't let go at once.* ...When that's healed, walk me through a village. In daylight. I've only ever seen my district on a map.
 
 moment general_high
-say: *He stands at the edge with his coat snapping in the wind and says nothing for a long time. The whole district lies under him, roofs and smoke and roads.* ...It's smaller than the map. And there's so much more in it.
-> Those are your people down there. | +4 -> people
-> *Stand beside him.* | +3 -> people
-ignored: *He stays until the light changes, memorising it.*
+say: *He walks with his hands behind his back down the middle of the street, in broad daylight, nodding to people who have no idea who he is. A woman sells him an apple and he holds it like evidence.* ...It's smaller than the map. And there's so much more in it.
+> Those are your people. | +4 -> people
+> *Walk beside him.* | +3 -> people
+ignored: *He walks it twice, memorising it.*
 page people
 say: Thirty years I've moved pins across a wall. *He points.* That's a bakery. I've sent patrols past it a thousand times and never known. *He glances at you and goes red above the beard.* ...You've shown me my own district. I don't know what to do with that. ...Be at my window at dawn. When I count the night shift in.
 > I'll be there. | +4 shy

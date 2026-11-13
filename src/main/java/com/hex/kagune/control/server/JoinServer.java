@@ -88,6 +88,8 @@ public final class JoinServer {
         UUID partner;
         UUID target;
         int seed;
+        /** 4.1.80: the companion whose courtship this is (Ayato's spar, asked for as a chapter: no gang's step), or null. */
+        String courting;
 
         Live(JoinTrial.Kind kind, UUID player, long began, BlockPos anchor) {
             this.kind = kind;
@@ -125,6 +127,18 @@ public final class JoinServer {
      * or why not now: another trial live, a show by day, too hurt for a spar, nowhere to hold it).
      */
     static String start(ServerPlayer player, EtoNpc leader, JoinTrial.Kind kind, int seed) {
+        return start(player, leader, kind, seed, null);
+    }
+
+    /**
+     * 4.1.80: Ayato's spar as a chapter of his courtship (the plan: "Ayato's a spar at the hideout, JoinServer's spar can be reused with no
+     * gang step"): the same fight, its end counted on the courtship ({@link #end}), its words his romance's (CourtVoice).
+     */
+    static String court(ServerPlayer player, EtoNpc companion, int seed) {
+        return start(player, companion, JoinTrial.Kind.SPAR, seed, companion.persona().key());
+    }
+
+    static String start(ServerPlayer player, EtoNpc leader, JoinTrial.Kind kind, int seed, String courting) {
         UUID id = player.m_20148_();
         Live running = LIVE.get(id);
         if (running != null) {
@@ -135,13 +149,15 @@ public final class JoinServer {
         BlockPos anchor = anchor(level, leader, kind);
         Live live = new Live(kind, id, now, anchor);
         live.seed = seed;
+        live.courting = courting;
         switch (kind) {
             case SPAR -> {
                 if (leader == null || leader.mind == null) {
-                    return JoinVoice.say(kind, "died", seed);
+                    return courting != null ? com.hex.kagune.control.npc.CourtVoice.spar("died", seed) : JoinVoice.say(kind, "died", seed);
                 }
                 if (player.m_21223_() < player.m_21233_() * 0.5F) {
-                    return "*He looks you up and down.* You're half dead already. Eat something. Then come back and I'll finish the job.";
+                    return courting != null ? com.hex.kagune.control.npc.CourtVoice.spar("hurt", seed)
+                        : "*He looks you up and down.* You're half dead already. Eat something. Then come back and I'll finish the job.";
                 }
                 live.leader = leader.m_19879_();
                 leader.m_21153_(leader.m_21233_()); // a fair fight: he starts it whole
@@ -179,7 +195,7 @@ public final class JoinServer {
         LIVE.put(id, live);
         UkakuFire.sound(level, player.m_20182_(), "block.note_block.bell", 0.7F, kind == JoinTrial.Kind.SPAR ? 0.6F : 1.0F);
         bar(player, live, now);
-        return JoinVoice.say(kind, "start", seed);
+        return courting != null ? com.hex.kagune.control.npc.CourtVoice.spar("start", seed) : JoinVoice.say(kind, "start", seed);
     }
 
     /**
@@ -438,9 +454,8 @@ public final class JoinServer {
                 end(player, live, false, "died");
                 return;
             }
-            GangPlayer g = GangServer.of(player);
-            if (g.step(JoinTrial.gang(live.kind)) != JoinTrial.step(live.kind) || g.gang() != GangPlayer.NONE) {
-                end(player, live, false, null); // its step moved on some other way (a command, a quit, a gang joined): over, quietly
+            if (live.courting != null ? !CourtshipServer.on(player, live.courting, com.hex.kagune.control.npc.Courtship.Task.SPAR) : stepGone(player, live)) {
+                end(player, live, false, null); // its step (or chapter) moved on some other way (a command, a quit, a gang joined): over, quietly
                 return;
             }
             switch (live.kind) {
@@ -459,6 +474,12 @@ public final class JoinServer {
         } catch (RuntimeException | LinkageError failure) {
             Safety.caught(failure, "JoinServer.tick");
         }
+    }
+
+    /** True if {@code player}'s way in is no longer at {@code live}'s step (or they are in a gang now). */
+    static boolean stepGone(ServerPlayer player, Live live) {
+        GangPlayer g = GangServer.of(player);
+        return g.step(JoinTrial.gang(live.kind)) != JoinTrial.step(live.kind) || g.gang() != GangPlayer.NONE;
     }
 
     /** Off {@code live}'s ground ({@code away}) a quarter second more, or back on it: true once off it too long ({@code out} ticks). */
@@ -1125,6 +1146,10 @@ public final class JoinServer {
             }
             ayato.mind.grudges.remove(player.m_20148_());
         }
+        if (live.courting != null) {
+            courted(player, live, won, moment, level, now);
+            return;
+        }
         int gang = JoinTrial.gang(live.kind);
         if (won) {
             GangPlayer g = GangServer.of(player);
@@ -1141,6 +1166,31 @@ public final class JoinServer {
             player.m_5661_(Component.m_237113_(GangServer.colour(gang) + leader(gang) + ": §f" + JoinVoice.say(live.kind, moment, live.seed)), false);
             String next = JoinTrial.goal(gang, won ? JoinTrial.after(live.kind) : JoinTrial.step(live.kind));
             player.m_5661_(Component.m_237113_(GangServer.colour(gang) + GangPlayer.title(gang) + ": §f" + (won ? next : "try again: " + lowerFirst(next))), true);
+        }
+    }
+
+    /**
+     * 4.1.80: a courtship's spar over: won, the chapter done and its moment brought to them at once (he is right there); lost, his word on
+     * why ({@code moment}: CourtVoice's; null, nothing said).
+     */
+    static void courted(ServerPlayer player, Live live, boolean won, String moment, ServerLevel level, long now) {
+        com.hex.kagune.control.npc.Persona persona = com.hex.kagune.control.npc.Persona.of(live.courting);
+        if (won && CourtshipServer.count(player, live.courting, com.hex.kagune.control.npc.Courtship.Task.SPAR) != null) {
+            UkakuFire.sound(level, player.m_20182_(), "entity.player.levelup", 0.7F, 1.2F);
+            level.m_8767_(ParticleTypes.f_123748_, player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_(), 12, 0.5, 0.6, 0.5, 0.0);
+            if (level.m_6815_(live.leader) instanceof EtoNpc companion) {
+                com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(live.courting,
+                    EtoServer.courtBond(player, live.courting));
+                if (chapter != null) {
+                    SceneServer.approachMoment(companion, player, SceneServer.scene(live.courting + "." + chapter.id()), now);
+                }
+            }
+        } else if (moment != null) {
+            UkakuFire.sound(level, player.m_20182_(), "block.candle.extinguish", 1.0F, 0.8F);
+        }
+        if (moment != null) {
+            player.m_5661_(Component.m_237113_(persona.colour() + persona.name() + ": §f" + com.hex.kagune.control.npc.CourtVoice.spar(moment, live.seed)),
+                false);
         }
     }
 
@@ -1186,7 +1236,8 @@ public final class JoinServer {
     /** Each second: where they are in it, in the action bar (time left, what is next, which way). */
     static void bar(ServerPlayer player, Live live, long now) {
         int gang = JoinTrial.gang(live.kind);
-        String head = GangServer.colour(gang) + GangPlayer.title(gang) + ": §f";
+        String head = live.courting != null ? com.hex.kagune.control.npc.Persona.of(live.courting).colour() + "❤ " // 4.1.80: his courtship's
+            : GangServer.colour(gang) + GangPlayer.title(gang) + ": §f";
         ServerLevel level = player.m_284548_();
         String text = switch (live.kind) {
             case SPAR -> live.fighting(now) ? "spar §7(" + JoinTrial.clock(live.began + JoinTrial.SPAR_COUNTDOWN + JoinTrial.SPAR_TICKS - now) + ")" : "";

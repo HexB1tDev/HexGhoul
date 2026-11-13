@@ -9,6 +9,17 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.80 (HexGhoul): romance, each companion's courtship their own: ten chapters asking for something new (testing)
+
+See `.github/release-notes-4.1.80.md`. `Courtship.Task` (ten new: `SPAR`, `READING`, `ROOF`, `QUINQUE`, `VILLAGE_DAY`, `SHOW`, `ERRAND`, `QUIZ`,
+`GARDEN`, `SERVE`; `timed`, `once`, `begun`), the ten chapters changed, `SUPPER`, `plant`/`planted`, `onRoof`, `daylight`, Touka's `HOMEWORK`
+(`homework`, `mayStudy`), `migrate(key, ...)`/`FROM_480` (a changed chapter on from before starts again, or stays done); `CourtVoice` (the
+spar's, the homework's, the show's, the garden's, the supper's words); `CourtTrials` (fireworks and planting by right click, the supper
+handed to Banjou's boys); `CourtshipServer` (the reading, the roof, the day's walk; `count`, `on`, `nearby`); `JoinServer` (Ayato's spar as
+a courtship's: `court`, `courted`); `EtoServer` (`courtTrial`, `court`, the homework; the Pack with a quinque); `HumanErrandServer` (a
+villager's favour). The 35 moments kept, their lines changed only where they named the old task. `CompanionTests.courtship480`, 68 rules
+sabotaged (`docs/handoff/sabotage-4.1.80.json`). Render `docs/handoff/romance-4.1.80.png` (`tools/UiPreview.java <dir> romance`).
+
 ## 4.1.79 (HexGhoul): the gangs' ways in: each step a trial of its own, a scene with the leader at the end (testing)
 
 See `.github/release-notes-4.1.79.md`. `JoinTrial` (the trials' kinds, which step each is, `after`, their rules: `clamp`/`reached`, `calledIn`,

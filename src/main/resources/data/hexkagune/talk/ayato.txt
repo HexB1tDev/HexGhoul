@@ -95,24 +95,24 @@ ignored: *He finishes all three and pretends that was nothing.*
 page hungry
 say: *Quietly, not looking at you.* My sister used to cook for us. After Dad. Badly. She'd burn everything and make me eat it anyway. ...Nobody's fed me since. Stupid, right? ...Don't answer that.
 > It's not stupid. | +4 shy
-  - *He clicks his tongue, but he doesn't argue.* ...There are wild ghouls out there who think this ward is theirs. Three of them. Show me you can fight.
+  - *He clicks his tongue, but he doesn't argue.* ...Feeding me's one thing. Fight me. Me, not some wild ghoul. Show me you can fight.
 > I'll make more. | +3 huff
-  - Don't make it a habit. ...Okay, make it a habit. Now go kill three wild ghouls who think they own the ward. Prove you're not useless.
+  - Don't make it a habit. ...Okay, make it a habit. Now fight me. Here. Prove you're not useless.
 
 moment ayato_ghouls
-say: *He's waiting at the edge of the street, arms crossed, watching you walk back covered in someone else's blood. For once he doesn't say anything mean right away.* ...You came back.
-> Told you I would. | +3 -> kept
+say: *He's sitting on the hideout floor with his back to the wall, a split lip already closing, watching you get your breath back. For once he doesn't say anything mean right away.* ...You didn't quit.
+> Told you I wouldn't. | +3 -> kept
 > Worried? | +2 -> kept
-ignored: *He shakes his head and starts walking. He waits for you to catch up.*
+ignored: *He gets up, offers you a hand, and pulls you up harder than he needs to.*
 page kept
-say: *He looks away.* Don't get cocky. They were weak. ...But you didn't run. Most people run. ...Nobody stays.
+say: *He looks away.* Don't get cocky. I was going easy. ...But you didn't back off. Most people back off. ...Nobody stays.
 > I'll always stay. | +4 shy
-  - *He goes red and scowls about it.* Shut up. ...Take me somewhere high. Away from all this. Above everything.
-> You were watching the whole time. | +3 cross
-  - ...Somebody had to. ...Fine. Take me somewhere high. Somewhere the Doves can't see.
+  - *He goes red and scowls about it.* Shut up. ...Take me up on the Doves' roof. Their tower. Above all of them.
+> You weren't going easy. | +3 cross
+  - ...Shut up. ...Fine. Take me up on top of the Doves' tower. Somewhere they can't see.
 
 moment ayato_roof
-say: *The whole ward is small below you. He sits on the edge, legs dangling, wings folded, quiet for a long time.* ...When I was a kid I thought if I got high enough, nobody could ever find us. Me and my sister.
+say: *The Doves' own roof. Somewhere under your feet a few hundred investigators are filing reports, and not one of them looks up. He sits on the edge, legs dangling, wings folded, quiet for a long time.* ...When I was a kid I thought if I got high enough, nobody could ever find us. Me and my sister.
 > Did it work? | +2 -> work
 > You're not a kid anymore. | +2 -> work
 ignored: *He just watches the lights below, and doesn't make you leave.*

@@ -36,6 +36,8 @@ public final class NpcMemory {
     public static final String PROOF_COUNT = "proofn";
     /** 2.1.2: the game day they last went on a date. */
     public static final String DATE_DAY = "dateday";
+    /** 4.1.80: the game day of a wrong answer to Touka's homework (tried again the day after). */
+    public static final String STUDIED = "studied";
 
     private final Map<String, Map<String, Long>> values = new LinkedHashMap<>();
 

@@ -1454,27 +1454,27 @@ page hurt
 say: *He breathes out.* I shouldn't have asked you. Every time I let someone do something dangerous for me they... *He stops.* That ghoul would have killed again tonight. And tomorrow. You saved people who'll never know your name. That's how it always is.
 > Is that how it is for you? | +4 -> him
 > I did it because you asked. | +4 crack
-  - *He flinches, and then doesn't.* ...Then I'll be careful what I ask. *Softer:* There's an investigator tracking me. I don't want to face him alone anymore. Walk with me?
+  - *He flinches, and then doesn't.* ...Then I'll be careful what I ask. *Softer:* There's somewhere I go at night when I can't sleep. The Library. Come with me?
 page him
 say: Every night. *He sits down on the curb.* People call me a king. Kings get thanked. I just get tired. *He looks at you.* But you came back. Most people don't come back. Thank you for coming back.
 > I'll always come back to you. | +5 bow
-  - *He doesn't answer for a while. When he does, his voice is careful.* ...There's a Dove who's been tracking me. Rank 5, maybe more. Walk with me. When he finds us, stay.
+  - *He doesn't answer for a while. When he does, his voice is careful.* ...When I can't sleep, I go to the Library and read. Come with me one night. Just sit. Stay.
 > You don't have to carry it alone. | +5 chin
-  - *He laughs, small and wet.* ...Then don't let me carry this one. There's an investigator hunting me. Rank 5 or above. Walk with me, and when he comes, fight beside me.
+  - *He laughs, small and wet.* ...Then don't let me carry this one. The nights are the worst. Come to the Library with me, one night, and read beside me.
 
 moment ken_doves
-say: *The investigator's quinque is still humming on the ground. Ken is standing very still, breathing hard, one tail still out and dripping. He looks at you like he's checking you're real.* You stayed. You didn't run.
-> I said I'd fight beside you. | +3 -> stayed
-> Are you hurt? | +3 -> stayed
-ignored: *He stands there until the quinque goes quiet, then puts his kagune away.*
+say: *The Library's lamps are low and the city's asleep outside. Ken has a novel open on his knee and hasn't turned a page in ten minutes; he's been watching you read instead.* You stayed. I thought you'd get bored and go.
+> I said I'd stay. | +3 -> stayed
+> Are you tired? | +3 -> stayed
+ignored: *He reads until the lamp gutters, then marks your page for you.*
 page stayed
-say: *He sits down on the curb, suddenly, like his legs gave out.* Every fight, I'm the one in front. So nobody else gets hurt. I've been in front for so long I forgot what it's like to have someone at my back. *He looks up.* It's quieter. Having you there.
-> You never have to stand in front alone again. | +5 bow
+say: *He closes the book on one finger.* Every night, I'm the one awake. So nobody else has to be. I've been alone in here so long I forgot what it's like to have someone across the table. *He looks up.* It's quieter. Having you there.
+> You never have to sit up alone again. | +5 bow
   - *He doesn't answer for a while.* ...I'd like to believe that. *Quietly:* Stay up with me tonight? Until the sun comes up. I'd like to see one sunrise with someone. With you.
 > I'll always have your back. | +5 chin
   - *He laughs, small and surprised.* ...Okay. *Then:* There's one more thing I'd like. It's small. Stay up with me until dawn. I want to see one sunrise not alone.
-> We make a good team. | +4 bow
-  - We do. *He stands, and offers you his hand up, though you're not the one sitting.* ...Stay up with me tonight? Until the sun comes up. That's the last thing I'll ask.
+> We should do this every night. | +4 bow
+  - We should. *He stands, and offers you his hand up, though you're the one still reading.* ...Stay up with me tonight? Until the sun comes up. That's the last thing I'll ask.
 
 moment ken_sunrise
 say: *The sky goes grey, then pink. Ken is sitting next to you with his knees pulled up, watching it like he's never seen one.* It's been years since I watched this. I usually close the curtains. The light hurts after a long night.

@@ -71,10 +71,80 @@ public final class CourtshipServer {
             case DAWN -> near <= Courtship.WITH && (time >= 22300L || time < 900L);
             case DEEP -> near <= Courtship.WITH && time >= 16500L && time < 21500L && ownPlace(npc);
             // 2.1.5: through a human village after dark (its people about), her along.
-            case VILLAGE_NIGHT -> along && EtoRules.night(time) && moving(player) && player.m_284548_().m_6443_(com.hex.kagune.control.npc.HumanNpc.class,
-                player.m_20191_().m_82400_(VILLAGE_NEAR), human -> human.m_6084_()).size() >= 2;
+            case VILLAGE_NIGHT -> along && EtoRules.night(time) && moving(player) && villagers(player);
+            // 4.1.80: Ken's nights at the Library (her place, Eto's); Ayato up on the Doves' roof; the General's district walked by day.
+            case READING -> along && EtoRules.night(time) && near(player, GangServer.home(player.m_284548_(), "eto"), Courtship.LIBRARY_NEAR);
+            case ROOF -> along && onRoof(player) && npc.m_20186_() >= player.m_20186_() - 6.0;
+            case VILLAGE_DAY -> along && Courtship.daylight(time) && moving(player) && villagers(player);
             default -> false;
         };
+    }
+
+    /** 2.1.5: true if a human village's people are about {@code player} (two at least, within {@link #VILLAGE_NEAR}). */
+    static boolean villagers(ServerPlayer player) {
+        return player.m_284548_().m_6443_(com.hex.kagune.control.npc.HumanNpc.class, player.m_20191_().m_82400_(VILLAGE_NEAR), human -> human.m_6084_())
+            .size() >= 2;
+    }
+
+    /** 4.1.80: true if {@code player} is within {@code reach} of {@code at} (and on the same floor or so: 20 blocks up or down). */
+    static boolean near(ServerPlayer player, BlockPos at, double reach) {
+        if (at == null) {
+            return false;
+        }
+        double dx = player.m_20185_() - (at.m_123341_() + 0.5);
+        double dz = player.m_20189_() - (at.m_123343_() + 0.5);
+        return dx * dx + dz * dz <= reach * reach && Math.abs(player.m_20186_() - at.m_123342_()) <= 20.0;
+    }
+
+    /** 4.1.80: true if {@code player} is up on the CCG tower's roof (Courtship.onRoof, from the world's height map round the General's spot). */
+    static boolean onRoof(ServerPlayer player) {
+        ServerLevel level = player.m_284548_();
+        BlockPos home = GangServer.home(level, "general");
+        if (home == null) {
+            return false;
+        }
+        double dx = player.m_20185_() - (home.m_123341_() + 0.5);
+        double dz = player.m_20189_() - (home.m_123343_() + 0.5);
+        if (dx * dx + dz * dz > Courtship.ROOF_REACH * Courtship.ROOF_REACH) {
+            return false;
+        }
+        int here = level.m_6924_(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)Math.floor(player.m_20185_()),
+            (int)Math.floor(player.m_20189_()));
+        int tower = level.m_6924_(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, home.m_123341_(), home.m_123343_());
+        return Courtship.onRoof(player.m_20186_(), here, tower, home.m_123342_());
+    }
+
+    /** 4.1.80: the companion {@code key} near {@code player} (within {@code reach}, alive, in their world), or null. */
+    static EtoNpc nearby(ServerPlayer player, String key, double reach) {
+        for (EtoNpc npc : EtoBrain.live()) {
+            if (npc.persona().key().equals(key) && npc.m_6084_() && npc.m_9236_() == player.m_9236_() && npc.m_20280_(player) <= reach * reach) {
+                return npc;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 4.1.80: one more done on {@code key}'s chapter on for {@code player} if it is a {@code task} not yet done: the bond saved, the
+     * progress told; the new bond (or null if nothing counted).
+     */
+    static QuestLog.Bond count(ServerPlayer player, String key, Courtship.Task task) {
+        QuestLog.Bond bond = EtoServer.courtBond(player, key);
+        Courtship.Chapter chapter = Courtship.chapter(key, bond);
+        if (chapter == null || chapter.task() != task || EtoRules.count(bond) >= chapter.need()) {
+            return null;
+        }
+        QuestLog.Bond after = Courtship.progress(key, bond, task, 1);
+        QuestServer.bond(player, key, after);
+        tell(player, Persona.of(key), after);
+        return after;
+    }
+
+    /** 4.1.80: true if {@code player}'s chapter on with {@code key} is a {@code task} not yet done. */
+    static boolean on(ServerPlayer player, String key, Courtship.Task task) {
+        QuestLog.Bond bond = EtoServer.courtBond(player, key);
+        Courtship.Chapter chapter = Courtship.chapter(key, bond);
+        return chapter != null && chapter.task() == task && EtoRules.count(bond) < chapter.need();
     }
 
     /** Last positions seen ("<player>"), so a walk only counts while they walk. */

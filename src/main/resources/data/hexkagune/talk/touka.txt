@@ -1559,29 +1559,29 @@ ignored: *She drinks both, frowning, and doesn't say which won.*
 page taste
 say: *She watches you over the rim of her own cup.* Yours is too sweet and you rushed it. *A pause.* ...It's not bad. The old man taught me that every cup's supposed to be for one person. Nobody's ever made one for me. *She stops.* Don't look at me like that.
 > I'll make you one every day. | +4 shy
-  - *She chokes on her coffee.* That's— you can't just SAY it! That's the whole point of the coffee! ...Idiot. *She doesn't look at you for a full minute.* Doves have been asking about the cafe. Next, you're helping me with that.
+  - *She chokes on her coffee.* That's— you can't just SAY it! That's the whole point of the coffee! ...Idiot. *She doesn't look at you for a full minute.* I've got exams next week. Next, you're helping me study.
 > Teach me to make it properly. | +4 laugh
-  - *She actually laughs, then covers her mouth like it's illegal.* Fine. Thursdays. Bring beans. *Then, darker:* Doves have been sniffing round. Next, you're making them stop.
+  - *She actually laughs, then covers her mouth like it's illegal.* Fine. Thursdays. Bring beans. *Then, glumly:* And you can help me study. My exams are next week.
 > Who's the old man? | +3 -> oldman
 page oldman
 say: The manager. He found me when I was a brat who bit everyone. Gave me an apron instead of a beating. *She turns her cup.* He says coffee's how you tell someone you're glad they exist without saying anything embarrassing.
 > Then I'm glad you exist too. | +4 shy
-  - *She goes red to the ears.* ...Shut up. *Quietly:* Doves have been asking about the cafe. Four of them. Next, you're making them stop asking.
+  - *She goes red to the ears.* ...Shut up. *Quietly:* I've got exams next week. Maths. Next, you're helping me with that.
 > So this cup means something. | +3 huff
-  - It means you can follow a recipe. That's all. *Her ears are red.* Doves next. Investigators. Don't get killed.
+  - It means you can follow a recipe. That's all. *Her ears are red.* Homework next. Mine. Don't get smug.
 
 moment touka_patrol
-say: *Touka drops off a wall beside you, breathing hard, wings fading to sparks. A Dove's coat lies in the street behind you.* Four. I counted. You fight like an idiot, you know that? You leave your left side open every time.
+say: *Touka shuts the textbook and stares at you across the cafe table like you've done a magic trick.* Three. In a row. I checked the back of the book twice. You read like an idiot, you know that? You move your lips the whole time.
 > You were watching me? | +2 -> watch
-> You were following me the whole time? | +2 -> watch
-> My left side is fine. | +1 huff -> watch
-ignored: Tch. Whatever. Good work. *She's gone over the rooftops before you can answer.*
+> You thought I'd cheat? | +2 -> watch
+> My lips are fine. | +1 huff -> watch
+ignored: Tch. Whatever. Good work. *She's gone up the stairs with the book before you can answer.*
 page watch
-say: Somebody had to. If a Dove got you, I'd... *She kicks a stone off the roof.* I'd have to find someone else to bring beans. That's all. Don't look at me like that.
+say: Somebody has to check you're not cheating. If I fail again they'll throw me out of that school, and then I'd... *She kicks the table leg.* I'd have to find someone else to quiz me. That's all. Don't look at me like that.
 > You were worried. | +3 shy -> brother
-> I'd have come back for you too. | +4 blush -> brother
+> I'll quiz you every night. | +4 blush -> brother
 page brother
-say: *She sits on the ledge. Quieter:* I have a brother. He left. Chose the people who hurt others, because they're strong. I keep thinking if I'd been stronger he'd have stayed. *She glares at the city.* I don't know why I'm telling you this.
+say: *She pulls her knees up onto the chair. Quieter:* I have a brother. He left. Chose the people who hurt others, because they're strong. I keep thinking if I'd been stronger he'd have stayed. *She glares out of the window.* I don't know why I'm telling you this.
 > Because you trust me. | +4 shy
   - *A long pause.* ...Maybe. Don't make it weird. *She stands up.* Next time, take me somewhere high. Higher than this. I want to breathe.
 > It's not your fault he left. | +4 look

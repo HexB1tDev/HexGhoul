@@ -62,17 +62,17 @@ say: *The boys are eating in the garden, masks pushed up, laughing for the first
 > They're happy. | +3 -> eat
 ignored: *He watches them until every plate is clean, then quietly starts collecting the dishes.*
 page eat
-say: *He turns to look at you properly.* Nobody's ever done something for my boys because of me. *He rubs the back of his neck.* There's- the CCG have been sniffing round the hideout. I can't make them leave. Would you... help me with that too? I hate asking.
+say: *He turns to look at you properly.* Nobody's ever done something for my boys because of me. *He rubs the back of his neck.* There's- the garden. At the den. Nothing grows for me. Would you... help me with that too? I hate asking.
 > Ask me anything. | +4 shy
   - *He goes red to the ears.* ...Okay. Okay. I'll try not to ask too much.
 
 moment banjou_doves
-say: *He comes running up, out of breath, his tiny blue wing still half out.* Are you okay? Are you hurt? I was- I was right behind you. *He looks at the ground.* ...I was a lot behind you.
-> You came. That's what counts. | +4 -> came
-> You were brave. | +3 -> came
-ignored: *He checks you over for scratches, muttering, and won't stop until he's sure.*
+say: *He's kneeling in the den's garden in the dark, pressing the soil down round the last thing you planted with two fingers, like it might break.* It's in. They're all in. *He sits back on his heels.* I tried, you know. Last spring. Everything I planted died. The boys made jokes for a week.
+> They'll grow. | +4 -> came
+> You did it too. | +3 -> came
+ignored: *He waters every one of them twice, muttering, and won't stop until he's sure.*
 page came
-say: *He lets the wing fold away.* ...They won't come back for a while. The boys can sleep. *He breathes out.* Hey. Can I ask you something stupid? Take me somewhere high sometime. Really high. I want to see everything look small. Just once.
+say: *He wipes his hands on his coat and leaves two long smears of dirt.* ...The boys will see them in the morning. *He breathes out.* Hey. Can I ask you something stupid? Take me somewhere high sometime. Really high. I want to see everything look small. Just once.
 > I'll take you. | +3 shy
   - *He grins, embarrassed and delighted.* ...It's a date. No! Not a date. A trip. A trip.
 

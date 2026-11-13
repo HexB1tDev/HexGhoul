@@ -328,10 +328,111 @@ public final class EtoServer {
     /** Regard a chapter's moment brings, before anything said in it. */
     static final int MOMENT_REGARD = 4;
 
+    // ---------------------------------------------------------------- 4.1.80: chapters begun from the talk
+
+    /** Touka's homework being done: the three questions, then how many answered. */
+    static final Map<UUID, int[]> HOMEWORK = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * "Need anything done?" on a chapter begun from the talk (Courtship.Task#begun), not yet done: its ask and the button that begins it
+     * (none on the day of a wrong answer). False if the chapter on is no such one.
+     */
+    static boolean courtTrial(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        String key = npc.persona().key();
+        QuestLog.Bond bond = courtBond(player, key);
+        com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(key, bond);
+        if (!c.mayDate() || chapter == null || !chapter.task().begun() || EtoRules.count(bond) >= chapter.need()) {
+            return false;
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>();
+        String line = com.hex.kagune.control.npc.Courtship.said(chapter, 0);
+        if (chapter.task() == com.hex.kagune.control.npc.Courtship.Task.QUIZ && !mayStudy(player, key)) {
+            line = com.hex.kagune.control.npc.CourtVoice.homework("today", c.seed());
+        } else {
+            out.add(new EtoTalk.Option(NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.Courtship.begin(chapter.task()), "court:go"));
+        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+        show(player, npc, c, new EtoTalk.Page(line, out), Kind.MAIN);
+        return true;
+    }
+
+    /** True if {@code player} may try {@code key}'s homework today (no wrong answer today). */
+    static boolean mayStudy(ServerPlayer player, String key) {
+        return com.hex.kagune.control.npc.Courtship.mayStudy(day(player.m_284548_()), NpcMemoryServer.of(player).get(key, NpcMemory.STUDIED, -1L));
+    }
+
+    /** "court:go" (the spar begun, the homework's first question) and "court:quiz:n" (an answer to the homework). */
+    static void court(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, String key) {
+        String persona = npc.persona().key();
+        QuestLog.Bond bond = courtBond(player, persona);
+        com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(persona, bond);
+        if (!c.mayDate() || chapter == null || !chapter.task().begun() || EtoRules.count(bond) >= chapter.need()) {
+            HOMEWORK.remove(player.m_20148_());
+            return;
+        }
+        Script script = npc.persona().script();
+        if (chapter.task() == com.hex.kagune.control.npc.Courtship.Task.SPAR) {
+            if (key.equals("court:go")) {
+                show(player, npc, c, script.main(c, JoinServer.court(player, npc, c.seed())), Kind.MAIN);
+            }
+            return;
+        }
+        // The homework.
+        if (!mayStudy(player, persona)) {
+            HOMEWORK.remove(player.m_20148_());
+            show(player, npc, c, script.main(c, com.hex.kagune.control.npc.CourtVoice.homework("today", c.seed())), Kind.MAIN);
+            return;
+        }
+        int[] state = HOMEWORK.get(player.m_20148_());
+        if (key.equals("court:go") || state == null) {
+            int[] drawn = com.hex.kagune.control.npc.Courtship.homework(day(player.m_284548_()), player.m_20148_().getLeastSignificantBits());
+            state = new int[] {drawn[0], drawn[1], drawn[2], 0};
+            HOMEWORK.put(player.m_20148_(), state);
+            show(player, npc, c, question(com.hex.kagune.control.npc.CourtVoice.homework("begin", c.seed()), state, c.seed()), Kind.MAIN);
+            return;
+        }
+        int answer = -1;
+        try {
+            answer = Integer.parseInt(key.substring("court:quiz:".length()));
+        } catch (RuntimeException bad) {
+            // not an answer
+        }
+        if (!com.hex.kagune.control.npc.JoinTrial.right(answer)) {
+            HOMEWORK.remove(player.m_20148_());
+            NpcMemoryServer.set(player, persona, NpcMemory.STUDIED, day(player.m_284548_()));
+            EtoBrain.gesture(npc.mind, EtoGesture.POUT, player.m_284548_().m_46467_());
+            show(player, npc, c, script.main(c, com.hex.kagune.control.npc.CourtVoice.homework("wrong", c.seed())), Kind.MAIN);
+            return;
+        }
+        state[3]++;
+        if (state[3] < com.hex.kagune.control.npc.Courtship.ASKED) {
+            show(player, npc, c, question(com.hex.kagune.control.npc.CourtVoice.homework("next", c.seed() + state[3]), state, c.seed()), Kind.MAIN);
+            return;
+        }
+        HOMEWORK.remove(player.m_20148_());
+        QuestServer.bond(player, persona, com.hex.kagune.control.npc.Courtship.progress(persona, bond, com.hex.kagune.control.npc.Courtship.Task.QUIZ, 1));
+        moment(player, npc, com.hex.kagune.control.npc.CourtVoice.homework("done", c.seed()));
+    }
+
+    /** The homework's question {@code state} is at, its three answers turned round by {@code seed} (the right one anywhere). */
+    static EtoTalk.Page question(String said, int[] state, int seed) {
+        com.hex.kagune.control.npc.JoinTrial.Question q = com.hex.kagune.control.npc.Courtship.HOMEWORK[state[state[3]]];
+        List<String[]> answers = new java.util.ArrayList<>(List.of(new String[] {q.answer(0), "court:quiz:0"}, new String[] {q.answer(1), "court:quiz:1"},
+            new String[] {q.answer(2), "court:quiz:2"}));
+        java.util.Collections.rotate(answers, Math.floorMod(seed + state[3], answers.size()));
+        List<EtoTalk.Option> out = new java.util.ArrayList<>();
+        NpcTalk.Choice[] slots = {NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3};
+        for (int i = 0; i < answers.size(); i++) {
+            out.add(new EtoTalk.Option(slots[i], answers.get(i)[0], answers.get(i)[1]));
+        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+        return new EtoTalk.Page(said + " Question " + (state[3] + 1) + " of " + com.hex.kagune.control.npc.Courtship.ASKED + ": " + q.asked(), out);
+    }
+
     /** {@code player}'s bond with {@code key}, as the courtship keeps it (a bond from before it read as its chapters, and saved so). */
     static QuestLog.Bond courtBond(ServerPlayer player, String key) {
         QuestLog.Bond bond = QuestServer.bond(player, key);
-        QuestLog.Bond migrated = com.hex.kagune.control.npc.Courtship.migrate(bond, com.hex.kagune.control.npc.Courtship.CHAPTERS);
+        QuestLog.Bond migrated = com.hex.kagune.control.npc.Courtship.migrate(key, bond, com.hex.kagune.control.npc.Courtship.CHAPTERS);
         if (migrated != bond) {
             QuestServer.bond(player, key, migrated);
         }
@@ -678,6 +779,14 @@ public final class EtoServer {
             carry(player, npc, c, choice, new EtoTalk.Reply(line, 0, EtoTalk.Effect.CLOSE, EtoGesture.WAVE), Kind.MAIN);
             return;
         }
+        if (key.startsWith("court:")) {
+            // 4.1.80: a courtship chapter begun from the talk: Ayato's spar, Touka's homework (and its answers).
+            court(player, npc, c, key);
+            return;
+        }
+        if (choice == NpcTalk.Choice.FAVOUR && courtTrial(player, npc, c)) {
+            return; // 4.1.80: its ask, and the button that begins it
+        }
         if (choice == NpcTalk.Choice.PROPOSE) {
             propose(player, npc, c);
             return;
@@ -774,7 +883,7 @@ public final class EtoServer {
             case COURT -> {
                 // 2.1.2: what the chapter asks for handed over (all of it that it still needs), then its moment if that was the last of it.
                 String key = npc.persona().key();
-                bond = com.hex.kagune.control.npc.Courtship.migrate(bond, com.hex.kagune.control.npc.Courtship.CHAPTERS);
+                bond = com.hex.kagune.control.npc.Courtship.migrate(key, bond, com.hex.kagune.control.npc.Courtship.CHAPTERS);
                 int taken = handOver(player, key, bond);
                 if (taken > 0) {
                     bond = com.hex.kagune.control.npc.Courtship.progress(key, bond, com.hex.kagune.control.npc.Courtship.Task.GIVE, taken);
@@ -1555,6 +1664,8 @@ public final class EtoServer {
         int rank = dead instanceof com.hex.kagune.control.npc.CcgAgent agent ? AgentBrain.rankLevel(agent) : -1;
         boolean nearHumans = dead instanceof GhoulNpc && !killer.m_284548_().m_6443_(com.hex.kagune.control.npc.HumanNpc.class,
             dead.m_20191_().m_82400_(CourtshipServer.VILLAGE_NEAR), human -> human.m_6084_()).isEmpty();
+        boolean pack = dead instanceof GhoulNpc packed && packed.identity() != null
+            && packed.identity().temper() == com.hex.kagune.control.npc.NpcTemper.PACK;
         for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
             QuestLog.Bond bond = courtBond(killer, persona.key());
             com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(persona.key(), bond);
@@ -1568,8 +1679,9 @@ public final class EtoServer {
                 case GHOUL -> dead instanceof GhoulNpc;
                 case DOVES -> rank >= chapter.rank();
                 case DOVES_WITH -> rank >= chapter.rank() && along;
-                case GHOUL_PACK -> dead instanceof GhoulNpc ghoul && ghoul.identity() != null
-                    && ghoul.identity().temper() == com.hex.kagune.control.npc.NpcTemper.PACK;
+                case GHOUL_PACK -> pack;
+                // 4.1.80: the General's: the Pack put down with one of the bureau's own, a quinque in the hand.
+                case QUINQUE -> pack && quinqueInHand(killer);
                 case VILLAGE_GHOUL -> nearHumans;
                 default -> false;
             };
@@ -1587,5 +1699,11 @@ public final class EtoServer {
                 pact(killer, EtoRules.Pact.GHOUL, 1);
             }
         }
+    }
+
+    /** 4.1.80: true if {@code player}'s main hand holds a quinque, drawn (a case's weapon, or an arm's). */
+    static boolean quinqueInHand(ServerPlayer player) {
+        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        return ControlItems.quinqueWeapon(held) != null || ControlItems.armWeapon(held) != null;
     }
 }

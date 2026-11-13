@@ -41,10 +41,10 @@ ignored: *She puts the masks back in their box one by one, still humming.*
 # =====================================================================================================================================
 
 moment roma_show
-say: *She's sitting on the ring's edge kicking her heels, three investigators' cases lined up in front of her like trophies.* Three! THREE! Did you see their faces? *She drums on the cases.* A briefcase. To a fight. I'm going to put flowers in them.
+say: *She's sitting on the ring's edge kicking her heels, smoke and sparks still drifting down through the big top's open roof.* Eight! EIGHT! Did you see the colours? *She drums on the ring's edge.* Red, then gold, then that green one that went sideways. I'm putting it in the act.
 > It was for you. | +4 -> for
-> They had it coming. | +3 -> for
-ignored: *She opens a case, finds paperwork, and laughs until she cries.*
+> The green one was on purpose. | +3 -> for
+ignored: *She picks a spent rocket out of the sawdust, sniffs it, and laughs until she cries.*
 page for
 say: *She stops drumming.* ...For me. *She tilts her head, the mask's painted grin and her real one at the same angle.* Nobody does things for the ringmaster. The ringmaster does things. *Then, quickly:* Walk with me tonight. The long way. I'll show you all my favourite dark windows.
 > It's a date. | +3 laugh

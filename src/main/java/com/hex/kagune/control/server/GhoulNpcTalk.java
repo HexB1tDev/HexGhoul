@@ -67,6 +67,9 @@ public final class GhoulNpcTalk {
             if (JoinServer.serve(player, npc)) {
                 return; // 4.1.79: a regular of Anteiku's shift served their cup (or asked for it)
             }
+            if (CourtTrials.serve(player, npc)) {
+                return; // 4.1.80: one of Banjou's boys handed his supper
+            }
             open(player, npc);
         }
     }

@@ -45,6 +45,20 @@ public final class Courtship {
     /** Near enough (blocks) to be "with" them at dawn or in the night; to be sitting with them. */
     public static final double WITH = 10.0;
     public static final double SITTING = 6.0;
+    /**
+     * 4.1.80: a bond's flag: its courtship is 4.1.80's (a chapter on from before whose task changed starts again, or stays done:
+     * {@link #migrate}).
+     */
+    public static final int FROM_480 = 1 << 17;
+    /** 4.1.80: how near (blocks) the Library's heart a reading is; the tower's middle the roof; the companion fireworks are watched from. */
+    public static final double LIBRARY_NEAR = 30.0;
+    public static final double ROOF_REACH = 24.0;
+    public static final double SHOW_NEAR = 24.0;
+    /** 4.1.80: how near (blocks) their home a garden is planted; how near they must be to see it. */
+    public static final double GARDEN_NEAR = 40.0;
+    public static final double WATCHING = 16.0;
+    /** 4.1.80: how many of {@link #HOMEWORK}'s questions are asked at a sitting (all right in a row). */
+    public static final int ASKED = 3;
 
     /** What a chapter asks for. */
     public enum Task {
@@ -82,11 +96,42 @@ public final class Courtship {
         /** A village human brought to tell them its secret. */
         HUMAN_SECRET,
         /** Walking through a human village after dark with the companion following (steps of {@link #STEP_SECONDS}). */
-        VILLAGE_NIGHT;
+        VILLAGE_NIGHT,
+        // 4.1.80 (the plan: "swap the repeated tasks so each companion's five differ"): each asked by one companion alone.
+        /** A spar with the companion, won: them at {@link JoinTrial#SPAR_WIN} of their health before the player is at {@link JoinTrial#SPAR_FLOOR}. */
+        SPAR,
+        /** Reading with them at the Library at night, them following (steps of {@link #STEP_SECONDS}). */
+        READING,
+        /** Up on the CCG tower's roof with them following. */
+        ROOF,
+        /** Pack ghouls killed with a quinque in the hand. */
+        QUINQUE,
+        /** Walking through a human village in daylight with them following (steps of {@link #STEP_SECONDS}). */
+        VILLAGE_DAY,
+        /** Fireworks set off at night, near them, as they watch. */
+        SHOW,
+        /** Village humans' favours done. */
+        ERRAND,
+        /** Their homework: {@link #ASKED} of {@link #HOMEWORK}'s questions right in a row on the talk screen (one wrong: tomorrow). */
+        QUIZ,
+        /** Flowers or saplings planted in their garden as they watch. */
+        GARDEN,
+        /** A bowl of the cookbook's handed to each of their own people (a different one each time). */
+        SERVE;
 
         /** True if counted in steps of time (shown in minutes). */
         public boolean timed() {
-            return this == WALK_NIGHT || this == SIT || this == VILLAGE_NIGHT;
+            return this == WALK_NIGHT || this == SIT || this == VILLAGE_NIGHT || this == READING || this == VILLAGE_DAY;
+        }
+
+        /** 4.1.80: true if done in one go (asked the same way until it is: a place reached, a time kept, a spar won, a test passed). */
+        public boolean once() {
+            return this == HIGH || this == DAWN || this == DEEP || this == SPAR || this == ROOF || this == QUIZ;
+        }
+
+        /** 4.1.80: true if begun from the talk screen ("Let's go."): the spar, the homework. */
+        public boolean begun() {
+            return this == SPAR || this == QUIZ;
         }
     }
 
@@ -110,6 +155,42 @@ public final class Courtship {
     static final Set<String> BLEND = Set.of("hexkagune:anteiku_blend", "hexkagune:blood_latte", "hexkagune:crimson_tea", "hexkagune:rc_tonic",
         "hexkagune:kakuja_shot");
     static final Set<String> GHOUL_MEAT = Set.of("hexkagune:ghoul_meat");
+    /** 4.1.80: Banjou's boys' supper: any bowl of the cookbook's (its bowls chapter's, and the broth). */
+    public static final Set<String> SUPPER = supper();
+
+    private static Set<String> supper() {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
+            if (dish.kind() == com.hex.kagune.control.kitchen.Dish.Kind.BOWL) {
+                out.add("hexkagune:" + dish.id());
+            }
+        }
+        return java.util.Set.copyOf(out);
+    }
+
+    /** 4.1.80: what a garden takes: a sapling, a flower (any of Minecraft's, the tall ones too), an azalea. */
+    private static final String[] FLOWERS = {"dandelion", "poppy", "blue_orchid", "allium", "azure_bluet", "_tulip", "oxeye_daisy", "cornflower",
+        "lily_of_the_valley", "sunflower", "lilac", "rose_bush", "peony", "torchflower", "pitcher_plant", "pink_petals", "wither_rose"};
+
+    /** 4.1.80: true if {@code id} (a block's or an item's, "minecraft:poppy") is something planted in a garden. */
+    public static boolean plant(String id) {
+        if (id == null || !id.startsWith("minecraft:")) {
+            return false;
+        }
+        String name = id.substring(10);
+        if (name.startsWith("potted_")) {
+            return false; // a pot is set down, not planted
+        }
+        if (name.endsWith("_sapling") || name.equals("azalea") || name.equals("flowering_azalea") || name.equals("mangrove_propagule")) {
+            return true;
+        }
+        for (String flower : FLOWERS) {
+            if (flower.startsWith("_") ? name.endsWith(flower) : name.equals(flower)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * 2.1.5: hers: walking among the humans unseen, a human who cares for you, Doves dying while she watches, a human's secret, then the
@@ -152,11 +233,12 @@ public final class Courtship {
                 + "it, a tonic if you don't. Make it yourself, bring it here, and don't you dare buy it from someone.",
             "Still nothing? It's in the book. Drinks chapter. It's not hard. ...It's a little hard.",
             "Make Touka a drink from her cookbook (the drinks chapter: the Anteiku Blend, an RC Tonic...) and hand it to her"),
-        new Chapter("touka_patrol", "Doves in the ward", Task.DOVES, 4, Set.of(), "",
-            "Doves have been sniffing round the ward. Investigators. Asking about the cafe, about a girl in a rabbit mask. Make them stop asking. "
-                + "Four of them. I'll know if you lie.",
-            "{n} of four. They're still out there. Asking.",
-            "Kill CCG investigators to keep them away from the ward: {n} of {need}"),
+        // 4.1.80: was four Doves killed (Doves were three companions' twice over): her exams, which she studies for every night.
+        new Chapter("touka_patrol", "Help me study", Task.QUIZ, 1, Set.of(), "",
+            "I've got exams next week and nothing's sticking. ...Help me study. I'll read you my homework, you answer. Three right in a row and "
+                + "you can explain them to me after. One wrong and that's it for today. ...Don't laugh.",
+            "Again? Fine. Same rules. Three in a row. ...I've been practising. Have you?",
+            "Help Touka with her homework: three of her questions right in a row (one wrong: try again tomorrow)"),
         new Chapter("touka_roof", "Somewhere high", Task.HIGH, 1, Set.of(), "",
             "Take me somewhere high. Higher than the rooftops. A mountain, a tower, I don't care. Somewhere the whole world's under us and "
                 + "nobody's looking up. Ask me to follow you, and climb.",
@@ -193,11 +275,12 @@ public final class Courtship {
                 + "...Stop one. Please. And come back alive.",
             "Not yet? ...Be careful. A Pack ghoul. You'll know them by how they smile.",
             "Kill a wild ghoul of the Pack"),
-        new Chapter("ken_doves", "Beside me", Task.DOVES_WITH, 1, Set.of(), "",
-            "There's an investigator who's been tracking me. Rank 5, maybe more. I don't want to fight him alone anymore. Walk with me, and when "
-                + "he finds us, fight beside me.",
-            "He hasn't found us yet. Stay close. Rank 5 or above.",
-            "With Ken following you, kill a CCG investigator of Rank 5 or above", 5),
+        // 4.1.80: was a Rank 5 Dove killed with him along (Ayato asks the same): a night at the Library, reading, the one place he rests.
+        new Chapter("ken_doves", "Nights at the Library", Task.READING, 12, Set.of(), "",
+            "I don't sleep. You know that. When it's bad I go to the Library, the old one, and read until the words stop moving. ...Would you come "
+                + "with me? At night. Just to read. A book each, nobody talking. Ask me to follow you there.",
+            "{m} of {mm} minutes. ...Don't stop reading on my account. I like the sound of the pages.",
+            "At night, with Ken following you, read with him at the Library: {m} of {mm} minutes"),
         new Chapter("ken_sunrise", "One sunrise", Task.DAWN, 1, Set.of(), "",
             "I don't sleep well. I haven't, for a long time. Stay up with me, once. Until the sun comes up. I'd like to see one sunrise with "
                 + "someone, instead of alone.",
@@ -215,15 +298,18 @@ public final class Courtship {
             "You want something to do? Feed me. Three ghoul's pies. Made right, not that slop they sell. ...Don't ask why. And don't tell my sister.",
             "{n} of three. You're slow.",
             "Bring Ayato ghoul's pies: {n} of {need}"),
-        new Chapter("ayato_ghouls", "The ward isn't theirs", Task.GHOUL, 3, Set.of(), "",
-            "There are wild ghouls out there who think this ward is theirs. Three of them. Show them it isn't. If you can.",
-            "{n} of three. Faster. I'm getting bored.",
-            "Kill three wild ghouls for Ayato: {n} of {need}"),
-        new Chapter("ayato_roof", "Where they can't see", Task.HIGH, 1, Set.of(), "",
-            "...Take me somewhere high. Above everything. The Doves never look up. I want to sit somewhere they can't see me. With you. "
-                + "Shut up, that's not weird.",
-            "Higher. Somewhere the whole ward looks small.",
-            "Take Ayato somewhere high (him following you)"),
+        // 4.1.80: was three wild ghouls killed: a spar with him (the plan: "Ayato's a spar at the hideout"); then not just anywhere high
+        // (three others asked that) but the Doves' own roof.
+        new Chapter("ayato_ghouls", "Hit me like you mean it", Task.SPAR, 1, Set.of(), "",
+            "You want something to do? Fight me. Here. Now. Not to the death, I'm not an idiot. Get me to half before I get you under a quarter. "
+                + "...If you can. Say when.",
+            "Again? Fine. Same rules. Half of me before a quarter of you.",
+            "Spar with Ayato: get him to half his health before he gets you under a quarter of yours"),
+        new Chapter("ayato_roof", "Where they can't see", Task.ROOF, 1, Set.of(), "",
+            "...Take me up on the Doves' roof. Their tower. Hundreds of them in there, and not one of them ever looks up. I want to sit up there "
+                + "with you. Shut up, that's not weird.",
+            "Not there yet. Their roof. The very top. Where they can't see.",
+            "Take Ayato up on the CCG tower's roof (him following you)"),
         new Chapter("ayato_rabbit", "Hunting the black rabbit", Task.DOVES_WITH, 1, Set.of(), "",
             "There's a Dove who's been hunting the black rabbit. Me. Rank 5 or worse. He'll come. When he does, you stand next to me. Not "
                 + "behind. Next to.",
@@ -245,21 +331,24 @@ public final class Courtship {
                 + "people are. Show me whose side you stand on when nobody's ordering you.",
             "{n} of three, at a village. The people there can't wait on my paperwork.",
             "Kill three wild ghouls preying on a village: {n} of {need}"),
-        new Chapter("general_vouch", "Someone to vouch for you", Task.HUMAN_FRIEND, 1, Set.of(), "",
-            "I've read your file. I'd rather hear it from a person. Find me one human in a village who'd call you a friend. Just one who'd "
-                + "say it and mean it.",
-            "One villager who cares for you. People can tell. They always can.",
-            "Bring a village human to care for you"),
-        new Chapter("general_pack", "The ones who enjoy it", Task.GHOUL_PACK, 3, Set.of(), "",
-            "The Pack. The ones who kill for the joy of it. I've lost eleven investigators to them this year. Three. Put down three, and "
-                + "I'll sleep one night this month.",
-            "{n} of three of the Pack. Be careful. That's not an order. ...It's an order.",
-            "Kill three ghouls of the Pack: {n} of {need}"),
-        new Chapter("general_high", "The district, not the map", Task.HIGH, 1, Set.of(), "",
-            "I've run this district for ten years from a map on a wall. Take me somewhere high. I want to see it, once, the way it really "
-                + "lies. ...With you. That part isn't in the report.",
-            "Higher. Somewhere I can see all of it.",
-            "Take General Kuroda somewhere high (him following you)"),
+        // 4.1.80: was a villager who cares for you (Eto asks that): villagers' favours done, the people's work his officers have no time
+        // for; the Pack put down with one of the bureau's quinques (Ken and Roma ask for the Pack too); his district walked by day, not
+        // seen from somewhere high.
+        new Chapter("general_vouch", "Someone to vouch for you", Task.ERRAND, 2, Set.of(), "",
+            "I've read your file. I'd rather hear it from people. There are villagers in my district with problems my officers never have time "
+                + "for. Help two of them, whatever they ask. Then we'll see who writes to me.",
+            "{n} of {need}. People talk. The good things travel slower, but they travel.",
+            "Do favours for villagers (the ones they ask of you): {n} of {need}"),
+        new Chapter("general_pack", "The ones who enjoy it", Task.QUINQUE, 3, Set.of(), "",
+            "The Pack. The ones who kill for the joy of it. I've lost eleven investigators to them this year. Three. And do it with one of ours: "
+                + "a quinque in your hand. I want them to see what's coming for them.",
+            "{n} of three of the Pack, with a quinque. Be careful. That's not an order. ...It's an order.",
+            "Kill three ghouls of the Pack with a quinque in your hand: {n} of {need}"),
+        new Chapter("general_high", "The district, not the map", Task.VILLAGE_DAY, 12, Set.of(), "",
+            "I've run this district for ten years from a map on a wall. Walk me through a village. In daylight, on foot, like a person. I want "
+                + "to see it once the way it really is. ...With you. That part isn't in the report.",
+            "{m} of {mm} minutes. Slower. I want to read the shop signs.",
+            "In daylight, with General Kuroda following you, walk through a human village: {m} of {mm} minutes"),
         new Chapter("general_dawn", "The end of the night shift", Task.DAWN, 1, Set.of(), "",
             "Be here at dawn. When the night shift comes in and I count them. ...I've counted them alone for thirty years. I'd like, once, "
                 + "not to.",
@@ -272,16 +361,18 @@ public final class Courtship {
      * (the only thing she won't laugh at), and the sun coming up with her, the one time she drops the act.
      */
     static final List<Chapter> ROMA = List.of(
-        new Chapter("roma_show", "A show for the ringmaster", Task.DOVES, 3, Set.of(), "",
-            "You want to date the ringmaster? Then put on a show! Three doves. Investigators. The ones with the briefcases. ...What? It's "
-                + "funny. They bring a case to a fight. A CASE. Like they're going to file us.",
-            "{n} doves of three! The crowd's warming up! The crowd is me.",
-            "Kill three CCG investigators: {n} of {need}"),
-        new Chapter("roma_walk", "Walk me past the windows", Task.VILLAGE_NIGHT, 3, Set.of(), "",
+        // 4.1.80: was three Doves killed (the plan: "Roma's 'kill 3 investigators' a circus show for her"): fireworks over her ring.
+        new Chapter("roma_show", "A show for the ringmaster", Task.SHOW, 8, Set.of(), "",
+            "You want to date the ringmaster? Then put on a show! Fireworks. Eight of them, over my ring, at night, where I can see. ...What? "
+                + "Everybody else brings flowers. Flowers don't EXPLODE.",
+            "{n} of eight! The crowd's warming up! The crowd is me.",
+            "At night, set off fireworks by Roma's ring while she watches: {n} of {need}"),
+        // 4.1.80: its count was 3 steps (half a minute) said as "0.5 of 3 minutes": three minutes now, said as minutes.
+        new Chapter("roma_walk", "Walk me past the windows", Task.VILLAGE_NIGHT, 18, Set.of(), "",
             "Walk me through a village. At night. The long way, past all the windows with the lights off. I like to guess which ones are "
                 + "already dead. ...Kidding! Mostly. Walk with me anyway.",
-            "{mm} minutes of {need}... keep walking, you're doing great, you haven't screamed once.",
-            "Walk Roma through a human village after dark: {mm} of {need} minutes"),
+            "{m} minutes of {mm}... keep walking, you're doing great, you haven't screamed once.",
+            "Walk Roma through a human village after dark: {m} of {mm} minutes"),
         new Chapter("roma_tent", "After the lights go out", Task.DEEP, 1, Set.of(), "",
             "Come to the tent in the dead of night. No show. No masks. Just the two of us and the echo. ...It's very spooky. You'll love it.",
             "The dead of night. In the tent. Shh. Hear that? That's nothing. That's the point.",
@@ -303,16 +394,18 @@ public final class Courtship {
      * him), and the cottage in the dead of night, the mask off.
      */
     static final List<Chapter> BANJOU = List.of(
-        new Chapter("banjou_supper", "Supper for the boys", Task.GIVE, 4, Set.of("hexkagune:ghoul_meat"), "the Ghoul Meat",
-            "You want to... help? Me? Okay. Okay. The boys are hungry and I'm the one who's supposed to feed them. Four pieces of ghoul meat. "
-                + "...I'd go myself. I'd come back with nothing. I always do.",
-            "{n} of four. The boys will eat before I do. They always do.",
-            "Bring Banjou Ghoul Meat for his men: {n} of {need}"),
-        new Chapter("banjou_doves", "The doves at the gate", Task.DOVES, 3, Set.of(), "",
-            "Investigators have been sniffing round the hideout. Three of them, at least. I went out to scare them off. ...They didn't scare. "
-                + "Could you? I'll be right behind you. A bit behind you.",
-            "{n} of three. I'm counting. I'm also hiding. Mostly counting.",
-            "Kill three CCG investigators for Banjou: {n} of {need}"),
+        // 4.1.80: was four Ghoul Meat handed to him (Ken asks for Ghoul Meat too): supper cooked and handed to the boys themselves; then,
+        // was three Doves killed: the dead garden behind his cottage planted.
+        new Chapter("banjou_supper", "Supper for the boys", Task.SERVE, 3, SUPPER, "a bowl",
+            "You want to... help? Me? Okay. Okay. The boys are hungry and I'm the one who's supposed to feed them. Cook them something hot. "
+                + "Bowls, from the cookbook. Hand one to three of them yourself. ...I'd do it. I'd burn it. I always do.",
+            "{n} of three fed. The boys eat before I do. They always do.",
+            "Cook bowls from the cookbook and hand one each to three of Banjou's Gas Masks (right-click them with it): {n} of {need}"),
+        new Chapter("banjou_doves", "Something that grows", Task.GARDEN, 6, Set.of(), "",
+            "There's a garden at the den. Was. Nothing grows for me. I planted everything last spring and it all died, and the boys laughed for a "
+                + "week. ...Would you plant something with me? Flowers. Saplings. Six. I'll watch. I'll hold the... I'll watch.",
+            "{n} of six in the ground. Careful with that one. ...They're all that one.",
+            "Plant flowers or saplings at the Gas Masks' den with Banjou there: {n} of {need}"),
         new Chapter("banjou_high", "Somewhere I look big", Task.HIGH, 1, Set.of(), "",
             "Take me somewhere high? Really high. Where everything looks small. ...I'd like to feel big, just once, next to somebody. Is that stupid?",
             "Higher. I can still see things that are bigger than me.",
@@ -357,6 +450,42 @@ public final class Courtship {
         return Math.max(0, Math.min(total, bits));
     }
 
+    /**
+     * 4.1.80: the chapters whose task changed in 4.1.80, and what each needed before: a chapter on from before it changed starts again
+     * (its count counted something else), unless it was already done, waiting for its moment (then it stays done).
+     */
+    static final java.util.Map<String, Integer> CHANGED_480 = java.util.Map.of("touka_patrol", 4, "ken_doves", 1, "ayato_ghouls", 3,
+        "ayato_roof", 1, "general_vouch", 1, "general_pack", 3, "general_high", 1, "roma_show", 3, "roma_walk", 3, "banjou_supper", 4);
+    /** Banjou's second: its old need (Map.of takes ten pairs at most). */
+    static final int BANJOU_DOVES_BEFORE = 3;
+
+    /** 4.1.80: what {@code id} needed before 4.1.80 changed it (0: it didn't change). */
+    static int before480(String id) {
+        return "banjou_doves".equals(id) ? BANJOU_DOVES_BEFORE : CHANGED_480.getOrDefault(id, 0);
+    }
+
+    /**
+     * 4.1.80: {@code bond} (of {@code key}'s courtship, after the 2.1.5 step) as 4.1.80 keeps it: a chapter on whose task changed starts
+     * again, or stays done if it was ({@link #before480}); marked {@link #FROM_480} once looked at (begun or not).
+     */
+    static QuestLog.Bond migrate480(String key, QuestLog.Bond bond) {
+        if (bond.has(FROM_480)) {
+            return bond;
+        }
+        QuestLog.Bond marked = new QuestLog.Bond(bond.regard(), bond.chatted(), bond.flags() | FROM_480, bond.favours());
+        Chapter chapter = chapter(key, bond);
+        int was = chapter == null ? 0 : before480(chapter.id());
+        if (was == 0) {
+            return marked;
+        }
+        return EtoRules.count(marked, EtoRules.count(bond) >= was ? chapter.need() : 0);
+    }
+
+    /** 4.1.80: {@code bond} as this courtship keeps it for {@code key} (every step: the errands', 2.1.5's, 4.1.80's). */
+    public static QuestLog.Bond migrate(String key, QuestLog.Bond bond, int total) {
+        return migrate480(key, migrate(bond, total));
+    }
+
     /** {@code bond} as this courtship keeps it: the errands' flags read as chapters (their count, meaningless now, from 0). */
     public static QuestLog.Bond migrate(QuestLog.Bond bond, int total) {
         if ((bond.flags() & LEGACY) == 0) {
@@ -394,8 +523,8 @@ public final class Courtship {
 
     /** Begun: the first chapter on, nothing done of it. */
     public static QuestLog.Bond begin(QuestLog.Bond bond) {
-        return EtoRules.count(new QuestLog.Bond(bond.regard(), bond.chatted(), (bond.flags() | EtoRules.LINE_ON | FROM_215) & ~LEGACY & ~BITS,
-            bond.favours()), 0);
+        return EtoRules.count(new QuestLog.Bond(bond.regard(), bond.chatted(), (bond.flags() | EtoRules.LINE_ON | FROM_215 | FROM_480) & ~LEGACY
+            & ~BITS, bond.favours()), 0);
     }
 
     /** {@code amount} more done on the chapter on for {@code key}, if it is a {@code task} (never past what it needs). */
@@ -431,7 +560,7 @@ public final class Courtship {
      */
     public static QuestLog.Bond wed(QuestLog.Bond bond) {
         int flags = bond.flags() & ~LEGACY & ~BITS | NpcBonds.MET | NpcBonds.BEFRIENDED | EtoRules.LINE_ON | EtoRules.DATING | FROM_215
-            | Math.min(7, CHAPTERS) << SHIFT;
+            | FROM_480 | Math.min(7, CHAPTERS) << SHIFT;
         return EtoRules.count(new QuestLog.Bond(NpcBonds.MOST, bond.chatted(), flags, bond.favours()), 0);
     }
 
@@ -448,6 +577,70 @@ public final class Courtship {
     public static boolean wants(String key, QuestLog.Bond bond, String item) {
         Chapter chapter = chapter(key, bond);
         return chapter != null && chapter.task() == Task.GIVE && item != null && chapter.items().contains(item);
+    }
+
+    /**
+     * 4.1.80: true if planting {@code what} went into the ground: one of the clicked block and its sides was something else
+     * ({@code before}) and is it now ({@code after}, the same places in the same order).
+     */
+    public static boolean planted(String what, String[] before, String[] after) {
+        if (!plant(what) || before == null || after == null || before.length != after.length) {
+            return false;
+        }
+        for (int i = 0; i < after.length; i++) {
+            if (what.equals(after[i]) && !what.equals(before[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ---------------------------------------------------------------- 4.1.80: where and when
+
+    /** How far over the General's floor the tower's top must be (blocks); how near its top height one on its roof stands. */
+    public static final int ROOF_OVER = 6;
+    public static final double ROOF_SLACK = 4.0;
+
+    /**
+     * True if one standing at {@code y} is up on the CCG tower's roof: nothing over them ({@code topHere}: the first open block over
+     * their column, as the world's height map has it), about as high as the tower's top over the General's spot ({@code topTower}), which
+     * is a building standing over his floor ({@code homeY}).
+     */
+    public static boolean onRoof(double y, int topHere, int topTower, int homeY) {
+        return topTower >= homeY + ROOF_OVER && y >= topHere - 0.5 && Math.abs(y - topTower) <= ROOF_SLACK;
+    }
+
+    /** True if it is daylight at {@code time} (the day's ticks): the hours a village is up and about (a walk by day). */
+    public static boolean daylight(long time) {
+        long t = Math.floorMod(time, 24000L);
+        return t >= 1000L && t < 12000L;
+    }
+
+    // ---------------------------------------------------------------- 4.1.80: Touka's homework
+
+    /**
+     * Her homework (she studies every night to stay in her human school): school questions, the right answer first (shown turned round,
+     * as the academy's test is). Append only (asked by index).
+     */
+    public static final JoinTrial.Question[] HOMEWORK = {
+        new JoinTrial.Question("The cafe sells three cups for 450 yen. How much are seven?", "1,050 yen.", "1,350 yen.", "950 yen."),
+        new JoinTrial.Question("Solve for x: 3x + 7 = 22.", "x = 5.", "x = 7.", "x = 3."),
+        new JoinTrial.Question("A right triangle's two short sides are 3 and 4. The long side is...", "5.", "7.", "6."),
+        new JoinTrial.Question("What's the square root of 144?", "12.", "14.", "16."),
+        new JoinTrial.Question("What's 15% of 200?", "30.", "15.", "20."),
+        new JoinTrial.Question("Which gas do plants take in to make their food?", "Carbon dioxide.", "Oxygen.", "Nitrogen."),
+        new JoinTrial.Question("At sea level, water boils at...", "100 degrees Celsius.", "90 degrees Celsius.", "120 degrees Celsius."),
+        new JoinTrial.Question("The largest planet in the solar system is...", "Jupiter.", "Saturn.", "Neptune."),
+        new JoinTrial.Question("The past tense of \"run\" is...", "Ran.", "Runned.", "Running.")};
+
+    /** The {@link #ASKED} homework questions asked on {@code day} of a player of {@code mine} (indexes, all different). */
+    public static int[] homework(long day, long mine) {
+        return JoinTrial.draw(HOMEWORK.length, ASKED, day, mine);
+    }
+
+    /** True if the homework may be tried on {@code day}: never on the day of a wrong answer ({@code failedOn}; -1 for none). */
+    public static boolean mayStudy(long day, long failedOn) {
+        return day != failedOn;
     }
 
     // ---------------------------------------------------------------- its words
@@ -467,8 +660,7 @@ public final class Courtship {
 
     /** What the companion says asked about the chapter on: its ask if nothing is done yet, else how far along. */
     public static String said(Chapter chapter, int done) {
-        return fill(done <= 0 || chapter.task() == Task.HIGH || chapter.task() == Task.DAWN || chapter.task() == Task.DEEP ? chapter.ask()
-            : chapter.progress(), chapter, done);
+        return fill(done <= 0 || chapter.task().once() ? chapter.ask() : chapter.progress(), chapter, done);
     }
 
     /** The journal's name for the chapter on: "Chapter 2 of 5: A walk after dark" ("" past the last). */
@@ -489,6 +681,11 @@ public final class Courtship {
         }
         Chapter chapter = all.get(closed);
         return done >= chapter.need() ? "Done: go and see " + Persona.of(key).her() + "." : fill(chapter.journal(), chapter, done) + ".";
+    }
+
+    /** 4.1.80: the button that begins a chapter begun from the talk ({@link Task#begun}). */
+    public static String begin(Task task) {
+        return task == Task.SPAR ? "Let's fight. (the spar)" : task == Task.QUIZ ? "Okay. Read me the first one." : "";
     }
 
     /** The talk screen's words for handing over the chapter's items. */

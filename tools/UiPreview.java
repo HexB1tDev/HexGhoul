@@ -1170,6 +1170,100 @@ public class UiPreview {
         }
     }
 
+    /**
+     * 4.1.80: the courtship's new chapters, as each companion asks them (the button that begins the spar or the homework; how far a count
+     * has gone), Touka's homework (a question, its three answers turned round), each changed moment's first page with its answers, and the
+     * journal's Romance tab on a chapter of each kind.
+     */
+    static void romanceTalk(File dir) throws Exception {
+        com.hex.kagune.control.npc.NpcTalk.Choice[] says = com.hex.kagune.control.npc.NpcTalk.Choice.SAYS;
+        com.hex.kagune.control.npc.NpcTalk.Choice back = com.hex.kagune.control.npc.NpcTalk.Choice.BACK;
+        com.hex.kagune.control.npc.NpcTalk.Choice chat = com.hex.kagune.control.npc.NpcTalk.Choice.CHAT;
+        com.hex.kagune.control.npc.NpcTalk.Choice favour = com.hex.kagune.control.npc.NpcTalk.Choice.FAVOUR;
+        com.hex.kagune.control.npc.NpcTalk.Choice leave = com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE;
+        String[][] who = {{"touka", "Touka", "Anteiku's waitress - wary", "touka/touka.png"}, {"ken", "Ken", "The one-eyed king - happy", "ken/ken.png"},
+            {"ayato", "Ayato", "The black rabbit - bored", "ayato/ayato.png"}, {"general", "The General", "The General - wary", "general/general.png"},
+            {"roma", "Roma", "The Clowns' ringmaster - giddy", "roma/roma.png"}, {"banjou", "Banjou", "The Gas Masks' leader - happy", "banjou/banjou.png"}};
+        java.util.Map<String, String[]> by = new java.util.HashMap<>();
+        for (String[] w : who) {
+            by.put(w[0], w);
+        }
+        String[] changed = {"touka_patrol", "ken_doves", "ayato_ghouls", "ayato_roof", "general_vouch", "general_pack", "general_high", "roma_show",
+            "banjou_supper", "banjou_doves"};
+        for (String id : changed) {
+            String key = id.substring(0, id.indexOf('_'));
+            String[] w = by.get(key);
+            com.hex.kagune.control.npc.Courtship.Chapter chapter = null;
+            for (com.hex.kagune.control.npc.Courtship.Chapter one : com.hex.kagune.control.npc.Courtship.of(key)) {
+                if (one.id().equals(id)) {
+                    chapter = one;
+                }
+            }
+            boolean begun = chapter.task().begun();
+            int done = chapter.task().once() ? 0 : Math.max(1, chapter.need() / 3);
+            String line = com.hex.kagune.control.npc.Courtship.said(chapter, begun ? 0 : done);
+            etoFrame(new File(dir, "court-" + id + ".png"), face(w[3]), new com.hex.kagune.control.client.NpcTalkView.Model(w[1], w[2], 62, false, line,
+                begun ? java.util.List.of(says[0], back) : java.util.List.of(chat, favour, leave),
+                begun ? java.util.List.of(com.hex.kagune.control.npc.Courtship.begin(chapter.task()), "") : java.util.List.of("Talk to me.",
+                    "About what you asked...", ""), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(62));
+        }
+        // Touka's homework: the three questions of a day, answers turned round as the server turns them.
+        int[] drawn = com.hex.kagune.control.npc.Courtship.homework(9L, 3L);
+        for (int i = 0; i < drawn.length; i++) {
+            com.hex.kagune.control.npc.JoinTrial.Question q = com.hex.kagune.control.npc.Courtship.HOMEWORK[drawn[i]];
+            java.util.List<String> answers = new java.util.ArrayList<>(java.util.List.of(q.answer(0), q.answer(1), q.answer(2)));
+            java.util.Collections.rotate(answers, i + 1);
+            answers.add("");
+            String said = (i == 0 ? com.hex.kagune.control.npc.CourtVoice.homework("begin", 0) : com.hex.kagune.control.npc.CourtVoice.homework("next", i))
+                + " Question " + (i + 1) + " of " + com.hex.kagune.control.npc.Courtship.ASKED + ": " + q.asked();
+            etoFrame(new File(dir, "court-homework-" + (i + 1) + ".png"), face("touka/touka.png"), new com.hex.kagune.control.client.NpcTalkView.Model(
+                "Touka", "Anteiku's waitress - wary", 62, false, said, java.util.List.of(says[0], says[1], says[2], back), answers, -1),
+                com.hex.kagune.control.client.NpcTalkView.Motion.still(62));
+        }
+        etoFrame(new File(dir, "court-homework-wrong.png"), face("touka/touka.png"), new com.hex.kagune.control.client.NpcTalkView.Model("Touka",
+            "Anteiku's waitress - sulking", 62, false, com.hex.kagune.control.npc.CourtVoice.homework("wrong", 0), java.util.List.of(chat, favour, leave),
+            java.util.List.of("Talk to me.", "About what you asked...", ""), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(62));
+        // Each changed moment's first page, as it plays when its task is done.
+        for (String id : changed) {
+            String key = id.substring(0, id.indexOf('_'));
+            String[] w = by.get(key);
+            String text = new String(java.nio.file.Files.readAllBytes(new File("src/main/resources/data/hexkagune/talk/" + key + ".txt").toPath()),
+                java.nio.charset.StandardCharsets.UTF_8);
+            com.hex.kagune.control.npc.scene.Scene scene = null;
+            for (com.hex.kagune.control.npc.scene.Scene one : com.hex.kagune.control.npc.scene.SceneBook.parse(key, text).scenes()) {
+                if (one.id().equals(id)) {
+                    scene = one;
+                }
+            }
+            com.hex.kagune.control.npc.scene.Scene.Page first = scene.first();
+            java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> choices = new java.util.ArrayList<>();
+            java.util.List<String> labels = new java.util.ArrayList<>();
+            for (int i = 0; i < first.options().size(); i++) {
+                choices.add(says[i]);
+                labels.add(first.options().get(i).label());
+            }
+            etoFrame(new File(dir, "moment-" + id + ".png"), face(w[3]), new com.hex.kagune.control.client.NpcTalkView.Model(w[1], w[2], 70, false,
+                first.lines().get(0), choices, labels, -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(70));
+        }
+        // The journal's Romance tab: one courting at each new kind (Roma's show, the General's walk, Banjou's garden, Ken's reading).
+        java.util.List<com.hex.kagune.control.npc.RomanceCard> cards = java.util.List.of(
+            new com.hex.kagune.control.npc.RomanceCard("roma", true, com.hex.kagune.control.npc.Romance.Stage.NONE, 66, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.COURTING, 3, 0L, 0, false, false, 0),
+            new com.hex.kagune.control.npc.RomanceCard("general", true, com.hex.kagune.control.npc.Romance.Stage.NONE, 72, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.COURTING, 5, 0L, 0, false, false, 3),
+            new com.hex.kagune.control.npc.RomanceCard("banjou", true, com.hex.kagune.control.npc.Romance.Stage.NONE, 70, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.COURTING, 2, 0L, 0, false, false, 1),
+            new com.hex.kagune.control.npc.RomanceCard("ken", true, com.hex.kagune.control.npc.Romance.Stage.NONE, 80, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.COURTING, 4, 0L, 0, false, false, 3),
+            new com.hex.kagune.control.npc.RomanceCard("touka", true, com.hex.kagune.control.npc.Romance.Stage.NONE, 64, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.COURTING, 0, 0L, 0, false, false, 1));
+        com.hex.kagune.control.quest.QuestLog log = new com.hex.kagune.control.quest.QuestLog();
+        for (String key : new String[] {"roma", "general", "banjou", "ken", "touka"}) {
+            journal(new File(dir, "journal-" + key + ".png"), KagunePath.RINKAKU, 520, log, com.hex.kagune.control.client.QuestJournalView.Tab.ROMANCE,
+                "romance:" + key, 0L, cards);
+        }
+    }
+
     /** 4.1.53: Noro and Roma giving today's job to one of their gang (the option on their first page, the job given, the reputation bar). */
     static void dailiesTalk(File dir) throws Exception {
         java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
@@ -1417,6 +1511,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("board")) {
             boardTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("romance")) {
+            romanceTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("dailies")) {

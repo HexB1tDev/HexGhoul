@@ -153,6 +153,7 @@ public final class HumanErrandServer {
         QuestServer.bond(player, key, bond.regard(bond.regard() + HumanErrand.REGARD));
         keep(player, null);
         HumanBrain.hearts(human, player.m_284548_(), 6);
+        CourtshipServer.event(player, com.hex.kagune.control.npc.Courtship.Task.ERRAND, 1); // 4.1.80: the General's villagers' favours
         return HumanErrand.thanks(HumanBrain.temper(human), human.m_217043_().m_188503_(100));
     }
 

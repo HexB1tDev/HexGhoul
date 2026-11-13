@@ -149,6 +149,7 @@ public final class CompanionTests {
         lessons();
         talk();
         courtship();
+        courtship480();
         proofs();
         oneSpouse();
         jealous();
@@ -1063,10 +1064,11 @@ public final class CompanionTests {
         java.util.List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of("general");
         check(chapters.size() == com.hex.kagune.control.npc.Courtship.CHAPTERS
             && chapters.get(0).task() == com.hex.kagune.control.npc.Courtship.Task.VILLAGE_GHOUL
-            && chapters.get(1).task() == com.hex.kagune.control.npc.Courtship.Task.HUMAN_FRIEND
-            && chapters.get(2).task() == com.hex.kagune.control.npc.Courtship.Task.GHOUL_PACK
+            && chapters.get(1).task() == com.hex.kagune.control.npc.Courtship.Task.ERRAND
+            && chapters.get(2).task() == com.hex.kagune.control.npc.Courtship.Task.QUINQUE
+            && chapters.get(3).task() == com.hex.kagune.control.npc.Courtship.Task.VILLAGE_DAY
             && chapters.get(4).task() == com.hex.kagune.control.npc.Courtship.Task.DAWN,
-            "his courtship: the village defended, a human to vouch, the Pack, somewhere high, the dawn count");
+            "his courtship (4.1.80): the village defended, villagers' favours, the Pack with a quinque, his district walked by day, the dawn count");
     }
 
     /**
@@ -1747,6 +1749,313 @@ public final class CompanionTests {
             }
             check(dates != null && p.script().sweet(dating, "").options().size() <= 12, p.key() + ": a partner can ask for a date");
         }
+    }
+
+    /** 4.1.80: {@code what} found in {@code text} within {@code n} characters after {@code start} (false if either is missing). */
+    static boolean near(String text, String start, String what, int n) {
+        int at = text.indexOf(start);
+        if (at < 0) {
+            return false;
+        }
+        int found = text.indexOf(what, at);
+        return found >= 0 && found - at <= n;
+    }
+
+    /**
+     * 4.1.80 (the plan the owner approved, "whatever you think is best": "keep all 35 scenes and lines; swap the repeated tasks so each
+     * companion's five differ"): every companion's five chapters of five kinds, one at least only theirs, the repeated ones cut down (the
+     * Doves from seven chapters to three, somewhere high from four to two, hand-overs from four to three); each new chapter's rules; old
+     * saves kept; the server holding each.
+     */
+    static void courtship480() {
+        String c = "com.hex.kagune.control.npc.";
+        java.util.Map<com.hex.kagune.control.npc.Courtship.Task, Set<String>> who = new java.util.EnumMap<>(com.hex.kagune.control.npc.Courtship.Task.class);
+        java.util.Map<com.hex.kagune.control.npc.Courtship.Task, Integer> used = new java.util.EnumMap<>(com.hex.kagune.control.npc.Courtship.Task.class);
+        for (Persona p : Persona.ALL) {
+            Set<com.hex.kagune.control.npc.Courtship.Task> kinds = new HashSet<>();
+            for (com.hex.kagune.control.npc.Courtship.Chapter chapter : com.hex.kagune.control.npc.Courtship.of(p.key())) {
+                kinds.add(chapter.task());
+                who.computeIfAbsent(chapter.task(), k -> new HashSet<>()).add(p.key());
+                used.merge(chapter.task(), 1, Integer::sum);
+            }
+            if (p.romanceable()) {
+                check(kinds.size() == com.hex.kagune.control.npc.Courtship.CHAPTERS, p.key() + ": five chapters, five kinds (" + kinds + ")");
+            }
+        }
+        for (Persona p : Persona.ALL) {
+            if (!p.romanceable()) {
+                continue;
+            }
+            boolean own = false;
+            for (com.hex.kagune.control.npc.Courtship.Chapter chapter : com.hex.kagune.control.npc.Courtship.of(p.key())) {
+                own |= who.get(chapter.task()).size() == 1;
+            }
+            check(own, p.key() + ": at least one chapter of a kind no one else asks for");
+        }
+        int doves = used.getOrDefault(com.hex.kagune.control.npc.Courtship.Task.DOVES, 0)
+            + used.getOrDefault(com.hex.kagune.control.npc.Courtship.Task.DOVES_WITH, 0);
+        check(doves == 3, "Doves killed: three chapters (was seven): " + doves);
+        check(used.getOrDefault(com.hex.kagune.control.npc.Courtship.Task.HIGH, 0) == 2, "somewhere high: two (was four)");
+        check(used.getOrDefault(com.hex.kagune.control.npc.Courtship.Task.GIVE, 0) == 3, "handed over: three (was four)");
+        check(used.getOrDefault(com.hex.kagune.control.npc.Courtship.Task.GHOUL_PACK, 0) == 2
+            && used.getOrDefault(com.hex.kagune.control.npc.Courtship.Task.HUMAN_FRIEND, 0) == 1, "the Pack twice, a villager's love once");
+        for (com.hex.kagune.control.npc.Courtship.Task t : com.hex.kagune.control.npc.Courtship.Task.values()) {
+            check(used.getOrDefault(t, 0) <= 4, t + ": asked by four at most");
+        }
+        int ghoulMeat = 0;
+        for (Persona p : Persona.ALL) {
+            for (com.hex.kagune.control.npc.Courtship.Chapter chapter : com.hex.kagune.control.npc.Courtship.of(p.key())) {
+                ghoulMeat += chapter.items().contains("hexkagune:ghoul_meat") ? 1 : 0;
+            }
+        }
+        check(ghoulMeat == 1, "Ghoul Meat asked for once (Ken), not by Banjou too");
+        // Each new chapter, as planned.
+        Object[][] plan = {{"touka", 1, "touka_patrol", "QUIZ", 1}, {"ken", 3, "ken_doves", "READING", 12}, {"ayato", 1, "ayato_ghouls", "SPAR", 1},
+            {"ayato", 2, "ayato_roof", "ROOF", 1}, {"general", 1, "general_vouch", "ERRAND", 2}, {"general", 2, "general_pack", "QUINQUE", 3},
+            {"general", 3, "general_high", "VILLAGE_DAY", 12}, {"roma", 0, "roma_show", "SHOW", 8}, {"roma", 1, "roma_walk", "VILLAGE_NIGHT", 18},
+            {"banjou", 0, "banjou_supper", "SERVE", 3}, {"banjou", 1, "banjou_doves", "GARDEN", 6}};
+        for (Object[] row : plan) {
+            com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.of((String)row[0]).get((Integer)row[1]);
+            check(chapter.id().equals(row[2]) && chapter.task().name().equals(row[3]) && chapter.need() == (Integer)row[4],
+                row[2] + ": " + row[3] + " x" + row[4] + " (is " + chapter.task() + " x" + chapter.need() + ")");
+        }
+        check(com.hex.kagune.control.npc.Courtship.of("banjou").get(0).items().equals(com.hex.kagune.control.npc.Courtship.SUPPER),
+            "Banjou's supper: the cookbook's bowls");
+        // Every chapter's words for its count: minutes for the timed ones ("{m} of {mm}"), the count for the rest.
+        for (Persona p : Persona.ALL) {
+            for (com.hex.kagune.control.npc.Courtship.Chapter chapter : com.hex.kagune.control.npc.Courtship.of(p.key())) {
+                if (chapter.task().timed()) {
+                    check(chapter.journal().contains("{m}") && chapter.journal().contains("{mm}") && !chapter.journal().contains("{need}")
+                        && chapter.progress().contains("{m}") && chapter.need() % 6 == 0,
+                        chapter.id() + ": timed, said in whole minutes (Roma's walk was \"0.5 of 3 minutes\")");
+                } else if (chapter.need() > 1) {
+                    check(chapter.journal().contains("{n}") && !chapter.journal().contains("{m}"), chapter.id() + ": counted, said as a count");
+                }
+            }
+        }
+        // The kinds' own rules.
+        check(com.hex.kagune.control.npc.Courtship.Task.READING.timed() && com.hex.kagune.control.npc.Courtship.Task.VILLAGE_DAY.timed()
+            && !com.hex.kagune.control.npc.Courtship.Task.SHOW.timed() && !com.hex.kagune.control.npc.Courtship.Task.GARDEN.timed()
+            && !com.hex.kagune.control.npc.Courtship.Task.ROOF.timed(), "the reading and the day's walk are counted in time; the rest are not");
+        Set<com.hex.kagune.control.npc.Courtship.Task> once = new HashSet<>();
+        Set<com.hex.kagune.control.npc.Courtship.Task> begun = new HashSet<>();
+        for (com.hex.kagune.control.npc.Courtship.Task t : com.hex.kagune.control.npc.Courtship.Task.values()) {
+            if (t.once()) {
+                once.add(t);
+            }
+            if (t.begun()) {
+                begun.add(t);
+                check(!com.hex.kagune.control.npc.Courtship.begin(t).isEmpty(), t + ": a button that begins it");
+            } else {
+                check(com.hex.kagune.control.npc.Courtship.begin(t).isEmpty(), t + ": no such button");
+            }
+        }
+        check(once.equals(Set.of(com.hex.kagune.control.npc.Courtship.Task.HIGH, com.hex.kagune.control.npc.Courtship.Task.DAWN,
+            com.hex.kagune.control.npc.Courtship.Task.DEEP, com.hex.kagune.control.npc.Courtship.Task.SPAR, com.hex.kagune.control.npc.Courtship.Task.ROOF,
+            com.hex.kagune.control.npc.Courtship.Task.QUIZ)), "done in one go: high, dawn, deep, the spar, the roof, the homework: " + once);
+        check(begun.equals(Set.of(com.hex.kagune.control.npc.Courtship.Task.SPAR, com.hex.kagune.control.npc.Courtship.Task.QUIZ)),
+            "begun from the talk: the spar and the homework");
+        com.hex.kagune.control.npc.Courtship.Chapter spar = com.hex.kagune.control.npc.Courtship.of("ayato").get(1);
+        check(com.hex.kagune.control.npc.Courtship.said(spar, 0).equals(spar.ask()) && com.hex.kagune.control.npc.Courtship.said(spar, 1).equals(spar.ask()),
+            "asked about a thing done in one go: its ask, always");
+        com.hex.kagune.control.npc.Courtship.Chapter show = com.hex.kagune.control.npc.Courtship.of("roma").get(0);
+        check(com.hex.kagune.control.npc.Courtship.said(show, 3).equals(com.hex.kagune.control.npc.Courtship.fill(show.progress(), show, 3))
+            && com.hex.kagune.control.npc.Courtship.said(show, 3).contains("3 of eight"), "a count under way: how far: " + com.hex.kagune.control.npc.Courtship.said(show, 3));
+        // The supper: every bowl of the cookbook's, nothing else.
+        Set<String> bowls = new HashSet<>();
+        for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
+            if (dish.kind() == com.hex.kagune.control.kitchen.Dish.Kind.BOWL) {
+                bowls.add("hexkagune:" + dish.id());
+            }
+        }
+        check(com.hex.kagune.control.npc.Courtship.SUPPER.equals(bowls) && bowls.size() >= 10 && bowls.contains("hexkagune:red_hunger_stew")
+            && !com.hex.kagune.control.npc.Courtship.SUPPER.contains("hexkagune:anteiku_blend") && !com.hex.kagune.control.npc.Courtship.SUPPER.contains("hexkagune:ghoul_meat"),
+            "the supper: the cookbook's bowls (" + com.hex.kagune.control.npc.Courtship.SUPPER.size() + ")");
+        // The garden: what is planted, and only what went into the ground.
+        for (String yes : new String[] {"minecraft:oak_sapling", "minecraft:cherry_sapling", "minecraft:poppy", "minecraft:red_tulip", "minecraft:sunflower",
+            "minecraft:azalea", "minecraft:pink_petals", "minecraft:lily_of_the_valley"}) {
+            check(com.hex.kagune.control.npc.Courtship.plant(yes), yes + " is planted");
+        }
+        for (String no : new String[] {"minecraft:potted_poppy", "minecraft:potted_red_tulip", "minecraft:potted_oak_sapling", "minecraft:dirt",
+            "minecraft:oak_leaves", "minecraft:wheat_seeds", "hexkagune:poppy", "poppy", "", null}) {
+            check(!com.hex.kagune.control.npc.Courtship.plant(no), no + " is not");
+        }
+        String[] before = {"minecraft:grass_block", "minecraft:air", "minecraft:dirt", "minecraft:air", "minecraft:air", "minecraft:air", "minecraft:air"};
+        String[] after = before.clone();
+        after[1] = "minecraft:poppy";
+        check(com.hex.kagune.control.npc.Courtship.planted("minecraft:poppy", before, after), "a poppy where there was air: planted");
+        String[] already = after.clone();
+        check(!com.hex.kagune.control.npc.Courtship.planted("minecraft:poppy", already, after), "a poppy already there: not planted again");
+        check(!com.hex.kagune.control.npc.Courtship.planted("minecraft:poppy", before, before), "nothing changed: nothing planted");
+        check(!com.hex.kagune.control.npc.Courtship.planted("minecraft:dandelion", before, after), "something else came up: not this");
+        check(!com.hex.kagune.control.npc.Courtship.planted("minecraft:poppy", before, new String[] {"minecraft:poppy"}), "the sides as they were, or nothing");
+        String[] last = before.clone();
+        last[6] = "minecraft:oak_sapling";
+        check(com.hex.kagune.control.npc.Courtship.planted("minecraft:oak_sapling", before, last), "the last side counts too");
+        // The roof: nothing over them, about as high as the tower's top, a tower over his floor.
+        check(com.hex.kagune.control.npc.Courtship.onRoof(130.0, 130, 131, 70), "on the roof");
+        check(com.hex.kagune.control.npc.Courtship.onRoof(127.0, 127, 131, 70) && !com.hex.kagune.control.npc.Courtship.onRoof(126.9, 126, 131, 70),
+            "within " + com.hex.kagune.control.npc.Courtship.ROOF_SLACK + " of its top, no further down");
+        check(!com.hex.kagune.control.npc.Courtship.onRoof(130.0, 133, 131, 70), "something over them: inside, not on it");
+        check(com.hex.kagune.control.npc.Courtship.onRoof(129.6, 130, 130, 70) && !com.hex.kagune.control.npc.Courtship.onRoof(129.4, 130, 130, 70),
+            "standing on its top (half a block of slack)");
+        check(!com.hex.kagune.control.npc.Courtship.onRoof(75.0, 75, 75, 70) && com.hex.kagune.control.npc.Courtship.onRoof(76.0, 76, 76, 70),
+            "a roof only " + com.hex.kagune.control.npc.Courtship.ROOF_OVER + " or more over his floor (the ground by his door is no roof)");
+        // Daylight for the General's walk.
+        check(com.hex.kagune.control.npc.Courtship.daylight(6000L) && com.hex.kagune.control.npc.Courtship.daylight(1000L)
+            && com.hex.kagune.control.npc.Courtship.daylight(11999L) && com.hex.kagune.control.npc.Courtship.daylight(30000L), "daylight: 1000 to 12000");
+        check(!com.hex.kagune.control.npc.Courtship.daylight(999L) && !com.hex.kagune.control.npc.Courtship.daylight(12000L)
+            && !com.hex.kagune.control.npc.Courtship.daylight(18000L), "dusk, night and dawn are not");
+        // Touka's homework: nine questions, three asked, all different; tried again the day after a wrong answer.
+        check(com.hex.kagune.control.npc.Courtship.HOMEWORK.length == 9 && com.hex.kagune.control.npc.Courtship.ASKED == 3, "nine questions, three asked");
+        Set<String> asked = new HashSet<>();
+        for (com.hex.kagune.control.npc.JoinTrial.Question q : com.hex.kagune.control.npc.Courtship.HOMEWORK) {
+            check(asked.add(q.asked()) && !q.right().equals(q.wrong1()) && !q.right().equals(q.wrong2()) && !q.wrong1().equals(q.wrong2()),
+                q.asked() + ": three different answers");
+        }
+        check(com.hex.kagune.control.npc.Courtship.HOMEWORK[0].right().equals("1,050 yen.") && 450 / 3 * 7 == 1050
+            && com.hex.kagune.control.npc.Courtship.HOMEWORK[1].right().equals("x = 5.") && 3 * 5 + 7 == 22
+            && com.hex.kagune.control.npc.Courtship.HOMEWORK[4].right().equals("30.") && 200 * 15 / 100 == 30, "the sums' answers are right");
+        Set<Integer> seen = new HashSet<>();
+        for (long day = 0; day < 400; day++) {
+            int[] drawn = com.hex.kagune.control.npc.Courtship.homework(day, 77L);
+            check(drawn.length == 3 && drawn[0] != drawn[1] && drawn[1] != drawn[2] && drawn[0] != drawn[2], "day " + day + ": three different");
+            for (int i : drawn) {
+                check(i >= 0 && i < com.hex.kagune.control.npc.Courtship.HOMEWORK.length, "a question there is");
+                seen.add(i);
+            }
+            check(java.util.Arrays.equals(drawn, com.hex.kagune.control.npc.Courtship.homework(day, 77L)), "the same day, the same three");
+        }
+        check(seen.size() == com.hex.kagune.control.npc.Courtship.HOMEWORK.length, "every question comes up");
+        check(java.util.Arrays.equals(com.hex.kagune.control.npc.JoinTrial.draw(12L, 5L), com.hex.kagune.control.npc.JoinTrial.draw(
+            com.hex.kagune.control.npc.JoinTrial.QUESTIONS.length, com.hex.kagune.control.npc.JoinTrial.EXAM_ASKED, 12L, 5L)), "the academy's draw as it was");
+        check(!com.hex.kagune.control.npc.Courtship.mayStudy(40L, 40L) && com.hex.kagune.control.npc.Courtship.mayStudy(41L, 40L)
+            && com.hex.kagune.control.npc.Courtship.mayStudy(40L, -1L), "a wrong answer: no more homework that day, again the next");
+        // Old saves (4.1.80): a chapter on whose task changed starts again, or stays done; a fresh or wed courtship is never touched.
+        int on215 = NpcBonds.MET | EtoRules.LINE_ON | com.hex.kagune.control.npc.Courtship.FROM_215;
+        QuestLog.Bond romaShow = new QuestLog.Bond(70, 0L, on215, 2);
+        QuestLog.Bond moved = com.hex.kagune.control.npc.Courtship.migrate("roma", romaShow, 5);
+        check(EtoRules.count(moved) == 0 && moved.has(com.hex.kagune.control.npc.Courtship.FROM_480), "Roma's show, two Doves of three before: from nothing");
+        QuestLog.Bond romaDone = com.hex.kagune.control.npc.Courtship.migrate("roma", new QuestLog.Bond(70, 0L, on215, 3), 5);
+        check(EtoRules.count(romaDone) == 8 && com.hex.kagune.control.npc.Courtship.ready("roma", romaDone), "all three Doves before: done, its moment waits");
+        QuestLog.Bond romaWalk = com.hex.kagune.control.npc.Courtship.migrate("roma", new QuestLog.Bond(70, 0L, on215 | 1 << com.hex.kagune.control.npc.Courtship.SHIFT, 3), 5);
+        check(EtoRules.count(romaWalk) == 18 && com.hex.kagune.control.npc.Courtship.ready("roma", romaWalk), "her walk done before (3 steps): done");
+        QuestLog.Bond banjou = com.hex.kagune.control.npc.Courtship.migrate("banjou", new QuestLog.Bond(70, 0L, on215 | 1 << com.hex.kagune.control.npc.Courtship.SHIFT, 2), 5);
+        check(EtoRules.count(banjou) == 0, "Banjou's second, two Doves of three: the garden from nothing");
+        QuestLog.Bond banjouDone = com.hex.kagune.control.npc.Courtship.migrate("banjou", new QuestLog.Bond(70, 0L, on215 | 1 << com.hex.kagune.control.npc.Courtship.SHIFT, 3), 5);
+        check(EtoRules.count(banjouDone) == 6, "Banjou's second, all three: done");
+        QuestLog.Bond eto = com.hex.kagune.control.npc.Courtship.migrate("eto", new QuestLog.Bond(70, 0L, on215, 5), 5);
+        check(EtoRules.count(eto) == 5 && eto.has(com.hex.kagune.control.npc.Courtship.FROM_480), "a chapter that didn't change keeps its count");
+        check(com.hex.kagune.control.npc.Courtship.migrate("roma", moved, 5) == moved, "once marked, left alone (a count from now on is the new one's)");
+        QuestLog.Bond markedNot = new QuestLog.Bond(70, 0L, on215 | com.hex.kagune.control.npc.Courtship.FROM_480, 2);
+        check(com.hex.kagune.control.npc.Courtship.migrate("roma", markedNot, 5) == markedNot, "a 4.1.80 bond's count is never reset");
+        QuestLog.Bond fresh = com.hex.kagune.control.npc.Courtship.begin(new QuestLog.Bond(70, 0L, NpcBonds.MET, 0));
+        check(fresh.has(com.hex.kagune.control.npc.Courtship.FROM_480) && com.hex.kagune.control.npc.Courtship.wed(new QuestLog.Bond(10, 0L, 0, 0))
+            .has(com.hex.kagune.control.npc.Courtship.FROM_480), "begun or wed now: already 4.1.80's");
+        QuestLog.Bond friends = com.hex.kagune.control.npc.Courtship.migrate("roma", new QuestLog.Bond(40, 0L, NpcBonds.MET, 0), 5);
+        check(friends.has(com.hex.kagune.control.npc.Courtship.FROM_480) && EtoRules.count(friends) == 0 && friends.regard() == 40, "not begun: only marked");
+        check((com.hex.kagune.control.npc.Courtship.FROM_480 & (NpcBonds.MET | NpcBonds.BEFRIENDED | NpcBonds.ASKED | EtoRules.LINE_ON | EtoRules.DATING
+            | EtoRules.BOOKS_DONE | EtoRules.HUNT_DONE | EtoRules.FLOWER_DONE | EtoRules.TAUGHT_KICK | EtoRules.TAUGHT_SOAR | EtoRules.TAUGHT_WITNESS
+            | EtoRules.TAUGHT_TRIAL | com.hex.kagune.control.npc.Courtship.FROM_215 | 7 << com.hex.kagune.control.npc.Courtship.SHIFT)) == 0,
+            "4.1.80's flag is a bit of its own");
+        // Their words.
+        for (int seed = 0; seed < 12; seed++) {
+            for (String m : new String[] {"start", "won", "lost", "draw", "fled", "hurt", "died"}) {
+                check(!com.hex.kagune.control.npc.CourtVoice.spar(m, seed).isBlank(), "the spar: " + m);
+            }
+            for (String m : new String[] {"begin", "next", "wrong", "today", "done"}) {
+                check(!com.hex.kagune.control.npc.CourtVoice.homework(m, seed).isBlank(), "the homework: " + m);
+            }
+        }
+        check(com.hex.kagune.control.npc.CourtVoice.homework("wrong", 0).contains("Tomorrow") && com.hex.kagune.control.npc.CourtVoice.homework("wrong", 1)
+            .contains("Tomorrow"), "a wrong answer: she says tomorrow");
+        check(com.hex.kagune.control.npc.CourtVoice.firework(8, 8, 3).startsWith("ENCORE") && !com.hex.kagune.control.npc.CourtVoice.firework(3, 8, 3).startsWith("ENCORE"),
+            "the last rocket: her ovation");
+        check(com.hex.kagune.control.npc.CourtVoice.served(3, 3, 0).contains("go and see Banjou") && !com.hex.kagune.control.npc.CourtVoice.served(2, 3, 0).contains("Banjou)"),
+            "the last boy fed: back to Banjou");
+        check(com.hex.kagune.control.npc.CourtVoice.planted(6, 6, 0).contains("all of them") && !com.hex.kagune.control.npc.CourtVoice.planted(2, 6, 0).contains("all of them"),
+            "the last one planted: all in");
+        // The scenes kept (all 35), their words fitting what is now asked.
+        String touka = read("src/main/resources/data/hexkagune/talk/touka.txt");
+        String ken = read("src/main/resources/data/hexkagune/talk/ken.txt");
+        String ayato = read("src/main/resources/data/hexkagune/talk/ayato.txt");
+        String general = read("src/main/resources/data/hexkagune/talk/general.txt");
+        String roma = read("src/main/resources/data/hexkagune/talk/roma.txt");
+        String banjouText = read("src/main/resources/data/hexkagune/talk/banjou.txt");
+        int moments = 0;
+        for (String text : new String[] {read("src/main/resources/data/hexkagune/talk/eto.txt"), touka, ken, ayato, general, roma, banjouText}) {
+            moments += text.split("\nmoment ").length - 1;
+        }
+        check(moments == 35, "all 35 moments kept: " + moments);
+        check(near(touka, "moment touka_patrol", "Three. In a row.", 200) && !near(touka, "moment touka_patrol", "Dove", 600), "Touka's: the homework, no Doves");
+        check(!near(touka, "moment touka_blend", "Doves", 3000) && near(touka, "moment touka_blend", "exams next week", 3000), "her blend's moment sets up the homework");
+        check(near(ken, "moment ken_doves", "The Library's lamps", 60) && !near(ken, "moment ken_doves", "quinque", 1500), "Ken's: the Library at night");
+        check(!near(ken, "moment ken_ghoul", "Rank 5", 3000) && near(ken, "moment ken_ghoul", "Library", 3000), "his Pack moment sets up the Library");
+        check(near(ayato, "moment ayato_ghouls", "split lip", 120) && near(ayato, "moment ayato_ghouls", "Doves' roof", 1500), "Ayato's: the spar, then the Doves' roof");
+        check(near(ayato, "moment ayato_roof", "The Doves' own roof", 60) && !near(ayato, "moment ayato_meal", "wild ghouls", 1500), "his roof; his pies set up the spar");
+        check(near(general, "moment general_high", "broad daylight", 150) && near(general, "moment general_pack", "walk me through a village", 1500)
+            && near(general, "moment general_vouch", "with a quinque in your hand", 1500), "the General's: the walk by day, the quinque");
+        check(near(roma, "moment roma_show", "sparks", 120) && !near(roma, "moment roma_show", "cases", 800), "Roma's: the fireworks, no briefcases");
+        check(near(banjouText, "moment banjou_doves", "garden", 120) && !near(banjouText, "moment banjou_supper", "sniffing", 1500)
+            && !near(banjouText, "moment banjou_doves", "wing", 900), "Banjou's: the garden; his supper sets it up");
+        // The server holds each.
+        String court = read("src/main/java/com/hex/kagune/control/server/CourtshipServer.java");
+        check(near(court, "case READING ->", "along && EtoRules.night(time) && near(player, GangServer.home(player.m_284548_(), \"eto\"), Courtship.LIBRARY_NEAR)", 30),
+            "the reading: along, at night, at the Library");
+        check(near(court, "case ROOF ->", "along && onRoof(player) && npc.m_20186_() >= player.m_20186_() - 6.0", 20), "the roof: along, on it, him up there too");
+        check(near(court, "case VILLAGE_DAY ->", "along && Courtship.daylight(time) && moving(player) && villagers(player)", 20), "the day's walk: along, by day, walking, among them");
+        check(near(court, "static boolean onRoof(ServerPlayer player)", "GangServer.home(level, \"general\")", 200)
+            && near(court, "static boolean onRoof(ServerPlayer player)", "> Courtship.ROOF_REACH * Courtship.ROOF_REACH", 500)
+            && near(court, "static boolean onRoof(ServerPlayer player)", "return Courtship.onRoof(player.m_20186_(), here, tower, home.m_123342_());", 1200),
+            "the roof is the General's tower's, from the height map");
+        check(near(court, "static boolean villagers(ServerPlayer player)", ".size() >= 2;", 300), "a village: two of its people about");
+        check(near(court, "static QuestLog.Bond count(", "chapter.task() != task || EtoRules.count(bond) >= chapter.need()", 400)
+            && near(court, "static boolean on(ServerPlayer player", "chapter.task() == task && EtoRules.count(bond) < chapter.need()", 400),
+            "counted only on its own chapter, never past what it needs");
+        String etoServer = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+        check(etoServer.contains("case QUINQUE -> pack && quinqueInHand(killer);") && near(etoServer, "static boolean quinqueInHand(ServerPlayer player)",
+            "return ControlItems.quinqueWeapon(held) != null || ControlItems.armWeapon(held) != null;", 200), "the Pack, with a quinque drawn");
+        check(etoServer.contains("case GHOUL_PACK -> pack;") && near(etoServer, "boolean pack = dead instanceof GhoulNpc packed", "NpcTemper.PACK", 200), "the Pack is the Pack");
+        check(near(etoServer, "if (choice == NpcTalk.Choice.FAVOUR && courtTrial(player, npc, c)) {", "return;", 120)
+            && near(etoServer, "static boolean courtTrial(", "!chapter.task().begun() || EtoRules.count(bond) >= chapter.need()", 400),
+            "a spar or the homework asked about: its ask and the button");
+        check(near(etoServer, "if (chapter.task() == com.hex.kagune.control.npc.Courtship.Task.QUIZ && !mayStudy(player, key)) {", "homework(\"today\"", 200),
+            "after a wrong answer, no button today");
+        check(near(etoServer, "if (!com.hex.kagune.control.npc.JoinTrial.right(answer)) {", "NpcMemoryServer.set(player, persona, NpcMemory.STUDIED, day(player.m_284548_()));", 200)
+            && near(etoServer, "state[3]++;", "if (state[3] < com.hex.kagune.control.npc.Courtship.ASKED) {", 40), "a wrong answer: tomorrow; three right: done");
+        check(near(etoServer, "HOMEWORK.remove(player.m_20148_());\n        QuestServer.bond(player, persona, com.hex.kagune.control.npc.Courtship.progress(persona, bond,",
+            "moment(player, npc,", 300), "three right: the chapter done, its moment at once");
+        check(near(etoServer, "if (chapter.task() == com.hex.kagune.control.npc.Courtship.Task.SPAR) {", "JoinServer.court(player, npc, c.seed())", 200), "the spar begun");
+        String trials = read("src/main/java/com/hex/kagune/control/server/CourtTrials.java");
+        check(near(trials, "static void firework(ServerPlayer player)", "CourtshipServer.on(player, \"roma\", Courtship.Task.SHOW)", 120)
+            && near(trials, "static void firework(ServerPlayer player)", "if (!EtoRules.night(player.m_9236_().m_46468_())) {", 300)
+            && near(trials, "static void firework(ServerPlayer player)", "CourtshipServer.nearby(player, \"roma\", Courtship.SHOW_NEAR);", 700)
+            && near(trials, "if (roma == null) {", "return;", 250), "a rocket counts at night, Roma near, on her show");
+        check(near(trials, "static void planting(", "CourtshipServer.on(player, \"banjou\", Courtship.Task.GARDEN)", 150)
+            && near(trials, "static void planting(", "GangServer.home(level, \"banjou\"), Courtship.GARDEN_NEAR)", 400)
+            && near(trials, "static void planting(", "CourtshipServer.nearby(player, \"banjou\", Courtship.WATCHING) == null", 600),
+            "a planting counts at the den, Banjou watching, on his garden");
+        check(near(trials, "PLANTING.remove(player.m_20148_());", "now - p.when() > 20L || !Courtship.planted(p.what(), p.before(), around(level, p.at()))", 80)
+            && near(trials, "if (now <= p.when()) {", "return;", 40), "looked at the tick after: only what went into the ground");
+        check(near(trials, "String id = String.valueOf(", "if (FIREWORK.equals(id)) {", 200) && trials.contains("} else if (Courtship.plant(id)) {")
+            && trials.contains("FIREWORK = \"minecraft:firework_rocket\""), "a rocket, or something to plant, in the hand that clicked");
+        check(near(trials, "static boolean serve(", "GangPlayer.of(npc.identity()) != GangPlayer.GAS_MASKS || !CourtshipServer.on(player, \"banjou\", Courtship.Task.SERVE)", 200)
+            && near(trials, "static boolean serve(", "if (!Courtship.SUPPER.contains(id)) {", 600)
+            && near(trials, "if (npc.getPersistentData().m_128471_(fed)) {", "SERVED_TWICE", 200)
+            && near(trials, "npc.getPersistentData().m_128379_(fed, true);", "held.m_41774_(1);", 120), "one of his boys, a bowl, once each, taken");
+        check(near(read("src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java"), "if (CourtTrials.serve(player, npc)) {", "return;", 80)
+            && read("src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java").indexOf("CourtTrials.serve(player, npc)")
+                < read("src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java").indexOf("            open(player, npc);"), "the supper before the talk");
+        check(near(read("src/main/java/com/hex/kagune/control/server/HumanErrandServer.java"), "static String complete(",
+            "CourtshipServer.event(player, com.hex.kagune.control.npc.Courtship.Task.ERRAND, 1);", 1500), "a villager's favour done counts");
+        String join = read("src/main/java/com/hex/kagune/control/server/JoinServer.java");
+        check(join.contains("if (live.courting != null ? !CourtshipServer.on(player, live.courting, com.hex.kagune.control.npc.Courtship.Task.SPAR) : stepGone(player, live)) {")
+            && near(join, "if (live.courting != null) {\n            courted(player, live, won, moment, level, now);", "return;", 140),
+            "a courtship's spar: no gang step looked at; its end the courtship's");
+        check(near(join, "static void courted(", "if (won && CourtshipServer.count(player, live.courting, com.hex.kagune.control.npc.Courtship.Task.SPAR) != null) {", 300)
+            && near(join, "static void courted(", "SceneServer.approachMoment(companion, player,", 1200), "won: counted, and his moment brought at once");
+        check(near(join, "static String court(", "start(player, companion, JoinTrial.Kind.SPAR, seed, companion.persona().key());", 120)
+            && join.contains("live.courting = courting;"), "his spar marked his courtship's");
     }
 
     /** {@code p}'s courtship on chapter {@code closed} + 1 with {@code done} of it done and {@code held} of what it asks for in hand. */

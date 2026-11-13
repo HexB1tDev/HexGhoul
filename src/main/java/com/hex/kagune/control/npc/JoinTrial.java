@@ -320,7 +320,11 @@ public final class JoinTrial {
 
     /** The {@link #EXAM_ASKED} questions asked on {@code day} of a player of {@code mine} (indexes, all different). */
     public static int[] draw(long day, long mine) {
-        int n = QUESTIONS.length;
+        return draw(QUESTIONS.length, EXAM_ASKED, day, mine);
+    }
+
+    /** 4.1.80: {@code asked} of {@code n} questions drawn for {@code day} and a player of {@code mine} (indexes, all different; Touka's homework too). */
+    public static int[] draw(int n, int asked, long day, long mine) {
         int[] order = new int[n];
         for (int i = 0; i < n; i++) {
             order[i] = i;
@@ -333,8 +337,8 @@ public final class JoinTrial {
             order[i] = order[j];
             order[j] = t;
         }
-        int[] out = new int[EXAM_ASKED];
-        System.arraycopy(order, 0, out, 0, EXAM_ASKED);
+        int[] out = new int[asked];
+        System.arraycopy(order, 0, out, 0, asked);
         return out;
     }
 
