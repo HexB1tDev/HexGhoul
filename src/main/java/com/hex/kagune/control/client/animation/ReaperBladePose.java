@@ -573,7 +573,11 @@ public final class ReaperBladePose {
      */
     public static RigPose end(double age) {
         RigPose p = pose(GUARD.clone(), 1.0F, 0.0F); // his one-handed guard
-        float slack = smooth((age - AgentRules.REAPER_END_SHATTER) / SLACK);
+        double since = age - AgentRules.REAPER_END_SHATTER;
+        if (since > 0.0) {
+            look(p, since);
+        }
+        float slack = smooth((age - AgentRules.REAPER_END_FALLS + DROPS) / SLACK);
         if (slack > 0.0F) {
             float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, -0.22F, 0.0F, 0.12F, slack);
             float[] left = QuinqueGrip.blendTurn(p.leftArmX, p.leftArmY, p.leftArmZ, 0.08F, 0.0F, -0.1F, slack);
@@ -583,10 +587,12 @@ public final class ReaperBladePose {
             p.leftArmX = left[0];
             p.leftArmY = left[1];
             p.leftArmZ = left[2];
-            // The broken hilt held slack in his hanging hand, its stub ahead of it.
+            // The broken hilt held slack in his hanging hand, its stub ahead of it; his eyes off it.
             p.weaponX *= 1.0F - slack;
             p.weaponY *= 1.0F - slack;
             p.weaponZ *= 1.0F - slack;
+            p.headX *= 1.0F - slack;
+            p.headY *= 1.0F - slack;
         }
         double falling = (age - AgentRules.REAPER_END_FALLS) / (double)AgentRules.REAPER_END_FALLING;
         if (falling > 0.0) {
@@ -595,8 +601,66 @@ public final class ReaperBladePose {
         return p;
     }
 
-    /** 4.1.76: the ticks his arm takes to drop slack as the blade shatters in his hand. */
+    /** 4.1.76: the ticks his arm takes to drop slack (4.1.77: as he begins to fall), and how long before the fall it starts. */
     public static final double SLACK = 5.0;
+    static final double DROPS = 2.0;
+    /**
+     * 4.1.77: looking at the broken blade: the ticks he takes to bring it up before him, his right arm then (forward, in toward his middle),
+     * his wrist (its stub out ahead of him), how far the arm sinks while he stares at it (never quite still), and the point he looks at
+     * (where it snapped: {@link ReaperBladeMesh#SNAPS}) from the middle of his head (model pixels).
+     */
+    public static final double RAISE = 10.0;
+    static final float LOOK_ARM_X = -0.98F;
+    static final float LOOK_ARM_Y = -0.5F;
+    static final float LOOK_WRIST = 0.8F;
+    static final float LOOK_SAG = 0.16F;
+    static final double[] EYES = {0.0, -4.0, 0.0};
+
+    /**
+     * 4.1.77 (the owner: "after the blade breaks make him look at it, then wait like 2 seconds and then fall!"): {@code since} ticks after
+     * it shattered: his right arm brings the broken hilt up before him ({@link #RAISE}), the stub out ahead; his left hangs loose; he
+     * straightens from his guard; his head turns to look at where it snapped and follows it as the arm sinks a little while he stares
+     * ({@link #LOOK_SAG}, until he drops it to fall).
+     */
+    static void look(RigPose p, double since) {
+        float raise = smooth(since / RAISE);
+        double stare = Math.max(0.0, Math.min(1.0, (since - RAISE)
+            / (AgentRules.REAPER_END_FALLS - DROPS - AgentRules.REAPER_END_SHATTER - RAISE)));
+        float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, LOOK_ARM_X + LOOK_SAG * (float)stare, LOOK_ARM_Y, 0.0F,
+            raise);
+        float[] left = QuinqueGrip.blendTurn(p.leftArmX, p.leftArmY, p.leftArmZ, 0.08F, 0.0F, -0.1F, raise);
+        p.rightArmX = right[0];
+        p.rightArmY = right[1];
+        p.rightArmZ = right[2];
+        p.leftArmX = left[0];
+        p.leftArmY = left[1];
+        p.leftArmZ = left[2];
+        p.weaponX = p.weaponX * (1.0F - raise) + LOOK_WRIST * raise;
+        p.weaponY *= 1.0F - raise;
+        p.weaponZ *= 1.0F - raise;
+        p.twist *= 1.0F - raise;
+        p.lean *= 1.0F - raise;
+        double[] at = gaze(p);
+        p.headX = p.headX * (1.0F - raise) + (float)at[0] * raise;
+        p.headY = p.headY * (1.0F - raise) + (float)at[1] * raise;
+        p.headHold = Math.max(p.headHold, raise);
+    }
+
+    /** 4.1.77: where the broken blade snapped, in the model's frame (pixels), as {@code p} holds it. */
+    public static double[] snapped(RigPose p) {
+        double[][] d = drawn(p);
+        double u = ReaperBladeMesh.SNAPS;
+        return toModel(p, new double[] {d[0][0] + d[1][0] * u, d[0][1] + d[1][1] * u, d[0][2] + d[1][2] * u});
+    }
+
+    /** 4.1.77: the head's turn {pitch (+ down), yaw (+ to his right)} that looks from {@link #EYES} at {@link #snapped}. */
+    public static double[] gaze(RigPose p) {
+        double[] t = snapped(p);
+        double dx = t[0] - EYES[0];
+        double dy = t[1] - EYES[1];
+        double dz = t[2] - EYES[2];
+        return new double[] {Math.atan2(dy, Math.hypot(dx, dz)), Math.atan2(-dx, -dz)};
+    }
     /** 4.1.75: face down: how far (radians) the whole of him is turned forward once he has fallen. */
     public static final float FACE_DOWN = (float)(Math.PI / 2.0);
     /**

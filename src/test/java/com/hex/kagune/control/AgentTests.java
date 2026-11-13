@@ -191,8 +191,24 @@ public final class AgentTests {
         // 4.1.76 (the owner: "why tf does he hold off on that michael jackson ah pose????? and why does he hold his weapon like that when it's
         // breaking?? just make the blade instantly shatter while he's holding it on one hand, and the fall straight on his face"): in his
         // one-handed guard the blade shatters at once; straight after, he falls; nothing held on the way, no kneel, no lowering.
-        check(AgentRules.REAPER_END_SHATTER <= 3 && falls > AgentRules.REAPER_END_SHATTER && falls - AgentRules.REAPER_END_SHATTER <= 6,
-            "it shatters at once, and straight after he falls");
+        check(AgentRules.REAPER_END_SHATTER <= 3, "it shatters at once");
+        // 4.1.77 (the owner: "after the blade breaks make him look at it, then wait like 2 seconds and then fall!"): he raises it and looks
+        // at it, stares about two seconds, then falls.
+        double raised = AgentRules.REAPER_END_SHATTER + com.hex.kagune.control.client.animation.ReaperBladePose.RAISE;
+        check(falls - raised >= 36 && falls - raised <= 48, "he stares at it about 2 seconds before he falls (" + (falls - raised) / 20.0 + " s)");
+        for (double age = raised; age <= falls - 3; age += 0.5) {
+            RigPose p = com.hex.kagune.control.client.animation.ReaperBladePose.end(age);
+            double[] at = com.hex.kagune.control.client.animation.ReaperBladePose.snapped(p);
+            double[] eyes = {0.0, -4.0, 0.0};
+            double[] to = {at[0] - eyes[0], at[1] - eyes[1], at[2] - eyes[2]};
+            double norm = Math.sqrt(to[0] * to[0] + to[1] * to[1] + to[2] * to[2]);
+            // His face's way (ModelPart: Rz Ry Rx on the face's -z), worked out here, not by the pose's own maths.
+            double[] face = {-Math.cos(p.headX) * Math.sin(p.headY), Math.sin(p.headX), -Math.cos(p.headX) * Math.cos(p.headY)};
+            double cos = (face[0] * to[0] + face[1] * to[1] + face[2] * to[2]) / norm;
+            check(cos > Math.cos(0.05) && p.headHold >= 1.0F, "end tick " + age + ": his eyes on where it snapped, nothing else turning his head");
+            check(p.headX > Math.toRadians(20.0), "end tick " + age + ": his head bowed over it (" + Math.toDegrees(p.headX) + " degrees)");
+            check(at[2] < -12.0 && at[1] < 10.0, "end tick " + age + ": the broken blade held up before him, above his waist (" + at[1] + ", " + at[2] + ")");
+        }
         for (double age = 0.0; age <= AgentRules.REAPER_END_SHATTER; age += 0.5) {
             check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age),
                 com.hex.kagune.control.client.animation.ReaperBladePose.guard(0.0F)), "end tick " + age + ": the blade in his one hand, his guard");

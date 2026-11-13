@@ -85,10 +85,10 @@ public final class ReaperBladePreview {
             case "end" -> {
                 // 4.1.76: his whole end (ReaperBladePose.end): the blade shattering in his one hand, his fall on his face, lying there.
                 cols = 6;
-                for (double t : new double[] {0, 1, 2, 3, 4, 5, 6, 9, 12, 14, 16, 18, 19, 20, 21, 22, 30, 50, 81, 92}) {
+                for (double t : new double[] {0, 2, 3, 5, 8, 12, 22, 32, 42, 50, 52, 56, 60, 63, 65, 66, 67, 68, 90, 140}) {
                     frames.add(end(t, 30, 8, endLabel(t)));
                 }
-                for (double t : new double[] {1, 3, 6, 12, 16, 19, 21, 22, 40, 92}) {
+                for (double t : new double[] {1, 3, 8, 12, 30, 50, 56, 62, 66, 68, 100, 140}) {
                     frames.add(end(t, -80, 6, "his right, " + endLabel(t)));
                 }
             }
@@ -161,7 +161,7 @@ public final class ReaperBladePreview {
 
     /** 4.1.74: tick {@code t} of his end, in seconds, with what is happening. */
     static String endLabel(double t) {
-        String what = t < AgentRules.REAPER_END_SHATTER ? "guard" : t < AgentRules.REAPER_END_FALLS ? "shattered"
+        String what = t < AgentRules.REAPER_END_SHATTER ? "guard" : t < AgentRules.REAPER_END_FALLS ? "looking at it"
             : t < AgentRules.REAPER_END_FALLS + AgentRules.REAPER_END_FALLING ? "falling" : t < AgentRules.REAPER_END_TICKS ? "lying" : "dead";
         return String.format("%.2f s, %s", t / 20.0, what);
     }

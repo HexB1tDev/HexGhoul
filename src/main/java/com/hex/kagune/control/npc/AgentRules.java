@@ -139,10 +139,12 @@ public final class AgentRules {
      * "make him actually lay on the floor face down like falling on his face and lay there a bit"): in his one-handed guard the blade
      * shatters all at once ({@link #REAPER_END_SHATTER}); from {@link #REAPER_END_FALLS} he falls straight forward on his face over
      * {@link #REAPER_END_FALLING} ticks (faster and faster), lands, and lies there till he dies ({@link #REAPER_END_TICKS}: 3 s on the ground).
-     * 4.1.74's slow lowering with both hands, the blade breaking a piece at a time and the kneel are gone.
+     * 4.1.74's slow lowering with both hands, the blade breaking a piece at a time and the kneel are gone. 4.1.77 (the owner: "after the
+     * blade breaks make him look at it, then wait like 2 seconds and then fall!"): he raises the broken hilt and looks at it (half a
+     * second), stares at it 2 seconds, and only then falls.
      */
     public static final int REAPER_END_SHATTER = 2;
-    public static final int REAPER_END_FALLS = 6;
+    public static final int REAPER_END_FALLS = 52;
     public static final int REAPER_END_FALLING = 16;
     public static final int REAPER_END_TICKS = REAPER_END_FALLS + REAPER_END_FALLING + 60;
 
