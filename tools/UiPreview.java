@@ -842,6 +842,34 @@ public class UiPreview {
         etoFrame(new File(dir, "eto-talk-4-claimed.png"), half, cold, new com.hex.kagune.control.client.NpcTalkView.Motion(3.0, 99.0, 12.0F, -8, 0.5));
     }
 
+    /**
+     * 4.1.67: the gangs' leaders on leaving: Roma's member page with the way out, her asking to be sure, Banjou's goodbye, and Ayato as a
+     * spouse whose wife or husband runs with the Clowns (his greeting is his demand).
+     */
+    static void gangTalk(File dir) throws Exception {
+        int clowns = com.hex.kagune.control.npc.GangPlayer.CLOWNS;
+        int gas = com.hex.kagune.control.npc.GangPlayer.GAS_MASKS;
+        com.hex.kagune.control.npc.NpcTalk.Choice[] says = com.hex.kagune.control.npc.NpcTalk.Choice.SAYS;
+        com.hex.kagune.control.npc.NpcTalk.Choice back = com.hex.kagune.control.npc.NpcTalk.Choice.BACK;
+        com.hex.kagune.control.npc.NpcTalk.Choice leave = com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE;
+        BufferedImage roma = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/roma/roma.png"));
+        BufferedImage banjou = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/banjou/banjou.png"));
+        BufferedImage ayato = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/ayato/ayato.png"));
+        etoFrame(new File(dir, "gang-roma-member.png"), roma, new com.hex.kagune.control.client.NpcTalkView.Model("Roma", "Your ringmaster", 70, false,
+            "My favourite Clown! Go scare someone.", java.util.List.of(says[0], back), java.util.List.of(com.hex.kagune.control.npc.GangWords.wantOut(clowns), "")),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(70));
+        etoFrame(new File(dir, "gang-roma-sure.png"), roma, new com.hex.kagune.control.client.NpcTalkView.Model("Roma", "Your ringmaster", 70, false,
+            com.hex.kagune.control.npc.GangWords.asked(clowns), java.util.List.of(says[0], says[1], back), java.util.List.of("I'm out. I quit.", "No. I'm staying.",
+                "")), com.hex.kagune.control.client.NpcTalkView.Motion.still(70));
+        etoFrame(new File(dir, "gang-banjou-gone.png"), banjou, new com.hex.kagune.control.client.NpcTalkView.Model("Banjou", "Gas Mask leader", 60, false,
+            com.hex.kagune.control.npc.GangWords.gone(gas), java.util.List.of(says[2], leave), java.util.List.of("I want to join the Gas Masks.", "")),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(60));
+        etoFrame(new File(dir, "gang-ayato-spouse.png"), ayato, new com.hex.kagune.control.client.NpcTalkView.Model("Ayato", "Your husband", 92, false,
+            com.hex.kagune.control.npc.GangWords.demand(com.hex.kagune.control.npc.GangPlayer.AOGIRI, clowns, 0), java.util.List.of(
+                com.hex.kagune.control.npc.NpcTalk.Choice.CHAT, com.hex.kagune.control.npc.NpcTalk.Choice.SWEET, says[2], leave),
+            java.util.List.of("Talk to me.", "Be sweet to him.", "I want to join Aogiri.", "")), com.hex.kagune.control.client.NpcTalkView.Motion.still(92));
+    }
+
     /** 2.1.3: a village human's talk: the first page, the "Talk a while." page with one of its secrets told, and a gift it loved. */
     static void villageTalk(File dir) throws Exception {
         BufferedImage face = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/human/human_03.png"));
@@ -1194,6 +1222,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("pale-menu")) {
             paleQuest(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("gang-talk")) {
+            gangTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("cookbook")) {

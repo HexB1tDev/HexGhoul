@@ -497,6 +497,62 @@ public final class NpcTests {
         }
         check(m.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && m.banned(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS)
             && !m.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "the Gas Masks ban past ten of their own, as every gang");
+        // 4.1.67 (the owner: "Add a new Quit the gang button to each leader whenever the player joins it."; "kicked from the gang if the
+        // player marries another gang leader, but can still join if the player was already married before joining."): out, never banned.
+        com.hex.kagune.control.npc.GangPlayer q = com.hex.kagune.control.npc.GangPlayer.NEW.laughed().join(com.hex.kagune.control.npc.GangPlayer.CLOWNS)
+            .killedOwn().killedOwn();
+        com.hex.kagune.control.npc.GangPlayer out = q.quit();
+        check(out.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && out.ownKills() == 0 && !out.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS)
+            && out.banned() == q.banned(), "quitting: out of the Clowns, their tag gone, not banned");
+        check(out.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_NOT_YET && !out.aogiriQuest()
+            && out.join(com.hex.kagune.control.npc.GangPlayer.CLOWNS).member(com.hex.kagune.control.npc.GangPlayer.CLOWNS),
+            "quitting: the way in begins again, and they may come back by it");
+        check(com.hex.kagune.control.npc.GangPlayer.NEW.quit() == com.hex.kagune.control.npc.GangPlayer.NEW, "no gang: nothing to quit");
+        int[] leaders = {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS, com.hex.kagune.control.npc.GangPlayer.GAS_MASKS};
+        java.util.Set<String> said = new java.util.HashSet<>();
+        int demanded = 0;
+        for (int leads : leaders) {
+            check(com.hex.kagune.control.npc.GangWords.wantOut(leads).contains(com.hex.kagune.control.npc.GangPlayer.title(leads)), "asking out names the gang");
+            said.add(com.hex.kagune.control.npc.GangWords.asked(leads));
+            said.add(com.hex.kagune.control.npc.GangWords.stay(leads));
+            said.add(com.hex.kagune.control.npc.GangWords.gone(leads));
+            for (int gang : leaders) {
+                if (gang == leads) {
+                    continue;
+                }
+                java.util.Set<String> lines = new java.util.HashSet<>();
+                for (int seed = 0; seed < 9; seed++) {
+                    String line = com.hex.kagune.control.npc.GangWords.demand(leads, gang, seed);
+                    lines.add(line);
+                    check(line.toLowerCase(java.util.Locale.ROOT).contains(com.hex.kagune.control.npc.GangPlayer.title(gang).toLowerCase(java.util.Locale.ROOT))
+                        && line.toLowerCase(java.util.Locale.ROOT).contains("quit") || line.contains("Leave") || line.contains("leave"),
+                        "the spouse names the gang to quit: " + line);
+                }
+                check(lines.size() == 3, "three demands a leader, in turn");
+            }
+        }
+        for (int seed = 0; seed < 300; seed++) {
+            demanded += com.hex.kagune.control.npc.GangWords.demands(seed) ? 1 : 0;
+        }
+        check(said.size() == 9 && demanded == 200, "each leader their own words to go and to stay; the spouse brings it up two times in three");
+        com.hex.kagune.control.npc.GangPlayer banned = m.join(com.hex.kagune.control.npc.GangPlayer.AOGIRI).quit();
+        check(banned.banned(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS), "quitting never lifts a ban from before");
+        try {
+            String gangs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java"));
+            String eto = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoServer.java"));
+            String commands = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java"));
+            check(gangs.contains("return quit(player, g, gang, key, seed); // 4.1.67") && gangs.split("wayOut\\(gang\\)\\);", -1).length == 3
+                && gangs.contains("\"gang:quit:yes\"") && gangs.contains("\"gang:stay\"") && gangs.contains("set(player, g.quit());"),
+                "each leader's member talk offers the way out (Ayato, Roma, Banjou), asked twice, then out");
+            check(eto.contains("UniqueNpcs.pair(level, npc.persona().key(), player, Romance.Stage.MARRIED);\n        GangServer.married(player, npc.persona());")
+                && commands.contains("GangServer.married(player, persona);"), "a wedding to another gang's leader takes them out of theirs (by ring or by command)");
+            check(gangs.contains("if (!leads(spouse) || g.gang() == GangPlayer.NONE || g.gang() == theirs) {"),
+                "married to a leader first, joining another gang after is never stopped");
+            check(eto.contains("GangServer.spouseDemand(player, npc.persona(), context.seed())") && gangs.contains("nag(player, g, now); // 4.1.67")
+                && gangs.contains("static final long NAG_EVERY = 20L * 150L;"), "a leader's spouse in another gang hears it on greeting and, near, every few minutes");
+        } catch (java.io.IOException failure) {
+            check(false, "the gang server's source: " + failure);
+        }
         check(com.hex.kagune.control.npc.GangPlayer.title(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS).equals("the Gas Masks")
             && com.hex.kagune.control.npc.GangPlayer.GAS_MASKS == 3, "the Gas Masks: gang 3");
         check(com.hex.kagune.control.npc.GangPlayer.named(com.hex.kagune.control.npc.GangPlayer.AOGIRI, "Ken").equals("\u00a7f\ue000 \u00a74Ken\u00a7r")

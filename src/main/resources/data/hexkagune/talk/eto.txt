@@ -3014,6 +3014,23 @@ say: *She thinks, finger on her lips.* "The Dove Who Forgot To Shoot." ...No. "M
   - You'd be the only one who knows it's true. That's the fun part.
 ignored: *She's already writing, very fast, giggling to herself.*
 
+# 4.1.67 (the owner asked that every reaction to a marriage with Touka be in): a child with Touka.
+scene bunny_child
+who: friend
+when: kidswith_touka
+say: *She leans in, delighted.* You made a little bunny. With the BUNNY. {kidwith}. *She claps once.* I want to be the strange aunt. The one with the gifts nobody should give a child.
+> Within reason. | +2 -> reason
+> You're not coming near them. | -1 -> near
+page reason
+say: Reason is a cage, but fine. Books, then. Only the scary ones. *A softer voice.* ...Tell {kidwith} the Owl says hello. When they're old enough to be afraid of me properly.
+> I'll tell them. | +3 shy
+  - ...You'd really let me? *She looks away, smiling.*
+page near
+say: *The smile stays; the eyes don't.* Smart. Very smart. ...I'd keep me away too. *She hops off the bench.* Still sending a gift.
+> Eto. | 0 laugh
+  - It won't explode! Probably!
+ignored: *She leaves a tiny stitched owl on the bench and is gone.*
+
 scene married_elsewhere
 who: friend
 when: wed_touka

@@ -196,7 +196,9 @@ public final class EtoServer {
         if (line == null && moment(player, npc, null)) {
             return;
         }
-        show(player, npc, context, script.main(context, line != null ? line : script.greeting(context)), Kind.MAIN);
+        // 4.1.67 (the owner: the spouse "constantly demanding they quit the gang"): a leader's spouse in another gang hears it first.
+        String demand = line == null ? GangServer.spouseDemand(player, npc.persona(), context.seed()) : null;
+        show(player, npc, context, script.main(context, line != null ? line : demand != null ? demand : script.greeting(context)), Kind.MAIN);
     }
 
     /**
@@ -956,6 +958,7 @@ public final class EtoServer {
         }
         takeRing(player);
         UniqueNpcs.pair(level, npc.persona().key(), player, Romance.Stage.MARRIED);
+        GangServer.married(player, npc.persona()); // 4.1.67: one of another gang, out of it
         NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.WED, day(level));
         QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
         QuestServer.bond(player, npc.persona().key(), bond.regard(NpcBonds.MOST).with(EtoRules.DATING, true));

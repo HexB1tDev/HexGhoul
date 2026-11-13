@@ -582,6 +582,7 @@ final class ControlCommands {
             notes.add(persona.name() + " left " + (unique.partnerName.isEmpty() ? "their partner" : unique.partnerName) + " for you.");
         }
         UniqueNpcs.pair(level, key, player, com.hex.kagune.control.npc.Romance.Stage.MARRIED);
+        GangServer.married(player, persona); // 4.1.67: a wedding by command keeps the same rule
         com.hex.kagune.control.npc.NpcMemory memory = NpcMemoryServer.of(player);
         long since = memory.get(key, com.hex.kagune.control.npc.NpcMemory.SINCE, -1L);
         long wed = memory.get(key, com.hex.kagune.control.npc.NpcMemory.WED, -1L);

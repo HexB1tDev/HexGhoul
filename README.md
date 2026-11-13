@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.67 (HexGhoul): quitting a gang, the marriage rules, a spouse who wants you out (testing)
+
+See `.github/release-notes-4.1.67.md`. `GangPlayer.quit()` (out, not banned, the way in from the start); `GangWords` (pure: `wantOut`, `asked`, `stay`, `gone`, `demand`, `demands`); `GangServer`: the member talk offers "gang:quit" (asked, "gang:quit:yes" / "gang:stay"), `married(player, spouse)` (called from `EtoServer.propose` and the marry command), `spouseDemand` (the spouse's greeting), `nag` (near, every `NAG_EVERY`); talk scenes: the General's `rabbit_wedding` and `rabbit_child`, Eto's `bunny_child`. `NpcTests.joining`. `tools/UiPreview.java gang-talk`. Render `docs/handoff/gang-leaving-4.1.67.png`. Protocol 125.
+
 ## 4.1.66 (HexGhoul): the cookbook in the quest menu's style (testing)
 
 See `.github/release-notes-4.1.66.md`. New `CookbookView` (pure: `Model(tab, picked)`, `tabs()`; chapter tab: picture, words, dish slots "pick:d:ID", the dish page with its picture, recipe slots and tooltips, fills, meat, effects; effects tab: cards "pick:e:KEY", the dishes that give it "goto:ID"). `CookbookScreen` draws through it (box, no overlay; remembers tab and pick; arrows and wheel step dish to dish). `UiCanvas` gains `item`, `texture`, `tr`, `itemTooltip` (`GuiCanvas`: the real item, blit, translation, tooltip; `tools/UiPreview.java`'s canvas: the mod's own PNGs and `en_us.json`). `verify/api-allowlist.txt`: `Screen.m_280273_` (renderBackground) removed, no screen uses it now. `QuestTests.cookbook`; `KitchenTests` reads the view's words. `tools/UiPreview.java cookbook`. Render `docs/handoff/cookbook-4.1.66.png`. Protocol 125.

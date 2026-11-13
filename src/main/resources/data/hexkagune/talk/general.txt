@@ -149,6 +149,34 @@ say: No. *He almost sounds proud.* She was always one step ahead of my best squa
   - Good. *He opens another report.* Dismissed.
 ignored: *The drawer stays locked.*
 
+# 4.1.67 (the owner asked that every reaction to a marriage with Touka be in): married to Touka; a child with her.
+scene rabbit_wedding
+who: anyone
+when: wed_touka
+say: *He sets down his pen.* Married. To Kirishima. *He looks at the locked drawer, then at you.* ...I was invited to nothing, which is correct. The CCG's General at a ghoul's wedding.
+> You'd have been welcome. | +3 -> welcome
+> Is that a problem now? | 0 -> problem
+page welcome
+say: *He is quiet for a long moment.* ...I'd have stood at the back. Out of uniform. *He clears his throat.* Congratulations. Don't tell anyone I said it.
+> Our secret. | +2 bow
+  - *A nod, very small.* Dismissed.
+page problem
+say: The file is still misplaced. It will stay misplaced. *He picks the pen back up.* A wedding changes nothing on my desk. It changes a great deal at your table. Look after it.
+> I will. | +2 bow
+  - Good.
+ignored: *He signs something without reading it.*
+
+scene rabbit_child
+who: anyone
+when: kidswith_touka
+say: *He turns a photograph face down before you see it.* {kidwith}. Kirishima's child, and yours. *He exhales through his nose.* ...There is no file on a child. There never will be. I've made sure.
+> Thank you. | +3 -> thanks
+page thanks
+say: Don't. *He straightens the papers that don't need straightening.* Children aren't the war. ...Bring them up away from it, if you can. Nobody did that for my investigators.
+> We'll try. | +2 bow
+  - That's all any of us did. Dismissed.
+ignored: *The photograph stays face down.*
+
 scene owl_file
 who: anyone
 when: with_eto

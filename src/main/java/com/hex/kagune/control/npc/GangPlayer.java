@@ -129,6 +129,15 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
     }
 
     /**
+     * 4.1.67 (the owner: "Add a new Quit the gang button to each leader whenever the player joins it."; "kicked from the gang if the player
+     * marries another gang leader"): out of their gang, of their own accord or by a marriage to another gang's leader: no gang, their tag
+     * gone, their count of their own killed forgotten; never banned for it (its way in begins again from the start).
+     */
+    public GangPlayer quit() {
+        return this.gang == NONE ? this : new GangPlayer(NONE, 0, this.banned, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0);
+    }
+
+    /**
      * Their name as everyone sees it (chat, the tag over their head): the gang's emblem in its own colours, a space, the name in the gang's
      * colour (the owner: "(symbol) (space) (name)": Aogiri's dark red, the Clowns' blue; 4.1.54, the Gas Masks: "Toxic logo, green name");
      * a gangless name as it is.

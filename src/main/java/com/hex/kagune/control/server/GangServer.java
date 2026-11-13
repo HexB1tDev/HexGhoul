@@ -374,6 +374,7 @@ public final class GangServer {
                 return;
             }
             long now = player.m_9236_().m_46467_();
+            nag(player, g, now); // 4.1.67
             vanish(player, now); // 4.1.53
             gasTraits(player, g); // 4.1.54
             if (kept(player).m_128451_(MASK) != g.gang()) {
@@ -831,6 +832,9 @@ public final class GangServer {
     static Said talk(ServerPlayer player, Persona persona, String key, int seed) {
         GangPlayer g = of(player);
         int gang = gangOf(persona);
+        if (g.member(gang) && (key.startsWith("gang:quit") || key.equals("gang:stay"))) {
+            return quit(player, g, gang, key, seed); // 4.1.67
+        }
         if (gang == GangPlayer.GAS_MASKS) {
             return banjou(player, g, key, seed); // 4.1.54
         }
@@ -838,7 +842,7 @@ public final class GangServer {
         if (g.member(gang)) {
             return new Said(ayato ? pick(seed, "Aogiri's fine. Don't get sloppy.", "You're one of us. Act like it.", "Still breathing? Good. Aogiri needs you.")
                 : pick(seed, "My favourite Clown! Go scare someone.", "You wear our face well. ...Kidding, you don't have one. You have mine. In your heart.",
-                    "The Clowns are great! Three of them are on fire, but great."), null);
+                    "The Clowns are great! Three of them are on fire, but great."), wayOut(gang));
         }
         if (g.banned(gang)) {
             return new Said(ayato ? "You killed our own. You're not Aogiri, and you never will be. Get out of my sight before I finish it."
@@ -903,7 +907,7 @@ public final class GangServer {
         int gang = GangPlayer.GAS_MASKS;
         if (g.member(gang)) {
             return new Said(pick(seed, "The boys are good. Fed, masked, nobody hurt this week. ...That last part's new. Thank you.",
-                "You're one of us. I still can't believe you picked us.", "Everyone's fine. I counted. Twice."), null);
+                "You're one of us. I still can't believe you picked us.", "Everyone's fine. I counted. Twice."), wayOut(gang));
         }
         if (g.banned(gang)) {
             return new Said("You killed my boys. *His voice shakes, and he doesn't back down.* You're not a Gas Mask. You never were. Get out before "
@@ -942,6 +946,86 @@ public final class GangServer {
         joined(player, gang);
         return new Said("*He turns the clown's mask over in his big hands, then hands you one of theirs.* ...Welcome to the Gas Masks. I'm the weakest "
             + "one here. You'll be fine.", null);
+    }
+
+    // ---------------------------------------------------------------- 4.1.67: quitting; a marriage to another gang's leader; their demands
+
+    /** 4.1.67: what a member may say to their leader to leave (the owner: "Add a new Quit the gang button to each leader"). */
+    static List<String[]> wayOut(int gang) {
+        return List.<String[]>of(new String[] {com.hex.kagune.control.npc.GangWords.wantOut(gang), "gang:quit"});
+    }
+
+    /**
+     * 4.1.67: a member asks their leader out ("gang:quit": asked to be sure), goes ("gang:quit:yes": out, not banned; its way in begins again),
+     * or thinks better of it ("gang:stay"). Each leader in their own voice ({@code GangWords}).
+     */
+    static Said quit(ServerPlayer player, GangPlayer g, int gang, String key, int seed) {
+        if (key.equals("gang:quit")) {
+            return new Said(com.hex.kagune.control.npc.GangWords.asked(gang), List.of(new String[] {"I'm out. I quit.", "gang:quit:yes"},
+                new String[] {"No. I'm staying.", "gang:stay"}));
+        }
+        if (key.equals("gang:stay")) {
+            return new Said(com.hex.kagune.control.npc.GangWords.stay(gang), null);
+        }
+        set(player, g.quit());
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "block.candle.extinguish", 1.0F, 0.9F);
+        player.m_5661_(Component.m_237113_("§7You left " + GangPlayer.title(gang) + ". They won't come for you, and they won't fight for you anymore."), false);
+        return new Said(com.hex.kagune.control.npc.GangWords.gone(gang), null);
+    }
+
+    /**
+     * 4.1.67 (the owner: "kicked from the gang if the player marries another gang leader, but can still join if the player was already married
+     * before joining."): {@code player} has just married {@code spouse}; one of another gang, they are out of it (not banned). Joining a gang
+     * when already married is never stopped.
+     */
+    static void married(ServerPlayer player, Persona spouse) {
+        GangPlayer g = of(player);
+        int theirs = gangOf(spouse);
+        if (!leads(spouse) || g.gang() == GangPlayer.NONE || g.gang() == theirs) {
+            return;
+        }
+        int was = g.gang();
+        set(player, g.quit());
+        player.m_5661_(Component.m_237113_(colour(was) + cap(GangPlayer.title(was)) + "§7: married to the leader of " + GangPlayer.title(theirs)
+            + "? You're out. §8(Not banned: you can come back by its way in.)"), false);
+    }
+
+    /**
+     * 4.1.67 (the owner: "being married to a gang leader but being part of another gang generates different reactions from the spouse,
+     * constantly demanding they quit the gang."): what {@code spouse} says to {@code player} about it (two times in three, by {@code seed}),
+     * or null when they are not that spouse or there is nothing to say.
+     */
+    static String spouseDemand(ServerPlayer player, Persona spouse, int seed) {
+        GangPlayer g = of(player);
+        if (!leads(spouse) || g.gang() == GangPlayer.NONE || g.gang() == gangOf(spouse) || !com.hex.kagune.control.npc.GangWords.demands(seed)
+            || UniqueNpcs.stage(player.m_284548_(), spouse.key(), player) != com.hex.kagune.control.npc.Romance.Stage.MARRIED) {
+            return null;
+        }
+        return com.hex.kagune.control.npc.GangWords.demand(gangOf(spouse), g.gang(), seed / 3);
+    }
+
+    /** 4.1.67: when a leader's spouse in another gang was last told to quit it by them, near (game time). */
+    private static final java.util.Map<UUID, Long> NAGGED = WorldTimes.map();
+    /** 4.1.67: at most this often (ticks), while they are near each other. */
+    static final long NAG_EVERY = 20L * 150L;
+
+    /** 4.1.67: near their spouse who leads another gang, every so often the spouse says it again (in chat, by name). */
+    static void nag(ServerPlayer player, GangPlayer g, long now) {
+        Long last = NAGGED.get(player.m_20148_());
+        if (g.gang() == GangPlayer.NONE || last != null && now - last < NAG_EVERY) {
+            return;
+        }
+        for (com.hex.kagune.control.npc.EtoNpc npc : player.m_284548_().m_6443_(com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(12.0),
+            body -> body.m_6084_() && body.mind != null)) {
+            Persona spouse = npc.persona();
+            if (!leads(spouse) || gangOf(spouse) == g.gang()
+                || UniqueNpcs.stage(player.m_284548_(), spouse.key(), player) != com.hex.kagune.control.npc.Romance.Stage.MARRIED) {
+                continue;
+            }
+            NAGGED.put(player.m_20148_(), now);
+            player.m_5661_(Component.m_237113_(spouse.colour() + npc.displayName() + "§f: " + com.hex.kagune.control.npc.GangWords.demand(gangOf(spouse), g.gang(), (int)(now / 20L))), false);
+            return;
+        }
     }
 
     /** 4.1.54: what may be said to Banjou; the third takes him seriously. */
