@@ -9,6 +9,15 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
+## FIRST (after the handoff): 4.1.73 released late; check CI after every push
+
+The 4.1.73 commit (`dd6f394b`) and the handoff after it failed on GitHub ("Build HexKagune" and "Release HexKagune"): `NpcTests.footing`
+runs `tools/npc_spots.py`, which loads `city_render`/`interior_render`, which import numpy and Pillow, which the runner didn't have
+(`ModuleNotFoundError: No module named 'numpy'`, 1 of 326047 checks failed). Local builds had them, so the session saw EXIT 0 and the
+Releases page stayed at 4.1.72. Fixed: `tools/requirements.txt` (numpy, Pillow, pinned) installed by both workflows through
+`actions/setup-python`; 4.1.73's notes touched so the release workflow publishes v4.1.73. New rule (in `CLAUDE.md`): after every push,
+check the runs end green and the release is up; a local EXIT 0 alone is not a shipped version. Then carry on below with 4.1.74.
+
 ## START HERE (newest, after 4.1.73, handoff): finish 4.1.74 (Arima's change and death) from its patch; then better the quests
 
 The owner stopped the session (quoted exactly): "Handoff + prompt for the next ai". **Pushed this session** (each after a full build EXIT 0

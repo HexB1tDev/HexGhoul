@@ -51,3 +51,5 @@ searching 72 blocks round it every second for as long as it lived; now every 30 
   `docs/handoff/ccg-banner-4.1.73.png` (a sketch of the banner before and after).
 - Tests: `NpcTests.footing` (the floor rule on slabs, carpets, fences, raised and lowered ground, a low ceiling; every place that puts an
   NPC down; the guard's limits; every template's NPCs), `NpcTests.lag173`; each rule sabotaged fails.
+- Published later than it was pushed: its first GitHub builds failed, the runner having no numpy or Pillow for `tools/npc_spots.py` (the
+  tests run it). The workflows now install them (`tools/requirements.txt`). The mod is the same 4.1.73.
