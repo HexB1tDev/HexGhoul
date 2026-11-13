@@ -870,6 +870,120 @@ public class UiPreview {
             java.util.List.of("Talk to me.", "Be sweet to him.", "I want to join Aogiri.", "")), com.hex.kagune.control.client.NpcTalkView.Motion.still(92));
     }
 
+    /**
+     * 4.1.70 (the owner: "Anteikou - Joinable through Ken (quest)"): Ken's pages for Anteiku: asked to join (why, three answers), the beans
+     * in hand, taken in, and a member's page with the reputation meter in Anteiku's light brown.
+     */
+    static void anteikuTalk(File dir) throws Exception {
+        int anteiku = com.hex.kagune.control.npc.GangPlayer.ANTEIKU;
+        com.hex.kagune.control.npc.NpcTalk.Choice[] says = com.hex.kagune.control.npc.NpcTalk.Choice.SAYS;
+        com.hex.kagune.control.npc.NpcTalk.Choice back = com.hex.kagune.control.npc.NpcTalk.Choice.BACK;
+        com.hex.kagune.control.npc.NpcTalk.Choice leave = com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE;
+        com.hex.kagune.control.npc.NpcTalk.Choice chat = com.hex.kagune.control.npc.NpcTalk.Choice.CHAT;
+        BufferedImage ken = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/ken/ken.png"));
+        String[] answers = com.hex.kagune.control.npc.GangWords.KEN_WHY;
+        etoFrame(new File(dir, "anteiku-ken-why.png"), ken, new com.hex.kagune.control.client.NpcTalkView.Model("Ken", "The one-eyed king", 45, false,
+            "Anteiku? *He closes his book on one finger.* It's just a café. ...Mostly. People who join us look after each other. Why do you want in? "
+                + "Honestly.", java.util.List.of(says[0], says[1], says[2], back), java.util.List.of(answers[1], answers[2], answers[0], "")),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(45));
+        etoFrame(new File(dir, "anteiku-ken-beans.png"), ken, new com.hex.kagune.control.client.NpcTalkView.Model("Ken", "The one-eyed king", 52, false,
+            "*He's quiet for a long moment. Then he smiles, a little sadly.* ...Yeah. That's the right reason. It was mine too. Okay. Small things "
+                + "first: we're out of beans, and Touka's been unbearable. Eight, if you can find them.", java.util.List.of(chat, says[2],
+                com.hex.kagune.control.npc.NpcTalk.Choice.INSULT, leave), java.util.List.of("", "Here. Coffee beans. (the cocoa beans in your hand)", "", "")),
+            com.hex.kagune.control.client.NpcTalkView.Motion.still(52));
+        etoFrame(new File(dir, "anteiku-ken-welcome.png"), ken, new com.hex.kagune.control.client.NpcTalkView.Model("Ken", "Ken", 70, false,
+            "*He hangs a second apron on the hook by the door.* ...Welcome to Anteiku. Nobody here will ask what you did before. Just... be kind, okay?",
+            java.util.List.of(chat, says[2], leave), java.util.List.of("", "How's Anteiku?", "")), com.hex.kagune.control.client.NpcTalkView.Motion.still(70));
+        etoFrame(new File(dir, "anteiku-ken-member.png"), ken, new com.hex.kagune.control.client.NpcTalkView.Model("Ken", "Ken", 74, false,
+            "Have you eaten? Properly, I mean. Sit down, I'll make you a cup.", java.util.List.of(says[0], back), java.util.List.of(
+                com.hex.kagune.control.npc.GangWords.wantOut(anteiku), ""), 64 | anteiku << 8), com.hex.kagune.control.client.NpcTalkView.Motion.still(74));
+    }
+
+    /**
+     * 4.1.70 (the owner: "Enegy bar increases size and increases maximum capacity."; then "naw man just make the energy bar smaller but longer
+     * to fit the bar, dont make it past it wtf bruh"; of two ways, "B: shrunk into its spot"): the HUD as it is and for one of Anteiku (the
+     * finer, longer bar on half pixels in the same spot), each at 1.65x; then the bar full, hungry and low, as it is and for Anteiku, at 3.6x.
+     */
+    static void anteikuBar(File out) throws Exception {
+        int w = 900;
+        int h = 520;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
+        c.fill(0, 0, w, h, 0xFF141016);
+        c.text("ANTEIKU: the one bar (energy and food) as it is (left) and for one of Anteiku (right): finer and longer in the same spot, holding "
+            + "one bar more", 8, 6, 0xFFC89B6D, false);
+        for (int side = 0; side < 2; side++) {
+            c.push();
+            c.translate(10 + side * 445, 24);
+            c.scale(1.65F);
+            hudWide(c, 0.62F, side == 1);
+            c.pop();
+        }
+        float[][] reserve = {{1.0F, 0.0F, 40.0F}, {0.4F, 0.55F, 120.0F}, {0.15F, 0.85F, 31.5F}};
+        String[] names = {"full", "hungry (40%)", "low (15%): it beats"};
+        for (int k = 0; k < 3; k++) {
+            for (int side = 0; side < 2; side++) {
+                int x = 10 + side * 445;
+                int y = 160 + k * 120;
+                c.text((side == 0 ? "As it is, " : "One of Anteiku, ") + names[k], x, y, 0xFFE6D2DA, false);
+                c.push();
+                c.translate(x, y + 12);
+                c.scale(3.6F);
+                com.hex.kagune.control.client.ReserveBarView.Frame frame = new com.hex.kagune.control.client.ReserveBarView.Frame(reserve[k][0],
+                    reserve[k][0], 0.0F, 0.0F, reserve[k][1], reserve[k][2]);
+                if (side == 1) {
+                    com.hex.kagune.control.client.ReserveBarView.drawFine(c, 0, 0, frame);
+                } else {
+                    com.hex.kagune.control.client.ReserveBarView.draw(c, 0, 0, frame);
+                }
+                c.pop();
+            }
+        }
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
+    /** 4.1.70: a 260 x 60 slice of the survival HUD round the hotbar (its middle at x 100); {@code fine}: one of Anteiku's bar. */
+    static void hudWide(ImageCanvas c, float fill, boolean fine) {
+        int cx = 100;
+        int H = 60;
+        c.fill(0, 0, 260, H, 0xFF5E8A48);
+        c.fill(0, 0, 260, 20, 0xFF7FA6D8);
+        c.fill(cx - 91, H - 22, cx + 91, H, 0xFF2A2A2A);
+        for (int s = 0; s < 9; s++) {
+            c.fill(cx - 90 + s * 20, H - 21, cx - 90 + s * 20 + 20, H - 1, 0xFF8B8B8B);
+            c.fill(cx - 89 + s * 20, H - 20, cx - 89 + s * 20 + 18, H - 2, 0xFF3F3F3F);
+        }
+        c.fill(cx - 91, H - 29, cx + 91, H - 24, 0xFF1A1A1A);
+        c.fill(cx - 90, H - 28, cx + 30, H - 25, 0xFF80FF20);
+        for (int i = 0; i < 10; i++) {
+            int hx = cx - 91 + i * 8;
+            int hy = H - 39;
+            for (int r = 0; r < 9; r++) {
+                for (int q = 0; q < 9; q++) {
+                    char ch = HEART[r].charAt(q);
+                    if (ch != '.') {
+                        int col = ch == '#' ? 0xFF1A0000 : ch == 'w' ? 0xFFFFC8C8 : i < 7 ? 0xFFE01818 : 0xFF3A0E0E;
+                        c.fill(hx + q, hy + r, hx + q + 1, hy + r + 1, col);
+                    }
+                }
+            }
+        }
+        com.hex.kagune.control.client.ReserveBarView.Frame frame = new com.hex.kagune.control.client.ReserveBarView.Frame(fill, fill, 0.0F, 0.0F, 0.2F, 50.0);
+        if (fine) {
+            com.hex.kagune.control.client.ReserveBarView.drawFine(c, cx + 10, H - 39, frame);
+        } else {
+            com.hex.kagune.control.client.ReserveBarView.draw(c, cx + 10, H - 39, frame);
+        }
+        // The level number as the game draws it, after the food row: centred, 35 up from the bottom, outlined in black.
+        String level = "12";
+        int lx = cx - c.width(level) / 2;
+        for (int[] o : new int[][] {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
+            c.text(level, lx + o[0], H - 35 + o[1], 0xFF000000, false);
+        }
+        c.text(level, lx, H - 35, 0xFF80FF20, false);
+    }
+
     /** 2.1.3: a village human's talk: the first page, the "Talk a while." page with one of its secrets told, and a gift it loved. */
     static void villageTalk(File dir) throws Exception {
         BufferedImage face = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/human/human_03.png"));
@@ -1226,6 +1340,11 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("gang-talk")) {
             gangTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("anteiku")) {
+            anteikuTalk(dir);
+            anteikuBar(new File(dir, "anteiku-bar.png"));
             return;
         }
         if (args.length > 1 && args[1].equals("cookbook")) {

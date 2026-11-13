@@ -593,6 +593,12 @@ public final class GhoulNpcBrain {
         if (body instanceof Player player && player.m_7500_()) {
             return false;
         }
+        if (body instanceof ServerPlayer player && !who.ccg() && GangServer.neutral(player)) {
+            // 4.1.70 (the owner, Anteiku's traits: "All ghouls and factions are neutral to the player but the CCG."): one of Anteiku is gone
+            // for only if they start it (a grudge, above), are banned by its gang, or go for one of its gang's own (above); never by a wild
+            // ghoul, a gang or Aogiri (nor its gate) otherwise. The CCG's ghouls (who.ccg) still hunt them.
+            return false;
+        }
         if (who.ccg()) {
             return division(npc, mind, body, now); // 4.1.46: as an investigator
         }
@@ -677,6 +683,9 @@ public final class GhoulNpcBrain {
         }
         if (who.aogiri() || who.gang() != 0) {
             return false; // 4.0.0: an Aogiri member's blows land only on what it is fighting (4.1.45: a gang's too)
+        }
+        if (body instanceof ServerPlayer player && !who.ccg() && GangServer.neutral(player)) {
+            return false; // 4.1.70: nor on one of Anteiku in the way
         }
         if (body instanceof ServerPlayer player) {
             return !player.m_7500_() && !player.equals(owner(npc, mind)) && attitude(npc, who, player) != NpcTemper.Attitude.FRIENDLY;

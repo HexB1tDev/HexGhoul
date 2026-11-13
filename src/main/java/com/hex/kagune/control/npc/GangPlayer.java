@@ -14,7 +14,7 @@ package com.hex.kagune.control.npc;
  * Clowns ({@link #killedClown}), bring him a clown's mask; its emblem the toxic trefoil, its name green.
  */
 public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest, int ccgKills, int clownStep, int gasKills, int gasStep,
-                         int clownKills) {
+                         int clownKills, int anteikuStep, int doveKills) {
     public static final int NONE = 0;
     public static final int AOGIRI = 1;
     public static final int CLOWNS = 2;
@@ -35,13 +35,35 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
     public static final int GAS_CLOWNS = 3;
     public static final int GAS_CLOWNS_NEXT = 1;
     public static final int GAS_MASK_NEXT = 2;
+    /**
+     * 4.1.70 (the owner: "Anteikou - Joinable through Ken (quest)"): Anteiku, the café, through Ken. His way in, a short chain as the others':
+     * the answer that is Anteiku's (why they want in: {@link #answered}), a handful of coffee beans brought ({@link #ANTEIKU_BEAN_COUNT}
+     * cocoa beans in the hand: {@link #beansBrought}), then {@link #ANTEIKU_CCG} investigators who came sniffing round the café killed
+     * ({@link #droveDove}); then he takes them in.
+     */
+    public static final int ANTEIKU = 4;
+    public static final int ANTEIKU_NOT_YET = 0;
+    public static final int ANTEIKU_BEANS = 1;
+    public static final int ANTEIKU_DOVES = 2;
+    public static final int ANTEIKU_DONE = 3;
+    public static final int ANTEIKU_CCG = 3;
+    public static final int ANTEIKU_BEAN_COUNT = 8;
+    /**
+     * 4.1.70 (the owner: "Enegy bar increases size and increases maximum capacity."): what one of Anteiku adds to how many times the energy
+     * their bar holds (1 to 2; Potential Unlock's 3 to 4), and how much longer the bar is drawn ({@code ReserveBarView.ANTEIKU_TAIL}).
+     */
+    public static final int ANTEIKU_CAPACITY = 1;
+    /** 4.1.70 (the owner: "Light brown name tag with a coffee symbol"): Anteiku's light brown, a latte's (0xRRGGBB). */
+    public static final int ANTEIKU_BROWN = 0xC89B6D;
     /** The emblems (assets/minecraft/font/default.json's private characters: tools/gang_emblems.py). */
     public static final String TREE = "";
     public static final String CLOWN = "";
     /** 4.1.54: the Gas Masks' toxic trefoil. */
     public static final String TOXIC = "";
+    /** 4.1.70: Anteiku's coffee cup. */
+    public static final String COFFEE = "\uE003";
 
-    public static final GangPlayer NEW = new GangPlayer(NONE, 0, 0, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0);
+    public static final GangPlayer NEW = new GangPlayer(NONE, 0, 0, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0);
 
     /** True if they belong to {@code gang}. */
     public boolean member(int gang) {
@@ -61,12 +83,12 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
     public GangPlayer join(int gang) {
         return new GangPlayer(gang, 0, this.banned, gang == AOGIRI ? false : this.aogiriQuest, gang == AOGIRI ? 0 : this.ccgKills,
             gang == CLOWNS ? CLOWN_NOT_YET : this.clownStep, gang == CLOWNS ? 0 : this.gasKills, gang == GAS_MASKS ? GAS_NOT_YET : this.gasStep,
-            gang == GAS_MASKS ? 0 : this.clownKills);
+            gang == GAS_MASKS ? 0 : this.clownKills, gang == ANTEIKU ? ANTEIKU_NOT_YET : this.anteikuStep, gang == ANTEIKU ? 0 : this.doveKills);
     }
 
     /** Aogiri's quest begun (Ayato's "Kill 5 CCG"). */
     public GangPlayer startAogiri() {
-        return new GangPlayer(this.gang, this.ownKills, this.banned, true, 0, this.clownStep, this.gasKills, this.gasStep, this.clownKills);
+        return new GangPlayer(this.gang, this.ownKills, this.banned, true, 0, this.clownStep, this.gasKills, this.gasStep, this.clownKills, this.anteikuStep, this.doveKills);
     }
 
     /** True once Aogiri's quest is done (five of the CCG killed while it was on). */
@@ -77,13 +99,13 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
     /** One of the CCG killed: counted while Aogiri's quest is on. */
     public GangPlayer killedDove() {
         return this.aogiriQuest && !this.member(AOGIRI) ? new GangPlayer(this.gang, this.ownKills, this.banned, true, this.ccgKills + 1, this.clownStep,
-            this.gasKills, this.gasStep, this.clownKills) : this;
+            this.gasKills, this.gasStep, this.clownKills, this.anteikuStep, this.doveKills) : this;
     }
 
     /** Roma laughed: the Gas Masks next. */
     public GangPlayer laughed() {
         return this.clownStep == CLOWN_NOT_YET ? new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, CLOWN_GAS_MASKS, 0,
-            this.gasStep, this.clownKills) : this;
+            this.gasStep, this.clownKills, this.anteikuStep, this.doveKills) : this;
     }
 
     /** One of the Gas Masks killed: counted while the Clowns' chain asks for them; the third moves it on to the case. */
@@ -93,13 +115,13 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
         }
         int kills = this.gasKills + 1;
         return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, kills >= CLOWN_GAS ? CLOWN_CASE : CLOWN_GAS_MASKS,
-            kills, this.gasStep, this.clownKills);
+            kills, this.gasStep, this.clownKills, this.anteikuStep, this.doveKills);
     }
 
     /** 4.1.54: Banjou taken seriously (the answer that does it): the Clowns next. */
     public GangPlayer takenSeriously() {
         return this.gasStep == GAS_NOT_YET ? new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep,
-            this.gasKills, GAS_CLOWNS_NEXT, 0) : this;
+            this.gasKills, GAS_CLOWNS_NEXT, 0, this.anteikuStep, this.doveKills) : this;
     }
 
     /** 4.1.54: one of the Clowns killed: counted while the Gas Masks' chain asks for them; the third moves it on to the clown mask. */
@@ -109,7 +131,36 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
         }
         int kills = this.clownKills + 1;
         return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills,
-            kills >= GAS_CLOWNS ? GAS_MASK_NEXT : GAS_CLOWNS_NEXT, kills);
+            kills >= GAS_CLOWNS ? GAS_MASK_NEXT : GAS_CLOWNS_NEXT, kills, this.anteikuStep, this.doveKills);
+    }
+
+    /** 4.1.70: Ken's question answered as Anteiku would (coffee beans next). */
+    public GangPlayer answered() {
+        return this.anteikuStep == ANTEIKU_NOT_YET ? this.anteiku(ANTEIKU_BEANS, 0) : this;
+    }
+
+    /** 4.1.70: the coffee beans brought (the investigators next). */
+    public GangPlayer beansBrought() {
+        return this.anteikuStep == ANTEIKU_BEANS ? this.anteiku(ANTEIKU_DOVES, 0) : this;
+    }
+
+    /** 4.1.70: one of the CCG killed: counted while Ken's chain asks for them; the third finishes it. */
+    public GangPlayer droveDove() {
+        if (this.anteikuStep != ANTEIKU_DOVES) {
+            return this;
+        }
+        int kills = this.doveKills + 1;
+        return this.anteiku(kills >= ANTEIKU_CCG ? ANTEIKU_DONE : ANTEIKU_DOVES, kills);
+    }
+
+    /** 4.1.70: true once Ken's chain is done (he takes them in when they next talk to him). */
+    public boolean anteikuDone() {
+        return this.anteikuStep == ANTEIKU_DONE;
+    }
+
+    private GangPlayer anteiku(int step, int kills) {
+        return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills, this.gasStep,
+            this.clownKills, step, kills);
     }
 
     /**
@@ -122,10 +173,10 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
         }
         int kills = this.ownKills + 1;
         if (kills > BAN_OVER) {
-            return new GangPlayer(NONE, 0, this.banned | bit(this.gang), false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0);
+            return new GangPlayer(NONE, 0, this.banned | bit(this.gang), false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0);
         }
         return new GangPlayer(this.gang, kills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills, this.gasStep,
-            this.clownKills);
+            this.clownKills, this.anteikuStep, this.doveKills);
     }
 
     /**
@@ -134,7 +185,7 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
      * gone, their count of their own killed forgotten; never banned for it (its way in begins again from the start).
      */
     public GangPlayer quit() {
-        return this.gang == NONE ? this : new GangPlayer(NONE, 0, this.banned, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0);
+        return this.gang == NONE ? this : new GangPlayer(NONE, 0, this.banned, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0);
     }
 
     /**
@@ -147,6 +198,8 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
             case AOGIRI -> "§f" + TREE + " §4" + name + "§r";
             case CLOWNS -> "§f" + CLOWN + " §9" + name + "§r";
             case GAS_MASKS -> "§f" + TOXIC + " §a" + name + "§r";
+            // 4.1.70: light brown is none of the sixteen; GangServer.nameTag gives it (ANTEIKU_BROWN); here, plain text's nearest: gold.
+            case ANTEIKU -> "§f" + COFFEE + " §6" + name + "§r";
             default -> name;
         };
     }
@@ -157,6 +210,7 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
             case AOGIRI -> "Aogiri Tree";
             case CLOWNS -> "the Clowns";
             case GAS_MASKS -> "the Gas Masks";
+            case ANTEIKU -> "Anteiku";
             default -> "no gang";
         };
     }

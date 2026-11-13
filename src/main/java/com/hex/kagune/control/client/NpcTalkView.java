@@ -403,8 +403,8 @@ public final class NpcTalkView {
         }
     }
 
-    /** 4.1.52: each gang's colour on its meter (none, Aogiri's dark red, the Clowns' blue, the Gas Masks' green). */
-    static final int[] GANG_COLOURS = {0xFF8A8A8A, 0xFFC4283A, 0xFF4F78E8, 0xFF58C050};
+    /** 4.1.52: each gang's colour on its meter (none, Aogiri's dark red, the Clowns' blue, the Gas Masks' green; 4.1.70: Anteiku's light brown). */
+    static final int[] GANG_COLOURS = {0xFF8A8A8A, 0xFFC4283A, 0xFF4F78E8, 0xFF58C050, 0xFF000000 | com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BROWN};
 
     /**
      * 4.1.52: the reputation meter: "REPUTATION", the word for where they stand (FEARED bright; UNWANTED red, beating), the share; a bar in

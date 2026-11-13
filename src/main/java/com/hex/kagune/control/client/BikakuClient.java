@@ -197,8 +197,16 @@ public final class BikakuClient {
         return -1.0;
     }
 
-    /** 3.6.7: how many times the energy {@code player}'s bar holds (Potential Unlock, on the Bikaku path: three; else one). */
+    /**
+     * 3.6.7: how many times the energy {@code player}'s bar holds (Potential Unlock, on the Bikaku path: three; else one); 4.1.70: one more
+     * for one of Anteiku (as the server's {@code SharedBar.capacity}).
+     */
     public static int capacity(Player player) {
+        return potential(player) + (GangClient.anteiku(player) ? com.hex.kagune.control.npc.GangPlayer.ANTEIKU_CAPACITY : 0);
+    }
+
+    /** 4.1.70: Potential Unlock's share of {@link #capacity} alone (three, or one): the reserve bar is purple for it, not for Anteiku's. */
+    public static int potential(Player player) {
         return player != null && isBikaku(player) ? BikakuRules.capacity(get(player).mutations()) : 1;
     }
 

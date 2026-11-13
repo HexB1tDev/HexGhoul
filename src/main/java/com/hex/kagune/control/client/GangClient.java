@@ -9,6 +9,12 @@ public final class GangClient {
     private GangClient() {
     }
 
+    /** 4.1.70: true if {@code player} is one of Anteiku, as this side knows it (the server tells every client each player's gang). */
+    public static boolean anteiku(Player player) {
+        Integer gang = player == null ? null : com.hex.kagune.control.server.GangServer.SEEN.get(player.m_20148_());
+        return gang != null && gang == com.hex.kagune.control.npc.GangPlayer.ANTEIKU;
+    }
+
     public static void accept(S2CGangName message) {
         com.hex.kagune.control.server.GangServer.SEEN.put(message.player(), message.gang());
         Minecraft minecraft = Minecraft.m_91087_();

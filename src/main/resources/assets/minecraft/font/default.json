@@ -26,6 +26,15 @@
       "chars": [
         "\ue002"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "hexkagune:font/anteiku_coffee.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue003"
+      ]
     }
   ]
 }

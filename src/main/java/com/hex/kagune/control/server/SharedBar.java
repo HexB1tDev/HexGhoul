@@ -78,9 +78,13 @@ public final class SharedBar {
         return cost * EnergyBalance.costScale(KaguneProfile.mastery(player)) / GhoulMeatServer.endurance(player) / capacity(player);
     }
 
-    /** 3.6.7: how many times the energy the bar holds for {@code player} (Potential Unlock, on the Bikaku path: three; else one). */
+    /**
+     * 3.6.7: how many times the energy the bar holds for {@code player} (Potential Unlock, on the Bikaku path: three; else one). 4.1.70 (the
+     * owner, Anteiku's traits: "Enegy bar increases size and increases maximum capacity."): one more for one of Anteiku.
+     */
     public static int capacity(ServerPlayer player) {
-        return BikakuServer.isBikaku(player) ? com.hex.kagune.control.bikaku.BikakuRules.capacity(BikakuDevour.mutations(player)) : 1;
+        return (BikakuServer.isBikaku(player) ? com.hex.kagune.control.bikaku.BikakuRules.capacity(BikakuDevour.mutations(player)) : 1)
+            + GangServer.capacity(player);
     }
 
     /** 1.0.33: in creative the original's store is kept full too, so its HUD and anything reading it straight see a full bar. */

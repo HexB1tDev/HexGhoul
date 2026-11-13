@@ -455,6 +455,180 @@ public final class NpcTests {
             && server.contains("giveMask(player, g.gang()); // 4.1.53: a member from before it got theirs"), "joining gives the gang's mask (once a gang)");
     }
 
+    /**
+     * 4.1.70 (the owner: "Anteikou - Joinable through Ken (quest) / Traits: / All ghouls and factions are neutral to the player but the CCG.
+     * / Enegy bar increases size and increases maximum capacity. / Looks: Light brown name tag with a coffee symbol."): Ken's chain step by
+     * step, the name, his words, the neutrality (where it sits in a ghoul's choice of whom to go for), the capacity on both sides, the longer
+     * bar as drawn.
+     */
+    static void anteiku() {
+        com.hex.kagune.control.npc.GangPlayer k = com.hex.kagune.control.npc.GangPlayer.NEW;
+        int anteiku = com.hex.kagune.control.npc.GangPlayer.ANTEIKU;
+        check(anteiku == 4 && com.hex.kagune.control.npc.GangPlayer.title(anteiku).equals("Anteiku"), "Anteiku: gang 4");
+        check(k.droveDove().doveKills() == 0 && k.beansBrought() == k, "nothing counts before Ken has asked why");
+        k = k.answered();
+        check(k.anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BEANS && k.answered() == k && k.droveDove() == k,
+            "answered as Anteiku would: the beans next (once); no investigator counts yet");
+        k = k.beansBrought();
+        check(k.anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_DOVES && k.beansBrought() == k, "the beans brought: the investigators next");
+        k = k.droveDove().droveDove();
+        check(k.doveKills() == 2 && !k.anteikuDone() && k.droveDove().anteikuDone() && com.hex.kagune.control.npc.GangPlayer.ANTEIKU_CCG == 3
+            && com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BEAN_COUNT == 8, "eight beans, then three investigators");
+        k = k.droveDove();
+        check(k.droveDove() == k, "done: no more counted");
+        k = k.join(anteiku);
+        check(k.member(anteiku) && k.anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_NOT_YET && k.doveKills() == 0
+            && !k.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI), "joined: Anteiku's");
+        com.hex.kagune.control.npc.GangPlayer left = k.quit();
+        check(left.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && !left.banned(anteiku) && left.anteikuStep() == 0
+            && left.answered().beansBrought().anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_DOVES, "out of Anteiku, never banned; the way in again from the start");
+        com.hex.kagune.control.npc.GangPlayer other = com.hex.kagune.control.npc.GangPlayer.NEW.answered().beansBrought().droveDove();
+        check(other.join(com.hex.kagune.control.npc.GangPlayer.CLOWNS).anteikuStep() == other.anteikuStep() && other.startAogiri().doveKills() == 1
+            && other.killedDove() == other, "another gang's way in leaves Ken's alone, and his leaves theirs");
+        check(com.hex.kagune.control.npc.GangPlayer.named(anteiku, "Ken").equals("§f §6Ken§r") && com.hex.kagune.control.npc.GangPlayer.COFFEE.equals("")
+            && com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BROWN == 0xC89B6D, "the coffee cup, a space, the name (plain text's nearest gold; the tag itself light brown)");
+        int r = com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BROWN >> 16 & 255;
+        int g = com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BROWN >> 8 & 255;
+        int b = com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BROWN & 255;
+        check(r > g && g > b && r - b > 70 && r > 160 && b > 70, "Anteiku's colour is a light brown (red over green over blue, light, not orange)");
+        NpcIdentity rolled = NpcIdentity.roll(300, new java.util.Random(7)::nextDouble);
+        for (com.hex.kagune.control.npc.Gang gang : com.hex.kagune.control.npc.Gang.values()) {
+            check(com.hex.kagune.control.npc.GangPlayer.of(rolled.ganged(gang, 1)) != anteiku, "no roaming ghoul is Anteiku's (Ken and Touka are)");
+        }
+        for (int seed = 0; seed < 6; seed++) {
+            check(!com.hex.kagune.control.npc.GangWords.asked(anteiku).equals(com.hex.kagune.control.npc.GangWords.asked(com.hex.kagune.control.npc.GangPlayer.CLOWNS))
+                && com.hex.kagune.control.npc.GangWords.demand(anteiku, com.hex.kagune.control.npc.GangPlayer.AOGIRI, seed).contains("Aogiri"),
+                "Ken asks in his own words, and names the gang a spouse should quit");
+        }
+        try {
+            String server = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java"));
+            String brain = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java"));
+            String bar = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/SharedBar.java"));
+            String client = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/BikakuClient.java"));
+            String hud = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/ReserveHud.java"));
+            check(server.contains("|| persona == Persona.KEN;") && server.contains(": persona == Persona.KEN ? GangPlayer.ANTEIKU : GangPlayer.NONE;")
+                && server.contains("persona == Persona.KEN || persona == Persona.TOUKA ? GangPlayer.ANTEIKU"), "Ken leads Anteiku; he and Touka are its own (their talk shows the bar)");
+            check(server.contains("return ken(player, g, key, seed); // 4.1.70") && server.indexOf("return ken(player, g, key, seed);") > server.indexOf("return quit(player, g, gang, key, seed);"),
+                "talking with Ken about Anteiku goes through his chain, after the way out");
+            int ken = server.indexOf("static Said ken(ServerPlayer player");
+            check(ken > 0 && server.indexOf("set(player, g.answered());", ken) > 0 && server.indexOf("takeBeans(player)", ken) > 0
+                && server.indexOf("set(player, g.beansBrought());", ken) > 0 && server.indexOf("if (!g.anteikuDone()) {", ken) > 0
+                && server.indexOf("set(player, g.join(gang));", ken) > server.indexOf("if (!g.anteikuDone()) {", ken), "Ken's chain in order: why, the beans, the investigators, in");
+            check(com.hex.kagune.control.npc.GangWords.KEN_RIGHT == 2 && com.hex.kagune.control.npc.GangWords.KEN_WHY[2].startsWith("So I don't turn into a monster.")
+                && server.contains("if (said == com.hex.kagune.control.npc.GangWords.KEN_RIGHT) {\n                    set(player, g.answered());"),
+                "the reason Anteiku takes is the third, and it is Anteiku's own");
+            check(server.contains("now = now.droveDove(); // 4.1.70") && server.contains("investigator.identity().ccg()"), "an investigator of either kind counts for Ken");
+            check(server.contains(".m_7220_(Component.m_237113_(name).m_6270_(") && server.contains("net.minecraft.network.chat.Style.f_131099_.m_178520_(GangPlayer.ANTEIKU_BROWN)")
+                && server.contains("event.setDisplayname(nameTag(gang, event.getDisplayname().getString()));"), "the tag: the cup, then the name in Anteiku's own light brown");
+            check(server.contains("if (gang != GangPlayer.AOGIRI && gang != GangPlayer.CLOWNS && gang != GangPlayer.GAS_MASKS"),
+                "Anteiku has no hideout to be turned out of (no ghoul of its own to turn on them)");
+            check(server.contains("!was.member(GangPlayer.ANTEIKU)) {\n                    by = GangStanding.KILL_RIVAL;"), "Anteiku rewards no gang killing (it is no one's rival)");
+            int grudge = brain.indexOf("Long until = mind.grudges.get(body.m_20148_());");
+            int neutral = brain.indexOf("if (body instanceof ServerPlayer player && !who.ccg() && GangServer.neutral(player)) {");
+            int ccg = brain.indexOf("if (who.ccg()) {\n            return division(");
+            int aogiri = brain.indexOf("return aogiriFoe(body) || body instanceof Player player && AogiriGuard.unwelcome(npc, player, now);");
+            int wild = brain.indexOf("return attitude(npc, who, player) == NpcTemper.Attitude.HOSTILE;");
+            check(grudge > 0 && neutral > grudge && neutral < ccg && neutral < aogiri && neutral < wild && brain.indexOf("return GangServer.turned(player);") < grudge,
+                "one of Anteiku: gone for on a grudge (they started it), a ban or a threat to a gang's own, then never by a ghoul, a gang or Aogiri's gate; the CCG's ghouls apart");
+            int fair = brain.indexOf("static boolean fair(");
+            check(fair > 0 && brain.indexOf("GangServer.neutral(player)) {\n            return false; // 4.1.70: nor on one of Anteiku in the way", fair) > fair,
+                "nor hit standing in the way");
+            check(bar.contains("+ GangServer.capacity(player);") && server.contains("return of(player).member(GangPlayer.ANTEIKU) ? GangPlayer.ANTEIKU_CAPACITY : 0;")
+                && client.contains("return potential(player) + (GangClient.anteiku(player) ? com.hex.kagune.control.npc.GangPlayer.ANTEIKU_CAPACITY : 0);"),
+                "the bar holds more for one of Anteiku, on the server (what everything costs) and on the client (what the menus read)");
+            check(hud.contains("if (BikakuClient.potential(minecraft.f_91074_) > 1) {"), "the bar is purple for Potential Unlock only");
+        } catch (java.io.IOException failure) {
+            check(false, "read Anteiku's files: " + failure);
+        }
+        // The owner, of a first try whose bar ran past the hotbar: "naw man just make the energy bar smaller but longer to fit the bar, dont
+        // make it past it wtf bruh"; of two ways shown, "B: shrunk into its spot". So one of Anteiku's is drawn on half pixels in the usual
+        // bar's own spot: exactly as wide, half as tall and centred in its rows, its tail about twice as long in its own pixels.
+        check(com.hex.kagune.control.npc.GangPlayer.ANTEIKU_CAPACITY == 1 && com.hex.kagune.control.client.ReserveBarView.FINE == 2
+            && com.hex.kagune.control.client.ReserveBarView.ANTEIKU_TAIL >= 2 * com.hex.kagune.control.client.ReserveBarView.TAIL,
+            "one more bar's worth; a tail about twice as long, on half pixels");
+        double[][] spans = new double[2][];
+        for (int which = 0; which < 2; which++) {
+            double[] seen = {Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE};
+            double[] at = {0.0, 0.0, 1.0};
+            java.util.Deque<double[]> stack = new java.util.ArrayDeque<>();
+            com.hex.kagune.control.client.ui.UiCanvas probe = new com.hex.kagune.control.client.ui.UiCanvas() {
+                public void fill(int x0, int y0, int x1, int y1, int argb) {
+                    seen[0] = Math.min(seen[0], at[0] + x0 * at[2]);
+                    seen[1] = Math.max(seen[1], at[0] + x1 * at[2]);
+                    seen[2] = Math.min(seen[2], at[1] + y0 * at[2]);
+                    seen[3] = Math.max(seen[3], at[1] + y1 * at[2]);
+                }
+
+                public void gradient(int x0, int y0, int x1, int y1, int top, int bottom) {
+                }
+
+                public void text(String text, int x, int y, int argb, boolean shadow) {
+                }
+
+                public void centered(String text, int centerX, int y, int argb) {
+                }
+
+                public int width(String text) {
+                    return text.length() * 6;
+                }
+
+                public void face(int x, int y, int size) {
+                }
+
+                public void hat(int x, int y, int size, int[] hole) {
+                }
+
+                public void push() {
+                    stack.push(at.clone());
+                }
+
+                public void translate(float x, float y) {
+                    at[0] += x * at[2];
+                    at[1] += y * at[2];
+                }
+
+                public void scale(float factor) {
+                    at[2] *= factor;
+                }
+
+                public void pop() {
+                    System.arraycopy(stack.pop(), 0, at, 0, 3);
+                }
+
+                public void batch(Runnable draw) {
+                    draw.run();
+                }
+            };
+            for (float fill : new float[] {0.0F, 0.4F, 1.0F}) {
+                for (double time = 0.0; time < 400.0; time += 7.0) {
+                    com.hex.kagune.control.client.ReserveBarView.Frame frame = new com.hex.kagune.control.client.ReserveBarView.Frame(fill, fill, 0.0F, 0.0F,
+                        0.9F, time);
+                    if (which == 0) {
+                        com.hex.kagune.control.client.ReserveBarView.draw(probe, 0, 0, frame);
+                    } else {
+                        com.hex.kagune.control.client.ReserveBarView.drawFine(probe, 0, 0, frame);
+                    }
+                }
+            }
+            check(stack.isEmpty() && at[0] == 0.0 && at[2] == 1.0, "the bar leaves the canvas as it found it");
+            spans[which] = seen;
+        }
+        int wide = com.hex.kagune.control.client.ReserveBarView.WIDTH;
+        int tall = com.hex.kagune.control.client.ReserveBarView.HEIGHT;
+        check(spans[0][0] == 0.0 && spans[0][1] == wide && spans[0][2] >= 0.0 && spans[0][3] <= tall, "the usual bar as it was: the food bar's footprint");
+        check(spans[1][0] == 0.0 && spans[1][1] == wide && spans[1][2] >= 0.0 && spans[1][3] <= tall,
+            "one of Anteiku's in exactly the same spot, never past the hotbar (" + spans[1][0] + " to " + spans[1][1] + ", rows " + spans[1][2] + " to " + spans[1][3] + ")");
+        check(spans[1][3] - spans[1][2] <= (spans[0][3] - spans[0][2]) / 2.0 + 0.01 && Math.abs((spans[1][2] + spans[1][3]) / 2.0 - tall / 2.0) <= 0.75,
+            "half as tall, centred in its rows");
+        try {
+            String hud = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/ReserveHud.java"));
+            check(hud.contains("if (GangClient.anteiku(minecraft.f_91074_)) {") && hud.contains("ReserveBarView.drawFine(canvas, x, y, frame);")
+                && hud.contains("int x = event.getWindow().m_85445_() / 2 + 10;"), "the HUD draws one of Anteiku's the finer way, where every bar is");
+        } catch (java.io.IOException failure) {
+            check(false, "read the reserve HUD: " + failure);
+        }
+    }
+
     static void joining() {
         com.hex.kagune.control.npc.GangPlayer g = com.hex.kagune.control.npc.GangPlayer.NEW;
         check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.killedDove().ccgKills() == 0, "no quest, no count");
@@ -497,6 +671,7 @@ public final class NpcTests {
         }
         check(m.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && m.banned(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS)
             && !m.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "the Gas Masks ban past ten of their own, as every gang");
+        anteiku();
         // 4.1.67 (the owner: "Add a new Quit the gang button to each leader whenever the player joins it."; "kicked from the gang if the
         // player marries another gang leader, but can still join if the player was already married before joining."): out, never banned.
         com.hex.kagune.control.npc.GangPlayer q = com.hex.kagune.control.npc.GangPlayer.NEW.laughed().join(com.hex.kagune.control.npc.GangPlayer.CLOWNS)
@@ -508,7 +683,8 @@ public final class NpcTests {
             && out.join(com.hex.kagune.control.npc.GangPlayer.CLOWNS).member(com.hex.kagune.control.npc.GangPlayer.CLOWNS),
             "quitting: the way in begins again, and they may come back by it");
         check(com.hex.kagune.control.npc.GangPlayer.NEW.quit() == com.hex.kagune.control.npc.GangPlayer.NEW, "no gang: nothing to quit");
-        int[] leaders = {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS, com.hex.kagune.control.npc.GangPlayer.GAS_MASKS};
+        int[] leaders = {com.hex.kagune.control.npc.GangPlayer.AOGIRI, com.hex.kagune.control.npc.GangPlayer.CLOWNS, com.hex.kagune.control.npc.GangPlayer.GAS_MASKS,
+            com.hex.kagune.control.npc.GangPlayer.ANTEIKU};
         java.util.Set<String> said = new java.util.HashSet<>();
         int demanded = 0;
         for (int leads : leaders) {
@@ -534,16 +710,17 @@ public final class NpcTests {
         for (int seed = 0; seed < 300; seed++) {
             demanded += com.hex.kagune.control.npc.GangWords.demands(seed) ? 1 : 0;
         }
-        check(said.size() == 9 && demanded == 200, "each leader their own words to go and to stay; the spouse brings it up two times in three");
+        check(said.size() == 12 && demanded == 200, "each leader their own words to go and to stay (4.1.70: Ken too); the spouse brings it up two "
+            + "times in three");
         com.hex.kagune.control.npc.GangPlayer banned = m.join(com.hex.kagune.control.npc.GangPlayer.AOGIRI).quit();
         check(banned.banned(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS), "quitting never lifts a ban from before");
         try {
             String gangs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java"));
             String eto = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoServer.java"));
             String commands = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java"));
-            check(gangs.contains("return quit(player, g, gang, key, seed); // 4.1.67") && gangs.split("wayOut\\(gang\\)\\);", -1).length == 3
+            check(gangs.contains("return quit(player, g, gang, key, seed); // 4.1.67") && gangs.split("wayOut\\(gang\\)\\);", -1).length == 4
                 && gangs.contains("\"gang:quit:yes\"") && gangs.contains("\"gang:stay\"") && gangs.contains("set(player, g.quit());"),
-                "each leader's member talk offers the way out (Ayato, Roma, Banjou), asked twice, then out");
+                "each leader's member talk offers the way out (Ayato, Roma, Banjou, 4.1.70: Ken), asked twice, then out");
             check(eto.contains("UniqueNpcs.pair(level, npc.persona().key(), player, Romance.Stage.MARRIED);\n        GangServer.married(player, npc.persona());")
                 && commands.contains("GangServer.married(player, persona);"), "a wedding to another gang's leader takes them out of theirs (by ring or by command)");
             check(gangs.contains("if (!leads(spouse) || g.gang() == GangPlayer.NONE || g.gang() == theirs) {"),

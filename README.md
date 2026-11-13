@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.70 (HexGhoul): Anteiku, joined through Ken (testing)
+
+See `.github/release-notes-4.1.70.md`. `GangPlayer.ANTEIKU` (4; `anteikuStep`, `doveKills`; `answered`, `beansBrought`, `droveDove`, `anteikuDone`; `COFFEE` U+E003, `ANTEIKU_BROWN`, `ANTEIKU_CAPACITY`); `GangServer` (`leads`/`gangOf`/`memberOf` Ken and Touka, `ken()` the chain, `holdsBeans`/`takeBeans`, `nameTag` with `Style.withColor`, `neutral`, `capacity`); `GangWords` (Ken's words, `KEN_WHY`); `GhoulNpcBrain.wanted`/`fair` (neutral to all but the CCG); `SharedBar.capacity`, `BikakuClient.capacity`/`potential`, `GangClient.anteiku`; `ReserveBarView` (tail length; `drawFine`, `FINE` 2, `ANTEIKU_TAIL` 153: on half pixels in the usual spot), `ReserveHud`; emblem `tools/gang_emblems.py`; new API `Style`, `MutableComponent.m_6270_`/`m_7220_`. `NpcTests.anteiku`. `tools/UiPreview.java anteiku`. Renders `docs/handoff/anteiku-*-4.1.70.png`. Protocol 125.
+
 ## 4.1.69 (HexGhoul): Ken's sitting fixed, no leg in the air (testing)
 
 See `.github/release-notes-4.1.69.md`. `EtoPose` SIT rebuilt for a companion's stiff body (EtoModel turns limbs whole, no knee or elbow): both legs level on the floor (`SIT_DROP` 10, `SIT_LEVEL` a quarter turn), leaning back 0.4 and over 0.15 onto the right hand, the left on the thigh, the head brought forward to look out; `sitDrop` lowers the hips only as the legs swing up (the heels on the floor all the way down); `PoseFade.blend` does the same getting up (`EtoPose.seated`). `CompanionTests` (legs level, no knee or elbow, the lean, the feet on the floor through the sit-down). `tools/CompanionPreview.java sit`. Renders `docs/handoff/ken-sit-4.1.69.png`, `docs/handoff/ken-sit-before-after-4.1.69.png`. Protocol 125.

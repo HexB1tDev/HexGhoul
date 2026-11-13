@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """4.1.50 (the owner: Aogiri's name "dark red with a custom tree emblem", the Clowns' "blue with a custom clown face", "(symbol) (space)
 (name)"; 4.1.54, the Gas Masks: "Toxic logo, green name"): the gangs' emblems as 16 x 16 font glyphs (assets/hexkagune/textures/font/), drawn here pixel by pixel, and the font that
-maps them (assets/minecraft/font/default.json: U+E000 the tree, U+E001 the clown, U+E002 the toxic trefoil, private characters added to the game's own font: every
+maps them (assets/minecraft/font/default.json: U+E000 the tree, U+E001 the clown, U+E002 the toxic trefoil, U+E003 (4.1.70) Anteiku's coffee cup, private characters added to the game's own font: every
 resource pack's default.json is read and joined, so a plain name can carry them). The glyphs keep their own colours (the name after them
 is coloured, not the emblem: GangPlayer.named puts white before them).
 
@@ -82,8 +82,34 @@ TOXIC = [
 ]
 TOXIC_COLOURS = {"g": (110, 214, 52), "d": (60, 150, 30)}
 
+# 4.1.70 (the owner: Anteiku's "Light brown name tag with a coffee symbol"): a cup of coffee on its saucer, steam rising: a cream cup with a
+# dark brown outline, the coffee's crema in its mouth, the handle on the right (its sides two pixels thick), two wisps of steam two pixels
+# thick, curling as they rise and thinning at the top (o: outline, w: cup, h: its lit side, c: coffee, C: crema, s: steam).
+COFFEE = [
+    ".....s.....s....",
+    "....ss....ss....",
+    "...ss....ss.....",
+    "...ss....ss.....",
+    "....ss....ss....",
+    "ooooooooooooo...",
+    "oCcccccccccCo...",
+    "ohwwwwwwwwwwoooo",
+    "ohwwwwwwwwwwo.oo",
+    "ohwwwwwwwwwwo.oo",
+    ".ohwwwwwwwwwooo.",
+    ".ohwwwwwwwwo....",
+    "..ohwwwwwwo.....",
+    "oooooooooooooo..",
+    ".oooooooooooo...",
+    "................",
+]
+COFFEE_COLOURS = {"o": (78, 46, 24), "w": (236, 222, 196), "h": (255, 250, 238), "c": (110, 64, 32), "C": (186, 132, 82),
+                  "s": (226, 226, 232)}
+
 GLYPHS = [("aogiri_tree", TREE, TREE_COLOURS, ""), ("clown_face", CLOWN, CLOWN_COLOURS, ""),
-          ("gas_toxic", TOXIC, TOXIC_COLOURS, "")]
+          ("gas_toxic", TOXIC, TOXIC_COLOURS, ""), ("anteiku_coffee", COFFEE, COFFEE_COLOURS, "\ue003")]
+# The name's colour after each (the game's: Aogiri §4, the Clowns §9, the Gas Masks §a; 4.1.70: Anteiku's own light brown, GangPlayer.ANTEIKU_BROWN).
+NAME_COLOURS = {"aogiri_tree": (170, 0, 0), "clown_face": (85, 85, 255), "gas_toxic": (85, 255, 85), "anteiku_coffee": (200, 155, 109)}
 
 
 def image(rows, colours):
@@ -110,7 +136,7 @@ def write():
 def preview(out):
     """A mock (not the game's font): each emblem big, then in a name tag and a chat line at the game's sizes, scaled up 4 times."""
     scale = 4
-    W, H = 760, 500
+    W, H = 860, 580
     sheet = Image.new("RGB", (W, H), (58, 68, 80))
     d = ImageDraw.Draw(sheet)
     try:
@@ -118,17 +144,16 @@ def preview(out):
         small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
     except OSError:
         font = small = ImageFont.load_default()
-    d.text((12, 8), "Gang emblems (4.1.50, 4.1.54): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
+    d.text((12, 8), "Gang emblems (4.1.50, 4.1.54, 4.1.70): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
     x = 20
     for name, rows, colours, _ in GLYPHS:
         big = image(rows, colours).resize((160, 160), Image.NEAREST)
         sheet.paste(big, (x, 40), big)
         d.text((x, 205), name.replace("_", " "), fill=(230, 230, 230), font=small)
         x += 200
-    lines = [("aogiri_tree", (170, 0, 0), "Ken"), ("clown_face", (85, 85, 255), "Ken"), ("gas_toxic", (85, 255, 85), "Ken")]
     y = 240
     for name, rows, colours, _ in GLYPHS:
-        colour = (170, 0, 0) if name == "aogiri_tree" else (85, 255, 85) if name == "gas_toxic" else (85, 85, 255)
+        colour = NAME_COLOURS[name]
         # A name tag: dark translucent box, the emblem, a space, the name.
         glyph = image(rows, colours).resize((8 * scale, 8 * scale), Image.NEAREST)
         label = "Ken"
