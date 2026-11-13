@@ -1109,6 +1109,67 @@ public class UiPreview {
         }
     }
 
+    /**
+     * 4.1.79: the gangs' ways in, as each leader shows them (JoinVoice's words, JoinTrial's questions): every trial put to them with the one
+     * button that begins it; the General's academy test (a question, its three answers turned round); Roma's job in her face; each leader's
+     * scene as they take them in (the member's page, the reputation bar now theirs).
+     */
+    static void joiningTalk(File dir) throws Exception {
+        com.hex.kagune.control.npc.NpcTalk.Choice[] says = com.hex.kagune.control.npc.NpcTalk.Choice.SAYS;
+        com.hex.kagune.control.npc.NpcTalk.Choice back = com.hex.kagune.control.npc.NpcTalk.Choice.BACK;
+        com.hex.kagune.control.npc.NpcTalk.Choice chat = com.hex.kagune.control.npc.NpcTalk.Choice.CHAT;
+        com.hex.kagune.control.npc.NpcTalk.Choice leave = com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE;
+        String[][] leaders = {{"Ayato", "The black rabbit - bored", "ayato/ayato.png"}, {"Roma", "The Clowns' ringmaster - giddy", "roma/roma.png"},
+            {"Banjou", "The Gas Masks' leader - wary", "banjou/banjou.png"}, {"Ken", "The one-eyed king - happy", "ken/ken.png"},
+            {"The General", "The General - wary", "general/general.png"}};
+        for (com.hex.kagune.control.npc.JoinTrial.Kind kind : com.hex.kagune.control.npc.JoinTrial.Kind.values()) {
+            int gang = com.hex.kagune.control.npc.JoinTrial.gang(kind);
+            String[] who = leaders[gang - 1];
+            etoFrame(new File(dir, "join-" + kind.name().toLowerCase() + "-offer.png"), face(who[2]), new com.hex.kagune.control.client.NpcTalkView.Model(who[0],
+                who[1], 45, false, com.hex.kagune.control.npc.JoinVoice.say(kind, "offer", 0), java.util.List.of(says[0], back),
+                java.util.List.of(com.hex.kagune.control.npc.JoinVoice.start(kind), ""), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(45));
+            etoFrame(new File(dir, "join-" + kind.name().toLowerCase() + "-start.png"), face(who[2]), new com.hex.kagune.control.client.NpcTalkView.Model(who[0],
+                who[1], 45, false, com.hex.kagune.control.npc.JoinVoice.say(kind, "start", 0), java.util.List.of(chat, says[2], leave),
+                java.util.List.of("Talk to me.", com.hex.kagune.control.npc.JoinVoice.ask(kind), ""), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(45));
+        }
+        // The right first answer taken, the next step put to them in the same breath (the longest lines on these pages).
+        com.hex.kagune.control.npc.JoinTrial.Kind[] next = {null, com.hex.kagune.control.npc.JoinTrial.Kind.RING, com.hex.kagune.control.npc.JoinTrial.Kind.GAS,
+            com.hex.kagune.control.npc.JoinTrial.Kind.SHIFT, null};
+        for (int gang = 2; gang <= 5; gang++) {
+            String[] who = leaders[gang - 1];
+            boolean exam = gang == com.hex.kagune.control.npc.GangPlayer.CCG;
+            String line = com.hex.kagune.control.npc.JoinVoice.answered(gang) + (exam ? com.hex.kagune.control.npc.JoinVoice.general("exam", 0)
+                : com.hex.kagune.control.npc.JoinVoice.say(next[gang - 1], "offer", 0));
+            etoFrame(new File(dir, "join-answered-" + who[0].toLowerCase().replace("the ", "") + ".png"), face(who[2]),
+                new com.hex.kagune.control.client.NpcTalkView.Model(who[0], who[1], 45, false, line, java.util.List.of(says[0], back),
+                    java.util.List.of(exam ? "I'm ready for the test." : com.hex.kagune.control.npc.JoinVoice.start(next[gang - 1]), ""), -1),
+                com.hex.kagune.control.client.NpcTalkView.Motion.still(45));
+        }
+        int[] drawn = com.hex.kagune.control.npc.JoinTrial.draw(12L, 5L);
+        for (int i = 0; i < drawn.length; i++) {
+            com.hex.kagune.control.npc.JoinTrial.Question q = com.hex.kagune.control.npc.JoinTrial.QUESTIONS[drawn[i]];
+            java.util.List<String> answers = new java.util.ArrayList<>(java.util.List.of(q.answer(0), q.answer(1), q.answer(2)));
+            java.util.Collections.rotate(answers, i + 1);
+            answers.add("");
+            String said = (i == 0 ? com.hex.kagune.control.npc.JoinVoice.general("exam", 0) : com.hex.kagune.control.npc.JoinVoice.general("next", i))
+                + " Question " + (i + 1) + " of " + com.hex.kagune.control.npc.JoinTrial.EXAM_ASKED + ": " + q.asked();
+            etoFrame(new File(dir, "join-exam-" + (i + 1) + ".png"), face("general/general.png"), new com.hex.kagune.control.client.NpcTalkView.Model(
+                "The General", "The General - wary", 30, false, said, java.util.List.of(says[0], says[1], says[2], back), answers, -1),
+                com.hex.kagune.control.client.NpcTalkView.Motion.still(30));
+        }
+        etoFrame(new File(dir, "join-roma-job.png"), face("roma/roma.png"), new com.hex.kagune.control.client.NpcTalkView.Model("Roma",
+            "The Clowns' ringmaster - giddy", 55, false, com.hex.kagune.control.npc.JoinVoice.roma("job", 0), java.util.List.of(chat, says[2], leave),
+            java.util.List.of("Talk to me.", "About the job...", ""), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(55));
+        String[] asks = {"How's Aogiri?", "How are the Clowns?", "How are the boys?", "How's Anteiku?", "How's the bureau, sir?"};
+        for (int gang = 1; gang <= 5; gang++) {
+            String[] who = leaders[gang - 1];
+            etoFrame(new File(dir, "join-scene-" + who[0].toLowerCase().replace("the ", "") + ".png"), face(who[2]),
+                new com.hex.kagune.control.client.NpcTalkView.Model(who[0], who[1], 60, false, com.hex.kagune.control.npc.JoinVoice.scene(gang, 0),
+                    java.util.List.of(chat, says[2], leave), java.util.List.of("Talk to me.", asks[gang - 1], ""), 50 | gang << 8),
+                com.hex.kagune.control.client.NpcTalkView.Motion.still(60));
+        }
+    }
+
     /** 4.1.53: Noro and Roma giving today's job to one of their gang (the option on their first page, the job given, the reputation bar). */
     static void dailiesTalk(File dir) throws Exception {
         java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
@@ -1348,6 +1409,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("reputation")) {
             reputationTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("joining")) {
+            joiningTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("board")) {

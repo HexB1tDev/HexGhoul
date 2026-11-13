@@ -13,41 +13,52 @@ package com.hex.kagune.control.npc;
  * {@link #GAS_MASKS}, through Banjou: say something to him that takes him seriously ({@link #takenSeriously}), kill {@link #GAS_CLOWNS}
  * Clowns ({@link #killedClown}), bring him a clown's mask; its emblem the toxic trefoil, its name green.
  */
-public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest, int ccgKills, int clownStep, int gasKills, int gasStep,
-                         int clownKills, int anteikuStep, int doveKills, int generalStep, int ghoulKills) {
+public record GangPlayer(int gang, int ownKills, int banned, int aogiriStep, int clownStep, int gasStep, int anteikuStep, int generalStep) {
     public static final int NONE = 0;
     public static final int AOGIRI = 1;
     public static final int CLOWNS = 2;
     /** 4.1.54: the Gas Masks. */
     public static final int GAS_MASKS = 3;
-    /** Aogiri's quest: this many of the CCG killed (the owner: "Kill 5 CCG"). */
-    public static final int AOGIRI_CCG = 5;
-    /** The Clowns' chain: this many Gas Masks killed. */
-    public static final int CLOWN_GAS = 3;
     /** Killing more than this many of their own gets them banned (the owner: "over 10"). */
     public static final int BAN_OVER = 10;
-    /** The Clowns' chain: nothing yet; she laughed (the Gas Masks next); the Gas Masks done (a quinque case next). */
-    public static final int CLOWN_NOT_YET = 0;
-    public static final int CLOWN_GAS_MASKS = 1;
-    public static final int CLOWN_CASE = 2;
-    /** 4.1.54: the Gas Masks' chain: nothing yet; Banjou taken seriously (the Clowns next); the Clowns done (a clown mask next). */
-    public static final int GAS_NOT_YET = 0;
-    public static final int GAS_CLOWNS = 3;
-    public static final int GAS_CLOWNS_NEXT = 1;
-    public static final int GAS_MASK_NEXT = 2;
     /**
-     * 4.1.70 (the owner: "Anteikou - Joinable through Ken (quest)"): Anteiku, the café, through Ken. His way in, a short chain as the others':
-     * the answer that is Anteiku's (why they want in: {@link #answered}), a handful of coffee beans brought ({@link #ANTEIKU_BEAN_COUNT}
-     * cocoa beans in the hand: {@link #beansBrought}), then {@link #ANTEIKU_CCG} investigators who came sniffing round the café killed
-     * ({@link #droveDove}); then he takes them in.
+     * 4.1.79 (the plan the owner approved: "the gangs' joining. Each chain 3 to 4 steps, each a different kind, a trial of its own, a scene
+     * with the leader at the end"): Aogiri's way in, through Ayato: a spar with him ({@link #AOGIRI_SPAR}: a duel that ends at low health,
+     * never a death), an ambush on a CCG patrol ({@link #AOGIRI_AMBUSH}), then back to him ({@link #AOGIRI_DONE}). Kept as its own number;
+     * a player from before (4.1.50's "Kill 5 CCG" begun) is read as {@link #aogiriFrom}.
+     */
+    public static final int AOGIRI_NOT_YET = 0;
+    public static final int AOGIRI_SPAR = 1;
+    public static final int AOGIRI_AMBUSH = 2;
+    public static final int AOGIRI_DONE = 3;
+    /**
+     * The Clowns' way in, through Roma: a joke that makes her laugh (4.1.50's, kept), then 4.1.79: a show in her ring ({@link #CLOWN_RING}),
+     * a job done in a clown's face ({@link #CLOWN_JOB}: an investigator killed in one of the Clowns' masks), then the case off him brought
+     * ({@link #CLOWN_CASE}). The saved numbers keep their places: 1 was "three Gas Masks" (now the ring), 2 "the quinque case" (now the job).
+     */
+    public static final int CLOWN_NOT_YET = 0;
+    public static final int CLOWN_RING = 1;
+    public static final int CLOWN_JOB = 2;
+    public static final int CLOWN_CASE = 3;
+    /**
+     * 4.1.54: the Gas Masks' way in, through Banjou: something said that takes him seriously (kept), then 4.1.79: a walk back to him through
+     * their gas ({@link #GAS_WALK}), the gate held with him against a Clown raid ({@link #GAS_RAID}), then back to him ({@link #GAS_DONE}).
+     * The saved 1 was "three Clowns" (now the walk), 2 "a clown's mask" (now the raid).
+     */
+    public static final int GAS_NOT_YET = 0;
+    public static final int GAS_WALK = 1;
+    public static final int GAS_RAID = 2;
+    public static final int GAS_DONE = 3;
+    /**
+     * 4.1.70 (the owner: "Anteikou - Joinable through Ken (quest)"): Anteiku, the café, through Ken: the answer that is Anteiku's (kept), then
+     * 4.1.79: a shift at the café ({@link #ANTEIKU_SHIFT}: brew and serve), a CCG raid driven off with nobody killed ({@link #ANTEIKU_RAID}),
+     * then back to him ({@link #ANTEIKU_DONE}). The saved 1 was "the coffee beans" (now the shift), 2 "three investigators" (now the raid).
      */
     public static final int ANTEIKU = 4;
     public static final int ANTEIKU_NOT_YET = 0;
-    public static final int ANTEIKU_BEANS = 1;
-    public static final int ANTEIKU_DOVES = 2;
+    public static final int ANTEIKU_SHIFT = 1;
+    public static final int ANTEIKU_RAID = 2;
     public static final int ANTEIKU_DONE = 3;
-    public static final int ANTEIKU_CCG = 3;
-    public static final int ANTEIKU_BEAN_COUNT = 8;
     /**
      * 4.1.70 (the owner: "Enegy bar increases size and increases maximum capacity."): what one of Anteiku adds to how many times the energy
      * their bar holds (1 to 2; Potential Unlock's 3 to 4), and how much longer the bar is drawn ({@code ReserveBarView.ANTEIKU_TAIL}).
@@ -64,14 +75,15 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
      * 4.1.71 (the owner: "CCG Faction: / Join through the general (quest) and now daily quests as well. / Traits: / CCG no longer attacks the
      * player. / All ghouls but official NPCS are hostile towards the player. / Damage increased when fighting ghouls. / Looks:  Cyan Blue with
      * a brief cafe symbol."; the symbol, their answer: "A briefcase (Recommended)"): the CCG, through the General. Why they want to serve
-     * ({@link #sworn}: the bureau's own answer), then {@link #CCG_GHOUL_COUNT} ghouls killed ({@link #killedGhoul}); then he swears them in.
-     * Its ghoul division's ghouls are the CCG's ({@link #of}); its name cyan blue ({@link #CCG_CYAN}), a quinque case before it.
+     * (the bureau's own answer, kept), then 4.1.79: the academy's test ({@link #CCG_EXAM}), a ghoul hunted with an assigned partner
+     * ({@link #CCG_HUNT}), then he swears them in ({@link #CCG_DONE}). The saved 1 was "five ghouls" (now the test); 2 stays done, so the
+     * hunt, new, is 3. Its ghoul division's ghouls are the CCG's ({@link #of}); its name cyan blue ({@link #CCG_CYAN}), a quinque case before it.
      */
     public static final int CCG = 5;
     public static final int CCG_NOT_YET = 0;
-    public static final int CCG_GHOULS = 1;
+    public static final int CCG_EXAM = 1;
     public static final int CCG_DONE = 2;
-    public static final int CCG_GHOUL_COUNT = 5;
+    public static final int CCG_HUNT = 3;
     /** 4.1.71 (the owner: "Damage increased when fighting ghouls."): how much harder a member's blows land on a ghoul. */
     public static final float CCG_DAMAGE = 1.3F;
     /** 4.1.71 (the owner: "Cyan Blue"): the CCG's name colour (0xRRGGBB; plain text's nearest is aqua). */
@@ -81,7 +93,15 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
     /** 4.1.70: Anteiku's coffee cup. */
     public static final String COFFEE = "\uE003";
 
-    public static final GangPlayer NEW = new GangPlayer(NONE, 0, 0, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0, CCG_NOT_YET, 0);
+    public static final GangPlayer NEW = new GangPlayer(NONE, 0, 0, AOGIRI_NOT_YET, CLOWN_NOT_YET, GAS_NOT_YET, ANTEIKU_NOT_YET, CCG_NOT_YET);
+
+    /**
+     * 4.1.79: Aogiri's step for a player saved before it had one: 4.1.50's quest ("Kill 5 CCG") done, back to Ayato; begun, the ambush (the
+     * doves they killed for it counted as the spar's proof); never begun, nothing yet.
+     */
+    public static int aogiriFrom(boolean quest, int ccgKills) {
+        return !quest ? AOGIRI_NOT_YET : ccgKills >= 5 ? AOGIRI_DONE : AOGIRI_AMBUSH;
+    }
 
     /** True if they belong to {@code gang}. */
     public boolean member(int gang) {
@@ -97,116 +117,38 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
         return 1 << gang;
     }
 
+    /** 4.1.79: where {@code gang}'s way in stands for them (its own step numbers), or 0. */
+    public int step(int gang) {
+        return switch (gang) {
+            case AOGIRI -> this.aogiriStep;
+            case CLOWNS -> this.clownStep;
+            case GAS_MASKS -> this.gasStep;
+            case ANTEIKU -> this.anteikuStep;
+            case CCG -> this.generalStep;
+            default -> 0;
+        };
+    }
+
+    /**
+     * 4.1.79: {@code gang}'s way in moved on from {@code from} to {@code to}; unchanged if it is not at {@code from} (a trial won twice, or
+     * one from another step, moves nothing), or if they already belong to it.
+     */
+    public GangPlayer advance(int gang, int from, int to) {
+        if (this.member(gang) || this.step(gang) != from) {
+            return this;
+        }
+        return this.with(gang, to);
+    }
+
+    private GangPlayer with(int gang, int step) {
+        return new GangPlayer(this.gang, this.ownKills, this.banned, gang == AOGIRI ? step : this.aogiriStep, gang == CLOWNS ? step : this.clownStep,
+            gang == GAS_MASKS ? step : this.gasStep, gang == ANTEIKU ? step : this.anteikuStep, gang == CCG ? step : this.generalStep);
+    }
+
     /** They join {@code gang}: its member, their count of their own killed begun again, its way in done with. */
     public GangPlayer join(int gang) {
-        return new GangPlayer(gang, 0, this.banned, gang == AOGIRI ? false : this.aogiriQuest, gang == AOGIRI ? 0 : this.ccgKills,
-            gang == CLOWNS ? CLOWN_NOT_YET : this.clownStep, gang == CLOWNS ? 0 : this.gasKills, gang == GAS_MASKS ? GAS_NOT_YET : this.gasStep,
-            gang == GAS_MASKS ? 0 : this.clownKills, gang == ANTEIKU ? ANTEIKU_NOT_YET : this.anteikuStep, gang == ANTEIKU ? 0 : this.doveKills,
-            gang == CCG ? CCG_NOT_YET : this.generalStep, gang == CCG ? 0 : this.ghoulKills);
-    }
-
-    /** Aogiri's quest begun (Ayato's "Kill 5 CCG"). */
-    public GangPlayer startAogiri() {
-        return new GangPlayer(this.gang, this.ownKills, this.banned, true, 0, this.clownStep, this.gasKills, this.gasStep, this.clownKills,
-            this.anteikuStep, this.doveKills, this.generalStep, this.ghoulKills);
-    }
-
-    /** True once Aogiri's quest is done (five of the CCG killed while it was on). */
-    public boolean aogiriDone() {
-        return this.aogiriQuest && this.ccgKills >= AOGIRI_CCG;
-    }
-
-    /** One of the CCG killed: counted while Aogiri's quest is on. */
-    public GangPlayer killedDove() {
-        return this.aogiriQuest && !this.member(AOGIRI) ? new GangPlayer(this.gang, this.ownKills, this.banned, true, this.ccgKills + 1, this.clownStep,
-            this.gasKills, this.gasStep, this.clownKills, this.anteikuStep, this.doveKills, this.generalStep, this.ghoulKills) : this;
-    }
-
-    /** Roma laughed: the Gas Masks next. */
-    public GangPlayer laughed() {
-        return this.clownStep == CLOWN_NOT_YET ? new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, CLOWN_GAS_MASKS, 0,
-            this.gasStep, this.clownKills, this.anteikuStep, this.doveKills, this.generalStep, this.ghoulKills) : this;
-    }
-
-    /** One of the Gas Masks killed: counted while the Clowns' chain asks for them; the third moves it on to the case. */
-    public GangPlayer killedGasMask() {
-        if (this.clownStep != CLOWN_GAS_MASKS) {
-            return this;
-        }
-        int kills = this.gasKills + 1;
-        return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, kills >= CLOWN_GAS ? CLOWN_CASE : CLOWN_GAS_MASKS,
-            kills, this.gasStep, this.clownKills, this.anteikuStep, this.doveKills,
-            this.generalStep, this.ghoulKills);
-    }
-
-    /** 4.1.54: Banjou taken seriously (the answer that does it): the Clowns next. */
-    public GangPlayer takenSeriously() {
-        return this.gasStep == GAS_NOT_YET ? new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep,
-            this.gasKills, GAS_CLOWNS_NEXT, 0, this.anteikuStep, this.doveKills, this.generalStep, this.ghoulKills) : this;
-    }
-
-    /** 4.1.54: one of the Clowns killed: counted while the Gas Masks' chain asks for them; the third moves it on to the clown mask. */
-    public GangPlayer killedClown() {
-        if (this.gasStep != GAS_CLOWNS_NEXT) {
-            return this;
-        }
-        int kills = this.clownKills + 1;
-        return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills,
-            kills >= GAS_CLOWNS ? GAS_MASK_NEXT : GAS_CLOWNS_NEXT, kills, this.anteikuStep, this.doveKills,
-            this.generalStep, this.ghoulKills);
-    }
-
-    /** 4.1.70: Ken's question answered as Anteiku would (coffee beans next). */
-    public GangPlayer answered() {
-        return this.anteikuStep == ANTEIKU_NOT_YET ? this.anteiku(ANTEIKU_BEANS, 0) : this;
-    }
-
-    /** 4.1.70: the coffee beans brought (the investigators next). */
-    public GangPlayer beansBrought() {
-        return this.anteikuStep == ANTEIKU_BEANS ? this.anteiku(ANTEIKU_DOVES, 0) : this;
-    }
-
-    /** 4.1.70: one of the CCG killed: counted while Ken's chain asks for them; the third finishes it. */
-    public GangPlayer droveDove() {
-        if (this.anteikuStep != ANTEIKU_DOVES) {
-            return this;
-        }
-        int kills = this.doveKills + 1;
-        return this.anteiku(kills >= ANTEIKU_CCG ? ANTEIKU_DONE : ANTEIKU_DOVES, kills);
-    }
-
-    /** 4.1.71: the General's question answered as the bureau would (ghouls next). */
-    public GangPlayer sworn() {
-        return this.generalStep == CCG_NOT_YET ? this.general(CCG_GHOULS, 0) : this;
-    }
-
-    /** 4.1.71: a ghoul killed (not the CCG's own): counted while the General's chain asks for them; the fifth finishes it. */
-    public GangPlayer killedGhoul() {
-        if (this.generalStep != CCG_GHOULS) {
-            return this;
-        }
-        int kills = this.ghoulKills + 1;
-        return this.general(kills >= CCG_GHOUL_COUNT ? CCG_DONE : CCG_GHOULS, kills);
-    }
-
-    /** 4.1.71: true once the General's chain is done (he swears them in when they next talk to him). */
-    public boolean ccgDone() {
-        return this.generalStep == CCG_DONE;
-    }
-
-    private GangPlayer general(int step, int kills) {
-        return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills, this.gasStep,
-            this.clownKills, this.anteikuStep, this.doveKills, step, kills);
-    }
-
-    /** 4.1.70: true once Ken's chain is done (he takes them in when they next talk to him). */
-    public boolean anteikuDone() {
-        return this.anteikuStep == ANTEIKU_DONE;
-    }
-
-    private GangPlayer anteiku(int step, int kills) {
-        return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills, this.gasStep,
-            this.clownKills, step, kills, this.generalStep, this.ghoulKills);
+        GangPlayer in = new GangPlayer(gang, 0, this.banned, this.aogiriStep, this.clownStep, this.gasStep, this.anteikuStep, this.generalStep);
+        return in.with(gang, 0);
     }
 
     /**
@@ -219,12 +161,9 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
         }
         int kills = this.ownKills + 1;
         if (kills > BAN_OVER) {
-            return new GangPlayer(NONE, 0, this.banned | bit(this.gang), false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0,
-                CCG_NOT_YET, 0);
+            return new GangPlayer(NONE, 0, this.banned | bit(this.gang), AOGIRI_NOT_YET, CLOWN_NOT_YET, GAS_NOT_YET, ANTEIKU_NOT_YET, CCG_NOT_YET);
         }
-        return new GangPlayer(this.gang, kills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills, this.gasStep,
-            this.clownKills, this.anteikuStep, this.doveKills,
-            this.generalStep, this.ghoulKills);
+        return new GangPlayer(this.gang, kills, this.banned, this.aogiriStep, this.clownStep, this.gasStep, this.anteikuStep, this.generalStep);
     }
 
     /**
@@ -233,8 +172,8 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
      * gone, their count of their own killed forgotten; never banned for it (its way in begins again from the start).
      */
     public GangPlayer quit() {
-        return this.gang == NONE ? this : new GangPlayer(NONE, 0, this.banned, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0,
-            CCG_NOT_YET, 0);
+        return this.gang == NONE ? this : new GangPlayer(NONE, 0, this.banned, AOGIRI_NOT_YET, CLOWN_NOT_YET, GAS_NOT_YET, ANTEIKU_NOT_YET,
+            CCG_NOT_YET);
     }
 
     /**

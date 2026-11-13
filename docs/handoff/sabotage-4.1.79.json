@@ -1,0 +1,352 @@
+[
+ {
+  "name": "spar blows land whole",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "        if (health - amount > least) {\n            return amount;",
+  "new": "        if (true) {\n            return amount;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "spar floor lower",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "SPAR_FLOOR = 0.25F;",
+  "new": "SPAR_FLOOR = 0.1F;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "Ayato's blows unclamped",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "float allowed = JoinTrial.clamp(player.m_21223_(), player.m_21233_(), event.getAmount(), JoinTrial.SPAR_FLOOR);",
+  "new": "float allowed = event.getAmount();",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "Ayato unclamped",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "float allowed = JoinTrial.clamp(npc.m_21223_(), npc.m_21233_(), event.getAmount(), JoinTrial.SPAR_WIN);",
+  "new": "float allowed = event.getAmount();",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "blows in the count",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "                        event.setAmount(0.0F); // not yet: \"three... two...\"\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "partner never sparred",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoBrain.java",
+  "old": "partnerOf(mind, player) && !JoinServer.sparring(player, npc)))) {",
+  "new": "partnerOf(mind, player)))) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "spar costs regard",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoBrain.java",
+  "old": "if (attacker instanceof ServerPlayer player && !JoinServer.sparring(player, npc)) {",
+  "new": "if (attacker instanceof ServerPlayer player) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "spar grudge kept",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "            ayato.mind.grudges.remove(player.m_20148_());\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "ambush clock doubled",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "return first != Long.MIN_VALUE && now - first > AMBUSH_CLOCK;",
+  "new": "return first != Long.MIN_VALUE && now - first > AMBUSH_CLOCK * 2;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "ambush never called in",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        if (JoinTrial.calledIn(live.first, now)) {\n            end(player, live, false, \"called\");",
+  "new": "        if (false) {\n            end(player, live, false, \"called\");",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "shows by day",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "        return time >= 13000L && time < 23000L;\n    }\n\n    // ---------------------------------------------------------------- Banjou's gas",
+  "new": "        return true;\n    }\n\n    // ---------------------------------------------------------------- Banjou's gas",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "ring by day",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "                if (!JoinTrial.showtime(level.m_46468_())) {",
+  "new": "                if (false) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "acts never booed",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "            if (now - live.currentAt > JoinTrial.RING_ACT) {",
+  "new": "            if (false) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "volunteers any rank",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "Math.min(rolled.tier(), JoinTrial.RING_TOP_TIER), rolled.skin(), rolled.name(),\n            rolled.seed(), rolled.mask(), false);",
+  "new": "rolled.tier(), rolled.skin(), rolled.name(),\n            rolled.seed(), rolled.mask(), false);",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "volunteers feral",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "NpcTemper.DRIFTER, Math.min(rolled.tier(), JoinTrial.RING_TOP_TIER)",
+  "new": "NpcTemper.FERAL, Math.min(rolled.tier(), JoinTrial.RING_TOP_TIER)",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "gas starts at once",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "return distance >= GAS_START && distance <= GAS_OUTER;",
+  "new": "return distance >= 0.0 && distance <= GAS_OUTER;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "gas mask allowed",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        if (GangServer.gasMaskOn(player)) {\n            end(player, live, false, \"masked\");",
+  "new": "        if (false) {\n            end(player, live, false, \"masked\");",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "no poison in the gas",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "player.m_7292_(new MobEffectInstance(MobEffects.f_19614_, 50, 0, false, true, true));",
+  "new": "player.m_7292_(new MobEffectInstance(MobEffects.f_19614_, 50, 0, false, false, true));",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "waves wait their time",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "return wave < GATE_WAVES && (wave == 0 || standing == 0 || since >= GATE_NEXT);",
+  "new": "return wave < GATE_WAVES && (wave == 0 || since >= GATE_NEXT);",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "raiders never march",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        march(level, live, player);\n    }\n\n    /**\n     * The raid's bodies",
+  "new": "    }\n\n    /**\n     * The raid's bodies",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "makings short",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "{\"minecraft:cocoa_beans\", \"6\"}",
+  "new": "{\"minecraft:cocoa_beans\", \"4\"}",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "makings every time",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "kept.m_128454_(MAKINGS_DAY) == today",
+  "new": "kept.m_128454_(MAKINGS_DAY) == today + 1L",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "three walk out",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "return strikes >= SHIFT_STRIKES;",
+  "new": "return strikes > SHIFT_STRIKES;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "served anything",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "if (cup == null || held.m_41619_() || held.m_41720_() != cup) {",
+  "new": "if (cup == null || held.m_41619_()) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "talk before serving",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java",
+  "old": "            if (JoinServer.serve(player, npc)) {\n                return; // 4.1.79: a regular of Anteiku's shift served their cup (or asked for it)\n            }\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "regulars wander",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java",
+  "old": "        if (JoinServer.held(npc, level, now)) {\n            return;\n        }\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "killing a raider allowed",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "                    if (theirs) {\n                        end(player, live, false, \"killed\");",
+  "new": "                    if (false) {\n                        end(player, live, false, \"killed\");",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "dead raiders break",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "return health > 0.0F && health <= max * CAFE_BREAK + 0.001F;",
+  "new": "return health <= max * CAFE_BREAK + 0.001F;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "broken raiders hit",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        if (OWNER.containsKey(event.getEntity().m_20148_()) && event.getEntity().getPersistentData().m_128471_(BROKE)) {\n            event.setCanceled(true);",
+  "new": "        if (OWNER.containsKey(event.getEntity().m_20148_()) && event.getEntity().getPersistentData().m_128471_(BROKE)) {\n            event.setCanceled(false);",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "partner hunts them",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentBrain.java",
+  "old": "        if (body instanceof ServerPlayer player && JoinServer.partnered(agent, player)) {\n            return false; // 4.1.79",
+  "new": "        if (body instanceof ServerPlayer player && JoinServer.partnered(agent, player) && false) {\n            return false; // 4.1.79",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "partner wanders",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentBrain.java",
+  "old": "        if (JoinServer.partnerWalk(agent, level, now)) {\n            return; // 4.1.79",
+  "new": "        if (false) {\n            return; // 4.1.79",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "partner may die",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "                    if (id.equals(live.partner)) {\n                        end(player, live, false, \"partner\");",
+  "new": "                    if (false) {\n                        end(player, live, false, \"partner\");",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "lone agent pairs",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        saveAlone(agent, player);\n        return agent;",
+  "new": "        return agent;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "partner on the roof",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        BlockPos beside = floor(level, feet, 1.5, 3.5, false, false, player);",
+  "new": "        BlockPos beside = null;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "orphans stay",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java",
+  "old": "&& JoinServer.orphan(npc)) {\n            npc.m_146870_();",
+  "new": "&& false) {\n            npc.m_146870_();",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "orphan agents stay",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentBrain.java",
+  "old": "&& JoinServer.orphan(agent)) {\n            agent.m_146870_();",
+  "new": "&& false) {\n            agent.m_146870_();",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "marked hide by day",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java",
+  "old": "who.gang() == 0 && !JoinServer.marked(npc);",
+  "new": "who.gang() == 0;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "wrong answers pass",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "            if (!com.hex.kagune.control.npc.JoinTrial.right(answer)) {",
+  "new": "            if (false) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "any answer right",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "        return answer == 0;",
+  "new": "        return answer >= 0;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "resit the same day",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "        return day != failedOn;",
+  "new": "        return true;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "one question thrice",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "        System.arraycopy(order, 0, out, 0, EXAM_ASKED);",
+  "new": "        java.util.Arrays.fill(out, order[0]);",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "job without the mask",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "if (investigator && clownMaskOn(player)) {",
+  "new": "if (investigator) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "steps skipped",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangPlayer.java",
+  "old": "        if (this.member(gang) || this.step(gang) != from) {",
+  "new": "        if (this.member(gang)) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "old quest done early",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangPlayer.java",
+  "old": "return !quest ? AOGIRI_NOT_YET : ccgKills >= 5 ? AOGIRI_DONE : AOGIRI_AMBUSH;",
+  "new": "return !quest ? AOGIRI_NOT_YET : ccgKills >= 4 ? AOGIRI_DONE : AOGIRI_AMBUSH;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "spar skips the ambush",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "            case SPAR -> GangPlayer.AOGIRI_AMBUSH;\n            case AMBUSH -> GangPlayer.AOGIRI_DONE;\n            case RING",
+  "new": "            case SPAR -> GangPlayer.AOGIRI_DONE;\n            case AMBUSH -> GangPlayer.AOGIRI_DONE;\n            case RING",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a win moves nothing",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "GangPlayer after = g.advance(gang, JoinTrial.step(live.kind), JoinTrial.after(live.kind));",
+  "new": "GangPlayer after = g.advance(gang, JoinTrial.step(live.kind), JoinTrial.step(live.kind));",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "no scene",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "            EtoBrain.gesture(npc.mind, sceneGesture(gang), level.m_46467_());\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "Aogiri step forgotten",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "        k.m_128405_(AOGIRI_STEP, g.aogiriStep());\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "lent mask twice",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "        if (gang != GangPlayer.CLOWNS || !kept(player).m_128471_(JoinServer.LENT)) {",
+  "new": "        if (true) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "ken's offer shared",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinVoice.java",
+  "old": "case \"offer\" -> new String[] {\"Okay. Small things first, as we say.",
+  "new": "case \"offer\" -> new String[] {\"Okay, funny one! Next act: YOU, in my ring, tonight. Three volunteers, one at a time. Put each one down before the crowd gets bored. Thirty seconds! Don't leave the stage, and don't die, it ruins the lighting.\", \"Okay. Small things first, as we say.",
+  "suite": "NpcTests"
+ }
+]

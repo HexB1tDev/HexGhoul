@@ -409,6 +409,10 @@ public final class GhoulNpcBrain {
             npc.mind = mind;
         }
         long now = level.m_46467_();
+        if (now % 40L == Math.floorMod(npc.m_19879_(), 40) && JoinServer.orphan(npc)) {
+            npc.m_146870_(); // 4.1.79: made for a gang's trial no longer live (a restart, a trial lost while it lay unloaded)
+            return;
+        }
         if (mind.leavingAt != Long.MIN_VALUE) {
             leave(npc, mind, level, now);
             return;
@@ -438,7 +442,8 @@ public final class GhoulNpcBrain {
         LivingEntity prey = prey(npc, who, mind, level, now);
         // 1.3.68: a wild ghoul prowls by night (its kakugan on) and hides what it is by day: anything it would fight, it runs from instead.
         // 4.0.0: Aogiri's own neither prowl nor hide: they hold their hideout. 4.1.45: nor a gang: they walk the night together.
-        boolean wild = mind.owner == null && !who.aogiri() && who.gang() == 0;
+        // 4.1.79: nor one made for a gang's trial (a volunteer, the reported ghoul): it stands and fights whatever the hour.
+        boolean wild = mind.owner == null && !who.aogiri() && who.gang() == 0 && !JoinServer.marked(npc);
         boolean eyes = NpcRules.prowls(wild, level.m_46468_());
         if (eyes != mind.eyes) {
             mind.eyes = eyes;
@@ -828,6 +833,10 @@ public final class GhoulNpcBrain {
 
     private static void idle(GhoulNpc npc, NpcIdentity who, Mind mind, ServerLevel level, long now) {
         calm(npc, mind, now, false);
+        // 4.1.79: a regular of Anteiku's shift waits at their seat for their cup.
+        if (JoinServer.held(npc, level, now)) {
+            return;
+        }
         ServerPlayer owner = owner(npc, mind);
         if (owner != null) {
             accompany(npc, mind, owner, level, now);
@@ -1074,6 +1083,7 @@ public final class GhoulNpcBrain {
     /** Sent off: it walks away from whoever it was with, and is gone a few seconds on. */
     private static void leave(GhoulNpc npc, Mind mind, ServerLevel level, long now) {
         if (now - mind.leavingAt > 100L) {
+            JoinServer.gone(npc); // 4.1.79: a regular walked out
             npc.m_146870_();
             return;
         }
@@ -1102,7 +1112,7 @@ public final class GhoulNpcBrain {
 
     /** At dawn, with no one near enough to see it go, it slips away (one kept as an ally stays). True if it went. */
     private static boolean dawn(GhoulNpc npc, ServerLevel level, long now) {
-        if (now % 100L != 0L || NpcRules.night(level.m_46468_()) || npc.m_21532_()) {
+        if (now % 100L != 0L || NpcRules.night(level.m_46468_()) || npc.m_21532_() || JoinServer.marked(npc)) {
             return false;
         }
         for (ServerPlayer player : level.m_6907_()) {

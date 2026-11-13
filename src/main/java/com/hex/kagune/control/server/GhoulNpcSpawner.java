@@ -138,7 +138,14 @@ public final class GhoulNpcSpawner {
     static GhoulNpc place(ServerLevel level, double x, double z, NpcIdentity who, int gang) {
         int bx = (int)Math.floor(x);
         int bz = (int)Math.floor(z);
-        int y = level.m_6924_(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz);
+        return placeAt(level, bx, level.m_6924_(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz), bz, who, gang);
+    }
+
+    /**
+     * 4.1.79: {@code who} standing in block {@code bx, y, bz} (a floor under a roof: the circus ring's, the café's), as {@link #place} puts
+     * one on the surface: on solid ground, out of any fluid, with room to stand (null if not).
+     */
+    static GhoulNpc placeAt(ServerLevel level, int bx, int y, int bz, NpcIdentity who, int gang) {
         BlockState ground = level.m_8055_(BlockPos.m_274561_(bx + 0.5, y - 1, bz + 0.5));
         if (ground.m_60795_() || !ground.m_60819_().m_76178_()) {
             return null;

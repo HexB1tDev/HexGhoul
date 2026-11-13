@@ -2,6 +2,7 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CGangName;
+import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.GangDaily;
 import com.hex.kagune.control.npc.GangPlayer;
 import com.hex.kagune.control.npc.GangStanding;
@@ -44,16 +45,18 @@ public final class GangServer {
     private static final String AOGIRI_QUEST = "HexGangAogiriQuest";
     private static final String CCG = "HexGangCcgKills";
     private static final String CLOWN_STEP = "HexGangClownStep";
-    private static final String GAS = "HexGangGasKills";
     /** 4.1.54: the Gas Masks' chain (where it stands, the Clowns killed for it). */
     private static final String GAS_STEP = "HexGangGasStep";
-    private static final String CLOWN_KILLS = "HexGangClownKills";
     /** 4.1.70: Ken's way into Anteiku: its step, and the investigators killed for it. */
     private static final String ANTEIKU_STEP = "HexGangAnteikuStep";
-    private static final String DOVES = "HexGangAnteikuDoves";
     /** 4.1.71: the General's way into the CCG: its step, and the ghouls killed for it. */
     private static final String GENERAL_STEP = "HexGangGeneralStep";
-    private static final String GHOULS = "HexGangGhoulKills";
+    /**
+     * 4.1.79: Aogiri's way in, a step of its own (the spar, the ambush, done). One saved before has none: read from 4.1.50's quest flag and
+     * its count of the CCG ({@link GangPlayer#aogiriFrom}). The old counts (the CCG's, the Gas Masks', the Clowns', the doves', the ghouls')
+     * are no longer kept: the trials are held live (JoinServer).
+     */
+    private static final String AOGIRI_STEP = "HexGangAogiriStep";
     /** How far a gang's member is looked for round one of the gang that might defend them (blocks). */
     static final double DEFEND = 24.0;
     /** What a gang is to a player: nothing, theirs, or one that banned them. */
@@ -77,12 +80,17 @@ public final class GangServer {
         return root.m_128469_("PlayerPersisted");
     }
 
+    /** 4.1.79: what is kept with {@code player} (JoinServer's days and the mask lent sit beside the gang's). */
+    static CompoundTag keptOf(ServerPlayer player) {
+        return kept(player);
+    }
+
     /** {@code player}'s gang and where they stand with each. */
     public static GangPlayer of(ServerPlayer player) {
         CompoundTag k = kept(player);
-        return new GangPlayer(k.m_128451_(GANG), k.m_128451_(OWN), k.m_128451_(BANNED), k.m_128471_(AOGIRI_QUEST), k.m_128451_(CCG),
-            k.m_128451_(CLOWN_STEP), k.m_128451_(GAS), k.m_128451_(GAS_STEP), k.m_128451_(CLOWN_KILLS), k.m_128451_(ANTEIKU_STEP), k.m_128451_(DOVES),
-            k.m_128451_(GENERAL_STEP), k.m_128451_(GHOULS));
+        int aogiri = k.m_128441_(AOGIRI_STEP) ? k.m_128451_(AOGIRI_STEP) : GangPlayer.aogiriFrom(k.m_128471_(AOGIRI_QUEST), k.m_128451_(CCG));
+        return new GangPlayer(k.m_128451_(GANG), k.m_128451_(OWN), k.m_128451_(BANNED), aogiri, k.m_128451_(CLOWN_STEP), k.m_128451_(GAS_STEP),
+            k.m_128451_(ANTEIKU_STEP), k.m_128451_(GENERAL_STEP));
     }
 
     /** {@code player}'s gang kept as {@code g}; a change of gang shown on their name everywhere. */
@@ -92,16 +100,11 @@ public final class GangServer {
         k.m_128405_(GANG, g.gang());
         k.m_128405_(OWN, g.ownKills());
         k.m_128405_(BANNED, g.banned());
-        k.m_128379_(AOGIRI_QUEST, g.aogiriQuest());
-        k.m_128405_(CCG, g.ccgKills());
+        k.m_128405_(AOGIRI_STEP, g.aogiriStep());
         k.m_128405_(CLOWN_STEP, g.clownStep());
-        k.m_128405_(GAS, g.gasKills());
         k.m_128405_(GAS_STEP, g.gasStep());
-        k.m_128405_(CLOWN_KILLS, g.clownKills());
         k.m_128405_(ANTEIKU_STEP, g.anteikuStep());
-        k.m_128405_(DOVES, g.doveKills());
         k.m_128405_(GENERAL_STEP, g.generalStep());
-        k.m_128405_(GHOULS, g.ghoulKills());
         if (was != g.gang()) {
             SEEN.put(player.m_20148_(), g.gang());
             player.refreshDisplayName();
@@ -188,29 +191,18 @@ public final class GangServer {
             LivingEntity dead = event.getEntity();
             GangPlayer was = of(player);
             GangPlayer now = was;
-            if (AgentBrain.ccg(dead)) {
-                now = now.killedDove();
-            }
-            if (AgentBrain.ccg(dead) || dead instanceof GhoulNpc investigator && investigator.identity() != null && investigator.identity().ccg()) {
-                now = now.droveDove(); // 4.1.70: Ken's chain (an investigator of either kind)
-            }
-            if (dead instanceof GhoulNpc hunted && hunted.identity() != null && !hunted.identity().ccg()) {
-                now = now.killedGhoul(); // 4.1.71: the General's chain (any ghoul but the CCG's own)
+            boolean investigator = AgentBrain.ccg(dead) || dead instanceof GhoulNpc division && division.identity() != null && division.identity().ccg();
+            if (investigator && clownMaskOn(player)) {
+                // 4.1.79: the Clowns' job, in a Clown's face: an investigator (of either kind) killed wearing one of their masks.
+                now = now.advance(GangPlayer.CLOWNS, GangPlayer.CLOWN_JOB, GangPlayer.CLOWN_CASE);
+            } else if (investigator && was.clownStep() == GangPlayer.CLOWN_JOB && !was.member(GangPlayer.CLOWNS)) {
+                player.m_5661_(Component.m_237113_("§9Roma: §f\"No face, no show!\" §7(a Clown's mask on your head, for the job)"), true);
             }
             if (dead instanceof com.hex.kagune.control.npc.CcgAgent && was.member(GangPlayer.CCG)) {
                 now = now.killedOwn(); // 4.1.71: an investigator is one of a member's own (the division's ghouls are, below)
             }
-            if (dead instanceof GhoulNpc ghoul && ghoul.identity() != null) {
-                NpcIdentity who = ghoul.identity();
-                if (who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS) {
-                    now = now.killedGasMask();
-                }
-                if (who.gangOf() == com.hex.kagune.control.npc.Gang.CLOWNS) {
-                    now = now.killedClown(); // 4.1.54: the Gas Masks' chain
-                }
-                if (was.member(GangPlayer.of(who))) {
-                    now = now.killedOwn();
-                }
+            if (dead instanceof GhoulNpc ghoul && ghoul.identity() != null && was.member(GangPlayer.of(ghoul.identity()))) {
+                now = now.killedOwn();
             }
             // 4.1.52: a member's reputation: up for the CCG and for other gangs killed, down a lot for one of their own.
             int by = 0;
@@ -248,25 +240,8 @@ public final class GangServer {
             if (by != 0 && now.gang() == was.gang()) {
                 reputation(player, by);
             }
-            if (now.ccgKills() != was.ccgKills()) {
-                player.m_5661_(Component.m_237113_("§4Aogiri Tree: §f" + Math.min(now.ccgKills(), GangPlayer.AOGIRI_CCG) + "/" + GangPlayer.AOGIRI_CCG
-                    + " CCG" + (now.aogiriDone() ? " §7(go back to Ayato)" : "")), true);
-            }
-            if (now.gasKills() != was.gasKills()) {
-                player.m_5661_(Component.m_237113_("§9The Clowns: §f" + Math.min(now.gasKills(), GangPlayer.CLOWN_GAS) + "/" + GangPlayer.CLOWN_GAS
-                    + " Gas Masks" + (now.clownStep() == GangPlayer.CLOWN_CASE ? " §7(now a quinque case, for Roma)" : "")), true);
-            }
-            if (now.ghoulKills() != was.ghoulKills()) {
-                player.m_5661_(Component.m_237113_("§bThe CCG: §f" + Math.min(now.ghoulKills(), GangPlayer.CCG_GHOUL_COUNT) + "/" + GangPlayer.CCG_GHOUL_COUNT
-                    + " ghouls" + (now.ccgDone() ? " §7(report to the General)" : "")), true);
-            }
-            if (now.doveKills() != was.doveKills()) {
-                player.m_5661_(Component.m_237113_("§6Anteiku: §f" + Math.min(now.doveKills(), GangPlayer.ANTEIKU_CCG) + "/" + GangPlayer.ANTEIKU_CCG
-                    + " investigators" + (now.anteikuDone() ? " §7(go back to Ken)" : "")), true);
-            }
-            if (now.clownKills() != was.clownKills()) {
-                player.m_5661_(Component.m_237113_("§aThe Gas Masks: §f" + Math.min(now.clownKills(), GangPlayer.GAS_CLOWNS) + "/" + GangPlayer.GAS_CLOWNS
-                    + " Clowns" + (now.gasStep() == GangPlayer.GAS_MASK_NEXT ? " §7(now a clown's mask, for Banjou)" : "")), true);
+            if (now.clownStep() != was.clownStep()) {
+                player.m_5661_(Component.m_237113_("§9The Clowns: §fthe job's done, in her face. §7(now the dove's quinque case, for Roma)"), false);
             }
             if (now.gang() == GangPlayer.NONE && was.gang() != GangPlayer.NONE) {
                 player.m_5661_(Component.m_237113_("§c" + cap(GangPlayer.title(was.gang())) + " has banned you for killing its own. Your tag is gone, "
@@ -981,90 +956,110 @@ public final class GangServer {
             return gang == GangPlayer.AOGIRI ? "How's Aogiri?" : gang == GangPlayer.GAS_MASKS ? "How are the boys?" : gang == GangPlayer.ANTEIKU
                 ? "How's Anteiku?" : gang == GangPlayer.CCG ? "How's the bureau, sir?" : "How are the Clowns?";
         }
-        if (gang == GangPlayer.CCG) {
-            // 4.1.71: the General's chain.
-            return g.ccgDone() ? "It's done. Five ghouls." : g.generalStep() != GangPlayer.CCG_NOT_YET ? "About joining the CCG..."
+        // 4.1.79: by the step their way in is at: its trial, live or not, or what is left to say or bring.
+        int step = g.step(gang);
+        com.hex.kagune.control.npc.JoinTrial.Kind kind = com.hex.kagune.control.npc.JoinTrial.of(gang, step);
+        if (kind != null) {
+            return com.hex.kagune.control.npc.JoinVoice.ask(kind);
+        }
+        return switch (gang) {
+            case GangPlayer.AOGIRI -> step == GangPlayer.AOGIRI_DONE ? "It's done. The patrol's down." : "I want to join Aogiri.";
+            case GangPlayer.CLOWNS -> step == GangPlayer.CLOWN_CASE ? (holdsCase(player) ? "Here. A dove's quinque case. (the case in your hand)"
+                : "About the dove's case...") : step == GangPlayer.CLOWN_JOB ? "About the job..." : "I want to join the Clowns.";
+            case GangPlayer.GAS_MASKS -> step == GangPlayer.GAS_DONE ? "The gate held." : "I want to join the Gas Masks.";
+            case GangPlayer.ANTEIKU -> step == GangPlayer.ANTEIKU_DONE ? "They're gone. Nobody died." : "I want to join Anteiku.";
+            default -> step == GangPlayer.CCG_DONE ? "Target down. My partner's alive, sir." : step == GangPlayer.CCG_EXAM ? "I'm ready for the test."
                 : "I want to join the CCG.";
-        }
-        if (gang == GangPlayer.ANTEIKU) {
-            // 4.1.70: Ken's chain: the beans in the hand once he has asked for them; the investigators done.
-            if (g.anteikuStep() == GangPlayer.ANTEIKU_BEANS && holdsBeans(player)) {
-                return "Here. Coffee beans. (the cocoa beans in your hand)";
-            }
-            return g.anteikuDone() ? "It's done. The doves are gone." : g.anteikuStep() != GangPlayer.ANTEIKU_NOT_YET ? "About joining Anteiku..."
-                : "I want to join Anteiku.";
-        }
-        if (gang == GangPlayer.GAS_MASKS) {
-            // 4.1.54: Banjou's chain: a clown's mask in the hand once the Clowns are done.
-            if (g.gasStep() == GangPlayer.GAS_MASK_NEXT && holdsClownMask(player)) {
-                return "Here. A clown's mask. (the mask in your hand)";
-            }
-            return g.gasStep() != GangPlayer.GAS_NOT_YET ? "About joining the Gas Masks..." : "I want to join the Gas Masks.";
-        }
-        if (gang == GangPlayer.AOGIRI) {
-            return g.aogiriDone() ? "It's done. Five doves." : g.aogiriQuest() ? "About joining Aogiri..." : "I want to join Aogiri.";
-        }
-        if (g.clownStep() == GangPlayer.CLOWN_CASE && holdsCase(player)) {
-            return "Here. A dove's quinque case. (the case in your hand)";
-        }
-        return g.clownStep() != GangPlayer.CLOWN_NOT_YET ? "About joining the Clowns..." : "I want to join the Clowns.";
+        };
     }
 
-    /** The talk about {@code persona}'s gang ({@code key}: "gang", or "gang:joke:n" a joke told): what is said, what it does. */
-    static Said talk(ServerPlayer player, Persona persona, String key, int seed) {
+    /**
+     * The talk about {@code persona}'s gang ({@code key}: "gang"; "gang:start" a trial begun; "gang:joke:n", "gang:serious:n", "gang:why:n",
+     * "gang:serve:n" a first answer; "gang:exam:n" an answer in the academy's test; "gang:quit..." a member's way out): what is said, what it
+     * does. 4.1.79: {@code npc} is the leader talked to (Ayato fights them in his spar; the scene at the end is theirs); null where unknown.
+     */
+    static Said talk(ServerPlayer player, EtoNpc npc, Persona persona, String key, int seed) {
         GangPlayer g = of(player);
         int gang = gangOf(persona);
         if (g.member(gang) && (key.startsWith("gang:quit") || key.equals("gang:stay"))) {
             return quit(player, g, gang, key, seed); // 4.1.67
         }
-        if (gang == GangPlayer.GAS_MASKS) {
-            return banjou(player, g, key, seed); // 4.1.54
-        }
-        if (gang == GangPlayer.ANTEIKU) {
-            return ken(player, g, key, seed); // 4.1.70
-        }
-        if (gang == GangPlayer.CCG) {
-            return general(player, g, key, seed); // 4.1.71
-        }
-        boolean ayato = gang == GangPlayer.AOGIRI;
         if (g.member(gang)) {
-            return new Said(ayato ? pick(seed, "Aogiri's fine. Don't get sloppy.", "You're one of us. Act like it.", "Still breathing? Good. Aogiri needs you.")
-                : pick(seed, "My favourite Clown! Go scare someone.", "You wear our face well. ...Kidding, you don't have one. You have mine. In your heart.",
-                    "The Clowns are great! Three of them are on fire, but great."), wayOut(gang));
+            return new Said(memberLine(gang, seed), wayOut(gang));
         }
         if (g.banned(gang)) {
-            return new Said(ayato ? "You killed our own. You're not Aogiri, and you never will be. Get out of my sight before I finish it."
-                : "*the grin stays; the eyes don't* You killed my Clowns. You don't get a mask. You get a head start. Run.", null);
+            return new Said(bannedLine(gang), null);
         }
         if (g.gang() != GangPlayer.NONE) {
-            // 4.1.54: whichever other gang they run with (the Gas Masks now too).
-            return new Said(ayato ? "You run with " + GangPlayer.title(g.gang()) + ". Aogiri doesn't share. Get lost."
-                : g.gang() == GangPlayer.AOGIRI ? "Aogiri? Ew. Trees. The ringmaster doesn't do double acts. Ditch them first."
-                : "The Gas Masks? The heavy breathers? Ugh. The ringmaster doesn't do double acts. Ditch them first.", null);
+            return new Said(otherGangLine(gang, g.gang()), null);
         }
-        if (ayato) {
-            if (g.aogiriDone()) {
-                set(player, g.join(GangPlayer.AOGIRI));
-                joined(player, GangPlayer.AOGIRI);
-                return new Said("Five doves. ...Fine. You're Aogiri now. Don't make me regret it. And if you ever turn on us, I'll kill you myself.", null);
-            }
-            if (g.aogiriQuest()) {
-                return new Said(g.ccgKills() + " of five. The doves aren't going to kill themselves. Move.", null);
-            }
-            set(player, g.startAogiri());
-            player.m_5661_(Component.m_237113_("§4Aogiri Tree: §fkill " + GangPlayer.AOGIRI_CCG + " CCG §7(0/" + GangPlayer.AOGIRI_CCG + ")"), false);
-            return new Said("Join Aogiri? ...You? Tch. Fine. Prove it. Kill five doves. CCG. I'll know if you lie.", null);
+        com.hex.kagune.control.npc.JoinTrial.Kind kind = com.hex.kagune.control.npc.JoinTrial.of(gang, g.step(gang));
+        if (kind != null) {
+            return trial(player, npc, kind, key, seed); // 4.1.79
         }
-        // Roma's chain: a joke that makes her laugh, three Gas Masks, a quinque case.
+        return switch (gang) {
+            case GangPlayer.AOGIRI -> ayato(player, npc, g, seed);
+            case GangPlayer.CLOWNS -> roma(player, npc, g, key, seed);
+            case GangPlayer.GAS_MASKS -> banjou(player, npc, g, key, seed); // 4.1.54
+            case GangPlayer.ANTEIKU -> ken(player, npc, g, key, seed); // 4.1.70
+            default -> general(player, npc, g, key, seed); // 4.1.71
+        };
+    }
+
+    /**
+     * 4.1.79: a step that is a live trial ({@code JoinServer}): put to them with the button that begins it, begun ("gang:start": the leader's
+     * word as it starts, or why not now), or asked about while it runs.
+     */
+    static Said trial(ServerPlayer player, EtoNpc npc, com.hex.kagune.control.npc.JoinTrial.Kind kind, String key, int seed) {
+        if (JoinServer.live(player) == kind) {
+            return new Said(com.hex.kagune.control.npc.JoinVoice.say(kind, "on", seed), null);
+        }
+        if (key.equals("gang:start")) {
+            return new Said(JoinServer.start(player, npc, kind, seed), null);
+        }
+        return offer(com.hex.kagune.control.npc.JoinVoice.say(kind, "offer", seed), kind);
+    }
+
+    /** {@code line}, and the one button that begins {@code kind}. */
+    static Said offer(String line, com.hex.kagune.control.npc.JoinTrial.Kind kind) {
+        return new Said(line, List.<String[]>of(new String[] {com.hex.kagune.control.npc.JoinVoice.start(kind), "gang:start"}));
+    }
+
+    /** 4.1.79: {@code gang}'s way in moved on to {@code to} by a talk, told in the action bar's words in chat (what it asks now). */
+    static GangPlayer moved(ServerPlayer player, GangPlayer g, int gang, int from, int to) {
+        GangPlayer after = g.advance(gang, from, to);
+        if (!after.equals(g)) {
+            set(player, after);
+            player.m_5661_(Component.m_237113_(colour(gang) + cap(GangPlayer.title(gang)) + ": §f" + com.hex.kagune.control.npc.JoinTrial.goal(gang, to)), false);
+        }
+        return after;
+    }
+
+    /**
+     * 4.1.79: Ayato's way into Aogiri (4.1.50's was "Kill 5 CCG"): asked, he wants a fight first (the spar: JoinServer), then an ambush on
+     * a CCG patrol; done, the scene. Ayato is cocky and sore about everything ({@code AyatoScript}).
+     */
+    static Said ayato(ServerPlayer player, EtoNpc npc, GangPlayer g, int seed) {
+        if (g.aogiriStep() == GangPlayer.AOGIRI_DONE) {
+            return welcome(player, npc, GangPlayer.AOGIRI, g, seed);
+        }
+        moved(player, g, GangPlayer.AOGIRI, GangPlayer.AOGIRI_NOT_YET, GangPlayer.AOGIRI_SPAR);
+        return trial(player, npc, com.hex.kagune.control.npc.JoinTrial.Kind.SPAR, "gang", seed);
+    }
+
+    /**
+     * Roma's way into the Clowns: a joke that makes her laugh (4.1.50, kept), then 4.1.79: a show in her ring (JoinServer), a job in her
+     * face (an investigator killed in one of the Clowns' masks: she lends one), the dove's case brought; the scene.
+     */
+    static Said roma(ServerPlayer player, EtoNpc npc, GangPlayer g, String key, int seed) {
         if (g.clownStep() == GangPlayer.CLOWN_NOT_YET) {
             if (key.startsWith("gang:joke:")) {
-                int told = Integer.parseInt(key.substring("gang:joke:".length()));
+                int told = number(key, "gang:joke:");
                 if (told == FUNNY) {
-                    set(player, g.laughed());
-                    player.m_5661_(Component.m_237113_("§9The Clowns: §fkill " + GangPlayer.CLOWN_GAS + " Gas Masks §7(0/" + GangPlayer.CLOWN_GAS + ")"),
-                        false);
-                    return new Said("*bursts out laughing so hard she has to hold onto you* HA! The BRIEFCASE! ...Okay. Okay. You're funny. Next act: three "
-                        + "Gas Masks. Kill them. They're no fun at all.", null);
+                    moved(player, g, GangPlayer.CLOWNS, GangPlayer.CLOWN_NOT_YET, GangPlayer.CLOWN_RING);
+                    return offer(com.hex.kagune.control.npc.JoinVoice.answered(GangPlayer.CLOWNS)
+                        + com.hex.kagune.control.npc.JoinVoice.say(com.hex.kagune.control.npc.JoinTrial.Kind.RING, "offer", seed),
+                        com.hex.kagune.control.npc.JoinTrial.Kind.RING);
                 }
                 return new Said(told == 0 ? "*stares at you* ...That's a dad joke. I'm not your dad. Try again some other time."
                     : "Hey! ...That one's about ME. ...It's a little funny. But no. Come back with better material.", null);
@@ -1074,179 +1069,223 @@ public final class GangServer {
             java.util.Collections.rotate(jokes, Math.floorMod(seed, jokes.size()));
             return new Said("Join the Clowns? Make me laugh first! Go on. Tell me a joke. A good one. I'll know.", jokes);
         }
-        if (g.clownStep() == GangPlayer.CLOWN_GAS_MASKS) {
-            return new Said(g.gasKills() + " of three Gas Masks! Chop chop. They're the ones breathing heavily at everyone.", null);
+        if (g.clownStep() == GangPlayer.CLOWN_JOB) {
+            return new Said(com.hex.kagune.control.npc.JoinVoice.roma(JoinServer.lend(player) ? "job" : "job_on", seed), null);
         }
         if (!takeCase(player)) {
-            return new Said("Now bring me an investigator's quinque case. The briefcase! I want to put flowers in it.", null);
+            return new Said(com.hex.kagune.control.npc.JoinVoice.roma("case", seed), null);
         }
-        set(player, g.join(GangPlayer.CLOWNS));
-        joined(player, GangPlayer.CLOWNS);
-        return new Said("*opens the case, drops an allium in it, and cackles* A dove's briefcase! Welcome to the Clowns, sweetheart. Nobody touches you now. "
-            + "Except me.", null);
+        return welcome(player, npc, GangPlayer.CLOWNS, g, seed);
     }
 
     /**
      * 4.1.54 (the owner: the Gas Masks joined by "Short chain, like Roma"; Banjou "wants to be tough but truly isnt, is aware of how weak he
      * truly is"): Banjou's way in. Something said to him that takes him seriously (of three answers, {@link #SERIOUS}: not mockery, not
-     * flattery he knows is false), then three Clowns killed (they keep hurting his men), then a clown's mask brought as proof.
+     * flattery he knows is false), then 4.1.79: the walk through the gas, the gate held against the Clowns (JoinServer); the scene.
      */
-    static Said banjou(ServerPlayer player, GangPlayer g, String key, int seed) {
-        int gang = GangPlayer.GAS_MASKS;
-        if (g.member(gang)) {
-            return new Said(pick(seed, "The boys are good. Fed, masked, nobody hurt this week. ...That last part's new. Thank you.",
-                "You're one of us. I still can't believe you picked us.", "Everyone's fine. I counted. Twice."), wayOut(gang));
+    static Said banjou(ServerPlayer player, EtoNpc npc, GangPlayer g, String key, int seed) {
+        if (g.gasStep() == GangPlayer.GAS_DONE) {
+            return welcome(player, npc, GangPlayer.GAS_MASKS, g, seed);
         }
-        if (g.banned(gang)) {
-            return new Said("You killed my boys. *His voice shakes, and he doesn't back down.* You're not a Gas Mask. You never were. Get out before "
-                + "they see you.", null);
-        }
-        if (g.gang() != GangPlayer.NONE) {
-            return new Said("You're with " + GangPlayer.title(g.gang()) + ". I can't take you. I'd be stealing, and they'd come for the boys.", null);
-        }
-        if (g.gasStep() == GangPlayer.GAS_NOT_YET) {
-            if (key.startsWith("gang:serious:")) {
-                int said = Integer.parseInt(key.substring("gang:serious:".length()));
-                if (said == SERIOUS) {
-                    set(player, g.takenSeriously());
-                    player.m_5661_(Component.m_237113_("§aThe Gas Masks: §fkill " + GangPlayer.GAS_CLOWNS + " Clowns §7(0/" + GangPlayer.GAS_CLOWNS + ")"),
-                        false);
-                    return new Said("*He looks at you for a long moment, like nobody's ever said that to him.* ...Okay. Okay. Then here's the thing. The "
-                        + "Clowns keep hurting my boys, and I can't stop them. Three of them. Then bring me one of their masks, so the boys know it was "
-                        + "you.", null);
-                }
-                return new Said(said == 0 ? "*His face goes still.* ...Yeah. I've heard that one. Come back when you mean it."
-                    : "*He laughs, not unkindly.* Don't. I know what I am. Flattery's how people get my boys killed.", null);
+        if (key.startsWith("gang:serious:")) {
+            int said = number(key, "gang:serious:");
+            if (said == SERIOUS) {
+                moved(player, g, GangPlayer.GAS_MASKS, GangPlayer.GAS_NOT_YET, GangPlayer.GAS_WALK);
+                return offer(com.hex.kagune.control.npc.JoinVoice.answered(GangPlayer.GAS_MASKS)
+                    + com.hex.kagune.control.npc.JoinVoice.say(com.hex.kagune.control.npc.JoinTrial.Kind.GAS, "offer", seed),
+                    com.hex.kagune.control.npc.JoinTrial.Kind.GAS);
             }
-            List<String[]> answers = new ArrayList<>(List.of(new String[] {ANSWERS[0], "gang:serious:0"}, new String[] {ANSWERS[1], "gang:serious:1"},
-                new String[] {ANSWERS[2], "gang:serious:2"}));
-            java.util.Collections.rotate(answers, Math.floorMod(seed, answers.size()));
-            return new Said("Join us? *He straightens up, trying to look like a gang boss.* Why? Tell me why. And don't lie to me. Everyone lies to me.",
-                answers);
+            return new Said(said == 0 ? "*His face goes still.* ...Yeah. I've heard that one. Come back when you mean it."
+                : "*He laughs, not unkindly.* Don't. I know what I am. Flattery's how people get my boys killed.", null);
         }
-        if (g.gasStep() == GangPlayer.GAS_CLOWNS_NEXT) {
-            return new Said(g.clownKills() + " of three Clowns. Be careful. They laugh the whole time. Don't let it get in your head.", null);
-        }
-        if (!takeClownMask(player)) {
-            return new Said("Now one of their masks. A clown's. So the boys know it was you who stood up for them.", null);
-        }
-        set(player, g.join(gang));
-        joined(player, gang);
-        return new Said("*He turns the clown's mask over in his big hands, then hands you one of theirs.* ...Welcome to the Gas Masks. I'm the weakest "
-            + "one here. You'll be fine.", null);
+        List<String[]> answers = new ArrayList<>(List.of(new String[] {ANSWERS[0], "gang:serious:0"}, new String[] {ANSWERS[1], "gang:serious:1"},
+            new String[] {ANSWERS[2], "gang:serious:2"}));
+        java.util.Collections.rotate(answers, Math.floorMod(seed, answers.size()));
+        return new Said("Join us? *He straightens up, trying to look like a gang boss.* Why? Tell me why. And don't lie to me. Everyone lies to me.",
+            answers);
     }
 
     /**
      * 4.1.70 (the owner: "Anteikou - Joinable through Ken (quest)"): Ken's way into Anteiku. Why they want in, asked (of three answers,
-     * {@code GangWords.KEN_RIGHT} is Anteiku's own: neither strength nor a place to hide), then {@link GangPlayer#ANTEIKU_BEAN_COUNT} cocoa beans
-     * for the café (Touka calls them coffee beans too), then {@link GangPlayer#ANTEIKU_CCG} investigators who came asking about the café
-     * killed; then he takes them in. Ken is polite, gentle, a little sad, fond of coffee and books ({@code KenScript}).
+     * {@code GangWords.KEN_RIGHT} is Anteiku's own: neither strength nor a place to hide), then 4.1.79: a shift at the café (brew and serve),
+     * the CCG's raid driven off with nobody killed (JoinServer); the scene. Ken is polite, gentle, a little sad, fond of coffee and books.
      */
-    static Said ken(ServerPlayer player, GangPlayer g, String key, int seed) {
-        int gang = GangPlayer.ANTEIKU;
-        if (g.member(gang)) {
-            return new Said(pick(seed, "Quiet today. Touka broke two cups and said they jumped. ...Anteiku's fine.",
-                "You're one of us. That means being kind to people who'd never be kind back. ...It's harder than fighting. I know.",
-                "Have you eaten? Properly, I mean. Sit down, I'll make you a cup."), wayOut(gang));
+    static Said ken(ServerPlayer player, EtoNpc npc, GangPlayer g, String key, int seed) {
+        if (g.anteikuStep() == GangPlayer.ANTEIKU_DONE) {
+            return welcome(player, npc, GangPlayer.ANTEIKU, g, seed);
         }
-        if (g.banned(gang)) {
-            return new Said("*He doesn't look up from his book.* ...I can't have you here anymore. I'm sorry. Please go.", null);
-        }
-        if (g.gang() != GangPlayer.NONE) {
-            return new Said("You're with " + GangPlayer.title(g.gang()) + ". *He shakes his head, sorry about it.* If I took you, they'd follow you to "
-                + "the café's door. I can't do that to everyone here.", null);
-        }
-        if (g.anteikuStep() == GangPlayer.ANTEIKU_NOT_YET) {
-            if (key.startsWith("gang:why:")) {
-                int said = Integer.parseInt(key.substring("gang:why:".length()));
-                if (said == com.hex.kagune.control.npc.GangWords.KEN_RIGHT) {
-                    set(player, g.answered());
-                    player.m_5661_(Component.m_237113_("§6Anteiku: §fbring Ken " + GangPlayer.ANTEIKU_BEAN_COUNT + " cocoa beans §7(the coffee beans, in "
-                        + "your hand)"), false);
-                    return new Said("*He's quiet for a long moment. Then he smiles, a little sadly.* ...Yeah. That's the right reason. It was mine too. "
-                        + "Okay. Small things first: we're out of beans, and Touka's been unbearable. Eight, if you can find them.", null);
-                }
-                return new Said(said == 0 ? "*He winces.* Then you want the other lot. Anteiku doesn't make anyone stronger. ...It just keeps them human."
-                    : "*He smiles, but it doesn't reach his eyes.* Everyone here is hiding from something. That can't be the reason, though. Think about "
-                    + "it, and come back.", null);
+        if (key.startsWith("gang:why:")) {
+            int said = number(key, "gang:why:");
+            if (said == com.hex.kagune.control.npc.GangWords.KEN_RIGHT) {
+                moved(player, g, GangPlayer.ANTEIKU, GangPlayer.ANTEIKU_NOT_YET, GangPlayer.ANTEIKU_SHIFT);
+                return offer(com.hex.kagune.control.npc.JoinVoice.answered(GangPlayer.ANTEIKU)
+                    + com.hex.kagune.control.npc.JoinVoice.say(com.hex.kagune.control.npc.JoinTrial.Kind.SHIFT, "offer", seed),
+                    com.hex.kagune.control.npc.JoinTrial.Kind.SHIFT);
             }
-            String[] why = com.hex.kagune.control.npc.GangWords.KEN_WHY;
-            List<String[]> answers = new ArrayList<>(List.of(new String[] {why[0], "gang:why:0"}, new String[] {why[1], "gang:why:1"},
-                new String[] {why[2], "gang:why:2"}));
-            java.util.Collections.rotate(answers, Math.floorMod(seed, answers.size()));
-            return new Said("Anteiku? *He closes his book on one finger.* It's just a café. ...Mostly. People who join us look after each other. "
-                + "Why do you want in? Honestly.", answers);
+            return new Said(said == 0 ? "*He winces.* Then you want the other lot. Anteiku doesn't make anyone stronger. ...It just keeps them human."
+                : "*He smiles, but it doesn't reach his eyes.* Everyone here is hiding from something. That can't be the reason, though. Think about "
+                + "it, and come back.", null);
         }
-        if (g.anteikuStep() == GangPlayer.ANTEIKU_BEANS) {
-            if (!takeBeans(player)) {
-                return new Said(GangPlayer.ANTEIKU_BEAN_COUNT + " cocoa beans. In your hand, please. ...Sorry. Touka counts them. She'll know.", null);
-            }
-            set(player, g.beansBrought());
-            player.m_5661_(Component.m_237113_("§6Anteiku: §fkill " + GangPlayer.ANTEIKU_CCG + " investigators §7(0/" + GangPlayer.ANTEIKU_CCG + ")"),
-                false);
-            return new Said("*He breathes in over the bag.* ...That's the good stuff. Thank you. *His face falls.* There's something else. Doves keep "
-                + "coming round, asking about the café. If they find out what we are, everyone here dies. Three of them. ...I'm sorry I have to ask.",
-                null);
-        }
-        if (!g.anteikuDone()) {
-            return new Said(g.doveKills() + " of three. Be careful. They carry cases, and the cases bite.", null);
-        }
-        set(player, g.join(gang));
-        joined(player, gang);
-        return new Said("*He hangs a second apron on the hook by the door.* ...Welcome to Anteiku. Nobody here will ask what you did before. "
-            + "Just... be kind, okay?", null);
+        String[] why = com.hex.kagune.control.npc.GangWords.KEN_WHY;
+        List<String[]> answers = new ArrayList<>(List.of(new String[] {why[0], "gang:why:0"}, new String[] {why[1], "gang:why:1"},
+            new String[] {why[2], "gang:why:2"}));
+        java.util.Collections.rotate(answers, Math.floorMod(seed, answers.size()));
+        return new Said("Anteiku? *He closes his book on one finger.* It's just a café. ...Mostly. People who join us look after each other. "
+            + "Why do you want in? Honestly.", answers);
     }
-
 
     /**
      * 4.1.71 (the owner: "CCG Faction: / Join through the general (quest)"): the General's way into the CCG. Why they want to serve (of three
-     * answers, {@code GangWords.GENERAL_RIGHT} is the bureau's own: to protect people, not to butcher, not for the pay), then
-     * {@link GangPlayer#CCG_GHOUL_COUNT} ghouls killed (any ghoul but the CCG's own division); then he swears them in. A ghoul may join too
-     * (the bureau has a division of them): he says so, flatly. He is a human, thirty years in the bureau: clipped, dry, proud of his people
-     * ({@code GeneralScript}).
+     * answers, {@code GangWords.GENERAL_RIGHT} is the bureau's own), then 4.1.79: the academy's test (three questions drawn from
+     * JoinTrial.QUESTIONS; one wrong and it is sat again tomorrow), a ghoul hunted with an assigned partner who comes back alive
+     * (JoinServer); then he swears them in. A ghoul may join too (the bureau has a division of them): he says so, flatly.
      */
-    static Said general(ServerPlayer player, GangPlayer g, String key, int seed) {
-        int gang = GangPlayer.CCG;
-        if (g.member(gang)) {
-            return new Said(pick(seed, "The bureau's holding. Fewer funerals this month. Keep it that way.",
-                "You're one of mine now. That means you come back alive. That's an order.",
-                "Paperwork's piling up and the coffee's terrible. So: normal. Anything to report?"), wayOut(gang));
+    static Said general(ServerPlayer player, EtoNpc npc, GangPlayer g, String key, int seed) {
+        if (g.generalStep() == GangPlayer.CCG_DONE) {
+            return welcome(player, npc, GangPlayer.CCG, g, seed);
         }
-        if (g.banned(gang)) {
-            return new Said("You killed investigators. My investigators. *He doesn't raise his voice.* Get out of my building while you can still walk.",
-                null);
+        if (g.generalStep() == GangPlayer.CCG_EXAM) {
+            return exam(player, g, key, seed);
         }
-        if (g.gang() != GangPlayer.NONE) {
-            return new Said("You run with " + GangPlayer.title(g.gang()) + ". The bureau doesn't take double agents. Leave them, then we'll talk.", null);
-        }
-        if (g.generalStep() == GangPlayer.CCG_NOT_YET) {
-            if (key.startsWith("gang:serve:")) {
-                int said = Integer.parseInt(key.substring("gang:serve:".length()));
-                if (said == com.hex.kagune.control.npc.GangWords.GENERAL_RIGHT) {
-                    set(player, g.sworn());
-                    player.m_5661_(Component.m_237113_("§bThe CCG: §fkill " + GangPlayer.CCG_GHOUL_COUNT + " ghouls §7(0/" + GangPlayer.CCG_GHOUL_COUNT + ")"),
-                        false);
-                    return new Said("*A short nod. Something close to approval.* ...Correct. Most people get that one wrong. Field test, then: five "
-                        + "ghouls. Not my division's. Come back and report.", null);
-                }
-                return new Said(said == 0 ? "*He doesn't blink.* Then you want to be a butcher. The bureau doesn't hire butchers. Dismissed."
-                    : "*Dryly.* It isn't. Ask anyone in this building. Try again when you have a real reason.", null);
+        if (key.startsWith("gang:serve:")) {
+            int said = number(key, "gang:serve:");
+            if (said == com.hex.kagune.control.npc.GangWords.GENERAL_RIGHT) {
+                moved(player, g, GangPlayer.CCG, GangPlayer.CCG_NOT_YET, GangPlayer.CCG_EXAM);
+                return new Said(com.hex.kagune.control.npc.JoinVoice.answered(GangPlayer.CCG)
+                    + com.hex.kagune.control.npc.JoinVoice.general("exam", seed), List.<String[]>of(new String[] {"I'm ready for the test.", "gang:exam"}));
             }
-            String[] why = com.hex.kagune.control.npc.GangWords.GENERAL_WHY;
-            List<String[]> answers = new ArrayList<>(List.of(new String[] {why[0], "gang:serve:0"}, new String[] {why[1], "gang:serve:1"},
-                new String[] {why[2], "gang:serve:2"}));
-            java.util.Collections.rotate(answers, Math.floorMod(seed, answers.size()));
-            boolean ghoul = com.hex.kagune.data.KaguneProfile.isUnlocked(player);
-            return new Said((ghoul ? "You're a ghoul. *Flat, not unkind.* We have a division for that. The oath's the same. " : "")
-                + "You want to join the CCG. *He sets the pen down.* Why? One answer. Make it the true one.", answers);
+            return new Said(said == 0 ? "*He doesn't blink.* Then you want to be a butcher. The bureau doesn't hire butchers. Dismissed."
+                : "*Dryly.* It isn't. Ask anyone in this building. Try again when you have a real reason.", null);
         }
-        if (!g.ccgDone()) {
-            return new Said(g.ghoulKills() + " of five. Work in pairs if you can. The ones who work alone don't come back.", null);
+        String[] why = com.hex.kagune.control.npc.GangWords.GENERAL_WHY;
+        List<String[]> answers = new ArrayList<>(List.of(new String[] {why[0], "gang:serve:0"}, new String[] {why[1], "gang:serve:1"},
+            new String[] {why[2], "gang:serve:2"}));
+        java.util.Collections.rotate(answers, Math.floorMod(seed, answers.size()));
+        boolean ghoul = com.hex.kagune.data.KaguneProfile.isUnlocked(player);
+        return new Said((ghoul ? "You're a ghoul. *Flat, not unkind.* We have a division for that. The oath's the same. " : "")
+            + "You want to join the CCG. *He sets the pen down.* Why? One answer. Make it the true one.", answers);
+    }
+
+    /**
+     * 4.1.79: the academy's test: begun (three questions drawn, the first asked), an answer given ("gang:exam:n": right, the next; the third
+     * right, passed and the hunt put to them; wrong, failed till tomorrow), or refused today after a fail.
+     */
+    static Said exam(ServerPlayer player, GangPlayer g, String key, int seed) {
+        int[] state = JoinServer.EXAMS.get(player.m_20148_());
+        if (key.startsWith("gang:exam:") && state != null) {
+            int answer = number(key, "gang:exam:");
+            if (!com.hex.kagune.control.npc.JoinTrial.right(answer)) {
+                JoinServer.failed(player);
+                UkakuFire.sound(player.m_284548_(), player.m_20182_(), "block.candle.extinguish", 1.0F, 0.8F);
+                return new Said(com.hex.kagune.control.npc.JoinVoice.general("failed", seed), null);
+            }
+            state[3]++;
+            if (state[3] >= com.hex.kagune.control.npc.JoinTrial.EXAM_ASKED) {
+                JoinServer.EXAMS.remove(player.m_20148_());
+                moved(player, g, GangPlayer.CCG, GangPlayer.CCG_EXAM, GangPlayer.CCG_HUNT);
+                UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.levelup", 0.7F, 1.2F);
+                return offer(com.hex.kagune.control.npc.JoinVoice.general("passed", seed) + " "
+                    + com.hex.kagune.control.npc.JoinVoice.say(com.hex.kagune.control.npc.JoinTrial.Kind.HUNT, "offer", seed),
+                    com.hex.kagune.control.npc.JoinTrial.Kind.HUNT);
+            }
+            return question(com.hex.kagune.control.npc.JoinVoice.general("next", seed), state, seed);
         }
+        state = JoinServer.sit(player);
+        if (state == null) {
+            return new Said(com.hex.kagune.control.npc.JoinVoice.general("today", seed), null);
+        }
+        return question(com.hex.kagune.control.npc.JoinVoice.general("exam", seed), state, seed);
+    }
+
+    /** The question the test is at, its three answers turned round by {@code seed} (the right one anywhere). */
+    static Said question(String said, int[] state, int seed) {
+        com.hex.kagune.control.npc.JoinTrial.Question q = com.hex.kagune.control.npc.JoinTrial.QUESTIONS[state[state[3]]];
+        List<String[]> answers = new ArrayList<>(List.of(new String[] {q.answer(0), "gang:exam:0"}, new String[] {q.answer(1), "gang:exam:1"},
+            new String[] {q.answer(2), "gang:exam:2"}));
+        java.util.Collections.rotate(answers, Math.floorMod(seed + state[3], answers.size()));
+        return new Said(said + " Question " + (state[3] + 1) + " of " + com.hex.kagune.control.npc.JoinTrial.EXAM_ASKED + ": " + q.asked(), answers);
+    }
+
+    /** The number after {@code prefix} in {@code key} (-1 if there is none). */
+    static int number(String key, String prefix) {
+        try {
+            return Integer.parseInt(key.substring(prefix.length()));
+        } catch (RuntimeException bad) {
+            return -1;
+        }
+    }
+
+    /**
+     * 4.1.79 (the plan: "a scene with the leader at the end"): they join {@code gang}: its member, its mask (or the CCG's quinque), and the
+     * leader's scene: their gesture (Ayato's arms crossed, Roma's cackle, Banjou's bow, Ken serving a cup, the General's nod), the happy
+     * sparks round them both, their words ({@code JoinVoice.scene}).
+     */
+    static Said welcome(ServerPlayer player, EtoNpc npc, int gang, GangPlayer g, int seed) {
         set(player, g.join(gang));
         joined(player, gang);
-        return new Said("*He stands, which he doesn't do for many.* Investigator. Welcome to the Commission of Counter Ghoul. Your quinque's in the "
-            + "case. Look after it, and it'll look after you.", null);
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        if (npc != null && npc.mind != null) {
+            EtoBrain.gesture(npc.mind, sceneGesture(gang), level.m_46467_());
+            level.m_8767_(net.minecraft.core.particles.ParticleTypes.f_123748_, npc.m_20185_(), npc.m_20186_() + 1.2, npc.m_20189_(), 10, 0.5, 0.6, 0.5, 0.0);
+        }
+        level.m_8767_(net.minecraft.core.particles.ParticleTypes.f_123748_, player.m_20185_(), player.m_20186_() + 1.2, player.m_20189_(), 10, 0.5, 0.6, 0.5,
+            0.0);
+        return new Said(com.hex.kagune.control.npc.JoinVoice.scene(gang, seed), null);
+    }
+
+    /** 4.1.79: each leader's move in their scene. */
+    static com.hex.kagune.control.npc.EtoGesture sceneGesture(int gang) {
+        return switch (gang) {
+            case GangPlayer.AOGIRI -> com.hex.kagune.control.npc.EtoGesture.CROSS;
+            case GangPlayer.CLOWNS -> com.hex.kagune.control.npc.EtoGesture.LAUGH;
+            case GangPlayer.ANTEIKU -> com.hex.kagune.control.npc.EtoGesture.SERVE;
+            default -> com.hex.kagune.control.npc.EtoGesture.BOW;
+        };
+    }
+
+    /** One of {@code gang}'s, talking to its leader (4.1.50 to 4.1.71's lines). */
+    static String memberLine(int gang, int seed) {
+        return switch (gang) {
+            case GangPlayer.AOGIRI -> pick(seed, "Aogiri's fine. Don't get sloppy.", "You're one of us. Act like it.", "Still breathing? Good. Aogiri needs you.");
+            case GangPlayer.CLOWNS -> pick(seed, "My favourite Clown! Go scare someone.",
+                "You wear our face well. ...Kidding, you don't have one. You have mine. In your heart.", "The Clowns are great! Three of them are on fire, but great.");
+            case GangPlayer.GAS_MASKS -> pick(seed, "The boys are good. Fed, masked, nobody hurt this week. ...That last part's new. Thank you.",
+                "You're one of us. I still can't believe you picked us.", "Everyone's fine. I counted. Twice.");
+            case GangPlayer.ANTEIKU -> pick(seed, "Quiet today. Touka broke two cups and said they jumped. ...Anteiku's fine.",
+                "You're one of us. That means being kind to people who'd never be kind back. ...It's harder than fighting. I know.",
+                "Have you eaten? Properly, I mean. Sit down, I'll make you a cup.");
+            default -> pick(seed, "The bureau's holding. Fewer funerals this month. Keep it that way.",
+                "You're one of mine now. That means you come back alive. That's an order.",
+                "Paperwork's piling up and the coffee's terrible. So: normal. Anything to report?");
+        };
+    }
+
+    /** One {@code gang} banned, talking to its leader. */
+    static String bannedLine(int gang) {
+        return switch (gang) {
+            case GangPlayer.AOGIRI -> "You killed our own. You're not Aogiri, and you never will be. Get out of my sight before I finish it.";
+            case GangPlayer.CLOWNS -> "*the grin stays; the eyes don't* You killed my Clowns. You don't get a mask. You get a head start. Run.";
+            case GangPlayer.GAS_MASKS -> "You killed my boys. *His voice shakes, and he doesn't back down.* You're not a Gas Mask. You never were. Get out "
+                + "before they see you.";
+            case GangPlayer.ANTEIKU -> "*He doesn't look up from his book.* ...I can't have you here anymore. I'm sorry. Please go.";
+            default -> "You killed investigators. My investigators. *He doesn't raise his voice.* Get out of my building while you can still walk.";
+        };
+    }
+
+    /** One of {@code theirs} asking {@code gang}'s leader to join. 4.1.79: Roma's for every gang (Anteiku's and the CCG's were the Gas Masks'). */
+    static String otherGangLine(int gang, int theirs) {
+        String title = GangPlayer.title(theirs);
+        return switch (gang) {
+            case GangPlayer.AOGIRI -> "You run with " + title + ". Aogiri doesn't share. Get lost.";
+            case GangPlayer.CLOWNS -> theirs == GangPlayer.AOGIRI ? "Aogiri? Ew. Trees. The ringmaster doesn't do double acts. Ditch them first."
+                : theirs == GangPlayer.GAS_MASKS ? "The Gas Masks? The heavy breathers? Ugh. The ringmaster doesn't do double acts. Ditch them first."
+                : theirs == GangPlayer.ANTEIKU ? "Anteiku? The coffee people? Cute. The ringmaster doesn't do double acts. Ditch them first."
+                : "A DOVE? In my circus? *She laughs until she sees you're serious.* ...Ditch the bureau first. Then we'll talk.";
+            case GangPlayer.GAS_MASKS -> "You're with " + title + ". I can't take you. I'd be stealing, and they'd come for the boys.";
+            case GangPlayer.ANTEIKU -> "You're with " + title + ". *He shakes his head, sorry about it.* If I took you, they'd follow you to the café's "
+                + "door. I can't do that to everyone here.";
+            default -> "You run with " + title + ". The bureau doesn't take double agents. Leave them, then we'll talk.";
+        };
     }
 
     /** 4.1.71: true if {@code player} is one of the CCG: every ghoul but the named ones goes for them (GhoulNpcBrain). */
@@ -1262,24 +1301,6 @@ public final class GangServer {
     static int ccgStance(ServerPlayer player) {
         GangPlayer g = of(player);
         return g.member(GangPlayer.CCG) ? OWN_GANG : g.banned(GangPlayer.CCG) ? OUTCAST : STRANGER;
-    }
-
-    /** 4.1.70: true if {@code player} holds Ken's coffee beans (at least {@link GangPlayer#ANTEIKU_BEAN_COUNT} cocoa beans in the main hand). */
-    static boolean holdsBeans(ServerPlayer player) {
-        net.minecraft.world.item.ItemStack held = player.m_21205_();
-        net.minecraft.world.item.Item beans = com.hex.kagune.control.ControlItems.vanilla("minecraft:cocoa_beans");
-        return beans != null && !held.m_41619_() && held.m_41720_() == beans && held.m_41613_() >= GangPlayer.ANTEIKU_BEAN_COUNT;
-    }
-
-    /** 4.1.70: the beans in {@code player}'s hand given over (kept in creative): true if there were enough. */
-    static boolean takeBeans(ServerPlayer player) {
-        if (!holdsBeans(player)) {
-            return false;
-        }
-        if (!player.m_7500_()) {
-            player.m_21205_().m_41774_(GangPlayer.ANTEIKU_BEAN_COUNT);
-        }
-        return true;
     }
 
     /**
@@ -1383,21 +1404,10 @@ public final class GangServer {
         "Because they follow you. Not for your strength. Because you stay."};
     static final int SERIOUS = 2;
 
-    /** 4.1.54: true if {@code player} holds one of the Clowns' masks (any of their five). */
-    static boolean holdsClownMask(ServerPlayer player) {
-        net.minecraft.world.item.ItemStack held = player.m_21205_();
-        return held.m_41720_() instanceof com.hex.kagune.control.outfit.OutfitItem item && item.piece().id().startsWith("mask_clown");
-    }
-
-    /** 4.1.54: the clown's mask in {@code player}'s hand given over (kept in creative): true if there was one. */
-    static boolean takeClownMask(ServerPlayer player) {
-        if (!holdsClownMask(player)) {
-            return false;
-        }
-        if (!player.m_7500_()) {
-            player.m_21205_().m_41774_(1);
-        }
-        return true;
+    /** 4.1.79: true if what is on {@code player}'s head is one of the Clowns' masks (any of their five): the job, in her face. */
+    static boolean clownMaskOn(ServerPlayer player) {
+        net.minecraft.world.item.ItemStack head = player.m_6844_(net.minecraft.world.entity.EquipmentSlot.HEAD);
+        return head.m_41720_() instanceof com.hex.kagune.control.outfit.OutfitItem item && item.piece().id().startsWith("mask_clown");
     }
 
     /** The jokes told to Roma; the second is the one that lands (her humour). */
@@ -1407,7 +1417,12 @@ public final class GangServer {
 
     private static void joined(ServerPlayer player, int gang) {
         standing(player, GangStanding.joined(today(player))); // 4.1.52: the bar starts at half
-        giveMask(player, gang); // 4.1.53
+        if (gang != GangPlayer.CLOWNS || !kept(player).m_128471_(JoinServer.LENT)) {
+            giveMask(player, gang); // 4.1.53
+        } else {
+            kept(player).m_128405_(MASK, gang); // 4.1.79: Roma lent hers for the job: it is theirs now
+            kept(player).m_128473_(JoinServer.LENT); // (a way in begun again some day lends another)
+        }
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.levelup", 0.8F, 0.7F);
         player.m_5661_(Component.m_237113_(colour(gang) + "You joined " + GangPlayer.title(gang) + (gang == GangPlayer.ANTEIKU
             ? ". §7Ghouls leave you be now, every gang too, unless you start it. The CCG won't. Your RC goes further." // 4.1.70

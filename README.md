@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.79 (HexGhoul): the gangs' ways in: each step a trial of its own, a scene with the leader at the end (testing)
+
+See `.github/release-notes-4.1.79.md`. `JoinTrial` (the trials' kinds, which step each is, `after`, their rules: `clamp`/`reached`, `calledIn`,
+`showtime`, `gasStarts`, `nextWave`, `shiftLost`, `breaks`, the academy's `QUESTIONS`/`draw`/`maySit`, `way`, `clock`); `JoinVoice` (the
+leaders' words); `JoinServer` (each trial live: `start`, `tick`, the spar's blows held in `hurt`, `died`, `serve`, `held`, `partnerWalk`,
+`partnered`, `march`, `orphan`, `end`); `GangPlayer` one step per way in (`advance`, `step`, `aogiriFrom`); `GangServer.talk` (`trial`,
+`offer`, `exam`, `welcome`). Hooks in `EtoBrain` (the spar), `AgentBrain` and `GhoulNpcBrain` (the partner, the bodies), `GhoulNpcTalk`
+(serving). `NpcTests.trials`. Render `docs/handoff/joining-4.1.79.png` (`tools/UiPreview.java <dir> joining`).
+
 ## 4.1.78 (HexGhoul): the daily board: three jobs a day to choose from, eight per gang, Ken's dailies for Anteiku, better pay (testing)
 
 See `.github/release-notes-4.1.78.md`. `GangDaily.Kind` (KILL by tags, BRING, WATCH, STREAK), its `Job`s (40; the old 13 at their ordinals),

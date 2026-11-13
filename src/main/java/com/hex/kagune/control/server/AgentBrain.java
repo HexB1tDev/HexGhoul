@@ -464,6 +464,10 @@ public final class AgentBrain {
             return;
         }
         long now = level.m_46467_();
+        if (now % 40L == Math.floorMod(agent.m_19879_(), 40) && JoinServer.orphan(agent)) {
+            agent.m_146870_(); // 4.1.79: made for a gang's trial no longer live
+            return;
+        }
         Mind mind = agent.mind == null ? wake(agent, level, now) : agent.mind;
         // 4.1.4: one sat at its desk (AgentDesk) stays sat only while that is what it does: anything else gets it up.
         mind.seatKept = false;
@@ -1226,6 +1230,9 @@ public final class AgentBrain {
         if (body instanceof Player player && player.m_7500_()) {
             return false;
         }
+        if (body instanceof ServerPlayer player && JoinServer.partnered(agent, player)) {
+            return false; // 4.1.79: the hunt's partner never goes for the one he was assigned to, their kagune out or not
+        }
         if (body instanceof ServerPlayer player) {
             // 4.1.71 (the owner, the CCG's traits: "CCG no longer attacks the player."): one of the CCG never, even struck or marked, unless
             // their bar is empty and they stayed in the tower past the warning; one it banned, on sight.
@@ -1400,6 +1407,9 @@ public final class AgentBrain {
             AgentArms.sheathe(agent, mind, level, now); // 3.0.0: back into its case
         }
         mind.shots = 0;
+        if (JoinServer.partnerWalk(agent, level, now)) {
+            return; // 4.1.79: the hunt's partner at the side of the one he was assigned to
+        }
         VillagePlace.Place place = VillagePlace.of(agent);
         if (place != null) {
             // 4.1.4: the CCG building's: at its post or its desk; the rest walk its patrol.

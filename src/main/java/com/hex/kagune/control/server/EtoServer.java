@@ -573,7 +573,7 @@ public final class EtoServer {
         }
         if (key.startsWith("gang")) {
             // 4.1.50: joining their gang (Ayato's Aogiri, Roma's Clowns), or how it stands; a joke told to Roma.
-            GangServer.Said said = GangServer.talk(player, npc.persona(), key, c.seed());
+            GangServer.Said said = GangServer.talk(player, npc, npc.persona(), key, c.seed());
             if (said.jokes() != null) {
                 List<EtoTalk.Option> jokes = new java.util.ArrayList<>();
                 NpcTalk.Choice[] slots = {NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3};

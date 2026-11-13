@@ -2,6 +2,9 @@ package com.hex.kagune.control;
 
 import com.hex.kagune.control.graft.GraftMove;
 import com.hex.kagune.control.graft.GraftStage;
+import com.hex.kagune.control.npc.GangPlayer;
+import com.hex.kagune.control.npc.JoinTrial;
+import com.hex.kagune.control.npc.JoinVoice;
 import com.hex.kagune.control.npc.NpcBonds;
 import com.hex.kagune.control.npc.NpcIdentity;
 import com.hex.kagune.control.npc.NpcLook;
@@ -33,6 +36,15 @@ public final class NpcTests {
         } else {
             FAILURES.add(description);
         }
+    }
+
+    /** 4.1.79: true if {@code what} is in {@code text} at or after {@code from} (itself found: not -1), within {@code within} characters of it. */
+    static boolean within(String text, int from, String what, int within) {
+        if (from < 0) {
+            return false;
+        }
+        int at = text.indexOf(what, from);
+        return at >= 0 && at - from < within;
     }
 
     public static void main(String[] args) {
@@ -712,26 +724,24 @@ public final class NpcTests {
         com.hex.kagune.control.npc.GangPlayer k = com.hex.kagune.control.npc.GangPlayer.NEW;
         int anteiku = com.hex.kagune.control.npc.GangPlayer.ANTEIKU;
         check(anteiku == 4 && com.hex.kagune.control.npc.GangPlayer.title(anteiku).equals("Anteiku"), "Anteiku: gang 4");
-        check(k.droveDove().doveKills() == 0 && k.beansBrought() == k, "nothing counts before Ken has asked why");
-        k = k.answered();
-        check(k.anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BEANS && k.answered() == k && k.droveDove() == k,
-            "answered as Anteiku would: the beans next (once); no investigator counts yet");
-        k = k.beansBrought();
-        check(k.anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_DOVES && k.beansBrought() == k, "the beans brought: the investigators next");
-        k = k.droveDove().droveDove();
-        check(k.doveKills() == 2 && !k.anteikuDone() && k.droveDove().anteikuDone() && com.hex.kagune.control.npc.GangPlayer.ANTEIKU_CCG == 3
-            && com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BEAN_COUNT == 8, "eight beans, then three investigators");
-        k = k.droveDove();
-        check(k.droveDove() == k, "done: no more counted");
+        // 4.1.79: Ken's way in: the answer, then the shift, the raid, back to him (each step moved on only from the one before it).
+        check(k.advance(anteiku, GangPlayer.ANTEIKU_SHIFT, GangPlayer.ANTEIKU_RAID) == k && k.advance(anteiku, GangPlayer.ANTEIKU_NOT_YET, GangPlayer.ANTEIKU_SHIFT).anteikuStep() == GangPlayer.ANTEIKU_SHIFT,
+            "nothing moves on before Ken has asked why; the answer, the shift next");
+        k = k.advance(anteiku, GangPlayer.ANTEIKU_NOT_YET, GangPlayer.ANTEIKU_SHIFT);
+        check(k.advance(anteiku, GangPlayer.ANTEIKU_NOT_YET, GangPlayer.ANTEIKU_SHIFT) == k && k.advance(anteiku, GangPlayer.ANTEIKU_RAID, GangPlayer.ANTEIKU_DONE) == k,
+            "answered once; the raid can't be won before the shift");
+        k = k.advance(anteiku, GangPlayer.ANTEIKU_SHIFT, GangPlayer.ANTEIKU_RAID).advance(anteiku, GangPlayer.ANTEIKU_RAID, GangPlayer.ANTEIKU_DONE);
+        check(k.anteikuStep() == GangPlayer.ANTEIKU_DONE && k.step(anteiku) == GangPlayer.ANTEIKU_DONE && !k.member(anteiku), "the shift, the raid: back to Ken");
+        check(GangPlayer.ANTEIKU_SHIFT == 1 && GangPlayer.ANTEIKU_RAID == 2 && GangPlayer.ANTEIKU_DONE == 3, "the saved steps keep their numbers (the beans' 1 is the shift, the doves' 2 the raid)");
         k = k.join(anteiku);
-        check(k.member(anteiku) && k.anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_NOT_YET && k.doveKills() == 0
-            && !k.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI), "joined: Anteiku's");
-        com.hex.kagune.control.npc.GangPlayer left = k.quit();
-        check(left.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && !left.banned(anteiku) && left.anteikuStep() == 0
-            && left.answered().beansBrought().anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_DOVES, "out of Anteiku, never banned; the way in again from the start");
-        com.hex.kagune.control.npc.GangPlayer other = com.hex.kagune.control.npc.GangPlayer.NEW.answered().beansBrought().droveDove();
-        check(other.join(com.hex.kagune.control.npc.GangPlayer.CLOWNS).anteikuStep() == other.anteikuStep() && other.startAogiri().doveKills() == 1
-            && other.killedDove() == other, "another gang's way in leaves Ken's alone, and his leaves theirs");
+        check(k.member(anteiku) && k.anteikuStep() == GangPlayer.ANTEIKU_NOT_YET && k.advance(anteiku, GangPlayer.ANTEIKU_NOT_YET, GangPlayer.ANTEIKU_SHIFT) == k
+            && !k.member(GangPlayer.AOGIRI), "joined: Anteiku's (its way in done with; a member's never moves)");
+        GangPlayer left = k.quit();
+        check(left.gang() == GangPlayer.NONE && !left.banned(anteiku) && left.anteikuStep() == 0
+            && left.advance(anteiku, GangPlayer.ANTEIKU_NOT_YET, GangPlayer.ANTEIKU_SHIFT).anteikuStep() == GangPlayer.ANTEIKU_SHIFT, "out of Anteiku, never banned; the way in again from the start");
+        GangPlayer other = GangPlayer.NEW.advance(anteiku, GangPlayer.ANTEIKU_NOT_YET, GangPlayer.ANTEIKU_SHIFT).advance(anteiku, GangPlayer.ANTEIKU_SHIFT, GangPlayer.ANTEIKU_RAID);
+        check(other.join(GangPlayer.CLOWNS).anteikuStep() == other.anteikuStep() && other.advance(GangPlayer.AOGIRI, GangPlayer.AOGIRI_NOT_YET, GangPlayer.AOGIRI_SPAR).anteikuStep() == GangPlayer.ANTEIKU_RAID
+            && other.advance(GangPlayer.AOGIRI, GangPlayer.AOGIRI_NOT_YET, GangPlayer.AOGIRI_SPAR).aogiriStep() == GangPlayer.AOGIRI_SPAR, "another gang's way in leaves Ken's alone, and his leaves theirs");
         check(com.hex.kagune.control.npc.GangPlayer.named(anteiku, "Ken").equals("§f §6Ken§r") && com.hex.kagune.control.npc.GangPlayer.COFFEE.equals("")
             && com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BROWN == 0xC89B6D, "the coffee cup, a space, the name (plain text's nearest gold; the tag itself light brown)");
         int r = com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BROWN >> 16 & 255;
@@ -755,16 +765,16 @@ public final class NpcTests {
             String hud = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/ReserveHud.java"));
             check(server.contains("|| persona == Persona.KEN || persona == Persona.GENERAL;") && server.contains(": persona == Persona.KEN ? GangPlayer.ANTEIKU : persona == Persona.GENERAL")
                 && server.contains("persona == Persona.KEN || persona == Persona.TOUKA ? GangPlayer.ANTEIKU"), "Ken leads Anteiku; he and Touka are its own (their talk shows the bar)");
-            check(server.contains("return ken(player, g, key, seed); // 4.1.70") && server.indexOf("return ken(player, g, key, seed);") > server.indexOf("return quit(player, g, gang, key, seed);"),
-                "talking with Ken about Anteiku goes through his chain, after the way out");
+            check(server.contains("case GangPlayer.ANTEIKU -> ken(player, npc, g, key, seed); // 4.1.70")
+                && within(server, server.indexOf("return quit(player, g, gang, key, seed);"), "case GangPlayer.ANTEIKU -> ken(", 1400),
+                "talking with Ken about Anteiku goes through his way in, after the way out");
             int ken = server.indexOf("static Said ken(ServerPlayer player");
-            check(ken > 0 && server.indexOf("set(player, g.answered());", ken) > 0 && server.indexOf("takeBeans(player)", ken) > 0
-                && server.indexOf("set(player, g.beansBrought());", ken) > 0 && server.indexOf("if (!g.anteikuDone()) {", ken) > 0
-                && server.indexOf("set(player, g.join(gang));", ken) > server.indexOf("if (!g.anteikuDone()) {", ken), "Ken's chain in order: why, the beans, the investigators, in");
+            check(ken > 0 && within(server, ken, "return welcome(player, npc, GangPlayer.ANTEIKU, g, seed);", 300)
+                && within(server, ken, "moved(player, g, GangPlayer.ANTEIKU, GangPlayer.ANTEIKU_NOT_YET, GangPlayer.ANTEIKU_SHIFT);", 900),
+                "Ken's way in: done, the scene; the right answer, the shift");
             check(com.hex.kagune.control.npc.GangWords.KEN_RIGHT == 2 && com.hex.kagune.control.npc.GangWords.KEN_WHY[2].startsWith("So I don't turn into a monster.")
-                && server.contains("if (said == com.hex.kagune.control.npc.GangWords.KEN_RIGHT) {\n                    set(player, g.answered());"),
+                && server.contains("if (said == com.hex.kagune.control.npc.GangWords.KEN_RIGHT) {\n                moved(player, g, GangPlayer.ANTEIKU,"),
                 "the reason Anteiku takes is the third, and it is Anteiku's own");
-            check(server.contains("now = now.droveDove(); // 4.1.70") && server.contains("investigator.identity().ccg()"), "an investigator of either kind counts for Ken");
             check(server.contains(".m_7220_(Component.m_237113_(name).m_6270_(") && server.contains("net.minecraft.network.chat.Style.f_131099_.m_178520_(GangPlayer.ANTEIKU_BROWN)")
                 && server.contains("event.setDisplayname(nameTag(gang, event.getDisplayname().getString()));"), "the tag: the cup, then the name in Anteiku's own light brown");
             check(server.contains("if (gang != GangPlayer.AOGIRI && gang != GangPlayer.CLOWNS && gang != GangPlayer.GAS_MASKS"),
@@ -886,18 +896,16 @@ public final class NpcTests {
         int ccg = com.hex.kagune.control.npc.GangPlayer.CCG;
         com.hex.kagune.control.npc.GangPlayer g = com.hex.kagune.control.npc.GangPlayer.NEW;
         check(ccg == 5 && com.hex.kagune.control.npc.GangPlayer.title(ccg).equals("the CCG"), "the CCG: gang 5");
-        check(g.killedGhoul().ghoulKills() == 0 && g.ccgDone() == false, "no ghoul counts before the General has asked why");
-        g = g.sworn();
-        check(g.generalStep() == com.hex.kagune.control.npc.GangPlayer.CCG_GHOULS && g.sworn() == g, "answered as the bureau would: ghouls next (once)");
-        for (int i = 0; i < 4; i++) {
-            g = g.killedGhoul();
-        }
-        check(g.ghoulKills() == 4 && !g.ccgDone() && g.killedGhoul().ccgDone() && com.hex.kagune.control.npc.GangPlayer.CCG_GHOUL_COUNT == 5,
-            "five ghouls, then sworn in");
-        g = g.killedGhoul();
-        check(g.killedGhoul() == g, "done: no more counted");
+        // 4.1.79: the oath, the academy's test, the hunt with a partner, sworn in (2 stays "done", as saved; the hunt, new, is 3).
+        check(g.advance(ccg, GangPlayer.CCG_EXAM, GangPlayer.CCG_HUNT) == g, "no test before the General has asked why");
+        g = g.advance(ccg, GangPlayer.CCG_NOT_YET, GangPlayer.CCG_EXAM);
+        check(g.generalStep() == GangPlayer.CCG_EXAM && g.advance(ccg, GangPlayer.CCG_NOT_YET, GangPlayer.CCG_EXAM) == g
+            && g.advance(ccg, GangPlayer.CCG_HUNT, GangPlayer.CCG_DONE) == g, "answered as the bureau would: the test next (once); no hunt before it");
+        g = g.advance(ccg, GangPlayer.CCG_EXAM, GangPlayer.CCG_HUNT).advance(ccg, GangPlayer.CCG_HUNT, GangPlayer.CCG_DONE);
+        check(g.generalStep() == GangPlayer.CCG_DONE && GangPlayer.CCG_DONE == 2 && GangPlayer.CCG_EXAM == 1 && GangPlayer.CCG_HUNT == 3,
+            "the test, the hunt, then sworn in (a player saved done stays done)");
         com.hex.kagune.control.npc.GangPlayer in = g.join(ccg);
-        check(in.member(ccg) && in.generalStep() == 0 && in.ghoulKills() == 0 && !in.member(com.hex.kagune.control.npc.GangPlayer.ANTEIKU), "sworn in: the CCG's");
+        check(in.member(ccg) && in.generalStep() == 0 && !in.member(com.hex.kagune.control.npc.GangPlayer.ANTEIKU), "sworn in: the CCG's");
         com.hex.kagune.control.npc.GangPlayer out = in.quit();
         check(out.gang() == 0 && !out.banned(ccg) && out.generalStep() == 0, "resigned: never banned; the way in from the start");
         com.hex.kagune.control.npc.GangPlayer banned = in;
@@ -905,9 +913,10 @@ public final class NpcTests {
             banned = banned.killedOwn();
         }
         check(banned.gang() == 0 && banned.banned(ccg), "past ten of their own (investigators or the division), banned as every gang");
-        com.hex.kagune.control.npc.GangPlayer half = com.hex.kagune.control.npc.GangPlayer.NEW.answered().beansBrought().sworn().killedGhoul();
-        check(half.anteikuStep() == com.hex.kagune.control.npc.GangPlayer.ANTEIKU_DOVES && half.ghoulKills() == 1 && half.join(ccg).anteikuStep() == half.anteikuStep()
-            && half.join(com.hex.kagune.control.npc.GangPlayer.ANTEIKU).ghoulKills() == 1, "Ken's way in and the General's keep apart");
+        GangPlayer half = GangPlayer.NEW.advance(GangPlayer.ANTEIKU, 0, GangPlayer.ANTEIKU_SHIFT).advance(GangPlayer.ANTEIKU, GangPlayer.ANTEIKU_SHIFT,
+            GangPlayer.ANTEIKU_RAID).advance(ccg, 0, GangPlayer.CCG_EXAM);
+        check(half.anteikuStep() == GangPlayer.ANTEIKU_RAID && half.generalStep() == GangPlayer.CCG_EXAM && half.join(ccg).anteikuStep() == half.anteikuStep()
+            && half.join(GangPlayer.ANTEIKU).generalStep() == GangPlayer.CCG_EXAM, "Ken's way in and the General's keep apart");
         check(com.hex.kagune.control.npc.GangPlayer.named(ccg, "Ken").equals("§f §bKen§r") && com.hex.kagune.control.npc.GangPlayer.BRIEFCASE.equals(""),
             "the quinque case, a space, the name (plain text's nearest aqua; the tag itself cyan blue)");
         int r = com.hex.kagune.control.npc.GangPlayer.CCG_CYAN >> 16 & 255;
@@ -940,10 +949,11 @@ public final class NpcTests {
             check(server.contains("|| persona == Persona.GENERAL;") && server.contains(": persona == Persona.GENERAL ? GangPlayer.CCG // 4.1.71"),
                 "the General leads the CCG and gives its dailies");
             int general = server.indexOf("static Said general(ServerPlayer player");
-            check(general > 0 && server.indexOf("set(player, g.sworn());", general) > 0 && server.indexOf("if (!g.ccgDone()) {", general) > 0
-                && server.indexOf("set(player, g.join(gang));", general) > server.indexOf("if (!g.ccgDone()) {", general), "the General's chain in order: why, five ghouls, sworn in");
-            check(server.contains("now = now.killedGhoul(); // 4.1.71") && server.contains("dead instanceof com.hex.kagune.control.npc.CcgAgent && was.member(GangPlayer.CCG)"),
-                "a ghoul counts for the General; an investigator killed is one of a member's own");
+            check(general > 0 && within(server, general, "return welcome(player, npc, GangPlayer.CCG, g, seed);", 300)
+                && within(server, general, "return exam(player, g, key, seed);", 500)
+                && within(server, general, "moved(player, g, GangPlayer.CCG, GangPlayer.CCG_NOT_YET, GangPlayer.CCG_EXAM);", 1000),
+                "the General's way in: done, sworn in; the test; the oath, then the test");
+            check(server.contains("dead instanceof com.hex.kagune.control.npc.CcgAgent && was.member(GangPlayer.CCG)"), "an investigator killed is one of a member's own");
             check(server.contains("by = AgentBrain.ccg(dead) ? -GangStanding.KILL_OWN : who != null ? GangStanding.KILL_RIVAL : 0;"),
                 "a member's reputation: up for ghouls, down a lot for the CCG");
             check(server.contains("net.minecraft.network.chat.Style.f_131099_.m_178520_(GangPlayer.CCG_CYAN)"), "the tag: the case, then the name in cyan blue");
@@ -967,58 +977,357 @@ public final class NpcTests {
         }
     }
 
-    static void joining() {
-        com.hex.kagune.control.npc.GangPlayer g = com.hex.kagune.control.npc.GangPlayer.NEW;
-        check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.killedDove().ccgKills() == 0, "no quest, no count");
-        g = g.startAogiri();
-        for (int i = 0; i < 4; i++) {
-            g = g.killedDove();
+    /**
+     * 4.1.79 (the plan the owner approved: "the gangs' joining. Each chain 3 to 4 steps, each a different kind, a trial of its own, a scene with
+     * the leader at the end"): the trials' rules (JoinTrial), their words (JoinVoice), and how the server holds them (JoinServer, the brains,
+     * the talk).
+     */
+    static void trials() {
+        int[][] orders = {{GangPlayer.AOGIRI, 0, GangPlayer.AOGIRI_SPAR, GangPlayer.AOGIRI_AMBUSH, GangPlayer.AOGIRI_DONE},
+            {GangPlayer.CLOWNS, 0, GangPlayer.CLOWN_RING, GangPlayer.CLOWN_JOB, GangPlayer.CLOWN_CASE},
+            {GangPlayer.GAS_MASKS, 0, GangPlayer.GAS_WALK, GangPlayer.GAS_RAID, GangPlayer.GAS_DONE},
+            {GangPlayer.ANTEIKU, 0, GangPlayer.ANTEIKU_SHIFT, GangPlayer.ANTEIKU_RAID, GangPlayer.ANTEIKU_DONE},
+            {GangPlayer.CCG, 0, GangPlayer.CCG_EXAM, GangPlayer.CCG_HUNT, GangPlayer.CCG_DONE}};
+        java.util.Set<JoinTrial.Kind> seen = java.util.EnumSet.noneOf(JoinTrial.Kind.class);
+        for (int[] order : orders) {
+            int gang = order[0];
+            check(JoinTrial.afterTalk(gang) == order[2], "the first answer (or Ayato's ask) moves " + GangPlayer.title(gang) + " on to its second step");
+            java.util.Set<Object> kinds = new java.util.HashSet<>();
+            int trials = 0;
+            for (int i = 1; i < order.length; i++) {
+                JoinTrial.Kind kind = JoinTrial.of(gang, order[i]);
+                kinds.add(kind == null ? "step " + order[i] : kind);
+                check(!JoinTrial.goal(gang, order[i]).isEmpty() || order[i] == 0, "every step past the first says what it asks: " + GangPlayer.title(gang) + " " + order[i]);
+                if (kind != null) {
+                    trials++;
+                    seen.add(kind);
+                    check(JoinTrial.gang(kind) == gang && JoinTrial.step(kind) == order[i] && i + 1 < order.length && JoinTrial.after(kind) == order[i + 1],
+                        kind + ": " + GangPlayer.title(gang) + "'s, held at its step, won moves on to the next");
+                }
+            }
+            check(kinds.size() == order.length - 1 && trials >= 1, GangPlayer.title(gang) + ": each step a different kind, at least one a live trial");
+            check(JoinTrial.of(gang, 0) == null, "the first ask is a talk, never a trial");
         }
-        check(g.aogiriQuest() && !g.aogiriDone() && g.killedDove().aogiriDone(), "Aogiri's quest: five of the CCG");
-        g = g.killedDove().join(com.hex.kagune.control.npc.GangPlayer.AOGIRI);
-        check(g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && !g.aogiriQuest() && g.ownKills() == 0, "joined: Aogiri's");
+        check(seen.size() == JoinTrial.Kind.values().length, "every trial is some gang's step");
+        check(JoinTrial.of(GangPlayer.AOGIRI, GangPlayer.AOGIRI_SPAR) == JoinTrial.Kind.SPAR && JoinTrial.of(GangPlayer.CLOWNS, GangPlayer.CLOWN_RING) == JoinTrial.Kind.RING
+            && JoinTrial.of(GangPlayer.GAS_MASKS, GangPlayer.GAS_RAID) == JoinTrial.Kind.GATE && JoinTrial.of(GangPlayer.ANTEIKU, GangPlayer.ANTEIKU_RAID) == JoinTrial.Kind.CAFE
+            && JoinTrial.of(GangPlayer.CCG, GangPlayer.CCG_HUNT) == JoinTrial.Kind.HUNT && JoinTrial.of(GangPlayer.CCG, GangPlayer.CCG_EXAM) == null,
+            "the plan: Ayato's spar, Roma's ring, the gate, the café's raid, the hunt; the academy's test is talk");
+        // Ayato's spar: a duel that ends at low health, never a death.
+        check(JoinTrial.clamp(20.0F, 20.0F, 5.0F, 0.25F) == 5.0F && JoinTrial.clamp(8.0F, 20.0F, 5.0F, 0.25F) == 3.0F
+            && JoinTrial.clamp(5.0F, 20.0F, 3.0F, 0.25F) == 0.0F && JoinTrial.clamp(40.0F, 40.0F, 100.0F, 0.5F) == 20.0F,
+            "a blow lands whole above the floor; one that would go under it lands to the floor only");
+        float hp = 20.0F;
+        for (int blow = 0; blow < 40; blow++) {
+            hp -= JoinTrial.clamp(hp, 20.0F, 1.0F + blow % 7, JoinTrial.SPAR_FLOOR);
+            check(hp >= 20.0F * JoinTrial.SPAR_FLOOR - 0.001F && hp > 0.0F, "no run of Ayato's blows takes them under a quarter (never dead)");
+        }
+        check(JoinTrial.reached(hp, 20.0F, JoinTrial.SPAR_FLOOR) && JoinTrial.reached(5.0F, 20.0F, 0.25F) && !JoinTrial.reached(5.1F, 20.0F, 0.25F),
+            "brought to the floor: it is reached");
+        check(JoinTrial.SPAR_FLOOR == 0.25F && JoinTrial.SPAR_WIN == 0.5F && JoinTrial.SPAR_WIN > JoinTrial.SPAR_FLOOR && JoinTrial.SPAR_COUNTDOWN == 60
+            && JoinTrial.SPAR_TICKS == 2400, "half of him before a quarter of them; three seconds' count, two minutes at most");
+        // The ambush.
+        check(!JoinTrial.calledIn(Long.MIN_VALUE, 1000000L) && !JoinTrial.calledIn(100L, 700L) && JoinTrial.calledIn(100L, 701L) && JoinTrial.AMBUSH_CLOCK == 600,
+            "no clock before the first blow; both down within thirty seconds of it, or they call it in");
+        check(JoinTrial.AMBUSH_SIZE == 2 && JoinTrial.AMBUSH_NEAR >= 32.0 && JoinTrial.AMBUSH_FAR > JoinTrial.AMBUSH_NEAR, "the patrol: the CCG's pair, out of sight");
+        // The ring.
+        check(JoinTrial.showtime(13000L) && !JoinTrial.showtime(12999L) && JoinTrial.showtime(22999L) && !JoinTrial.showtime(23000L)
+            && JoinTrial.showtime(24000L * 5L + 18000L) && !JoinTrial.showtime(24000L * 5L + 6000L), "shows are at night");
+        check(JoinTrial.RING_ACTS == 3 && JoinTrial.RING_ACT == 600 && JoinTrial.RING_IN_FAR < JoinTrial.RING_REACH && JoinTrial.RING_TOP_TIER <= 1,
+            "three volunteers, thirty seconds each, stepping in on the stage; none over C rank");
+        // The gas.
+        check(!JoinTrial.gasStarts(15.9) && JoinTrial.gasStarts(16.0) && JoinTrial.gasStarts(48.0) && !JoinTrial.gasStarts(48.1),
+            "the gas starts out past the gate, in reach of it");
+        check(JoinTrial.GAS_REACHED < JoinTrial.GAS_START && JoinTrial.GAS_TICKS == 1200, "to Banjou within a minute of it starting");
+        // The gate.
+        check(JoinTrial.nextWave(0, 0, 0L) && !JoinTrial.nextWave(1, 3, 899L) && JoinTrial.nextWave(1, 0, 10L) && JoinTrial.nextWave(1, 2, 900L)
+            && !JoinTrial.nextWave(2, 0, 5000L), "the first wave at once; the next when it is down or after 45 s; never a third");
+        check(JoinTrial.GATE_WAVES == 2 && JoinTrial.GATE_WAVE == 3 && JoinTrial.GATE_NEAR > Math.hypot(28.0, 19.0) / 2.0
+            && JoinTrial.GATE_ZONE >= JoinTrial.GATE_FAR, "two waves of three, coming from outside the walls; the gate's ground takes them in");
+        // The shift.
+        check(!JoinTrial.shiftLost(1) && JoinTrial.shiftLost(2) && JoinTrial.SHIFT_CUSTOMERS == 3 && JoinTrial.SHIFT_PATIENCE == 1200,
+            "three regulars served; two walking out loses the shift; a minute each");
+        com.hex.kagune.control.kitchen.Dish blend = null;
+        for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
+            if (("hexkagune:" + dish.id()).equals(JoinTrial.CUP)) {
+                blend = dish;
+            }
+        }
+        check(blend != null && blend.kind() == com.hex.kagune.control.kitchen.Dish.Kind.DRINK && blend.makes() == 1, "the cup served is the cookbook's Anteiku Blend");
+        if (blend != null) {
+            Map<String, Integer> need = new java.util.HashMap<>();
+            for (String ingredient : blend.recipe().ingredients()) {
+                need.merge(ingredient, JoinTrial.SHIFT_CUSTOMERS, Integer::sum);
+            }
+            Map<String, Integer> given = new java.util.HashMap<>();
+            for (String[] making : JoinTrial.MAKINGS) {
+                given.put(making[0], Integer.parseInt(making[1]));
+            }
+            check(need.equals(given), "Ken's makings brew exactly three blends, by the cookbook's own recipe: " + need + " / " + given);
+        }
+        // The café's raid.
+        check(!JoinTrial.breaks(0.0F, 20.0F) && !JoinTrial.breaks(-3.0F, 20.0F) && JoinTrial.breaks(8.0F, 20.0F) && !JoinTrial.breaks(8.1F, 20.0F)
+            && JoinTrial.breaks(1.0F, 20.0F) && JoinTrial.CAFE_BREAK == 0.4F && JoinTrial.CAFE_RAIDERS == 3,
+            "an investigator left alive at two fifths or under breaks off; a dead one never did");
+        // The hunt.
+        check(JoinTrial.HUNT_NEAR >= 40.0 && JoinTrial.HUNT_FAR > JoinTrial.HUNT_NEAR && JoinTrial.HUNT_TOP_TIER <= 3 && JoinTrial.PARTNER_CLOSE < 6.0,
+            "the reported ghoul out of sight, A rank at most; the partner at their side");
+        // The academy's test.
+        java.util.Set<Integer> asked = new java.util.HashSet<>();
+        java.util.Set<String> firsts = new java.util.HashSet<>();
+        for (long day = 0; day < 200; day++) {
+            for (long mine = -3; mine < 3; mine++) {
+                int[] drawn = JoinTrial.draw(day, mine * 7919L);
+                check(drawn.length == JoinTrial.EXAM_ASKED && drawn[0] != drawn[1] && drawn[1] != drawn[2] && drawn[0] != drawn[2],
+                    "three questions, all different");
+                for (int q : drawn) {
+                    check(q >= 0 && q < JoinTrial.QUESTIONS.length, "a question of the academy's");
+                    asked.add(q);
+                }
+                firsts.add(drawn[0] + "," + drawn[1] + "," + drawn[2]);
+            }
+        }
+        check(asked.size() == JoinTrial.QUESTIONS.length && firsts.size() > 100 && JoinTrial.QUESTIONS.length >= 3 * JoinTrial.EXAM_ASKED,
+            "every question comes up; the sittings differ day to day and player to player");
+        check(java.util.Arrays.equals(JoinTrial.draw(9L, 4L), JoinTrial.draw(9L, 4L)), "the same sitting all day (a page closed and opened again)");
+        for (JoinTrial.Question q : JoinTrial.QUESTIONS) {
+            check(!q.asked().isEmpty() && !q.right().equals(q.wrong1()) && !q.right().equals(q.wrong2()) && !q.wrong1().equals(q.wrong2())
+                && q.answer(0).equals(q.right()), "a question with three different answers, the right one first: " + q.asked());
+        }
+        check(JoinTrial.right(0) && !JoinTrial.right(1) && !JoinTrial.right(2) && !JoinTrial.right(-1), "only the right one is right");
+        check(!JoinTrial.maySit(40L, 40L) && JoinTrial.maySit(41L, 40L) && JoinTrial.maySit(40L, Long.MIN_VALUE), "one wrong and it is sat again tomorrow");
+        check(JoinTrial.way(0.0, -42.0).equals("42 blocks north") && JoinTrial.way(30.0, 30.0).equals("42 blocks south-east") && JoinTrial.way(2.0, 2.0).equals("here")
+            && JoinTrial.way(-10.0, 0.0).equals("10 blocks west") && JoinTrial.way(20.0, -20.0).equals("28 blocks north-east"), "the way said as the game's compass has it");
+        check(JoinTrial.clock(1300L).equals("1:05") && JoinTrial.clock(0L).equals("0:00") && JoinTrial.clock(-5L).equals("0:00") && JoinTrial.clock(19L).equals("0:01"),
+            "the time left, minutes and seconds");
+        // Their words.
+        String[] moments = {"offer", "start", "on", "won", "lost", "draw", "fled", "died", "called", "slow", "booed", "masked", "walked", "killed", "partner", "night"};
+        java.util.Set<String> offers = new java.util.HashSet<>();
+        java.util.Set<String> buttons = new java.util.HashSet<>();
+        for (JoinTrial.Kind kind : JoinTrial.Kind.values()) {
+            for (String moment : moments) {
+                for (int seed = 0; seed < 4; seed++) {
+                    String line = JoinVoice.say(kind, moment, seed);
+                    check(line != null && line.length() > 8 && !line.contains("null"), "a line for " + kind + " " + moment);
+                }
+            }
+            offers.add(JoinVoice.say(kind, "offer", 0));
+            buttons.add(JoinVoice.start(kind));
+            check(!JoinVoice.say(kind, "offer", 0).equals(JoinVoice.say(kind, "start", 0)) && !JoinVoice.say(kind, "won", 0).equals(JoinVoice.say(kind, "died", 0)),
+                kind + ": offered, begun, won and lost each in their own words");
+            check(JoinVoice.ask(kind).endsWith("...") && JoinVoice.start(kind).length() < 40, kind + ": its buttons short");
+        }
+        check(offers.size() == JoinTrial.Kind.values().length && buttons.size() == JoinTrial.Kind.values().length, "every trial put and begun in words of its own");
+        check(JoinVoice.say(JoinTrial.Kind.SPAR, "start", 0).contains("Three... two...") && JoinVoice.say(JoinTrial.Kind.CAFE, "offer", 0).contains("don't kill")
+            && JoinVoice.say(JoinTrial.Kind.GAS, "offer", 0).contains("No mask") && JoinVoice.say(JoinTrial.Kind.HUNT, "offer", 0).contains("partner back alive"),
+            "each trial's rule said by its leader");
+        java.util.Set<String> scenes = new java.util.HashSet<>();
+        for (int gang = 1; gang <= 5; gang++) {
+            scenes.add(JoinVoice.scene(gang, 0));
+        }
+        check(scenes.size() == 5 && JoinVoice.scene(GangPlayer.AOGIRI, 0).contains("Aogiri") && JoinVoice.scene(GangPlayer.ANTEIKU, 0).contains("Anteiku")
+            && JoinVoice.scene(GangPlayer.CCG, 0).contains("Investigator"), "a scene of their own for each leader");
+        for (String moment : new String[] {"job", "job_on", "case"}) {
+            check(!JoinVoice.roma(moment, 1).isEmpty(), "Roma's job: " + moment);
+        }
+        for (String moment : new String[] {"exam", "next", "failed", "passed", "today"}) {
+            check(!JoinVoice.general(moment, 1).isEmpty(), "the General's test: " + moment);
+        }
+        check(JoinVoice.roma("job", 0).contains("mask") && JoinVoice.general("failed", 0).contains("omorrow"), "the job in her face; tomorrow after a fail");
+        {
+            String join = read("src/main/java/com/hex/kagune/control/server/JoinServer.java");
+            String gangs = read("src/main/java/com/hex/kagune/control/server/GangServer.java");
+            String eto = read("src/main/java/com/hex/kagune/control/server/EtoBrain.java");
+            String agents = read("src/main/java/com/hex/kagune/control/server/AgentBrain.java");
+            String ghouls = read("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java");
+            String talk = read("src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java");
+            String etoServer = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+            // The spar.
+            int hurt = join.indexOf("public static void hurt(LivingHurtEvent event) {");
+            check(join.contains("@SubscribeEvent(priority = EventPriority.LOWEST)\n    public static void hurt(LivingHurtEvent event) {"),
+                "the spar's blows are held last of all (what lands, as every other handler leaves it)");
+            check(within(join, hurt, "JoinTrial.clamp(player.m_21223_(), player.m_21233_(), event.getAmount(), JoinTrial.SPAR_FLOOR);", 700)
+                && within(join, hurt, "end(player, live, false, \"lost\");", 1000), "Ayato's blows never take them under the floor; the one that would, loses it");
+            check(within(join, hurt, "JoinTrial.clamp(npc.m_21223_(), npc.m_21233_(), event.getAmount(), JoinTrial.SPAR_WIN);", 1700)
+                && within(join, hurt, "end(player, live, true, \"won\");", 2000), "theirs never take him under half; the one that would, wins it");
+            check(within(join, hurt, "event.setAmount(0.0F); // not yet", 1500), "no blow lands on him during the count");
+            check(eto.contains("partnerOf(mind, player) && !JoinServer.sparring(player, npc)))) {")
+                && eto.contains("(!partnerOf(mind, player) || JoinServer.sparring(player, npc)) && !spared(player, npc)")
+                && eto.contains("if (attacker instanceof ServerPlayer player && !JoinServer.sparring(player, npc)) {"),
+                "a spar: fought though his partner; no regard lost, no grudge kept for its blows");
+            check(join.contains("leader.m_21153_(leader.m_21233_()); // a fair fight") && join.contains("if (player.m_21223_() < player.m_21233_() * 0.5F) {"),
+                "he starts it whole; not with someone half dead");
+            int over = join.indexOf("static void end(ServerPlayer player, Live live, boolean won, String moment) {");
+            check(within(join, over, "ayato.mind.grudges.remove(player.m_20148_());", 1200) && within(join, over, "ayato.mind.target = 0;", 1200),
+                "the spar over: he lets them go, nothing held against them");
+            check(within(join, over, "g.advance(gang, JoinTrial.step(live.kind), JoinTrial.after(live.kind));", 1800)
+                && within(join, over, "clear(level, live, now);", 600), "won, the way in moves on (only from its own step); either way its bodies go");
+            // The ambush.
+            int ambush = join.indexOf("static void ambush(ServerPlayer player, Live live, ServerLevel level, long now) {");
+            check(within(join, ambush, "if (JoinTrial.calledIn(live.first, now)) {\n            end(player, live, false, \"called\");", 400)
+                && within(join, hurt, "live.first = player.m_9236_().m_46467_(); // the first blow", 3500)
+                && within(join, ambush, "if (live.marked.isEmpty()) {\n            end(player, live, true, \"won\");", 200),
+                "the first blow starts the clock; both down, won; too slow, they call it in");
+            // The ring.
+            int start = join.indexOf("static String start(ServerPlayer player, EtoNpc leader, JoinTrial.Kind kind, int seed) {");
+            check(within(join, start, "if (!JoinTrial.showtime(level.m_46468_())) {\n                    return JoinVoice.say(kind, \"night\", seed);", 2400),
+                "no show by day");
+            int ring = join.indexOf("static void ring(ServerPlayer player, Live live, ServerLevel level, long now) {");
+            check(within(join, ring, "distance(player, live.anchor) > JoinTrial.RING_REACH, JoinTrial.RING_OUT)", 300)
+                && within(join, ring, "if (now - live.currentAt > JoinTrial.RING_ACT) {\n                end(player, live, false, \"booed\");", 1000)
+                && within(join, ring, "Math.min(rolled.tier(), JoinTrial.RING_TOP_TIER)", 2600), "off the stage, over; an act too long, booed; volunteers C rank at most");
+            // The gas.
+            int gas = join.indexOf("static void gas(ServerPlayer player, Live live, ServerLevel level, long now) {");
+            check(within(join, gas, "if (JoinTrial.gasStarts(from)) {", 500) && within(join, gas, "if (GangServer.gasMaskOn(player)) {\n            end(player, live, false, \"masked\");", 1200)
+                && within(join, gas, "if (from <= JoinTrial.GAS_REACHED) {", 1400) && within(join, gas, "MobEffects.f_19614_, 50, 0", 2400),
+                "the gas starts past the gate; a gas mask on loses it; reaching him wins; poison while in it");
+            // The gate.
+            int gate = join.indexOf("static void gate(ServerPlayer player, Live live, ServerLevel level, long now) {");
+            check(within(join, gate, "if (JoinTrial.nextWave(live.wave, standing, now - live.waveAt)) {", 500)
+                && within(join, gate, "if (live.wave >= JoinTrial.GATE_WAVES && standing == 0) {", 1300), "the waves; all down, the gate held");
+            check(join.contains("NpcIdentity.roll(mastery, () -> player.m_217043_().m_188500_()).ganged(gang, faces[i]);")
+                && join.contains("com.hex.kagune.control.npc.Gang gang = com.hex.kagune.control.npc.Gang.CLOWNS;"), "the raid is the Clowns (rivals of the Gas Masks on sight)");
+            // The shift.
+            int serve = join.indexOf("static boolean serve(ServerPlayer player, GhoulNpc npc) {");
+            check(within(join, serve, "held.m_41720_() != cup", 600) && within(join, serve, "held.m_41774_(1);", 1000) && within(join, serve, "live.done++;", 1300),
+                "a regular served only a cup of the blend, taken from the hand");
+            check(talk.contains("if (JoinServer.serve(player, npc)) {\n                return;") && talk.indexOf("JoinServer.serve(player, npc)") < talk.indexOf("open(player, npc);\n        }"),
+                "a right click on a waiting regular serves before any talk opens");
+            check(within(join, join.indexOf("case SHIFT -> {"), "makings(player);", 80) && join.contains("kept.m_128454_(MAKINGS_DAY) == today"),
+                "Ken hands over the makings, once a day");
+            check(ghouls.contains("calm(npc, mind, now, false);\n        // 4.1.79: a regular of Anteiku's shift waits at their seat for their cup.\n        if (JoinServer.held(npc, level, now)) {"),
+                "a regular waits at their seat");
+            // The café's raid.
+            int died = join.indexOf("public static void died(LivingDeathEvent event) {");
+            check(within(join, died, "case CAFE -> {\n                    if (theirs) {\n                        end(player, live, false, \"killed\");", 3000),
+                "an investigator of the raid killed by them loses it");
+            check(within(join, hurt, "JoinTrial.breaks(hurt.m_21223_() - event.getAmount(), hurt.m_21233_())", 3000)
+                && join.contains("if (OWNER.containsKey(event.getEntity().m_20148_()) && event.getEntity().getPersistentData().m_128471_(BROKE)) {\n            event.setCanceled(true);"),
+                "one left low breaks off, and nothing lands on him as he goes");
+            // The hunt.
+            check(within(join, died, "if (id.equals(live.partner)) {\n                        end(player, live, false, \"partner\");", 3600)
+                && within(join, died, "} else if (id.equals(live.target)) {", 3800), "the partner dead, lost; the target dead, won");
+            int single = join.indexOf("static CcgAgent single(ServerLevel level, double x, double z, ServerPlayer player) {");
+            check(within(join, single, "saveAlone(agent, player);", 300) && join.contains("AgentBrain.save(agent, com.hex.kagune.control.npc.AgentRules.regularLook(") && join.contains(".m_188500_()), true, null);"),
+                "a lone investigator is saved before he wakes (no partner of his own made for him)");
+            int wanted = agents.indexOf("static boolean wanted(CcgAgent agent");
+            check(within(agents, wanted, "if (body instanceof ServerPlayer player && JoinServer.partnered(agent, player)) {\n            return false;", 800)
+                && agents.indexOf("JoinServer.partnered(agent, player)", wanted) < agents.indexOf("Long until = mind.grudges.get(body.m_20148_());", wanted),
+                "the partner never goes for the one he was assigned to (before any mark or grudge)");
+            check(agents.contains("if (JoinServer.partnerWalk(agent, level, now)) {\n            return;"), "the partner keeps at their side");
+            // The bodies.
+            check(ghouls.contains("&& JoinServer.orphan(npc)) {\n            npc.m_146870_();") && agents.contains("&& JoinServer.orphan(agent)) {\n            agent.m_146870_();"),
+                "a trial's body with no trial live is taken away (a restart, a trial lost while it lay unloaded)");
+            check(ghouls.contains("who.gang() == 0 && !JoinServer.marked(npc);") && ghouls.contains("|| npc.m_21532_() || JoinServer.marked(npc)) {"),
+                "a volunteer or the reported ghoul neither hides by day nor slips away at dawn");
+            check(join.contains("return marked(body) && !OWNER.containsKey(body.m_20148_());"), "an orphan: marked, and no trial owns it");
+            // The talk.
+            check(gangs.contains("return trial(player, npc, kind, key, seed); // 4.1.79") && etoServer.contains("GangServer.talk(player, npc, npc.persona(), key, c.seed());"),
+                "a step that is a trial is offered, begun and asked about through the leader's talk");
+            int exam = gangs.indexOf("static Said exam(ServerPlayer player, GangPlayer g, String key, int seed) {");
+            check(within(gangs, exam, "if (!com.hex.kagune.control.npc.JoinTrial.right(answer)) {\n                JoinServer.failed(player);", 600)
+                && within(gangs, exam, "if (state[3] >= com.hex.kagune.control.npc.JoinTrial.EXAM_ASKED) {", 1200)
+                && within(gangs, exam, "moved(player, g, GangPlayer.CCG, GangPlayer.CCG_EXAM, GangPlayer.CCG_HUNT);", 1400),
+                "a wrong answer fails the test till tomorrow; three right, the hunt");
+            check(gangs.contains("if (investigator && clownMaskOn(player)) {\n                // 4.1.79: the Clowns' job")
+                && gangs.contains("now = now.advance(GangPlayer.CLOWNS, GangPlayer.CLOWN_JOB, GangPlayer.CLOWN_CASE);"),
+                "Roma's job counts only in one of the Clowns' masks");
+            check(gangs.contains("int aogiri = k.m_128441_(AOGIRI_STEP) ? k.m_128451_(AOGIRI_STEP) : GangPlayer.aogiriFrom(k.m_128471_(AOGIRI_QUEST), k.m_128451_(CCG));")
+                && gangs.contains("k.m_128405_(AOGIRI_STEP, g.aogiriStep());"), "Aogiri's step kept, and read from 4.1.50's quest for a player saved before");
+            int welcome = gangs.indexOf("static Said welcome(ServerPlayer player, EtoNpc npc, int gang, GangPlayer g, int seed) {");
+            check(within(gangs, welcome, "set(player, g.join(gang));", 200) && within(gangs, welcome, "EtoBrain.gesture(npc.mind, sceneGesture(gang),", 600)
+                && within(gangs, welcome, "return new Said(com.hex.kagune.control.npc.JoinVoice.scene(gang, seed), null);", 1200),
+                "the end of every way in: the leader's scene (their move, their words) as they join");
+            check(gangs.split("return welcome\\(player, npc, GangPlayer\\.", -1).length == 6, "all five ways in end in the scene");
+            check(join.contains("NpcTemper.DRIFTER, Math.min(rolled.tier(), JoinTrial.RING_TOP_TIER)"),
+                "a volunteer is a drifter: it hunts no other ghoul (never Roma's Clowns about the tent)");
+            int march = join.indexOf("static void march(ServerLevel level, Live live, ServerPlayer player) {");
+            check(within(join, march, "ghoul.mind.prey == 0 && ghoul.mind.leavingAt == Long.MIN_VALUE", 500) && within(join, march, "agent.mind.prey == 0", 900)
+                && within(join, gate, "march(level, live, player);", 2200) && within(join, join.indexOf("static void cafe(ServerPlayer player"), "march(level, live, player);", 1500),
+                "the raid's bodies with nothing to fight march on them (the gate's Clowns, the café's investigators)");
+            int huntAt = join.indexOf("static boolean hunt(ServerLevel level, ServerPlayer player, Live live) {");
+            check(within(join, huntAt, "BlockPos beside = floor(level, feet, 1.5, 3.5, false, false, player);", 1800)
+                && within(join, huntAt, "partner = AgentSpawner.placeAt(level, beside.m_123341_(), beside.m_123342_(), beside.m_123343_());", 2000),
+                "the partner made on their own floor (the General's office is up in the tower)");
+            check(gangs.contains("kept(player).m_128473_(JoinServer.LENT);") && within(gangs, gangs.indexOf("private static void joined("), "!kept(player).m_128471_(JoinServer.LENT)", 300),
+                "Roma's lent mask is theirs once in (no second one), and the loan forgotten for a way in begun again");
+            check(gangs.contains("\"A DOVE? In my circus?") && gangs.contains("\"Anteiku? The coffee people? Cute."),
+                "Roma answers one of Anteiku or the CCG as what they are (not as a Gas Mask)");
+            check(!join.isEmpty() && !gangs.isEmpty() && !eto.isEmpty() && !agents.isEmpty() && !ghouls.isEmpty() && !talk.isEmpty() && !etoServer.isEmpty(),
+                "read the trials' files");
+        }
+    }
+
+    static void joining() {
+        // 4.1.79: Ayato's way in: the spar, the ambush, back to him; a player saved mid 4.1.50's "Kill 5 CCG" read sensibly.
+        GangPlayer g = GangPlayer.NEW;
+        int aogiri = GangPlayer.AOGIRI;
+        check(!g.member(aogiri) && g.advance(aogiri, GangPlayer.AOGIRI_SPAR, GangPlayer.AOGIRI_AMBUSH) == g, "nothing asked, nothing moves");
+        g = g.advance(aogiri, GangPlayer.AOGIRI_NOT_YET, GangPlayer.AOGIRI_SPAR);
+        check(g.aogiriStep() == GangPlayer.AOGIRI_SPAR && g.advance(aogiri, GangPlayer.AOGIRI_AMBUSH, GangPlayer.AOGIRI_DONE) == g, "asked: the spar first");
+        g = g.advance(aogiri, GangPlayer.AOGIRI_SPAR, GangPlayer.AOGIRI_AMBUSH).advance(aogiri, GangPlayer.AOGIRI_AMBUSH, GangPlayer.AOGIRI_DONE);
+        check(g.aogiriStep() == GangPlayer.AOGIRI_DONE && !g.member(aogiri), "the spar, the ambush: back to Ayato");
+        check(GangPlayer.aogiriFrom(false, 3) == GangPlayer.AOGIRI_NOT_YET && GangPlayer.aogiriFrom(true, 2) == GangPlayer.AOGIRI_AMBUSH
+            && GangPlayer.aogiriFrom(true, 5) == GangPlayer.AOGIRI_DONE && GangPlayer.aogiriFrom(true, 9) == GangPlayer.AOGIRI_DONE,
+            "4.1.50's quest read: never begun, nothing; begun, the ambush; five doves, done");
+        g = g.join(aogiri);
+        check(g.member(aogiri) && g.aogiriStep() == GangPlayer.AOGIRI_NOT_YET && g.ownKills() == 0, "joined: Aogiri's");
         for (int i = 0; i < 10; i++) {
             g = g.killedOwn();
         }
-        check(g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.ownKills() == 10, "ten of their own: still theirs (\"over 10\")");
+        check(g.member(aogiri) && g.ownKills() == 10, "ten of their own: still theirs (\"over 10\")");
         g = g.killedOwn();
-        check(!g.member(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && g.gang() == com.hex.kagune.control.npc.GangPlayer.NONE
-            && g.banned(com.hex.kagune.control.npc.GangPlayer.AOGIRI) && !g.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "the eleventh: banned, out, its tag gone");
-        com.hex.kagune.control.npc.GangPlayer c = com.hex.kagune.control.npc.GangPlayer.NEW;
-        check(c.killedGasMask().gasKills() == 0, "the Gas Masks count only once she has laughed");
-        c = c.laughed();
-        check(c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_GAS_MASKS, "she laughed: the Gas Masks next");
-        c = c.killedGasMask().killedGasMask();
-        check(c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_GAS_MASKS && c.killedGasMask().clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_CASE,
-            "three Gas Masks, then the quinque case");
-        c = c.killedGasMask().join(com.hex.kagune.control.npc.GangPlayer.CLOWNS);
-        check(c.member(com.hex.kagune.control.npc.GangPlayer.CLOWNS) && c.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_NOT_YET, "joined: the Clowns'");
-        // 4.1.54 (the owner: the Gas Masks joined by "Short chain, like Roma"): Banjou taken seriously, three Clowns, a clown's mask.
-        com.hex.kagune.control.npc.GangPlayer m = com.hex.kagune.control.npc.GangPlayer.NEW;
-        check(m.killedClown().clownKills() == 0, "the Clowns count only once Banjou has been taken seriously");
-        m = m.takenSeriously();
-        check(m.gasStep() == com.hex.kagune.control.npc.GangPlayer.GAS_CLOWNS_NEXT && m.takenSeriously() == m, "taken seriously: the Clowns next (once)");
-        m = m.killedClown().killedClown();
-        check(m.gasStep() == com.hex.kagune.control.npc.GangPlayer.GAS_CLOWNS_NEXT && m.killedClown().gasStep() == com.hex.kagune.control.npc.GangPlayer.GAS_MASK_NEXT
-            && com.hex.kagune.control.npc.GangPlayer.GAS_CLOWNS == 3, "three Clowns, then a clown's mask");
-        m = m.killedClown().join(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS);
-        check(m.member(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS) && m.gasStep() == com.hex.kagune.control.npc.GangPlayer.GAS_NOT_YET && m.clownKills() == 0
-            && !m.member(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "joined: the Gas Masks'");
+        check(!g.member(aogiri) && g.gang() == GangPlayer.NONE && g.banned(aogiri) && !g.banned(GangPlayer.CLOWNS), "the eleventh: banned, out, its tag gone");
+        // Roma's: the joke (kept), the ring, the job in her face, the case.
+        GangPlayer c = GangPlayer.NEW;
+        int clowns = GangPlayer.CLOWNS;
+        check(c.advance(clowns, GangPlayer.CLOWN_RING, GangPlayer.CLOWN_JOB) == c, "no show before she has laughed");
+        c = c.advance(clowns, GangPlayer.CLOWN_NOT_YET, GangPlayer.CLOWN_RING);
+        check(c.clownStep() == GangPlayer.CLOWN_RING && c.advance(clowns, GangPlayer.CLOWN_JOB, GangPlayer.CLOWN_CASE) == c, "she laughed: the ring next");
+        c = c.advance(clowns, GangPlayer.CLOWN_RING, GangPlayer.CLOWN_JOB).advance(clowns, GangPlayer.CLOWN_JOB, GangPlayer.CLOWN_CASE);
+        check(c.clownStep() == GangPlayer.CLOWN_CASE && GangPlayer.CLOWN_RING == 1 && GangPlayer.CLOWN_JOB == 2,
+            "the ring, the job, then the case (the saved 1 and 2 keep their places)");
+        c = c.join(clowns);
+        check(c.member(clowns) && c.clownStep() == GangPlayer.CLOWN_NOT_YET, "joined: the Clowns'");
+        // 4.1.54 (the owner: the Gas Masks joined by "Short chain, like Roma"): Banjou taken seriously; 4.1.79: the gas, the gate.
+        GangPlayer m = GangPlayer.NEW;
+        int gas = GangPlayer.GAS_MASKS;
+        check(m.advance(gas, GangPlayer.GAS_WALK, GangPlayer.GAS_RAID) == m, "no gas before Banjou has been taken seriously");
+        m = m.advance(gas, GangPlayer.GAS_NOT_YET, GangPlayer.GAS_WALK);
+        check(m.gasStep() == GangPlayer.GAS_WALK && m.advance(gas, GangPlayer.GAS_NOT_YET, GangPlayer.GAS_WALK) == m, "taken seriously: the gas next (once)");
+        m = m.advance(gas, GangPlayer.GAS_WALK, GangPlayer.GAS_RAID).advance(gas, GangPlayer.GAS_RAID, GangPlayer.GAS_DONE);
+        check(m.gasStep() == GangPlayer.GAS_DONE && GangPlayer.GAS_WALK == 1 && GangPlayer.GAS_RAID == 2, "the gas, the gate, back to Banjou");
+        m = m.join(gas);
+        check(m.member(gas) && m.gasStep() == GangPlayer.GAS_NOT_YET && !m.member(clowns), "joined: the Gas Masks'");
         for (int i = 0; i < 11; i++) {
             m = m.killedOwn();
         }
-        check(m.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && m.banned(com.hex.kagune.control.npc.GangPlayer.GAS_MASKS)
-            && !m.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS), "the Gas Masks ban past ten of their own, as every gang");
+        check(m.gang() == GangPlayer.NONE && m.banned(gas) && !m.banned(clowns), "the Gas Masks ban past ten of their own, as every gang");
+        GangPlayer all = GangPlayer.NEW;
+        for (int gang = 1; gang <= 5; gang++) {
+            all = all.advance(gang, 0, JoinTrial.afterTalk(gang));
+        }
+        check(all.aogiriStep() == GangPlayer.AOGIRI_SPAR && all.clownStep() == GangPlayer.CLOWN_RING && all.gasStep() == GangPlayer.GAS_WALK
+            && all.anteikuStep() == GangPlayer.ANTEIKU_SHIFT && all.generalStep() == GangPlayer.CCG_EXAM, "five ways in at once, each its own");
+        check(all.join(GangPlayer.CCG).aogiriStep() == GangPlayer.AOGIRI_SPAR && all.join(GangPlayer.CCG).generalStep() == 0
+            && all.killedOwn() == all, "joining one leaves the others where they were; no gang, no own to kill");
+        GangPlayer turned = all.join(GangPlayer.CCG);
+        for (int i = 0; i < 11; i++) {
+            turned = turned.killedOwn();
+        }
+        check(turned.gang() == GangPlayer.NONE && turned.aogiriStep() == 0 && turned.clownStep() == 0 && turned.gasStep() == 0 && turned.anteikuStep() == 0
+            && turned.generalStep() == 0, "banned: every way in begins again");
         anteiku();
         ccg();
+        trials();
         // 4.1.67 (the owner: "Add a new Quit the gang button to each leader whenever the player joins it."; "kicked from the gang if the
         // player marries another gang leader, but can still join if the player was already married before joining."): out, never banned.
-        com.hex.kagune.control.npc.GangPlayer q = com.hex.kagune.control.npc.GangPlayer.NEW.laughed().join(com.hex.kagune.control.npc.GangPlayer.CLOWNS)
+        com.hex.kagune.control.npc.GangPlayer q = GangPlayer.NEW.advance(GangPlayer.CLOWNS, 0, GangPlayer.CLOWN_RING).join(GangPlayer.CLOWNS)
             .killedOwn().killedOwn();
         com.hex.kagune.control.npc.GangPlayer out = q.quit();
         check(out.gang() == com.hex.kagune.control.npc.GangPlayer.NONE && out.ownKills() == 0 && !out.banned(com.hex.kagune.control.npc.GangPlayer.CLOWNS)
             && out.banned() == q.banned(), "quitting: out of the Clowns, their tag gone, not banned");
-        check(out.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_NOT_YET && !out.aogiriQuest()
+        check(out.clownStep() == com.hex.kagune.control.npc.GangPlayer.CLOWN_NOT_YET && out.aogiriStep() == 0
             && out.join(com.hex.kagune.control.npc.GangPlayer.CLOWNS).member(com.hex.kagune.control.npc.GangPlayer.CLOWNS),
             "quitting: the way in begins again, and they may come back by it");
         check(com.hex.kagune.control.npc.GangPlayer.NEW.quit() == com.hex.kagune.control.npc.GangPlayer.NEW, "no gang: nothing to quit");
@@ -1057,7 +1366,11 @@ public final class NpcTests {
             String gangs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GangServer.java"));
             String eto = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoServer.java"));
             String commands = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java"));
-            check(gangs.contains("return quit(player, g, gang, key, seed); // 4.1.67") && gangs.split("wayOut\\(gang\\)\\);", -1).length == 5
+            int memberLines = gangs.indexOf("static String memberLine(int gang, int seed) {");
+            check(gangs.contains("return quit(player, g, gang, key, seed); // 4.1.67") && gangs.contains("return new Said(memberLine(gang, seed), wayOut(gang));")
+                && within(gangs, memberLines, "case GangPlayer.AOGIRI ->", 200) && within(gangs, memberLines, "case GangPlayer.CLOWNS ->", 400)
+                && within(gangs, memberLines, "case GangPlayer.GAS_MASKS ->", 800) && within(gangs, memberLines, "case GangPlayer.ANTEIKU ->", 1200)
+                && within(gangs, memberLines, "default -> pick(seed, \"The bureau's holding.", 1800)
                 && gangs.contains("\"gang:quit:yes\"") && gangs.contains("\"gang:stay\"") && gangs.contains("set(player, g.quit());"),
                 "each leader's member talk offers the way out (Ayato, Roma, Banjou, 4.1.70: Ken, 4.1.71: the General), asked twice, then out");
             check(eto.contains("UniqueNpcs.pair(level, npc.persona().key(), player, Romance.Stage.MARRIED);\n        GangServer.married(player, npc.persona());")
@@ -1251,7 +1564,8 @@ public final class NpcTests {
             check(brain.contains("if (who.gang() != 0 && roam(npc, mind, level, now)) {") && brain.contains("mind.wanderAt = Long.MAX_VALUE; // never its own way while it follows")
                 && brain.contains("&& a.getPersistentData().m_128451_(GANG_ID) == b.getPersistentData().m_128451_(GANG_ID);"),
                 "they walk together: one leads, the rest keep up (only with their own gang)");
-            check(brain.contains("boolean wild = mind.owner == null && !who.aogiri() && who.gang() == 0;"), "a gang neither prowls nor hides: it walks the night");
+            check(brain.contains("boolean wild = mind.owner == null && !who.aogiri() && who.gang() == 0 && !JoinServer.marked(npc);"),
+                "a gang neither prowls nor hides: it walks the night");
             // 4.1.48: a rival on sight (prey looks only at what it sees), before the rule that a gang starts nothing.
             check(brain.indexOf("if (who.gang() != 0 && body instanceof GhoulNpc other && other.identity() != null && who.gangOf().rival(other.identity().gangOf())) {")
                     < brain.indexOf("if (who.gang() != 0) {\n            // 4.1.45")

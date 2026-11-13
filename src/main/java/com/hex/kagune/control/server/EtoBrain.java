@@ -520,7 +520,7 @@ public final class EtoBrain {
         if (current != null && (!current.m_6084_() || current.m_9236_() != level
             || !com.hex.kagune.control.npc.FightRules.keeps(Math.sqrt(current.m_20280_(npc)), Math.sqrt(current.m_20238_(home)),
                 com.hex.kagune.control.npc.FightRules.since(now, mind.reachedAt), false)
-            || current instanceof ServerPlayer player && (player.m_7500_() || player.m_5833_() || partnerOf(mind, player)))) {
+            || current instanceof ServerPlayer player && (player.m_7500_() || player.m_5833_() || partnerOf(mind, player) && !JoinServer.sparring(player, npc)))) {
             current = null;
         }
         if (current == null && now % 5L == 0L) {
@@ -565,7 +565,8 @@ public final class EtoBrain {
             return false;
         }
         if (body instanceof ServerPlayer player) {
-            return !player.m_7500_() && !player.m_5833_() && !partnerOf(mind, player) && !spared(player, npc)
+            // 4.1.79: in a spar (Ayato's way into Aogiri), his partner too: it is a fight they both agreed to.
+            return !player.m_7500_() && !player.m_5833_() && (!partnerOf(mind, player) || JoinServer.sparring(player, npc)) && !spared(player, npc)
                 && (mind.target == player.m_19879_() || mind.grudges.containsKey(player.m_20148_()));
         }
         if (com.hex.kagune.control.server.FleshThralls.ownedBy(body, npc)) {
@@ -815,7 +816,8 @@ public final class EtoBrain {
         if (!(cause instanceof LivingEntity attacker) || attacker == npc) {
             return;
         }
-        if (attacker instanceof ServerPlayer player) {
+        // 4.1.79: a spar's blows (Ayato's way into Aogiri) are no offence: no regard lost, no grudge, no sulk; he just fights back.
+        if (attacker instanceof ServerPlayer player && !JoinServer.sparring(player, npc)) {
             QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
             if (partnerOf(mind, player)) {
                 // 2.2.0: tolerance: a first blow is an accident (more so mid-fight); only more of them, close together, put her out.
