@@ -430,8 +430,9 @@ public final class CompanionTests {
             check(false, "read the path's key: " + failure);
         }
         com.hex.kagune.control.client.animation.RigPose seated = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.SIT, 400.0, false);
-        check(seated != null && Math.abs(seated.drop - 10.0F) < 0.01F && seated.rightLegX < -1.3F && seated.leftKnee > 1.5F && seated.legHold >= 1.0F && seated.armHold >= 1.0F,
-            "seated: hips to the floor, a leg out, a knee up, still");
+        check(seated != null && Math.abs(seated.drop - 10.0F) < 0.01F && seated.rightLegX < -1.3F && seated.leftLegX < -1.3F && seated.leftKnee == 0.0F
+            && seated.rightKnee == 0.0F && seated.legHold >= 1.0F && seated.armHold >= 1.0F,
+            "seated (4.1.69): hips to the floor, both legs out along it (no knees to bend: EtoTests.kenSits), still");
         // 1.3.29: Touka's own ways: never round an arm; a kiss on the cheek or a kiss stolen instead; her own poses, not Eto's.
         check(Persona.ETO.clings() && Persona.KEN.clings() && !Persona.TOUKA.clings(), "Touka never winds round an arm");
         check(Persona.TOUKA.unasked(EtoGesture.CLING) == EtoGesture.PECK && Persona.TOUKA.unasked(EtoGesture.DANCE) == EtoGesture.STEAL

@@ -19,6 +19,16 @@ public final class EtoPose {
     static final float KISS_LEAN = 0.5F;
     static final float BLUSH_LEAN = 0.55F;
     static final float PULL_LEAN = 0.52F;
+    /**
+     * 4.1.69: Ken sitting on the deck, a model without knees: his hips down on it ({@code drop}, model pixels: the 12-pixel legs'
+     * pivots 2 above the floor, so legs laid flat rest on it), each leg's turn (x, y, z; radians: both out along the floor, the right
+     * wider), each arm's (x, unused, z: the hands resting on his thighs). EtoTests.kenSits checks where they all end up.
+     */
+    public static final float SIT_DROP = 10.0F;
+    public static final float[] SIT_RIGHT_LEG = {-1.53F, 0.27F, 0.06F};
+    public static final float[] SIT_LEFT_LEG = {-1.54F, -0.15F, -0.04F};
+    public static final float[] SIT_RIGHT_ARM = {-0.42F, 0.0F, -0.05F};
+    public static final float[] SIT_LEFT_ARM = {-0.72F, 0.0F, 0.16F};
 
     private EtoPose() {
     }
@@ -767,23 +777,27 @@ public final class EtoPose {
             }
             case TILT -> tilt(p, t);
             case SIT -> {
-                // 4.0.9, Ken on the top of his tower: down on the deck (hips to the floor), the right leg out straight, the left knee up, his
-                // left forearm on it, leaning back a little on his right hand behind him, looking out; his head drifting slowly about.
+                // 4.1.69 (the owner: "Ken's sitting animation is broken, one of his legs is just in the air."): his model has no knees, so
+                // 4.0.9's raised left knee pointed the whole leg up into the air. Now both legs lie out along the deck in a loose V, the
+                // right a little wider; his hips down on it; his right hand resting by his hip, his left forward on his thigh; a little
+                // lean onto the right; his head turned a touch and drifting slowly about as he looks out (SitSpot keeps his feet off walls).
                 float on = ease(Math.min(1.0F, t / 14.0F));
-                p.drop = 10.0F * on;
-                p.rightLegX = -1.45F * on;
-                p.rightKnee = 0.08F * on;
-                p.leftLegX = -2.05F * on;
-                p.leftKnee = 1.95F * on;
-                p.leftLegZ = -0.12F * on;
-                p.rightArmX = 0.62F * on;
-                p.rightArmZ = 0.32F * on;
-                p.leftArmX = -0.95F * on;
-                p.leftArmZ = -0.08F * on;
-                p.leftElbow = 0.65F * on;
-                p.lean = -0.14F * on;
-                p.headY = 0.28F * on * (float)Math.sin(t * 0.018);
-                p.headX = 0.06F * on * (float)Math.sin(t * 0.011 + 1.3);
+                p.drop = SIT_DROP * on;
+                p.rightLegX = SIT_RIGHT_LEG[0] * on;
+                p.rightLegY = SIT_RIGHT_LEG[1] * on;
+                p.rightLegZ = SIT_RIGHT_LEG[2] * on;
+                p.leftLegX = SIT_LEFT_LEG[0] * on;
+                p.leftLegY = SIT_LEFT_LEG[1] * on;
+                p.leftLegZ = SIT_LEFT_LEG[2] * on;
+                p.rightArmX = SIT_RIGHT_ARM[0] * on;
+                p.rightArmZ = SIT_RIGHT_ARM[2] * on;
+                p.leftArmX = SIT_LEFT_ARM[0] * on;
+                p.leftArmZ = SIT_LEFT_ARM[2] * on;
+                p.lean = -0.04F * on;
+                p.side = 0.03F * on;
+                p.headY = (0.18F + 0.24F * (float)Math.sin(t * 0.018)) * on;
+                p.headX = (0.02F + 0.05F * (float)Math.sin(t * 0.011 + 1.3)) * on;
+                p.headZ = -0.04F * on;
                 p.armHold = Math.max(p.armHold, on);
                 p.legHold = Math.max(p.legHold, on);
             }

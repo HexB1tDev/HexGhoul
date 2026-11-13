@@ -14,6 +14,7 @@ import com.hex.kagune.control.npc.NpcBonds;
 import com.hex.kagune.control.npc.NpcMemory;
 import com.hex.kagune.control.npc.NpcRules;
 import com.hex.kagune.control.npc.Romance;
+import com.hex.kagune.control.npc.SitSpot;
 import com.hex.kagune.control.npc.UniqueNpc;
 import com.hex.kagune.control.pale.PaleRules;
 import com.hex.kagune.control.quest.QuestLog;
@@ -2144,10 +2145,37 @@ public final class EtoBrain {
         float yaw = npc.getPersistentData().m_128441_(SIT_YAW) ? npc.getPersistentData().m_128451_(SIT_YAW) / 10.0F : npc.f_20883_;
         npc.m_146922_(yaw);
         npc.f_20883_ = yaw;
+        // 4.1.69: his legs lie out ahead of him, so he sits back from a wall ahead (Anteiku's parapet) as far as his boots need, sliding
+        // there from wherever his walk stopped before he sits down (SitSpot).
+        double[] ahead = SitSpot.facing(yaw);
+        double back = SitSpot.back(clearAhead(level, feet, ahead));
+        double tx = feet[0] - ahead[0] * back;
+        double tz = feet[2] - ahead[1] * back;
+        double ox = tx - npc.m_20185_();
+        double oz = tz - npc.m_20189_();
+        if (ox * ox + oz * oz > SitSpot.THERE * SitSpot.THERE) {
+            if (mind.gesture == EtoGesture.SIT) {
+                gesture(mind, EtoGesture.NONE, now);
+            }
+            double[] next = SitSpot.slide(npc.m_20185_(), npc.m_20189_(), tx, tz);
+            npc.m_6021_(next[0], npc.m_20186_(), next[1]);
+            return true;
+        }
         if (mind.gesture != EtoGesture.SIT) {
             gesture(mind, EtoGesture.SIT, now);
         }
         return true;
+    }
+
+    /** 4.1.69: how far the floor ahead of {@code feet} (along {@code ahead}, at his legs' height) is free of anything solid, up to SitSpot's reach. */
+    static double clearAhead(ServerLevel level, double[] feet, double[] ahead) {
+        for (double t = 0.0; t <= SitSpot.REACH; t += SitSpot.LOOK) {
+            BlockPos at = BlockPos.m_274561_(feet[0] + ahead[0] * t, feet[1] + 0.1, feet[2] + ahead[1] * t);
+            if (!level.m_8055_(at).m_60812_(level, at).m_83281_()) {
+                return t;
+            }
+        }
+        return SitSpot.REACH;
     }
 
     static void gesture(Mind mind, EtoGesture gesture, long now) {

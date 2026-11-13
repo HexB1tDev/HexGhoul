@@ -144,6 +144,7 @@ public final class EtoTests {
         grant();
         fight();
         poses();
+        kenSits();
         romance();
         memory();
         unique();
@@ -768,6 +769,85 @@ public final class EtoTests {
         check(com.hex.kagune.control.pale.PaleRules.fist(EtoRules.MASTERY) >= 4.4F, "her fists are a master's");
         check(EtoRules.damage(10.0F, 0.4F) > EtoRules.damage(10.0F, 0.9F), "serious, she hits harder");
         check(EtoRules.LEASH == EtoRules.HOME_RADIUS + 3 && EtoRules.LOST > EtoRules.LEASH, "she chases a little past home, never far");
+    }
+
+    /** A model-space vector (pixels; x to the left, y down, z back) turned as a ModelPart turns it: Rz Ry Rx. */
+    static double[] turned(double x, double y, double z, double rx, double ry, double rz) {
+        double y1 = y * Math.cos(rx) - z * Math.sin(rx);
+        double z1 = y * Math.sin(rx) + z * Math.cos(rx);
+        double x2 = x * Math.cos(ry) + z1 * Math.sin(ry);
+        double z2 = -x * Math.sin(ry) + z1 * Math.cos(ry);
+        double x3 = x2 * Math.cos(rz) - y1 * Math.sin(rz);
+        double y3 = x2 * Math.sin(rz) + y1 * Math.cos(rz);
+        return new double[] {x3, y3, z2};
+    }
+
+    /**
+     * 4.1.69 (the owner: "Ken's sitting animation is broken, one of his legs is just in the air."): his model has no knees, so where his
+     * limbs end up is worked out as the game poses them, through the whole time he sits: each leg lies along the floor, both ends of it
+     * resting on the deck (its 4-pixel thickness on it, neither up in the air nor through it); each hand rests on a thigh or by his hip
+     * (between the floor and a thigh's top, not hanging in the air); his boots end within SitSpot's reach, and SitSpot puts that reach
+     * short of a wall ahead, never further back than his own block.
+     */
+    static void kenSits() {
+        for (double t = 14.0; t <= 3000.0; t += 13.0) {
+            RigPose p = EtoPose.gesture(EtoGesture.SIT, t, true);
+            double floor = 24.0 - p.drop;
+            double reach = 0.0;
+            for (boolean right : new boolean[] {true, false}) {
+                String leg = right ? "rightLeg" : "leftLeg";
+                float[] r = p.transform(leg, RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+                double[] end = turned(0.0, 12.0, 0.0, r[0], r[1], r[2]);
+                double hip = floor - 12.0;
+                double far = floor - (12.0 + end[1]);
+                check(hip > 1.0 && hip < 3.0 && far > 1.0 && far < 3.0, "sitting at " + t + ", his " + leg + " lies on the deck (hip "
+                    + hip + ", far end " + far + " pixels up)");
+                for (double cx : new double[] {-2.0, 2.0}) {
+                    for (double cz : new double[] {-2.0, 2.0}) {
+                        reach = Math.max(reach, -turned(cx, 12.0, cz, r[0], r[1], r[2])[2] / 16.0);
+                    }
+                }
+                String arm = right ? "rightArm" : "leftArm";
+                float[] at = p.transform(arm, RigPose.POSITION, right ? -5.0F : 5.0F, 2.5F, 0.0F); // his slim arms' pivots
+                float[] a = p.transform(arm, RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+                double[] hand = turned(0.0, 10.0, 0.0, a[0], a[1], a[2]);
+                double up = floor - (at[1] + hand[1]);
+                check(up > 1.5 && up < 6.0 && -(at[2] + hand[2]) > -1.0, "sitting at " + t + ", his " + arm + "'s hand rests on him (" + up
+                    + " pixels up, " + -(at[2] + hand[2]) + " ahead)");
+            }
+            check(reach > 0.6 && reach <= com.hex.kagune.control.npc.SitSpot.REACH, "sitting at " + t + ", his boots end " + reach
+                + " blocks ahead, inside SitSpot's reach");
+        }
+        RigPose half = EtoPose.gesture(EtoGesture.SIT, 5.0, true);
+        check(half.drop > 0.0F && half.drop < EtoPose.SIT_DROP && half.leftLegX > EtoPose.SIT_LEFT_LEG[0], "he eases down into it");
+        check(Math.abs(com.hex.kagune.control.npc.SitSpot.back(0.5) - (com.hex.kagune.control.npc.SitSpot.REACH - 0.5)) < 1.0E-9
+            && com.hex.kagune.control.npc.SitSpot.back(5.0) == 0.0 && com.hex.kagune.control.npc.SitSpot.back(com.hex.kagune.control.npc.SitSpot.REACH) == 0.0,
+            "a wall half a block ahead (Anteiku's parapet) sets him back just far enough; open floor, not at all");
+        check(com.hex.kagune.control.npc.SitSpot.back(0.0) == com.hex.kagune.control.npc.SitSpot.MOST_BACK
+            && com.hex.kagune.control.npc.SitSpot.back(Double.NaN) == com.hex.kagune.control.npc.SitSpot.MOST_BACK
+            && com.hex.kagune.control.npc.SitSpot.MOST_BACK + com.hex.kagune.control.npc.SitSpot.THERE < 0.5,
+            "never further back than his own block, inside the brain's half a block of home (EtoBrain.sit)");
+        double[] south = com.hex.kagune.control.npc.SitSpot.facing(0.0F);
+        double[] east = com.hex.kagune.control.npc.SitSpot.facing(-90.0F);
+        check(Math.abs(south[0]) < 1.0E-9 && Math.abs(south[1] - 1.0) < 1.0E-9 && Math.abs(east[0] - 1.0) < 1.0E-9 && Math.abs(east[1]) < 1.0E-9,
+            "yaw 0 faces south (+z), -90 east (+x)");
+        double[] at = {17.9, 17.9};
+        int steps = 0;
+        while ((Math.abs(at[0] - 17.5) > 1.0E-9 || Math.abs(at[1] - 17.18) > 1.0E-9) && steps < 100) {
+            double[] next = com.hex.kagune.control.npc.SitSpot.slide(at[0], at[1], 17.5, 17.18);
+            check(Math.hypot(next[0] - at[0], next[1] - at[1]) <= com.hex.kagune.control.npc.SitSpot.STEP + 1.0E-9, "a slide is a small step");
+            at = next;
+            steps++;
+        }
+        check(steps > 3 && steps < 20, "he settles onto the spot in a few ticks (" + steps + ")");
+        try {
+            String brain = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java")));
+            int sit = brain.indexOf("static boolean sit(EtoNpc npc");
+            check(sit > 0 && brain.indexOf("SitSpot.back(clearAhead(", sit) > sit && brain.indexOf("SitSpot.slide(", sit) > sit,
+                "Ken's brain sits him back from a wall and slides him there");
+        } catch (java.io.IOException failure) {
+            check(false, "read EtoBrain: " + failure);
+        }
     }
 
     static void poses() {

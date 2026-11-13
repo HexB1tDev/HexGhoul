@@ -34,6 +34,7 @@ public final class CompanionPreview {
                 sit.add(new Shot("sit " + (int)yaw, EtoPose.gesture(EtoGesture.SIT, 200.0, true), yaw));
             }
             sheet(new File(out, "ken-sit.png"), "Ken", "src/main/resources/assets/hexkagune/textures/entity/ken/ken.png", true, sit);
+            roof(new File(out, "ken-sit-roof.png"));
             return;
         }
         if (args.length > 1 && args[1].equals("frames")) {
@@ -287,6 +288,53 @@ public final class CompanionPreview {
 
     /** 2.4.8: drawn as a player is (elbows and knees bend), not as a companion's stiff limbs. */
     static boolean bendy = false;
+
+    /** A block's six faces (world blocks: x to his left, y up, z ahead of him) in one colour. */
+    static void box(List<PoseRender.Tri> t, double x0, double y0, double z0, double x1, double y1, double z1, int rgb) {
+        double[][] c = {{x0, y0, z0}, {x1, y0, z0}, {x1, y1, z0}, {x0, y1, z0}, {x0, y0, z1}, {x1, y0, z1}, {x1, y1, z1}, {x0, y1, z1}};
+        int[][] f = {{0, 1, 2, 3}, {5, 4, 7, 6}, {4, 0, 3, 7}, {1, 5, 6, 2}, {3, 2, 6, 7}, {4, 5, 1, 0}};
+        double[][] n = {{0, 0, -1}, {0, 0, 1}, {-1, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, -1, 0}};
+        for (int i = 0; i < 6; i++) {
+            t.add(new PoseRender.Tri(new double[][] {c[f[i][0]], c[f[i][1]], c[f[i][2]]}, rgb, n[i]));
+            t.add(new PoseRender.Tri(new double[][] {c[f[i][0]], c[f[i][2]], c[f[i][3]]}, rgb, n[i]));
+        }
+    }
+
+    /**
+     * 4.1.69: Ken sitting on Anteiku's roof as SitSpot sets him: the parapet (polished diorite, a block tall) half a block ahead of his
+     * spot's middle, him sat back from it by SitSpot.back(0.5); from the street side, both of his sides, behind and above.
+     */
+    static void roof(File file) throws Exception {
+        PoseRender.skin = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/ken/ken.png"));
+        PoseRender.slim = true;
+        PoseRender.stiff = !bendy;
+        double wall = 0.5 + com.hex.kagune.control.npc.SitSpot.back(0.5);
+        List<PoseRender.Tri> parapet = new ArrayList<>();
+        box(parapet, -2.5, 0.0, wall, 2.5, 1.0, wall + 1.0, 0xD9D7D0);
+        RigPose pose = EtoPose.gesture(EtoGesture.SIT, 200.0, true);
+        double[][] views = {{0, 32, 4.6}, {90, 8, 3.4}, {270, 8, 3.4}, {180, 25, 3.4}, {35, 42, 4.2}, {320, 45, 4.2}};
+        String[] names = {"from the street side", "his left side", "his right side", "behind", "front-left, above", "front-right, above"};
+        int w = 300;
+        int h = 300;
+        BufferedImage sheet = new BufferedImage(3 * w, 2 * (h + 22) + 36, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setColor(new Color(34, 34, 40));
+        g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+        g.setColor(Color.WHITE);
+        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
+        g.drawString("Ken sitting on Anteiku's roof (the parapet " + String.format("%.2f", wall) + " blocks ahead of his middle)", 10, 24);
+        for (int i = 0; i < views.length; i++) {
+            BufferedImage image = PoseRender.render(pose, PoseRender.orbit(views[i][0], views[i][1], views[i][2], 0.55), w, h, parapet);
+            int x = i % 3 * w;
+            int y = 36 + i / 3 * (h + 22);
+            g.drawImage(image, x, y, null);
+            g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
+            g.drawString(names[i], x + 10, y + h + 16);
+        }
+        g.dispose();
+        ImageIO.write(sheet, "png", file);
+    }
 
     static void sheet(File file, String title, String skin, boolean slim, List<Shot> shots) throws Exception {
         PoseRender.skin = ImageIO.read(new File(skin));
