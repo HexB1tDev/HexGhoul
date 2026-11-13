@@ -1,0 +1,441 @@
+diff --git a/src/main/java/com/hex/kagune/control/client/NpcTalkView.java b/src/main/java/com/hex/kagune/control/client/NpcTalkView.java
+index f817cd4d..0075bda6 100644
+--- a/src/main/java/com/hex/kagune/control/client/NpcTalkView.java
++++ b/src/main/java/com/hex/kagune/control/client/NpcTalkView.java
+@@ -403,8 +403,8 @@ public final class NpcTalkView {
+         }
+     }
+ 
+-    /** 4.1.52: each gang's colour on its meter (none, Aogiri's dark red, the Clowns' blue, the Gas Masks' green). */
+-    static final int[] GANG_COLOURS = {0xFF8A8A8A, 0xFFC4283A, 0xFF4F78E8, 0xFF58C050};
++    /** 4.1.52: each gang's colour on its meter (none, Aogiri's dark red, the Clowns' blue, the Gas Masks' green; 4.1.70: Anteiku's light brown). */
++    static final int[] GANG_COLOURS = {0xFF8A8A8A, 0xFFC4283A, 0xFF4F78E8, 0xFF58C050, 0xFF000000 | com.hex.kagune.control.npc.GangPlayer.ANTEIKU_BROWN};
+ 
+     /**
+      * 4.1.52: the reputation meter: "REPUTATION", the word for where they stand (FEARED bright; UNWANTED red, beating), the share; a bar in
+diff --git a/src/main/java/com/hex/kagune/control/npc/GangPlayer.java b/src/main/java/com/hex/kagune/control/npc/GangPlayer.java
+index ccf287de..345bbb53 100644
+--- a/src/main/java/com/hex/kagune/control/npc/GangPlayer.java
++++ b/src/main/java/com/hex/kagune/control/npc/GangPlayer.java
+@@ -14,7 +14,7 @@ package com.hex.kagune.control.npc;
+  * Clowns ({@link #killedClown}), bring him a clown's mask; its emblem the toxic trefoil, its name green.
+  */
+ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest, int ccgKills, int clownStep, int gasKills, int gasStep,
+-                         int clownKills) {
++                         int clownKills, int anteikuStep, int doveKills) {
+     public static final int NONE = 0;
+     public static final int AOGIRI = 1;
+     public static final int CLOWNS = 2;
+@@ -35,13 +35,30 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+     public static final int GAS_CLOWNS = 3;
+     public static final int GAS_CLOWNS_NEXT = 1;
+     public static final int GAS_MASK_NEXT = 2;
++    /**
++     * 4.1.70 (the owner: "Anteikou - Joinable through Ken (quest)"): Anteiku, the café, through Ken. His way in, a short chain as the others':
++     * the answer that is Anteiku's (why they want in: {@link #answered}), a handful of coffee beans brought ({@link #ANTEIKU_BEAN_COUNT}
++     * cocoa beans in the hand: {@link #beansBrought}), then {@link #ANTEIKU_CCG} investigators who came sniffing round the café killed
++     * ({@link #droveDove}); then he takes them in.
++     */
++    public static final int ANTEIKU = 4;
++    public static final int ANTEIKU_NOT_YET = 0;
++    public static final int ANTEIKU_BEANS = 1;
++    public static final int ANTEIKU_DOVES = 2;
++    public static final int ANTEIKU_DONE = 3;
++    public static final int ANTEIKU_CCG = 3;
++    public static final int ANTEIKU_BEAN_COUNT = 8;
++    /** 4.1.70 (the owner: "Light brown name tag with a coffee symbol"): Anteiku's light brown, a latte's (0xRRGGBB). */
++    public static final int ANTEIKU_BROWN = 0xC89B6D;
+     /** The emblems (assets/minecraft/font/default.json's private characters: tools/gang_emblems.py). */
+     public static final String TREE = "";
+     public static final String CLOWN = "";
+     /** 4.1.54: the Gas Masks' toxic trefoil. */
+     public static final String TOXIC = "";
++    /** 4.1.70: Anteiku's coffee cup. */
++    public static final String COFFEE = "\uE003";
+ 
+-    public static final GangPlayer NEW = new GangPlayer(NONE, 0, 0, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0);
++    public static final GangPlayer NEW = new GangPlayer(NONE, 0, 0, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0);
+ 
+     /** True if they belong to {@code gang}. */
+     public boolean member(int gang) {
+@@ -61,12 +78,12 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+     public GangPlayer join(int gang) {
+         return new GangPlayer(gang, 0, this.banned, gang == AOGIRI ? false : this.aogiriQuest, gang == AOGIRI ? 0 : this.ccgKills,
+             gang == CLOWNS ? CLOWN_NOT_YET : this.clownStep, gang == CLOWNS ? 0 : this.gasKills, gang == GAS_MASKS ? GAS_NOT_YET : this.gasStep,
+-            gang == GAS_MASKS ? 0 : this.clownKills);
++            gang == GAS_MASKS ? 0 : this.clownKills, gang == ANTEIKU ? ANTEIKU_NOT_YET : this.anteikuStep, gang == ANTEIKU ? 0 : this.doveKills);
+     }
+ 
+     /** Aogiri's quest begun (Ayato's "Kill 5 CCG"). */
+     public GangPlayer startAogiri() {
+-        return new GangPlayer(this.gang, this.ownKills, this.banned, true, 0, this.clownStep, this.gasKills, this.gasStep, this.clownKills);
++        return new GangPlayer(this.gang, this.ownKills, this.banned, true, 0, this.clownStep, this.gasKills, this.gasStep, this.clownKills, this.anteikuStep, this.doveKills);
+     }
+ 
+     /** True once Aogiri's quest is done (five of the CCG killed while it was on). */
+@@ -77,13 +94,13 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+     /** One of the CCG killed: counted while Aogiri's quest is on. */
+     public GangPlayer killedDove() {
+         return this.aogiriQuest && !this.member(AOGIRI) ? new GangPlayer(this.gang, this.ownKills, this.banned, true, this.ccgKills + 1, this.clownStep,
+-            this.gasKills, this.gasStep, this.clownKills) : this;
++            this.gasKills, this.gasStep, this.clownKills, this.anteikuStep, this.doveKills) : this;
+     }
+ 
+     /** Roma laughed: the Gas Masks next. */
+     public GangPlayer laughed() {
+         return this.clownStep == CLOWN_NOT_YET ? new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, CLOWN_GAS_MASKS, 0,
+-            this.gasStep, this.clownKills) : this;
++            this.gasStep, this.clownKills, this.anteikuStep, this.doveKills) : this;
+     }
+ 
+     /** One of the Gas Masks killed: counted while the Clowns' chain asks for them; the third moves it on to the case. */
+@@ -93,13 +110,13 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+         }
+         int kills = this.gasKills + 1;
+         return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, kills >= CLOWN_GAS ? CLOWN_CASE : CLOWN_GAS_MASKS,
+-            kills, this.gasStep, this.clownKills);
++            kills, this.gasStep, this.clownKills, this.anteikuStep, this.doveKills);
+     }
+ 
+     /** 4.1.54: Banjou taken seriously (the answer that does it): the Clowns next. */
+     public GangPlayer takenSeriously() {
+         return this.gasStep == GAS_NOT_YET ? new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep,
+-            this.gasKills, GAS_CLOWNS_NEXT, 0) : this;
++            this.gasKills, GAS_CLOWNS_NEXT, 0, this.anteikuStep, this.doveKills) : this;
+     }
+ 
+     /** 4.1.54: one of the Clowns killed: counted while the Gas Masks' chain asks for them; the third moves it on to the clown mask. */
+@@ -109,7 +126,36 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+         }
+         int kills = this.clownKills + 1;
+         return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills,
+-            kills >= GAS_CLOWNS ? GAS_MASK_NEXT : GAS_CLOWNS_NEXT, kills);
++            kills >= GAS_CLOWNS ? GAS_MASK_NEXT : GAS_CLOWNS_NEXT, kills, this.anteikuStep, this.doveKills);
++    }
++
++    /** 4.1.70: Ken's question answered as Anteiku would (coffee beans next). */
++    public GangPlayer answered() {
++        return this.anteikuStep == ANTEIKU_NOT_YET ? this.anteiku(ANTEIKU_BEANS, 0) : this;
++    }
++
++    /** 4.1.70: the coffee beans brought (the investigators next). */
++    public GangPlayer beansBrought() {
++        return this.anteikuStep == ANTEIKU_BEANS ? this.anteiku(ANTEIKU_DOVES, 0) : this;
++    }
++
++    /** 4.1.70: one of the CCG killed: counted while Ken's chain asks for them; the third finishes it. */
++    public GangPlayer droveDove() {
++        if (this.anteikuStep != ANTEIKU_DOVES) {
++            return this;
++        }
++        int kills = this.doveKills + 1;
++        return this.anteiku(kills >= ANTEIKU_CCG ? ANTEIKU_DONE : ANTEIKU_DOVES, kills);
++    }
++
++    /** 4.1.70: true once Ken's chain is done (he takes them in when they next talk to him). */
++    public boolean anteikuDone() {
++        return this.anteikuStep == ANTEIKU_DONE;
++    }
++
++    private GangPlayer anteiku(int step, int kills) {
++        return new GangPlayer(this.gang, this.ownKills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills, this.gasStep,
++            this.clownKills, step, kills);
+     }
+ 
+     /**
+@@ -122,10 +168,10 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+         }
+         int kills = this.ownKills + 1;
+         if (kills > BAN_OVER) {
+-            return new GangPlayer(NONE, 0, this.banned | bit(this.gang), false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0);
++            return new GangPlayer(NONE, 0, this.banned | bit(this.gang), false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0);
+         }
+         return new GangPlayer(this.gang, kills, this.banned, this.aogiriQuest, this.ccgKills, this.clownStep, this.gasKills, this.gasStep,
+-            this.clownKills);
++            this.clownKills, this.anteikuStep, this.doveKills);
+     }
+ 
+     /**
+@@ -134,7 +180,7 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+      * gone, their count of their own killed forgotten; never banned for it (its way in begins again from the start).
+      */
+     public GangPlayer quit() {
+-        return this.gang == NONE ? this : new GangPlayer(NONE, 0, this.banned, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0);
++        return this.gang == NONE ? this : new GangPlayer(NONE, 0, this.banned, false, 0, CLOWN_NOT_YET, 0, GAS_NOT_YET, 0, ANTEIKU_NOT_YET, 0);
+     }
+ 
+     /**
+@@ -147,6 +193,8 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+             case AOGIRI -> "§f" + TREE + " §4" + name + "§r";
+             case CLOWNS -> "§f" + CLOWN + " §9" + name + "§r";
+             case GAS_MASKS -> "§f" + TOXIC + " §a" + name + "§r";
++            // 4.1.70: light brown is none of the sixteen; GangServer.nameTag gives it (ANTEIKU_BROWN); here, plain text's nearest: gold.
++            case ANTEIKU -> "§f" + COFFEE + " §6" + name + "§r";
+             default -> name;
+         };
+     }
+@@ -157,6 +205,7 @@ public record GangPlayer(int gang, int ownKills, int banned, boolean aogiriQuest
+             case AOGIRI -> "Aogiri Tree";
+             case CLOWNS -> "the Clowns";
+             case GAS_MASKS -> "the Gas Masks";
++            case ANTEIKU -> "Anteiku";
+             default -> "no gang";
+         };
+     }
+diff --git a/src/main/java/com/hex/kagune/control/server/GangServer.java b/src/main/java/com/hex/kagune/control/server/GangServer.java
+index f7c86cce..731bda96 100644
+--- a/src/main/java/com/hex/kagune/control/server/GangServer.java
++++ b/src/main/java/com/hex/kagune/control/server/GangServer.java
+@@ -48,6 +48,9 @@ public final class GangServer {
+     /** 4.1.54: the Gas Masks' chain (where it stands, the Clowns killed for it). */
+     private static final String GAS_STEP = "HexGangGasStep";
+     private static final String CLOWN_KILLS = "HexGangClownKills";
++    /** 4.1.70: Ken's way into Anteiku: its step, and the investigators killed for it. */
++    private static final String ANTEIKU_STEP = "HexGangAnteikuStep";
++    private static final String DOVES = "HexGangAnteikuDoves";
+     /** How far a gang's member is looked for round one of the gang that might defend them (blocks). */
+     static final double DEFEND = 24.0;
+     /** What a gang is to a player: nothing, theirs, or one that banned them. */
+@@ -75,7 +78,7 @@ public final class GangServer {
+     public static GangPlayer of(ServerPlayer player) {
+         CompoundTag k = kept(player);
+         return new GangPlayer(k.m_128451_(GANG), k.m_128451_(OWN), k.m_128451_(BANNED), k.m_128471_(AOGIRI_QUEST), k.m_128451_(CCG),
+-            k.m_128451_(CLOWN_STEP), k.m_128451_(GAS), k.m_128451_(GAS_STEP), k.m_128451_(CLOWN_KILLS));
++            k.m_128451_(CLOWN_STEP), k.m_128451_(GAS), k.m_128451_(GAS_STEP), k.m_128451_(CLOWN_KILLS), k.m_128451_(ANTEIKU_STEP), k.m_128451_(DOVES));
+     }
+ 
+     /** {@code player}'s gang kept as {@code g}; a change of gang shown on their name everywhere. */
+@@ -91,6 +94,8 @@ public final class GangServer {
+         k.m_128405_(GAS, g.gasKills());
+         k.m_128405_(GAS_STEP, g.gasStep());
+         k.m_128405_(CLOWN_KILLS, g.clownKills());
++        k.m_128405_(ANTEIKU_STEP, g.anteikuStep());
++        k.m_128405_(DOVES, g.doveKills());
+         if (was != g.gang()) {
+             SEEN.put(player.m_20148_(), g.gang());
+             player.refreshDisplayName();
+@@ -180,6 +185,9 @@ public final class GangServer {
+             if (AgentBrain.ccg(dead)) {
+                 now = now.killedDove();
+             }
++            if (AgentBrain.ccg(dead) || dead instanceof GhoulNpc investigator && investigator.identity() != null && investigator.identity().ccg()) {
++                now = now.droveDove(); // 4.1.70: Ken's chain (an investigator of either kind)
++            }
+             if (dead instanceof GhoulNpc ghoul && ghoul.identity() != null) {
+                 NpcIdentity who = ghoul.identity();
+                 if (who.gangOf() == com.hex.kagune.control.npc.Gang.GAS_MASKS) {
+@@ -231,6 +239,10 @@ public final class GangServer {
+                 player.m_5661_(Component.m_237113_("§9The Clowns: §f" + Math.min(now.gasKills(), GangPlayer.CLOWN_GAS) + "/" + GangPlayer.CLOWN_GAS
+                     + " Gas Masks" + (now.clownStep() == GangPlayer.CLOWN_CASE ? " §7(now a quinque case, for Roma)" : "")), true);
+             }
++            if (now.doveKills() != was.doveKills()) {
++                player.m_5661_(Component.m_237113_("§6Anteiku: §f" + Math.min(now.doveKills(), GangPlayer.ANTEIKU_CCG) + "/" + GangPlayer.ANTEIKU_CCG
++                    + " investigators" + (now.anteikuDone() ? " §7(go back to Ken)" : "")), true);
++            }
+             if (now.clownKills() != was.clownKills()) {
+                 player.m_5661_(Component.m_237113_("§aThe Gas Masks: §f" + Math.min(now.clownKills(), GangPlayer.GAS_CLOWNS) + "/" + GangPlayer.GAS_CLOWNS
+                     + " Clowns" + (now.gasStep() == GangPlayer.GAS_MASK_NEXT ? " §7(now a clown's mask, for Banjou)" : "")), true);
+@@ -739,7 +751,8 @@ public final class GangServer {
+     }
+ 
+     static String colour(int gang) {
+-        return gang == GangPlayer.AOGIRI ? "§4" : gang == GangPlayer.CLOWNS ? "§9" : gang == GangPlayer.GAS_MASKS ? "§a" : "§7";
++        return gang == GangPlayer.AOGIRI ? "§4" : gang == GangPlayer.CLOWNS ? "§9" : gang == GangPlayer.GAS_MASKS ? "§a" : gang == GangPlayer.ANTEIKU ? "§6"
++            : "§7";
+     }
+ 
+     // ---------------------------------------------------------------- the name
+@@ -754,13 +767,25 @@ public final class GangServer {
+             Player player = event.getEntity();
+             Integer gang = player instanceof ServerPlayer server ? Integer.valueOf(of(server).gang()) : SEEN.get(player.m_20148_());
+             if (gang != null && gang != GangPlayer.NONE) {
+-                event.setDisplayname(Component.m_237113_(GangPlayer.named(gang, event.getDisplayname().getString())));
++                event.setDisplayname(nameTag(gang, event.getDisplayname().getString()));
+             }
+         } catch (RuntimeException | LinkageError failure) {
+             Safety.caught(failure, "GangServer.name");
+         }
+     }
+ 
++    /**
++     * 4.1.70: the name as {@link GangPlayer#named} has it; Anteiku's in its own light brown (the owner: "Light brown name tag with a coffee
++     * symbol"), none of the sixteen colours a name can be given by its text: the emblem, a space, then the name styled with the colour.
++     */
++    static Component nameTag(int gang, String name) {
++        if (gang == GangPlayer.ANTEIKU) {
++            return Component.m_237113_("§f" + GangPlayer.COFFEE + " ").m_7220_(Component.m_237113_(name).m_6270_(
++                net.minecraft.network.chat.Style.f_131099_.m_178520_(GangPlayer.ANTEIKU_BROWN)));
++        }
++        return Component.m_237113_(GangPlayer.named(gang, name));
++    }
++
+     /** A player in: they are told every player's gang, and everyone theirs. */
+     @SubscribeEvent
+     public static void loggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+@@ -1059,8 +1084,9 @@ public final class GangServer {
+         standing(player, GangStanding.joined(today(player))); // 4.1.52: the bar starts at half
+         giveMask(player, gang); // 4.1.53
+         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.levelup", 0.8F, 0.7F);
+-        player.m_5661_(Component.m_237113_(colour(gang) + "You joined " + GangPlayer.title(gang)
+-            + ". §7They will never go for you again, and they will fight for you."), false);
++        player.m_5661_(Component.m_237113_(colour(gang) + "You joined " + GangPlayer.title(gang) + (gang == GangPlayer.ANTEIKU
++            ? ". §7Ghouls leave you be now, every gang too, unless you start it. The CCG won't. Your RC goes further." // 4.1.70
++            : ". §7They will never go for you again, and they will fight for you.")), false);
+     }
+ 
+     private static String pick(int seed, String... lines) {
+diff --git a/src/main/resources/assets/hexkagune/textures/font/anteiku_coffee.png b/src/main/resources/assets/hexkagune/textures/font/anteiku_coffee.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..7f73d901dad59bca7ceea79a41ebe154ce15e378
+GIT binary patch
+literal 209
+zcmeAS@N?(olHy`uVBq!ia0vp^0wB!61|;P_|4#%`Gdx`!Ln`JZCmdjsv#t6#KcZ00
+z%Op9p#aB_UaE;yqi3zW`-0W>R57jv{&(_<U(6TX70tku@t&!OF#?n1taeueq;VGfV
+z4PrNZJY(9n-G7~6YITqU2iN>H4lduAj&3}#<>e)Aw|Ze+wnRzYMWzRt>Mk!8@6lOu
+zW15IS)1w+TwiV(Xg{)?0d3aKmG0#}a!*jtvA>25Wf#Kfds3Yg&S2+OP$l&Sf=d#Wz
+Gp$P!HLP<;j
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/main/resources/assets/minecraft/font/default.json b/src/main/resources/assets/minecraft/font/default.json
+index 21ce851f..dff05577 100644
+--- a/src/main/resources/assets/minecraft/font/default.json
++++ b/src/main/resources/assets/minecraft/font/default.json
+@@ -26,6 +26,15 @@
+       "chars": [
+         "\ue002"
+       ]
++    },
++    {
++      "type": "bitmap",
++      "file": "hexkagune:font/anteiku_coffee.png",
++      "ascent": 7,
++      "height": 8,
++      "chars": [
++        "\ue003"
++      ]
+     }
+   ]
+ }
+diff --git a/stubs/net/minecraft/network/chat/MutableComponent.java b/stubs/net/minecraft/network/chat/MutableComponent.java
+index c49a3ed1..7317c2bf 100644
+--- a/stubs/net/minecraft/network/chat/MutableComponent.java
++++ b/stubs/net/minecraft/network/chat/MutableComponent.java
+@@ -2,4 +2,7 @@
+ package net.minecraft.network.chat;
+ 
+ public class MutableComponent implements Component {
++    /** setStyle (4.1.70) */ public MutableComponent m_6270_(Style style) { throw new UnsupportedOperationException(); }
++
++    /** append (4.1.70) */ public MutableComponent m_7220_(Component sibling) { throw new UnsupportedOperationException(); }
+ }
+diff --git a/stubs/net/minecraft/network/chat/Style.java b/stubs/net/minecraft/network/chat/Style.java
+new file mode 100644
+index 00000000..ee404e9f
+--- /dev/null
++++ b/stubs/net/minecraft/network/chat/Style.java
+@@ -0,0 +1,8 @@
++// Compile-only API stub (Minecraft 1.20.1 / Forge 47 / PlayerAnimator). Never packaged; see verify/api-allowlist.txt.
++package net.minecraft.network.chat;
++
++public class Style {
++    /** EMPTY */ public static final Style f_131099_ = null;
++
++    /** withColor(int rgb) */ public Style m_178520_(int rgb) { throw new UnsupportedOperationException(); }
++}
+diff --git a/tools/gang_emblems.py b/tools/gang_emblems.py
+index b7dba979..ea34e535 100644
+--- a/tools/gang_emblems.py
++++ b/tools/gang_emblems.py
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env python3
+ """4.1.50 (the owner: Aogiri's name "dark red with a custom tree emblem", the Clowns' "blue with a custom clown face", "(symbol) (space)
+ (name)"; 4.1.54, the Gas Masks: "Toxic logo, green name"): the gangs' emblems as 16 x 16 font glyphs (assets/hexkagune/textures/font/), drawn here pixel by pixel, and the font that
+-maps them (assets/minecraft/font/default.json: U+E000 the tree, U+E001 the clown, U+E002 the toxic trefoil, private characters added to the game's own font: every
++maps them (assets/minecraft/font/default.json: U+E000 the tree, U+E001 the clown, U+E002 the toxic trefoil, U+E003 (4.1.70) Anteiku's coffee cup, private characters added to the game's own font: every
+ resource pack's default.json is read and joined, so a plain name can carry them). The glyphs keep their own colours (the name after them
+ is coloured, not the emblem: GangPlayer.named puts white before them).
+ 
+@@ -82,8 +82,34 @@ TOXIC = [
+ ]
+ TOXIC_COLOURS = {"g": (110, 214, 52), "d": (60, 150, 30)}
+ 
++# 4.1.70 (the owner: Anteiku's "Light brown name tag with a coffee symbol"): a cup of coffee on its saucer, steam rising: a cream cup with a
++# dark brown outline, the coffee's crema in its mouth, the handle on the right (its sides two pixels thick), two wisps of steam two pixels
++# thick, curling as they rise and thinning at the top (o: outline, w: cup, h: its lit side, c: coffee, C: crema, s: steam).
++COFFEE = [
++    ".....s.....s....",
++    "....ss....ss....",
++    "...ss....ss.....",
++    "...ss....ss.....",
++    "....ss....ss....",
++    "ooooooooooooo...",
++    "oCcccccccccCo...",
++    "ohwwwwwwwwwwoooo",
++    "ohwwwwwwwwwwo.oo",
++    "ohwwwwwwwwwwo.oo",
++    ".ohwwwwwwwwwooo.",
++    ".ohwwwwwwwwo....",
++    "..ohwwwwwwo.....",
++    "oooooooooooooo..",
++    ".oooooooooooo...",
++    "................",
++]
++COFFEE_COLOURS = {"o": (78, 46, 24), "w": (236, 222, 196), "h": (255, 250, 238), "c": (110, 64, 32), "C": (186, 132, 82),
++                  "s": (226, 226, 232)}
++
+ GLYPHS = [("aogiri_tree", TREE, TREE_COLOURS, ""), ("clown_face", CLOWN, CLOWN_COLOURS, ""),
+-          ("gas_toxic", TOXIC, TOXIC_COLOURS, "")]
++          ("gas_toxic", TOXIC, TOXIC_COLOURS, ""), ("anteiku_coffee", COFFEE, COFFEE_COLOURS, "\ue003")]
++# The name's colour after each (the game's: Aogiri §4, the Clowns §9, the Gas Masks §a; 4.1.70: Anteiku's own light brown, GangPlayer.ANTEIKU_BROWN).
++NAME_COLOURS = {"aogiri_tree": (170, 0, 0), "clown_face": (85, 85, 255), "gas_toxic": (85, 255, 85), "anteiku_coffee": (200, 155, 109)}
+ 
+ 
+ def image(rows, colours):
+@@ -110,7 +136,7 @@ def write():
+ def preview(out):
+     """A mock (not the game's font): each emblem big, then in a name tag and a chat line at the game's sizes, scaled up 4 times."""
+     scale = 4
+-    W, H = 760, 500
++    W, H = 860, 580
+     sheet = Image.new("RGB", (W, H), (58, 68, 80))
+     d = ImageDraw.Draw(sheet)
+     try:
+@@ -118,17 +144,16 @@ def preview(out):
+         small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
+     except OSError:
+         font = small = ImageFont.load_default()
+-    d.text((12, 8), "Gang emblems (4.1.50, 4.1.54): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
++    d.text((12, 8), "Gang emblems (4.1.50, 4.1.54, 4.1.70): 16x16 glyphs, shown 8 px tall as a name's symbol (mock text, not the game's font)", fill=(230, 230, 230), font=small)
+     x = 20
+     for name, rows, colours, _ in GLYPHS:
+         big = image(rows, colours).resize((160, 160), Image.NEAREST)
+         sheet.paste(big, (x, 40), big)
+         d.text((x, 205), name.replace("_", " "), fill=(230, 230, 230), font=small)
+         x += 200
+-    lines = [("aogiri_tree", (170, 0, 0), "Ken"), ("clown_face", (85, 85, 255), "Ken"), ("gas_toxic", (85, 255, 85), "Ken")]
+     y = 240
+     for name, rows, colours, _ in GLYPHS:
+-        colour = (170, 0, 0) if name == "aogiri_tree" else (85, 255, 85) if name == "gas_toxic" else (85, 85, 255)
++        colour = NAME_COLOURS[name]
+         # A name tag: dark translucent box, the emblem, a space, the name.
+         glyph = image(rows, colours).resize((8 * scale, 8 * scale), Image.NEAREST)
+         label = "Ken"
+diff --git a/verify/api-allowlist.txt b/verify/api-allowlist.txt
+index 2818832c..17bb6609 100644
+--- a/verify/api-allowlist.txt
++++ b/verify/api-allowlist.txt
+@@ -919,6 +919,12 @@ M net/minecraft/world/level/Level m_46471_ ()Z  # [srg] isRaining: cmm.m_46471_
+ # 1.3.14: a companion's name tag renames it everywhere (the name filter keeps some names out of the mod itself)
+ M net/minecraft/world/entity/Entity m_7770_ ()Lnet/minecraft/network/chat/Component;  # [srg] getCustomName: bfj.m_7770_ ()Lsw; (declared on Entity, from Nameable; yarn Entity.getCustomName)
+ M net/minecraft/network/chat/Component getString ()Ljava/lang/String;  # [srg] getString: ta.getString ()Ljava/lang/String; (FormattedText, which Component extends: never obfuscated)
++# 4.1.70: Anteiku's name in its own light brown (the owner: "Light brown name tag with a coffee symbol"): a colour none of the sixteen.
++C net/minecraft/network/chat/Style  # [srg] obf ts = intermediary class_2583 = yarn net/minecraft/text/Style (MCPConfig: ts net/minecraft/src/C_5020_; MutableComponent tj C_5012_, Component sw C_4996_)
++F net/minecraft/network/chat/Style f_131099_ Lnet/minecraft/network/chat/Style;  # [srg] EMPTY: ts.a (field_24360, yarn Style.EMPTY)
++M net/minecraft/network/chat/Style m_178520_ (I)Lnet/minecraft/network/chat/Style;  # [srg] withColor(int): ts.a (I)Lts; (method_36139, yarn Style.withColor(int))
++M net/minecraft/network/chat/MutableComponent m_6270_ (Lnet/minecraft/network/chat/Style;)Lnet/minecraft/network/chat/MutableComponent;  # [srg] setStyle: tj.b (Lts;)Ltj; (method_10862, yarn MutableText.setStyle)
++M net/minecraft/network/chat/MutableComponent m_7220_ (Lnet/minecraft/network/chat/Component;)Lnet/minecraft/network/chat/MutableComponent;  # [srg] append: tj.b (Lsw;)Ltj; (method_10852, yarn MutableText.append)
+ # 1.3.15: children: carried, no gravity and no pushing (they shoved their carrier and fell between ticks); drawn on a little one's own
+ # proportions (vanilla's young model off, each part scaled); found with /kagune children (they glow a while)
+ M net/minecraft/world/entity/LivingEntity m_6138_ ()V  # [srg] pushEntities: bfz.m_6138_ ()V (yarn LivingEntity.tickCramming)

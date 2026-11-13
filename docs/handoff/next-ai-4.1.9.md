@@ -1,4 +1,4 @@
-# Next AI: after 4.1.69 (Ken's sit for stiff legs, nothing in the air; pushed). Next: the Anteiku faction through Ken, the CCG faction through the General, then the hotel. after 4.1.68 (Ken's tower gone, Ken on Anteiku's roof; pushed). after 4.1.67 (the old to-do: quitting a gang, the marriage rules, a spouse's demands, Touka's marriage reactions; pushed). after 4.1.66 (the cookbook, every screen the quest menu's, pushed). after 4.1.65 (the king's choice, pushed). after 4.1.64 (the path choice, pushed). after 4.1.63 (the gender screen, pushed). after 4.1.62 (the kakugan screen, pushed). after 4.1.61 (the Pale menu, pushed). after 4.1.60 (the Graft menu, pushed). after 4.1.59 (the Bikaku menu, pushed). after 4.1.58 (the Rinkaku menu, pushed). after 4.1.57 (every place cleared and set on its own floor, graded round, built after the trees; every template's glass panes joined; pushed). after 4.1.56 (the Ukaku menu in the quest menu's style, pushed). after 4.1.55, handoff (4.1.56 next: the Ukaku menu in the quest menu's style, planned below; the menus go on, one a version). after 4.1.55 (the talk screen in the quest menu's style; the menus go on, one a version). after 4.1.54 (the Gas Masks and Banjou, pushed). Then: the owner's new list (below, quoted). Before: after 4.1.53, handoff (4.1.54 the Gas Masks/Banjou next: its first step in docs/handoff/wip-4.1.54.patch; 4.1.53: the gangs' traits and daily quests; 4.1.52: the reputation bar; 4.1.51: the new CCG tower, the owner's furnished CCG.schematic, a working lift; 4.1.50: joining gangs). Before: after 4.1.47, 4.1.48 half done (4.1.48 WIP: Ayato and Noro on slim arms with builds 0.42/0.52, in docs/handoff/wip-4.1.48.patch; 4.1.47: the ghouls' arm blade rebuilt as the owner's picture, four slashes, a living stance, protocol 121; 4.1.46: the CCG's ghoul division, protocol 120; 4.1.45: roaming gangs, the Clowns and the Gas Masks, protocol 119; 4.1.44: the hideout and the CCG building spawn again; 4.1.43: the one-of-a-kind claim taken as the place is built, never two Etos; 4.1.42: structures once per world, flat, never floating, spread out; 4.1.41: the Reaper's blade turned over about its length; 4.1.40: older worlds' townspeople keep their maps, "complete all" reopens gates at login; 4.1.39: Small City fixes, humans kept in their village, the city ground cached, protocol 118; 4.1.38: two minutes after a fight the Reaper puts his jacket back on; 4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.69, handoff (4.1.70 the Anteiku faction half written: docs/handoff/wip-4.1.70.patch, the plan below). after 4.1.69 (Ken's sit for stiff legs, nothing in the air; pushed). Next: the Anteiku faction through Ken, the CCG faction through the General, then the hotel. after 4.1.68 (Ken's tower gone, Ken on Anteiku's roof; pushed). after 4.1.67 (the old to-do: quitting a gang, the marriage rules, a spouse's demands, Touka's marriage reactions; pushed). after 4.1.66 (the cookbook, every screen the quest menu's, pushed). after 4.1.65 (the king's choice, pushed). after 4.1.64 (the path choice, pushed). after 4.1.63 (the gender screen, pushed). after 4.1.62 (the kakugan screen, pushed). after 4.1.61 (the Pale menu, pushed). after 4.1.60 (the Graft menu, pushed). after 4.1.59 (the Bikaku menu, pushed). after 4.1.58 (the Rinkaku menu, pushed). after 4.1.57 (every place cleared and set on its own floor, graded round, built after the trees; every template's glass panes joined; pushed). after 4.1.56 (the Ukaku menu in the quest menu's style, pushed). after 4.1.55, handoff (4.1.56 next: the Ukaku menu in the quest menu's style, planned below; the menus go on, one a version). after 4.1.55 (the talk screen in the quest menu's style; the menus go on, one a version). after 4.1.54 (the Gas Masks and Banjou, pushed). Then: the owner's new list (below, quoted). Before: after 4.1.53, handoff (4.1.54 the Gas Masks/Banjou next: its first step in docs/handoff/wip-4.1.54.patch; 4.1.53: the gangs' traits and daily quests; 4.1.52: the reputation bar; 4.1.51: the new CCG tower, the owner's furnished CCG.schematic, a working lift; 4.1.50: joining gangs). Before: after 4.1.47, 4.1.48 half done (4.1.48 WIP: Ayato and Noro on slim arms with builds 0.42/0.52, in docs/handoff/wip-4.1.48.patch; 4.1.47: the ghouls' arm blade rebuilt as the owner's picture, four slashes, a living stance, protocol 121; 4.1.46: the CCG's ghoul division, protocol 120; 4.1.45: roaming gangs, the Clowns and the Gas Masks, protocol 119; 4.1.44: the hideout and the CCG building spawn again; 4.1.43: the one-of-a-kind claim taken as the place is built, never two Etos; 4.1.42: structures once per world, flat, never floating, spread out; 4.1.41: the Reaper's blade turned over about its length; 4.1.40: older worlds' townspeople keep their maps, "complete all" reopens gates at login; 4.1.39: Small City fixes, humans kept in their village, the city ground cached, protocol 118; 4.1.38: two minutes after a fight the Reaper puts his jacket back on; 4.1.37: the Reaper untouchable through his change, a real coat taken off, a slower draw, the blade point-down, his blows clashable; 4.1.36: the Small City in worlds, the villages deleted, humans in vanilla villages; 4.1.35: the Small City cut for 1.20.1; 4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -9,7 +9,82 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
-## START HERE (newest, after 4.1.69): the Anteiku faction next, then the CCG faction, then the hotel
+## START HERE (newest, after 4.1.69, handoff): finish 4.1.70, the Anteiku faction, from its patch
+
+The owner stopped the session ("prompt + handoff now"). **Pushed this session** (each after a full build EXIT 0 on its exact commit, jar
+sent): 4.1.56 (`1b444f34`) to 4.1.66 (`a0a55d6f`), 4.1.67 (`e32fb7b1`, the old to-do), 4.1.68 (`4024deb8`, Ken's tower gone, Ken on
+Anteiku's roof), 4.1.69 (`d54ced3f`, Ken's sit; pushed with this commit once its build ended EXIT 0: if the branch's `git log` has no
+"HexKagune 4.1.69", its notes are below and its build must be redone). The commit carrying this section changes only docs/ (the build's
+code is 4.1.69's).
+
+**4.1.70, the Anteiku faction, half written:** `git apply docs/handoff/wip-4.1.70.patch` (applies cleanly on 4.1.69; never compiled or
+tested yet). The owner's words (quoted exactly, from the section after 4.1.54): "Anteikou - Joinable through Ken (quest) / Traits: / All
+ghouls and factions are neutral to the player but the CCG. / Enegy bar increases size and increases maximum capacity. / Looks: Light
+brown name tag with a coffee symbol."
+
+In the patch (done):
+- `GangPlayer`: `ANTEIKU = 4`; Ken's chain `ANTEIKU_NOT_YET/BEANS/DOVES/DONE` with two new record fields `anteikuStep`, `doveKills`
+  (all 11 constructions carry them); `answered()`, `beansBrought()`, `droveDove()`, `anteikuDone()`; `ANTEIKU_CCG = 3`,
+  `ANTEIKU_BEAN_COUNT = 8`; `COFFEE` (U+E003); `ANTEIKU_BROWN = 0xC89B6D`; `named` (plain-text fallback gold), `title` "Anteiku".
+- The emblem: `tools/gang_emblems.py` COFFEE (a cup on its saucer, steam curling; judged against two other steams, the curled one kept),
+  `textures/font/anteiku_coffee.png`, `assets/minecraft/font/default.json` U+E003. Render: `docs/handoff/anteiku-emblem-4.1.70.png` (all
+  four emblems, each in a name tag and a chat line, the name in its colour).
+- The light brown name: none of the 16 `§` colours, so `GangServer.nameTag(gang, name)` builds a Component: the emblem, then the name with
+  `Style.EMPTY.withColor(ANTEIKU_BROWN)`. New API, stubbed in `stubs/net/minecraft/network/chat/` (`Style`, `MutableComponent.m_6270_`,
+  `m_7220_`) and in `verify/api-allowlist.txt` with evidence (worked out this session from MCPConfig 1.20.1 `joined.tsrg`, Fabric
+  intermediary 1.20.1 and Yarn 1.20.1, all reachable on raw.githubusercontent.com): `Style` = obf `ts` (C_5020_, yarn Style);
+  `f_131099_` EMPTY; `m_178520_` withColor(int); `MutableComponent` = `tj`: `m_6270_` setStyle, `m_7220_` append. The build's verify step
+  has not seen them yet: if it complains about the C line's form, compare with other C lines.
+- `GangServer`: the two fields kept with the player (`HexGangAnteikuStep`, `HexGangAnteikuDoves`); `died()` counts an investigator for
+  Ken's chain (a CCG agent or one of the CCG's ghoul division) with its progress line ("§6Anteiku: n/3 investigators (go back to Ken)");
+  `colour` §6; `joined()` says Anteiku's own line (ghouls and gangs leave you be unless you start it, the CCG won't, RC goes further).
+- `NpcTalkView.GANG_COLOURS[4]` Anteiku's brown (the reputation meter clamped gang 4 to the Gas Masks' green).
+
+Still to write (the plan):
+- `GangServer.leads` + `Persona.KEN`; `gangOf(KEN)` and `memberOf(KEN or TOUKA)` = ANTEIKU. Ken's first page has room (it never uses
+  SAY_3; `EtoServer.withGang` adds the topic). This brings 4.1.67's rules to Ken: marrying Ken while in another gang takes the player out
+  of it, and a Ken married to a player in another gang asks them to quit: tell the owner plainly in the notes.
+- `ask()`: member "How's Anteiku?"; not yet "I want to join Anteiku."; beans step with 8 cocoa beans in the main hand "Here. Coffee beans.
+  (the cocoa beans in your hand)"; done "It's done. The doves are gone."; else "About joining Anteiku...".
+- `talk()`: after the 4.1.67 quit check, `if (gang == GangPlayer.ANTEIKU) return ken(player, g, key, seed);`, built like `banjou()`.
+  Ken asks why (three answers rotated by seed, keys "gang:why:n"; the right one: "So I don't turn into a monster. And so nobody else has to
+  be alone like I was."; wrong: "I want to get stronger. Anteiku's ghouls are the strongest there are." (Aogiri is that way, sorry) and "I
+  need somewhere to hide." (everyone here hides from something; that can't be the reason)). Then 8 cocoa beans held (`holdsBeans`/
+  `takeBeans` like `holdsCase`/`takeCase`, kept in creative; Touka already calls cocoa beans coffee beans). Then 3 investigators asking
+  about the café. Then he takes them in (`set(join)`, `joined`): "*He hangs a second apron on the hook by the door.* ...Welcome to
+  Anteiku. Nobody here will ask what you did before. Just... be kind, okay?". Member lines with `wayOut(gang)`; in another gang: he can't
+  take someone who belongs to them (it would bring them to the café's door). Ken is polite, gentle, apologetic, fond of coffee and books
+  (`KenScript`'s header).
+- `GangWords` Anteiku cases in Ken's voice (`asked`, `stay`, `gone`, `demand`); today they fall to the Clowns' `default`.
+- Traits: neutral, in `GhoulNpcBrain.wanted` after the gang stance block: an Anteiku member (not creative) is gone for by a ghoul only on
+  a grudge (provoked), never by an unprovoked ghoul or gang; `who.ccg()` (the CCG's ghouls) as before; banned-gang outcasts still on
+  sight. Capacity: `SharedBar.capacity` +1 for Anteiku (1 to 2; Potential Unlock's 3 to 4), and its client twin (`BikakuClient.capacity`,
+  read by the HUD and the menus; the client knows gangs from `GangServer.SEEN`, filled by `S2CGangName`). Size: `ReserveBarView`'s tail
+  is one constant (`TAIL` 72, the kakuhou bulb right after it, `WIDTH` 81): make the tail's length a parameter (Anteiku 108, 1.5 times,
+  same 9 px height so it never meets the air bubbles above) and have `ReserveHud` pass it.
+- No dailies or mask for Anteiku (the owner asked dailies for the CCG only); `inHideout` leaves Anteiku out, so the reputation bar never
+  turns on them. Check `GangDaily` and `dailyKill` take gang 4 quietly.
+- Tests (`NpcTests.joining` is where the gangs' are): the chain step by step, the name (`named`, `nameTag` source), `GangWords`, the
+  neutrality and capacity hooks (source checks as 4.1.67's), the bar's length. Sabotage each. Renders, judged: Ken's Anteiku pages on the
+  talk screen (`tools/UiPreview.java gang-talk` mode, 4.1.67), the longer reserve bar beside the normal one (UiPreview's reserve mode),
+  the name tag.
+- Then docs, version 4.1.70, full build, push, jar, renders.
+
+**After 4.1.70:** the CCG faction through the General (a quest and dailies; "CCG no longer attacks the player. / All ghouls but official
+NPCS are hostile towards the player. / Damage increased when fighting ghouls. / Looks: Cyan Blue with a brief cafe symbol" (a briefcase,
+the owner's answer); `GeneralScript`; the CCG's agents are `AgentBrain`, its ghoul division `who.ccg()`), the same rails as Anteiku; then
+the hotel replacing the Small City (`art/exploration/humanhotel.schem`, the owner's: never altered).
+
+**Prompt for the next session:**
+
+> Continue HexGhoul on branch claude/admiring-johnson-8df58h (fast-forward your session branch onto it first). Read
+> docs/handoff/next-ai-4.1.9.md first: the "START HERE (newest, after 4.1.69, handoff)" section, and CLAUDE.md (render and judge everything
+> you change; tests passing is not the bar). Finish 4.1.70, the Anteiku faction through Ken: `git apply docs/handoff/wip-4.1.70.patch`,
+> then the rest of its plan in that section (Ken's chain, his words, the traits, tests, renders). Then the CCG faction through the General
+> with dailies, then the hotel replacing the Small City, one a version. For each version: full build in an isolated copy, push on EXIT 0
+> to both branches, send the jar, show the renders. Quote the owner exactly; never claim in-game testing.
+
+## START HERE (after 4.1.69): the Anteiku faction next, then the CCG faction, then the hotel
 
 **This session:** 4.1.56 (`1b444f34`) to 4.1.68 pushed after EXIT 0, jars sent; 4.1.69 Ken's sit (this commit; pushed only after its
 full build ended EXIT 0. If the branch's `git log` has no "HexKagune 4.1.69", redo it from below).
