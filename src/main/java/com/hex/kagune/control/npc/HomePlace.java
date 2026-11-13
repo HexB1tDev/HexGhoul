@@ -49,11 +49,48 @@ public final class HomePlace {
     }
 
     /**
-     * True if official {@code key} stands in the very middle of her place (Roma, in the middle of the ring: her spot in the tent's template is
-     * its footprint's middle, whichever way the tent is turned): where she is made if her place has none of her.
+     * 4.1.83 (the owner: "Gas mask guy is ALSO not spawning in his room, or anywhere"; "and I'm 99% sure the general of the CCg isnt spawning
+     * either"): official {@code key}'s own spot in her place's template, where it puts her ({x, feet y, z, yaw}: a jigsaw place's own; the
+     * Aogiri hideout's and the CCG tower's in the whole site, from its first tile's corner), or null for none of theirs. As the built
+     * templates have them (CompanionTests reads them back), but Banjou: in his bedroom upstairs by the magenta beds, facing into it (the
+     * owner, asked where his room is: "Upstairs bedroom (Recommended)"); the template is written so (tools/companion_structures.py).
      */
-    public static boolean middle(String key) {
-        return "roma".equals(key);
+    public static int[] spot(String key) {
+        return switch (key == null ? "" : key) {
+            case "eto" -> new int[] {6, 3, 5, 90};
+            case "touka" -> new int[] {17, 10, 8, 0};
+            case "ken" -> new int[] {17, 30, 17, 0};
+            case "ayato" -> new int[] {238, 14, 105, 0};
+            case "noro" -> new int[] {94, 26, 88, 0};
+            case "general" -> new int[] {23, 58, 25, 0};
+            case "roma" -> new int[] {38, 1, 24, 0};
+            case "banjou" -> new int[] {5, 7, 10, -90};
+            default -> null;
+        };
+    }
+
+    /**
+     * 4.1.83: where {@code spot} (a template's {x, feet y, z, yaw}) stands in the world ({x, feet y, z, yaw}) with the template's corner at
+     * ({@code x}, {@code y}, {@code z}) turned {@code turns} quarter turns clockwise (Rotation's order: NONE, CLOCKWISE_90, CLOCKWISE_180,
+     * COUNTERCLOCKWISE_90), as the game turns a template's blocks and people about its corner (village.VillageRules#turn) and their facing.
+     */
+    public static int[] placed(int[] spot, int x, int y, int z, int turns) {
+        int[] turned = com.hex.kagune.control.village.VillageRules.turn(spot[0], spot[2], turns);
+        int yaw = Math.floorMod(spot[3] + 90 * Math.floorMod(turns, 4) + 180, 360) - 180;
+        return new int[] {x + turned[0], y + spot[1], z + turned[1], yaw};
+    }
+
+    /** 4.1.83: how near (blocks, across) her spot a player keeps her place: half a minute there with none of her in it, she is made there. */
+    public static final double KEEP_NEAR = 24.0;
+    /** 4.1.83: how far (blocks, any way) her home may be from her spot's before it is moved there (a step or two of her own is hers). */
+    public static final int ASTRAY = 2;
+
+    /**
+     * 4.1.83: true if a home ({@code ax}, {@code ay}, {@code az}: a block one over her feet) is not the one at her spot's ({@code x}, {@code y},
+     * {@code z}): more than {@link #ASTRAY} from it any way (Banjou downstairs before his bedroom upstairs).
+     */
+    public static boolean astray(int ax, int ay, int az, int x, int y, int z) {
+        return Math.abs(ax - x) > ASTRAY || Math.abs(ay - y) > ASTRAY || Math.abs(az - z) > ASTRAY;
     }
 
     /** The middle of a box ({x, y, z}: its middle across, the floor's height over its lowest layer). */
@@ -63,8 +100,8 @@ public final class HomePlace {
 
     /**
      * 4.1.82: true if official {@code key} is made at her place now: someone has been there {@code waited} ticks (UniqueNpc.MISSING or
-     * more), none of her is in it ({@code inPlace}), she is not out with someone ({@code along}: following or holding a hand) and not
-     * married.
+     * more), none of her is in it ({@code inPlace}), she is not out with someone ({@code along}: following or holding a hand; 4.1.83: or left
+     * waiting somewhere by a player: she goes home herself after a day alone, UniqueNpc#dueHome) and not married.
      */
     public static boolean remade(boolean inPlace, boolean along, boolean married, long waited, long missing) {
         return !inPlace && !along && !married && waited >= missing;

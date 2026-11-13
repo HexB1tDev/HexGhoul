@@ -4,9 +4,10 @@ given: the floor (air at the feet, something under) light, anything at the feet 
 its people as the template puts them (a dot and the way they face), and any extra spots marked.
 
     python3 -I tools/floor_plan.py <name> out.png --floor Y "title" [--floor Y "title" ...] [--crop X0 X1 Z0 Z1]
-        [--mark X Y Z "label"] [--cell N]
+        [--mark X Y Z "label"] [--cell N] [--section Z "title"]
 
-A spot marked or a person is drawn on the panel whose floor is its own (its Y), with its label beside it.
+A spot marked or a person is drawn on the panel whose floor is its own (its Y), with its label beside it. 4.1.83: --section Z adds a
+panel seen from the south, cut through row Z (x across, y up, the cropped x and every layer): who stands in that row, on what.
 """
 import math
 import sys
@@ -25,7 +26,7 @@ BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 def main():
     a = sys.argv[1:]
     name, out = a[0], a[1]
-    floors, marks, crop, cell = [], [], None, 30
+    floors, marks, crop, cell, section = [], [], None, 30, None
     i = 2
     while i < len(a):
         if a[i] == "--floor":
@@ -37,6 +38,9 @@ def main():
         elif a[i] == "--crop":
             crop = tuple(int(v) for v in a[i + 1:i + 5])
             i += 5
+        elif a[i] == "--section":
+            section = (int(a[i + 1]), a[i + 2])
+            i += 3
         elif a[i] == "--cell":
             cell = int(a[i + 1])
             i += 2
@@ -53,7 +57,8 @@ def main():
     font, bold, big = ImageFont.truetype(FONT, 14), ImageFont.truetype(BOLD, 13), ImageFont.truetype(BOLD, 17)
     pad, top = 24, 34
     pw, ph = (x1 - x0) * cell, (z1 - z0) * cell
-    img = Image.new("RGB", (len(floors) * (pw + pad) + pad, ph + top + pad + 8), (24, 24, 28))
+    sh = h * cell if section else 0
+    img = Image.new("RGB", (max(len(floors) * (pw + pad) + pad, pw + 2 * pad), ph + top + pad + 8 + (sh + top + pad if section else 0)), (24, 24, 28))
     dr = ImageDraw.Draw(img)
     for f, (y, title) in enumerate(floors):
         ox, oz = pad + f * (pw + pad), top
@@ -83,7 +88,32 @@ def main():
             box = dr.textbbox((X + cell + 4, Z + cell / 2), lab, font=bold, anchor="lm")
             dr.rectangle([box[0] - 3, box[1] - 2, box[2] + 3, box[3] + 2], fill=(20, 20, 24))
             dr.text((X + cell + 4, Z + cell / 2), lab, fill=(255, 235, 160), font=bold, anchor="lm")
-    dr.text((pad, ph + top + 6), "north is up; one square a block; framed: something at feet height", fill=(170, 170, 170), font=font)
+    dr.text((pad, ph + top + 6), "north up; a square a block" if pw < 420 else "north is up; one square a block; framed: something at feet height",
+            fill=(170, 170, 170), font=font)
+    if section:
+        sz, title = section
+        ox, oz = pad, ph + top + pad + 8 + top
+        dr.text((ox, oz - top + 8), title, fill=(240, 240, 240), font=big)
+        for x in range(x0, x1):
+            for y in range(h):
+                X, Y = ox + (x - x0) * cell, oz + (h - 1 - y) * cell
+                if not isair(x, y, sz):
+                    c = tuple(int(v * 0.85) for v in C.colour(names[grid[x, y, sz]])[:3])
+                    dr.rectangle([X, Y, X + cell - 1, Y + cell - 1], fill=c, outline=(12, 12, 12))
+                else:
+                    behind = next((names[grid[x, y, zz]] for zz in range(sz - 1, -1, -1) if not isair(x, y, zz)), None)
+                    c = tuple(int(30 + v * 0.25) for v in C.colour(behind)[:3]) if behind else (36, 36, 42)
+                    dr.rectangle([X, Y, X + cell - 1, Y + cell - 1], fill=c)
+        for who, px_, py_, pz_ in people:
+            if pz_ == sz and x0 <= px_ < x1:
+                X, Y = ox + (px_ - x0) * cell, oz + (h - 1 - py_) * cell
+                dr.rectangle([X + 6, Y - cell + 4, X + cell - 7, Y + cell - 2], fill=(160, 90, 210), outline=(255, 255, 255), width=2)
+                lab = who.split(":")[1]
+                box = dr.textbbox((X + cell + 4, Y), lab, font=bold, anchor="lm")
+                dr.rectangle([box[0] - 3, box[1] - 2, box[2] + 3, box[3] + 2], fill=(20, 20, 24))
+                dr.text((X + cell + 4, Y), lab, fill=(255, 235, 160), font=bold, anchor="lm")
+        dr.text((ox, oz + h * cell + 6), f"seen from the south, cut through row z {sz}; up is up; dim: what is behind the cut",
+                fill=(170, 170, 170), font=font)
     img.save(out)
     print("wrote", out, img.size)
 

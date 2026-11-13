@@ -152,6 +152,7 @@ public final class CompanionTests {
         courtship480();
         dates481();
         bugs482();
+        officials483();
         proofs();
         oneSpouse();
         jealous();
@@ -2169,8 +2170,6 @@ public final class CompanionTests {
         check(com.hex.kagune.control.npc.HomePlace.takesOver(true, false, false), "her tent's body takes her from one whose home is elsewhere");
         check(!com.hex.kagune.control.npc.HomePlace.takesOver(true, true, false) && !com.hex.kagune.control.npc.HomePlace.takesOver(false, false, false)
             && !com.hex.kagune.control.npc.HomePlace.takesOver(true, false, true), "not from one at home, not from elsewhere, never from a married one");
-        check(com.hex.kagune.control.npc.HomePlace.middle("roma") && !com.hex.kagune.control.npc.HomePlace.middle("banjou")
-            && !com.hex.kagune.control.npc.HomePlace.middle("eto"), "only Roma's spot is her place's middle");
         check(java.util.Arrays.equals(com.hex.kagune.control.npc.HomePlace.middle(0, 76, 0, 48, 10), new int[] {38, 11, 24})
             && java.util.Arrays.equals(com.hex.kagune.control.npc.HomePlace.middle(-77, -1, 100, 148, 63), new int[] {-39, 64, 124})
             && java.util.Arrays.equals(com.hex.kagune.control.npc.HomePlace.middle(-78, -1, -149, -100, 63), new int[] {-40, 64, -125}),
@@ -2193,18 +2192,19 @@ public final class CompanionTests {
             "her slot's home looked at, and her marriage");
         check(near(unique, "public static boolean atOwnPlace(", "com.hex.kagune.control.PlaceClaims.claimed(place);", 250)
             && near(unique, "public static boolean atOwnPlace(", "HomePlace.within(place, x - ((chunk[0] << 4) + 8), z - ((chunk[1] << 4) + 8));", 400), "her place as the world built it");
-        check(near(unique, "static void keepPlaces(", "!someoneNear(level, new BlockPos(spot[0], spot[1], spot[2]), 24.0)", 600)
-            && near(unique, "static void keepPlaces(", "HomePlace.remade(inPlace, along, married, now - since, UniqueNpc.MISSING)", 3200)
-            && near(unique, "adopt(level, key, body, new BlockPos(spot[0], spot[1], spot[2]));", "live.m_146870_();", 200)
+        check(near(unique, "static void keepPlaces(", "!someoneNear(level, new BlockPos(spot[0], spot[1], spot[2]), com.hex.kagune.control.npc.HomePlace.KEEP_NEAR)", 600)
+            && near(unique, "static void keepPlaces(", "HomePlace.remade(inPlace, along, married, now - since, UniqueNpc.MISSING)", 4200)
+            && near(unique, "adopt(level, key, body, home);", "live.m_146870_();", 200)
             && unique.contains("        keepPlaces(level, now); // 4.1.82"), "made in her place, the stray one sent away, looked at with the others");
-        check(near(unique, "if (slot != null && !slot.alive && slot.diedAt != Long.MIN_VALUE) {", "slot.originX = spot[0];", 500),
+        check(near(unique, "if (slot != null && !slot.alive && slot.diedAt != Long.MIN_VALUE) {", "slot.originX = home.m_123341_();", 500),
             "dead, she comes back in her place");
         check(near(unique, "boolean along = live != null && (", "live.following() != null || live.mind != null && live.mind.holding != null", 60),
             "out with someone: left alone");
         String structures = read("src/main/java/com/hex/kagune/control/ControlStructures.java");
-        check(near(structures, "public static int[] middle(", "BoundingBox box = found.m_73601_();", 1200)
-            && near(structures, "public static int[] middle(", "!level.m_46805_(", 300)
-            && near(structures, "public static int[] middle(", "if (found == null || !found.m_73603_()) {\n            return null;", 1000),
+        check(near(structures, "public static int[] middle(", "BoundingBox box = found.m_73601_();", 600)
+            && near(structures, "public static int[] middle(", "StructureStart found = start(level, id);\n        if (found == null) {\n            return null;", 200)
+            && near(structures, "StructureStart start(", "!level.m_46805_(", 300)
+            && near(structures, "StructureStart start(", "return found == null || !found.m_73603_() ? null : found;", 900),
             "the tent's middle from its start's box, only where it's loaded and built");
         // The trials: each player's alone.
         String join = read("src/main/java/com/hex/kagune/control/server/JoinServer.java");
@@ -2280,6 +2280,107 @@ public final class CompanionTests {
         check(near(ghouls, "static boolean posted(", "if (dx * dx + dz * dz <= AgentSpawner.POST_REACH * AgentSpawner.POST_REACH) {\n            return false;", 600)
             && near(ghouls, "if (posted(npc, mind, now)) {", "return;", 60) && ghouls.indexOf("if (posted(npc, mind, now)) {") < ghouls.indexOf("if (who.gang() != 0 && roam(npc, mind, level, now)) {"),
             "a posted one strayed walks back, before it roams with its squad");
+    }
+
+    /**
+     * 4.1.83, the officials at their own spots (the owner: "Gas mask guy is ALSO not spawning in his room, or anywhere"; "and I'm 99% sure the
+     * general of the CCg isnt spawning either"; asked where Banjou's room is: "Upstairs bedroom (Recommended)").
+     */
+    static void officials483() {
+        // Each official's spot is where her place's built template puts her (read back), facing its way.
+        String[][] where = {{"eto", "library"}, {"touka", "anteiku"}, {"ken", "anteiku"}, {"roma", "circus"}, {"banjou", "gas_hideout"},
+            {"ayato", "aogiri_hideout/t_4_2", "218", "105"}, {"noro", "aogiri_hideout/t_1_1", "54", "53"}, {"general", "ccg_building/t_0_0", "0", "0"}};
+        int officials = 0;
+        for (String[] w : where) {
+            int[] spot = com.hex.kagune.control.npc.HomePlace.spot(w[0]);
+            try {
+                byte[] nbt = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(java.nio.file.Path.of(
+                    "src/main/resources/data/hexkagune/structures/" + w[1] + ".nbt"))).readAllBytes();
+                int[] at = figures(nbt).get("hexkagune:" + w[0]);
+                int ox = w.length > 2 ? Integer.parseInt(w[2]) : 0;
+                int oz = w.length > 2 ? Integer.parseInt(w[3]) : 0;
+                check(spot != null && at != null && spot[0] == at[0] + ox && spot[1] == at[1] && spot[2] == at[2] + oz,
+                    w[0] + ": her spot is where her place's template puts her: " + java.util.Arrays.toString(spot) + " / " + java.util.Arrays.toString(at));
+                String text = new String(nbt, java.nio.charset.StandardCharsets.ISO_8859_1);
+                int body = text.indexOf("hexkagune:" + w[0]);
+                int rotation = text.indexOf("Rotation", body);
+                check(spot != null && body > 0 && rotation - body < 100 && yawAt(nbt, rotation) == spot[3], w[0] + ": and facing its way");
+            } catch (java.io.IOException failure) {
+                check(false, "read " + w[1] + ": " + failure);
+            }
+            check(com.hex.kagune.control.npc.HomePlace.of(w[0]) != null && w[1].startsWith(com.hex.kagune.control.npc.HomePlace.of(w[0])), w[0] + ": in her own place");
+            officials++;
+        }
+        check(officials == com.hex.kagune.control.npc.Persona.ALL.size() && com.hex.kagune.control.npc.HomePlace.spot("child:1") == null
+            && com.hex.kagune.control.npc.HomePlace.spot(null) == null, "every official has a spot, no one else");
+        for (com.hex.kagune.control.npc.Persona p : com.hex.kagune.control.npc.Persona.ALL) {
+            check(com.hex.kagune.control.npc.HomePlace.spot(p.key()) != null, p.key() + " has her own spot");
+        }
+        // Banjou: in his bedroom upstairs (its floor at y 6), beside the magenta beds, facing into it.
+        int[] banjou = com.hex.kagune.control.npc.HomePlace.spot("banjou");
+        check(banjou[0] == 5 && banjou[1] == 7 && banjou[2] == 10 && banjou[3] == -90, "Banjou upstairs by the beds, facing east into his room");
+        check(read("tools/companion_structures.py").contains("{\"who\": \"hexkagune:banjou\", \"at\": (5, 7, 10), \"yaw\": -90.0},")
+            && read("tools/companion_structures.py").contains("\"Upstairs bedroom (Recommended)\""), "the template written so, the owner's answer kept");
+        // Placed: the template's corner at the piece's position, turned as the game turns a template (about its corner) and its people.
+        int[] touka = com.hex.kagune.control.npc.HomePlace.spot("touka");
+        int[][] want = {{117, 74, 208, 0}, {92, 74, 217, 90}, {83, 74, 192, -180}, {108, 74, 183, -90}};
+        for (int turns = 0; turns < 4; turns++) {
+            int[] got = com.hex.kagune.control.npc.HomePlace.placed(touka, 100, 64, 200, turns);
+            check(java.util.Arrays.equals(got, want[turns]), "Touka placed, " + turns + " quarter turns: " + java.util.Arrays.toString(got));
+        }
+        check(com.hex.kagune.control.npc.HomePlace.placed(banjou, 0, 70, 0, 1)[3] == 0 && com.hex.kagune.control.npc.HomePlace.placed(banjou, 0, 70, 0, 3)[3] == -180
+            && com.hex.kagune.control.npc.HomePlace.placed(com.hex.kagune.control.npc.HomePlace.spot("eto"), 0, 0, 0, 3)[3] == 0,
+            "her facing turned with her place (yaw + 90 a quarter turn, -180 to 180)");
+        check(java.util.Arrays.equals(com.hex.kagune.control.npc.HomePlace.placed(banjou, -50, 63, -70, 5), com.hex.kagune.control.npc.HomePlace.placed(banjou, -50, 63, -70, 1)),
+            "five quarter turns are one");
+        // Her home, and when it is moved to her spot.
+        check(!com.hex.kagune.control.npc.HomePlace.astray(10, 64, 10, 12, 66, 8) && com.hex.kagune.control.npc.HomePlace.astray(10, 64, 10, 13, 64, 10)
+            && com.hex.kagune.control.npc.HomePlace.astray(10, 64, 10, 10, 67, 10) && com.hex.kagune.control.npc.HomePlace.astray(10, 64, 10, 10, 64, 7)
+            && com.hex.kagune.control.npc.HomePlace.ASTRAY == 2, "a home two blocks off is hers; three off (downstairs) is moved to her spot");
+        check(com.hex.kagune.control.npc.HomePlace.KEEP_NEAR == 24.0, "a player within 24 across of her spot keeps her place");
+        // The world's spot, from the place as built.
+        String structures = read("src/main/java/com/hex/kagune/control/ControlStructures.java");
+        check(near(structures, "public static int[] spot(", "for (StructurePiece piece : found.m_73602_()) {", 900)
+            && near(structures, "for (StructurePiece piece : found.m_73602_()) {", "if (piece instanceof PoolElementStructurePiece pool && !clearing(piece)) {", 100)
+            && near(structures, "if (piece instanceof PoolElementStructurePiece pool && !clearing(piece)) {", "BlockPos at = pool.m_72646_();", 120)
+            && near(structures, "BlockPos at = pool.m_72646_();", "int turns = ((Enum<?>)(Object)pool.m_6830_()).ordinal();", 100)
+            && near(structures, "int turns = ((Enum<?>)(Object)pool.m_6830_()).ordinal();", "return com.hex.kagune.control.npc.HomePlace.placed(local, at.m_123341_(), at.m_123342_(), at.m_123343_(), turns);", 300),
+            "her spot read from her place's first piece past its clearing: its corner and its turns");
+        check(near(structures, "static net.minecraft.world.level.levelgen.structure.StructureStart start(", "!level.m_46805_(", 300)
+            && near(structures, "static net.minecraft.world.level.levelgen.structure.StructureStart start(", "return found == null || !found.m_73603_() ? null : found;", 900),
+            "only a place built, its chunk loaded");
+        // The keeper: every official, at her spot.
+        String unique = read("src/main/java/com/hex/kagune/control/server/UniqueNpcs.java");
+        String keep = unique.substring(Math.max(0, unique.indexOf("static void keepPlaces(")));
+        check(keep.length() < unique.length() && keep.contains("if (com.hex.kagune.control.npc.HomePlace.of(key) == null) {\n                continue;")
+            && !keep.contains("HomePlace.middle(key)") && keep.contains("int[] spot = spotOf(level, key);"), "every official kept, each at her own spot");
+        check(keep.contains("BlockPos home = new BlockPos(spot[0], spot[1] + 1, spot[2]);"), "her home one over her feet (as a body settles)");
+        check(keep.contains("|| slot != null && slot.away;"), "one left waiting somewhere by a player is left (she goes home herself after a day)");
+        check(near(keep, "boolean inPlace = live != null && atOwnPlace(", "live.homeAt(home);", 900) && near(keep, "live.homeAt(home);", "adopt(level, key, live, home);", 200)
+            && near(keep, "if (inPlace && !along && !married && was != null", "HomePlace.astray(", 200), "one in her place, her home elsewhere: her spot is her home");
+        check(near(keep, "Mob body = kind == null ? null : kind.get().m_20615_(level);", "spot[2] + 0.5, spot[3], 0.0F);", 500)
+            && near(keep, "spot[2] + 0.5, spot[3], 0.0F);", "body.f_20885_ = spot[3];\n            body.f_20883_ = spot[3];", 80), "made at her spot, facing its way");
+        check(near(keep, "for (com.hex.kagune.control.npc.EtoNpc one : EtoBrain.live()) {", "&& (live == null || atOwnPlace(key, one.m_20185_(), one.m_20189_()))) {", 300),
+            "the one in her place is the one looked at");
+        check(near(unique, "static int[] spotOf(", "if (spotsOf != level) {\n            SPOTS.clear();", 200)
+            && near(unique, "static int[] spotOf(", "known = com.hex.kagune.control.ControlStructures.spot(level, key);", 500), "each world's spots read once, kept");
+        // The command says what it does now.
+        String commands = read("src/main/java/com/hex/kagune/control/server/ControlCommands.java");
+        check(commands.contains(": name + \" is here now. \" + her + \" own place is still \"")
+            && near(commands, "String said = married || com.hex.kagune.control.npc.HomePlace.of(persona.key()) == null ? name + \" lives here now.\"", "is here now.", 200),
+            "/kagune <name> here says she lives there only if married; else she is visiting");
+    }
+
+    /** The yaw (a Rotation list's first float) of the NBT list named Rotation at {@code at} in {@code nbt}. */
+    static int yawAt(byte[] nbt, int at) {
+        if (at < 0 || at + 8 + 1 + 4 + 4 > nbt.length) {
+            return Integer.MIN_VALUE;
+        }
+        java.nio.ByteBuffer b = java.nio.ByteBuffer.wrap(nbt, at + 8, 9);
+        if (b.get() != 5 || b.getInt() != 2) {
+            return Integer.MIN_VALUE;
+        }
+        return Math.round(b.getFloat());
     }
 
     /** {@code p}'s courtship on chapter {@code closed} + 1 with {@code done} of it done and {@code held} of what it asks for in hand. */

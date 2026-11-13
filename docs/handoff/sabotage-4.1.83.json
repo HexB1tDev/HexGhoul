@@ -1,0 +1,240 @@
+[
+ {
+  "name": "Eto a step off",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"eto\" -> new int[] {6, 3, 5, 90};",
+  "new": "case \"eto\" -> new int[] {6, 3, 6, 90};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Touka facing the wall",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"touka\" -> new int[] {17, 10, 8, 0};",
+  "new": "case \"touka\" -> new int[] {17, 10, 8, 180};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ken off the roof",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"ken\" -> new int[] {17, 30, 17, 0};",
+  "new": "case \"ken\" -> new int[] {17, 10, 17, 0};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma under her floor",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"roma\" -> new int[] {38, 1, 24, 0};",
+  "new": "case \"roma\" -> new int[] {38, 0, 24, 0};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Banjou downstairs again",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"banjou\" -> new int[] {5, 7, 10, -90};",
+  "new": "case \"banjou\" -> new int[] {7, 2, 11, -90};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ayato where the hideout's numbers had him (before its cut)",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"ayato\" -> new int[] {238, 14, 105, 0};",
+  "new": "case \"ayato\" -> new int[] {262, 14, 105, 0};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Noro where the hideout's numbers had him (before its cut)",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"noro\" -> new int[] {94, 26, 88, 0};",
+  "new": "case \"noro\" -> new int[] {118, 26, 88, 0};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General a floor down",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"general\" -> new int[] {23, 58, 25, 0};",
+  "new": "case \"general\" -> new int[] {23, 52, 25, 0};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "everyone a spot",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "            default -> null;\n        };\n    }\n\n    /**\n     * 4.1.83: where",
+  "new": "            default -> new int[] {0, 0, 0, 0};\n        };\n    }\n\n    /**\n     * 4.1.83: where",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "placed unturned",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "int[] turned = com.hex.kagune.control.village.VillageRules.turn(spot[0], spot[2], turns);",
+  "new": "int[] turned = com.hex.kagune.control.village.VillageRules.turn(spot[0], spot[2], 0);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "placed turned the other way",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "int[] turned = com.hex.kagune.control.village.VillageRules.turn(spot[0], spot[2], turns);",
+  "new": "int[] turned = com.hex.kagune.control.village.VillageRules.unturn(spot[0], spot[2], turns);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "placed at the corner's height",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return new int[] {x + turned[0], y + spot[1], z + turned[1], yaw};",
+  "new": "return new int[] {x + turned[0], y, z + turned[1], yaw};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her facing unturned",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "int yaw = Math.floorMod(spot[3] + 90 * Math.floorMod(turns, 4) + 180, 360) - 180;",
+  "new": "int yaw = spot[3];",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her facing past 180",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "int yaw = Math.floorMod(spot[3] + 90 * Math.floorMod(turns, 4) + 180, 360) - 180;",
+  "new": "int yaw = Math.floorMod(spot[3] + 90 * Math.floorMod(turns, 4), 360);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "astray at two",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return Math.abs(ax - x) > ASTRAY || Math.abs(ay - y) > ASTRAY || Math.abs(az - z) > ASTRAY;",
+  "new": "return Math.abs(ax - x) >= ASTRAY || Math.abs(ay - y) >= ASTRAY || Math.abs(az - z) >= ASTRAY;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "astray never by height",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return Math.abs(ax - x) > ASTRAY || Math.abs(ay - y) > ASTRAY || Math.abs(az - z) > ASTRAY;",
+  "new": "return Math.abs(ax - x) > ASTRAY || Math.abs(az - z) > ASTRAY;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "astray never north or south",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return Math.abs(ax - x) > ASTRAY || Math.abs(ay - y) > ASTRAY || Math.abs(az - z) > ASTRAY;",
+  "new": "return Math.abs(ax - x) > ASTRAY || Math.abs(ay - y) > ASTRAY;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "astray far",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "public static final int ASTRAY = 2;",
+  "new": "public static final int ASTRAY = 4;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "kept from far off",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "public static final double KEEP_NEAR = 24.0;",
+  "new": "public static final double KEEP_NEAR = 64.0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the spot from a clearing tile",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "if (piece instanceof PoolElementStructurePiece pool && !clearing(piece)) {",
+  "new": "if (piece instanceof PoolElementStructurePiece pool) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the spot never turned",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "int turns = ((Enum<?>)(Object)pool.m_6830_()).ordinal(); // NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90\n                return",
+  "new": "int turns = 0; // NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90\n                return",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the start where nothing is loaded",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "        if (chunk == null || !level.m_46805_(new BlockPos((chunk[0] << 4) + 8, 64, (chunk[1] << 4) + 8))) {\n            return null;\n        }\n        Structure structure",
+  "new": "        if (chunk == null) {\n            return null;\n        }\n        Structure structure",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the start though not built",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "return found == null || !found.m_73603_() ? null : found;",
+  "new": "return found;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "only Roma kept",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "            if (com.hex.kagune.control.npc.HomePlace.of(key) == null) {\n                continue;",
+  "new": "            if (!\"roma\".equals(key)) {\n                continue;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her home at her feet",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "BlockPos home = new BlockPos(spot[0], spot[1] + 1, spot[2]);",
+  "new": "BlockPos home = new BlockPos(spot[0], spot[1], spot[2]);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "one left waiting taken home",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "boolean along = live != null && (live.following() != null || live.mind != null && live.mind.holding != null) || slot != null && slot.away;",
+  "new": "boolean along = live != null && (live.following() != null || live.mind != null && live.mind.holding != null);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "in her place, her home left elsewhere",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "                live.homeAt(home); // in her place",
+  "new": "                live.m_6084_(); // in her place",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "in her place, the world's home left elsewhere",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "                adopt(level, key, live, home);\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "made facing south",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "spot[2] + 0.5, spot[3], 0.0F);",
+  "new": "spot[2] + 0.5, 0.0F, 0.0F);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "made, its body turned south",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "            body.f_20885_ = spot[3];\n            body.f_20883_ = spot[3];",
+  "new": "            body.f_20885_ = 0.0F;\n            body.f_20883_ = 0.0F;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the stray one looked at",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "                    && (live == null || atOwnPlace(key, one.m_20185_(), one.m_20189_()))) {",
+  "new": "                    ) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "spots of another world",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "        if (spotsOf != level) {\n            SPOTS.clear();",
+  "new": "        if (spotsOf == null) {\n            SPOTS.clear();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the command: lives there",
+  "file": "src/main/java/com/hex/kagune/control/server/ControlCommands.java",
+  "old": "String said = married || com.hex.kagune.control.npc.HomePlace.of(persona.key()) == null ? name + \" lives here now.\"",
+  "new": "String said = true ? name + \" lives here now.\"",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the template's Banjou downstairs",
+  "file": "tools/companion_structures.py",
+  "old": "{\"who\": \"hexkagune:banjou\", \"at\": (5, 7, 10), \"yaw\": -90.0},",
+  "new": "{\"who\": \"hexkagune:banjou\", \"at\": (7, 2, 11), \"yaw\": -90.0},",
+  "suite": "CompanionTests"
+ }
+]

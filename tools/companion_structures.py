@@ -96,12 +96,15 @@ PLACES = {
     "gas_hideout": {
         "source": "exploration/GasMask_hideout.schem",
         # 4.1.54 (the owner: Banjou "Lives in the small house in the schematic"; asked which, "The cottage": the main cherry house with the
-        # pink roof): Banjou on the cottage's ground floor, facing its cherry doors (east). Four of the Gas Masks about it, each in a different
+        # pink roof): Banjou in the cottage (4.1.83: his bedroom upstairs). Four of the Gas Masks about it, each in a different
         # mask, all of one gang (HexGang), kept with the world: two outside the front door (south), one in the walled garden, one in its
         # little crimson-roofed garden house. Its bottom layer is its own ground (dirt, grass, moss): the anchor in its middle puts it on the
         # world's surface.
         "people": [
-            {"who": "hexkagune:banjou", "at": (7, 2, 11), "yaw": -90.0},
+            # 4.1.83 (the owner: "Gas mask guy is ALSO not spawning in his room, or anywhere"; asked which is his room, the plan of the
+            # cottage shown, they chose "Upstairs bedroom (Recommended)"): in his bedroom upstairs (its floor y 6), beside the foot of
+            # the two magenta beds against its west wall, facing into the room (east). Before: the ground floor, facing the cherry doors.
+            {"who": "hexkagune:banjou", "at": (5, 7, 10), "yaw": -90.0},
             {"who": "hexkagune:ghoul", "at": (10, 1, 18), "yaw": 0.0, "who_data": GAS_MASK(1)},
             {"who": "hexkagune:ghoul", "at": (15, 1, 18), "yaw": 0.0, "who_data": GAS_MASK(2)},
             {"who": "hexkagune:ghoul", "at": (19, 2, 8), "yaw": 90.0, "who_data": GAS_MASK(3)},
@@ -372,14 +375,15 @@ def build(key, place, registry):
         # 4.1.73 (the owner: "Make sure NPCS dont spawn in the ground at any point, especially official NPCS."): on what is under them,
         # at its collision's top: down onto a carpet, a snow layer or a bottom slab (they stood a block over it, and dropped onto it).
         feet = float(wy_out)
-        under = by_index[cells[((wy - 1) * length + wz) * width + wx]] if wy > 0 else "minecraft:air"
-        base = under.split("[")[0]
+        # 4.1.83: its own name (it was `under`, the circus's floor, so the circus's second person on its floor failed to bake).
+        beneath = by_index[cells[((wy - 1) * length + wz) * width + wx]] if wy > 0 else "minecraft:air"
+        base = beneath.split("[")[0]
         if base.endswith("_carpet"):
             wy_out, feet = wy_out - 1, wy_out - 1 + 1.0 / 16.0
         elif base == "minecraft:snow":
-            layers_of = int(under.split("layers=")[1].split(",")[0].split("]")[0]) if "layers=" in under else 1
+            layers_of = int(beneath.split("layers=")[1].split(",")[0].split("]")[0]) if "layers=" in beneath else 1
             wy_out, feet = wy_out - 1, wy_out - 1 + (layers_of - 1) * 2.0 / 16.0
-        elif base.endswith("_slab") and "type=bottom" in under:
+        elif base.endswith("_slab") and "type=bottom" in beneath:
             feet = wy_out - 0.5
         who = {"id": Tag(STRING, person["who"]), "PersistenceRequired": Tag(BYTE, 1), "Rotation": Tag(LIST, (FLOAT, [person["yaw"], 0.0])),
                "Motion": Tag(LIST, (DOUBLE, [0.0, 0.0, 0.0])), "OnGround": Tag(BYTE, 1)}

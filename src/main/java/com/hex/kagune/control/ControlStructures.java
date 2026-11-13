@@ -959,6 +959,19 @@ public final class ControlStructures {
      * pieces, from its claimed start chunk), or null if it isn't built, or its chunk isn't loaded (nothing is loaded for this).
      */
     public static int[] middle(net.minecraft.server.level.ServerLevel level, String id) {
+        net.minecraft.world.level.levelgen.structure.StructureStart found = start(level, id);
+        if (found == null) {
+            return null;
+        }
+        BoundingBox box = found.m_73601_();
+        return com.hex.kagune.control.npc.HomePlace.middle(box.m_162395_(), box.m_162399_(), box.m_162398_(), box.m_162401_(), box.m_162396_());
+    }
+
+    /**
+     * 4.1.82: the one-of-a-kind place {@code id} as this world built it (its start, kept with its claimed start chunk), or null if it isn't
+     * built, or its chunk isn't loaded (nothing is loaded for this).
+     */
+    static net.minecraft.world.level.levelgen.structure.StructureStart start(net.minecraft.server.level.ServerLevel level, String id) {
         int[] chunk = PlaceClaims.claimed(id);
         if (chunk == null || !level.m_46805_(new BlockPos((chunk[0] << 4) + 8, 64, (chunk[1] << 4) + 8))) {
             return null;
@@ -968,11 +981,30 @@ public final class ControlStructures {
             return null;
         }
         net.minecraft.world.level.levelgen.structure.StructureStart found = level.m_6325_(chunk[0], chunk[1]).m_213652_(structure);
-        if (found == null || !found.m_73603_()) {
+        return found == null || !found.m_73603_() ? null : found;
+    }
+
+    /**
+     * 4.1.83 (the owner: "Gas mask guy is ALSO not spawning in his room, or anywhere"; "and I'm 99% sure the general of the CCg isnt spawning
+     * either"): official {@code key}'s own spot in the world ({x, feet y, z, yaw}: npc.HomePlace#spot where her place stands, as this world
+     * built it), or null if her place isn't built or its start chunk isn't loaded. Read from the place's own first piece (past its
+     * clearing's: a jigsaw place's start, a site's first tile, both laid with the template's corner at their position, turned as they are),
+     * so a place built by any version has it.
+     */
+    public static int[] spot(net.minecraft.server.level.ServerLevel level, String key) {
+        int[] local = com.hex.kagune.control.npc.HomePlace.spot(key);
+        net.minecraft.world.level.levelgen.structure.StructureStart found = local == null ? null : start(level, com.hex.kagune.control.npc.HomePlace.of(key));
+        if (found == null) {
             return null;
         }
-        BoundingBox box = found.m_73601_();
-        return com.hex.kagune.control.npc.HomePlace.middle(box.m_162395_(), box.m_162399_(), box.m_162398_(), box.m_162401_(), box.m_162396_());
+        for (StructurePiece piece : found.m_73602_()) {
+            if (piece instanceof PoolElementStructurePiece pool && !clearing(piece)) {
+                BlockPos at = pool.m_72646_();
+                int turns = ((Enum<?>)(Object)pool.m_6830_()).ordinal(); // NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90
+                return com.hex.kagune.control.npc.HomePlace.placed(local, at.m_123341_(), at.m_123342_(), at.m_123343_(), turns);
+            }
+        }
+        return null;
     }
 
     /**

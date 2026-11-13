@@ -547,7 +547,14 @@ final class ControlCommands {
             UniqueNpcs.adopt(level, persona.key(), body, body.home());
         }
         String name = body.displayName();
-        context.getSource().m_288197_(() -> Component.m_237113_(name + " lives here now."), false);
+        // 4.1.83: an official belongs at her own place (UniqueNpcs.keepPlaces): unless married (the spouse's home is hers), this is a visit.
+        boolean married = UniqueNpcs.get(level, persona.key()).stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED;
+        String her = persona.female() ? "Her" : "His";
+        String she = persona.female() ? "she" : "he";
+        String said = married || com.hex.kagune.control.npc.HomePlace.of(persona.key()) == null ? name + " lives here now."
+            : name + " is here now. " + her + " own place is still " + her.toLowerCase(java.util.Locale.ROOT) + " home: once someone is there half a minute without "
+                + (persona.female() ? "her" : "him") + ", " + she + " is made there again and this one leaves.";
+        context.getSource().m_288197_(() -> Component.m_237113_(said), false);
         return 1;
     }
 

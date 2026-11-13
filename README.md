@@ -9,6 +9,16 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.83 (HexGhoul): every official back at her own spot; Banjou in his bedroom (testing)
+
+See `.github/release-notes-4.1.83.md`. `HomePlace.spot` (each official's spot in her place's template: x, feet y, z, yaw), `placed` (turned as
+the game turns a template about its corner, and her facing), `astray`, `KEEP_NEAR`; `ControlStructures.start`/`spot` (her place's first
+piece past its clearing: its position and quarter turns; `StructureStart.m_73602_` allowlisted with joined.tsrg evidence);
+`UniqueNpcs.spotOf`/`keepPlaces` for every official (made at her spot facing its way, one in her place re-homed there, one left waiting
+left alone, dead back at her spot). Banjou's template spot in his bedroom upstairs (`tools/companion_structures.py`, its `under` name
+clash fixed). `/kagune <name> here` says she visits unless married. `CompanionTests.officials483`, 34 rules sabotaged
+(`docs/handoff/sabotage-4.1.83.json`). Renders `docs/handoff/banjou-room-4.1.83.png`, `docs/handoff/officials-4.1.83.png` (`tools/floor_plan.py`).
+
 ## 4.1.82 (HexGhoul): the owner's bug list: the control bar gone, Roma kept in her tent, the ghoul division at its tower, a trial's bodies its player's alone, Anteiku's regulars at the counter (testing)
 
 See `.github/release-notes-4.1.82.md`. `client/ControlHud` and the `controlIndicator` setting deleted (the 1.0.43 notes below are history).
