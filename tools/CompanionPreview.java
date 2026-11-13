@@ -30,10 +30,27 @@ public final class CompanionPreview {
         if (args.length > 1 && args[1].equals("sit")) {
             // 4.1.69 (the owner: "Ken's sitting animation is broken, one of his legs is just in the air."): Ken sitting, held, all round.
             List<Shot> sit = new ArrayList<>();
-            for (double yaw : new double[] {12.0, 80.0, 170.0, 260.0, 45.0, 315.0}) {
+            for (double yaw : new double[] {0.0, 90.0, 180.0, 270.0, 35.0, 325.0}) {
                 sit.add(new Shot("sit " + (int)yaw, EtoPose.gesture(EtoGesture.SIT, 200.0, true), yaw));
             }
             sheet(new File(out, "ken-sit.png"), "Ken", "src/main/resources/assets/hexkagune/textures/entity/ken/ken.png", true, sit);
+            // Sitting down, from his right side (the propping hand) and from the front three quarters: tick by tick.
+            List<Shot> down = new ArrayList<>();
+            for (double yaw : new double[] {270.0, 30.0}) {
+                for (double tick : new double[] {0.0, 5.0, 8.0, 11.0, 14.0}) {
+                    down.add(new Shot("tick " + (int)tick + ", " + (int)yaw, EtoPose.gesture(EtoGesture.SIT, tick, true), yaw));
+                }
+            }
+            sheet(new File(out, "ken-sit-down.png"), "Ken sitting down", "src/main/resources/assets/hexkagune/textures/entity/ken/ken.png", true, down);
+            // Getting up (called away: into no gesture), through the game's own fade, from his right side.
+            List<Shot> up = new ArrayList<>();
+            com.hex.kagune.control.client.animation.PoseFade fade = new com.hex.kagune.control.client.animation.PoseFade();
+            fade.through(EtoPose.gesture(EtoGesture.SIT, 400.0, true), 1L, 500.0);
+            for (double tick : new double[] {0.0, 1.0, 2.0, 3.0, 4.0}) {
+                RigPose now = fade.through(null, 2L, 500.0 + tick);
+                up.add(new Shot("up, tick " + (int)tick, now == null ? new RigPose() : now, 270.0));
+            }
+            sheet(new File(out, "ken-sit-up.png"), "Ken getting up", "src/main/resources/assets/hexkagune/textures/entity/ken/ken.png", true, up);
             return;
         }
         if (args.length > 1 && args[1].equals("frames")) {

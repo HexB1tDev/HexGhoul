@@ -429,9 +429,34 @@ public final class CompanionTests {
         } catch (java.io.IOException failure) {
             check(false, "read the path's key: " + failure);
         }
+        // 4.1.69 (the owner: "Ken's sitting animation is broken, one of his legs is just in the air."): a companion's limbs are stiff
+        // (EtoModel turns each part whole: no knee, no elbow), so 4.0.9's knee up was a straight leg pointing up. The sit asks nothing of a
+        // knee or an elbow: both legs level, their undersides on the floor; leaning back and over onto his right hand; his left on his thigh.
         com.hex.kagune.control.client.animation.RigPose seated = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.SIT, 400.0, false);
-        check(seated != null && Math.abs(seated.drop - 10.0F) < 0.01F && seated.rightLegX < -1.3F && seated.leftKnee > 1.5F && seated.legHold >= 1.0F && seated.armHold >= 1.0F,
-            "seated: hips to the floor, a leg out, a knee up, still");
+        float level = com.hex.kagune.control.client.animation.EtoPose.SIT_LEVEL;
+        try {
+            String model = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/render/EtoModel.java"));
+            check(!model.contains("Knee") && !model.contains("Elbow") && !model.contains("BEND"), "a companion's limbs are stiff (EtoModel bends nothing)");
+        } catch (java.io.IOException failure) {
+            check(false, "read EtoModel: " + failure);
+        }
+        check(seated != null && Math.abs(seated.drop - com.hex.kagune.control.client.animation.EtoPose.SIT_DROP) < 0.01F
+            && Math.abs(seated.rightLegX + level) < 0.01F && Math.abs(seated.leftLegX + level) < 0.01F && Math.abs(seated.drop - 10.0F) < 0.01F
+            && seated.rightKnee == 0.0F && seated.leftKnee == 0.0F && seated.rightElbow == 0.0F && seated.leftElbow == 0.0F
+            && seated.legHold >= 1.0F && seated.armHold >= 1.0F, "seated: hips to the floor, both legs level on it, no knee or elbow asked: "
+            + (seated == null ? "none" : seated.rightLegX + " " + seated.leftLegX + " " + seated.leftKnee + " " + seated.drop));
+        check(seated.lean < -0.3F && seated.lean > -0.5F && seated.side < 0.0F && seated.rightArmX > 0.4F && seated.leftArmX < -0.3F
+            && seated.headX > 0.15F, "leaning back and over onto his right hand behind him, his left forward on his thigh, looking out (not up)");
+        // Going down, each foot's lowest corner (the hip 12 up, the leg 12 long, 4 thick) stays on the floor: never through it, never off it.
+        double worst = 0.0;
+        for (double tick = 0.0; tick <= 20.0; tick += 0.25) {
+            com.hex.kagune.control.client.animation.RigPose down = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.SIT, tick, false);
+            for (float forward : new float[] {-down.rightLegX, -down.leftLegX}) {
+                double foot = 12.0 - down.drop - 12.0 * Math.cos(forward) - 2.0 * Math.sin(forward);
+                worst = Math.max(worst, Math.abs(foot));
+            }
+        }
+        check(worst < 0.25, "sitting down, his heels slide out along the floor, never through it or off it: " + worst + " px at worst");
         // 1.3.29: Touka's own ways: never round an arm; a kiss on the cheek or a kiss stolen instead; her own poses, not Eto's.
         check(Persona.ETO.clings() && Persona.KEN.clings() && !Persona.TOUKA.clings(), "Touka never winds round an arm");
         check(Persona.TOUKA.unasked(EtoGesture.CLING) == EtoGesture.PECK && Persona.TOUKA.unasked(EtoGesture.DANCE) == EtoGesture.STEAL
@@ -1384,6 +1409,30 @@ public final class CompanionTests {
         check(fade.through(null, 200L, 206.0) == null, "then none");
         com.hex.kagune.control.client.animation.PoseFade fresh = new com.hex.kagune.control.client.animation.PoseFade();
         check(fresh.through(null, 5L, 1.0) == null && fresh.through(kiss, 6L, 2.0) != null, "nothing before: nothing to blend from");
+        // 4.1.69 (the owner: "Ken's sitting animation is broken, one of his legs is just in the air."): up off the floor (into nothing, or
+        // into another gesture), his feet stay on the floor as his legs swing down: the hips rise as fast as they must, not straight.
+        RigPose sitting = EtoPose.gesture(EtoGesture.SIT, 400.0, true);
+        check(EtoPose.seated(sitting) && !EtoPose.seated(EtoPose.gesture(EtoGesture.CHIN, 40.0, true)) && !EtoPose.seated(null), "sitting, told apart");
+        for (EtoGesture next : new EtoGesture[] {null, EtoGesture.CHIN, EtoGesture.BOW}) {
+            com.hex.kagune.control.client.animation.PoseFade up = new com.hex.kagune.control.client.animation.PoseFade();
+            up.through(sitting, 1L, 500.0);
+            double worst = 0.0;
+            float lastDrop = sitting.drop;
+            boolean steady = true;
+            for (double clock = 500.0; clock <= 500.0 + com.hex.kagune.control.client.animation.PoseFade.TICKS + 1.0; clock += 0.25) {
+                RigPose to = next == null ? null : EtoPose.gesture(next, clock - 500.0, true);
+                RigPose now = up.through(to, 2L, clock);
+                if (now == null) {
+                    continue;
+                }
+                float forward = Math.max(0.0F, Math.min(EtoPose.SIT_LEVEL, Math.min(-now.rightLegX, -now.leftLegX)));
+                double foot = 12.0 - now.drop - 12.0 * Math.cos(forward) - 2.0 * Math.sin(forward);
+                worst = Math.min(worst, foot);
+                steady &= Math.abs(now.drop - lastDrop) < 2.0F;
+                lastDrop = now.drop;
+            }
+            check(worst > -0.25 && steady, "up from sitting into " + next + ": the feet never through the floor (" + worst + " px), the hips rising smoothly");
+        }
     }
 
     /**

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.69 (HexGhoul): Ken's sitting fixed, no leg in the air (testing)
+
+See `.github/release-notes-4.1.69.md`. `EtoPose` SIT rebuilt for a companion's stiff body (EtoModel turns limbs whole, no knee or elbow): both legs level on the floor (`SIT_DROP` 10, `SIT_LEVEL` a quarter turn), leaning back 0.4 and over 0.15 onto the right hand, the left on the thigh, the head brought forward to look out; `sitDrop` lowers the hips only as the legs swing up (the heels on the floor all the way down); `PoseFade.blend` does the same getting up (`EtoPose.seated`). `CompanionTests` (legs level, no knee or elbow, the lean, the feet on the floor through the sit-down). `tools/CompanionPreview.java sit`. Renders `docs/handoff/ken-sit-4.1.69.png`, `docs/handoff/ken-sit-before-after-4.1.69.png`. Protocol 125.
+
 ## 4.1.68 (HexGhoul): Ken's tower gone, Ken on Anteiku's roof (testing)
 
 See `.github/release-notes-4.1.68.md`. The cyber tower's structure, structure set, template pool and template deleted, and out of `PlaceClaims`, `ControlStructures` and `DryLand`; `tools/companion_structures.py` puts Ken in Anteiku's template on its roof (the deck at y 29 inside the south parapet, yaw 0) beside Touka at her counter; `Persona` KEN's home "Anteiku's roof". `CompanionTests`, `NpcTests`, `KitchenTests`. `tools/CompanionPreview.java sit`. Render `docs/handoff/ken-anteiku-roof-4.1.68.png`. Protocol 125.

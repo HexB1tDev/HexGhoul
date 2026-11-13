@@ -19,6 +19,26 @@ public final class EtoPose {
     static final float KISS_LEAN = 0.5F;
     static final float BLUSH_LEAN = 0.55F;
     static final float PULL_LEAN = 0.52F;
+    /**
+     * 4.1.69: sitting on the floor with stiff legs (a companion's: no knees). The hips' pivot is 12 pixels up, a leg 4 thick about it: 10
+     * down puts it 2 up, and a leg turned level (a quarter turn forward) then lies with its underside on the floor, its foot neither in the
+     * air nor through the floor.
+     */
+    public static final float SIT_DROP = 10.0F;
+    public static final float SIT_LEVEL = (float)(Math.PI / 2.0);
+
+    /**
+     * 4.1.69: how far down the hips go with stiff legs swung {@code forward} (radians) for the lowest corner of the foot to rest on the
+     * floor: the hip 12 up, the leg 12 long and 4 thick, its front-bottom corner {@code 12 cos + 2 sin} under the hip.
+     */
+    public static float sitDrop(float forward) {
+        return Math.max(0.0F, Math.min(SIT_DROP, 12.0F - 12.0F * (float)Math.cos(forward) - 2.0F * (float)Math.sin(forward)));
+    }
+
+    /** 4.1.69: whether {@code p} sits on the floor (the hips the whole way down, both legs out level), as Ken at his spot. */
+    public static boolean seated(RigPose p) {
+        return p != null && p.drop > SIT_DROP - 0.5F && -p.rightLegX > SIT_LEVEL - 0.2F && -p.leftLegX > SIT_LEVEL - 0.2F;
+    }
 
     private EtoPose() {
     }
@@ -767,23 +787,31 @@ public final class EtoPose {
             }
             case TILT -> tilt(p, t);
             case SIT -> {
-                // 4.0.9, Ken on the top of his tower: down on the deck (hips to the floor), the right leg out straight, the left knee up, his
-                // left forearm on it, leaning back a little on his right hand behind him, looking out; his head drifting slowly about.
+                // 4.0.9, Ken at his spot: down on the deck (hips to the floor), looking out; his head drifting slowly about.
+                // 4.1.69 (the owner: "Ken's sitting animation is broken, one of his legs is just in the air."): a companion's limbs are
+                // stiff (EtoModel turns each part whole: no knee, no elbow), so 4.0.9's raised knee was a straight leg pointing up. Now both
+                // legs lie flat on the deck (level, the hips 10 down: a level leg's underside on the floor), the right one straight out
+                // before him, the left swung out to the side. A stiff arm hanging from a seated shoulder stops short of the floor, so he
+                // leans back (23 degrees) and over onto his right hand, as anyone propped on one hand does: its heel on the deck behind
+                // him; his left hand resting on the top of his thigh; his head brought forward again to look out, not up.
                 float on = ease(Math.min(1.0F, t / 14.0F));
-                p.drop = 10.0F * on;
-                p.rightLegX = -1.45F * on;
-                p.rightKnee = 0.08F * on;
-                p.leftLegX = -2.05F * on;
-                p.leftKnee = 1.95F * on;
-                p.leftLegZ = -0.12F * on;
-                p.rightArmX = 0.62F * on;
-                p.rightArmZ = 0.32F * on;
-                p.leftArmX = -0.95F * on;
-                p.leftArmZ = -0.08F * on;
-                p.leftElbow = 0.65F * on;
-                p.lean = -0.14F * on;
+                // Going down, the hips come down only as far as the legs swinging up let them: the heels slide out along the floor
+                // (never through it, never off it), the whole drop once the legs are level.
+                p.drop = sitDrop(SIT_LEVEL * on);
+                p.rightLegX = -SIT_LEVEL * on;
+                p.rightLegY = 0.1F * on;
+                p.leftLegX = -SIT_LEVEL * on;
+                p.leftLegY = -0.55F * on;
+                p.lean = -0.4F * on;
+                p.side = -0.15F * on;
+                p.rightArmX = 0.6F * on;
+                p.rightArmZ = 0.2F * on;
+                p.leftArmX = -0.535F * on;
+                p.leftArmY = 0.1F * on;
+                p.leftArmZ = -0.05F * on;
                 p.headY = 0.28F * on * (float)Math.sin(t * 0.018);
-                p.headX = 0.06F * on * (float)Math.sin(t * 0.011 + 1.3);
+                p.headX = (0.3F + 0.06F * (float)Math.sin(t * 0.011 + 1.3)) * on;
+                p.headZ = 0.1F * on;
                 p.armHold = Math.max(p.armHold, on);
                 p.legHold = Math.max(p.legHold, on);
             }

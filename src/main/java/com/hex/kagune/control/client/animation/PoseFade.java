@@ -45,6 +45,16 @@ public final class PoseFade {
             out.add(b, k);
         }
         out.rightArmHold = a.rightArmHold * (1.0F - k) + (b == null ? 0.0F : b.rightArmHold * k);
+        // 4.1.69 (the owner: "Ken's sitting animation is broken, one of his legs is just in the air."): into or out of sitting on the
+        // floor, a straight blend took the hips down (or up) as fast as the legs swung, the feet through the floor halfway. The hips go no
+        // lower than the legs let them (EtoPose.sitDrop, on the more upright leg: its foot is the lower), past what the other pose has
+        // of its own; the same pose at both ends of the fade.
+        float sat = Math.max(EtoPose.seated(a) ? 1.0F - k : 0.0F, b != null && EtoPose.seated(b) ? k : 0.0F);
+        if (sat > 0.0F && sat < 1.0F) {
+            RigPose other = EtoPose.seated(a) ? b : a;
+            float forward = Math.max(0.0F, Math.min(EtoPose.SIT_LEVEL, Math.min(-out.rightLegX, -out.leftLegX)));
+            out.drop = Math.min(out.drop, EtoPose.sitDrop(forward) + (other == null ? 0.0F : Math.max(0.0F, other.drop)) * (1.0F - sat));
+        }
         return out;
     }
 }
