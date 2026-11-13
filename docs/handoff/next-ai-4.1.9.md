@@ -11,6 +11,35 @@ alter the owner's files, one version at a time, no PR.
 
 ## START HERE (newest, after 4.1.78): the quests, step 2: the gangs' joining (then romance)
 
+**The owner ended the session (quoted exactly): "prompt and handoff".** Nothing is half done: every version below is pushed, built EXIT 0
+in an isolated copy on its exact commit, **green on GitHub (Build and Release) and on the Releases page**. Branch:
+`claude/amazing-mayer-833gup` (it holds everything from `claude/admiring-johnson-8df58h` and on).
+
+**This session, in order:**
+- **4.1.73 released at last:** its GitHub builds had failed (the runner had no numpy/Pillow for `tools/npc_spots.py`), so it never
+  reached the Releases page though its handoff said pushed. `tools/requirements.txt`, installed by both workflows; the rule in `CLAUDE.md`:
+  a push is done only when GitHub's runs are green and the release is up.
+- **4.1.74:** Arima's change slowed (9.5 s), Dawn out of his hand, everything cleared off him as he dies, nothing grabbing him (a hole
+  found: `EtoBrain.foe` let Roma's tendrils hold him). The tests' -1 blind spot fixed (`AgentTests.within`).
+- **4.1.75 → 4.1.77, Arima's death, as the owner reshaped it:** falls on his face and lies there ("make him actually lay on the floor face
+  down"); then "just make the blade instantly shatter while he's holding it on one hand, and the fall straight on his face" (the kneel read
+  as a "michael jackson" lean from the side: gone); then "after the blade breaks make him look at it, then wait like 2 seconds and then
+  fall!". Now: one-handed guard, the blade shatters at once, he raises the hilt and looks at it (head aimed at where it snapped) for about 2 s,
+  falls straight on his face from his feet, lies 3 s, dies face down (vanilla's death roll off for him: `AgentRenderer.m_6441_`).
+- **4.1.78:** the daily board (below), the first step of the owner's quest plan.
+
+**Tools left for you** (they made this session's loop fast; use them):
+- `tools/fast_tests.sh <Suite>...`: recompiles main and tests into `build/fast` and runs the suites (AgentTests ~25 s, NpcTests ~1 min).
+  Not the full build. Read its whole output: a crashing suite prints a stack trace and no "FAILED".
+- `tools/sabotage.py <list.json> [name...]`: breaks each rule in turn, runs its suite, restores the file; OK / MISS / BAD / SKIP. The
+  house rule "each rule sabotaged fails" made mechanical. `docs/handoff/sabotage-4.1.78.json` is 4.1.78's list (14 rules, all caught):
+  write one like it for each version.
+- `tools/ReaperBladePreview.java end|shedgif|endgif` and `tools/frames_gif.py` (real-speed GIFs, a frame a world tick); judge motion by the
+  frames' pixel change as well as by eye (a spike is a jolt, a run of zeros a frozen pose). `tools/UiPreview.java <dir> board` for the talk
+  screen's daily board.
+- **Judge every pose from the side too**, not only three-quarter front (the kneel passed from the front and was a lean from the side).
+
+
 **The plan the owner approved** (after it was shown: "whatever you think is best"): the quest system's new checks built as each quest needs
 them; one area a version: **dailies (4.1.78, done)**, then **the gangs' joining**, then **romance**. What was found (the diagnosis):
 dailies were 13 jobs, all "kill N" or "bring N", one a day, paid in vanilla items, none for Anteiku; the five joining chains all "the right
@@ -42,11 +71,12 @@ spawned (a marked investigator; an escort), done carefully.
 
 **Prompt for the next session:**
 
-> Continue HexGhoul on branch claude/amazing-mayer-833gup (fast-forward your session branch onto it first). Read
-> docs/handoff/next-ai-4.1.9.md first: the "START HERE (newest, after 4.1.78)" section, and CLAUDE.md (render and judge everything you
-> change; a push is done only when GitHub's runs are green and the release is up). 4.1.78 is pushed and released. Next: the quests, step 2,
-> the gangs' joining chains (as that section plans), one version; then romance. Full build in an isolated copy, push on EXIT 0, check CI
-> green and the release up, send the jar, show the renders. Quote the owner exactly; never claim in-game testing.
+> Continue HexGhoul on branch claude/amazing-mayer-833gup (fast-forward your session branch onto it first). Read CLAUDE.md, then
+> docs/handoff/next-ai-4.1.9.md: the "START HERE (newest, after 4.1.78)" section (this session, the tools, the plan). 4.1.78 is pushed,
+> green and released. Next: the quests, step 2: the gangs' joining chains, each a trial of its own (as that section plans), one version;
+> then romance. Use tools/fast_tests.sh between full builds and prove every new rule with tools/sabotage.py (a list like
+> docs/handoff/sabotage-4.1.78.json); render and judge what you change, from the side too. Full build in an isolated copy, push on EXIT 0,
+> check GitHub's runs green and the release up, send the jar, show the renders. Quote the owner exactly; never claim in-game testing.
 
 ## START HERE (after 4.1.77): better the quests (the owner's final to-do step), shown as a plan first
 

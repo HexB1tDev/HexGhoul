@@ -16,3 +16,8 @@ RULE: a push is done only when GitHub says so. After every push, check the branc
 release notes changed) ends green and the version is on the Releases page. A local `python3 build.py` EXIT 0 is not enough: 4.1.73 passed
 locally and failed on the runner (no numpy or Pillow there), so it went unreleased while its handoff said pushed. Python packages any check
 needs go in `tools/requirements.txt`, which both workflows install.
+
+RULE: prove the tests. Every rule you add, break it on purpose and see a test fail: `tools/sabotage.py <list.json>` does it (a list like
+`docs/handoff/sabotage-4.1.78.json`); `tools/fast_tests.sh <Suite>` is the quick loop between full builds. A MISS is a hole in the tests,
+fixed before the push. Holes found so far: `indexOf(x, from) - from < n` passes when x is gone (-1); a size checked against the very
+constant broken; a crashed suite prints no "FAILED".
