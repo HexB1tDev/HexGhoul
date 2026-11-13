@@ -92,7 +92,7 @@ public abstract class Persona {
         return this.female();
     }
 
-    /** 4.0.9: whether, with nothing to do at home (his own place, not one shared with a spouse), he sits there (Ken, on the top of his tower). */
+    /** 4.0.9: whether, with nothing to do at home (his own place, not one shared with a spouse), he sits there (Ken, on Anteiku's roof: 4.1.68). */
     public boolean sitsAtHome() {
         return false;
     }
@@ -692,7 +692,7 @@ public abstract class Persona {
 
         @Override
         public String home() {
-            return "his tower"; // 1.3.24: the top of the tower (his structure)
+            return "Anteiku's roof"; // 4.1.68 (the owner: "he is to spawn on top of Anteikou"): the café's roof, his tower gone
         }
 
         @Override
@@ -729,7 +729,7 @@ public abstract class Persona {
             return true;
         }
 
-        /** 4.0.9 (the owner: "make sure he sits on the top"): on the top of his tower, he sits, looking out. */
+        /** 4.0.9 (the owner: "make sure he sits on the top"): at his spot, he sits, looking out (4.1.68: on Anteiku's roof, his tower gone). */
         @Override
         public boolean sitsAtHome() {
             return true;

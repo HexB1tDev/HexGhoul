@@ -3,8 +3,9 @@
 
     python3 tools/companion_structures.py [--blocks blocks.json]
 
-  art/anteiku.schem     -> src/main/resources/data/hexkagune/structures/anteiku.nbt      Touka behind the café's bar counter
-  art/exploration/Ken_tower.litematic -> src/main/resources/data/hexkagune/structures/cyber_tower.nbt  Ken sitting on the top of his tower
+  art/anteiku.schem     -> src/main/resources/data/hexkagune/structures/anteiku.nbt      Touka behind the café's bar counter; 4.1.68: Ken
+                                                                                          on its roof (the owner: "Ken's cybertower is now
+                                                                                          fully removed, he is to spawn on top of Anteikou.")
   art/reaper/arima_mansion.schem -> src/main/resources/data/hexkagune/structures/reaper_mansion.nbt  4.1.24: Arima in its garden
   art/exploration/circus.schematic -> src/main/resources/data/hexkagune/structures/circus.nbt  4.1.48: four Clowns in the tent
   art/exploration/GasMask_hideout.schem -> src/main/resources/data/hexkagune/structures/gas_hideout.nbt  4.1.54: Banjou in the cottage, four Gas Masks
@@ -13,23 +14,12 @@
 states). It has no floor (it stood on its world's ground): a floor of dirt path is laid under everything inside its outer ring (floor()),
 grass under its tufts and its flower; the anchor is the floor's middle. Several people can live in one place ("people").
 
-4.0.9 (the owner: "I sent you a replacement for the Ken tower as well, make sure he sits on the top."): Ken's tower is their new one, a
-Litematica file (saved by 1.21.4): 73 x 310 x 73, a podium, four glass tiers stepping in, a star-shaped roof deck behind a parapet and a
-netherite spire. 310 blocks can't stand on the ground of a 1.20.1 world (it ends at y 320), so nine floors are taken out of each of its
-two tallest tiers, where they repeat exactly (every four layers): 238 tall, the podium, every tier, the deck and the whole spire kept.
-Ken sits on the deck (EtoGesture.SIT), at the tip of its east arm by the parapet, looking out.
+4.1.68 (the owner: "Ken's cybertower is now fully removed, he is to spawn on top of Anteikou."): Ken's tower (4.0.9's Litematica file,
+cut to fit 1.20.1's height) is gone; Ken is made with Anteiku, on its flat roof (the spruce deck, y 29), at its south edge. The Litematica
+reader (litematic()) and the swaps for 1.21's blocks stay for any newer file.
 
 Anteiku (saved by 1.15) is written whole, its air too (so nothing of the ground is left inside it); its walls' old sides (true/false)
 become 1.20.1's (low/none) and every leaf is made persistent (its hedges have no logs: they would rot away).
-
-The tower (saved by a much newer game) is 320 blocks tall: the whole height a 1.20.1 world has, so it can't stand on the ground as it
-is. It is cut at its first full floor above the podium (schematic y 62: the twin towers' floors come every five blocks), and its spire's
-last few decorative blocks (above 315) left off for margin, so it stands from the ground (y 62) to just under the sky's limit, Ken's roof
-whole. The blocks 1.20.1 does not have (1.21's) are swapped for its nearest: the iron chain is 1.20.1's chain (only renamed), tuff's
-slabs and stairs andesite's, polished tuff polished andesite; the trial spawner is left out (it would be a pig spawner). Its air is left
-out (a template of seven million cells would not load): the structure's own terrain adaptation clears the ground in its box. A jigsaw
-block at its middle (its start_jigsaw_name) centres it on the chunk it starts in: 151 blocks across, placed from a corner it would reach
-past the eight chunks the game builds a structure's pieces in.
 
 --blocks: PrismarineJS minecraft-data's 1.20 blocks.json, to check every block state written is one 1.20.1 has (it fails if not).
 """
@@ -70,7 +60,12 @@ PLACES = {
     "anteiku": {
         "source": "anteiku.schem",
         # Behind the bar counter on the café floor (the aisle between the counter and the coffee machines), facing the tables (south).
-        "who": "hexkagune:touka", "at": (17, 10, 8), "yaw": 0.0,
+        # 4.1.68 (the owner: "Ken's cybertower is now fully removed, he is to spawn on top of Anteikou."): Ken on the café's flat roof (its
+        # spruce deck, y 29), just inside the south parapet, looking out over the street (south), where he sits (Persona.sitsAtHome).
+        "people": [
+            {"who": "hexkagune:touka", "at": (17, 10, 8), "yaw": 0.0},
+            {"who": "hexkagune:ken", "at": (17, 30, 17), "yaw": 0.0},
+        ],
         "keep_air": True, "crop": None, "anchor": None,
     },
     "reaper_mansion": {
@@ -113,12 +108,6 @@ PLACES = {
             {"who": "hexkagune:ghoul", "at": (20, 2, 13), "yaw": 0.0, "who_data": GAS_MASK(4)},
         ],
         "keep_air": False, "crop": None, "anchor": (14, 0, 9), "anchor_name": "hexkagune:gas_hideout_anchor",
-    },
-    "cyber_tower": {
-        "source": "exploration/Ken_tower.litematic",
-        # On the roof deck (its floor y 264), at the tip of its east arm by the parapet, looking out east (source coordinates).
-        "who": "hexkagune:ken", "at": (46, 265, 36), "yaw": -90.0,
-        "keep_air": False, "crop": None, "drop": ((108, 144), (204, 240)), "anchor": (36, 0, 36), "anchor_name": "hexkagune:tower_anchor",
     },
 }
 

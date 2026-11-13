@@ -2117,7 +2117,7 @@ public final class EtoBrain {
 
     /**
      * 4.0.9 (the owner: "I sent you a replacement for the Ken tower as well, make sure he sits on the top."): with nothing to do, Ken walks
-     * back to his spot on the top of his tower and sits there, looking out the way he was set (his head free to turn to whoever comes up).
+     * back to his spot (4.1.68: on Anteiku's roof, his tower gone) and sits there, looking out the way he was set (his head free to turn to whoever comes up).
      * True while he does (sitting, or on his way to his spot); false if something else has him, or he is away from home.
      */
     static boolean sit(EtoNpc npc, Mind mind, ServerLevel level, long now) {

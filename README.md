@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.68 (HexGhoul): Ken's tower gone, Ken on Anteiku's roof (testing)
+
+See `.github/release-notes-4.1.68.md`. The cyber tower's structure, structure set, template pool and template deleted, and out of `PlaceClaims`, `ControlStructures` and `DryLand`; `tools/companion_structures.py` puts Ken in Anteiku's template on its roof (the deck at y 29 inside the south parapet, yaw 0) beside Touka at her counter; `Persona` KEN's home "Anteiku's roof". `CompanionTests`, `NpcTests`, `KitchenTests`. `tools/CompanionPreview.java sit`. Render `docs/handoff/ken-anteiku-roof-4.1.68.png`. Protocol 125.
+
 ## 4.1.67 (HexGhoul): quitting a gang, the marriage rules, a spouse who wants you out (testing)
 
 See `.github/release-notes-4.1.67.md`. `GangPlayer.quit()` (out, not banned, the way in from the start); `GangWords` (pure: `wantOut`, `asked`, `stay`, `gone`, `demand`, `demands`); `GangServer`: the member talk offers "gang:quit" (asked, "gang:quit:yes" / "gang:stay"), `married(player, spouse)` (called from `EtoServer.propose` and the marry command), `spouseDemand` (the spouse's greeting), `nag` (near, every `NAG_EVERY`); talk scenes: the General's `rabbit_wedding` and `rabbit_child`, Eto's `bunny_child`. `NpcTests.joining`. `tools/UiPreview.java gang-talk`. Render `docs/handoff/gang-leaving-4.1.67.png`. Protocol 125.

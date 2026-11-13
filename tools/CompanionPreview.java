@@ -27,6 +27,15 @@ public final class CompanionPreview {
     public static void main(String[] args) throws Exception {
         File out = new File(args.length > 0 ? args[0] : "build/preview");
         out.mkdirs();
+        if (args.length > 1 && args[1].equals("sit")) {
+            // 4.1.69 (the owner: "Ken's sitting animation is broken, one of his legs is just in the air."): Ken sitting, held, all round.
+            List<Shot> sit = new ArrayList<>();
+            for (double yaw : new double[] {12.0, 80.0, 170.0, 260.0, 45.0, 315.0}) {
+                sit.add(new Shot("sit " + (int)yaw, EtoPose.gesture(EtoGesture.SIT, 200.0, true), yaw));
+            }
+            sheet(new File(out, "ken-sit.png"), "Ken", "src/main/resources/assets/hexkagune/textures/entity/ken/ken.png", true, sit);
+            return;
+        }
         if (args.length > 1 && args[1].equals("frames")) {
             frames(out);
             return;

@@ -355,20 +355,24 @@ public final class CompanionTests {
         // leg out and the other knee up, held still.
         check(Persona.KEN.sitsAtHome() && !Persona.ETO.sitsAtHome() && !Persona.TOUKA.sitsAtHome() && !Persona.AYATO.sitsAtHome() && !Persona.NORO.sitsAtHome(),
             "Ken sits at home, the others as they were");
-        // 4.0.9 (the owner: "I sent you a replacement for the Ken tower as well, make sure he sits on the top."): their tower, 73 wide, its
-        // repeating floors thinned to stand under a 1.20.1 world's top from the ground (238 tall), Ken on its top deck (its floor the
-        // highest that runs across it), looking out.
+        // 4.1.68 (the owner: "Ken's cybertower is now fully removed, he is to spawn on top of Anteikou."): Ken in Anteiku's template, on its
+        // flat roof (its spruce deck, the highest floor that runs across it), Touka still behind the counter below.
         try {
-            byte[] tower = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(java.nio.file.Path.of(
-                "src/main/resources/data/hexkagune/structures/cyber_tower.nbt"))).readAllBytes();
-            int[] size = ints(tower, "size");
-            int[] ken = ints(tower, "blockPos");
-            check(size != null && size[0] == 73 && size[2] == 73 && size[1] == 238 && 63 + size[1] <= 319, "Ken's tower, the owner's, standing under the world's top: "
-                + java.util.Arrays.toString(size));
-            check(ken != null && ken[1] > size[1] - 50 && ken[1] < size[1] - 30 && new String(tower, java.nio.charset.StandardCharsets.ISO_8859_1).contains("hexkagune:ken"),
-                "Ken on its top deck: " + java.util.Arrays.toString(ken));
+            byte[] cafe = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(java.nio.file.Path.of(
+                "src/main/resources/data/hexkagune/structures/anteiku.nbt"))).readAllBytes();
+            String text = new String(cafe, java.nio.charset.StandardCharsets.ISO_8859_1);
+            int[] size = ints(cafe, "size");
+            check(size != null && size[0] == 30 && size[1] == 39 && size[2] == 39 && text.contains("hexkagune:ken") && text.contains("hexkagune:touka"),
+                "Anteiku, the owner's, whole: Touka and Ken in it");
+            java.util.Map<String, int[]> people = figures(cafe);
+            int[] ken = people.get("hexkagune:ken");
+            int[] touka = people.get("hexkagune:touka");
+            check(ken != null && ken[0] == 17 && ken[1] == 30 && ken[2] == 17 && Persona.KEN.home().equals("Anteiku's roof"),
+                "Ken lives on Anteiku's roof now, on its deck (y 29) at the south edge: " + java.util.Arrays.toString(ken));
+            check(touka != null && touka[0] == 17 && touka[1] == 10 && touka[2] == 8, "Touka still behind the counter: " + java.util.Arrays.toString(touka));
+            check(!java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/structures/cyber_tower.nbt")), "his tower gone");
         } catch (java.io.IOException failure) {
-            check(false, "read Ken's tower: " + failure);
+            check(false, "read Anteiku: " + failure);
         }
         // 4.1.24 (the owner: "I'm going to give you a schematic where he's going to spawn in always ... outside in the garden, like in this
         // place. Make sure also doesn't spawn like in the ground, like the tower"): the White Reaper's mansion, the owner's, 79 by 121, its
@@ -1825,6 +1829,35 @@ public final class CompanionTests {
     }
 
     /** The three ints of the NBT list of ints named {@code name} in {@code nbt} (its first), or null. */
+    /** 4.1.68: each figure a template carries (its id, as "hexkagune:ken"), at its blockPos. */
+    static java.util.Map<String, int[]> figures(byte[] nbt) {
+        java.util.Map<String, int[]> found = new java.util.LinkedHashMap<>();
+        String text = new String(nbt, java.nio.charset.StandardCharsets.ISO_8859_1);
+        byte[] key = "blockPos".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        outer:
+        for (int i = 0; i + 3 + key.length + 17 <= nbt.length; i++) {
+            if (nbt[i] != 9 || nbt[i + 1] != 0 || nbt[i + 2] != key.length) {
+                continue;
+            }
+            for (int k = 0; k < key.length; k++) {
+                if (nbt[i + 3 + k] != key[k]) {
+                    continue outer;
+                }
+            }
+            int at = i + 3 + key.length;
+            java.nio.ByteBuffer b = java.nio.ByteBuffer.wrap(nbt, at + 1, 16);
+            if (nbt[at] != 3 || b.getInt() != 3) {
+                continue;
+            }
+            int[] pos = {b.getInt(), b.getInt(), b.getInt()};
+            java.util.regex.Matcher id = java.util.regex.Pattern.compile("hexkagune:[a-z_]+").matcher(text);
+            if (id.find(at + 17)) {
+                found.putIfAbsent(id.group(), pos);
+            }
+        }
+        return found;
+    }
+
     static int[] ints(byte[] nbt, String name) {
         byte[] key = name.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         outer:

@@ -158,7 +158,7 @@ public final class KitchenTests {
         // 2.0.2 (the owner: "stop limiting it to plains ... including some from biomes o plenty"); 4.1.9 (the owner: "it should be able to
         // spawn literally in any biome ... It should also be fully compatible with Biomes of Plenty"): the cafe, the tower, the library and
         // the villages stand in any biome of the overworld, a mod's too, and never in a wet one (judged in code: NpcTests.dryLand).
-        for (String place : new String[] {"anteiku", "cyber_tower", "library", "small_city"}) {
+        for (String place : new String[] {"anteiku", "library", "small_city"}) {
             String json = read("src/main/resources/data/hexkagune/worldgen/structure/" + place + ".json");
             check(json.contains("\"biomes\": \"#hexkagune:overworld\""), place + ": any biome of the overworld, Biomes O' Plenty's too");
         }

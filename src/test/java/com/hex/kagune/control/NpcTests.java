@@ -2343,7 +2343,7 @@ public final class NpcTests {
                         || name.equals("small_city.json") && json.contains("\"type\": \"hexkagune:small_city\""), name + ": built only on dry land");
                 }
             }
-            for (String place : List.of("anteiku", "library", "cyber_tower", "reaper_mansion", "circus", "gas_hideout")) {
+            for (String place : List.of("anteiku", "library", "reaper_mansion", "circus", "gas_hideout")) {
                 String json = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/structure/" + place + ".json")));
                 check(json.contains("\"type\": \"hexkagune:dry_place\"") && json.contains("\"start_pool\": \"hexkagune:" + place + "/start\""),
                     place + ": moved near its start onto dry land");
@@ -2486,7 +2486,7 @@ public final class NpcTests {
         // Their numbers, each its own salt, the same as their sets'.
         java.util.Set<Integer> salts = new java.util.HashSet<>(List.of(com.hex.kagune.control.village.DryLand.SALT, com.hex.kagune.control.village.DryLand.CCG_SALT,
             com.hex.kagune.control.village.DryLand.CITY_SALT));
-        check(List.of(com.hex.kagune.control.village.DryLand.PLACES).equals(List.of("anteiku", "library", "cyber_tower", "reaper_mansion", "circus",
+        check(List.of(com.hex.kagune.control.village.DryLand.PLACES).equals(List.of("anteiku", "library", "reaper_mansion", "circus",
             "gas_hideout")), "the six jigsaw places, in the order chosen (4.1.24: the White Reaper's mansion; 4.1.48: the circus tent; 4.1.54: the "
             + "Gas Masks' hideout last)");
         // The offers are read from the set as the world has it (a mod may change every set's spacing): with the file's numbers they are
@@ -2584,7 +2584,7 @@ public final class NpcTests {
             // none is taken (a world from before the claims); a second is told in the log; every one-of-a-kind place is looked for.
             String adopt = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java")));
             check(adopt.contains("if (taken == null) {\n                    claim(place, at.f_45578_, at.f_45579_);")
-                && adopt.contains("ONE_OF_A_KIND = {\"aogiri_hideout\", \"ccg_building\", \"anteiku\", \"library\", \"cyber_tower\", \"reaper_mansion\",\n        \"circus\", \"gas_hideout\"}"),
+                && adopt.contains("ONE_OF_A_KIND = {\"aogiri_hideout\", \"ccg_building\", \"anteiku\", \"library\", \"reaper_mansion\", \"circus\", \"gas_hideout\"}"),
                 "a one-of-a-kind place already standing is the world's one");
             // 4.1.17 (the owner: "they are spawning under the ground, which cannot happen ... always at the top max area"): no place under
             // the ground; 4.1.57 (the owner: "CLEAR ALL BLOCKS OR TREES, AND THEN PLACE IT DIRECTLY ON THE FLOOR, NOT FLYING, NOT HOVERING
@@ -2594,9 +2594,12 @@ public final class NpcTests {
             check(structures.contains("return Optional.of(settled(best, floor - ground.surface(bestAt[0], bestAt[1]), context.f_226625_(),")
                 && structures.contains("made.m_192781_(shift);") && !structures.contains("DryLand.lift("),
                 "a place stands on its footprint's own floor, its site cleared over it: never under the ground, never on a plinth");
-            String tower = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json")));
-            check(tower.contains("\"project_start_to_heightmap\": \"WORLD_SURFACE_WG\"") && !tower.contains("\"absolute\": 63"), "Ken's tower starts on the ground");
-            for (String place : new String[] {"anteiku", "library", "cyber_tower", "reaper_mansion", "circus", "gas_hideout"}) {
+            // 4.1.68 (the owner: "Ken's cybertower is now fully removed, he is to spawn on top of Anteikou."): no tower anywhere.
+            for (String gone : new String[] {"worldgen/structure/cyber_tower.json", "worldgen/structure_set/cyber_tower.json",
+                "worldgen/template_pool/cyber_tower/start.json", "structures/cyber_tower.nbt"}) {
+                check(!java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/" + gone)), "Ken's tower gone: " + gone);
+            }
+            for (String place : new String[] {"anteiku", "library", "reaper_mansion", "circus", "gas_hideout"}) {
                 String json = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/" + place + ".json")));
                 check(json.contains("\"project_start_to_heightmap\": \"WORLD_SURFACE_WG\""), place + " starts on the ground's height");
             }
@@ -2639,7 +2642,7 @@ public final class NpcTests {
             String commands = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java")));
             // (Read in the source: ControlStructures registers the game's own registries as it loads, and there is no game here.)
             check(commands.contains("Commands.m_82127_(\"places\")") && commands.contains("ControlStructures.report()")
-                && structures.contains("ONE_OF_A_KIND = java.util.List.of(\"aogiri_hideout\", \"ccg_building\", \"cyber_tower\", \"anteiku\", \"library\",\n        \"reaper_mansion\", \"circus\", \"gas_hideout\")"),
+                && structures.contains("ONE_OF_A_KIND = java.util.List.of(\"aogiri_hideout\", \"ccg_building\", \"anteiku\", \"library\", \"reaper_mansion\",\n        \"circus\", \"gas_hideout\");"),
                 "/kagune places lists the eight places (4.1.54: the Gas Masks' hideout)");
             // 4.1.13: from a player it makes each place's start chunk and looks in it: built there, or stopped (one chunk a world: anything that
             // stops it there leaves the world without it).
@@ -2882,7 +2885,7 @@ public final class NpcTests {
             int apron = code.indexOf("static void apron(WorldGenLevel level, BoundingBox chunk, PiecesContainer pieces) {");
             check(apron > 0 && code.indexOf("if (inside(own, x, z)) {\n                    // Under the place itself only its foundation fills", apron) > 0,
                 "the grading never fills under the place itself (its pool, its stairwell kept)");
-            for (String name : new String[] {"anteiku", "aogiri_hideout", "ccg_building", "circus", "cyber_tower", "gas_hideout", "library",
+            for (String name : new String[] {"anteiku", "aogiri_hideout", "ccg_building", "circus", "gas_hideout", "library",
                 "reaper_mansion"}) {
                 String json = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/" + name + ".json"));
                 check(json.contains("\"step\": \"top_layer_modification\""), name + ": built after the trees (the last step), so none grows through it");
@@ -2964,7 +2967,7 @@ public final class NpcTests {
         check(high != null && high[0] == 70 && high[1] == 84, "the city's platform found in its first layers, filled under");
         // Places apart.
         com.hex.kagune.control.village.TakenPlaces taken = com.hex.kagune.control.village.TakenPlaces.read("");
-        check(taken.takeApart("anteiku", 0, 0, 32) && !taken.takeApart("library", 10, 10, 32) && taken.crowded("cyber_tower", 20, 5, 32)
+        check(taken.takeApart("anteiku", 0, 0, 32) && !taken.takeApart("library", 10, 10, 32) && taken.crowded("circus", 20, 5, 32)
             && taken.takeApart("library", 40, 0, 32) && taken.takeApart("anteiku", 0, 0, 32) && !taken.takeApart("anteiku", 90, 90, 32),
             "one-of-a-kind places never within 32 chunks of each other; each keeps its one spot");
         try {
