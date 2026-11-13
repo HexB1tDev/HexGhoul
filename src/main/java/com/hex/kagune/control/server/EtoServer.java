@@ -688,6 +688,10 @@ public final class EtoServer {
             show(player, npc, c, script.gifts(c, script.giftsAsked(c.seed())), Kind.GIFTS);
             return;
         }
+        if (key.equals("present")) {
+            present(player, npc, c, choice); // 4.1.84
+            return;
+        }
         if (key.startsWith("gang")) {
             // 4.1.50: joining their gang (Ayato's Aogiri, Roma's Clowns), or how it stands; a joke told to Roma.
             GangServer.Said said = GangServer.talk(player, npc, npc.persona(), key, c.seed());
@@ -1513,6 +1517,78 @@ public final class EtoServer {
         return new EtoTalk.Page(page.line(), out);
     }
 
+    /**
+     * 4.1.84: what is in {@code player}'s main hand, if it is a present for {@code npc}: anything with no gift of its own on her pages (her
+     * errand's item, her flower, Ghoul Meat, a letter, the ring, what her courtship's chapter asks for); else null.
+     */
+    static String present(ServerPlayer player, EtoNpc npc) {
+        ItemStack held = player.m_21205_();
+        String item = id(held);
+        com.hex.kagune.control.npc.Persona persona = npc.persona();
+        if (item == null || persona.errandItem(item) || persona.flower(item) || ControlItems.ghoulMeat(held) || EtoRules.letter(item)
+            || ControlItems.ring(held) || com.hex.kagune.control.npc.Courtship.wants(persona.key(), QuestServer.bond(player, persona.key()), item)) {
+            return null;
+        }
+        return item;
+    }
+
+    /**
+     * 4.1.84 (romance: gifts each companion loves or hates): a present in hand is offered on the gifts page ("present"); on the main page,
+     * where no gifts link is, the link is added (SAY_8, the only slot it ever takes), while the page has room. Never to someone else's.
+     */
+    static EtoTalk.Page withPresent(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, EtoTalk.Page page, Kind kind) {
+        if (c.claimedBy() != null || kind != Kind.MAIN && kind != Kind.GIFTS) {
+            return page;
+        }
+        String item = present(player, npc);
+        if (item == null) {
+            return page;
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        int at = out.size();
+        boolean link = false;
+        boolean leave = false;
+        for (int i = 0; i < out.size(); i++) {
+            EtoTalk.Option option = out.get(i);
+            link |= "gifts".equals(option.key()) || "present".equals(option.key());
+            leave |= option.choice() == (kind == Kind.GIFTS ? NpcTalk.Choice.BACK : NpcTalk.Choice.LEAVE); // a main page (not a chapter's), the gifts page
+            if (option.choice() == NpcTalk.Choice.LEAVE || option.choice() == NpcTalk.Choice.BACK || option.choice() == NpcTalk.Choice.INSULT
+                || option.choice() == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        if (link || !leave || out.size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        out.add(at, kind == Kind.GIFTS ? new EtoTalk.Option(NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.Tastes.offer(item), "present")
+            : new EtoTalk.Option(NpcTalk.Choice.SAY_8, "I brought you something...", "gifts"));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
+    /**
+     * 4.1.84: the present in their hand given: once a day, as every gift (EtoRules.gifted: one hated counts too); loved or liked, it is
+     * taken; hated, pushed back. Regard by how she takes it (npc.Tastes), in her words, with her gesture.
+     */
+    static void present(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, NpcTalk.Choice choice) {
+        String key = npc.persona().key();
+        String item = present(player, npc);
+        if (item == null) {
+            show(player, npc, c, npc.persona().script().gifts(c, npc.persona().script().giftsAsked(c.seed())), Kind.GIFTS);
+            return;
+        }
+        if (c.giftedToday()) {
+            carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.again(key, c.seed()), 0, EtoTalk.Effect.NONE), Kind.MAIN);
+            return;
+        }
+        com.hex.kagune.control.npc.Tastes.Taste taste = com.hex.kagune.control.npc.Tastes.of(key, item);
+        QuestServer.bond(player, key, EtoRules.gifted(QuestServer.bond(player, key), day(player.m_284548_())));
+        if (taste != com.hex.kagune.control.npc.Tastes.Taste.HATED) {
+            player.m_21205_().m_41774_(1);
+        }
+        carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.said(key, taste, item, c.seed(), c.dating()),
+            com.hex.kagune.control.npc.Tastes.regard(taste), EtoTalk.Effect.NONE, com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);
+    }
+
     private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, EtoTalk.Page page, Kind kind) {
         if (kind == Kind.MAIN && context.dating() && context.mood() == EtoMood.JEALOUS) {
             // 2.2.3: jealous: they can tell them it's only them.
@@ -1525,6 +1601,7 @@ public final class EtoServer {
             }
             page = new EtoTalk.Page(page.line(), out);
         }
+        page = withPresent(player, npc, context, page, kind); // 4.1.84
         if (kind == Kind.MAIN) {
             page = withHome(player, npc, page);
             page = withCookbook(player, npc, page);

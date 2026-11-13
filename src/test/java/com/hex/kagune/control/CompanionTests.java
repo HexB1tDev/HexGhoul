@@ -153,6 +153,7 @@ public final class CompanionTests {
         dates481();
         bugs482();
         officials483();
+        gifts484();
         proofs();
         oneSpouse();
         jealous();
@@ -2369,6 +2370,122 @@ public final class CompanionTests {
         check(commands.contains(": name + \" is here now. \" + her + \" own place is still \"")
             && near(commands, "String said = married || com.hex.kagune.control.npc.HomePlace.of(persona.key()) == null ? name + \" lives here now.\"", "is here now.", 200),
             "/kagune <name> here says she lives there only if married; else she is visiting");
+    }
+
+    /**
+     * 4.1.84, romance, step 3 (the owner's to-do, of the plan: "whatever you think is best"): gifts each companion loves or hates.
+     */
+    static void gifts484() {
+        String[] ghouls = {"eto", "touka", "ken", "ayato", "noro", "roma", "banjou"};
+        for (String g : ghouls) {
+            check(com.hex.kagune.control.npc.Tastes.of(g, "minecraft:bread") == com.hex.kagune.control.npc.Tastes.Taste.HATED
+                && com.hex.kagune.control.npc.Tastes.of(g, "minecraft:cooked_beef") == com.hex.kagune.control.npc.Tastes.Taste.HATED
+                && com.hex.kagune.control.npc.Tastes.of(g, "minecraft:cake") == com.hex.kagune.control.npc.Tastes.Taste.HATED, g + ": a ghoul hates human food");
+        }
+        check(com.hex.kagune.control.npc.Tastes.of("general", "minecraft:bread") == com.hex.kagune.control.npc.Tastes.Taste.LOVED
+            && com.hex.kagune.control.npc.Tastes.of("general", "minecraft:cooked_beef") == com.hex.kagune.control.npc.Tastes.Taste.LOVED
+            && com.hex.kagune.control.npc.Tastes.of("general", "minecraft:carrot") == com.hex.kagune.control.npc.Tastes.Taste.LIKED,
+            "the General, a human, eats as one");
+        check(com.hex.kagune.control.npc.Tastes.of("general", "hexkagune:ghoul_meat") == com.hex.kagune.control.npc.Tastes.Taste.HATED
+            && com.hex.kagune.control.npc.Tastes.of("general", "hexkagune:human_stew") == com.hex.kagune.control.npc.Tastes.Taste.HATED
+            && com.hex.kagune.control.npc.Tastes.of("general", "hexkagune:mask_touka") == com.hex.kagune.control.npc.Tastes.Taste.HATED
+            && com.hex.kagune.control.npc.Tastes.of("general", "hexkagune:blood_latte") == com.hex.kagune.control.npc.Tastes.Taste.HATED
+            && com.hex.kagune.control.npc.Tastes.of("general", "hexkagune:quinque_katana") == com.hex.kagune.control.npc.Tastes.Taste.LOVED,
+            "he hates what ghouls eat and wear; a quinque he loves");
+        // Each has things of their own life they love, and the ones they hate (besides human food).
+        String[][] loves = {{"eto", "hexkagune:anteiku_blend"}, {"eto", "minecraft:ink_sac"}, {"touka", "hexkagune:anteiku_blend"}, {"touka", "minecraft:rabbit_hide"},
+            {"ken", "hexkagune:anteiku_blend"}, {"ken", "minecraft:writable_book"}, {"ayato", "minecraft:black_dye"}, {"ayato", "minecraft:netherite_sword"},
+            {"noro", "hexkagune:kakuhou_tartare"}, {"general", "minecraft:clock"}, {"roma", "minecraft:firework_star"}, {"roma", "minecraft:music_disc_cat"},
+            {"banjou", "minecraft:oak_sapling"}, {"banjou", "minecraft:poppy"}, {"banjou", "minecraft:bone_meal"}};
+        for (String[] l : loves) {
+            check(com.hex.kagune.control.npc.Tastes.of(l[0], l[1]) == com.hex.kagune.control.npc.Tastes.Taste.LOVED, l[0] + " loves " + l[1]);
+        }
+        String[][] hates = {{"eto", "hexkagune:quinque_katana"}, {"touka", "hexkagune:mask_amon"}, {"ken", "minecraft:spider_eye"}, {"ken", "hexkagune:centipede_soba"},
+            {"ken", "minecraft:shears"}, {"ken", "hexkagune:mask_yamori"}, {"ayato", "minecraft:poppy"}, {"ayato", "minecraft:pink_dye"}, {"roma", "minecraft:paper"},
+            {"roma", "minecraft:writable_book"}, {"banjou", "minecraft:wither_rose"}, {"banjou", "minecraft:tnt"}};
+        for (String[] h : hates) {
+            check(com.hex.kagune.control.npc.Tastes.of(h[0], h[1]) == com.hex.kagune.control.npc.Tastes.Taste.HATED, h[0] + " hates " + h[1]);
+        }
+        check(com.hex.kagune.control.npc.Tastes.of("ayato", "minecraft:oak_sapling") == com.hex.kagune.control.npc.Tastes.Taste.LIKED
+            && com.hex.kagune.control.npc.Tastes.of("ayato", "minecraft:wither_rose") != com.hex.kagune.control.npc.Tastes.Taste.HATED,
+            "Ayato: flowers insult him (a sapling isn't one, the wither rose is his)");
+        for (com.hex.kagune.control.npc.Persona p : com.hex.kagune.control.npc.Persona.ALL) {
+            check(com.hex.kagune.control.npc.Tastes.of(p.key(), "minecraft:cobblestone") == com.hex.kagune.control.npc.Tastes.Taste.LIKED
+                && com.hex.kagune.control.npc.Tastes.of(p.key(), null) == com.hex.kagune.control.npc.Tastes.Taste.LIKED, p.key() + ": anything else taken politely");
+            int loved = 0;
+            for (String l : com.hex.kagune.control.npc.Tastes.LOVES.get(p.key())) {
+                loved++;
+                check(!(l.endsWith("_") || l.endsWith(":")) || l.length() > 12, p.key() + ": a kind loved, not everything: " + l);
+            }
+            check(loved >= 4, p.key() + " loves at least four things of their own: " + loved);
+            check(com.hex.kagune.control.npc.Tastes.HATES.containsKey(p.key()), p.key() + ": hates listed");
+            // Their lines: their own, each naming what was given where it's taken; never a colour code (the talk screen draws them as they are).
+            for (com.hex.kagune.control.npc.Tastes.Taste t : com.hex.kagune.control.npc.Tastes.Taste.values()) {
+                for (int seed = 0; seed < 4; seed++) {
+                    for (boolean together : new boolean[] {false, true}) {
+                        String said = com.hex.kagune.control.npc.Tastes.said(p.key(), t, "minecraft:writable_book", seed, together);
+                        check(said != null && !said.isBlank() && !said.contains("\u00a7") && !said.equals("Thank you.") && !said.equals("No, thank you."),
+                            p.key() + " " + t + ": in their own words: " + said);
+                    }
+                }
+                for (String item : new String[] {"minecraft:ink_sac", "hexkagune:anteiku_blend", "minecraft:oak_sapling", "minecraft:clock"}) {
+                    for (int seed = 0; seed < 4; seed++) {
+                        String said = com.hex.kagune.control.npc.Tastes.said(p.key(), t, item, seed, seed % 2 == 0);
+                        String named = com.hex.kagune.control.npc.Tastes.name(item);
+                        boolean vowel = "aeiouAEIOU".indexOf(named.charAt(0)) >= 0;
+                        check(!java.util.regex.Pattern.compile("\\b" + (vowel ? "[Aa]" : "[Aa]n") + " " + java.util.regex.Pattern.quote(named)).matcher(said).find(),
+                            p.key() + ": its article right: " + said);
+                    }
+                }
+                String loved1 = com.hex.kagune.control.npc.Tastes.said(p.key(), com.hex.kagune.control.npc.Tastes.Taste.LOVED, "minecraft:clock", 0, true);
+                check(p.key().equals("noro") || loved1.contains("clock"), p.key() + ": names what they love: " + loved1);
+            }
+            String again = com.hex.kagune.control.npc.Tastes.again(p.key(), 1);
+            check(again != null && !again.equals("Tomorrow.") && !again.contains("\u00a7"), p.key() + ": once a day, in their words: " + again);
+            check(com.hex.kagune.control.npc.Tastes.gesture(p.key(), com.hex.kagune.control.npc.Tastes.Taste.LIKED) == com.hex.kagune.control.npc.EtoGesture.NONE
+                && (p.key().equals("noro") || com.hex.kagune.control.npc.Tastes.gesture(p.key(), com.hex.kagune.control.npc.Tastes.Taste.HATED) != com.hex.kagune.control.npc.EtoGesture.NONE)
+                && com.hex.kagune.control.npc.Tastes.gesture(p.key(), com.hex.kagune.control.npc.Tastes.Taste.LOVED) != com.hex.kagune.control.npc.EtoGesture.NONE,
+                p.key() + ": loved or hated shows");
+        }
+        check(com.hex.kagune.control.npc.Tastes.LOVED_REGARD == com.hex.kagune.control.npc.EtoRules.GIFT && com.hex.kagune.control.npc.Tastes.LIKED_REGARD == 2
+            && com.hex.kagune.control.npc.Tastes.HATED_REGARD == -4
+            && com.hex.kagune.control.npc.Tastes.regard(com.hex.kagune.control.npc.Tastes.Taste.LOVED) == com.hex.kagune.control.npc.EtoRules.GIFT
+            && com.hex.kagune.control.npc.Tastes.regard(com.hex.kagune.control.npc.Tastes.Taste.LIKED) == 2
+            && com.hex.kagune.control.npc.Tastes.regard(com.hex.kagune.control.npc.Tastes.Taste.HATED) == -4, "loved as much as their own gifts, liked a little, hated costs");
+        check(com.hex.kagune.control.npc.Tastes.name("minecraft:writable_book").equals("book and quill") && com.hex.kagune.control.npc.Tastes.name("hexkagune:mask_touka").equals("Touka mask")
+            && com.hex.kagune.control.npc.Tastes.name("minecraft:music_disc_cat").equals("record") && com.hex.kagune.control.npc.Tastes.name("minecraft:oak_sapling").equals("oak sapling")
+            && com.hex.kagune.control.npc.Tastes.name("hexkagune:quinque_case_dawn").equals("quinque") && com.hex.kagune.control.npc.Tastes.name(null).equals("nothing"),
+            "named as said aloud");
+        check(com.hex.kagune.control.npc.Tastes.offer("minecraft:clock").equals("Here. I want you to have this. (the clock in your hand)"), "offered by name");
+        check(com.hex.kagune.control.npc.Tastes.an("ink sac", true).equals("An ink sac") && com.hex.kagune.control.npc.Tastes.an("clock", false).equals("a clock")
+            && com.hex.kagune.control.npc.Tastes.an("Anteiku Blend", false).equals("an Anteiku Blend"), "a or an by the first letter");
+        // The server: offered on the gifts page, given once a day, hated pushed back.
+        String eto = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+        check(near(eto, "static String present(ServerPlayer player, EtoNpc npc) {", "persona.errandItem(item) || persona.flower(item) || ControlItems.ghoulMeat(held) || EtoRules.letter(item)", 300)
+            && near(eto, "static String present(ServerPlayer player, EtoNpc npc) {", "|| ControlItems.ring(held) || com.hex.kagune.control.npc.Courtship.wants(", 500),
+            "a present is what has no gift of its own (the errand's, the flower, the meat, a letter, the ring, the chapter's)");
+        check(near(eto, "static EtoTalk.Page withPresent(", "if (c.claimedBy() != null || kind != Kind.MAIN && kind != Kind.GIFTS) {", 200)
+            && near(eto, "static EtoTalk.Page withPresent(", "if (link || !leave || out.size() >= S2CNpcTalk.MOST) {", 1700)
+            && near(eto, "static EtoTalk.Page withPresent(", "leave |= option.choice() == (kind == Kind.GIFTS ? NpcTalk.Choice.BACK : NpcTalk.Choice.LEAVE);", 1200)
+            && near(eto, "static EtoTalk.Page withPresent(", "kind == Kind.GIFTS ? new EtoTalk.Option(NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.Tastes.offer(item), \"present\")", 1900)
+            && near(eto, "static EtoTalk.Page withPresent(", ": new EtoTalk.Option(NpcTalk.Choice.SAY_8, \"I brought you something...\", \"gifts\"));", 2100)
+            && eto.contains("        page = withPresent(player, npc, context, page, kind); // 4.1.84"), "offered on the gifts page, linked from the main page, never to someone else's");
+        check(near(eto, "static void present(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, NpcTalk.Choice choice) {", "if (c.giftedToday()) {", 500)
+            && near(eto, "if (c.giftedToday()) {\n            carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.again(key, c.seed()), 0,", "return;", 200)
+            && near(eto, "Tastes.Taste taste = com.hex.kagune.control.npc.Tastes.of(key, item);", "QuestServer.bond(player, key, EtoRules.gifted(", 150)
+            && near(eto, "if (taste != com.hex.kagune.control.npc.Tastes.Taste.HATED) {", "player.m_21205_().m_41774_(1);", 80)
+            && near(eto, "player.m_21205_().m_41774_(1);", "com.hex.kagune.control.npc.Tastes.regard(taste), EtoTalk.Effect.NONE, com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);", 400)
+            && eto.contains("if (key.equals(\"present\")) {\n            present(player, npc, c, choice); // 4.1.84"),
+            "once a day (a hated one too), taken unless hated, regard and gesture by taste");
+        // Every key used is a real item of the mod's (its model is there) or Minecraft's.
+        java.util.List<String> all = new java.util.ArrayList<>();
+        com.hex.kagune.control.npc.Tastes.LOVES.values().forEach(all::addAll);
+        com.hex.kagune.control.npc.Tastes.HATES.values().forEach(all::addAll);
+        for (String id : all) {
+            if (id.startsWith("hexkagune:") && !id.endsWith("_")) {
+                check(new java.io.File("src/main/resources/assets/hexkagune/models/item/" + id.substring(10) + ".json").exists(), id + " is one of the mod's items");
+            }
+        }
     }
 
     /** The yaw (a Rotation list's first float) of the NBT list named Rotation at {@code at} in {@code nbt}. */

@@ -1302,6 +1302,39 @@ public class UiPreview {
         }
     }
 
+    /**
+     * 4.1.84: each companion's gifts page with a present in hand (the option the server adds: npc.Tastes.offer), then what they say to one
+     * they love and one they hate (npc.Tastes.said), as the talk screen draws them.
+     */
+    static void giftsTalk(File dir) throws Exception {
+        com.hex.kagune.control.npc.NpcTalk.Choice back = com.hex.kagune.control.npc.NpcTalk.Choice.BACK;
+        com.hex.kagune.control.npc.NpcTalk.Choice leave = com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE;
+        String[][] who = {{"eto", "Eto", "Your girlfriend - happy", "eto/eto.png", "minecraft:ink_sac", "hexkagune:quinque_katana"},
+            {"touka", "Touka", "Your girlfriend - happy", "touka/touka.png", "minecraft:rabbit_hide", "minecraft:bread"},
+            {"ken", "Ken", "Your boyfriend - happy", "ken/ken.png", "hexkagune:anteiku_blend", "minecraft:spider_eye"},
+            {"ayato", "Ayato", "Your boyfriend - bored", "ayato/ayato.png", "minecraft:netherite_sword", "minecraft:poppy"},
+            {"noro", "Noro", "Aogiri's - quiet", "noro/noro.png", "hexkagune:kakuhou_tartare", "minecraft:cake"},
+            {"general", "The General", "Your boyfriend - happy", "general/general.png", "minecraft:clock", "hexkagune:mask_eto"},
+            {"roma", "Roma", "Your girlfriend - giddy", "roma/roma.png", "minecraft:firework_star", "minecraft:writable_book"},
+            {"banjou", "Banjou", "Your boyfriend - happy", "banjou/banjou.png", "minecraft:oak_sapling", "minecraft:wither_rose"}};
+        for (String[] w : who) {
+            int regard = w[0].equals("noro") ? 20 : 92;
+            etoFrame(new File(dir, "gifts-" + w[0] + "-page.png"), face(w[3]), new com.hex.kagune.control.client.NpcTalkView.Model(w[1], w[2], regard, false,
+                com.hex.kagune.control.npc.Persona.of(w[0]).script().giftsAsked(0), java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.SAY_1, back),
+                java.util.List.of(com.hex.kagune.control.npc.Tastes.offer(w[4]), ""), -1), com.hex.kagune.control.client.NpcTalkView.Motion.still(regard));
+            String[] items = {w[4], w[5]};
+            String[] names = {"loved", "hated"};
+            for (int k = 0; k < 2; k++) {
+                com.hex.kagune.control.npc.Tastes.Taste taste = com.hex.kagune.control.npc.Tastes.of(w[0], items[k]);
+                int after = Math.max(0, Math.min(100, regard + com.hex.kagune.control.npc.Tastes.regard(taste)));
+                etoFrame(new File(dir, "gifts-" + w[0] + "-" + names[k] + ".png"), face(w[3]), new com.hex.kagune.control.client.NpcTalkView.Model(w[1], w[2],
+                    after, false, com.hex.kagune.control.npc.Tastes.said(w[0], taste, items[k], 0, !w[0].equals("noro")),
+                    java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT, leave), java.util.List.of("Talk to me.", ""), -1),
+                    com.hex.kagune.control.client.NpcTalkView.Motion.still(after));
+            }
+        }
+    }
+
     /** 4.1.53: Noro and Roma giving today's job to one of their gang (the option on their first page, the job given, the reputation bar). */
     static void dailiesTalk(File dir) throws Exception {
         java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> page = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
@@ -1557,6 +1590,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("dates")) {
             datesTalk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("gifts")) {
+            giftsTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("dailies")) {

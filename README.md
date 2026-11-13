@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.84 (HexGhoul): romance: presents each companion loves or hates (testing)
+
+See `.github/release-notes-4.1.84.md`. `npc/Tastes` (pure: `Taste` LOVED/LIKED/HATED, `HUMAN_FOOD` every ghoul hates, `LOVES`/`HATES`
+by companion (ids, or kinds by prefix), `of`, `regard`, `name`/`an`/`offer`, `said`/`again` in their words, `gesture`).
+`EtoServer.present` (a main-hand item with no gift of its own), `withPresent` (the gifts page's "present" option, `SAY_1`; the main page's
+gifts link, `SAY_8`, while there is room), the "present" handler (once a day, taken unless hated, through `carry`).
+`CompanionTests.gifts484`, 33 rules sabotaged (`docs/handoff/sabotage-4.1.84.json`). Render `docs/handoff/gifts-4.1.84.png`
+(`tools/UiPreview.java <dir> gifts`).
+
 ## 4.1.83 (HexGhoul): every official back at her own spot; Banjou in his bedroom (testing)
 
 See `.github/release-notes-4.1.83.md`. `HomePlace.spot` (each official's spot in her place's template: x, feet y, z, yaw), `placed` (turned as

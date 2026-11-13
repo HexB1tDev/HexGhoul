@@ -1,0 +1,233 @@
+[
+ {
+  "name": "ghouls eat human food",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "if (ghoul && HUMAN_FOOD.contains(item) ||",
+  "new": "if (false && HUMAN_FOOD.contains(item) ||",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General a ghoul",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "boolean ghoul = persona != null && !persona.human();",
+  "new": "boolean ghoul = persona != null;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "bread not human food",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "Set.of(\"minecraft:bread\", ",
+  "new": "Set.of(",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "loved before hated",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        if (ghoul && HUMAN_FOOD.contains(item) || among(HATES.getOrDefault(key, List.of()), item)",
+  "new": "        if (among(LOVES.getOrDefault(key, List.of()), item) || \"banjou\".equals(key) && Courtship.plant(item)) {\n            return Taste.LOVED;\n        }\n        if (ghoul && HUMAN_FOOD.contains(item) || among(HATES.getOrDefault(key, List.of()), item)",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ayato takes flowers",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "            || \"ayato\".equals(key) && flower(item) && !\"minecraft:wither_rose\".equals(item)) {",
+  "new": ") {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ayato hates saplings",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "            || \"ayato\".equals(key) && flower(item) && !\"minecraft:wither_rose\".equals(item)) {",
+  "new": "            || \"ayato\".equals(key) && Courtship.plant(item) && !\"minecraft:wither_rose\".equals(item)) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Banjou's garden forgotten",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        if (among(LOVES.getOrDefault(key, List.of()), item) || \"banjou\".equals(key) && Courtship.plant(item)) {",
+  "new": "        if (among(LOVES.getOrDefault(key, List.of()), item)) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "no kinds, only ids",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "            boolean prefix = one.endsWith(\"_\") || one.endsWith(\":\");",
+  "new": "            boolean prefix = false;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "loved a little",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "public static final int LOVED_REGARD = EtoRules.GIFT;",
+  "new": "public static final int LOVED_REGARD = 3;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "hated free",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "public static final int HATED_REGARD = -4;",
+  "new": "public static final int HATED_REGARD = 0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "liked much",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "public static final int LIKED_REGARD = 2;",
+  "new": "public static final int LIKED_REGARD = 5;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "hated as liked",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "            case HATED -> HATED_REGARD;\n        };",
+  "new": "            case HATED -> LIKED_REGARD;\n        };",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a book and quill unnamed",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "Map.of(\"writable_book\", \"book and quill\", ",
+  "new": "Map.of(",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "masks by their ids",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        if (path.startsWith(\"mask_\")) {",
+  "new": "        if (path.startsWith(\"mask__\")) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a quinque by its case",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        if (path.startsWith(\"quinque_\")) {",
+  "new": "        if (path.startsWith(\"quinque__\")) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "always a",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        boolean vowel = !name.isEmpty() && \"aeiouAEIOU\".indexOf(name.charAt(0)) >= 0;",
+  "new": "        boolean vowel = false;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "liked shows",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        if (taste == Taste.LIKED) {\n            return EtoGesture.NONE;\n        }",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Touka in no one's words",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "            case \"touka\" -> switch (taste) {",
+  "new": "            case \"touka_\" -> switch (taste) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ken's once a day in no one's words",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "            case \"ken\" -> \"You've already given me something today. Keep it. Tomorrow, maybe.\";",
+  "new": "            case \"ken_\" -> \"You've already given me something today. Keep it. Tomorrow, maybe.\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma loves no records",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "\"hexkagune:mask_roma\", \"minecraft:music_disc_\"),",
+  "new": "\"hexkagune:mask_roma\"),",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ken unafraid of centipedes",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "\"minecraft:fermented_spider_eye\", \"hexkagune:centipede_soba\", ",
+  "new": "\"minecraft:fermented_spider_eye\", ",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the errand's item a present",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "if (item == null || persona.errandItem(item) || persona.flower(item) ||",
+  "new": "if (item == null || persona.flower(item) ||",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the chapter's item a present",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "            || ControlItems.ring(held) || com.hex.kagune.control.npc.Courtship.wants(persona.key(), QuestServer.bond(player, persona.key()), item)) {",
+  "new": "            || ControlItems.ring(held)) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "presents to someone else's",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "if (c.claimedBy() != null || kind != Kind.MAIN && kind != Kind.GIFTS) {",
+  "new": "if (kind != Kind.MAIN && kind != Kind.GIFTS) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "past the page's room",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "if (link || !leave || out.size() >= S2CNpcTalk.MOST) {",
+  "new": "if (link || !leave) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the present on a slot the main page's add-ons take",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "kind == Kind.GIFTS ? new EtoTalk.Option(NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.Tastes.offer(item), \"present\")",
+  "new": "kind == Kind.GIFTS ? new EtoTalk.Option(NpcTalk.Choice.SAY_3, com.hex.kagune.control.npc.Tastes.offer(item), \"present\")",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "never offered",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "        page = withPresent(player, npc, context, page, kind); // 4.1.84\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "presents all day",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "        if (c.giftedToday()) {\n            carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.again(",
+  "new": "        if (c.giftedToday() && false) {\n            carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.again(",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "today's gift not kept",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "        QuestServer.bond(player, key, EtoRules.gifted(QuestServer.bond(player, key), day(player.m_284548_())));\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a hated one taken",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "        if (taste != com.hex.kagune.control.npc.Tastes.Taste.HATED) {\n            player.m_21205_().m_41774_(1);",
+  "new": "        if (taste != null) {\n            player.m_21205_().m_41774_(1);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "regard none",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "            com.hex.kagune.control.npc.Tastes.regard(taste), EtoTalk.Effect.NONE, com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);",
+  "new": "            0, EtoTalk.Effect.NONE, com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the present unanswered",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "        if (key.equals(\"present\")) {\n            present(player, npc, c, choice); // 4.1.84",
+  "new": "        if (key.equals(\"present_\")) {\n            present(player, npc, c, choice); // 4.1.84",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a chapter's page offered presents",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "            leave |= option.choice() == (kind == Kind.GIFTS ? NpcTalk.Choice.BACK : NpcTalk.Choice.LEAVE); // a main page (not a chapter's), the gifts page",
+  "new": "            leave |= option.choice() == NpcTalk.Choice.LEAVE || option.choice() == NpcTalk.Choice.BACK; // a main page (not a chapter's), the gifts page",
+  "suite": "CompanionTests"
+ }
+]
