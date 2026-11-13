@@ -564,28 +564,19 @@ public final class ReaperBladePose {
     }
 
     /**
-     * 4.1.31 (the owner: "he breaks the weapon. The blade shatters at the end, and it's just broken. And he accepts his death a little before he
-     * dies actually, and then he just falls on his knees and dies after the weapon shatters"): {@code age} ticks into his end: both hands
-     * lower the blade, its point to the ground before him ({@link #END_LOW}); it shatters ({@link AgentRules#REAPER_END_SHATTER}), his arms
-     * fall to his sides, the broken hilt in his right hand; he goes down on his knees ({@link AgentRules#REAPER_END_KNEELS}: his legs folded
-     * back, his hips sunk till his feet are on the ground: he has no knees to bend), leans forward, bows his head; held as he dies.
-     * 4.1.74 (the owner: "the blade slowly shatter, then he holds still for a bit then dies"): lowered more slowly; he holds it there, still,
-     * the whole time it breaks away piece by piece ({@link AgentRules#REAPER_END_SHATTER} .. {@link AgentRules#REAPER_END_SHATTERED}); only
-     * then his arms fall; he goes down slowly ({@link AgentRules#REAPER_END_KNEELING}) and holds still on his knees till he dies.
-     * 4.1.75 (the owner: "make him actually lay on the floor face down like falling on his face and lay there a bit"): knelt and bowed a
-     * moment, then he falls on his face ({@link #fall}) and lies there, still, till he dies.
+     * 4.1.76 (the owner: "why tf does he hold off on that michael jackson ah pose????? and why does he hold his weapon like that when it's
+     * breaking?? just make the blade instantly shatter while he's holding it on one hand, and the fall straight on his face"): {@code age}
+     * ticks into his end: in his one-handed guard, the blade in his right hand, it shatters all at once
+     * ({@link AgentRules#REAPER_END_SHATTER}); his arm drops slack ({@link #SLACK}); he falls straight forward on his face ({@link #fall}) and
+     * lies there till he dies. (4.1.31's lowering with both hands and kneeling, slowed in 4.1.74, are gone: on his knees, a body with no
+     * knees to bend reads from the side as a stiff lean.)
      */
     public static RigPose end(double age) {
-        float lower = smooth(age / (AgentRules.REAPER_END_SHATTER - 1.0));
-        float[] k = new float[GUARD.length];
-        for (int c = 0; c < k.length; c++) {
-            k[c] = GUARD[c] + (END_LOW[c] - GUARD[c]) * lower;
-        }
-        RigPose p = pose(k, 1.0F - lower, lower); // 4.1.37: from his one-handed guard, both hands on it as he lowers it
-        float drop = smooth((age - AgentRules.REAPER_END_SHATTERED) / 8.0);
-        if (drop > 0.0F) {
-            float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, -0.22F, 0.0F, 0.12F, drop);
-            float[] left = QuinqueGrip.blendTurn(p.leftArmX, p.leftArmY, p.leftArmZ, 0.08F, 0.0F, -0.1F, drop);
+        RigPose p = pose(GUARD.clone(), 1.0F, 0.0F); // his one-handed guard
+        float slack = smooth((age - AgentRules.REAPER_END_SHATTER) / SLACK);
+        if (slack > 0.0F) {
+            float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, -0.22F, 0.0F, 0.12F, slack);
+            float[] left = QuinqueGrip.blendTurn(p.leftArmX, p.leftArmY, p.leftArmZ, 0.08F, 0.0F, -0.1F, slack);
             p.rightArmX = right[0];
             p.rightArmY = right[1];
             p.rightArmZ = right[2];
@@ -593,26 +584,10 @@ public final class ReaperBladePose {
             p.leftArmY = left[1];
             p.leftArmZ = left[2];
             // The broken hilt held slack in his hanging hand, its stub ahead of it.
-            p.weaponX = p.weaponX * (1.0F - drop);
-            p.weaponY = p.weaponY * (1.0F - drop);
-            p.weaponZ = p.weaponZ * (1.0F - drop);
+            p.weaponX *= 1.0F - slack;
+            p.weaponY *= 1.0F - slack;
+            p.weaponZ *= 1.0F - slack;
         }
-        float kneel = smooth((age - AgentRules.REAPER_END_KNEELS) / (double)AgentRules.REAPER_END_KNEELING);
-        float bow = smooth((age - AgentRules.REAPER_END_KNEELS - 14.0) / 24.0); // 4.1.75: bowed before he falls (30 ticks before)
-        p.rightLegX = p.rightLegX * (1.0F - kneel) + KNEEL * kneel;
-        p.leftLegX = p.leftLegX * (1.0F - kneel) + KNEEL * kneel;
-        p.rightLegZ *= 1.0F - kneel;
-        p.leftLegZ *= 1.0F - kneel;
-        p.rightLegZ += 0.08F * kneel;
-        p.leftLegZ -= 0.08F * kneel;
-        p.legHold = Math.max(p.legHold, kneel);
-        p.drop = p.drop * (1.0F - kneel) + KNEEL_DROP * kneel;
-        p.lunge *= 1.0F - kneel;
-        p.twist *= 1.0F - kneel;
-        p.lean = p.lean * (1.0F - kneel) + 0.2F * kneel + 0.1F * bow;
-        p.headX = p.headX * (1.0F - kneel) + 0.25F * kneel + 0.45F * bow;
-        p.headY *= 1.0F - kneel;
-        p.headHold = Math.max(p.headHold, 0.8F * kneel);
         double falling = (age - AgentRules.REAPER_END_FALLS) / (double)AgentRules.REAPER_END_FALLING;
         if (falling > 0.0) {
             fall(p, Math.min(1.0, falling));
@@ -620,6 +595,8 @@ public final class ReaperBladePose {
         return p;
     }
 
+    /** 4.1.76: the ticks his arm takes to drop slack as the blade shatters in his hand. */
+    public static final double SLACK = 5.0;
     /** 4.1.75: face down: how far (radians) the whole of him is turned forward once he has fallen. */
     public static final float FACE_DOWN = (float)(Math.PI / 2.0);
     /**
@@ -627,27 +604,30 @@ public final class ReaperBladePose {
      * chest) a pixel into it, his face to the ground.
      */
     public static final double LYING = 3.0 / 16.0;
-    /** 4.1.75: his arms lying (a little back, out from his sides) and his head (in line with him, face to the ground). */
+    /** 4.1.75: his arms lying (a little back, out from his sides). */
     static final float LIE_ARM_X = 0.06F;
     static final float LIE_ARM_Z = 0.2F;
     /** 4.1.75: lying, his wrist turned so the broken hilt lies flat beside him, its stub out to his right (HELD's way along his arm's front). */
     static final float LIE_WRIST = (float)(Math.PI / 2.0);
+    /** 4.1.76: the edge he falls over: the front of his feet on the ground, under the middle of him (model pixels). */
+    public static final double[] TOES = {0.0, 24.0, -2.0};
 
     /**
-     * 4.1.75: {@code t} (0 to 1) of his fall on his face, from his knees: the whole of him turned forward faster and faster (nothing holds
-     * him up: {@code t} squared) about his knees, which stay where they rest ({@link #knee}); his legs straighten out behind him, his back
-     * in line with them, his head too, his arms limp along his sides; at the end he lies flat, face down ({@link #FACE_DOWN},
-     * {@link #LYING}).
+     * 4.1.76: {@code t} (0 to 1) of his fall straight on his face from where he stands: the whole of him, stiff, turned forward faster and
+     * faster (nothing holds him up: {@code t} squared) over the front of his feet, which stay where they stand ({@link #toes}); his legs,
+     * his back and his head straightened in line, his arms limp along his sides, the broken hilt flat beside him; at the end he lies flat,
+     * face down ({@link #FACE_DOWN}, {@link #LYING}: the edge rises to a pixel off the ground as his chest comes down a pixel over it).
      */
     static void fall(RigPose p, double t) {
+        double[] rest = toes(p, 0.0);
         double theta = FACE_DOWN * t * t;
         float straight = smooth(t);
-        float legs = KNEEL * (1.0F - straight);
-        p.rightLegX = legs;
-        p.leftLegX = legs;
+        p.rightLegX *= 1.0F - straight;
+        p.leftLegX *= 1.0F - straight;
         p.rightLegZ *= 1.0F - straight;
         p.leftLegZ *= 1.0F - straight;
         p.lean *= 1.0F - straight;
+        p.twist *= 1.0F - straight;
         p.headX *= 1.0F - straight;
         p.headY *= 1.0F - straight;
         float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, LIE_ARM_X, 0.0F, LIE_ARM_Z, straight);
@@ -664,18 +644,12 @@ public final class ReaperBladePose {
         p.weaponY = p.weaponY * (1.0F - straight) + LIE_WRIST * straight;
         p.weaponZ *= 1.0F - straight;
         p.flip = (float)-theta; // forward (x+ tips his head back)
-        // His knees kept where they rest (their middle rising to the middle of his lying legs as he comes down flat): the drop and the
-        // lunge that put them there, his body turned theta about the point BodyFrame.TURN_PIVOT up.
-        double[] rest = knee(KNEEL, 0.0, KNEEL_DROP, 0.0);
-        double y = rest[1] + (LYING - rest[1]) * t * t;
-        double[] w = turned(kneeModel(legs), theta);
+        // The front of his feet kept where it stands (rising a pixel as he comes down flat): the drop and the lunge that put it there, his
+        // body turned theta about the point BodyFrame.TURN_PIVOT up.
+        double y = rest[1] + (LYING - 2.0 / 16.0 - rest[1]) * t * t;
+        double[] w = turned(TOES, theta);
         p.drop = (float)(16.0 * (BodyFrame.TURN_PIVOT - (y - w[1])));
         p.lunge = (float)(16.0 * (rest[2] - w[2]));
-    }
-
-    /** 4.1.75: the middle of his right knee (halfway down his leg, swung back {@code legs}) in the model's frame (pixels). */
-    static double[] kneeModel(float legs) {
-        return new double[] {-1.9, 12.0 + 6.0 * Math.cos(legs), 6.0 * Math.sin(legs)};
     }
 
     /** 4.1.75: a model point (pixels) about the body's turning point (blocks: y up, z forward), turned forward {@code theta}. */
@@ -685,10 +659,10 @@ public final class ReaperBladePose {
         return new double[] {q[0] / 16.0, y * Math.cos(theta) - z * Math.sin(theta), y * Math.sin(theta) + z * Math.cos(theta)};
     }
 
-    /** 4.1.75: where his knee is (blocks: y up from the ground, z forward), his legs swung back {@code legs}, turned, dropped, lunged. */
-    public static double[] knee(float legs, double theta, double drop, double lunge) {
-        double[] w = turned(kneeModel(legs), theta);
-        return new double[] {w[0], w[1] + BodyFrame.TURN_PIVOT - drop / 16.0, w[2] + lunge / 16.0};
+    /** 4.1.76: where the front of his feet is (blocks: y up from the ground, z forward) under pose {@code p} turned forward {@code theta}. */
+    public static double[] toes(RigPose p, double theta) {
+        double[] w = turned(TOES, theta);
+        return new double[] {w[0], w[1] + BodyFrame.TURN_PIVOT - p.drop / 16.0, w[2] + p.lunge / 16.0};
     }
 
     /**
@@ -738,15 +712,6 @@ public final class ReaperBladePose {
     public static RigPose shatterPose() {
         return shatter().at;
     }
-
-    /**
-     * 4.1.31: on his knees: his legs swung back (radians) and his hips sunk (pixels): his thighs seen going down and back from the front, the
-     * rest of each leg (his shins, folded under him) below the ground; and the blade lowered before the end, its point resting on the
-     * ground ahead (a key).
-     */
-    public static final float KNEEL = 0.55F;
-    public static final float KNEEL_DROP = 6.0F;
-    static final float[] END_LOW = {0, 0.0F, 0.12F, 0.0F, 0.4F, -0.85F, -0.05F, -0.32F, -0.1F, 0.0F, -0.05F, 0.1F, 0.4F};
 
     /**
      * 4.1.31: shard {@code i} of the shattered blade, {@code dt} ticks after it broke, in the model's frame (pixels, before its fall to the

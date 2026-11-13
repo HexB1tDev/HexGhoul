@@ -9,6 +9,13 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.76 (HexGhoul): Arima's blade shatters at once in his one hand, and he falls straight on his face (testing)
+
+See `.github/release-notes-4.1.76.md`. `AgentRules.REAPER_END_SHATTER`/`FALLS`/`FALLING`/`TICKS` (2/6/16/82); `ReaperBladePose.end` (his one-handed
+guard, `SLACK` as it shatters, then `fall`: stiff, `t` squared, over `TOES`, kept where they stand: `toes`); `ReaperBladeLayer` (whole, then the
+stub and every shard at once); one crash in `AgentBrain.ending`. 4.1.74's `ReaperBladeRules.level`/`breaksAt`/`breaking`, `ReaperBladeMesh.brokenAt`,
+the kneel (`KNEEL`, `END_LOW`) removed. `AgentTests.reaperFallen`, `reaperEnd`. Renders `docs/handoff/arima-end-4.1.76.*`.
+
 ## 4.1.75 (HexGhoul): Arima falls on his face and lies there before he dies (testing)
 
 See `.github/release-notes-4.1.75.md`. `AgentRules.REAPER_END_FALLS`/`FALLING`/`TICKS` (132/12/200); `ReaperBladePose.fall` (turned forward

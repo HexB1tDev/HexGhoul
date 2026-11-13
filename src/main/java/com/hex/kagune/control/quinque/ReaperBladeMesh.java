@@ -56,32 +56,6 @@ public final class ReaperBladeMesh {
         return broken;
     }
 
-    private static final ArmMesh.Mesh[] CUT = new ArmMesh.Mesh[com.hex.kagune.control.npc.ReaperBladeRules.LEVELS + 1];
-
-    /**
-     * 4.1.74 (the owner: "the blade slowly shatter"): the blade cut at length {@code level} of ReaperBladeRules.LEVELS (its end jagged, as
-     * {@link #broken}, at {@link #SNAPS} + that share of the rest): LEVELS the whole blade, 0 the stub. Built the first time each is asked for.
-     */
-    public static synchronized ArmMesh.Mesh brokenAt(int level) {
-        int levels = com.hex.kagune.control.npc.ReaperBladeRules.LEVELS;
-        if (level >= levels) {
-            return of();
-        }
-        if (level <= 0) {
-            return broken();
-        }
-        if (CUT[level] == null) {
-            double end = SNAPS + (TIP - SNAPS) * level / levels;
-            ArmMesh.Builder b = new ArmMesh.Builder(ReaperBladeMesh::inverted, ReaperBladeMesh::inverted);
-            blade(b, end);
-            veins(b, end);
-            guard(b);
-            grip(b);
-            CUT[level] = b.done();
-        }
-        return CUT[level];
-    }
-
     /** Its mesh, built the first time it is asked for. */
     public static synchronized ArmMesh.Mesh of() {
         if (built == null) {

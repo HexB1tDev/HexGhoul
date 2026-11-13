@@ -83,12 +83,12 @@ public final class ReaperBladePreview {
                 }
             }
             case "end" -> {
-                // 4.1.74: his whole end (ReaperBladePose.end; the blade cut at ReaperBladeRules.level, its shards from their own breaksAt).
+                // 4.1.76: his whole end (ReaperBladePose.end): the blade shattering in his one hand, his fall on his face, lying there.
                 cols = 6;
-                for (double t : new double[] {0, 12, 19, 32, 50, 68, 79, 86, 98, 110, 124, 132, 135, 137, 139, 140, 141, 142, 143, 144, 160, 199}) {
+                for (double t : new double[] {0, 1, 2, 3, 4, 5, 6, 9, 12, 14, 16, 18, 19, 20, 21, 22, 30, 50, 81, 92}) {
                     frames.add(end(t, 30, 8, endLabel(t)));
                 }
-                for (double t : new double[] {124, 134, 137, 139, 141, 142, 143, 144, 170, 199}) {
+                for (double t : new double[] {1, 3, 6, 12, 16, 19, 21, 22, 40, 92}) {
                     frames.add(end(t, -80, 6, "his right, " + endLabel(t)));
                 }
             }
@@ -161,16 +161,14 @@ public final class ReaperBladePreview {
 
     /** 4.1.74: tick {@code t} of his end, in seconds, with what is happening. */
     static String endLabel(double t) {
-        String what = t < AgentRules.REAPER_END_SHATTER ? "lowering" : t < AgentRules.REAPER_END_SHATTERED ? "breaking"
-            : t < AgentRules.REAPER_END_KNEELS ? "slack" : t < AgentRules.REAPER_END_KNEELS + AgentRules.REAPER_END_KNEELING ? "kneeling"
-            : t < AgentRules.REAPER_END_FALLS ? "bowed" : t < AgentRules.REAPER_END_FALLS + AgentRules.REAPER_END_FALLING ? "falling"
-            : t < AgentRules.REAPER_END_TICKS ? "lying" : "dead";
+        String what = t < AgentRules.REAPER_END_SHATTER ? "guard" : t < AgentRules.REAPER_END_FALLS ? "shattered"
+            : t < AgentRules.REAPER_END_FALLS + AgentRules.REAPER_END_FALLING ? "falling" : t < AgentRules.REAPER_END_TICKS ? "lying" : "dead";
         return String.format("%.2f s, %s", t / 20.0, what);
     }
 
     /**
-     * 4.1.74: {@code age} ticks into his end, as ReaperBladeLayer.ended draws it: his pose (ReaperBladePose.end), the blade cut at what is
-     * left of it (ReaperBladeRules.level), each shard from the tick it broke off, flying out and falling to lie flat on the ground.
+     * 4.1.74: {@code age} ticks into his end, as ReaperBladeLayer.ended draws it: his pose (ReaperBladePose.end), the whole blade until it
+     * shatters (4.1.76: all at once), then the stub, the shards flying out and falling to lie flat on the ground.
      */
     static BufferedImage end(double age, double yaw, double pitch, String text) {
         RigPose pose = ReaperBladePose.end(age);
@@ -181,7 +179,7 @@ public final class ReaperBladePreview {
         List<Boolean> glows = new ArrayList<>();
         double[] fist = {-1.0, 9.0, 0.0};
         double[][] inArm = ReaperBladePose.inArm(pose);
-        add(lit, glows, ReaperBladeMesh.brokenAt(com.hex.kagune.control.npc.ReaperBladeRules.level(age)),
+        add(lit, glows, age >= AgentRules.REAPER_END_SHATTER ? ReaperBladeMesh.broken() : ReaperBladeMesh.of(),
             v -> PoseRender.point(pose, "rightArm", plus(fist, apply(inArm, v))));
         PoseRender.Camera cam = PoseRender.orbit(yaw, pitch, 6.4, 1.0);
         PoseRender.Canvas canvas = new PoseRender.Canvas(W, H, 2, cam, 0x3A4450);
@@ -204,7 +202,7 @@ public final class ReaperBladePreview {
         RigPose broke = ReaperBladePose.shatterPose(); // 4.1.75: as ReaperBladeLayer.shards: worked out there, carried to his body now
         double ground = 24.0 - broke.drop - 0.05;
         for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
-            double dt = age - com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);
+            double dt = age - AgentRules.REAPER_END_SHATTER;
             if (dt < 0.0) {
                 continue;
             }

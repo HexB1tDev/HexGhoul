@@ -135,26 +135,16 @@ public final class AgentRules {
      */
     public static final float REAPER_END_HEALTH = 6.0F;
     /**
-     * 4.1.74 (the owner: "the death animation is too fast, during his death he should remain immortal and the blade slowly shatter, then he
-     * holds still for a bit then dies. during this death animation he's 100% immortal, ungrabbable and all effects like bleed etc are
-     * removed from him."): his end slowed and lengthened: the blade lowered to the ground over {@link #REAPER_END_SHATTER} ticks (9 before);
-     * from then it breaks, a piece at a time from its point to the hilt (ReaperBladeRules.breaksAt), the last at
-     * {@link #REAPER_END_SHATTERED} (all at once at 9 before); his arms fall slack, he goes down on his knees from
-     * {@link #REAPER_END_KNEELS} over {@link #REAPER_END_KNEELING} ticks, holds still, and dies at {@link #REAPER_END_TICKS} (3.5 seconds
-     * before, 8.5 now).
+     * 4.1.76 (the owner: "just make the blade instantly shatter while he's holding it on one hand, and the fall straight on his face"; 4.1.75:
+     * "make him actually lay on the floor face down like falling on his face and lay there a bit"): in his one-handed guard the blade
+     * shatters all at once ({@link #REAPER_END_SHATTER}); from {@link #REAPER_END_FALLS} he falls straight forward on his face over
+     * {@link #REAPER_END_FALLING} ticks (faster and faster), lands, and lies there till he dies ({@link #REAPER_END_TICKS}: 3 s on the ground).
+     * 4.1.74's slow lowering with both hands, the blade breaking a piece at a time and the kneel are gone.
      */
-    public static final int REAPER_END_SHATTER = 20;
-    public static final int REAPER_END_SHATTERED = 80;
-    public static final int REAPER_END_KNEELS = 86;
-    public static final int REAPER_END_KNEELING = 24;
-    /**
-     * 4.1.75 (the owner: "make him actually lay on the floor face down like falling on his face and lay there a bit"): knelt and bowed, a
-     * moment still, then he topples forward from {@link #REAPER_END_FALLS} over {@link #REAPER_END_FALLING} ticks (faster and faster, about
-     * his knees, nothing holding him up), lands face down, and lies there till he dies ({@link #REAPER_END_TICKS}: 10 seconds; 8.5 in 4.1.74).
-     */
-    public static final int REAPER_END_FALLS = 132;
-    public static final int REAPER_END_FALLING = 12;
-    public static final int REAPER_END_TICKS = 200;
+    public static final int REAPER_END_SHATTER = 2;
+    public static final int REAPER_END_FALLS = 6;
+    public static final int REAPER_END_FALLING = 16;
+    public static final int REAPER_END_TICKS = REAPER_END_FALLS + REAPER_END_FALLING + 60;
 
     /** 4.1.31: a blow of {@code amount} on him at {@code health} with his blade: never below 1 (his end takes him, not the blow). */
     public static float endClamp(float health, float amount) {

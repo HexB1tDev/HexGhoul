@@ -564,16 +564,9 @@ public final class AgentBrain {
         // him"): untouchable and held where he is (as since 4.1.37), and every tick of it nothing left on him: no effect, no fire, no
         // bleeding, no spikes in him, no stun, never knocked down.
         cleanse(agent, level, now);
-        // 4.1.74 ("the blade slowly shatter"): a crack for each tick a piece of it breaks off, from its point back to the hilt; the last
-        // of it with the sound of the whole blade going.
-        int breaking = age >= AgentRules.REAPER_END_SHATTER && age < AgentRules.REAPER_END_SHATTERED
-            ? com.hex.kagune.control.npc.ReaperBladeRules.breaking(age) : 0;
-        Vec3 blade = agent.m_20182_().m_82520_(0.0, 0.6, 0.0);
-        if (breaking > 0) {
-            float k = (float)com.hex.kagune.control.npc.ReaperBladeRules.shattered(age);
-            UkakuFire.sound(level, blade, "block.glass.break", 0.35F + 0.12F * Math.min(breaking, 3), 1.7F - 0.6F * k);
-        }
-        if (!mind.shattered && age >= AgentRules.REAPER_END_SHATTERED) {
+        // 4.1.76 (the owner: "just make the blade instantly shatter"): all at once, with the sound of the whole blade going.
+        Vec3 blade = agent.m_20182_().m_82520_(0.0, 1.0, 0.0);
+        if (!mind.shattered && age >= AgentRules.REAPER_END_SHATTER) {
             mind.shattered = true;
             UkakuFire.sound(level, blade, "block.glass.break", 1.2F, 0.6F);
             UkakuFire.sound(level, blade, "hexkagune:sfx.blade_heavy", 1.0F, 0.5F);

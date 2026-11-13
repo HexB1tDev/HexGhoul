@@ -80,54 +80,6 @@ public final class ReaperBladeRules {
             1.0 + 2.6 * r.nextDouble(), (r.nextDouble() - 0.5) * 0.9, 1.3 + 2.2 * r.nextDouble());
     }
 
-    /**
-     * 4.1.74 (the owner: "the blade slowly shatter"): his blade breaks a piece at a time, from its point ({@link #SHATTER_FROM}) back to the
-     * stub left in his hand ({@link #SHATTER_TO}), through AgentRules' {@link AgentRules#REAPER_END_SHATTER} ..
-     * {@link AgentRules#REAPER_END_SHATTERED}: what is left of it ends at {@link #remaining}, each shard leaves as the break reaches it
-     * ({@link #breaksAt}), and the blade's mesh is cut at one of {@link #LEVELS} lengths ({@link #level}).
-     */
-    public static final double SHATTER_FROM = com.hex.kagune.control.quinque.ReaperBladeMesh.TIP;
-    public static final double SHATTER_TO = com.hex.kagune.control.quinque.ReaperBladeMesh.SNAPS;
-    public static final int LEVELS = 12;
-
-    /** 4.1.74: the shatter's progress {@code age} ticks into his end: 0 whole, 1 all of it gone but the stub. */
-    public static double shattered(double age) {
-        double span = AgentRules.REAPER_END_SHATTERED - AgentRules.REAPER_END_SHATTER;
-        return Math.max(0.0, Math.min(1.0, (age - AgentRules.REAPER_END_SHATTER) / span));
-    }
-
-    /** 4.1.74: where (u) what is left of the blade ends, {@code age} ticks into his end. */
-    public static double remaining(double age) {
-        return SHATTER_FROM - (SHATTER_FROM - SHATTER_TO) * shattered(age);
-    }
-
-    /** 4.1.74: the tick of his end shard {@code i} breaks off: as the break reaches where it was (the stub's own at the last). */
-    public static double breaksAt(int i) {
-        double u = shard(i).u();
-        double k = Math.max(0.0, Math.min(1.0, (SHATTER_FROM - u) / (SHATTER_FROM - SHATTER_TO)));
-        return AgentRules.REAPER_END_SHATTER + k * (AgentRules.REAPER_END_SHATTERED - AgentRules.REAPER_END_SHATTER);
-    }
-
-    /** 4.1.74: how many shards break off in tick {@code age} of his end (a crack heard for each tick any does). */
-    public static int breaking(long age) {
-        int n = 0;
-        for (int i = 0; i < SHARDS; i++) {
-            if ((long)Math.floor(breaksAt(i)) == age) {
-                n++;
-            }
-        }
-        return n;
-    }
-
-    /**
-     * 4.1.74: which of the blade's cut lengths to draw {@code age} ticks into his end: {@link #LEVELS} the whole blade, 0 the stub; always
-     * the next length up from where it is broken (a shard just off overlaps the end a moment: never a gap where one has yet to go).
-     */
-    public static int level(double age) {
-        double k = (remaining(age) - SHATTER_TO) / (SHATTER_FROM - SHATTER_TO);
-        return Math.max(0, Math.min(LEVELS, (int)Math.ceil(k * LEVELS - 1.0E-9)));
-    }
-
     /** Blow {@code step} (wrapped onto the string). */
     public static Blow blow(int step) {
         return STRING[Math.floorMod(step, STEPS)];

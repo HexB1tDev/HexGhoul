@@ -105,25 +105,8 @@ public final class AgentTests {
     static void reaperEnd() throws IOException {
         check(AgentRules.endClamp(10.0F, 50.0F) == 9.0F && AgentRules.endClamp(40.0F, 5.0F) == 5.0F && AgentRules.endClamp(1.0F, 5.0F) == 0.0F,
             "the blow that brings his end leaves him at 1: his end takes him, not the blow");
-        check(AgentRules.REAPER_END_SHATTER < AgentRules.REAPER_END_KNEELS && AgentRules.REAPER_END_KNEELS + 20 < AgentRules.REAPER_END_TICKS,
-            "the blade shatters, then he kneels, a while on his knees before he dies");
         check(com.hex.kagune.control.npc.CcgAgent.END == com.hex.kagune.control.npc.CcgAgent.BLADE + com.hex.kagune.control.npc.ReaperBladeRules.STEPS
             && com.hex.kagune.control.npc.CcgAgent.END < com.hex.kagune.control.npc.ArmRules.STEP, "his end's code clear of every other");
-        // Lowered: its point to the ground ahead, never into it; then broken: only its stub left.
-        for (double age = 0.0; age < AgentRules.REAPER_END_SHATTER; age += 0.5) {
-            RigPose p = com.hex.kagune.control.client.animation.ReaperBladePose.end(age);
-            double[][] d = com.hex.kagune.control.client.animation.ReaperBladePose.drawn(p);
-            double low = -1.0E9;
-            for (double u = 9.6; u <= com.hex.kagune.control.quinque.ReaperBladeMesh.TIP; u += 0.5) {
-                double[] m = com.hex.kagune.control.client.animation.ReaperBladePose.toModel(p,
-                    new double[] {d[0][0] + d[1][0] * u, d[0][1] + d[1][1] * u, d[0][2] + d[1][2] * u});
-                low = Math.max(low, m[1]);
-            }
-            check(low < 24.0 - p.drop + 1.0, "end tick " + age + ": the lowered blade never into the ground (" + low + ")");
-            if (age >= AgentRules.REAPER_END_SHATTER - 1.0) {
-                check(low > 24.0 - p.drop - 3.0, "end tick " + age + ": its point down to the ground ahead (" + low + ")");
-            }
-        }
         com.hex.kagune.control.quinque.ArmMesh.Mesh stub = com.hex.kagune.control.quinque.ReaperBladeMesh.broken();
         double far = -1.0E9;
         for (int i = 0; i < stub.pos.length; i += 3) {
@@ -138,11 +121,6 @@ public final class AgentTests {
             double moved = Math.hypot(later[0][0] - at[0][0], later[0][2] - at[0][2]);
             check(moved > 2.0 && Math.hypot(later[0][0], later[0][2]) < 64.0, "shard " + i + " flies out, and lands about him (" + moved + ")");
         }
-        // On his knees: hips sunk, thighs angled back above the ground, head bowed; held.
-        RigPose knelt = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_FALLS); // 4.1.75: then he falls
-        double knee = 12.0 + 6.0 * Math.cos(knelt.rightLegX);
-        check(knelt.drop == com.hex.kagune.control.client.animation.ReaperBladePose.KNEEL_DROP && knelt.rightLegX > 0.4 && knelt.leftLegX > 0.4
-            && knee < 24.0 - knelt.drop && knelt.headX > 0.5, "on his knees, head bowed (" + knee + ")");
         RigPose after = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_TICKS + 40.0);
         check(samePose(after, com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_TICKS)), "held as he dies");
         String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
@@ -155,9 +133,10 @@ public final class AgentTests {
             && brain.contains("\"block.glass.break\""), "it shatters with a sound, and he dies by the blow that brought it (his killer gets Slain Reaper)");
         String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
         String layer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperBladeLayer.java"));
-        check(client.contains("ReaperBladePose.end(") && layer.contains("ReaperBladeMesh.brokenAt(com.hex.kagune.control.npc.ReaperBladeRules.level(age))")
-            && layer.contains("shards(pose, out, age, posed, light);") && layer.contains("double dt = age - com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);"),
-            "drawn: lowered, shattered piece by piece, the hilt and its shards, on his knees");
+        check(client.contains("ReaperBladePose.end(")
+            && layer.contains("age >= AgentRules.REAPER_END_SHATTER ? ReaperBladeMesh.broken() : ReaperBladeMesh.of()")
+            && layer.contains("shards(pose, out, age, posed, light);") && layer.contains("double dt = age - AgentRules.REAPER_END_SHATTER;"),
+            "drawn: the whole blade, then all at once the stub in his hand and its shards");
     }
 
     /** True if {@code what} is in {@code text} at or after {@code from} (itself found: not -1), within {@code within} characters of it. */
@@ -207,9 +186,27 @@ public final class AgentTests {
     static void reaperFallen() throws IOException {
         int falls = AgentRules.REAPER_END_FALLS;
         int lands = falls + AgentRules.REAPER_END_FALLING;
-        check(AgentRules.REAPER_END_FALLING >= 8 && AgentRules.REAPER_END_FALLING <= 16, "a fall (0.4 to 0.8 s), not a slide or a drop");
+        check(AgentRules.REAPER_END_FALLING >= 10 && AgentRules.REAPER_END_FALLING <= 20, "a fall from his feet (0.5 to 1 s), not a slide or a drop");
         check(lands + 40 <= AgentRules.REAPER_END_TICKS, "he lies there a while (2 s or more) before he dies");
-        check(AgentRules.REAPER_END_KNEELS + AgentRules.REAPER_END_KNEELING < falls, "on his knees before he falls");
+        // 4.1.76 (the owner: "why tf does he hold off on that michael jackson ah pose????? and why does he hold his weapon like that when it's
+        // breaking?? just make the blade instantly shatter while he's holding it on one hand, and the fall straight on his face"): in his
+        // one-handed guard the blade shatters at once; straight after, he falls; nothing held on the way, no kneel, no lowering.
+        check(AgentRules.REAPER_END_SHATTER <= 3 && falls > AgentRules.REAPER_END_SHATTER && falls - AgentRules.REAPER_END_SHATTER <= 6,
+            "it shatters at once, and straight after he falls");
+        for (double age = 0.0; age <= AgentRules.REAPER_END_SHATTER; age += 0.5) {
+            check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age),
+                com.hex.kagune.control.client.animation.ReaperBladePose.guard(0.0F)), "end tick " + age + ": the blade in his one hand, his guard");
+        }
+        for (int age = AgentRules.REAPER_END_SHATTER; age < lands; age++) {
+            check(!samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age), com.hex.kagune.control.client.animation.ReaperBladePose.end(age + 1)),
+                "end tick " + age + ": nothing held between the shatter and the ground");
+        }
+        RigPose guard = com.hex.kagune.control.client.animation.ReaperBladePose.guard(0.0F);
+        for (double age = 0.0; age <= lands; age += 0.5) {
+            RigPose p = com.hex.kagune.control.client.animation.ReaperBladePose.end(age);
+            check(Math.abs(p.rightLegX) <= Math.abs(guard.rightLegX) + 1.0E-6 && Math.abs(p.leftLegX) <= Math.abs(guard.leftLegX) + 1.0E-6
+                && Math.abs(p.lean) <= Math.abs(guard.lean) + 1.0E-6, "end tick " + age + ": straight from his feet, never knelt or bent back");
+        }
         // Faster and faster: each tick of the fall turns him further than the one before.
         double lastStep = 0.0;
         boolean faster = true;
@@ -225,7 +222,8 @@ public final class AgentTests {
         RigPose down = com.hex.kagune.control.client.animation.ReaperBladePose.end(lands);
         double[] crown = com.hex.kagune.control.client.animation.ReaperBladePose.place(down, new double[] {0.0, -8.0, 0.0}, false);
         double[] heel = com.hex.kagune.control.client.animation.ReaperBladePose.place(down, new double[] {-1.9, 24.0, 0.0}, false);
-        check(crown[2] > 1.0 && heel[2] < -0.4, "fallen forward: his head before him, his feet behind (" + crown[2] + ", " + heel[2] + ")");
+        check(crown[2] > 1.8 && Math.abs(heel[2]) < 0.3, "fallen forward his whole length: his head before him, his feet where he stood ("
+            + crown[2] + ", " + heel[2] + ")");
         check(Math.abs(down.flip + com.hex.kagune.control.client.animation.ReaperBladePose.FACE_DOWN) < 1.0E-4
             && Math.abs(down.rightLegX) < 1.0E-3 && Math.abs(down.leftLegX) < 1.0E-3 && Math.abs(down.lean) < 1.0E-3
             && Math.abs(down.headX) < 1.0E-3 && Math.abs(down.headY) < 1.0E-3, "face down, flat: his legs, his back and his head in line");
@@ -250,18 +248,17 @@ public final class AgentTests {
         double len = Math.sqrt(stub[0] * stub[0] + stub[1] * stub[1] + stub[2] * stub[2]);
         check(Math.abs(stub[1]) / len < 0.3 && stub[0] / len < -0.8,
             "lying, the broken hilt flat beside him, its stub out to his right, not standing up (" + java.util.Arrays.toString(stub) + ")");
-        // His knees stay where they rest through the fall (he falls about them), rising only to his lying legs' middle.
-        double[] rest = com.hex.kagune.control.client.animation.ReaperBladePose.knee(com.hex.kagune.control.client.animation.ReaperBladePose.KNEEL,
-            0.0, com.hex.kagune.control.client.animation.ReaperBladePose.KNEEL_DROP, 0.0);
-        check(rest[1] > -0.5 * px && rest[1] < 1.5 * px, "knelt, his knees on the ground (" + rest[1] * 16 + " px)");
+        // The front of his feet stays where it stands through the fall (he falls over it), rising only the pixel his lying chest is up.
+        double[] rest = com.hex.kagune.control.client.animation.ReaperBladePose.toes(com.hex.kagune.control.client.animation.ReaperBladePose.end(falls), 0.0);
+        check(rest[1] > -1.0 * px && rest[1] < 0.5 * px, "standing, his feet on the ground (" + rest[1] * 16 + " px)");
         double lastY = rest[1];
         for (double age = falls; age <= lands; age += 0.25) {
             RigPose p = com.hex.kagune.control.client.animation.ReaperBladePose.end(age);
-            double[] knee = com.hex.kagune.control.client.animation.ReaperBladePose.knee(p.rightLegX, -p.flip, p.drop, p.lunge);
-            check(Math.abs(knee[2] - rest[2]) < 1.0E-5 && knee[1] >= lastY - 1.0E-6
-                && knee[1] <= com.hex.kagune.control.client.animation.ReaperBladePose.LYING + 1.0E-5,
-                "end tick " + age + ": he falls about his knees, kept where they rest");
-            lastY = knee[1];
+            double[] toes = com.hex.kagune.control.client.animation.ReaperBladePose.toes(p, -p.flip);
+            check(Math.abs(toes[2] - rest[2]) < 1.0E-5 && toes[1] >= lastY - 1.0E-6
+                && toes[1] <= com.hex.kagune.control.client.animation.ReaperBladePose.LYING - 2.0 * px + 1.0E-5,
+                "end tick " + age + ": he falls over the front of his feet, kept where they stand");
+            lastY = toes[1];
             check(lowest(corners(p, -4, 4, 0, 12, -2, 2)) > -0.5 * px && lowest(corners(p, -4, 4, -8, 0, -4, 4)) > -1.5 * px,
                 "end tick " + age + ": nothing of him through the ground as he falls");
         }
@@ -362,110 +359,7 @@ public final class AgentTests {
         }
         check(rising, "the change's keys only ever go forward");
 
-        // His end: lowered, held still while the blade breaks away, slack, down on his knees, still a long while, dead: 8.5 s, not 3.5.
-        check(AgentRules.REAPER_END_SHATTER < AgentRules.REAPER_END_SHATTERED && AgentRules.REAPER_END_SHATTERED < AgentRules.REAPER_END_KNEELS
-            && AgentRules.REAPER_END_KNEELS + AgentRules.REAPER_END_KNEELING + 60 <= AgentRules.REAPER_END_TICKS,
-            "lowered, then it breaks, then he kneels, on his knees at least 3 s before he dies");
-        check(AgentRules.REAPER_END_SHATTERED - AgentRules.REAPER_END_SHATTER >= 40 && AgentRules.REAPER_END_TICKS >= 2 * 70
-            && AgentRules.REAPER_END_KNEELING >= 16, "slow: 2 s or more of the blade breaking, his end twice as long as before, a slow kneel");
-        // How broken it is: whole until it starts, gone but the stub when it's done, never mending.
-        double TIP = com.hex.kagune.control.quinque.ReaperBladeMesh.TIP;
-        double SNAPS = com.hex.kagune.control.quinque.ReaperBladeMesh.SNAPS;
-        int LEVELS = com.hex.kagune.control.npc.ReaperBladeRules.LEVELS;
-        double step = (TIP - SNAPS) / LEVELS;
-        check(com.hex.kagune.control.npc.ReaperBladeRules.SHATTER_FROM == TIP && com.hex.kagune.control.npc.ReaperBladeRules.SHATTER_TO == SNAPS,
-            "it breaks from its point down to where the stub snaps");
-        double lastLeft = Double.MAX_VALUE;
-        int lastLevel = Integer.MAX_VALUE;
-        boolean shrinks = true;
-        for (double age = 0.0; age <= AgentRules.REAPER_END_TICKS; age += 0.25) {
-            double broke = com.hex.kagune.control.npc.ReaperBladeRules.shattered(age);
-            double left = com.hex.kagune.control.npc.ReaperBladeRules.remaining(age);
-            int level = com.hex.kagune.control.npc.ReaperBladeRules.level(age);
-            double cut = SNAPS + step * level;
-            if (age <= AgentRules.REAPER_END_SHATTER) {
-                check(broke == 0.0 && left == TIP && level == LEVELS, "end tick " + age + ": whole before it breaks");
-            }
-            if (age >= AgentRules.REAPER_END_SHATTERED) {
-                check(broke == 1.0 && left == SNAPS && level == 0, "end tick " + age + ": only the stub once it's done");
-            }
-            check(broke >= 0.0 && broke <= 1.0 && left >= SNAPS && left <= TIP, "end tick " + age + ": the break within the blade");
-            check(cut >= left - 1.0E-9 && cut < left + step + 1.0E-9,
-                "end tick " + age + ": drawn cut at the next length up from the break, never shorter (" + cut + " for " + left + ")");
-            shrinks &= left <= lastLeft && level <= lastLevel;
-            lastLeft = left;
-            lastLevel = level;
-        }
-        check(shrinks, "the blade only ever gets shorter");
-        // Each piece: off as the break reaches it, point first; never a gap in the blade where a piece has yet to go, never a piece drawn
-        // both flying and still on the blade for longer than a step.
-        int ticksWithCracks = 0;
-        int counted = 0;
-        for (long age = 0; age <= AgentRules.REAPER_END_TICKS; age++) {
-            int n = com.hex.kagune.control.npc.ReaperBladeRules.breaking(age);
-            counted += n;
-            ticksWithCracks += n > 0 ? 1 : 0;
-        }
-        check(counted == com.hex.kagune.control.npc.ReaperBladeRules.SHARDS, "every shard breaks off exactly once (" + counted + ")");
-        check(ticksWithCracks >= 15, "piece by piece: shards breaking off over many ticks, not all at once (" + ticksWithCracks + ")");
-        for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
-            double u = com.hex.kagune.control.npc.ReaperBladeRules.shard(i).u();
-            double at = com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);
-            check(at >= AgentRules.REAPER_END_SHATTER && at <= AgentRules.REAPER_END_SHATTERED, "shard " + i + " breaks during the shatter (" + at + ")");
-            for (int j = 0; j < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; j++) {
-                if (com.hex.kagune.control.npc.ReaperBladeRules.shard(j).u() < u) {
-                    check(com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(j) >= at, "shard " + i + " (nearer the point) off no later than shard " + j);
-                }
-            }
-            for (double age = AgentRules.REAPER_END_SHATTER; age <= AgentRules.REAPER_END_SHATTERED; age += 0.5) {
-                double cut = SNAPS + step * com.hex.kagune.control.npc.ReaperBladeRules.level(age);
-                if (age < at) {
-                    check(cut >= Math.min(u, TIP) - 1.0E-6, "end tick " + age + ": shard " + i + " still on the blade is drawn there (no gap)");
-                } else if (age >= at + 1.0 && u >= SNAPS) {
-                    check(cut <= u + step + 1.0E-6, "end tick " + age + ": shard " + i + " flown off is no longer drawn on the blade");
-                }
-            }
-        }
-        // The cut meshes: each a length of the blade, longer with each level, the whole blade and the stub at the ends; built once.
-        check(com.hex.kagune.control.quinque.ReaperBladeMesh.brokenAt(LEVELS) == com.hex.kagune.control.quinque.ReaperBladeMesh.of()
-            && com.hex.kagune.control.quinque.ReaperBladeMesh.brokenAt(0) == com.hex.kagune.control.quinque.ReaperBladeMesh.broken(),
-            "the whole blade before, the stub after");
-        double lastEnd = meshEnd(com.hex.kagune.control.quinque.ReaperBladeMesh.broken());
-        for (int level = 1; level < LEVELS; level++) {
-            com.hex.kagune.control.quinque.ArmMesh.Mesh cut = com.hex.kagune.control.quinque.ReaperBladeMesh.brokenAt(level);
-            double end = meshEnd(cut);
-            double want = SNAPS + step * level;
-            check(Math.abs(end - want) < 1.5 && end > lastEnd, "cut " + level + " ends where its length is (" + end + " for " + want + ")");
-            check(cut == com.hex.kagune.control.quinque.ReaperBladeMesh.brokenAt(level), "cut " + level + " built once");
-            lastEnd = end;
-        }
-        check(meshEnd(com.hex.kagune.control.quinque.ReaperBladeMesh.of()) > lastEnd, "the whole blade longer than every cut");
-
-        // The pose: still from the moment it's lowered until the last piece goes; only then slack; no kneel before KNEELS; on his knees,
-        // bowed, holding still for at least 2 s before he dies.
-        RigPose lowered = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_SHATTER);
-        for (double age = AgentRules.REAPER_END_SHATTER; age <= AgentRules.REAPER_END_SHATTERED; age += 0.5) {
-            check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age), lowered),
-                "end tick " + age + ": he holds it still while it breaks");
-        }
-        RigPose slack = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_KNEELS);
-        check(Math.abs(slack.rightArmX - lowered.rightArmX) > 0.3 && slack.rightLegX == lowered.rightLegX,
-            "his arms fallen slack once the last piece is gone, before he goes down");
-        RigPose before = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_KNEELS);
-        check(before.rightLegX == lowered.rightLegX && before.drop == lowered.drop, "not kneeling before he goes down");
-        // 4.1.75: bowed on his knees a moment, still, before he falls on his face (reaperFallen: then lying still till he dies).
-        double still = AgentRules.REAPER_END_KNEELS + 14.0 + 24.0;
-        RigPose bowed = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_FALLS);
-        check(AgentRules.REAPER_END_FALLS - still >= 6.0, "still on his knees, bowed, a moment before he falls");
-        for (double age = still; age <= AgentRules.REAPER_END_FALLS; age += 0.5) {
-            check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age), bowed), "end tick " + age + ": he holds still, bowed");
-        }
-        for (double age = AgentRules.REAPER_END_KNEELS; age < still; age += 1.0) {
-            RigPose a = com.hex.kagune.control.client.animation.ReaperBladePose.end(age);
-            RigPose b = com.hex.kagune.control.client.animation.ReaperBladePose.end(age + 1.0);
-            check(Math.abs(b.drop - a.drop) <= 0.6 && Math.abs(b.rightLegX - a.rightLegX) <= 0.06 && Math.abs(b.headX - a.headX) <= 0.05,
-                "end tick " + age + ": he goes down slowly, no jolt");
-        }
+        // (4.1.74's slowed end, lowered, broken a piece at a time, on his knees: replaced by 4.1.76's, reaperFallen.)
 
         // The server: Dawn out of his hand as the change begins and every tick of it; everything off him every tick of his end; a crack as
         // each piece goes, the whole blade's sound with the last; nothing holding him.
@@ -491,8 +385,9 @@ public final class AgentTests {
         check(body.contains("agent.m_21219_();") && body.contains("agent.m_20095_();") && body.contains("UkakuCrystalCombat.stanch(agent, level, now);")
             && body.contains("PaleStun.clear(agent);") && body.contains("PaleKnockdown.clear(agent);"),
             "every effect, his fire, the bleeding and spikes in him, a stun, a knockdown");
-        check(brain.contains("ReaperBladeRules.breaking(age)") && brain.contains("age >= AgentRules.REAPER_END_SHATTERED) {"),
-            "a crack as each piece goes; the whole blade's sound with the last");
+        int crash = brain.indexOf("if (!mind.shattered && age >= AgentRules.REAPER_END_SHATTER) {");
+        check(within(brain, crash, "\"block.glass.break\"", 300) && within(brain, crash, "\"hexkagune:sfx.blade_heavy\"", 400)
+            && !brain.contains("ReaperBladeRules.breaking("), "4.1.76: one crash as it shatters all at once, no cracks piece by piece");
         String crystals = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/UkakuCrystalCombat.java"));
         int stanch = crystals.indexOf("public static void stanch(LivingEntity body, ServerLevel level, long now) {");
         check(within(crystals, stanch, "BLEEDS.remove(body.m_20148_())", 200) && within(crystals, stanch, "STUCK.remove(body.m_19879_())", 300)

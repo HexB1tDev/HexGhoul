@@ -120,9 +120,8 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
 
     /**
      * 4.1.31: his end ({@code age} ticks in): the whole blade until it shatters, then the broken hilt in his hand and its shards flown out
-     * from where the blade was, falling to the ground about him and lying there. 4.1.74 (the owner: "the blade slowly shatter"): a piece at a
-     * time from its point back to the stub: the blade cut at what is left of it (ReaperBladeRules.level), each shard flying off as the break
-     * reaches it.
+     * from where the blade was, falling to the ground about him and lying there. 4.1.76 (the owner: "just make the blade instantly shatter
+     * while he's holding it on one hand"): all at once again (4.1.74's piece at a time gone).
      */
     private void ended(PoseStack pose, VertexConsumer out, CcgAgent agent, RigPose posed, double age, int light) {
         double[] fist = {-1.0, 9.0, 0.0};
@@ -132,13 +131,13 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
         pose.m_85836_();
         this.m_117386_().f_102811_.m_104299_(pose);
         double[][] inArm = posed == null ? ReaperBladePose.HELD : ReaperBladePose.inArm(posed);
-        emit(pose, out, ReaperBladeMesh.brokenAt(com.hex.kagune.control.npc.ReaperBladeRules.level(age)), inArm, fist, 1.0F, light);
+        emit(pose, out, age >= AgentRules.REAPER_END_SHATTER ? ReaperBladeMesh.broken() : ReaperBladeMesh.of(), inArm, fist, 1.0F, light);
         pose.m_85849_();
     }
 
     /**
-     * 4.1.31: the shattered blade's shards, {@code age} ticks into his end (the model's frame): each a thin sliver, both sides drawn. 4.1.74:
-     * each from the tick it breaks off (ReaperBladeRules.breaksAt), none before.
+     * 4.1.31: the shattered blade's shards, {@code age} ticks into his end (the model's frame): each a thin sliver, both sides drawn, all
+     * from the tick it shatters (AgentRules.REAPER_END_SHATTER).
      */
     static void shards(PoseStack pose, VertexConsumer out, double age, RigPose now, int light) {
         Matrix4f at = pose.m_85850_().m_252922_();
@@ -149,10 +148,7 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
         RigPose broke = ReaperBladePose.shatterPose();
         double ground = 24.0 - broke.drop - 0.05;
         for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
-            double dt = age - com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);
-            if (dt < 0.0) {
-                continue; // still part of the blade
-            }
+            double dt = age - AgentRules.REAPER_END_SHATTER;
             double[][] s = ReaperBladePose.shard(i, dt);
             double fall = 0.5 * com.hex.kagune.control.npc.ReaperBladeRules.SHARD_FALL * dt * dt;
             double[] c = s[0];
