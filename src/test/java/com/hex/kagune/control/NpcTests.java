@@ -1268,6 +1268,7 @@ public final class NpcTests {
         g = g.advance(aogiri, GangPlayer.AOGIRI_SPAR, GangPlayer.AOGIRI_AMBUSH).advance(aogiri, GangPlayer.AOGIRI_AMBUSH, GangPlayer.AOGIRI_DONE);
         check(g.aogiriStep() == GangPlayer.AOGIRI_DONE && !g.member(aogiri), "the spar, the ambush: back to Ayato");
         check(GangPlayer.aogiriFrom(false, 3) == GangPlayer.AOGIRI_NOT_YET && GangPlayer.aogiriFrom(true, 2) == GangPlayer.AOGIRI_AMBUSH
+            && GangPlayer.aogiriFrom(true, 4) == GangPlayer.AOGIRI_AMBUSH && GangPlayer.aogiriFrom(false, 5) == GangPlayer.AOGIRI_NOT_YET
             && GangPlayer.aogiriFrom(true, 5) == GangPlayer.AOGIRI_DONE && GangPlayer.aogiriFrom(true, 9) == GangPlayer.AOGIRI_DONE,
             "4.1.50's quest read: never begun, nothing; begun, the ambush; five doves, done");
         g = g.join(aogiri);

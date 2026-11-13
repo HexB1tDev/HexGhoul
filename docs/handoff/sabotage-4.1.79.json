@@ -122,7 +122,7 @@
   "name": "no poison in the gas",
   "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
   "old": "player.m_7292_(new MobEffectInstance(MobEffects.f_19614_, 50, 0, false, true, true));",
-  "new": "player.m_7292_(new MobEffectInstance(MobEffects.f_19614_, 50, 0, false, false, true));",
+  "new": "player.m_7292_(new MobEffectInstance(MobEffects.f_19619_, 50, 0, false, true, true));",
   "suite": "NpcTests"
  },
  {
