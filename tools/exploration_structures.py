@@ -443,6 +443,18 @@ def build(site, registry):
             "homes": homes, "tiles": tiles, "people": people, "blocks": sum(1 for c in out.values()), "cells": cells, "top": top}
 
 
+def rest(here, below):
+    """4.1.73: how far over its block's foot a body stands: a carpet's sixteenth or a snow layer's height in its block (both stood in, as
+    PASS has them), half a block down onto a bottom slab under it; 0 on a whole block."""
+    if here is not None and here[0].endswith("_carpet"):
+        return 1.0 / 16.0
+    if here is not None and here[0] == "minecraft:snow":
+        return (int(here[1].get("layers", "1")) - 1) * 2.0 / 16.0
+    if below is not None and below[0].endswith("_slab") and below[1].get("type") == "bottom":
+        return -0.5
+    return 0.0
+
+
 def houses(cells, name, stands, roofed, width, d, h, street, middle):
     """A spot inside each door (any but iron) that opens from outside into a room with a roof over all of it."""
     def enclosed(start, y, door):
@@ -707,7 +719,10 @@ def write_tiles(site, out, entities, people, middle, width, depth, height, loot,
         forge.update(extra)
         nbt = L.compound(id=L.s(kind), PersistenceRequired=L.Tag(L.BYTE, 1), Rotation=L.floats(0.0, 0.0), Motion=L.doubles(0.0, 0.0, 0.0),
                          OnGround=L.Tag(L.BYTE, 1), ForgeData=L.compound(**forge))
-        ents[key].append({"blockPos": L.ints(lx, py, lz), "pos": L.doubles(lx + 0.5, float(py), lz + 0.5), "nbt": nbt})
+        # 4.1.73 (the owner: "Make sure NPCS dont spawn in the ground at any point, especially official NPCS."): on its floor's top, not its
+        # block's foot: over a carpet or a snow layer in its block, down onto a bottom slab under it (tools/npc_spots.py checks them all).
+        feet = py + rest(out.get((px, py, pz)), out.get((px, py - 1, pz)))
+        ents[key].append({"blockPos": L.ints(lx, py, lz), "pos": L.doubles(lx + 0.5, feet, lz + 0.5), "nbt": nbt})
     # 4.1.51: what hangs on its walls, each at its block's middle (the game hangs a painting or a frame in the block its position is in).
     for (hx, hy, hz), nbt in hanging:
         key = (tile_of(hx, xs), tile_of(hz, zs))

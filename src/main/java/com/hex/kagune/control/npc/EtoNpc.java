@@ -170,7 +170,11 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
             return;
         }
         this.m_21573_().m_26573_();
-        this.m_6021_(origin.m_123341_() + 0.5, origin.m_123342_() - 1.0, origin.m_123343_() + 0.5);
+        // 4.1.73: on her floor at home (its collision's top, room for all of her), never at the whole block it was kept as.
+        double feet = this.m_9236_() instanceof net.minecraft.server.level.ServerLevel level
+            ? com.hex.kagune.control.server.NpcFooting.feet(level, this, origin.m_123341_() + 0.5, origin.m_123342_() - 1.0, origin.m_123343_() + 0.5)
+            : origin.m_123342_() - 1.0;
+        this.m_6021_(origin.m_123341_() + 0.5, feet, origin.m_123343_() + 0.5);
         CompoundTag tag = this.getPersistentData();
         tag.m_128405_(HOME + "X", origin.m_123341_());
         tag.m_128405_(HOME + "Y", origin.m_123342_());

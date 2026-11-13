@@ -66,12 +66,135 @@ public final class NpcTests {
         reputation();
         dailies();
         division();
+        footing();
+        lag173();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Ghoul NPC tests: " + passed + " checks passed");
+    }
+
+    /** A made-up column for Footing: each block's collision top (NaN: none), and the body's room (1.8 tall) against those tops and solids. */
+    static com.hex.kagune.control.Footing.Column column(java.util.Map<Integer, Double> tops, double height) {
+        return new com.hex.kagune.control.Footing.Column() {
+            @Override
+            public double top(int y) {
+                return tops.getOrDefault(y, Double.NaN);
+            }
+
+            @Override
+            public boolean free(double feet) {
+                for (java.util.Map.Entry<Integer, Double> block : tops.entrySet()) {
+                    double from = block.getKey();
+                    double to = block.getKey() + block.getValue();
+                    if (to > feet + 1.0E-9 && from < feet + height - 1.0E-9) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+    }
+
+    /**
+     * 4.1.73 (the owner: "Make sure NPCS dont spawn in the ground at any point, especially official NPCS."): a body put down stands on its
+     * floor (the top of its collision: a slab's half, a carpet's sixteenth), never at the whole block its home was kept as; every place the mod
+     * puts one down goes by it; one found in the blocks is stood out of them; every NPC written into a template stands clear.
+     */
+    static void footing() {
+        // The ground's top block at 63 (a full block): a body wanted at 64 stands at 64.
+        java.util.Map<Integer, Double> ground = new java.util.HashMap<>();
+        for (int y = 50; y <= 63; y++) {
+            ground.put(y, 1.0);
+        }
+        check(com.hex.kagune.control.Footing.stand(64.0, column(ground, 1.8)) == 64.0, "on flat ground, at its top");
+        // A slab built at its home's block (64): on the slab (64.5), not half in it.
+        java.util.Map<Integer, Double> slab = new java.util.HashMap<>(ground);
+        slab.put(64, 0.5);
+        check(com.hex.kagune.control.Footing.stand(64.0, column(slab, 1.8)) == 64.5, "a slab where it was put: on the slab, never half in it");
+        java.util.Map<Integer, Double> carpet = new java.util.HashMap<>(ground);
+        carpet.put(64, 1.0 / 16.0);
+        check(com.hex.kagune.control.Footing.stand(64.0, column(carpet, 1.8)) == 64.0625, "a carpet: on it (a sixteenth up), not in it");
+        // Ground risen over its home since (built up two blocks): out of it, onto the new top.
+        java.util.Map<Integer, Double> risen = new java.util.HashMap<>(ground);
+        risen.put(64, 1.0);
+        risen.put(65, 1.0);
+        check(com.hex.kagune.control.Footing.stand(64.0, column(risen, 1.8)) == 66.0, "the ground built up two blocks over its home: on top of it");
+        // A floor a block lower (its home's slab broken since): down onto it rather than in the air (within DOWN).
+        java.util.Map<Integer, Double> lower = new java.util.HashMap<>();
+        for (int y = 50; y <= 62; y++) {
+            lower.put(y, 1.0);
+        }
+        check(com.hex.kagune.control.Footing.stand(64.0, column(lower, 1.8)) == 63.0, "its floor a block lower now: down onto it");
+        // No room on the nearest floor (a ceiling a block over it): the next floor up with room.
+        java.util.Map<Integer, Double> low = new java.util.HashMap<>(ground);
+        low.put(65, 1.0);
+        low.put(66, 1.0);
+        check(com.hex.kagune.control.Footing.stand(64.0, column(low, 1.8)) == 67.0, "no room under a ceiling: the floor over it");
+        check(Double.isNaN(com.hex.kagune.control.Footing.stand(64.0, column(new java.util.HashMap<>(), 1.8))), "nothing near to stand on: left as it was");
+        java.util.Map<Integer, Double> fence = new java.util.HashMap<>(ground);
+        fence.put(64, 1.5);
+        check(com.hex.kagune.control.Footing.stand(64.0, column(fence, 1.8)) == 65.5, "a fence (1.5 high to a body) under it: on the fence");
+        java.util.Map<Integer, Double> deep = new java.util.HashMap<>();
+        for (int y = 50; y <= 70; y++) {
+            deep.put(y, 1.0);
+        }
+        check(Double.isNaN(com.hex.kagune.control.Footing.stand(64.0, column(deep, 1.8))) && com.hex.kagune.control.Footing.UP == 3
+            && com.hex.kagune.control.Footing.DOWN == 2, "buried deeper than it may be lifted (3): left (Homeward puts an official one home)");
+        check(!com.hex.kagune.control.Footing.stuck(1) && com.hex.kagune.control.Footing.stuck(2) && com.hex.kagune.control.Footing.INSIDE == 0.15,
+            "in the blocks twice running, half a second apart, more than 0.15 deep: stood out (a door shut on it once, a shove: never)");
+        // Every place the mod puts a body down at a kept height goes by it.
+        String unique = read("src/main/java/com/hex/kagune/control/server/UniqueNpcs.java");
+        String eto = read("src/main/java/com/hex/kagune/control/npc/EtoNpc.java");
+        String child = read("src/main/java/com/hex/kagune/control/npc/ChildNpc.java");
+        String home = read("src/main/java/com/hex/kagune/control/server/Homeward.java");
+        String ghoul = read("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java");
+        String footing = read("src/main/java/com/hex/kagune/control/server/NpcFooting.java");
+        check(unique.contains("body.m_7678_(spawn[0] + 0.5, NpcFooting.feet(level, body, spawn[0] + 0.5, spawn[1] - 1.0, spawn[2] + 0.5), spawn[2] + 0.5, 0.0F, 0.0F);"),
+            "an official NPC (or a child) coming back at its home: on its floor there");
+        check(eto.contains("com.hex.kagune.control.server.NpcFooting.feet(level, this, origin.m_123341_() + 0.5, origin.m_123342_() - 1.0, origin.m_123343_() + 0.5)")
+            && eto.contains("this.m_6021_(origin.m_123341_() + 0.5, feet, origin.m_123343_() + 0.5);")
+            && child.contains("com.hex.kagune.control.server.NpcFooting.feet(level, this, origin.m_123341_() + 0.5, origin.m_123342_() - 1.0, origin.m_123343_() + 0.5)")
+            && !eto.contains("this.m_6021_(origin.m_123341_() + 0.5, origin.m_123342_() - 1.0") && !child.contains("this.m_6021_(origin.m_123341_() + 0.5, origin.m_123342_() - 1.0"),
+            "an official NPC or a child sent home: on its floor there");
+        check(home.contains("NpcFooting.put(level, mob, home.f_82479_, home.f_82480_, home.f_82481_);")
+            && read("src/main/java/com/hex/kagune/control/server/EtoBrain.java").contains("Homeward.put(level, npc, homeAt);")
+            && read("src/main/java/com/hex/kagune/control/server/ChildBrain.java").contains("Homeward.put(level, npc, homeAt);"),
+            "one put home stuck in a wall or stalled: on its floor at home");
+        check(ghoul.contains("double feet = NpcFooting.feet(level, npc, behind.f_82479_, owner.m_20186_(), behind.f_82481_);")
+            && ghoul.contains("npc.m_7678_(owner.m_20185_(), owner.m_20186_(), owner.m_20189_(), owner.m_146908_(), 0.0F);"),
+            "an ally ghoul brought up behind its player: on the floor there with room, else at their feet");
+        check(footing.contains("@SubscribeEvent\n    public static void tick(LivingEvent.LivingTickEvent event) {") && footing.contains("|| !NpcSwim.ours(mob)")
+            && footing.contains("% EVERY != 0") && footing.contains("mob.f_19794_ || mob.m_20159_() || mob.m_5803_()")
+            && footing.contains("agent.seated()") && footing.contains("level.m_186434_(mob, mob.m_20191_().m_82400_(-Footing.INSIDE))")
+            && footing.contains("Safety.caught(failure, \"an NPC stood out of the blocks\")"),
+            "every NPC of the mod's looked at every half second, never one held, riding, asleep or at its desk; an error never stops the game");
+        // Every NPC written into a structure template stands clear (tools/npc_spots.py: its body's box and what holds it up).
+        try {
+            Process run = new ProcessBuilder("python3", "tools/npc_spots.py", "--check").redirectErrorStream(true).start();
+            String said = new String(run.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            int code = run.waitFor();
+            check(code == 0 && said.contains("117 NPCs in the templates, 0 wrong") && said.contains("ccg_building: 53 NPCs (29 at their desks' chairs), 0 wrong")
+                && said.contains("gas_hideout.nbt: 5 NPCs (0 at their desks' chairs), 0 wrong"),
+                "every NPC in every template on its floor, none in a block, none over nothing: " + said.replace('\n', ' '));
+        } catch (java.io.IOException | InterruptedException failure) {
+            check(false, "the templates' NPCs could not be checked: " + failure);
+        }
+        check(read("tools/exploration_structures.py").contains("feet = py + rest(out.get((px, py, pz)), out.get((px, py - 1, pz)))")
+            && read("tools/companion_structures.py").contains("wy_out, feet = wy_out - 1, wy_out - 1 + 1.0 / 16.0"),
+            "the templates' makers put them on a carpet's top (not in it), down onto it (not a block over it)");
+    }
+
+    /** 4.1.73 (the owner: "Run a lag prevention check"): a widowed investigator stops looking round 72 blocks every second for its partner. */
+    static void lag173() {
+        check(com.hex.kagune.control.npc.AgentRules.look(0L) == 20L && com.hex.kagune.control.npc.AgentRules.look(399L) == 20L
+            && com.hex.kagune.control.npc.AgentRules.look(400L) == 600L && com.hex.kagune.control.npc.AgentRules.look(Long.MAX_VALUE) == 600L
+            && com.hex.kagune.control.npc.AgentRules.PARTNER_LOST == 400L,
+            "its partner looked for each second while it may be about, each half minute once it is lost");
+        check(read("src/main/java/com/hex/kagune/control/server/AgentBrain.java").contains("long every = AgentRules.look(ago(now, mind.partnerSeen));\n"
+            + "        if (now % every != Math.floorMod(agent.m_19879_(), every)) {"), "the investigator's brain goes by it");
     }
 
     /** 1.0.41: its flips, heavies and ways of fighting: the stronger the quicker, a flip never slower or faster than one goes. */

@@ -1052,7 +1052,15 @@ public final class GhoulNpcBrain {
         double distance = npc.m_20280_(owner);
         if (distance > 32.0 * 32.0 && owner.m_20096_()) {
             Vec3 behind = owner.m_20182_().m_82546_(GhoulNpcCombat.flat(owner.m_20154_()).m_82490_(2.0));
-            npc.m_7678_(behind.f_82479_, owner.m_20186_(), behind.f_82481_, owner.m_146908_(), 0.0F);
+            // 4.1.73: on the floor behind them with room for it (else at their own feet), never in a wall or the ground behind them.
+            double feet = NpcFooting.feet(level, npc, behind.f_82479_, owner.m_20186_(), behind.f_82481_);
+            boolean room = level.m_45756_(npc, npc.m_20191_().m_82386_(behind.f_82479_ - npc.m_20185_(), feet - npc.m_20186_(),
+                behind.f_82481_ - npc.m_20189_()));
+            if (room) {
+                npc.m_7678_(behind.f_82479_, feet, behind.f_82481_, owner.m_146908_(), 0.0F);
+            } else {
+                npc.m_7678_(owner.m_20185_(), owner.m_20186_(), owner.m_20189_(), owner.m_146908_(), 0.0F);
+            }
             npc.m_21573_().m_26573_();
         } else if (distance > 25.0) {
             if (now % 10L == 0L || npc.m_21573_().m_26571_()) {

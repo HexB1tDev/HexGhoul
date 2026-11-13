@@ -346,6 +346,9 @@ public final class UniqueNpcs {
                 continue;
             }
             body.m_7678_(spawn[0] + 0.5, spawn[1] - 1.0, spawn[2] + 0.5, 0.0F, 0.0F);
+            // 4.1.73 (the owner: "Make sure NPCS dont spawn in the ground at any point, especially official NPCS."): on her floor there
+            // (a slab's top, a carpet's), with room for all of her, never at the whole block her home was kept as.
+            body.m_7678_(spawn[0] + 0.5, NpcFooting.feet(level, body, spawn[0] + 0.5, spawn[1] - 1.0, spawn[2] + 0.5), spawn[2] + 0.5, 0.0F, 0.0F);
             made(body, entry.getKey());
             npc.body = body.m_20148_();
             npc.alive = true;

@@ -193,7 +193,7 @@ public final class ChildBrain {
         boolean recoveryBusy = npc.following() != null || mind.carrier != null || npc.carriedBy != 0 || mind.target != 0
             || mind.conversation != null || busy(mind, now);
         if (Homeward.bugged(npc, level, homeAt, awayFromHome, recoveryBusy, now)) {
-            Homeward.put(npc, homeAt);
+            Homeward.put(level, npc, homeAt);
         }
         if (now % 200L == 11L) {
             if (!UniqueNpcs.claim(level, key, npc.m_20148_(), home)) {

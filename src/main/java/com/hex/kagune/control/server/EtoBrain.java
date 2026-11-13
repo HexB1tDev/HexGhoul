@@ -381,7 +381,7 @@ public final class EtoBrain {
         boolean recoveryBusy = mind.target != 0 || mind.owl.busy() || EtoOwl.carried(mind.owl) || mind.holding != null
             || npc.following() != null || mind.talking != null || mind.with != 0;
         if (Homeward.bugged(npc, level, homeAt, away, recoveryBusy, now)) {
-            Homeward.put(npc, homeAt);
+            Homeward.put(level, npc, homeAt);
             mind.target = 0;
         }
         LivingEntity target = target(npc, mind, level, homeAt, now);

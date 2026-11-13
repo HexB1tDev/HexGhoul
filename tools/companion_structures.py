@@ -369,13 +369,25 @@ def build(key, place, registry):
             assert by_index[cells[((wy - 1) * length + wz) * width + wx]] not in AIR, f"{key}: {person['who']} would stand on nothing"
         assert wy in layers, f"{key}: {person['who']} is cut off"
         wy_out = layers.index(wy) + lift
+        # 4.1.73 (the owner: "Make sure NPCS dont spawn in the ground at any point, especially official NPCS."): on what is under them,
+        # at its collision's top: down onto a carpet, a snow layer or a bottom slab (they stood a block over it, and dropped onto it).
+        feet = float(wy_out)
+        under = by_index[cells[((wy - 1) * length + wz) * width + wx]] if wy > 0 else "minecraft:air"
+        base = under.split("[")[0]
+        if base.endswith("_carpet"):
+            wy_out, feet = wy_out - 1, wy_out - 1 + 1.0 / 16.0
+        elif base == "minecraft:snow":
+            layers_of = int(under.split("layers=")[1].split(",")[0].split("]")[0]) if "layers=" in under else 1
+            wy_out, feet = wy_out - 1, wy_out - 1 + (layers_of - 1) * 2.0 / 16.0
+        elif base.endswith("_slab") and "type=bottom" in under:
+            feet = wy_out - 0.5
         who = {"id": Tag(STRING, person["who"]), "PersistenceRequired": Tag(BYTE, 1), "Rotation": Tag(LIST, (FLOAT, [person["yaw"], 0.0])),
                "Motion": Tag(LIST, (DOUBLE, [0.0, 0.0, 0.0])), "OnGround": Tag(BYTE, 1)}
         if "who_data" in person:
             # 4.1.24: who they are, in Forge's saved data (Entity.getPersistentData: "ForgeData").
             kinds = {"long": LONG, "int": INT, "byte": BYTE}
             who["ForgeData"] = Tag(COMPOUND, {k: Tag(kinds[kind], v) for k, (kind, v) in person["who_data"].items()})
-        figures.append({"blockPos": Tag(LIST, (INT, [wx, wy_out, wz])), "pos": Tag(LIST, (DOUBLE, [wx + 0.5, float(wy_out), wz + 0.5])),
+        figures.append({"blockPos": Tag(LIST, (INT, [wx, wy_out, wz])), "pos": Tag(LIST, (DOUBLE, [wx + 0.5, feet, wz + 0.5])),
                         "nbt": Tag(COMPOUND, who)})
     size = (width, len(layers) + lift, length)
     path = OUT / (key + ".nbt")

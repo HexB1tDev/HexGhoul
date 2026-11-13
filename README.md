@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.73 (HexGhoul): NPCs never in the ground; lag, structures and official NPCs checked (testing)
+
+See `.github/release-notes-4.1.73.md`. `Footing` (pure: `stand`, `UP` 3, `DOWN` 2, `INSIDE`, `stuck`); `server/NpcFooting` (`feet`, `put`, the guard on every NPC of the mod's every `EVERY` ticks); used by `UniqueNpcs.levelTick` (coming back), `EtoNpc.goHome`, `ChildNpc.goHome`, `Homeward.put`, `GhoulNpcBrain.accompany`; `tools/npc_spots.py` (every template's NPCs checked; the makers `exploration_structures.rest`, `companion_structures` set feet on a carpet's or slab's top); `AgentRules.look` (a lost partner looked for each 30 s). `NpcTests.footing`, `NpcTests.lag173`. Renders `docs/handoff/npc-spot-4.1.73.png`, `ccg-banner-4.1.73.png`.
+
 ## 4.1.72 (HexGhoul): the hotel replaces the Small City (testing)
 
 See `.github/release-notes-4.1.72.md`. The Small City's structure (`hexkagune:small_city`), placement (`hexkagune:city`), tiles and `CityPlan` gone (its maps kept in `RetiredSites` for an older world's people); the owner's `art/exploration/humanhotel.schem` as `hexkagune:hotel` (`tools/exploration_structures.py` site "hotel", `patrol_sky`; `structures/hotel/t_*.nbt`, `worldgen/structure/hotel.json`, `worldgen/structure_set/hotel.json`); `village/HotelPlan` (pure: `chosen`, `first`/`side` the first side clear of other villages, `hotelOf`, `DISTANCE` 14, `CLEAR_OF`, `APART`, `offersNear`/`scan`, `near`, `onPlains`); `ControlStructures` (`Site.hotel`/`hotelAt`, `villages`, `villageOffers`, `village`, `inHotel`, `PLAINS`, `plains`); `tags/worldgen/biome/plains.json`; `DryLand.DEEP`, `HOTEL_SALT`. `NpcTests.hotel`. Renders `tools/city_render.py` (any tiled site), `tools/hotel_render.py village|street`; `docs/handoff/hotel-*-4.1.72.png`. Protocol 126.

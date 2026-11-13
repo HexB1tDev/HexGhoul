@@ -1054,7 +1054,11 @@ public final class AgentBrain {
             return known;
         }
         mind.partnerId = 0;
-        if (now % 20L != Math.floorMod(agent.m_19879_(), 20)) {
+        // 4.1.73 (the owner: "Run a lag prevention check"): looked for each second while it may be about; once it is lost (dead, gone off
+        // with the world's edge: PARTNER_LOST), each LOST_LOOK only (every widowed investigator searched 72 blocks round it each second for
+        // as long as it lived).
+        long every = AgentRules.look(ago(now, mind.partnerSeen));
+        if (now % every != Math.floorMod(agent.m_19879_(), every)) {
             return null;
         }
         for (CcgAgent other : level.m_6443_(CcgAgent.class, agent.m_20191_().m_82400_(72.0), a -> a != agent && a.m_6084_())) {

@@ -796,4 +796,12 @@ public final class AgentRules {
 
     /** True if a pair member is lost: its partner gone this long (ticks), with no player near to see it go. */
     public static final long PARTNER_LOST = 400L;
+    /** 4.1.73 (lag): how often (ticks) an investigator looks round for its partner while it may be about, and once it is lost. */
+    public static final long PARTNER_LOOK = 20L;
+    public static final long LOST_LOOK = 600L;
+
+    /** 4.1.73: how often it looks for its partner, unseen {@code unseen} ticks: each second at first, each half minute once it is lost. */
+    public static long look(long unseen) {
+        return unseen >= PARTNER_LOST ? LOST_LOOK : PARTNER_LOOK;
+    }
 }

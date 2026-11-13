@@ -39,10 +39,9 @@ final class Homeward {
         return false;
     }
 
-    /** Put home (its way there stopped). */
-    static void put(PathfinderMob mob, Vec3 home) {
-        mob.m_21573_().m_26573_();
-        mob.m_6021_(home.f_82479_, home.f_82480_, home.f_82481_);
+    /** Put home (its way there stopped): 4.1.73: on its floor there (NpcFooting), never into it. */
+    static void put(ServerLevel level, PathfinderMob mob, Vec3 home) {
+        NpcFooting.put(level, mob, home.f_82479_, home.f_82480_, home.f_82481_);
     }
 
     private static boolean seen(Entity mob, ServerLevel level) {
