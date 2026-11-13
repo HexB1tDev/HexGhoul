@@ -131,6 +131,15 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
         }
     }
 
+    /**
+     * 4.1.75 (the owner: "make him actually lay on the floor face down like falling on his face and lay there a bit"): vanilla tips a dying
+     * body over on its side (getFlipDegrees, 90); the White Reaper dies lying on his face (ReaperBladePose.end) and stays so.
+     */
+    @Override
+    protected float m_6441_(CcgAgent agent) {
+        return agent.swing() == CcgAgent.END ? 0.0F : 90.0F;
+    }
+
     @Override
     public ResourceLocation m_5478_(CcgAgent agent) {
         return SKINS[agent.lookIndex()];

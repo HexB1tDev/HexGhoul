@@ -89,6 +89,7 @@ public final class AgentTests {
         reaperClose();
         reaperEnd();
         reaperSlowed();
+        reaperFallen();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -138,12 +139,12 @@ public final class AgentTests {
             check(moved > 2.0 && Math.hypot(later[0][0], later[0][2]) < 64.0, "shard " + i + " flies out, and lands about him (" + moved + ")");
         }
         // On his knees: hips sunk, thighs angled back above the ground, head bowed; held.
-        RigPose knelt = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_TICKS);
+        RigPose knelt = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_FALLS); // 4.1.75: then he falls
         double knee = 12.0 + 6.0 * Math.cos(knelt.rightLegX);
         check(knelt.drop == com.hex.kagune.control.client.animation.ReaperBladePose.KNEEL_DROP && knelt.rightLegX > 0.4 && knelt.leftLegX > 0.4
             && knee < 24.0 - knelt.drop && knelt.headX > 0.5, "on his knees, head bowed (" + knee + ")");
         RigPose after = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_TICKS + 40.0);
-        check(after.drop == knelt.drop && after.rightLegX == knelt.rightLegX, "held as he dies");
+        check(samePose(after, com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_TICKS)), "held as he dies");
         String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
         int act = brain.indexOf("private static void act(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
         check(within(brain, act, "if (ending(agent, mind, level, now)) {", 120), "his end before anything else");
@@ -166,6 +167,146 @@ public final class AgentTests {
         }
         int at = text.indexOf(what, from);
         return at >= 0 && at - from < within;
+    }
+
+    /** The world (blocks about him: y up from the ground, z forward) of a box's corners, model pixels {x0..x1, y0..y1, z0..z1}, under pose p. */
+    private static double[][] corners(RigPose p, double x0, double x1, double y0, double y1, double z0, double z1) {
+        double[][] out = new double[8][];
+        int k = 0;
+        for (double x : new double[] {x0, x1}) {
+            for (double y : new double[] {y0, y1}) {
+                for (double z : new double[] {z0, z1}) {
+                    out[k++] = com.hex.kagune.control.client.animation.ReaperBladePose.place(p, new double[] {x, y, z}, false);
+                }
+            }
+        }
+        return out;
+    }
+
+    private static double lowest(double[][] points) {
+        double low = Double.MAX_VALUE;
+        for (double[] w : points) {
+            low = Math.min(low, w[1]);
+        }
+        return low;
+    }
+
+    private static double highest(double[][] points) {
+        double high = -Double.MAX_VALUE;
+        for (double[] w : points) {
+            high = Math.max(high, w[1]);
+        }
+        return high;
+    }
+
+    /**
+     * 4.1.75 (the owner: "make him actually lay on the floor face down like falling on his face and lay there a bit"): knelt and bowed a
+     * moment, he falls forward on his face, faster and faster, about his knees; lands face down, flat, on the ground (not in it, not over
+     * it); lies there still till he dies, and stays so as he dies (never tipped on his side); the shards lying about him stay where they lie.
+     */
+    static void reaperFallen() throws IOException {
+        int falls = AgentRules.REAPER_END_FALLS;
+        int lands = falls + AgentRules.REAPER_END_FALLING;
+        check(AgentRules.REAPER_END_FALLING >= 8 && AgentRules.REAPER_END_FALLING <= 16, "a fall (0.4 to 0.8 s), not a slide or a drop");
+        check(lands + 40 <= AgentRules.REAPER_END_TICKS, "he lies there a while (2 s or more) before he dies");
+        check(AgentRules.REAPER_END_KNEELS + AgentRules.REAPER_END_KNEELING < falls, "on his knees before he falls");
+        // Faster and faster: each tick of the fall turns him further than the one before.
+        double lastStep = 0.0;
+        boolean faster = true;
+        for (int age = falls; age < lands; age++) {
+            double step = com.hex.kagune.control.client.animation.ReaperBladePose.end(age).flip
+                - com.hex.kagune.control.client.animation.ReaperBladePose.end(age + 1).flip;
+            faster &= step > lastStep;
+            lastStep = step;
+        }
+        check(faster, "he falls faster and faster (nothing holding him up)");
+        check(com.hex.kagune.control.client.animation.ReaperBladePose.end(falls).flip == 0.0F, "upright on his knees until he falls");
+        // Forward: his head goes out before him, his feet behind.
+        RigPose down = com.hex.kagune.control.client.animation.ReaperBladePose.end(lands);
+        double[] crown = com.hex.kagune.control.client.animation.ReaperBladePose.place(down, new double[] {0.0, -8.0, 0.0}, false);
+        double[] heel = com.hex.kagune.control.client.animation.ReaperBladePose.place(down, new double[] {-1.9, 24.0, 0.0}, false);
+        check(crown[2] > 1.0 && heel[2] < -0.4, "fallen forward: his head before him, his feet behind (" + crown[2] + ", " + heel[2] + ")");
+        check(Math.abs(down.flip + com.hex.kagune.control.client.animation.ReaperBladePose.FACE_DOWN) < 1.0E-4
+            && Math.abs(down.rightLegX) < 1.0E-3 && Math.abs(down.leftLegX) < 1.0E-3 && Math.abs(down.lean) < 1.0E-3
+            && Math.abs(down.headX) < 1.0E-3 && Math.abs(down.headY) < 1.0E-3, "face down, flat: his legs, his back and his head in line");
+        // On the ground, face to it: his chest a pixel over it, his head at most a pixel into it, his legs on it, his back no higher than
+        // his body is deep, all of him along it.
+        double px = 1.0 / 16.0;
+        double[][] torso = corners(down, -4, 4, 0, 12, -2, 2);
+        double[][] head = corners(down, -4, 4, -8, 0, -4, 4);
+        double[][] legs = corners(down, -3.9, 3.9, 12, 24, -2, 2);
+        check(lowest(torso) > -0.01 && lowest(torso) < 1.5 * px, "his chest on the ground (" + lowest(torso) * 16 + " px)");
+        check(lowest(head) > -1.5 * px, "his face to the ground, at most a pixel into it (" + lowest(head) * 16 + " px)");
+        check(lowest(legs) > -0.01 && lowest(legs) < 1.5 * px, "his legs on the ground (" + lowest(legs) * 16 + " px)");
+        check(highest(torso) < 6.0 * px && highest(head) < 8.0 * px && highest(legs) < 6.0 * px, "lying flat, nothing of him raised");
+        // The broken hilt in his slack hand lies flat beside him, its stub out to his right (held as it hung, it stood straight up out of him).
+        double[][] grip = com.hex.kagune.control.client.animation.ReaperBladePose.inArm(down);
+        double[] inArm = {grip[0][0], grip[1][0], grip[2][0]};
+        float[] armTurn = down.transform("rightArm", RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+        double[][] arm = RigPose.zyx(armTurn[0], armTurn[1], armTurn[2]);
+        double[] inModel = {arm[0][0] * inArm[0] + arm[0][1] * inArm[1] + arm[0][2] * inArm[2],
+            arm[1][0] * inArm[0] + arm[1][1] * inArm[1] + arm[1][2] * inArm[2], arm[2][0] * inArm[0] + arm[2][1] * inArm[1] + arm[2][2] * inArm[2]};
+        double[] stub = com.hex.kagune.control.client.animation.ReaperBladePose.place(down, inModel, true);
+        double len = Math.sqrt(stub[0] * stub[0] + stub[1] * stub[1] + stub[2] * stub[2]);
+        check(Math.abs(stub[1]) / len < 0.3 && stub[0] / len < -0.8,
+            "lying, the broken hilt flat beside him, its stub out to his right, not standing up (" + java.util.Arrays.toString(stub) + ")");
+        // His knees stay where they rest through the fall (he falls about them), rising only to his lying legs' middle.
+        double[] rest = com.hex.kagune.control.client.animation.ReaperBladePose.knee(com.hex.kagune.control.client.animation.ReaperBladePose.KNEEL,
+            0.0, com.hex.kagune.control.client.animation.ReaperBladePose.KNEEL_DROP, 0.0);
+        check(rest[1] > -0.5 * px && rest[1] < 1.5 * px, "knelt, his knees on the ground (" + rest[1] * 16 + " px)");
+        double lastY = rest[1];
+        for (double age = falls; age <= lands; age += 0.25) {
+            RigPose p = com.hex.kagune.control.client.animation.ReaperBladePose.end(age);
+            double[] knee = com.hex.kagune.control.client.animation.ReaperBladePose.knee(p.rightLegX, -p.flip, p.drop, p.lunge);
+            check(Math.abs(knee[2] - rest[2]) < 1.0E-5 && knee[1] >= lastY - 1.0E-6
+                && knee[1] <= com.hex.kagune.control.client.animation.ReaperBladePose.LYING + 1.0E-5,
+                "end tick " + age + ": he falls about his knees, kept where they rest");
+            lastY = knee[1];
+            check(lowest(corners(p, -4, 4, 0, 12, -2, 2)) > -0.5 * px && lowest(corners(p, -4, 4, -8, 0, -4, 4)) > -1.5 * px,
+                "end tick " + age + ": nothing of him through the ground as he falls");
+        }
+        // Lying still, till he dies and after (the second vanilla takes over him).
+        for (double age = lands; age <= AgentRules.REAPER_END_TICKS + 40; age += 0.5) {
+            check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age), down), "end tick " + age + ": he lies still");
+        }
+        // Carried between his body's frames: a point keeps its place in the world, whatever the pose (the shards on the ground).
+        Random random = new Random(175);
+        for (int i = 0; i < 400; i++) {
+            RigPose a = com.hex.kagune.control.client.animation.ReaperBladePose.end(random.nextDouble() * AgentRules.REAPER_END_TICKS);
+            RigPose b = new RigPose();
+            b.flip = (float)(random.nextDouble() * 4.0 - 2.0);
+            b.spin = (float)(random.nextDouble() * 4.0 - 2.0);
+            b.roll = (float)(random.nextDouble() * 4.0 - 2.0);
+            b.drop = (float)(random.nextDouble() * 12.0);
+            b.lunge = (float)(random.nextDouble() * 8.0 - 4.0);
+            double[] q = {random.nextDouble() * 40 - 20, random.nextDouble() * 40 - 10, random.nextDouble() * 40 - 20};
+            double[] there = com.hex.kagune.control.client.animation.ReaperBladePose.place(a, q, false);
+            double[] carried = com.hex.kagune.control.client.animation.ReaperBladePose.place(b,
+                com.hex.kagune.control.client.animation.ReaperBladePose.carried(a, b, q, false), false);
+            double[] way = com.hex.kagune.control.client.animation.ReaperBladePose.place(a, q, true);
+            double[] wayCarried = com.hex.kagune.control.client.animation.ReaperBladePose.place(b,
+                com.hex.kagune.control.client.animation.ReaperBladePose.carried(a, b, q, true), true);
+            check(Math.hypot(Math.hypot(there[0] - carried[0], there[1] - carried[1]), there[2] - carried[2]) < 1.0E-6
+                && Math.hypot(Math.hypot(way[0] - wayCarried[0], way[1] - wayCarried[1]), way[2] - wayCarried[2]) < 1.0E-6,
+                "carried " + i + ": the same place in the world (and way) in the other pose's frame");
+        }
+        // The renderer: never tipped on his side as he dies; the shards carried; the thud as he lands.
+        String renderer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java"));
+        int flipDegrees = renderer.indexOf("protected float m_6441_(CcgAgent agent) {");
+        check(within(renderer, flipDegrees, "return agent.swing() == CcgAgent.END ? 0.0F : 90.0F;", 100)
+            && Files.readString(Path.of("stubs/net/minecraft/client/renderer/entity/LivingEntityRenderer.java")).contains("protected float m_6441_(T entity)")
+            && Files.readString(Path.of("verify/api-allowlist.txt")).contains("M net/minecraft/client/renderer/entity/LivingEntityRenderer m_6441_ (Lnet/minecraft/world/entity/LivingEntity;)F"),
+            "he dies lying on his face (vanilla's tip onto his side off for him)");
+        String layer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperBladeLayer.java"));
+        int shards = layer.indexOf("static void shards(PoseStack pose, VertexConsumer out, double age, RigPose now, int light) {");
+        check(within(layer, shards, "RigPose broke = ReaperBladePose.shatterPose();", 800) && within(layer, shards, "double ground = 24.0 - broke.drop - 0.05;", 900)
+            && within(layer, shards, "q[k] = ReaperBladePose.carried(broke, now, q[k], false);", 3000)
+            && within(layer, shards, "ReaperBladePose.carried(broke, now, ReaperBladePose.normal(l, w), true)", 3000),
+            "the shards worked out where the blade broke and carried into his body's frame (they stay where they lie as he falls)");
+        String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+        int thud = brain.indexOf("if (age == AgentRules.REAPER_END_FALLS + AgentRules.REAPER_END_FALLING) {");
+        check(thud > brain.indexOf("private static boolean ending(") && within(brain, thud, "\"entity.generic.big_fall\"", 300),
+            "the thud of him landing on his face");
     }
 
     /** Every primitive field of the two poses the same (nothing of him moves between them). */
@@ -312,11 +453,12 @@ public final class AgentTests {
             "his arms fallen slack once the last piece is gone, before he goes down");
         RigPose before = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_KNEELS);
         check(before.rightLegX == lowered.rightLegX && before.drop == lowered.drop, "not kneeling before he goes down");
-        double still = AgentRules.REAPER_END_KNEELS + 14.0 + 30.0;
-        RigPose dying = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_TICKS);
-        check(AgentRules.REAPER_END_TICKS - still >= 40.0, "still on his knees, bowed, 2 s or more before he dies");
-        for (double age = still; age <= AgentRules.REAPER_END_TICKS; age += 0.5) {
-            check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age), dying), "end tick " + age + ": he holds still");
+        // 4.1.75: bowed on his knees a moment, still, before he falls on his face (reaperFallen: then lying still till he dies).
+        double still = AgentRules.REAPER_END_KNEELS + 14.0 + 24.0;
+        RigPose bowed = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_FALLS);
+        check(AgentRules.REAPER_END_FALLS - still >= 6.0, "still on his knees, bowed, a moment before he falls");
+        for (double age = still; age <= AgentRules.REAPER_END_FALLS; age += 0.5) {
+            check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age), bowed), "end tick " + age + ": he holds still, bowed");
         }
         for (double age = AgentRules.REAPER_END_KNEELS; age < still; age += 1.0) {
             RigPose a = com.hex.kagune.control.client.animation.ReaperBladePose.end(age);

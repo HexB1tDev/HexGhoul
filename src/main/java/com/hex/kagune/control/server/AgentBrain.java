@@ -578,6 +578,11 @@ public final class AgentBrain {
             UkakuFire.sound(level, blade, "block.glass.break", 1.2F, 0.6F);
             UkakuFire.sound(level, blade, "hexkagune:sfx.blade_heavy", 1.0F, 0.5F);
         }
+        if (age == AgentRules.REAPER_END_FALLS + AgentRules.REAPER_END_FALLING) {
+            // 4.1.75 (the owner: "falling on his face"): the thud of him landing.
+            UkakuFire.sound(level, agent.m_20182_(), "entity.generic.big_fall", 1.0F, 0.8F);
+            UkakuFire.sound(level, agent.m_20182_(), "entity.player.attack.knockback", 0.6F, 0.6F);
+        }
         if (age >= AgentRules.REAPER_END_TICKS && agent.m_6084_()) {
             mind.finishing = true;
             try {

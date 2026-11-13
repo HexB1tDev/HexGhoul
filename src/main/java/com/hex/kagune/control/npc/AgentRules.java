@@ -147,7 +147,14 @@ public final class AgentRules {
     public static final int REAPER_END_SHATTERED = 80;
     public static final int REAPER_END_KNEELS = 86;
     public static final int REAPER_END_KNEELING = 24;
-    public static final int REAPER_END_TICKS = 170;
+    /**
+     * 4.1.75 (the owner: "make him actually lay on the floor face down like falling on his face and lay there a bit"): knelt and bowed, a
+     * moment still, then he topples forward from {@link #REAPER_END_FALLS} over {@link #REAPER_END_FALLING} ticks (faster and faster, about
+     * his knees, nothing holding him up), lands face down, and lies there till he dies ({@link #REAPER_END_TICKS}: 10 seconds; 8.5 in 4.1.74).
+     */
+    public static final int REAPER_END_FALLS = 132;
+    public static final int REAPER_END_FALLING = 12;
+    public static final int REAPER_END_TICKS = 200;
 
     /** 4.1.31: a blow of {@code amount} on him at {@code health} with his blade: never below 1 (his end takes him, not the blow). */
     public static float endClamp(float health, float amount) {

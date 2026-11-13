@@ -143,7 +143,11 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
     static void shards(PoseStack pose, VertexConsumer out, double age, RigPose now, int light) {
         Matrix4f at = pose.m_85850_().m_252922_();
         Matrix3f normals = pose.m_85850_().m_252943_();
-        double ground = 24.0 - (now == null ? 0.0 : now.drop) - 0.05;
+        // 4.1.75 (the owner: "make him actually lay on the floor face down like falling on his face"): worked out in the frame of his pose as
+        // the blade broke, then carried into his body's frame now (ReaperBladePose.carried): the model is turned as he falls, the shards
+        // lying on the ground are not.
+        RigPose broke = ReaperBladePose.shatterPose();
+        double ground = 24.0 - broke.drop - 0.05;
         for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
             double dt = age - com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);
             if (dt < 0.0) {
@@ -170,7 +174,10 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
             }
             double[][] q = {{c[0] - l[0] * 0.5, y - l[1] * 0.5, c[2] - l[2] * 0.5}, {c[0] + w[0], y + w[1], c[2] + w[2]},
                 {c[0] + l[0] * 0.5, y + l[1] * 0.5, c[2] + l[2] * 0.5}, {c[0] - w[0], y - w[1], c[2] - w[2]}};
-            double[] n = ReaperBladePose.normal(l, w);
+            double[] n = ReaperBladePose.carried(broke, now, ReaperBladePose.normal(l, w), true);
+            for (int k = 0; k < 4; k++) {
+                q[k] = ReaperBladePose.carried(broke, now, q[k], false);
+            }
             int silver = i % 4 == 0 ? 0xFF9A0C16 : i % 3 == 0 ? 0xFFE8E9EB : 0xFFC9CBCE;
             for (int side = 0; side < 2; side++) {
                 for (int k = 0; k < 4; k++) {

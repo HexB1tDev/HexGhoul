@@ -85,10 +85,10 @@ public final class ReaperBladePreview {
             case "end" -> {
                 // 4.1.74: his whole end (ReaperBladePose.end; the blade cut at ReaperBladeRules.level, its shards from their own breaksAt).
                 cols = 6;
-                for (double t : new double[] {0, 6, 12, 19, 21, 26, 32, 38, 44, 50, 56, 62, 68, 74, 79, 82, 86, 92, 98, 104, 110, 130, 150, 169}) {
+                for (double t : new double[] {0, 12, 19, 32, 50, 68, 79, 86, 98, 110, 124, 132, 135, 137, 139, 140, 141, 142, 143, 144, 160, 199}) {
                     frames.add(end(t, 30, 8, endLabel(t)));
                 }
-                for (double t : new double[] {19, 40, 64, 82, 98, 169}) {
+                for (double t : new double[] {124, 134, 137, 139, 141, 142, 143, 144, 170, 199}) {
                     frames.add(end(t, -80, 6, "his right, " + endLabel(t)));
                 }
             }
@@ -99,7 +99,7 @@ public final class ReaperBladePreview {
                 coatSkin = ImageIO.read(new File(new File(args[0]).getParentFile(), "ccg_reaper.png"));
                 coatTexture = ImageIO.read(new File(new File(args[0]).getParentFile(), "reaper_coat.png"));
                 boolean change = mode.equals("shedgif");
-                int last = change ? AgentRules.REAPER_CHANGE_REAL + 12 : AgentRules.REAPER_END_TICKS + 6;
+                int last = change ? AgentRules.REAPER_CHANGE_REAL + 12 : AgentRules.REAPER_END_TICKS + 20; // 4.1.75: and the second he dies
                 out.mkdirs();
                 for (int real = -6; real <= last; real++) {
                     BufferedImage a;
@@ -110,8 +110,8 @@ public final class ReaperBladePreview {
                         a = shed(age, 30, 8, text);
                         b = shed(age, -80, 6, text);
                     } else {
-                        double age = Math.max(0.0, Math.min(real, AgentRules.REAPER_END_TICKS));
-                        String text = String.format("%.2f s", real / 20.0) + (real >= AgentRules.REAPER_END_TICKS ? " (dies)" : "");
+                        double age = Math.max(0.0, real);
+                        String text = String.format("%.2f s", real / 20.0) + (real >= AgentRules.REAPER_END_TICKS ? " (dead)" : "");
                         a = end(age, 30, 8, text);
                         b = end(age, -80, 6, text);
                     }
@@ -162,7 +162,9 @@ public final class ReaperBladePreview {
     /** 4.1.74: tick {@code t} of his end, in seconds, with what is happening. */
     static String endLabel(double t) {
         String what = t < AgentRules.REAPER_END_SHATTER ? "lowering" : t < AgentRules.REAPER_END_SHATTERED ? "breaking"
-            : t < AgentRules.REAPER_END_KNEELS ? "slack" : t < AgentRules.REAPER_END_KNEELS + AgentRules.REAPER_END_KNEELING ? "kneeling" : "still";
+            : t < AgentRules.REAPER_END_KNEELS ? "slack" : t < AgentRules.REAPER_END_KNEELS + AgentRules.REAPER_END_KNEELING ? "kneeling"
+            : t < AgentRules.REAPER_END_FALLS ? "bowed" : t < AgentRules.REAPER_END_FALLS + AgentRules.REAPER_END_FALLING ? "falling"
+            : t < AgentRules.REAPER_END_TICKS ? "lying" : "dead";
         return String.format("%.2f s, %s", t / 20.0, what);
     }
 
@@ -197,9 +199,10 @@ public final class ReaperBladePreview {
         return img;
     }
 
-    /** 4.1.74: the shards as ReaperBladeLayer.shards places them (the model's frame, moved with his body), both faces drawn. */
+    /** 4.1.74: the shards as ReaperBladeLayer.shards places them (4.1.75: carried into his body's frame, lying still as he falls), both faces. */
     static void endShards(List<PoseRender.Tri> tris, RigPose pose, double age) {
-        double ground = 24.0 - pose.drop - 0.05;
+        RigPose broke = ReaperBladePose.shatterPose(); // 4.1.75: as ReaperBladeLayer.shards: worked out there, carried to his body now
+        double ground = 24.0 - broke.drop - 0.05;
         for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
             double dt = age - com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);
             if (dt < 0.0) {
@@ -227,7 +230,7 @@ public final class ReaperBladePreview {
                 {c[0] + l[0] * 0.5, y + l[1] * 0.5, c[2] + l[2] * 0.5}, {c[0] - w[0], y - w[1], c[2] - w[2]}};
             double[][] at = new double[4][];
             for (int k = 0; k < 4; k++) {
-                at[k] = PoseRender.world(pose, q[k]);
+                at[k] = PoseRender.world(pose, ReaperBladePose.carried(broke, pose, q[k], false));
             }
             int silver = i % 4 == 0 ? 0x9A0C16 : i % 3 == 0 ? 0xE8E9EB : 0xC9CBCE;
             double[] n = PoseRender.norm(PoseRender.cross(PoseRender.sub(at[1], at[0]), PoseRender.sub(at[3], at[0])));

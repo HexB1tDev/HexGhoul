@@ -9,6 +9,13 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.75 (HexGhoul): Arima falls on his face and lies there before he dies (testing)
+
+See `.github/release-notes-4.1.75.md`. `AgentRules.REAPER_END_FALLS`/`FALLING`/`TICKS` (132/12/200); `ReaperBladePose.fall` (turned forward
+`t` squared about his knees: `knee`, `kneeModel`, `turned`; `FACE_DOWN`, `LYING`, `LIE_ARM_*`, `LIE_WRIST`), `carried`/`place`/`local` (a point
+kept in the world between his body's frames: `ReaperBladeLayer.shards` from `shatterPose`); `AgentRenderer.m_6441_` (getFlipDegrees, 0 in his
+end); the thud in `AgentBrain.ending`. `AgentTests.reaperFallen`. Renders `docs/handoff/arima-*-4.1.75.*`.
+
 ## 4.1.74 (HexGhoul): Arima's change and death slowed; Dawn out of his hand; nothing touches him as he dies (testing)
 
 See `.github/release-notes-4.1.74.md`. `AgentRules.REAPER_CHANGE_SLOW` (1.75), `REAPER_CHANGE_REAL`, `changeAge` (the change's keys played

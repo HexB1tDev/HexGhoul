@@ -572,6 +572,8 @@ public final class ReaperBladePose {
      * 4.1.74 (the owner: "the blade slowly shatter, then he holds still for a bit then dies"): lowered more slowly; he holds it there, still,
      * the whole time it breaks away piece by piece ({@link AgentRules#REAPER_END_SHATTER} .. {@link AgentRules#REAPER_END_SHATTERED}); only
      * then his arms fall; he goes down slowly ({@link AgentRules#REAPER_END_KNEELING}) and holds still on his knees till he dies.
+     * 4.1.75 (the owner: "make him actually lay on the floor face down like falling on his face and lay there a bit"): knelt and bowed a
+     * moment, then he falls on his face ({@link #fall}) and lies there, still, till he dies.
      */
     public static RigPose end(double age) {
         float lower = smooth(age / (AgentRules.REAPER_END_SHATTER - 1.0));
@@ -596,7 +598,7 @@ public final class ReaperBladePose {
             p.weaponZ = p.weaponZ * (1.0F - drop);
         }
         float kneel = smooth((age - AgentRules.REAPER_END_KNEELS) / (double)AgentRules.REAPER_END_KNEELING);
-        float bow = smooth((age - AgentRules.REAPER_END_KNEELS - 14.0) / 30.0);
+        float bow = smooth((age - AgentRules.REAPER_END_KNEELS - 14.0) / 24.0); // 4.1.75: bowed before he falls (30 ticks before)
         p.rightLegX = p.rightLegX * (1.0F - kneel) + KNEEL * kneel;
         p.leftLegX = p.leftLegX * (1.0F - kneel) + KNEEL * kneel;
         p.rightLegZ *= 1.0F - kneel;
@@ -611,7 +613,130 @@ public final class ReaperBladePose {
         p.headX = p.headX * (1.0F - kneel) + 0.25F * kneel + 0.45F * bow;
         p.headY *= 1.0F - kneel;
         p.headHold = Math.max(p.headHold, 0.8F * kneel);
+        double falling = (age - AgentRules.REAPER_END_FALLS) / (double)AgentRules.REAPER_END_FALLING;
+        if (falling > 0.0) {
+            fall(p, Math.min(1.0, falling));
+        }
         return p;
+    }
+
+    /** 4.1.75: face down: how far (radians) the whole of him is turned forward once he has fallen. */
+    public static final float FACE_DOWN = (float)(Math.PI / 2.0);
+    /**
+     * 4.1.75: lying face down, how high (blocks) the middle of his body is: his chest a pixel over the ground, his head (deeper than his
+     * chest) a pixel into it, his face to the ground.
+     */
+    public static final double LYING = 3.0 / 16.0;
+    /** 4.1.75: his arms lying (a little back, out from his sides) and his head (in line with him, face to the ground). */
+    static final float LIE_ARM_X = 0.06F;
+    static final float LIE_ARM_Z = 0.2F;
+    /** 4.1.75: lying, his wrist turned so the broken hilt lies flat beside him, its stub out to his right (HELD's way along his arm's front). */
+    static final float LIE_WRIST = (float)(Math.PI / 2.0);
+
+    /**
+     * 4.1.75: {@code t} (0 to 1) of his fall on his face, from his knees: the whole of him turned forward faster and faster (nothing holds
+     * him up: {@code t} squared) about his knees, which stay where they rest ({@link #knee}); his legs straighten out behind him, his back
+     * in line with them, his head too, his arms limp along his sides; at the end he lies flat, face down ({@link #FACE_DOWN},
+     * {@link #LYING}).
+     */
+    static void fall(RigPose p, double t) {
+        double theta = FACE_DOWN * t * t;
+        float straight = smooth(t);
+        float legs = KNEEL * (1.0F - straight);
+        p.rightLegX = legs;
+        p.leftLegX = legs;
+        p.rightLegZ *= 1.0F - straight;
+        p.leftLegZ *= 1.0F - straight;
+        p.lean *= 1.0F - straight;
+        p.headX *= 1.0F - straight;
+        p.headY *= 1.0F - straight;
+        float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, LIE_ARM_X, 0.0F, LIE_ARM_Z, straight);
+        float[] left = QuinqueGrip.blendTurn(p.leftArmX, p.leftArmY, p.leftArmZ, LIE_ARM_X, 0.0F, -LIE_ARM_Z, straight);
+        p.rightArmX = right[0];
+        p.rightArmY = right[1];
+        p.rightArmZ = right[2];
+        p.leftArmX = left[0];
+        p.leftArmY = left[1];
+        p.leftArmZ = left[2];
+        // The broken hilt in his slack hand turned with it: its stub out to his right, flat on the ground beside him (held as it hung, it
+        // would stand straight up out of him lying on his face).
+        p.weaponX *= 1.0F - straight;
+        p.weaponY = p.weaponY * (1.0F - straight) + LIE_WRIST * straight;
+        p.weaponZ *= 1.0F - straight;
+        p.flip = (float)-theta; // forward (x+ tips his head back)
+        // His knees kept where they rest (their middle rising to the middle of his lying legs as he comes down flat): the drop and the
+        // lunge that put them there, his body turned theta about the point BodyFrame.TURN_PIVOT up.
+        double[] rest = knee(KNEEL, 0.0, KNEEL_DROP, 0.0);
+        double y = rest[1] + (LYING - rest[1]) * t * t;
+        double[] w = turned(kneeModel(legs), theta);
+        p.drop = (float)(16.0 * (BodyFrame.TURN_PIVOT - (y - w[1])));
+        p.lunge = (float)(16.0 * (rest[2] - w[2]));
+    }
+
+    /** 4.1.75: the middle of his right knee (halfway down his leg, swung back {@code legs}) in the model's frame (pixels). */
+    static double[] kneeModel(float legs) {
+        return new double[] {-1.9, 12.0 + 6.0 * Math.cos(legs), 6.0 * Math.sin(legs)};
+    }
+
+    /** 4.1.75: a model point (pixels) about the body's turning point (blocks: y up, z forward), turned forward {@code theta}. */
+    static double[] turned(double[] q, double theta) {
+        double y = 1.501 - q[1] / 16.0 - BodyFrame.TURN_PIVOT;
+        double z = -q[2] / 16.0;
+        return new double[] {q[0] / 16.0, y * Math.cos(theta) - z * Math.sin(theta), y * Math.sin(theta) + z * Math.cos(theta)};
+    }
+
+    /** 4.1.75: where his knee is (blocks: y up from the ground, z forward), his legs swung back {@code legs}, turned, dropped, lunged. */
+    public static double[] knee(float legs, double theta, double drop, double lunge) {
+        double[] w = turned(kneeModel(legs), theta);
+        return new double[] {w[0], w[1] + BodyFrame.TURN_PIVOT - drop / 16.0, w[2] + lunge / 16.0};
+    }
+
+    /**
+     * 4.1.75: a point (or, {@code way}, a direction) in the model's frame under pose {@code from}, given in the model's frame under pose
+     * {@code to} at the same place in the world. AgentRenderer turns the whole model, its layers with it, by the pose's flip, spin and roll
+     * about the point BodyFrame.TURN_PIVOT up, then drops and lunges it: what keeps the shards lying where they fell while he falls on his
+     * face. A null pose: none of that.
+     */
+    public static double[] carried(RigPose from, RigPose to, double[] q, boolean way) {
+        return local(to, place(from, q, way), way);
+    }
+
+    /** 4.1.75: a model point (pixels) of pose {@code p} in the world about the body (blocks: x to his left, y up from the ground, z forward). */
+    public static double[] place(RigPose p, double[] q, boolean way) {
+        float[] at = p == null ? new float[3] : p.transform("body", RigPose.POSITION, 0.0F, 0.0F, 0.0F);
+        float[] rot = p == null ? new float[3] : p.transform("body", RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+        double[] w = {q[0] / 16.0, way ? -q[1] / 16.0 : 1.501 - q[1] / 16.0 - BodyFrame.TURN_PIVOT, -q[2] / 16.0};
+        w = about(w, 0, -rot[0]);
+        w = about(w, 1, rot[1]);
+        w = about(w, 2, -rot[2]);
+        return way ? w : new double[] {w[0] - at[0], w[1] + BodyFrame.TURN_PIVOT + at[1], w[2] - at[2]};
+    }
+
+    /** 4.1.75: {@link #place} undone: a world point (or direction) about the body in the model's frame of pose {@code p}. */
+    public static double[] local(RigPose p, double[] w, boolean way) {
+        float[] at = p == null ? new float[3] : p.transform("body", RigPose.POSITION, 0.0F, 0.0F, 0.0F);
+        float[] rot = p == null ? new float[3] : p.transform("body", RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+        double[] r = way ? w.clone() : new double[] {w[0] + at[0], w[1] - BodyFrame.TURN_PIVOT - at[1], w[2] + at[2]};
+        r = about(r, 2, rot[2]);
+        r = about(r, 1, -rot[1]);
+        r = about(r, 0, rot[0]);
+        return new double[] {16.0 * r[0], way ? -16.0 * r[1] : 16.0 * (1.501 - BodyFrame.TURN_PIVOT - r[1]), -16.0 * r[2]};
+    }
+
+    /** {@code v} turned {@code angle} (right-handed) about axis {@code axis} (0 x, 1 y, 2 z). */
+    static double[] about(double[] v, int axis, double angle) {
+        double c = Math.cos(angle);
+        double s = Math.sin(angle);
+        return switch (axis) {
+            case 0 -> new double[] {v[0], v[1] * c - v[2] * s, v[1] * s + v[2] * c};
+            case 1 -> new double[] {v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c};
+            default -> new double[] {v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]};
+        };
+    }
+
+    /** 4.1.75: his pose as his blade broke (the frame its shards are worked out in). */
+    public static RigPose shatterPose() {
+        return shatter().at;
     }
 
     /**

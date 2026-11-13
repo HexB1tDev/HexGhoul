@@ -7,5 +7,6 @@ public abstract class LivingEntityRenderer<T extends net.minecraft.world.entity.
     /** getModel (declared by RenderLayerParent) */ public M m_7200_() { throw new UnsupportedOperationException(); }
     /** render (1.0.13: a body cut in half, drawn twice) */ public void m_7392_(T entity, float yaw, float partialTicks, com.mojang.blaze3d.vertex.PoseStack pose,
         net.minecraft.client.renderer.MultiBufferSource buffers, int light) { throw new UnsupportedOperationException(); }
+    /** getFlipDegrees (4.1.75: the White Reaper dies on his face, not tipped on his side) */ protected float m_6441_(T entity) { throw new UnsupportedOperationException(); }
     /** addLayer */ public final boolean m_115326_(net.minecraft.client.renderer.entity.layers.RenderLayer<T, M> layer) { throw new UnsupportedOperationException(); }
 }
