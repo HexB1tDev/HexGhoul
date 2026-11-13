@@ -651,7 +651,8 @@ final class EtoOwl {
 
     /** What her blows may catch besides what she fights: anything hostile; never her partner, never a player she isn't fighting. */
     static boolean fair(EtoNpc npc, EtoBrain.Mind mind, LivingEntity body) {
-        if (body == npc || !body.m_6084_() || EtoBrain.partnerOf(mind, body)) {
+        // 4.1.74: never the White Reaper through his change or his end (untouchable: no arm of a companion's takes hold of him).
+        if (body == npc || !body.m_6084_() || EtoBrain.partnerOf(mind, body) || AgentBrain.untouchable(body)) {
             return false;
         }
         return body.m_19879_() == mind.target || body instanceof Enemy;

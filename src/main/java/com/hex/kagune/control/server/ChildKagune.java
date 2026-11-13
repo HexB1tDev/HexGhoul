@@ -653,7 +653,9 @@ final class ChildKagune {
 
     /** True if its kagune may hurt {@code living}: what it fights, or a monster; never a player, a companion, a child. */
     static boolean fair(LivingEntity living, LivingEntity threat) {
-        if (living instanceof net.minecraft.world.entity.player.Player || living instanceof com.hex.kagune.control.npc.EtoNpc || living instanceof ChildNpc) {
+        // 4.1.74: never the White Reaper through his change or his end (untouchable).
+        if (living instanceof net.minecraft.world.entity.player.Player || living instanceof com.hex.kagune.control.npc.EtoNpc || living instanceof ChildNpc
+            || AgentBrain.untouchable(living)) {
             return false;
         }
         return living == threat || EtoBrain.hostile(living);

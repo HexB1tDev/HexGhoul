@@ -556,6 +556,11 @@ public final class EtoBrain {
         if (body == npc || !body.m_6084_() || mind == null) {
             return false;
         }
+        if (AgentBrain.untouchable(body)) {
+            // 4.1.74 (the owner: "during this death animation he's 100% immortal, ungrabbable"): the White Reaper through his change or
+            // his end is no official NPC's foe: their worms (NpcWorms) and tendrils (NpcTendrils: Roma's impale held him) pass him by.
+            return false;
+        }
         if (body instanceof EtoNpc || body instanceof com.hex.kagune.control.npc.ChildNpc) {
             return false;
         }

@@ -30,6 +30,8 @@ public abstract class LivingEntity extends Entity {
     /** setHealth */ public void m_21153_(float health) { throw new UnsupportedOperationException(); }
     /** hasEffect */ public boolean m_21023_(net.minecraft.world.effect.MobEffect effect) { throw new UnsupportedOperationException(); }
     /** removeEffect */ public boolean m_21195_(net.minecraft.world.effect.MobEffect effect) { throw new UnsupportedOperationException(); }
+    /** removeAllEffects (4.1.74: the White Reaper's end) */ public boolean m_21219_() { throw new UnsupportedOperationException(); }
+    /** clearFire (Entity's; allowlisted on LivingEntity: 4.1.74 the White Reaper's end) */ public void m_20095_() { throw new UnsupportedOperationException(); }
     /** getEffect */ public net.minecraft.world.effect.MobEffectInstance m_21124_(net.minecraft.world.effect.MobEffect effect) { throw new UnsupportedOperationException(); }
     /** addEffect */ public boolean m_7292_(net.minecraft.world.effect.MobEffectInstance effect) { throw new UnsupportedOperationException(); }
     /** addEffect(effect, source) */ public boolean m_147207_(net.minecraft.world.effect.MobEffectInstance effect, Entity source) { throw new UnsupportedOperationException(); }

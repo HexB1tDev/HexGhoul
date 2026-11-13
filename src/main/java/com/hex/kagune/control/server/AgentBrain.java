@@ -560,11 +560,23 @@ public final class AgentBrain {
         }
         long age = ago(now, mind.endAt);
         pin(agent, mind, level);
-        if (!mind.shattered && age >= AgentRules.REAPER_END_SHATTER) {
+        // 4.1.74 (the owner: "during this death animation he's 100% immortal, ungrabbable and all effects like bleed etc are removed from
+        // him"): untouchable and held where he is (as since 4.1.37), and every tick of it nothing left on him: no effect, no fire, no
+        // bleeding, no spikes in him, no stun, never knocked down.
+        cleanse(agent, level, now);
+        // 4.1.74 ("the blade slowly shatter"): a crack for each tick a piece of it breaks off, from its point back to the hilt; the last
+        // of it with the sound of the whole blade going.
+        int breaking = age >= AgentRules.REAPER_END_SHATTER && age < AgentRules.REAPER_END_SHATTERED
+            ? com.hex.kagune.control.npc.ReaperBladeRules.breaking(age) : 0;
+        Vec3 blade = agent.m_20182_().m_82520_(0.0, 0.6, 0.0);
+        if (breaking > 0) {
+            float k = (float)com.hex.kagune.control.npc.ReaperBladeRules.shattered(age);
+            UkakuFire.sound(level, blade, "block.glass.break", 0.35F + 0.12F * Math.min(breaking, 3), 1.7F - 0.6F * k);
+        }
+        if (!mind.shattered && age >= AgentRules.REAPER_END_SHATTERED) {
             mind.shattered = true;
-            Vec3 at = agent.m_20182_().m_82520_(0.0, 1.0, 0.0);
-            UkakuFire.sound(level, at, "block.glass.break", 1.2F, 0.6F);
-            UkakuFire.sound(level, at, "hexkagune:sfx.blade_heavy", 1.0F, 0.5F);
+            UkakuFire.sound(level, blade, "block.glass.break", 1.2F, 0.6F);
+            UkakuFire.sound(level, blade, "hexkagune:sfx.blade_heavy", 1.0F, 0.5F);
         }
         if (age >= AgentRules.REAPER_END_TICKS && agent.m_6084_()) {
             mind.finishing = true;
@@ -576,6 +588,25 @@ public final class AgentBrain {
             }
         }
         return true;
+    }
+
+    /** 4.1.74: nothing in his hands (Dawn put by): his change's whole length. */
+    private static void letGo(CcgAgent agent) {
+        if (!agent.m_21205_().m_41619_()) {
+            agent.m_21008_(InteractionHand.MAIN_HAND, ItemStack.f_41583_);
+        }
+    }
+
+    /**
+     * 4.1.74 (the owner: "all effects like bleed etc are removed from him"): every effect off him (the original's bleeding with the rest),
+     * his fire put out, the bleeding counted on him and the spikes stuck in him gone (their clients told), no stun or knockdown left on him.
+     */
+    static void cleanse(CcgAgent agent, ServerLevel level, long now) {
+        agent.m_21219_();
+        agent.m_20095_();
+        UkakuCrystalCombat.stanch(agent, level, now);
+        PaleStun.clear(agent);
+        PaleKnockdown.clear(agent);
     }
 
     /**
@@ -618,14 +649,18 @@ public final class AgentBrain {
             agent.m_21573_().m_26573_();
             agent.swing(CcgAgent.SHED, now);
             UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.6F, 0.6F);
+            letGo(agent);
             return true;
         }
         long age = ago(now, mind.shedAt);
         pin(agent, mind, level);
+        // 4.1.74 (the owner: "while transforming arima keeps holding the old quinque instead of getting rid of it"): his hands empty the
+        // whole change (arm, which put Dawn by, never ran while it lasted: Dawn stayed in his hand through the coat and the draw).
+        letGo(agent);
         if (mind.prey != 0 && level.m_6815_(mind.prey) instanceof LivingEntity prey) {
             agent.m_21563_().m_24960_(prey, 30.0F, 30.0F);
         }
-        if (!mind.bare && age >= AgentRules.REAPER_SHED_SWAP) {
+        if (!mind.bare && AgentRules.changeAge(age) >= AgentRules.REAPER_SHED_SWAP) {
             mind.bare = true;
             mind.look = AgentRules.REAPER_BARE_LOOK;
             agent.getPersistentData().m_128405_(BARE, 1);
@@ -633,7 +668,7 @@ public final class AgentBrain {
             agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(speed(mind));
             UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.9F, 0.75F);
         }
-        if (age >= AgentRules.REAPER_CHANGE_TICKS || age < 0L) {
+        if (age >= AgentRules.REAPER_CHANGE_REAL || age < 0L) { // 4.1.74: played slower than its keys (AgentRules.REAPER_CHANGE_SLOW)
             mind.shedAt = Long.MIN_VALUE;
             mind.pinnedAt = null;
             mind.readyAt = Math.max(mind.readyAt, now + 4L);

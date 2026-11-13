@@ -88,6 +88,7 @@ public final class AgentTests {
         reaperBlade();
         reaperClose();
         reaperEnd();
+        reaperSlowed();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -145,7 +146,7 @@ public final class AgentTests {
         check(after.drop == knelt.drop && after.rightLegX == knelt.rightLegX, "held as he dies");
         String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
         int act = brain.indexOf("private static void act(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
-        check(brain.indexOf("if (ending(agent, mind, level, now)) {", act) - act < 120, "his end before anything else");
+        check(within(brain, act, "if (ending(agent, mind, level, now)) {", 120), "his end before anything else");
         check(brain.contains("event.setAmount(AgentRules.endClamp(agent.m_21223_(), event.getAmount()));") && brain.contains("agent.mind.endSource = event.getSource();")
             && brain.contains("agent.mind.shedAt != Long.MIN_VALUE || agent.mind.endAt != Long.MIN_VALUE") && brain.contains("if (agent.mind.finishing) {"),
             "begun by the blow that brings him low, nothing landing after, his own last blow let through");
@@ -153,8 +154,233 @@ public final class AgentTests {
             && brain.contains("\"block.glass.break\""), "it shatters with a sound, and he dies by the blow that brought it (his killer gets Slain Reaper)");
         String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
         String layer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperBladeLayer.java"));
-        check(client.contains("ReaperBladePose.end(") && layer.contains("ReaperBladeMesh.broken()") && layer.contains("shards(pose, out,"),
-            "drawn: lowered, shattered, the hilt and its shards, on his knees");
+        check(client.contains("ReaperBladePose.end(") && layer.contains("ReaperBladeMesh.brokenAt(com.hex.kagune.control.npc.ReaperBladeRules.level(age))")
+            && layer.contains("shards(pose, out, age, posed, light);") && layer.contains("double dt = age - com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);"),
+            "drawn: lowered, shattered piece by piece, the hilt and its shards, on his knees");
+    }
+
+    /** True if {@code what} is in {@code text} at or after {@code from} (itself found: not -1), within {@code within} characters of it. */
+    private static boolean within(String text, int from, String what, int within) {
+        if (from < 0) {
+            return false;
+        }
+        int at = text.indexOf(what, from);
+        return at >= 0 && at - from < within;
+    }
+
+    /** Every primitive field of the two poses the same (nothing of him moves between them). */
+    private static boolean samePose(RigPose a, RigPose b) {
+        try {
+            for (java.lang.reflect.Field f : RigPose.class.getDeclaredFields()) {
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || !f.getType().isPrimitive()) {
+                    continue;
+                }
+                f.setAccessible(true);
+                if (!f.get(a).equals(f.get(b))) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (ReflectiveOperationException failure) {
+            return false;
+        }
+    }
+
+    /** Where the blade's mesh ends (its farthest vertex along it). */
+    private static double meshEnd(com.hex.kagune.control.quinque.ArmMesh.Mesh mesh) {
+        double far = -1.0E9;
+        for (int i = 0; i < mesh.pos.length; i += 3) {
+            far = Math.max(far, mesh.pos[i]);
+        }
+        return far;
+    }
+
+    /**
+     * 4.1.74 (the owner: "bug found, while transforming arima keeps holding the old quinque instead of getting rid of it, the death animation
+     * is too fast, during his death he should remain immortal and the blade slowly shatter, then he holds still for a bit then dies. during
+     * this death animation he's 100% immortal, ungrabbable and all effects like bleed etc are removed from him." Then: "I think same for the
+     * transformation animation, it goes by too quick, can barely see it"): Dawn out of his hand through the change; the change and his end
+     * slowed; the blade breaking a piece at a time from its point; held still, then on his knees, still, then dead; nothing on him, nothing
+     * holding him.
+     */
+    static void reaperSlowed() throws IOException {
+        // The change: the same keys, played REAPER_CHANGE_SLOW times slower, ending exactly as its keys end (no frozen tail, nothing cut).
+        check(AgentRules.REAPER_CHANGE_SLOW >= 1.5, "the change clearly slower (the owner: \"can barely see it\")");
+        check(AgentRules.REAPER_CHANGE_REAL == (int)Math.ceil(AgentRules.REAPER_CHANGE_TICKS * AgentRules.REAPER_CHANGE_SLOW)
+            && AgentRules.changeAge(AgentRules.REAPER_CHANGE_REAL) >= AgentRules.REAPER_CHANGE_TICKS
+            && AgentRules.changeAge(AgentRules.REAPER_CHANGE_REAL - 1) < AgentRules.REAPER_CHANGE_TICKS,
+            "the change lasts in the world exactly as long as its keys take played slower (" + AgentRules.REAPER_CHANGE_REAL + " ticks)");
+        check(AgentRules.changeAge(0.0) == 0.0 && AgentRules.REAPER_CHANGE_REAL / 20.0 >= 9.0
+            && AgentRules.REAPER_CHANGE_REAL >= 1.5 * AgentRules.REAPER_CHANGE_TICKS, "9.5 seconds of it, not 5.4");
+        double previous = -1.0;
+        boolean rising = true;
+        for (double real = 0.0; real <= AgentRules.REAPER_CHANGE_REAL; real += 0.25) {
+            double keys = AgentRules.changeAge(real);
+            rising &= keys > previous;
+            previous = keys;
+        }
+        check(rising, "the change's keys only ever go forward");
+
+        // His end: lowered, held still while the blade breaks away, slack, down on his knees, still a long while, dead: 8.5 s, not 3.5.
+        check(AgentRules.REAPER_END_SHATTER < AgentRules.REAPER_END_SHATTERED && AgentRules.REAPER_END_SHATTERED < AgentRules.REAPER_END_KNEELS
+            && AgentRules.REAPER_END_KNEELS + AgentRules.REAPER_END_KNEELING + 60 <= AgentRules.REAPER_END_TICKS,
+            "lowered, then it breaks, then he kneels, on his knees at least 3 s before he dies");
+        check(AgentRules.REAPER_END_SHATTERED - AgentRules.REAPER_END_SHATTER >= 40 && AgentRules.REAPER_END_TICKS >= 2 * 70
+            && AgentRules.REAPER_END_KNEELING >= 16, "slow: 2 s or more of the blade breaking, his end twice as long as before, a slow kneel");
+        // How broken it is: whole until it starts, gone but the stub when it's done, never mending.
+        double TIP = com.hex.kagune.control.quinque.ReaperBladeMesh.TIP;
+        double SNAPS = com.hex.kagune.control.quinque.ReaperBladeMesh.SNAPS;
+        int LEVELS = com.hex.kagune.control.npc.ReaperBladeRules.LEVELS;
+        double step = (TIP - SNAPS) / LEVELS;
+        check(com.hex.kagune.control.npc.ReaperBladeRules.SHATTER_FROM == TIP && com.hex.kagune.control.npc.ReaperBladeRules.SHATTER_TO == SNAPS,
+            "it breaks from its point down to where the stub snaps");
+        double lastLeft = Double.MAX_VALUE;
+        int lastLevel = Integer.MAX_VALUE;
+        boolean shrinks = true;
+        for (double age = 0.0; age <= AgentRules.REAPER_END_TICKS; age += 0.25) {
+            double broke = com.hex.kagune.control.npc.ReaperBladeRules.shattered(age);
+            double left = com.hex.kagune.control.npc.ReaperBladeRules.remaining(age);
+            int level = com.hex.kagune.control.npc.ReaperBladeRules.level(age);
+            double cut = SNAPS + step * level;
+            if (age <= AgentRules.REAPER_END_SHATTER) {
+                check(broke == 0.0 && left == TIP && level == LEVELS, "end tick " + age + ": whole before it breaks");
+            }
+            if (age >= AgentRules.REAPER_END_SHATTERED) {
+                check(broke == 1.0 && left == SNAPS && level == 0, "end tick " + age + ": only the stub once it's done");
+            }
+            check(broke >= 0.0 && broke <= 1.0 && left >= SNAPS && left <= TIP, "end tick " + age + ": the break within the blade");
+            check(cut >= left - 1.0E-9 && cut < left + step + 1.0E-9,
+                "end tick " + age + ": drawn cut at the next length up from the break, never shorter (" + cut + " for " + left + ")");
+            shrinks &= left <= lastLeft && level <= lastLevel;
+            lastLeft = left;
+            lastLevel = level;
+        }
+        check(shrinks, "the blade only ever gets shorter");
+        // Each piece: off as the break reaches it, point first; never a gap in the blade where a piece has yet to go, never a piece drawn
+        // both flying and still on the blade for longer than a step.
+        int ticksWithCracks = 0;
+        int counted = 0;
+        for (long age = 0; age <= AgentRules.REAPER_END_TICKS; age++) {
+            int n = com.hex.kagune.control.npc.ReaperBladeRules.breaking(age);
+            counted += n;
+            ticksWithCracks += n > 0 ? 1 : 0;
+        }
+        check(counted == com.hex.kagune.control.npc.ReaperBladeRules.SHARDS, "every shard breaks off exactly once (" + counted + ")");
+        check(ticksWithCracks >= 15, "piece by piece: shards breaking off over many ticks, not all at once (" + ticksWithCracks + ")");
+        for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
+            double u = com.hex.kagune.control.npc.ReaperBladeRules.shard(i).u();
+            double at = com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);
+            check(at >= AgentRules.REAPER_END_SHATTER && at <= AgentRules.REAPER_END_SHATTERED, "shard " + i + " breaks during the shatter (" + at + ")");
+            for (int j = 0; j < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; j++) {
+                if (com.hex.kagune.control.npc.ReaperBladeRules.shard(j).u() < u) {
+                    check(com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(j) >= at, "shard " + i + " (nearer the point) off no later than shard " + j);
+                }
+            }
+            for (double age = AgentRules.REAPER_END_SHATTER; age <= AgentRules.REAPER_END_SHATTERED; age += 0.5) {
+                double cut = SNAPS + step * com.hex.kagune.control.npc.ReaperBladeRules.level(age);
+                if (age < at) {
+                    check(cut >= Math.min(u, TIP) - 1.0E-6, "end tick " + age + ": shard " + i + " still on the blade is drawn there (no gap)");
+                } else if (age >= at + 1.0 && u >= SNAPS) {
+                    check(cut <= u + step + 1.0E-6, "end tick " + age + ": shard " + i + " flown off is no longer drawn on the blade");
+                }
+            }
+        }
+        // The cut meshes: each a length of the blade, longer with each level, the whole blade and the stub at the ends; built once.
+        check(com.hex.kagune.control.quinque.ReaperBladeMesh.brokenAt(LEVELS) == com.hex.kagune.control.quinque.ReaperBladeMesh.of()
+            && com.hex.kagune.control.quinque.ReaperBladeMesh.brokenAt(0) == com.hex.kagune.control.quinque.ReaperBladeMesh.broken(),
+            "the whole blade before, the stub after");
+        double lastEnd = meshEnd(com.hex.kagune.control.quinque.ReaperBladeMesh.broken());
+        for (int level = 1; level < LEVELS; level++) {
+            com.hex.kagune.control.quinque.ArmMesh.Mesh cut = com.hex.kagune.control.quinque.ReaperBladeMesh.brokenAt(level);
+            double end = meshEnd(cut);
+            double want = SNAPS + step * level;
+            check(Math.abs(end - want) < 1.5 && end > lastEnd, "cut " + level + " ends where its length is (" + end + " for " + want + ")");
+            check(cut == com.hex.kagune.control.quinque.ReaperBladeMesh.brokenAt(level), "cut " + level + " built once");
+            lastEnd = end;
+        }
+        check(meshEnd(com.hex.kagune.control.quinque.ReaperBladeMesh.of()) > lastEnd, "the whole blade longer than every cut");
+
+        // The pose: still from the moment it's lowered until the last piece goes; only then slack; no kneel before KNEELS; on his knees,
+        // bowed, holding still for at least 2 s before he dies.
+        RigPose lowered = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_SHATTER);
+        for (double age = AgentRules.REAPER_END_SHATTER; age <= AgentRules.REAPER_END_SHATTERED; age += 0.5) {
+            check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age), lowered),
+                "end tick " + age + ": he holds it still while it breaks");
+        }
+        RigPose slack = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_KNEELS);
+        check(Math.abs(slack.rightArmX - lowered.rightArmX) > 0.3 && slack.rightLegX == lowered.rightLegX,
+            "his arms fallen slack once the last piece is gone, before he goes down");
+        RigPose before = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_KNEELS);
+        check(before.rightLegX == lowered.rightLegX && before.drop == lowered.drop, "not kneeling before he goes down");
+        double still = AgentRules.REAPER_END_KNEELS + 14.0 + 30.0;
+        RigPose dying = com.hex.kagune.control.client.animation.ReaperBladePose.end(AgentRules.REAPER_END_TICKS);
+        check(AgentRules.REAPER_END_TICKS - still >= 40.0, "still on his knees, bowed, 2 s or more before he dies");
+        for (double age = still; age <= AgentRules.REAPER_END_TICKS; age += 0.5) {
+            check(samePose(com.hex.kagune.control.client.animation.ReaperBladePose.end(age), dying), "end tick " + age + ": he holds still");
+        }
+        for (double age = AgentRules.REAPER_END_KNEELS; age < still; age += 1.0) {
+            RigPose a = com.hex.kagune.control.client.animation.ReaperBladePose.end(age);
+            RigPose b = com.hex.kagune.control.client.animation.ReaperBladePose.end(age + 1.0);
+            check(Math.abs(b.drop - a.drop) <= 0.6 && Math.abs(b.rightLegX - a.rightLegX) <= 0.06 && Math.abs(b.headX - a.headX) <= 0.05,
+                "end tick " + age + ": he goes down slowly, no jolt");
+        }
+
+        // The server: Dawn out of his hand as the change begins and every tick of it; everything off him every tick of his end; a crack as
+        // each piece goes, the whole blade's sound with the last; nothing holding him.
+        String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+        int shed = brain.indexOf("private static boolean shed(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
+        int shedEnd = brain.indexOf("\n    }\n", shed);
+        int start = brain.indexOf("agent.swing(CcgAgent.SHED, now);", shed);
+        int firstLetGo = brain.indexOf("letGo(agent);", shed);
+        int tickPin = brain.indexOf("pin(agent, mind, level);", start);
+        check(shed > 0 && start > shed && firstLetGo > start && firstLetGo < brain.indexOf("return true;", start),
+            "Dawn out of his hand the tick the change begins");
+        check(tickPin > start && within(brain, tickPin, "letGo(agent);", 400) && brain.indexOf("letGo(agent);", tickPin) < shedEnd,
+            "and every tick it lasts");
+        int letGo = brain.indexOf("private static void letGo(CcgAgent agent) {");
+        check(within(brain, letGo, "agent.m_21008_(InteractionHand.MAIN_HAND, ItemStack.f_41583_);", 200),
+            "put by (his hand emptied, not dropped: no free Dawn mid-fight)");
+        check(brain.contains("AgentRules.changeAge(age) >= AgentRules.REAPER_SHED_SWAP"), "his look turns bare at the slowed key");
+        int ending = brain.indexOf("private static boolean ending(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
+        int endPin = brain.indexOf("pin(agent, mind, level);", ending);
+        check(ending > 0 && endPin > ending && within(brain, endPin, "cleanse(agent, level, now);", 400), "everything taken off him every tick of his end");
+        int cleanse = brain.indexOf("static void cleanse(CcgAgent agent, ServerLevel level, long now) {");
+        String body = cleanse > 0 ? brain.substring(cleanse, brain.indexOf("\n    }\n", cleanse)) : "";
+        check(body.contains("agent.m_21219_();") && body.contains("agent.m_20095_();") && body.contains("UkakuCrystalCombat.stanch(agent, level, now);")
+            && body.contains("PaleStun.clear(agent);") && body.contains("PaleKnockdown.clear(agent);"),
+            "every effect, his fire, the bleeding and spikes in him, a stun, a knockdown");
+        check(brain.contains("ReaperBladeRules.breaking(age)") && brain.contains("age >= AgentRules.REAPER_END_SHATTERED) {"),
+            "a crack as each piece goes; the whole blade's sound with the last");
+        String crystals = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/UkakuCrystalCombat.java"));
+        int stanch = crystals.indexOf("public static void stanch(LivingEntity body, ServerLevel level, long now) {");
+        check(within(crystals, stanch, "BLEEDS.remove(body.m_20148_())", 200) && within(crystals, stanch, "STUCK.remove(body.m_19879_())", 300)
+            && within(crystals, stanch, "body.m_21195_(KaguneEffects.BLEEDING.get());", 400)
+            && within(crystals, stanch, "dirty(level, body.m_19879_());", 500), "his bleeding stopped, the spikes out of him, clients told");
+        check(Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/PaleStun.java")).contains("STUNNED.remove(body.m_19879_());")
+            && Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/PaleKnockdown.java")).contains("DOWN.remove(body.m_19879_());"),
+            "a Pale's stun and knockdown let go of him");
+        String owl = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/EtoOwl.java"));
+        String child = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/ChildKagune.java"));
+        String ken = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/KenPullOut.java"));
+        String eto = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java"));
+        int owlFair = owl.indexOf("static boolean fair(EtoNpc npc, EtoBrain.Mind mind, LivingEntity body) {");
+        int childFair = child.indexOf("static boolean fair(LivingEntity living, LivingEntity threat) {");
+        int foe = eto.indexOf("public static boolean foe(EtoNpc npc, LivingEntity body) {");
+        check(within(owl, owlFair, "AgentBrain.untouchable(body)", 400), "a companion's arm never takes hold of him");
+        check(within(child, childFair, "AgentBrain.untouchable(living)", 500), "nor a child's kagune");
+        check(ken.contains("&& !AgentBrain.untouchable(e)"), "nor Ken's burst pushes him");
+        check(within(eto, foe, "if (AgentBrain.untouchable(body)) {", 300),
+            "no official NPC's foe: their worms and tendrils (Roma's impale) never hold him");
+        // Drawn slowed: the pose, the case and blade, the coat, all on the same slowed clock.
+        String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
+        String layer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperBladeLayer.java"));
+        String coatLayer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ReaperCoatLayer.java"));
+        check(client.contains("double shedAge = AgentRules.changeAge(CcgAgent.since(now, agent.swingAt()) + partial);")
+            && layer.contains("AgentRules.changeAge(CcgAgent.since(agent.m_9236_().m_46467_(), agent.swingAt()) + partial) - AgentRules.REAPER_SHED_TICKS")
+            && coatLayer.contains("age = AgentRules.changeAge(age);"), "his pose, the case and blade, and the coat all played on the slowed clock");
+        check(Files.readString(Path.of("verify/api-allowlist.txt")).contains("M net/minecraft/world/entity/LivingEntity m_21219_ ()Z")
+            && Files.readString(Path.of("stubs/net/minecraft/world/entity/LivingEntity.java")).contains("public boolean m_21219_()"),
+            "removeAllEffects proven (SRG) and stubbed");
     }
 
     /**
@@ -337,7 +563,7 @@ public final class AgentTests {
             "his blade before any of Dawn's moves");
         check(brain.contains("if (mind.shedAt != Long.MIN_VALUE || mind.bare || mind.dressAt != Long.MIN_VALUE) {") && brain.contains("UkakuCrystalCombat.agentBleed(body, agent, AgentRules.REAPER_BLADE_BLEED, now);"),
             "his hand empty in his second phase; every hit bleeds");
-        check(brain.contains("if (age >= AgentRules.REAPER_CHANGE_TICKS || age < 0L) {"), "nothing lands on him through the jacket and the draw");
+        check(brain.contains("if (age >= AgentRules.REAPER_CHANGE_REAL || age < 0L) {"), "nothing lands on him through the jacket and the draw (4.1.74: its slower length)");
         String renderer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java"));
         String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
         check(renderer.contains("new ReaperBladeLayer(this)") && client.contains("ReaperBladePose.draw(shedAge - AgentRules.REAPER_SHED_TICKS)")
@@ -412,14 +638,15 @@ public final class AgentTests {
     static void guarded() throws IOException {
         String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
         int rule = brain.indexOf("public static boolean untouchable(Entity body) {");
-        check(rule > 0 && brain.indexOf("!mind.finishing && (mind.shedAt != Long.MIN_VALUE || mind.endAt != Long.MIN_VALUE)", rule) - rule < 400,
+        check(rule > 0 && within(brain, rule, "&& !mind.finishing", 300)
+            && within(brain, rule, "&& (mind.shedAt != Long.MIN_VALUE || mind.endAt != Long.MIN_VALUE || mind.dressAt != Long.MIN_VALUE);", 400),
             "untouchable while he changes or ends (his end's own last blow let through)");
         int attacked = brain.indexOf("public static void attacked(LivingAttackEvent event) {");
-        check(attacked > 0 && brain.indexOf("if (untouchable(event.getEntity()) && !com.hex.kagune.control.GhoulTank.bypasses(", attacked) - attacked < 400,
+        check(attacked > 0 && within(brain, attacked, "if (untouchable(event.getEntity()) && !com.hex.kagune.control.GhoulTank.bypasses(", 400),
             "the attack itself cancelled (no knockback, red flash or sound), /kill and the void still taking him");
         int shed = brain.indexOf("private static boolean shed(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
         int end = brain.indexOf("private static boolean ending(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
-        check(brain.indexOf("pin(agent, mind, level);", shed) - shed < 2600 && brain.indexOf("pin(agent, mind, level);", end) - end < 400,
+        check(within(brain, shed, "pin(agent, mind, level);", 2600) && within(brain, end, "pin(agent, mind, level);", 400),
             "pinned where he stands, every tick of his change and of his end");
         int free = brain.indexOf("private static void free(CcgAgent agent, ServerLevel level) {");
         check(free > 0 && brain.indexOf("KaguneServerController.releaseHeldSlot(level, tails, slot)", free) > 0
@@ -432,7 +659,7 @@ public final class AgentTests {
         String arms = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/PlayerArms.java"));
         String patch = Files.readString(Path.of("patch/KagunePatch.java"));
         int spared = eto.indexOf("public static boolean spared(ServerPlayer player, LivingEntity body) {");
-        check(spared > 0 && eto.indexOf("if (AgentBrain.untouchable(body)) {", spared) - spared < 200
+        check(spared > 0 && within(eto, spared, "if (AgentBrain.untouchable(body)) {", 200)
             && patch.contains("patchSpared(controller, \"validSwipeTarget\");") && patch.contains("patchSpared(controller, \"isHostileTo\");"),
             "nobody's target: the original kagune's own checks (every grab, tail and swipe that asks them) say no");
         check(arms.contains("if (body == player || !body.m_6084_() || AgentBrain.untouchable(body)) {")
@@ -441,10 +668,10 @@ public final class AgentTests {
         int lands = brain.indexOf("private static void bladeLands(");
         int strike = brain.indexOf("private static void beginStrike(");
         int brawl = brain.indexOf("private static void brawlLands(");
-        check(brain.indexOf("KaguneClash.swing(agent, now, ReaperBladeRules.blow(step).impact()", blade) - blade < 900
-            && brain.indexOf("KaguneClash.meets(agent, prey, now)", lands) - lands < 500
-            && brain.indexOf("KaguneClash.swing(agent, now, strike.impact", strike) - strike < 900
-            && brain.indexOf("KaguneClash.meets(agent, target, now)", brawl) - brawl < 400,
+        check(within(brain, blade, "KaguneClash.swing(agent, now, ReaperBladeRules.blow(step).impact()", 900)
+            && within(brain, lands, "KaguneClash.meets(agent, prey, now)", 500)
+            && within(brain, strike, "KaguneClash.swing(agent, now, strike.impact", 900)
+            && within(brain, brawl, "KaguneClash.meets(agent, target, now)", 400),
             "his blade's blows and his hands' strikes can be met (KaguneClash): set out on the board, met at impact");
     }
 
@@ -497,11 +724,11 @@ public final class AgentTests {
         check(Math.abs(end.rightArmX) < 0.02 && Math.abs(end.leftArmX) < 0.02 && end.armHold < 0.05, "at rest at the end, into his first phase");
         String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
         int dress = brain.indexOf("private static boolean dress(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
-        check(dress > 0 && brain.indexOf("ago(now, mind.foughtAt) < AgentRules.REAPER_REDRESS_CALM", dress) - dress < 600
-            && brain.indexOf("ago(now, mind.hurtAt) < AgentRules.REAPER_REDRESS_CALM", dress) - dress < 700
-            && brain.indexOf("mind.prey != 0", dress) - dress < 500 && brain.indexOf("pin(agent, mind, level);", dress) - dress < 1300
-            && brain.indexOf("agent.getPersistentData().m_128473_(BARE);", dress) - dress < 1700
-            && brain.indexOf("agent.m_21153_(agent.m_21233_());", dress) - dress < 2100
+        check(dress > 0 && within(brain, dress, "ago(now, mind.foughtAt) < AgentRules.REAPER_REDRESS_CALM", 600)
+            && within(brain, dress, "ago(now, mind.hurtAt) < AgentRules.REAPER_REDRESS_CALM", 700)
+            && within(brain, dress, "mind.prey != 0", 500) && within(brain, dress, "pin(agent, mind, level);", 1300)
+            && within(brain, dress, "agent.getPersistentData().m_128473_(BARE);", 1700)
+            && within(brain, dress, "agent.m_21153_(agent.m_21233_());", 2100)
             && brain.contains("if (dress(agent, mind, level, now)) {")
             && brain.contains("|| mind.dressAt != Long.MIN_VALUE);"), "calm two minutes, pinned and untouchable, his first phase back and whole");
         String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
@@ -553,7 +780,7 @@ public final class AgentTests {
         // The server: before anything else, once; nothing lands while he does it; the jacket's state kept with him; faster.
         String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
         int act = brain.indexOf("private static void act(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
-        check(act > 0 && brain.indexOf("if (shed(agent, mind, level, now)) {", act) - act < 400
+        check(act > 0 && within(brain, act, "if (shed(agent, mind, level, now)) {", 400)
             && brain.indexOf("if (shed(agent, mind, level, now)) {", act) < brain.indexOf("if (BikakuDevour.held(agent)) {", act),
             "the shed comes before anything else he does (but his end, 4.1.31)");
         check(brain.contains("event.setCanceled(true); // 4.1.28") && brain.contains("AgentRules.shedClamp(health, event.getAmount())")
@@ -561,8 +788,8 @@ public final class AgentTests {
         check(brain.contains("agent.getPersistentData().m_128405_(BARE, 1);") && brain.contains("mind.bare = saved.m_128441_(BARE);")
             && brain.contains("mind.look = mind.bare ? AgentRules.REAPER_BARE_LOOK : AgentRules.REAPER_LOOK;"), "the jacket stays off, saved with him");
         int swap = brain.indexOf("mind.look = AgentRules.REAPER_BARE_LOOK;");
-        check(swap > 0 && brain.indexOf("agent.dress(mind.look, mind.kind);", swap) - swap < 200
-            && brain.indexOf(".m_22100_(speed(mind));", swap) - swap < 400, "the look sent to every client as it comes off, and his speed with it");
+        check(swap > 0 && within(brain, swap, "agent.dress(mind.look, mind.kind);", 200)
+            && within(brain, swap, ".m_22100_(speed(mind));", 400), "the look sent to every client as it comes off, and his speed with it");
         String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
         String renderer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java"));
         check(client.contains("return AgentPose.shed(shedAge);") && client.contains("AgentRules.reaperLook(agent.lookIndex())")

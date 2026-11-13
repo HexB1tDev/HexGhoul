@@ -1130,6 +1130,20 @@ final class UkakuCrystalCombat {
         return nextSpikeId++;
     }
 
+    /**
+     * 4.1.74 (the owner, of the White Reaper's end: "all effects like bleed etc are removed from him"): {@code body}'s bleeding stopped at
+     * once (its stacks and the original's effect gone) and the spikes stuck in it gone; the clients near it told.
+     */
+    public static void stanch(LivingEntity body, ServerLevel level, long now) {
+        boolean had = BLEEDS.remove(body.m_20148_()) != null;
+        had |= STUCK.remove(body.m_19879_()) != null;
+        body.m_21195_(KaguneEffects.BLEEDING.get());
+        if (had) {
+            dirty(level, body.m_19879_());
+            flushChanged(level, now);
+        }
+    }
+
     // ------------------------------------------------------------------ clients
 
     private static void dirty(Object level, int id) {

@@ -569,6 +569,9 @@ public final class ReaperBladePose {
      * lower the blade, its point to the ground before him ({@link #END_LOW}); it shatters ({@link AgentRules#REAPER_END_SHATTER}), his arms
      * fall to his sides, the broken hilt in his right hand; he goes down on his knees ({@link AgentRules#REAPER_END_KNEELS}: his legs folded
      * back, his hips sunk till his feet are on the ground: he has no knees to bend), leans forward, bows his head; held as he dies.
+     * 4.1.74 (the owner: "the blade slowly shatter, then he holds still for a bit then dies"): lowered more slowly; he holds it there, still,
+     * the whole time it breaks away piece by piece ({@link AgentRules#REAPER_END_SHATTER} .. {@link AgentRules#REAPER_END_SHATTERED}); only
+     * then his arms fall; he goes down slowly ({@link AgentRules#REAPER_END_KNEELING}) and holds still on his knees till he dies.
      */
     public static RigPose end(double age) {
         float lower = smooth(age / (AgentRules.REAPER_END_SHATTER - 1.0));
@@ -577,7 +580,7 @@ public final class ReaperBladePose {
             k[c] = GUARD[c] + (END_LOW[c] - GUARD[c]) * lower;
         }
         RigPose p = pose(k, 1.0F - lower, lower); // 4.1.37: from his one-handed guard, both hands on it as he lowers it
-        float drop = smooth((age - AgentRules.REAPER_END_SHATTER) / 4.0);
+        float drop = smooth((age - AgentRules.REAPER_END_SHATTERED) / 8.0);
         if (drop > 0.0F) {
             float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, -0.22F, 0.0F, 0.12F, drop);
             float[] left = QuinqueGrip.blendTurn(p.leftArmX, p.leftArmY, p.leftArmZ, 0.08F, 0.0F, -0.1F, drop);
@@ -592,8 +595,8 @@ public final class ReaperBladePose {
             p.weaponY = p.weaponY * (1.0F - drop);
             p.weaponZ = p.weaponZ * (1.0F - drop);
         }
-        float kneel = smooth((age - AgentRules.REAPER_END_KNEELS) / 9.0);
-        float bow = smooth((age - AgentRules.REAPER_END_KNEELS - 7.0) / 14.0);
+        float kneel = smooth((age - AgentRules.REAPER_END_KNEELS) / (double)AgentRules.REAPER_END_KNEELING);
+        float bow = smooth((age - AgentRules.REAPER_END_KNEELS - 14.0) / 30.0);
         p.rightLegX = p.rightLegX * (1.0F - kneel) + KNEEL * kneel;
         p.leftLegX = p.leftLegX * (1.0F - kneel) + KNEEL * kneel;
         p.rightLegZ *= 1.0F - kneel;

@@ -47,7 +47,9 @@ public final class AgentClient {
         // 4.1.28: the White Reaper taking his jacket off (AgentPose.shed), his hands empty; 4.1.29: then drawing the golden case from behind
         // his back and opening it into his blade (ReaperBladePose.draw).
         if (agent.swing() == CcgAgent.SHED) {
-            double shedAge = CcgAgent.since(now, agent.swingAt()) + partial;
+            // 4.1.74 (the owner: "I think same for the transformation animation, it goes by too quick, can barely see it"): its keys played
+            // AgentRules.REAPER_CHANGE_SLOW times slower.
+            double shedAge = AgentRules.changeAge(CcgAgent.since(now, agent.swingAt()) + partial);
             if (shedAge >= 0.0 && shedAge < AgentRules.REAPER_SHED_TICKS) {
                 return AgentPose.shed(shedAge);
             }

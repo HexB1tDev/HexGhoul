@@ -89,7 +89,8 @@ public final class KenPullOut {
         }
         UkakuFire.sound(level, back, "hexkagune:kagune_burst", 1.5F, 0.9F);
         UkakuFire.sound(level, back, "hexkagune:manifest_rip", 1.4F, 0.75F);
-        for (LivingEntity near : level.m_6443_(LivingEntity.class, player.m_20191_().m_82400_(2.5), e -> e != player && e.m_6084_())) {
+        for (LivingEntity near : level.m_6443_(LivingEntity.class, player.m_20191_().m_82400_(2.5), e -> e != player && e.m_6084_()
+            && !AgentBrain.untouchable(e))) { // 4.1.74: never the White Reaper through his change or his end
             Vec3 away = near.m_20182_().m_82546_(player.m_20182_());
             double flat = Math.sqrt(away.f_82479_ * away.f_82479_ + away.f_82481_ * away.f_82481_);
             if (flat < 1.0E-3) {

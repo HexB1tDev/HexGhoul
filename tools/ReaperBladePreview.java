@@ -19,7 +19,8 @@ import javax.imageio.ImageIO;
  *
  * <pre>
  * javac -nowarn -cp build/quick/classes:build/quick/base.jar -d build/reaper-preview tools/PoseRender.java tools/ReaperPreview.java tools/ReaperBladePreview.java
- * java -Djava.awt.headless=true -cp build/reaper-preview:build/quick/classes:build/quick/base.jar:src/main/resources ReaperBladePreview &lt;bare skin.png&gt; &lt;out.png&gt; guard|draw|string|shed|case|dress
+ * java -Djava.awt.headless=true -cp build/reaper-preview:build/quick/classes:build/quick/base.jar:src/main/resources ReaperBladePreview &lt;bare skin.png&gt; &lt;out.png&gt; guard|draw|string|shed|case|dress|end
+ * java ... ReaperBladePreview &lt;bare skin.png&gt; &lt;frames dir&gt; shedgif|endgif   (then: python3 tools/frames_gif.py &lt;frames dir&gt; &lt;out.gif&gt;)
  * </pre>
  */
 public final class ReaperBladePreview {
@@ -66,19 +67,63 @@ public final class ReaperBladePreview {
                 bare = PoseRender.skin;
                 coatSkin = ImageIO.read(new File(new File(args[0]).getParentFile(), "ccg_reaper.png"));
                 coatTexture = ImageIO.read(new File(new File(args[0]).getParentFile(), "reaper_coat.png"));
+                // 4.1.74: labelled in the world's seconds (the keys played AgentRules.REAPER_CHANGE_SLOW times slower).
                 for (double t : new double[] {0, 4, 8, 12, 15, 18, 21, 24, 26, 28, 30, 33, 37, 46}) {
-                    frames.add(shed(t, 30, 8, "jacket, tick " + (int)t));
+                    frames.add(shed(t, 30, 8, "jacket, " + seconds(t)));
                 }
                 for (double t : new double[] {6, 11, 16, 22, 28, 34, 38, 42, 46, 50, 54, 58}) {
-                    frames.add(shed(AgentRules.REAPER_SHED_TICKS + t, 30, 8, "then the case, tick " + (int)(AgentRules.REAPER_SHED_TICKS + t)));
+                    frames.add(shed(AgentRules.REAPER_SHED_TICKS + t, 30, 8, "then the case, " + seconds(AgentRules.REAPER_SHED_TICKS + t)));
                 }
-                frames.add(shed(AgentRules.REAPER_CHANGE_TICKS - 2, 30, 8, "ready, tick " + (AgentRules.REAPER_CHANGE_TICKS - 2)));
+                frames.add(shed(AgentRules.REAPER_CHANGE_TICKS - 2, 30, 8, "ready, " + seconds(AgentRules.REAPER_CHANGE_TICKS - 2)));
                 for (double t : new double[] {15, 21, 26, 30, 33, 46}) {
-                    frames.add(shed(t, 150, 12, "behind, tick " + (int)t));
+                    frames.add(shed(t, 150, 12, "behind, " + seconds(t)));
                 }
                 for (double t : new double[] {18, 24, 28, 37}) {
-                    frames.add(shed(t, 90, 6, "his left, tick " + (int)t));
+                    frames.add(shed(t, 90, 6, "his left, " + seconds(t)));
                 }
+            }
+            case "end" -> {
+                // 4.1.74: his whole end (ReaperBladePose.end; the blade cut at ReaperBladeRules.level, its shards from their own breaksAt).
+                cols = 6;
+                for (double t : new double[] {0, 6, 12, 19, 21, 26, 32, 38, 44, 50, 56, 62, 68, 74, 79, 82, 86, 92, 98, 104, 110, 130, 150, 169}) {
+                    frames.add(end(t, 30, 8, endLabel(t)));
+                }
+                for (double t : new double[] {19, 40, 64, 82, 98, 169}) {
+                    frames.add(end(t, -80, 6, "his right, " + endLabel(t)));
+                }
+            }
+            case "shedgif", "endgif" -> {
+                // 4.1.74: one frame per world tick (20 a second: real speed), front three-quarter beside his right side, written to the
+                // directory args[1] as frame-NNN.png (tools/frames_gif.py makes the GIF).
+                bare = PoseRender.skin;
+                coatSkin = ImageIO.read(new File(new File(args[0]).getParentFile(), "ccg_reaper.png"));
+                coatTexture = ImageIO.read(new File(new File(args[0]).getParentFile(), "reaper_coat.png"));
+                boolean change = mode.equals("shedgif");
+                int last = change ? AgentRules.REAPER_CHANGE_REAL + 12 : AgentRules.REAPER_END_TICKS + 6;
+                out.mkdirs();
+                for (int real = -6; real <= last; real++) {
+                    BufferedImage a;
+                    BufferedImage b;
+                    if (change) {
+                        double age = Math.max(0.0, Math.min(AgentRules.changeAge(real), AgentRules.REAPER_CHANGE_TICKS - 0.01));
+                        String text = String.format("%.2f s", real / 20.0);
+                        a = shed(age, 30, 8, text);
+                        b = shed(age, -80, 6, text);
+                    } else {
+                        double age = Math.max(0.0, Math.min(real, AgentRules.REAPER_END_TICKS));
+                        String text = String.format("%.2f s", real / 20.0) + (real >= AgentRules.REAPER_END_TICKS ? " (dies)" : "");
+                        a = end(age, 30, 8, text);
+                        b = end(age, -80, 6, text);
+                    }
+                    BufferedImage pair = new BufferedImage(2 * W, H, BufferedImage.TYPE_INT_RGB);
+                    Graphics2D g = pair.createGraphics();
+                    g.drawImage(a, 0, 0, null);
+                    g.drawImage(b, W, 0, null);
+                    g.dispose();
+                    ImageIO.write(pair, "png", new File(out, String.format("frame-%03d.png", real + 6)));
+                }
+                System.out.println("wrote " + out);
+                return;
             }
             case "case" -> {
                 // Every tick of the case in his hand, two sides: to judge its turn frame by frame.
@@ -108,6 +153,91 @@ public final class ReaperBladePreview {
     static java.awt.image.BufferedImage bare;
     static java.awt.image.BufferedImage coatSkin;
     static java.awt.image.BufferedImage coatTexture;
+
+    /** 4.1.74: key tick {@code t} of his change in the world's seconds (and the key's tick). */
+    static String seconds(double t) {
+        return String.format("%.2f s (key %d)", t * AgentRules.REAPER_CHANGE_SLOW / 20.0, (int)t);
+    }
+
+    /** 4.1.74: tick {@code t} of his end, in seconds, with what is happening. */
+    static String endLabel(double t) {
+        String what = t < AgentRules.REAPER_END_SHATTER ? "lowering" : t < AgentRules.REAPER_END_SHATTERED ? "breaking"
+            : t < AgentRules.REAPER_END_KNEELS ? "slack" : t < AgentRules.REAPER_END_KNEELS + AgentRules.REAPER_END_KNEELING ? "kneeling" : "still";
+        return String.format("%.2f s, %s", t / 20.0, what);
+    }
+
+    /**
+     * 4.1.74: {@code age} ticks into his end, as ReaperBladeLayer.ended draws it: his pose (ReaperBladePose.end), the blade cut at what is
+     * left of it (ReaperBladeRules.level), each shard from the tick it broke off, flying out and falling to lie flat on the ground.
+     */
+    static BufferedImage end(double age, double yaw, double pitch, String text) {
+        RigPose pose = ReaperBladePose.end(age);
+        List<PoseRender.Tri> tris = new ArrayList<>(PoseRender.model(pose));
+        ReaperPreview.chest(tris, pose, false);
+        endShards(tris, pose, age);
+        List<PoseRender.Tri> lit = new ArrayList<>();
+        List<Boolean> glows = new ArrayList<>();
+        double[] fist = {-1.0, 9.0, 0.0};
+        double[][] inArm = ReaperBladePose.inArm(pose);
+        add(lit, glows, ReaperBladeMesh.brokenAt(com.hex.kagune.control.npc.ReaperBladeRules.level(age)),
+            v -> PoseRender.point(pose, "rightArm", plus(fist, apply(inArm, v))));
+        PoseRender.Camera cam = PoseRender.orbit(yaw, pitch, 6.4, 1.0);
+        PoseRender.Canvas canvas = new PoseRender.Canvas(W, H, 2, cam, 0x3A4450);
+        canvas.floor(6, 0x58626C, 0x4E5862);
+        for (PoseRender.Tri t : tris) {
+            canvas.tri(t, true);
+        }
+        QuinqueMeshPreview.draw(canvas, lit, glows, cam.eye());
+        BufferedImage img = canvas.image();
+        Graphics2D g = img.createGraphics();
+        g.setColor(Color.WHITE);
+        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        g.drawString(text, 6, 16);
+        g.dispose();
+        return img;
+    }
+
+    /** 4.1.74: the shards as ReaperBladeLayer.shards places them (the model's frame, moved with his body), both faces drawn. */
+    static void endShards(List<PoseRender.Tri> tris, RigPose pose, double age) {
+        double ground = 24.0 - pose.drop - 0.05;
+        for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
+            double dt = age - com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);
+            if (dt < 0.0) {
+                continue;
+            }
+            double[][] s = ReaperBladePose.shard(i, dt);
+            double fall = 0.5 * com.hex.kagune.control.npc.ReaperBladeRules.SHARD_FALL * dt * dt;
+            double[] c = s[0];
+            double[] l = s[1];
+            double[] w = s[2];
+            double low = c[1] + fall + Math.abs(l[1]) * 0.5 + Math.abs(w[1]) * 0.5;
+            double y = c[1] + fall;
+            if (low > ground) {
+                y = ground - 0.1;
+                l = new double[] {l[0], 0.0, l[2]};
+                w = new double[] {w[0], 0.0, w[2]};
+                if (Math.hypot(l[0], l[2]) < 1.0E-3) {
+                    l = new double[] {0.6, 0.0, 0.0};
+                }
+                if (Math.hypot(w[0], w[2]) < 1.0E-3) {
+                    w = new double[] {0.0, 0.0, 0.3};
+                }
+            }
+            double[][] q = {{c[0] - l[0] * 0.5, y - l[1] * 0.5, c[2] - l[2] * 0.5}, {c[0] + w[0], y + w[1], c[2] + w[2]},
+                {c[0] + l[0] * 0.5, y + l[1] * 0.5, c[2] + l[2] * 0.5}, {c[0] - w[0], y - w[1], c[2] - w[2]}};
+            double[][] at = new double[4][];
+            for (int k = 0; k < 4; k++) {
+                at[k] = PoseRender.world(pose, q[k]);
+            }
+            int silver = i % 4 == 0 ? 0x9A0C16 : i % 3 == 0 ? 0xE8E9EB : 0xC9CBCE;
+            double[] n = PoseRender.norm(PoseRender.cross(PoseRender.sub(at[1], at[0]), PoseRender.sub(at[3], at[0])));
+            tris.add(new PoseRender.Tri(new double[][] {at[0], at[1], at[2]}, silver, n));
+            tris.add(new PoseRender.Tri(new double[][] {at[0], at[2], at[3]}, silver, n));
+            double[] back = PoseRender.scale(n, -1);
+            tris.add(new PoseRender.Tri(new double[][] {at[2], at[1], at[0]}, silver, back));
+            tris.add(new PoseRender.Tri(new double[][] {at[3], at[2], at[0]}, silver, back));
+        }
+    }
 
     /**
      * 4.1.37: {@code age} ticks into his change (the shed, then the draw): his look (the coat's, slim, before the swap; bare and wide after),

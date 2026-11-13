@@ -53,8 +53,11 @@ public final class ReaperCoatLayer extends RenderLayer<CcgAgent, PlayerModel<Ccg
                 if (age < 0.0) {
                     return;
                 }
-            } else if (!ReaperCoatPose.drawn(age)) {
-                return;
+            } else {
+                age = AgentRules.changeAge(age); // 4.1.74: his change played slower than its keys (AgentRules.REAPER_CHANGE_SLOW)
+                if (!ReaperCoatPose.drawn(age)) {
+                    return;
+                }
             }
             draw(pose, buffers.m_6299_(TYPE), light, agent, age, partial);
         } catch (RuntimeException failure) {

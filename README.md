@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.74 (HexGhoul): Arima's change and death slowed; Dawn out of his hand; nothing touches him as he dies (testing)
+
+See `.github/release-notes-4.1.74.md`. `AgentRules.REAPER_CHANGE_SLOW` (1.75), `REAPER_CHANGE_REAL`, `changeAge` (the change's keys played
+slower: `AgentClient`, `ReaperBladeLayer`, `ReaperCoatLayer`, `AgentBrain.shed`); `REAPER_END_SHATTER`/`SHATTERED`/`KNEELS`/`KNEELING`/`TICKS`
+(20/80/86/24/170); `ReaperBladeRules.shattered`, `remaining`, `breaksAt`, `breaking`, `level`; `ReaperBladeMesh.brokenAt`; `ReaperBladePose.end`
+(held still through the shatter); `AgentBrain.letGo` (Dawn put by through the change), `cleanse` (every effect, fire, bleeding and spikes,
+stun, knockdown off him each tick of his end); `untouchable` asked by `EtoOwl.fair`, `ChildKagune.fair`, `KenPullOut`, `EtoBrain.foe`.
+`AgentTests.reaperSlowed`. Renders `docs/handoff/arima-*-4.1.74.*` (`tools/ReaperBladePreview.java end|shedgif|endgif`, `tools/frames_gif.py`).
+
 ## 4.1.73 (HexGhoul): NPCs never in the ground; lag, structures and official NPCs checked (testing)
 
 See `.github/release-notes-4.1.73.md`. `Footing` (pure: `stand`, `UP` 3, `DOWN` 2, `INSIDE`, `stuck`); `server/NpcFooting` (`feet`, `put`, the guard on every NPC of the mod's every `EVERY` ticks); used by `UniqueNpcs.levelTick` (coming back), `EtoNpc.goHome`, `ChildNpc.goHome`, `Homeward.put`, `GhoulNpcBrain.accompany`; `tools/npc_spots.py` (every template's NPCs checked; the makers `exploration_structures.rest`, `companion_structures` set feet on a carpet's or slab's top); `AgentRules.look` (a lost partner looked for each 30 s). `NpcTests.footing`, `NpcTests.lag173`. Renders `docs/handoff/npc-spot-4.1.73.png`, `ccg-banner-4.1.73.png`.

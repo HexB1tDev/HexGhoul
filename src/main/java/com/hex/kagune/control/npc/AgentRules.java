@@ -100,8 +100,22 @@ public final class AgentRules {
      * the whole draw slower (the owner: "It's pretty too fast"), 36 ticks then, 62 now.
      */
     public static final int REAPER_CASE_DROPS = 48;
-    /** 4.1.28 + 4.1.29: the whole change, nothing landing on him through it. */
+    /** 4.1.28 + 4.1.29: the whole change, nothing landing on him through it (its keys' own ticks: {@link #REAPER_CHANGE_SLOW}). */
     public static final int REAPER_CHANGE_TICKS = REAPER_SHED_TICKS + REAPER_DRAW_TICKS;
+    /**
+     * 4.1.74 (the owner: "I think same for the transformation animation, it goes by too quick, can barely see it"): his whole change (the
+     * coat off, the golden case drawn and opened into his blade) played this many times slower than its keys: every tick above
+     * ({@link #REAPER_SHED_TICKS}, {@link #REAPER_DRAW_TICKS}, the case's, the coat's) is the animation's own; the world's are
+     * {@link #changeAge} of them. 5.4 seconds before, 9.5 now.
+     */
+    public static final double REAPER_CHANGE_SLOW = 1.75;
+    /** 4.1.74: the change's length in the world's ticks. */
+    public static final int REAPER_CHANGE_REAL = (int)Math.ceil(REAPER_CHANGE_TICKS * REAPER_CHANGE_SLOW);
+
+    /** 4.1.74: how far into its keys (their ticks) the change is {@code real} world ticks after it began. */
+    public static double changeAge(double real) {
+        return real / REAPER_CHANGE_SLOW;
+    }
 
     /**
      * 4.1.29 (the owner: "It is a heavy weapon, dual-handed, that deals massive damage and ... causes bleed whenever hit"): his blade's blows
@@ -120,9 +134,20 @@ public final class AgentRules {
      * shatters ({@link #REAPER_END_SHATTER}), he goes down on his knees, bows his head, and dies ({@link #REAPER_END_TICKS}).
      */
     public static final float REAPER_END_HEALTH = 6.0F;
-    public static final int REAPER_END_SHATTER = 9;
-    public static final int REAPER_END_KNEELS = 14;
-    public static final int REAPER_END_TICKS = 70;
+    /**
+     * 4.1.74 (the owner: "the death animation is too fast, during his death he should remain immortal and the blade slowly shatter, then he
+     * holds still for a bit then dies. during this death animation he's 100% immortal, ungrabbable and all effects like bleed etc are
+     * removed from him."): his end slowed and lengthened: the blade lowered to the ground over {@link #REAPER_END_SHATTER} ticks (9 before);
+     * from then it breaks, a piece at a time from its point to the hilt (ReaperBladeRules.breaksAt), the last at
+     * {@link #REAPER_END_SHATTERED} (all at once at 9 before); his arms fall slack, he goes down on his knees from
+     * {@link #REAPER_END_KNEELS} over {@link #REAPER_END_KNEELING} ticks, holds still, and dies at {@link #REAPER_END_TICKS} (3.5 seconds
+     * before, 8.5 now).
+     */
+    public static final int REAPER_END_SHATTER = 20;
+    public static final int REAPER_END_SHATTERED = 80;
+    public static final int REAPER_END_KNEELS = 86;
+    public static final int REAPER_END_KNEELING = 24;
+    public static final int REAPER_END_TICKS = 170;
 
     /** 4.1.31: a blow of {@code amount} on him at {@code health} with his blade: never below 1 (his end takes him, not the blow). */
     public static float endClamp(float health, float amount) {

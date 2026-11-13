@@ -49,7 +49,8 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
         RigPose posed = AgentModel.pose;
         double after = Double.NaN;
         if (agent.swing() == CcgAgent.SHED) {
-            double since = CcgAgent.since(agent.m_9236_().m_46467_(), agent.swingAt()) + partial - AgentRules.REAPER_SHED_TICKS;
+            // 4.1.74: the change played slower than its keys (AgentRules.REAPER_CHANGE_SLOW).
+            double since = AgentRules.changeAge(CcgAgent.since(agent.m_9236_().m_46467_(), agent.swingAt()) + partial) - AgentRules.REAPER_SHED_TICKS;
             if (since < AgentRules.REAPER_DRAW_TICKS) {
                 after = since;
             }
@@ -119,27 +120,35 @@ public final class ReaperBladeLayer extends RenderLayer<CcgAgent, PlayerModel<Cc
 
     /**
      * 4.1.31: his end ({@code age} ticks in): the whole blade until it shatters, then the broken hilt in his hand and its shards flown out
-     * from where the blade was, falling to the ground about him and lying there.
+     * from where the blade was, falling to the ground about him and lying there. 4.1.74 (the owner: "the blade slowly shatter"): a piece at a
+     * time from its point back to the stub: the blade cut at what is left of it (ReaperBladeRules.level), each shard flying off as the break
+     * reaches it.
      */
     private void ended(PoseStack pose, VertexConsumer out, CcgAgent agent, RigPose posed, double age, int light) {
         double[] fist = {-1.0, 9.0, 0.0};
-        boolean broke = age >= AgentRules.REAPER_END_SHATTER;
-        if (broke) {
-            shards(pose, out, age - AgentRules.REAPER_END_SHATTER, posed, light);
+        if (age >= AgentRules.REAPER_END_SHATTER) {
+            shards(pose, out, age, posed, light);
         }
         pose.m_85836_();
         this.m_117386_().f_102811_.m_104299_(pose);
         double[][] inArm = posed == null ? ReaperBladePose.HELD : ReaperBladePose.inArm(posed);
-        emit(pose, out, broke ? ReaperBladeMesh.broken() : ReaperBladeMesh.of(), inArm, fist, 1.0F, light);
+        emit(pose, out, ReaperBladeMesh.brokenAt(com.hex.kagune.control.npc.ReaperBladeRules.level(age)), inArm, fist, 1.0F, light);
         pose.m_85849_();
     }
 
-    /** 4.1.31: the shattered blade's shards, {@code dt} ticks after it broke (the model's frame): each a thin sliver, both sides drawn. */
-    static void shards(PoseStack pose, VertexConsumer out, double dt, RigPose now, int light) {
+    /**
+     * 4.1.31: the shattered blade's shards, {@code age} ticks into his end (the model's frame): each a thin sliver, both sides drawn. 4.1.74:
+     * each from the tick it breaks off (ReaperBladeRules.breaksAt), none before.
+     */
+    static void shards(PoseStack pose, VertexConsumer out, double age, RigPose now, int light) {
         Matrix4f at = pose.m_85850_().m_252922_();
         Matrix3f normals = pose.m_85850_().m_252943_();
         double ground = 24.0 - (now == null ? 0.0 : now.drop) - 0.05;
         for (int i = 0; i < com.hex.kagune.control.npc.ReaperBladeRules.SHARDS; i++) {
+            double dt = age - com.hex.kagune.control.npc.ReaperBladeRules.breaksAt(i);
+            if (dt < 0.0) {
+                continue; // still part of the blade
+            }
             double[][] s = ReaperBladePose.shard(i, dt);
             double fall = 0.5 * com.hex.kagune.control.npc.ReaperBladeRules.SHARD_FALL * dt * dt;
             double[] c = s[0];
