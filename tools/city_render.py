@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""4.1.35: an isometric picture of the Small City as the game gets it: its four quarters' 1.20.1 tiles
-(data/hexkagune/structures/small_city_<k>/), put back side by side, every block a small coloured cube seen from the south-east, lit from
-above (tops brightest, the south faces darker, the east faces darkest), painter's order through a depth buffer.
+"""4.1.35: an isometric picture of a tiled place as the game gets it (4.1.72: any site's tiles, data/hexkagune/structures/<site>/t_i_j.nbt,
+the hotel by default; the Small City it was written for is gone), put back side by side, every block a small coloured cube seen from the
+south-east, lit from above (tops brightest, the south faces darker, the east faces darkest), painter's order through a depth buffer.
 
-    python3 tools/city_render.py out.png [--scale N] [--box x0 z0 x1 z1] [--turn 0..3] [--people] [--placed T]
+    python3 tools/city_render.py out.png [--site ID] [--scale N] [--box x0 z0 x1 z1] [--turn 0..3] [--people] [--grass | --land]
+                                         [--roof Y] [--cut south|east]
 
---box renders only that part of the city (x, z from its north-west corner, 0 .. 544); --scale N makes each block N times bigger; --turn
-turns the city a quarter at a time (as the game turns a structure) before it is drawn; --people marks where its people stand.
-
---placed T (4.1.36): the city as the game builds it turned T: each quarter turned on its own and laid in the slot CityPlan gives it
-(slot_of below is CityPlan.slotOf), checked block for block against the whole city turned as one, and drawn on a stretch of grass.
+--box renders only that part of it (x, z from its north-west corner); --scale N makes each block N times bigger; --turn turns it a quarter
+at a time (as the game turns a structure) before it is drawn; --people marks where its people stand; --grass sets it on a stretch of grass,
+--land on rolling land with a river (fitted roughly as its terrain adaptation fits it); --roof Y leaves out everything from its layer Y up
+(see inside a storey); --cut south leaves out the southern half (east: the eastern half).
 """
 import sys
 from pathlib import Path
@@ -19,12 +19,9 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import library_structure as L  # noqa: E402
-from exploration_structures import splits  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "src" / "main" / "resources" / "data" / "hexkagune" / "structures"
-QUARTER = 272
-SIZE = 2 * QUARTER
 
 DYES = {"white": (233, 236, 236), "orange": (240, 118, 19), "magenta": (189, 68, 179), "light_blue": (58, 175, 217), "yellow": (248, 197, 39),
         "lime": (112, 185, 25), "pink": (237, 141, 172), "gray": (62, 68, 71), "light_gray": (142, 142, 134), "cyan": (21, 137, 145),
@@ -102,42 +99,53 @@ def _v(tag):
     return v[1] if isinstance(v, tuple) and len(v) == 2 and isinstance(v[1], list) else v
 
 
-def load_city(turn=0):
-    """The city as a (x, y, z) array of indices into names (0: air), x and z from its north-west corner; and its people."""
+def load_site(site="hotel", turn=0):
+    """
+    A tiled site as a (x, y, z) array of indices into names (0: air), x and z from its north-west corner; and its people (kind, x, y, z).
+    Each tile t_i_j sits after the tiles before it in its row and column (their sizes read from the tiles themselves).
+    """
+    folder = DATA / site
+    tiles = {}
+    for f in folder.glob("t_*_*.nbt"):
+        i, j = (int(v) for v in f.stem.split("_")[1:])
+        root = L.read(f)
+        tiles[i, j] = root.value if isinstance(root, L.Tag) else root
+    if not tiles:
+        raise SystemExit(f"no tiles in {folder}")
+    across = 1 + max(i for i, _ in tiles)
+    down = 1 + max(j for _, j in tiles)
+    size = {k: [_v(v) for v in _v(r["size"])] for k, r in tiles.items()}
+    xs = [0]
+    for i in range(across):
+        xs.append(xs[-1] + size[i, 0][0])
+    zs = [0]
+    for j in range(down):
+        zs.append(zs[-1] + size[0, j][2])
+    height = max(v[1] for v in size.values())
     names = ["minecraft:air"]
     index = {"minecraft:air": 0}
-    height = None
-    grid = None
+    grid = np.zeros((xs[-1], height, zs[-1]), dtype=np.uint16)
     people = []
-    for k in range(4):
-        folder = DATA / f"small_city_{k}"
-        qx, qz = (k % 2) * QUARTER, (k // 2) * QUARTER
-        xs, zs = splits(QUARTER), splits(QUARTER)
-        for i in range(len(xs) - 1):
-            for j in range(len(zs) - 1):
-                root = L.read(folder / f"t_{i}_{j}.nbt")
-                root = root.value if isinstance(root, L.Tag) else root
-                size = [_v(v) for v in _v(root["size"])]
-                if grid is None:
-                    height = size[1]
-                    grid = np.zeros((SIZE, height, SIZE), dtype=np.uint16)
-                pal = []
-                for p in _v(root["palette"]):
-                    n = _v(p["Name"])
-                    if n not in index:
-                        index[n] = len(names)
-                        names.append(n)
-                    pal.append(index[n])
-                for b in _v(root["blocks"]):
-                    x, y, z = (_v(v) for v in _v(b["pos"]))
-                    grid[qx + xs[i] + x, y, qz + zs[j] + z] = pal[_v(b["state"])]
-                for e in _v(root["entities"]):
-                    x, y, z = (_v(v) for v in _v(e["blockPos"]))
-                    people.append((_v(_v(e["nbt"])["id"]), qx + xs[i] + x, y, qz + zs[j] + z))
+    for (i, j), root in tiles.items():
+        pal = []
+        for p in _v(root["palette"]):
+            n = _v(p["Name"])
+            if n not in index:
+                index[n] = len(names)
+                names.append(n)
+            pal.append(index[n])
+        for b in _v(root["blocks"]):
+            x, y, z = (_v(v) for v in _v(b["pos"]))
+            grid[xs[i] + x, y, zs[j] + z] = pal[_v(b["state"])]
+        for e in _v(root["entities"]):
+            x, y, z = (_v(v) for v in _v(e["blockPos"]))
+            people.append((_v(_v(e["nbt"])["id"]), xs[i] + x, y, zs[j] + z))
+    w, d = grid.shape[0], grid.shape[2]
     for _ in range(turn % 4):
-        # A quarter turn clockwise seen from above (north up): x' = SIZE - 1 - z, z' = x.
-        grid = np.ascontiguousarray(np.rot90(grid, k=-1, axes=(0, 2)))
-        people = [(kind, SIZE - 1 - z, y, x) for kind, x, y, z in people]
+        # A quarter turn clockwise seen from above (north up), as the game turns a template: x' = (d - 1) - z, z' = x.
+        grid = turned(grid, 1)
+        people = [(kind, d - 1 - z, y, x) for kind, x, y, z in people]
+        w, d = d, w
     return grid, names, people
 
 
@@ -151,38 +159,6 @@ def turned(grid, t):
     if t == 3:
         return np.ascontiguousarray(grid[::-1, :, :].transpose(2, 1, 0))
     return grid
-
-
-def turn_point(dx, dz, t):
-    """VillageRules.turn."""
-    return [(dx, dz), (-dz, dx), (-dx, -dz), (dz, -dx)][t % 4]
-
-
-def turned_least(w, d, t):
-    """SiteMaps.turnedLeast."""
-    return [(0, 0), (-(d - 1), 0), (-(w - 1), -(d - 1)), (0, -(w - 1))][t % 4]
-
-
-def slot_of(k, t):
-    """CityPlan.slotOf: the slot (0 NW, 1 NE, 2 SW, 3 SE) quarter k lands in, the city turned t."""
-    qx, qz = (k & 1) * QUARTER, (k >> 1) * QUARTER
-    a = turn_point(qx, qz, t)
-    b = turn_point(qx + QUARTER - 1, qz + QUARTER - 1, t)
-    least = turned_least(SIZE, SIZE, t)
-    return (min(a[0], b[0]) - least[0]) // QUARTER + 2 * ((min(a[1], b[1]) - least[1]) // QUARTER)
-
-
-def placed(grid, t):
-    """The city as the game lays it turned t: each quarter turned alone, in its slot; and it must equal the whole city turned."""
-    out = np.zeros_like(grid)
-    for k in range(4):
-        qx, qz = (k & 1) * QUARTER, (k >> 1) * QUARTER
-        s = slot_of(k, t)
-        sx, sz = (s & 1) * QUARTER, (s >> 1) * QUARTER
-        out[sx:sx + QUARTER, :, sz:sz + QUARTER] = turned(grid[qx:qx + QUARTER, :, qz:qz + QUARTER], t)
-    assert sorted(slot_of(k, t) for k in range(4)) == [0, 1, 2, 3], t
-    assert np.array_equal(out, turned(grid, t)), f"turn {t}: the quarters laid in their slots differ from the city turned whole"
-    return out
 
 
 def on_grass(grid, names, margin=40, ground=6):
@@ -333,18 +309,38 @@ def render(grid, names, out, scale=1, box=None, people=(), sky=(132, 166, 204)):
     return picture
 
 
+def ground_of(site):
+    """The site's street level (its slab's or ground's top layer: SiteMaps' ground), read from SiteMaps.java."""
+    import re
+    text = (ROOT / "src/main/java/com/hex/kagune/control/village/SiteMaps.java").read_text()
+    found = re.search(r'new Site\("' + re.escape(site) + r'", \d+, \d+, \d+, \d+, (\d+),', text)
+    return int(found.group(1)) if found else 6
+
+
 def main():
     args = sys.argv[1:]
     out = args[0]
+    site = args[args.index("--site") + 1] if "--site" in args else "hotel"
     scale = int(args[args.index("--scale") + 1]) if "--scale" in args else 1
     box = tuple(int(v) for v in args[args.index("--box") + 1:args.index("--box") + 5]) if "--box" in args else None
     turn = int(args[args.index("--turn") + 1]) if "--turn" in args else 0
-    grid, names, people = load_city(turn)
-    if "--placed" in args:
-        t = int(args[args.index("--placed") + 1])
-        grid = on_land(placed(grid, t), names) if "--land" in args else on_grass(placed(grid, t), names)
-        people = ()
-        print(f"turn {t}: the four quarters in slots {[slot_of(k, t) for k in range(4)]} (quarter 0..3), identical to the city turned whole")
+    grid, names, people = load_site(site, turn)
+    if "--roof" in args:
+        grid[:, int(args[args.index("--roof") + 1]):, :] = 0
+    if "--cut" in args:
+        cut = args[args.index("--cut") + 1]
+        if cut == "south":
+            grid[:, :, grid.shape[2] // 2:] = 0
+        else:
+            grid[grid.shape[0] // 2:, :, :] = 0
+    margin = 0
+    if "--grass" in args:
+        margin = 40
+        grid = on_grass(grid, names, margin, ground_of(site))
+    elif "--land" in args:
+        margin = 64
+        grid = on_land(grid, names, margin)
+    people = [(k, x + margin, y, z + margin) for k, x, y, z in people]
     render(grid, names, out, scale, box, people if "--people" in args else ())
     print(out)
 

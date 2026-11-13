@@ -90,7 +90,7 @@ public final class DryLand {
 
     /**
      * 4.1.44: a big place's ground (its streets' or floor's first free height) over {@code sizeX} x {@code sizeZ} from ({@code minX},
-     * {@code minZ}), as the Small City judges its own (CityPlan.land): {@code n} x {@code n} levels (the top of the ground or of the water over
+     * {@code minZ}) (as 4.1.36's Small City judged its own): {@code n} x {@code n} levels (the top of the ground or of the water over
      * it) rising and falling no more than {@code flat}, their middle (never under the sea's level, 64); water no deeper than {@code deep} at
      * any of them or at any column every 32 blocks; no sea's or steep biome at any column every 16. {@link Integer#MIN_VALUE} if not.
      */
@@ -270,7 +270,7 @@ public final class DryLand {
      * spot of the hideout's or a village's.
      */
     static int[][] offers(long seed, int salt, int inner, int outer, boolean apart) {
-        // 4.1.36: the villages' spots are gone; the Small City is kept clear of where it is really built (ControlStructures.inCity).
+        // 4.1.36: the villages' spots are gone; 4.1.72: the hotels are kept clear of where they may stand (ControlStructures.inHotel).
         Spread[] keep = apart ? new Spread[] {fixed(seed, SPACING, SEPARATION, SALT)} : new Spread[0];
         return offers(fixed(seed, SPACING, SEPARATION, salt), inner, outer, keep, CCG_APART);
     }
@@ -345,18 +345,16 @@ public final class DryLand {
     public static final int CCG_SALT = 1873602245;
     public static final int CCG_APART = 12;
     /**
-     * 4.1.36: the Small City's set (data/hexkagune/worldgen/structure_set/small_city.json, its own placement hexkagune:city with these
-     * numbers: {@link CityPlan}). It replaces the villages' (34, 20). A region of 48 chunks holds at most one city (34 chunks wide, its
-     * offer moved at most 12): no two ever touch; one a region at most, on dry, fairly flat land only: rarer than a vanilla village (34).
+     * 4.1.72 (the owner: "from now on the small city is gone, erased."; the Small City's set and its numbers, 4.1.36's, gone with it): the
+     * hotels' set (data/hexkagune/worldgen/structure_set/hotel.json) offers every chunk (spacing 1): a hotel starts only at the one chunk
+     * beside a village HotelPlan says (ControlStructures.Site's hotel), so its own spread is no rule of where it stands; its salt its own.
      */
-    public static final int CITY_SPACING = 48;
-    public static final int CITY_SEPARATION = 36;
-    public static final int CITY_SALT = 1873602250;
+    public static final int HOTEL_SALT = 1873602250;
     /**
-     * 4.1.36: how far (chunks) a one-of-a-kind place's start chunk is kept outside a Small City that is built (its square of chunks): the
-     * widest place's half (the hideout's, 9) and one more.
+     * 4.1.36: water no deeper than this (blocks over its bed) may lie under a big place (the hideout, 4.1.72: a hotel): a river, a swamp's
+     * pools, a pond; not a lake or a sea (the owner, of the Small City: "that city should be able to go over rivers"). 4.1.72: moved here.
      */
-    public static final int CITY_MARGIN = 10;
+    public static final int DEEP = 8;
 
     /** 4.1.4: true if the start chunk ({@code x}, {@code z}) is within {@code apart} chunks of an offer of the random spread with these numbers. */
     public static boolean near(long seed, int x, int z, int apart, int spacing, int separation, int salt) {

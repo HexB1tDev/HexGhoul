@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.72 (HexGhoul): the hotel replaces the Small City (testing)
+
+See `.github/release-notes-4.1.72.md`. The Small City's structure (`hexkagune:small_city`), placement (`hexkagune:city`), tiles and `CityPlan` gone (its maps kept in `RetiredSites` for an older world's people); the owner's `art/exploration/humanhotel.schem` as `hexkagune:hotel` (`tools/exploration_structures.py` site "hotel", `patrol_sky`; `structures/hotel/t_*.nbt`, `worldgen/structure/hotel.json`, `worldgen/structure_set/hotel.json`); `village/HotelPlan` (pure: `chosen`, `first`/`side` the first side clear of other villages, `hotelOf`, `DISTANCE` 14, `CLEAR_OF`, `APART`, `offersNear`/`scan`, `near`, `onPlains`); `ControlStructures` (`Site.hotel`/`hotelAt`, `villages`, `villageOffers`, `village`, `inHotel`, `PLAINS`, `plains`); `tags/worldgen/biome/plains.json`; `DryLand.DEEP`, `HOTEL_SALT`. `NpcTests.hotel`. Renders `tools/city_render.py` (any tiled site), `tools/hotel_render.py village|street`; `docs/handoff/hotel-*-4.1.72.png`. Protocol 126.
+
 ## 4.1.71 (HexGhoul): the CCG, joined through the General (testing)
 
 See `.github/release-notes-4.1.71.md`. `GangPlayer.CCG` (5; `generalStep`, `ghoulKills`; `sworn`, `killedGhoul`, `ccgDone`; `BRIEFCASE` U+E004, `CCG_CYAN`, `CCG_DAMAGE`; `of`: the division is the CCG's); `GangServer` (`general()` the chain, `generalDaily`, `leads`/`gangOf`/`memberOf`/`gives` the General, `hunted`, `ccgStance`, `ghoul`, the damage in `fought`, `nameTag`, `inHideout` the tower, `giveMask` the issued case, `died` kills and reputation); `GangDaily` (`CCG_GHOULS`, `CCG_GANGS`, `CCG_PAPER`, the CCG's pay, `PAPER`, `ISSUED_CASE`); `GangWords` (the General's words, `GENERAL_WHY`); `AgentBrain.wanted`/`reveal`/`hurt`; `GhoulNpcBrain.wanted`; `NpcTalkView.GANG_COLOURS`; emblem `tools/gang_emblems.py`. `NpcTests.ccg`. `tools/UiPreview.java ccg`. Renders `docs/handoff/ccg-*-4.1.71.png`. Protocol 125.

@@ -4,9 +4,13 @@ and v3), to 1.20.1 structure templates cut into tiles, with the people who live 
 
     python3 tools/exploration_structures.py --blocks blocks.json
 
-  art/city/small-city.zip               -> hexkagune:small_city      4.1.35/4.1.36: the owner's Small City, four quarters
-                                                                       (small_city_0 .. 3, tools/city_structure.py); it replaced
-                                                                       village_1 (the human town) and village_2 (the CCG settlement)
+  art/exploration/humanhotel.schem      -> hexkagune:hotel           4.1.72: the owner's hotel (the owner: "from now on the small city
+                                                                       is gone, erased. / From now on close to a village will be an hotel
+                                                                       where humans work, live and walk around doing their own thing. /
+                                                                       CCG patrols around the hotel at all times."): humans at home in it,
+                                                                       investigators on patrol round it; beside some villages
+                                                                       (ControlStructures, HotelPlan). The Small City (4.1.35, maps 7 to 10)
+                                                                       is no longer made: village/RetiredSites keeps its maps.
   art/exploration/aogiri_mansion.schem  -> hexkagune:aogiri_hideout  the Aogiri Tree hideout (4.0.2: the owner's mansion, replacing
                                                                        hideout_ougiri.schem: its guards, its patrol, its members, Ayato
                                                                        and Noro in rooms of their own)
@@ -80,16 +84,16 @@ SITES = [
      "rooms": {"hexkagune:general": (23, 58, 25)}, "boss_office": (22, 24, 26, 31)},
 ]
 
-# 4.1.35 (the owner: "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City""): the city, 544 x 544,
-# cut by tools/city_structure.py into four 272 x 272 quarters (0 north-west, 1 north-east, 2 south-west, 3 south-east: what one structure can
-# place) on the city's one ground (its schematics' layer 6, the world's y 64), placed side by side by ControlStructures. Its people: humans
-# at home and investigators on patrol in every quarter.
-import city_structure  # noqa: E402
-
-CITY_GROUND = 6
-for _k in range(4):
-    SITES.append({"id": f"small_city_{_k}", "source": str(city_structure.OUT / f"small_city_{_k}.schem"), "map": 7 + _k, "crop_x": None,
-                  "kind": "human", "houses": 12, "agents": 2, "ring": (24, 110), "loot_every": 7, "ground": CITY_GROUND, "city": True})
+# 4.1.72 (the owner, with art/exploration/humanhotel.schem: "To-do list addition: / from now on the small city is gone, erased. / From now on
+# close to a village will be an hotel where humans work, live and walk around doing their own thing. / CCG patrols around the hotel at all
+# times."; they chose "Beside some villages"): the owner's hotel, saved by 1.16.5 (Sponge v2), 191 x 233 x 196, its layers over 193 empty
+# (left off). It stands on a slab of stone (its layers 3 to 11, a basement of corridors and rooms cut into it), on a superflat's dirt and
+# grass (layers 0 to 2, left to the world's); its roads and forecourt are the slab's top (layer 11), its people walk on 12. Its stone is
+# kept down to layer 3 (keep 8) and the basement's air written in (hollow_below), so the world's ground fills neither. Homes in its rooms
+# off the street (two humans each), six investigators on the patrol round it (the roads either side and the forecourt; the tower's back
+# stands at the file's edge), every stop of it under the open sky (patrol_sky: not in its great hall, whose ceiling is 12 up).
+SITES.append({"id": "hotel", "source": "humanhotel.schem", "map": 12, "crop_x": None, "kind": "human", "houses": 10, "agents": 6,
+              "ring": (55, 125), "loot_every": 7, "ground": 11, "top": 194, "keep": 8, "hollow_below": True, "patrol_sky": True})
 
 # 1.20.1 has none of these (1.20.3 to 1.21.9): each one's nearest, and the properties it keeps.
 SWAPS = {
@@ -192,6 +196,9 @@ def convert(state, registry):
     name, props = parse(state)
     if name in AIR or name in DROP:
         return None
+    if name == "minecraft:cauldron" and props.get("level", "0") != "0":
+        # 4.1.72: before 1.17 a cauldron held its water as a level; 1.20.1's is a water cauldron.
+        name, props = "minecraft:water_cauldron", {"level": props["level"]}
     if name in SWAPS:
         new, keeps, *fixed = SWAPS[name]
         props = {k: v for k, v in props.items() if k in keeps}
@@ -240,7 +247,14 @@ def sign_line(line):
 
 def block_entity(kind, inner, loot, seed):
     out = {"id": L.s(kind)}
-    if kind in ("minecraft:sign", "minecraft:hanging_sign"):
+    if kind == "minecraft:sign" and "Text1" in inner:
+        # 4.1.72: a sign saved before 1.20 (the hotel's: Text1 to Text4, Color): its words on its front, its back blank.
+        lines = [sign_line(val(inner.get(f"Text{i}", ""))) for i in range(1, 5)]
+        out["front_text"] = L.compound(messages=L.strings(*lines), color=L.s(val(inner.get("Color", "black"))),
+                                       has_glowing_text=L.Tag(L.BYTE, val(inner.get("GlowingText", 0))))
+        out["back_text"] = L.compound(messages=L.strings(*[sign_line("")] * 4), color=L.s("black"), has_glowing_text=L.Tag(L.BYTE, 0))
+        out["is_waxed"] = L.Tag(L.BYTE, 0)
+    elif kind in ("minecraft:sign", "minecraft:hanging_sign"):
         for side in ("front_text", "back_text"):
             t = {k: val(v) for k, v in val(inner[side]).items()} if side in inner else {}
             lines = [sign_line(val(m)) for m in (val(t["messages"])[1] if "messages" in t else ["", "", "", ""])]
@@ -253,6 +267,10 @@ def block_entity(kind, inner, loot, seed):
             q = {k: val(v) for k, v in val(q).items()}
             patterns.append({"Pattern": L.s(BANNER_CODES[q["pattern"]]), "Color": L.Tag(L.INT, DYES.index(q["color"]))})
         out["Patterns"] = L.Tag(L.LIST, (L.COMPOUND, patterns))
+    elif kind == "minecraft:banner" and "Patterns" in inner:
+        out["Patterns"] = inner["Patterns"]  # 4.1.72: saved before 1.20.5 (the hotel's): already 1.20.1's
+    elif kind == "minecraft:skull" and "SkullOwner" in inner:
+        out["SkullOwner"] = inner["SkullOwner"]  # 4.1.72: a player head's owner and texture (the hotel's furniture heads), as 1.20.1 keeps it
     elif kind in CONTAINERS or kind in ("minecraft:furnace", "minecraft:blast_furnace", "minecraft:smoker", "minecraft:hopper",
                                         "minecraft:dispenser", "minecraft:dropper", "minecraft:campfire", "minecraft:soul_campfire"):
         out["Items"] = L.Tag(L.LIST, (L.COMPOUND, []))
@@ -344,13 +362,21 @@ def build(site, registry):
     street = ground + 1
     middle = (width // 2, street, d // 2)
 
-    # What goes in the tiles: all but the natural ground more than KEEP under the place's own ground.
-    out = {p: c for p, c in cells.items() if p[1] >= ground - KEEP or c[0] not in NATURAL}
+    # What goes in the tiles: all but the natural ground more than KEEP (4.1.72: the site's own "keep") under the place's own ground.
+    keep = site.get("keep", KEEP)
+    out = {p: c for p, c in cells.items() if p[1] >= ground - keep or c[0] not in NATURAL}
+    if site.get("hollow_below"):
+        # 4.1.72: the hotel's basement, cut into its own stone: every air under its ground, down to what is kept, written as air.
+        for x in range(width):
+            for z in range(d):
+                for y in range(max(0, ground - keep), ground + 1):
+                    if (x, y, z) not in cells:
+                        out[(x, y, z)] = ("minecraft:air", {})
     # Air at or under its ground where it is open from above (a sunken yard, a pool's basin, a pit): the world's ground, filled up to the
     # place's own ground under it, must not fill these.
     for x in range(width):
         for z in range(d):
-            for y in range(ground + 1, ground - KEEP - 1, -1):
+            for y in range(ground + 1, ground - keep - 1, -1):
                 if y < 0 or (x, y, z) in cells:
                     break
                 out[(x, y, z)] = ("minecraft:air", {})
@@ -366,6 +392,9 @@ def build(site, registry):
     rel = lambda p: math.hypot(p[0] - middle[0], p[2] - middle[2])  # noqa: E731
     lo, hi = site["ring"]
     ring = [p for p in streets if lo <= rel(p) <= hi and abs(p[1] - street) <= 3]
+    if site.get("patrol_sky"):
+        # 4.1.72: the hotel's patrol round it, outside under the open sky (its great hall's ceiling, 12 up, is over roofed's reach).
+        ring = [p for p in ring if not any(name((p[0], yy, p[2])) not in OPEN for yy in range(p[1] + 2, h))]
     route, last = [], None
     for p in sorted(ring, key=lambda p: math.atan2(p[2] - middle[2], p[0] - middle[0])):
         a = math.degrees(math.atan2(p[2] - middle[2], p[0] - middle[0]))
@@ -849,8 +878,6 @@ def main():
     registry = None
     if "--blocks" in sys.argv:
         registry = Registry(sys.argv[sys.argv.index("--blocks") + 1])
-    ground, y0 = city_structure.make()
-    assert ground - y0 == CITY_GROUND, (ground, y0)
     results = [build(site, registry) for site in SITES]
     java(results)
     for r in results:

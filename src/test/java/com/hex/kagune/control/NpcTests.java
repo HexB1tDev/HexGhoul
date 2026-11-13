@@ -56,7 +56,7 @@ public final class NpcTests {
         mansion();
         dryLand();
         ccgBuilding();
-        smallCity();
+        hotel();
         cityFixes();
         worldgen();
         sitePrep();
@@ -2636,7 +2636,8 @@ public final class NpcTests {
             try (java.util.stream.Stream<java.nio.file.Path> tags = java.nio.file.Files.walk(data.resolve("tags/worldgen/biome"))) {
                 java.util.List<String> left = tags.filter(java.nio.file.Files::isRegularFile).map(f -> data.resolve("tags/worldgen/biome").relativize(f).toString())
                     .sorted().toList();
-                check(left.equals(List.of("overworld.json", "steep.json", "wet.json")), "no place's own biome list is left (4.1.42: the steep ones kept out): " + left);
+                check(left.equals(List.of("overworld.json", "plains.json", "steep.json", "wet.json")),
+                    "no place's own biome list is left (4.1.42: the steep ones kept out; 4.1.72: the hotel's plains): " + left);
             }
             check(wetTag.contains("\"#forge:is_swamp\"") && wetTag.contains("\"#forge:is_water\"") && wetTag.contains("\"#c:is_swamp\"")
                 && wetTag.contains("\"biomesoplenty:marsh\"") && wetTag.split("\"required\": false").length > 10,
@@ -2754,7 +2755,7 @@ public final class NpcTests {
             && com.hex.kagune.control.village.DryLand.apart(5, 5, List.of(), 12), "apart: at least that many chunks from each");
         // Their numbers, each its own salt, the same as their sets'.
         java.util.Set<Integer> salts = new java.util.HashSet<>(List.of(com.hex.kagune.control.village.DryLand.SALT, com.hex.kagune.control.village.DryLand.CCG_SALT,
-            com.hex.kagune.control.village.DryLand.CITY_SALT));
+            com.hex.kagune.control.village.DryLand.HOTEL_SALT));
         check(List.of(com.hex.kagune.control.village.DryLand.PLACES).equals(List.of("anteiku", "library", "reaper_mansion", "circus",
             "gas_hideout")), "the six jigsaw places, in the order chosen (4.1.24: the White Reaper's mansion; 4.1.48: the circus tent; 4.1.54: the "
             + "Gas Masks' hideout last)");
@@ -2809,8 +2810,8 @@ public final class NpcTests {
                 }
                 check(sorted && com.hex.kagune.control.village.DryLand.placeFurther(42L, place).length > offers.length, place + ": its offers nearest the middle first");
             }
-            check(com.hex.kagune.control.village.DryLand.placeSalt("small_city") < 0 && com.hex.kagune.control.village.DryLand.placeSalt(null) < 0,
-                "the Small City is not one of a kind");
+            check(com.hex.kagune.control.village.DryLand.placeSalt("hotel") < 0 && com.hex.kagune.control.village.DryLand.placeSalt(null) < 0,
+                "4.1.72: the hotels are not one of a kind");
             try (java.util.stream.Stream<java.nio.file.Path> sets = java.nio.file.Files.list(data.resolve("worldgen/structure_set"))) {
                 for (java.nio.file.Path file : sets.sorted().toList()) {
                     String json = new String(java.nio.file.Files.readAllBytes(file));
@@ -2819,7 +2820,8 @@ public final class NpcTests {
             }
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
             int overrides = structures.split("public Optional<Structure.GenerationStub> m_262864_\\(Structure.GenerationContext context\\) \\{\n            return this.m_214086_\\(context\\);").length - 1;
-            check(overrides == 4, "the jigsaw village, every site, every jigsaw place and the Small City leave the game's biome-list test out (" + overrides + ")");
+            check(overrides == 3, "the jigsaw village, every site (4.1.72: the hotels too) and every jigsaw place leave the game's biome-list test out ("
+                + overrides + ")");
             check(structures.contains("return !biome.m_203656_(WET) && !biome.m_203656_(STEEP);") && !structures.contains("return context.f_226630_().test(biome);"),
                 "a place stands in any biome but a wet one (4.1.42: or a steep one)");
             // 4.1.14 (the owner: "Fix structures still not spawning at all or able to be located (still not spawning)"): no one chunk a world
@@ -2830,9 +2832,9 @@ public final class NpcTests {
                 && !structures.contains("if (!offered(context, placeSpread(context, id))) {")
                 && structures.contains("Optional<Structure.GenerationStub> stub = this.flattest(context);"),
                 "a jigsaw place stands at any spot of its set where it lays out on dry, flat land (4.1.42: the flattest), until one is built (4.1.43: /place too, never a second)");
-            check(structures.contains("if (inCity(context, x, z) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)")
+            check(structures.contains("if (inHotel(context, x, z) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)")
                 && structures.contains("x, z, DryLand.PLACE_APART)) {") && structures.contains("if (!other.equals(id) && DryLand.near(placeSpread(context, other), x, z, DryLand.PLACE_APART)) {"),
-                "kept clear of the hideout's, the CCG building's, the other places' spots and the Small City");
+                "kept clear of the hideout's, the CCG building's, the other places' spots and the hotels (4.1.72)");
             check(structures.contains("if (id == null) {\n                return Optional.empty();"), "a place whose name can't be read is never built many times over");
             // 4.1.14: nothing worked out once a world any more (whatever stopped the world's one chunk left the world without it).
             check(!structures.contains("chosen(context, id)") && !structures.contains("= hideout(context)") && !structures.contains("= ccg(context)")
@@ -3190,25 +3192,31 @@ public final class NpcTests {
         int minX = 1000;
         int minZ = -2000;
         com.hex.kagune.control.village.DryLand.Ground flat = Land.of((x, z) -> 70);
-        check(com.hex.kagune.control.village.CityPlan.land(flat, minX, minZ) == 70, "flat land holds a city, on it");
-        // A valley 25 deep and 40 wide across the city, between two of the old 9 x 9 sample lines (every ~67 blocks: 2, 69, 136 ...).
+        // 4.1.72: the Small City's own judge (CityPlan) is gone with it; a hotel's land is judged as the hideout's (DryLand.land over its
+        // 191 x 196, 9 x 9 levels, ControlStructures.HIDEOUT_FLAT 14, DryLand.DEEP 8: ControlStructures.Site.hotelAt).
+        int hx = 191;
+        int hz = 196;
+        int deep = com.hex.kagune.control.village.DryLand.DEEP;
+        check(deep == 8, "a big place's water no deeper than 8 (a river, a swamp's pools), moved to DryLand with the city gone: " + deep);
+        check(com.hex.kagune.control.village.DryLand.land(flat, minX, minZ, hx, hz, 9, 14, deep) == 70, "flat land holds a hotel, on it");
+        // A valley 25 deep and 40 wide across it: the 9 levels a side are 23 blocks apart, so one always falls in it.
         java.util.function.IntBinaryOperator valley = (x, z) -> x >= minX + 90 && x < minX + 130 ? 45 : 70;
-        int[] old = new int[81];
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                old[i * 9 + j] = valley.applyAsInt(minX + 2 + 539 * i / 8, minZ + 2 + 539 * j / 8);
-            }
-        }
-        check(com.hex.kagune.control.village.CityPlan.ground(old) == 70, "(the old 9 x 9 samples never saw that valley: the city hung over it)");
-        check(com.hex.kagune.control.village.CityPlan.land(Land.of(valley), minX, minZ) == Integer.MIN_VALUE, "a valley across it: no city there");
-        check(com.hex.kagune.control.village.CityPlan.land(Land.of((x, z) -> 70 + (x - minX) * 30 / 544), minX, minZ) == Integer.MIN_VALUE,
-            "a hillside rising 30 over it: no city");
-        int gentle = com.hex.kagune.control.village.CityPlan.land(Land.of((x, z) -> 70 + (x - minX) * 8 / 544), minX, minZ);
+        check(com.hex.kagune.control.village.DryLand.land(Land.of(valley), minX, minZ, hx, hz, 9, 14, deep) == Integer.MIN_VALUE,
+            "a valley across it: no hotel there");
+        check(com.hex.kagune.control.village.DryLand.land(Land.of((x, z) -> 70 + (x - minX) * 30 / hx), minX, minZ, hx, hz, 9, 14, deep)
+            == Integer.MIN_VALUE, "a hillside rising 30 over it: no hotel");
+        int gentle = com.hex.kagune.control.village.DryLand.land(Land.of((x, z) -> 70 + (x - minX) * 8 / hx), minX, minZ, hx, hz, 9, 14, deep);
         check(gentle >= 70 && gentle <= 78, "a gentle rise of 8 over it holds one, on its middle: " + gentle);
-        check(com.hex.kagune.control.village.CityPlan.land(new Land((x, z) -> 70, (x, z) -> Integer.MIN_VALUE, (x, z) -> x > minX + 500,
-            (x, z) -> false), minX, minZ) == Integer.MIN_VALUE, "the sea at its edge: no city");
-        check(com.hex.kagune.control.village.CityPlan.land(new Land((x, z) -> 70, (x, z) -> Integer.MIN_VALUE, (x, z) -> false,
-            (x, z) -> z < minZ + 40), minX, minZ) == Integer.MIN_VALUE, "a steep biome in it: no city");
+        check(com.hex.kagune.control.village.DryLand.land(new Land((x, z) -> 70, (x, z) -> Integer.MIN_VALUE, (x, z) -> x > minX + 170,
+            (x, z) -> false), minX, minZ, hx, hz, 9, 14, deep) == Integer.MIN_VALUE, "the sea at its edge: no hotel");
+        check(com.hex.kagune.control.village.DryLand.land(new Land((x, z) -> 70, (x, z) -> Integer.MIN_VALUE, (x, z) -> false,
+            (x, z) -> z < minZ + 40), minX, minZ, hx, hz, 9, 14, deep) == Integer.MIN_VALUE, "a steep biome in it: no hotel");
+        java.util.function.IntBinaryOperator riverBed = (x, z) -> z >= minZ + 60 && z < minZ + 72 ? 66 : 70;
+        java.util.function.IntBinaryOperator riverTop = (x, z) -> z >= minZ + 60 && z < minZ + 72 ? 69 : Integer.MIN_VALUE;
+        check(com.hex.kagune.control.village.DryLand.land(new Land(riverBed, riverTop, (x, z) -> false, (x, z) -> false), minX, minZ, hx, hz, 9, 14, deep)
+            == 70, "a river 3 deep across it: a hotel over it (its terrain fit fills the bed up)");
+        check(com.hex.kagune.control.village.DryLand.land(new Land((x, z) -> 50, (x, z) -> 64, (x, z) -> false, (x, z) -> false), minX, minZ, hx, hz,
+            9, 14, deep) == Integer.MIN_VALUE, "a lake 14 deep under it: no hotel");
         check(com.hex.kagune.control.village.DryLand.roughness(flat, 0, 0, 40, 40, 6) == 0
             && com.hex.kagune.control.village.DryLand.roughness(Land.of((x, z) -> 60 + x), 0, 0, 40, 40, 6) == 39,
             "a place's ground: its rise and fall over its footprint, edges and all");
@@ -3244,7 +3252,7 @@ public final class NpcTests {
             int purpose = structures.indexOf("static boolean onPurpose(Structure.GenerationContext context) {");
             check(purpose > 0 && structures.indexOf("if (!(context.f_226629_() instanceof net.minecraft.world.level.Level)) {", purpose) - purpose < 900,
                 "only /place (asking on the live world) builds outside the world's one: never the world's own making, whatever a mod does to the biome test");
-            check(structures.split("foundation\\(level, box, pieces\\);").length - 1 == 3, "the city, the sites and the jigsaw places all on a foundation");
+            check(structures.split("foundation\\(level, box, pieces\\);").length - 1 == 2, "the sites (4.1.72: the hotels among them) and the jigsaw places all on a foundation");
             String eto = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java"));
             check(eto.contains("if (slot.alive && slot.body != null && !slot.body.equals(npc.m_20148_()) && slot.seen != Long.MIN_VALUE && now - slot.seen < 400L) {"),
                 "4.1.43: a second body of Eto (or Touka, Ken, Ayato, Noro) leaves at once while hers is loaded: never two of her");
@@ -3270,11 +3278,17 @@ public final class NpcTests {
             "their homes and patrol are there");
         try {
             String structures = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java"));
-            int ground = structures.indexOf("static int ground(Structure.GenerationContext context, int minX, int minZ) {");
-            check(ground > 0 && structures.indexOf("Integer known = GROUNDS.get(key);", ground) - ground < 900
-                && structures.indexOf("int found = measure(context, minX, minZ);", ground) - ground < 1100
-                && structures.contains("System.identityHashCode(context.f_226622_())") && structures.contains("context.f_226627_()"),
-                "the city's ground measured once per world and city, then known");
+            // 4.1.72 (the owner: "from now on the small city is gone, erased."): its four quarters' maps (7 to 10) kept for its people in a
+            // world made before, never built again.
+            boolean retired = true;
+            for (int k = 0; k < 4; k++) {
+                com.hex.kagune.control.village.SiteMaps.Site q = com.hex.kagune.control.village.SiteMaps.byMap(7 + k);
+                retired &= q != null && q.id().equals("small_city_" + k) && q.width() == 272 && q.homes().length == 12 && q.route().length >= 8
+                    && com.hex.kagune.control.village.SiteMaps.of("small_city_" + k) == null;
+            }
+            check(retired && java.util.Arrays.stream(com.hex.kagune.control.village.SiteMaps.ALL).noneMatch(site -> site.map() >= 7 && site.map() <= 10)
+                && !structures.contains("class City ") && !structures.contains("CityPlacement"),
+                "4.1.72: the Small City is never built again; an older world's city people keep their quarters' streets, homes and patrol");
             String humans = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/VillageHumans.java"));
             String brain = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/HumanBrain.java"));
             check(humans.contains("m_128405_(HOME + \"X\"") && humans.contains("m_128405_(HOME, 1)")
@@ -3286,132 +3300,250 @@ public final class NpcTests {
         }
     }
 
-    static void smallCity() {
-        boolean quarters = true;
-        boolean tiles = true;
-        for (int k = 0; k < 4; k++) {
-            com.hex.kagune.control.village.SiteMaps.Site q = com.hex.kagune.control.village.SiteMaps.of("small_city_" + k);
-            quarters &= q != null && q.width() == 272 && q.depth() == 272 && q.height() == 138 && q.ground() == 6 && q.map() == 7 + k
-                && com.hex.kagune.control.village.SiteMaps.byMap(7 + k) == q && q.homes().length == 12 && q.route().length >= 8;
-            if (q == null) {
-                continue;
-            }
-            for (int i = 0; i < q.across(); i++) {
-                for (int j = 0; j < q.down(); j++) {
-                    tiles &= java.nio.file.Files.isRegularFile(java.nio.file.Path.of("src/main/resources/data/hexkagune/structures/small_city_" + k
-                        + "/t_" + i + "_" + j + ".nbt"));
-                }
+    /**
+     * 4.1.72 (the owner, with humanhotel.schem: "from now on the small city is gone, erased. / From now on close to a village will be an
+     * hotel where humans work, live and walk around doing their own thing. / CCG patrols around the hotel at all times."; they chose
+     * "Beside some villages"): the hotel's site, its tiles, its people, where hotels stand and how they face, the city's files gone, the
+     * owner's file untouched.
+     */
+    static void hotel() {
+        com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of("hotel");
+        check(site != null && site.width() == 191 && site.depth() == 196 && site.height() == 194 && site.ground() == 11 && site.map() == 12
+            && com.hex.kagune.control.village.SiteMaps.byMap(12) == site, "the hotel: the owner's 191 x 196, 194 tall (its empty top left off), its ground its slab's top (11), map 12");
+        check(site != null && site.homes().length == 10 && site.route().length >= 8, "humans at home in it (10 homes, two each), a patrol round it");
+        boolean tiles = site != null && site.across() == 3 && site.down() == 4;
+        for (int i = 0; site != null && i < site.across(); i++) {
+            for (int j = 0; j < site.down(); j++) {
+                tiles &= java.nio.file.Files.isRegularFile(java.nio.file.Path.of("src/main/resources/data/hexkagune/structures/hotel/t_" + i + "_" + j + ".nbt"));
             }
         }
-        check(quarters, "the city's four quarters: 272 x 272 each (one structure's reach), all 138 tall on the one ground (layer 6), maps 7-10, "
-            + "12 homes and a patrol each");
-        check(tiles, "every tile of every quarter is written");
-        // 4.1.36: placed together. Each turn puts each quarter in its own slot, and a quarter laid turned in its slot lands every block where
-        // the whole city turned as one would put it.
-        boolean slots = true;
-        boolean whole = true;
-        for (int t = 0; t < 4; t++) {
-            java.util.Set<Integer> seen = new java.util.HashSet<>();
-            for (int k = 0; k < 4; k++) {
-                int slot = com.hex.kagune.control.village.CityPlan.slotOf(k, t);
-                seen.add(slot);
-                slots &= com.hex.kagune.control.village.CityPlan.quarterIn(slot, t) == k;
-                int qx = (k & 1) * 272;
-                int qz = (k >> 1) * 272;
-                int[] cityLeast = com.hex.kagune.control.village.SiteMaps.turnedLeast(544, 544, t);
-                int[] quarterLeast = com.hex.kagune.control.village.SiteMaps.turnedLeast(272, 272, t);
-                int[] slotAt = com.hex.kagune.control.village.CityPlan.slotCorner(0, 0, slot);
-                int[] cityAt = com.hex.kagune.control.village.CityPlan.corner(0, 0);
-                for (int x = 0; x < 272; x += 17) {
-                    for (int z = 0; z < 272; z += 13) {
-                        int[] a = com.hex.kagune.control.village.VillageRules.turn(qx + x, qz + z, t);
-                        int[] b = com.hex.kagune.control.village.VillageRules.turn(x, z, t);
-                        whole &= cityAt[0] + a[0] - cityLeast[0] == slotAt[0] + b[0] - quarterLeast[0]
-                            && cityAt[1] + a[1] - cityLeast[1] == slotAt[1] + b[1] - quarterLeast[1];
+        check(tiles, "every tile of the hotel written (3 x 4)");
+        // Its people: the humans who live in it and the investigators who patrol round it, written into its tiles.
+        int humans = 0;
+        int agents = 0;
+        for (java.nio.file.Path tile : java.util.List.of(java.nio.file.Path.of("src/main/resources/data/hexkagune/structures/hotel"))) {
+            try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.list(tile)) {
+                for (java.nio.file.Path file : files.toList()) {
+                    String text = new String(new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(file)).readAllBytes(),
+                        java.nio.charset.StandardCharsets.ISO_8859_1);
+                    humans += text.split("hexkagune:human(?![a-z_])", -1).length - 1; // the entity's id, never a longer id it begins
+                    agents += text.split("hexkagune:ccg_investigator", -1).length - 1;
+                }
+            } catch (java.io.IOException failure) {
+                check(false, "read the hotel's tiles: " + failure);
+            }
+        }
+        check(humans == 2 * site.homes().length && agents == 6, "people: two humans living at each of its homes (" + humans
+            + "), six investigators on patrol round it (" + agents + ")");
+        // Where hotels stand (HotelPlan, pure): one village in four, on the first side (from its own, by the seed, round clockwise) clear of
+        // every other village's offer, DISTANCE chunks out, never overlapping another hotel, turned to face its village.
+        int chosen = 0;
+        for (int x = -60; x < 60; x++) {
+            for (int z = -60; z < 60; z++) {
+                chosen += com.hex.kagune.control.village.HotelPlan.chosen(1234L, x, z) ? 1 : 0;
+            }
+        }
+        check(chosen > 14400 * 20 / 100 && chosen < 14400 * 30 / 100 && com.hex.kagune.control.village.HotelPlan.ONE_IN == 4,
+            "about one village in four is chosen for a hotel (" + chosen + " of 14400)");
+        // Its near edge, on its nearest sides (north and west: the footprint centres on its chunk's middle), from the village's start corner.
+        int d16 = com.hex.kagune.control.village.HotelPlan.DISTANCE * 16;
+        int deepest = Math.max(site.width(), site.depth());
+        int nearEdge = Math.min(d16 - (8 - deepest / 2 + deepest - 1), d16 + 8 - deepest / 2);
+        check(nearEdge == 119 && nearEdge - com.hex.kagune.control.village.SitePrep.MARGIN - 12 >= 80 + 16
+            && com.hex.kagune.control.village.HotelPlan.VILLAGE_REACH * 16 >= 80 + 16,
+            "a hotel's near edge " + nearEdge + " blocks out of its village's start: its clearing (8) and its terrain fit (12) short of where a "
+                + "village's pieces may reach (80 from its start piece's middle, that piece up to 16 off: 96)");
+        check(com.hex.kagune.control.village.HotelPlan.REACH * 16 >= deepest / 2 + 8 && com.hex.kagune.control.village.HotelPlan.REACH * 16 <= 128
+            && com.hex.kagune.control.village.HotelPlan.CLEAR_OF == com.hex.kagune.control.village.HotelPlan.REACH
+                + com.hex.kagune.control.village.HotelPlan.VILLAGE_REACH + 1
+            && com.hex.kagune.control.village.HotelPlan.APART == 2 * com.hex.kagune.control.village.HotelPlan.REACH + 1,
+            "a hotel within a start's reach (8 chunks); no other village within its reach and a village's; two hotels never within each other's");
+        for (int reach : new int[] {13, 14, 27, 28}) {
+            int[] scan = com.hex.kagune.control.village.HotelPlan.scan(reach);
+            boolean even = scan[0] == -reach && scan[scan.length - 1] == reach;
+            for (int k = 1; k < scan.length; k++) {
+                even &= scan[k] > scan[k - 1] && scan[k] - scan[k - 1] <= com.hex.kagune.control.village.HotelPlan.SCAN_GAP;
+            }
+            // 4.1.72: a first scan (-13 by 6s) never asked 12 or 13 chunks out.
+            check(even, "the offers asked from " + -reach + " to " + reach + " chunks, none more than 6 apart: " + java.util.Arrays.toString(scan));
+        }
+        int villagesSeen = 0;
+        int chosenSeen = 0;
+        int hotelsSeen = 0;
+        int[] sides = new int[4];
+        boolean placed = true;
+        boolean apart = true;
+        boolean clear = true;
+        boolean same = true;
+        int nearCount = 0;
+        int nearWrong = 0;
+        for (long seed : new long[] {1234L, -99L, 8675309L, 42L}) {
+            // Vanilla's villages: a linear spread, spacing 34, separation 8, salt 10387312 (data/minecraft/worldgen/structure_set/villages.json).
+            java.util.Map<Long, int[]> memo = new java.util.HashMap<>();
+            com.hex.kagune.control.village.HotelPlan.Offers villages = (cx, cz) -> {
+                int rx = Math.floorDiv(cx, 34);
+                int rz = Math.floorDiv(cz, 34);
+                return memo.computeIfAbsent((long)rx << 32 ^ rz & 0xFFFFFFFFL,
+                    k -> com.hex.kagune.control.village.DryLand.spreadChunk(seed, rx, rz, 34, 8, 10387312));
+            };
+            java.util.List<int[]> offers = new java.util.ArrayList<>();
+            java.util.List<int[]> hotels = new java.util.ArrayList<>();
+            for (int rx = -8; rx <= 7; rx++) {
+                for (int rz = -8; rz <= 7; rz++) {
+                    offers.add(com.hex.kagune.control.village.DryLand.spreadChunk(seed, rx, rz, 34, 8, 10387312));
+                }
+            }
+            for (int[] v : offers) {
+                boolean inner = Math.abs(v[0]) < 200 && Math.abs(v[1]) < 200;
+                villagesSeen += inner ? 1 : 0;
+                chosenSeen += inner && com.hex.kagune.control.village.HotelPlan.chosen(seed, v[0], v[1]) ? 1 : 0;
+                int[] h = com.hex.kagune.control.village.HotelPlan.hotelOf(seed, villages, v[0], v[1]);
+                same &= java.util.Arrays.equals(h, com.hex.kagune.control.village.HotelPlan.hotelOf(seed, villages, v[0], v[1]));
+                if (h == null) {
+                    continue;
+                }
+                hotels.add(h);
+                if (!inner) {
+                    continue;
+                }
+                hotelsSeen++;
+                sides[h[2]]++;
+                int[] back = com.hex.kagune.control.village.HotelPlan.village(h[0], h[1], h[2]);
+                placed &= back[0] == v[0] && back[1] == v[1] && Math.abs(h[0] - v[0]) + Math.abs(h[1] - v[1]) == com.hex.kagune.control.village.HotelPlan.DISTANCE;
+                for (int[] o : offers) {
+                    if (o != v) {
+                        clear &= Math.max(Math.abs(o[0] - h[0]), Math.abs(o[1] - h[1])) > com.hex.kagune.control.village.HotelPlan.CLEAR_OF;
                     }
                 }
             }
-            slots &= seen.size() == 4;
-        }
-        check(slots, "every turn: the four quarters in the four slots, one each");
-        check(whole, "every turn: each quarter laid turned in its slot is where the whole city turned as one puts it (no gap, no overlap)");
-        check(com.hex.kagune.control.village.CityPlan.slotOf(0, 0) == 0 && com.hex.kagune.control.village.CityPlan.slotOf(0, 1) == 1
-            && com.hex.kagune.control.village.CityPlan.slotOf(2, 1) == 0, "turned a quarter clockwise, the north-west quarter goes north-east");
-        // Each slot's quarter is exactly all its start chunk reaches (8 chunks back, 8 on), 17 chunks from the next.
-        boolean reach = true;
-        for (int s = 0; s < 4; s++) {
-            int[] off = com.hex.kagune.control.village.CityPlan.slotOffset(s);
-            int[] at = com.hex.kagune.control.village.CityPlan.slotCorner(5, -7, s);
-            reach &= at[0] == (5 + off[0]) * 16 - 128 && at[1] == (-7 + off[1]) * 16 - 128 && at[0] + 271 <= (5 + off[0]) * 16 + 143;
-        }
-        check(reach, "each quarter within its start chunk's reach");
-        // The four start chunks of a city are all offered, and are known as theirs; the chunks beside them are not.
-        boolean offered = true;
-        java.util.Set<Integer> turns = new java.util.HashSet<>();
-        for (long seed : new long[] {0L, 42L, -7_000_000_000L}) {
-            com.hex.kagune.control.village.DryLand.Spread spread = com.hex.kagune.control.village.DryLand.fixed(seed,
-                com.hex.kagune.control.village.DryLand.CITY_SPACING, com.hex.kagune.control.village.DryLand.CITY_SEPARATION,
-                com.hex.kagune.control.village.DryLand.CITY_SALT);
-            for (int rx = -6; rx <= 6; rx++) {
-                for (int rz = -6; rz <= 6; rz++) {
-                    int[] base = spread.chunk(rx * 48, rz * 48);
-                    for (int s = 0; s < 4; s++) {
-                        int[] off = com.hex.kagune.control.village.CityPlan.slotOffset(s);
-                        int[] got = com.hex.kagune.control.village.CityPlan.slot(spread, base[0] + off[0], base[1] + off[1]);
-                        offered &= got != null && got[0] == s && got[1] == base[0] && got[2] == base[1];
+            for (int[] a : hotels) {
+                for (int[] b : hotels) {
+                    if (a != b) {
+                        apart &= Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) >= com.hex.kagune.control.village.HotelPlan.APART;
                     }
-                    offered &= com.hex.kagune.control.village.CityPlan.slot(spread, base[0] + 1, base[1]) == null
-                        && com.hex.kagune.control.village.CityPlan.slot(spread, base[0] + 8, base[1] + 8) == null;
-                    int turn = com.hex.kagune.control.village.CityPlan.turn(seed, base[0], base[1]);
-                    offered &= turn == com.hex.kagune.control.village.CityPlan.turn(seed, base[0], base[1]) && turn >= 0 && turn < 4;
-                    turns.add(turn);
-                    // The next region's city never touches this one: this one reaches chunks base - 8 .. base + 25.
-                    int[] east = spread.chunk((rx + 1) * 48, rz * 48);
-                    int[] south = spread.chunk(rx * 48, (rz + 1) * 48);
-                    offered &= east[0] - 8 > base[0] + 25 && south[1] - 8 > base[1] + 25;
                 }
             }
+            // HotelPlan.near (what keeps every other place clear of the hotels): right at each hotel's margin, inside and out, and all round.
+            java.util.List<int[]> asked = new java.util.ArrayList<>();
+            int edge = com.hex.kagune.control.village.HotelPlan.REACH + com.hex.kagune.control.village.HotelPlan.MARGIN;
+            for (int[] h : hotels) {
+                if (Math.abs(h[0]) > 150 || Math.abs(h[1]) > 150) {
+                    continue;
+                }
+                for (int r = edge; r <= edge + 1; r++) {
+                    for (int k = -r; k <= r; k++) {
+                        asked.add(new int[] {h[0] + k, h[1] - r});
+                        asked.add(new int[] {h[0] + k, h[1] + r});
+                        asked.add(new int[] {h[0] - r, h[1] + k});
+                        asked.add(new int[] {h[0] + r, h[1] + k});
+                    }
+                }
+            }
+            for (int x = -150; x < 150; x += 3) {
+                for (int z = -150; z < 150; z += 3) {
+                    asked.add(new int[] {x, z});
+                }
+            }
+            for (int[] c : asked) {
+                boolean want = false;
+                for (int[] h : hotels) {
+                    want |= com.hex.kagune.control.village.HotelPlan.covers(h[0], h[1], c[0], c[1], com.hex.kagune.control.village.HotelPlan.MARGIN);
+                }
+                nearCount += want ? 1 : 0;
+                nearWrong += want != com.hex.kagune.control.village.HotelPlan.near(seed, villages, c[0], c[1]) ? 1 : 0;
+            }
         }
-        check(offered, "a city's four start chunks are offered and known as its own; its neighbours' cities never touch it");
-        check(turns.size() == 4, "cities are turned every way");
-        check(com.hex.kagune.control.village.DryLand.CITY_SPACING > 34 && com.hex.kagune.control.village.CityPlan.FLAT > 0,
-            "rarer than a vanilla village (one a 48-chunk region at most, on dry, fairly flat land only; Minecraft's are one a 34)");
-        // 4.1.36: a one-of-a-kind place is kept out of a city that is built: its chunk square, and CITY_MARGIN round it.
-        check(com.hex.kagune.control.village.CityPlan.covers(0, 0, -8, -8, 0) && com.hex.kagune.control.village.CityPlan.covers(0, 0, 25, 25, 0)
-            && !com.hex.kagune.control.village.CityPlan.covers(0, 0, 26, 0, 0) && !com.hex.kagune.control.village.CityPlan.covers(0, 0, -9, 0, 0)
-            && com.hex.kagune.control.village.CityPlan.covers(0, 0, 35, 0, 10) && !com.hex.kagune.control.village.CityPlan.covers(0, 0, 36, 0, 10)
-            && com.hex.kagune.control.village.DryLand.CITY_MARGIN * 16 >= 136 + 16, "a city's chunks are its four quarters' reach; the margin holds the hideout's half");
-        // 4.1.36 (the owner: "that city should be able to go over rivers ... Just make sure it blends well with the terrain"): its ground is
-        // the middle of its levels (water's top counted), never under the sea's level, none at all where the land rises and falls too much.
-        int[] river = new int[81];
-        java.util.Arrays.fill(river, 70);
-        river[40] = 63;
-        river[41] = 63;
-        int[] low = new int[81];
-        java.util.Arrays.fill(low, 60);
-        int[] hilly = new int[81];
-        java.util.Arrays.fill(hilly, 66);
-        hilly[3] = 66 + com.hex.kagune.control.village.CityPlan.FLAT + 1;
-        check(com.hex.kagune.control.village.CityPlan.ground(river) == 70 && com.hex.kagune.control.village.CityPlan.ground(low) == 64
-            && com.hex.kagune.control.village.CityPlan.ground(hilly) == Integer.MIN_VALUE && com.hex.kagune.control.village.CityPlan.DEEP >= 6
-            && com.hex.kagune.control.village.CityPlan.ABOVE_SEA == 64, "a river under it is fine; it stands on its middle, over the sea's level, never on rough land");
+        System.out.println("  hotels: " + villagesSeen + " village offers, " + chosenSeen + " chosen, " + hotelsSeen + " hotels (sides "
+            + java.util.Arrays.toString(sides) + ")");
+        check(hotelsSeen * 100 >= chosenSeen * 75 && hotelsSeen * 100 <= villagesSeen * 30,
+            "most chosen villages find a side clear of the rest (" + hotelsSeen + " of " + chosenSeen + " chosen, " + villagesSeen + " villages)");
+        check(sides[0] > hotelsSeen / 8 && sides[1] > hotelsSeen / 8 && sides[2] > hotelsSeen / 8 && sides[3] > hotelsSeen / 8 && placed,
+            "on every side, " + com.hex.kagune.control.village.HotelPlan.DISTANCE + " chunks out, each hotel's village found back from it: "
+                + java.util.Arrays.toString(sides));
+        check(clear, "no hotel within reach of another village's offer (a village of its own's never under a hotel)");
+        check(apart, "no two hotels within each other's reach (the one beside the first village stands)");
+        check(same, "the same world makes the same choice every time (by its seed and the villages' offers)");
+        check(nearCount > 10000 && nearWrong == 0, "every chunk a hotel's margin reaches is known near one, and no other: "
+            + nearCount + " chunks near them, " + nearWrong + " judged wrong");
+        boolean faces = true;
+        int[][] step = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+        for (int side = 0; side < 4; side++) {
+            int[] front = com.hex.kagune.control.village.HotelPlan.front(com.hex.kagune.control.village.HotelPlan.turns(side));
+            faces &= front[0] == -step[side][0] && front[1] == -step[side][1];
+        }
+        check(faces, "turned so its forecourt (its file's south) faces its village");
+        check(com.hex.kagune.control.village.HotelPlan.covers(0, 0, 7, -7, 0) && !com.hex.kagune.control.village.HotelPlan.covers(0, 0, 8, 0, 0)
+            && com.hex.kagune.control.village.HotelPlan.covers(0, 0, 13, 0, com.hex.kagune.control.village.HotelPlan.MARGIN), "a hotel's chunks, and the margin kept round them");
+        // 4.1.72 (the owner: "Only spawns on plains or biomes o plenty equivallent biomes, we cant have that shit spawning on mountains"):
+        // every column of its footprint and round it a plains biome (hexkagune:plains).
+        String plainsTag = read("src/main/resources/data/hexkagune/tags/worldgen/biome/plains.json");
+        java.util.List<String> plainsIds = new java.util.ArrayList<>();
+        java.util.regex.Matcher id = java.util.regex.Pattern.compile("\"(?:id\": \")?([a-z_]+:[a-z_]+)\"").matcher(plainsTag);
+        while (id.find()) {
+            plainsIds.add(id.group(1));
+        }
+        check(plainsIds.equals(java.util.List.of("minecraft:plains", "minecraft:sunflower_plains", "minecraft:snowy_plains", "biomesoplenty:field",
+                "biomesoplenty:grassland", "biomesoplenty:pasture", "biomesoplenty:prairie", "biomesoplenty:lavender_field"))
+            && plainsTag.split("\"required\": false").length == 6 && !plainsTag.contains("#") && !plainsTag.contains("meadow")
+            && !plainsTag.contains("highland") && !plainsTag.contains("rocky_shrubland"),
+            "a hotel's biomes: vanilla's plains and Biomes O' Plenty's open grasslands (each only if it is there); never forge:is_plains (the meadow, "
+                + "BOP's highland and rocky shrubland are in it): " + plainsIds);
+        int px = 1000;
+        int pz = -400;
+        check(com.hex.kagune.control.village.HotelPlan.onPlains(px, pz, 196, 191, (x, z) -> true), "all plains: a hotel");
+        check(!com.hex.kagune.control.village.HotelPlan.onPlains(px, pz, 196, 191, (x, z) -> !(x > px + 150 && z > pz + 150)),
+            "a mountain in one corner of it: no hotel");
+        boolean strips = com.hex.kagune.control.village.HotelPlan.PLAINS_STEP <= 16;
+        for (int at = -16; at < 191; at++) { // every strip a chunk wide that touches its footprint (196 x 191)
+            int fromX = px + at;
+            int fromZ = pz + at;
+            strips &= !com.hex.kagune.control.village.HotelPlan.onPlains(px, pz, 196, 191, (x, z) -> !(x >= fromX && x < fromX + 17))
+                && !com.hex.kagune.control.village.HotelPlan.onPlains(px, pz, 196, 191, (x, z) -> !(z >= fromZ && z < fromZ + 17));
+        }
+        check(strips, "a strip of forest a chunk wide anywhere across it, either way: no hotel");
+        check(!com.hex.kagune.control.village.HotelPlan.onPlains(px, pz, 196, 191, (x, z) -> z >= pz),
+            "plains under all of it but a hill just past its north edge: no hotel (looked at round it too)");
+        check(read("src/main/java/com/hex/kagune/control/ControlStructures.java").contains("if (!asked && !com.hex.kagune.control.village.HotelPlan.onPlains("
+            + "minX, minZ, sizeX, sizeZ, (x, z) -> plains(context, x, y, z))) {"), "the hotel asks the world's biomes so before it is built (/place builds it anywhere)");
+        check(java.util.Arrays.asList(com.hex.kagune.control.village.HotelPlan.VILLAGE_TAGS).equals(java.util.List.of("village_plains", "village_desert",
+            "village_savanna", "village_snowy", "village_taiga")), "a village stands where vanilla's village biome tags say (a pack's biomes in them too)");
         String structures = read("src/main/java/com/hex/kagune/control/ControlStructures.java");
-        String plan = read("src/main/java/com/hex/kagune/control/village/CityPlan.java");
-        check(plan.contains("if (ground.sea(column[0], middle, column[1]) || ground.steep(column[0], middle, column[1])) {") && plan.contains("if (surface - floor > DEEP) {")
-            && structures.contains("\"minecraft\", \"is_ocean\""), "never over a sea or a lake deeper than a river (4.1.42: nor a steep biome; CityPlan.land)");
-        check(structures.contains("|| inCity(context, chunk.f_45578_, chunk.f_45579_)) {") && structures.contains("if (inCity(context, x, z) ||")
-            && structures.contains("if (inCity(context, chunk.f_45578_, chunk.f_45579_)) {")
-            && structures.contains("if (City.ground(context, corner[0], corner[1]) != Site.NO_GROUND && !City.holdsPlace(b[0], b[1])) {")
-            && structures.contains("if (holdsPlace(at[1], at[2])) {"),
-            "the hideout, the CCG building and every jigsaw place stay out of a city that is built; a city is never built over an older world's place");
-        check(structures.contains("int middle = ground(context, corner[0], corner[1]);")
-            && structures.contains("int turns = com.hex.kagune.control.village.CityPlan.turn(context.f_226627_(), at[1], at[2]);")
-            && structures.contains("found.f_210004_() instanceof CityPlacement city"),
-            "each quarter takes the whole city's ground and turn, so the four are built together or none; no city if its placement was changed");
-        String humans = read("src/main/java/com/hex/kagune/control/server/VillageHumans.java");
-        check(humans.contains("instanceof net.minecraft.world.entity.npc.Villager") && humans.contains(".m_128441_(KEY)")
-            && humans.contains(">= MOST") && com.hex.kagune.control.server.VillageHumans.MOST > 0 && com.hex.kagune.control.server.VillageHumans.ODDS > 1,
-            "humans in vanilla villages: each villager looked at once, a few humans, never a crowd, none by a wandering trader");
+        check(structures.contains("if (HOTEL.equals(this.site.id())) {\n                return this.hotel(context, chunk); // 4.1.72")
+            && structures.contains(".m_7745_(net.minecraft.resources.ResourceLocation.m_214293_(\"minecraft\", \"villages\"));")
+            && structures.contains("int[] hotel = com.hex.kagune.control.village.HotelPlan.hotelOf(seed, offers, at[0], at[1]);\n"
+                + "                if (hotel == null || hotel[0] != chunk.f_45578_ || hotel[1] != chunk.f_45579_) {")
+            && structures.contains("if (!village(context, at[0], at[1]) || holdsPlace(chunk)) {")
+            && structures.contains("return this.hotelAt(context, chunk, com.hex.kagune.control.village.HotelPlan.turns(hotel[2]), false);"),
+            "a hotel starts only beside a village that is really there (the world's own village placement and biomes), clear of an older world's place");
+        check(structures.contains("int middle = DryLand.land(ground, minX, minZ, sizeX, sizeZ, 9, HIDEOUT_FLAT, DryLand.DEEP);")
+            && structures.contains("|| !asked && !biome(context, minX + sizeX / 2, middle, minZ + sizeZ / 2)) {"), "on land as the hideout judges its own: dry, fairly flat, no sea");
+        check(structures.contains("|| inHotel(context, chunk.f_45578_, chunk.f_45579_)) {") && structures.contains("if (inHotel(context, chunk.f_45578_, chunk.f_45579_)) {")
+            && structures.contains("if (inHotel(context, x, z) ||")
+            && structures.contains("return com.hex.kagune.control.village.HotelPlan.near(seed, villageOffers(spread, seed), x, z);")
+            && structures.contains("ChunkPos offer = spread.m_227008_(seed, cx, cz);"),
+            "the hideout, the CCG building and every jigsaw place stay clear of the hotels (judged by HotelPlan.near on the world's own village offers)");
+        String set = read("src/main/resources/data/hexkagune/worldgen/structure_set/hotel.json");
+        String structure = read("src/main/resources/data/hexkagune/worldgen/structure/hotel.json");
+        check(set.contains("\"structure\": \"hexkagune:hotel\"") && set.contains("\"spacing\": 1,") && set.contains("\"separation\": 0,")
+            && set.contains("\"salt\": " + com.hex.kagune.control.village.DryLand.HOTEL_SALT) && structure.contains("\"type\": \"hexkagune:site_hotel\"")
+            && structure.contains("\"terrain_adaptation\": \"beard_box\"") && structure.contains("\"step\": \"top_layer_modification\""),
+            "its set offers every chunk (the hotel decides); its structure its own type, the ground fitted to it, after the trees");
+        check(!java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/small_city.json"))
+            && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/small_city.json"))
+            && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/structures/small_city_0"))
+            && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/village/CityPlan.java")),
+            "4.1.72: the Small City's set, structure, tiles and plan are gone");
+        try {
+            byte[] owners = java.nio.file.Files.readAllBytes(java.nio.file.Path.of("art/exploration/humanhotel.schem"));
+            String sum = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(owners));
+            check(sum.equals("e8ec48539030baf6116bedbad8dece19908489ac5a171d0068dc51ab77d127ea"), "the owner's humanhotel.schem is as they sent it");
+        } catch (java.io.IOException | java.security.NoSuchAlgorithmException failure) {
+            check(false, "read the owner's hotel: " + failure);
+        }
+        String humansSrc = read("src/main/java/com/hex/kagune/control/server/VillageHumans.java");
+        check(humansSrc.contains("instanceof net.minecraft.world.entity.npc.Villager") && humansSrc.contains(".m_128441_(KEY)")
+            && humansSrc.contains(">= MOST") && com.hex.kagune.control.server.VillageHumans.MOST > 0 && com.hex.kagune.control.server.VillageHumans.ODDS > 1,
+            "humans in vanilla villages too: each villager looked at once, a few humans, never a crowd, none by a wandering trader");
     }
 
     static void ccgBuilding() {
@@ -3423,10 +3555,11 @@ public final class NpcTests {
         check(old != null && old != site && "ccg_building".equals(old.id()) && old.width() == 39 && old.depth() == 39 && old.route().length == 15
             && !java.util.Arrays.asList(com.hex.kagune.control.village.SiteMaps.ALL).contains(old),
             "4.1.51: the old building's map (6) is kept for its people in a world made before (their patrol), never built again");
-        check(com.hex.kagune.control.village.SiteMaps.ALL.length == 6 && com.hex.kagune.control.village.SiteMaps.of("aogiri_hideout").map() == 5
+        check(com.hex.kagune.control.village.SiteMaps.ALL.length == 3 && com.hex.kagune.control.village.SiteMaps.of("aogiri_hideout").map() == 5
             && com.hex.kagune.control.village.SiteMaps.of("village_1") == null && com.hex.kagune.control.village.SiteMaps.of("village_2") == null
             && com.hex.kagune.control.village.SiteMaps.byMap(3) != null && com.hex.kagune.control.village.SiteMaps.byMap(4) != null,
-            "the hideout keeps its map; the two towns are gone (4.1.36), their maps kept for an older world's people (4.1.40)");
+            "the hideout keeps its map; the two towns are gone (4.1.36), their maps kept for an older world's people (4.1.40); 4.1.72: the hideout, the "
+                + "building and the hotel are all the sites built");
         // Its patrol: a loop round the tower, two blocks out from its walls (the world's ground, levelled by its terrain adaptation).
         int[][] route = site.route();
         boolean round = route.length >= 12;
@@ -3472,7 +3605,7 @@ public final class NpcTests {
         check(fewest >= 6, "every world has several spots to try (the fewest of these seeds: " + fewest + ")");
         // 12 chunks: the mansion and the towns reach 136 blocks from their middle, the tower and its patrol 27 (4.1.51).
         check(site.perimeter() <= 28 && com.hex.kagune.control.village.DryLand.CCG_APART * 16 >= 136 + 28 + 16 && com.hex.kagune.control.village.DryLand.CCG_SALT != com.hex.kagune.control.village.DryLand.SALT
-            && com.hex.kagune.control.village.DryLand.CCG_SALT != com.hex.kagune.control.village.DryLand.CITY_SALT, "far enough that they never touch; its own salt");
+            && com.hex.kagune.control.village.DryLand.CCG_SALT != com.hex.kagune.control.village.DryLand.HOTEL_SALT, "far enough that they never touch; its own salt");
         check(com.hex.kagune.control.village.DryLand.near(5L, 100, 100, 1000, 40, 20, 77) && !com.hex.kagune.control.village.DryLand.near(5L, 100, 100, 0, 40, 20, 77),
             "near: anything within a great reach, nothing within none");
         try {
@@ -3490,8 +3623,8 @@ public final class NpcTests {
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
             check(structures.contains("return claimed(CCG, context, () -> {")
                 && structures.contains("DryLand.near(hideoutSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART)")
-                && structures.contains("|| inCity(context, chunk.f_45578_, chunk.f_45579_)) {"),
-                "the world's one building, at the first of its set's spots on dry land the world makes, clear of the hideout's and the Small City");
+                && structures.contains("|| inHotel(context, chunk.f_45578_, chunk.f_45579_)) {"),
+                "the world's one building, at the first of its set's spots on dry land the world makes, clear of the hideout's and the hotels");
             // The template itself: its people, and what each does.
             java.util.Map<String, Object> template;
             try (java.io.DataInputStream in = new java.io.DataInputStream(new java.util.zip.GZIPInputStream(
@@ -3702,7 +3835,6 @@ public final class NpcTests {
             "the hideout is the owner's mansion (272 x 263, all a start chunk reaches), its patrol a loop round the house");
         try {
             String set = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/aogiri_hideout.json")));
-            String city = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/small_city.json")));
             // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): a spread of offers, the
             // world's one hideout at the first on dry land (DryLand.hideoutOffers reads the same numbers as the game).
             check(set.contains("\"minecraft:random_spread\"") && set.contains("\"spacing\": " + com.hex.kagune.control.village.DryLand.SPACING + ",")
@@ -3739,18 +3871,18 @@ public final class NpcTests {
                     }
                 }
             }
-            check(city.contains("\"structure\": \"hexkagune:small_city\"") && city.contains("\"type\": \"hexkagune:city\"")
+            check(!java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/small_city.json"))
                 && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/villages.json"))
                 && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/village_1.json"))
                 && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/village_2.json"))
                 && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/village.json")),
-                "4.1.36: the villages are gone, the Small City in their place (its own placement)");
+                "4.1.36: the villages are gone; 4.1.72: the Small City too, the hotels in its place");
             String brain = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java")));
             check(brain.contains("AogiriGuard.idle(npc, mind, level, now)") && brain.contains("AogiriGuard.unwelcome(npc, player, now)"),
                 "the members at their work, and a player kept out is gone for");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
-            check(structures.contains("return claimed(HIDEOUT, context, () -> {") && structures.contains("if (inCity(context, chunk.f_45578_, chunk.f_45579_)) {")
-                && structures.contains("int middle = DryLand.land(ground(context), minX, minZ, sizeX, sizeZ, 9, HIDEOUT_FLAT, com.hex.kagune.control.village.CityPlan.DEEP);")
+            check(structures.contains("return claimed(HIDEOUT, context, () -> {") && structures.contains("if (inHotel(context, chunk.f_45578_, chunk.f_45579_)) {")
+                && structures.contains("int middle = DryLand.land(ground(context), minX, minZ, sizeX, sizeZ, 9, HIDEOUT_FLAT, DryLand.DEEP);")
                 && structures.contains("if ((CCG.equals(this.site.id()) || unique(this.site)) && onPurpose(context)) {")
                 && structures.contains("return claimed(CCG.equals(this.site.id()) ? CCG : HIDEOUT, context, () -> Optional.of(this.stub(")
                 && structures.contains("return context.f_226630_().test(null);"),
