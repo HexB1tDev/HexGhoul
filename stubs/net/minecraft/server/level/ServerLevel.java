@@ -13,4 +13,5 @@ public class ServerLevel extends net.minecraft.world.level.Level {
         net.minecraft.world.phys.AABB area, java.util.function.Predicate<? super T> filter) { throw new UnsupportedOperationException(); }
     /** sendParticles */ public <T extends net.minecraft.core.particles.ParticleOptions> int m_8767_(T type, double x, double y, double z,
         int count, double dx, double dy, double dz, double speed) { throw new UnsupportedOperationException(); }
+    /** sendParticles to one player (4.1.82: a trial's bodies marked for their own player only) */ public <T extends net.minecraft.core.particles.ParticleOptions> boolean m_8624_(ServerPlayer player, T particle, boolean force, double x, double y, double z, int count, double dx, double dy, double dz, double speed) { throw new UnsupportedOperationException(); }
 }

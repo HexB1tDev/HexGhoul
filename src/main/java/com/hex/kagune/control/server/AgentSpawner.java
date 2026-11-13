@@ -35,6 +35,11 @@ public final class AgentSpawner {
         if (level.m_46467_() % AgentRules.SPAWN_EVERY != 0L) {
             return;
         }
+        try {
+            station(level); // 4.1.82
+        } catch (RuntimeException failure) {
+            com.hex.kagune.control.Safety.caught(failure, "the ghoul division's post at the tower");
+        }
         for (ServerPlayer player : new ArrayList<>(level.m_6907_())) {
             if (!player.m_5833_() && player.m_217043_().m_188500_() < AgentRules.SPAWN_CHANCE) {
                 try {
@@ -88,6 +93,86 @@ public final class AgentSpawner {
             }
         }
         return made;
+    }
+
+    /** 4.1.82: on each of a posted squad: its post (block x, y, z). */
+    static final String POST = "HexDivisionPost";
+    /** 4.1.82: how far (blocks) a posted squad strays from its post; how near the tower a player brings one; how far out it stands. */
+    static final double POST_REACH = 20.0;
+    static final double STATION_NEAR = 96.0;
+    static final double POST_NEAREST = 32.0;
+    static final double POST_FARTHEST = 44.0;
+    /** 4.1.82: the least time (ticks: five minutes) between two squads posted at the tower (one wiped out is not made again at once). */
+    static final long POST_EVERY = 6000L;
+    /** 4.1.82: when a squad was last posted at the tower (the world's game time). */
+    private static final java.util.Map<String, Long> POSTED = WorldTimes.map();
+
+    /**
+     * 4.1.82 (the owner: "where tf is the human ghoul division from the ccg?"): they only ever turned up by chance (a third of the CCG's
+     * turning up, about one squad every three days of play near someone), looking like any investigator. Now one squad of three is always
+     * at their tower: when a player comes within {@link #STATION_NEAR} of it and none of its squad is there, three are made on the ground
+     * round it ({@link #POST_NEAREST} to {@link #POST_FARTHEST} from its middle) and keep to their post ({@link #POST}, GhoulNpcBrain); at most
+     * one squad each {@link #POST_EVERY}. The chance squads go on as before.
+     */
+    static void station(ServerLevel level) {
+        int[] middle = com.hex.kagune.control.ControlStructures.middle(level, "ccg_building");
+        if (middle == null) {
+            return;
+        }
+        ServerPlayer near = null;
+        for (ServerPlayer player : level.m_6907_()) {
+            double dx = player.m_20185_() - middle[0];
+            double dz = player.m_20189_() - middle[2];
+            if (!player.m_5833_() && dx * dx + dz * dz <= STATION_NEAR * STATION_NEAR) {
+                near = player;
+            }
+        }
+        if (near == null) {
+            return;
+        }
+        double r = STATION_NEAR;
+        AABB round = new AABB(middle[0] - r, middle[1] - 64.0, middle[2] - r, middle[0] + r, middle[1] + 128.0, middle[2] + r);
+        if (!level.m_6443_(com.hex.kagune.control.npc.GhoulNpc.class, round, g -> g.m_6084_() && g.getPersistentData().m_128441_(POST + "X")).isEmpty()) {
+            return; // its squad is there
+        }
+        long now = level.m_46467_();
+        Long last = POSTED.get("ccg_building");
+        if (last != null && now - last < POST_EVERY && now >= last) {
+            return;
+        }
+        ServerPlayer them = near;
+        int mastery = com.hex.kagune.data.KaguneProfile.isUnlocked(them) ? com.hex.kagune.data.KaguneProfile.mastery(them) : 0;
+        int number = 1 + them.m_217043_().m_188503_(Integer.MAX_VALUE - 1);
+        java.util.List<com.hex.kagune.control.npc.GhoulNpc> made = new ArrayList<>();
+        for (int attempt = 0; attempt < 6 && made.isEmpty(); attempt++) {
+            double angle = near.m_217043_().m_188500_() * Math.PI * 2.0;
+            double distance = POST_NEAREST + (POST_FARTHEST - POST_NEAREST) * near.m_217043_().m_188500_();
+            double x = middle[0] + 0.5 + Math.cos(angle) * distance;
+            double z = middle[2] + 0.5 + Math.sin(angle) * distance;
+            for (int i = 0; i < com.hex.kagune.control.npc.Gang.TRIO; i++) {
+                com.hex.kagune.control.npc.NpcIdentity who = com.hex.kagune.control.npc.NpcIdentity.roll(mastery, () -> them.m_217043_().m_188500_())
+                    .ganged(com.hex.kagune.control.npc.Gang.CCG_DIVISION, 0);
+                double side = i * Math.PI * 2.0 / com.hex.kagune.control.npc.Gang.TRIO;
+                com.hex.kagune.control.npc.GhoulNpc one = GhoulNpcSpawner.place(level, x + (i == 0 ? 0.0 : Math.cos(side) * AgentRules.PAIR_APART),
+                    z + (i == 0 ? 0.0 : Math.sin(side) * AgentRules.PAIR_APART), who, number);
+                if (one != null) {
+                    made.add(one);
+                }
+            }
+            if (made.size() < com.hex.kagune.control.npc.Gang.TRIO) {
+                made.forEach(com.hex.kagune.control.npc.GhoulNpc::m_146870_); // never fewer than three
+                made.clear();
+                continue;
+            }
+            for (com.hex.kagune.control.npc.GhoulNpc one : made) {
+                one.getPersistentData().m_128405_(POST + "X", (int)Math.floor(x));
+                one.getPersistentData().m_128405_(POST + "Y", (int)Math.floor(made.get(0).m_20186_()));
+                one.getPersistentData().m_128405_(POST + "Z", (int)Math.floor(z));
+            }
+        }
+        if (!made.isEmpty()) {
+            POSTED.put("ccg_building", now);
+        }
     }
 
     /** A pair near {@code player}, if a place for them is found on the first few tries (false if not). */

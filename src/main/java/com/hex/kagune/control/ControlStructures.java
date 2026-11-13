@@ -955,6 +955,27 @@ public final class ControlStructures {
     }
 
     /**
+     * 4.1.82: the middle of the one-of-a-kind place {@code id} as this world built it ({x, its lowest y, z}: its start's box round all its
+     * pieces, from its claimed start chunk), or null if it isn't built, or its chunk isn't loaded (nothing is loaded for this).
+     */
+    public static int[] middle(net.minecraft.server.level.ServerLevel level, String id) {
+        int[] chunk = PlaceClaims.claimed(id);
+        if (chunk == null || !level.m_46805_(new BlockPos((chunk[0] << 4) + 8, 64, (chunk[1] << 4) + 8))) {
+            return null;
+        }
+        Structure structure = level.m_9598_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
+        if (structure == null) {
+            return null;
+        }
+        net.minecraft.world.level.levelgen.structure.StructureStart found = level.m_6325_(chunk[0], chunk[1]).m_213652_(structure);
+        if (found == null || !found.m_73603_()) {
+            return null;
+        }
+        BoundingBox box = found.m_73601_();
+        return com.hex.kagune.control.npc.HomePlace.middle(box.m_162395_(), box.m_162399_(), box.m_162398_(), box.m_162401_(), box.m_162396_());
+    }
+
+    /**
      * 4.1.14: a one-of-a-kind place asked for at this start chunk: turned away if another spot of the world already holds it
      * ({@link PlaceClaims}); else laid out here ({@code here}: empty if this spot won't do), and, as the world makes this chunk (not as
      * /locate only asks), the spot taken: the first the world makes holds it, and no other ever does.

@@ -77,6 +77,25 @@ public final class UniqueNpcs {
         }
     }
 
+    /** 4.1.82: true if ({@code x}, {@code z}) is at official {@code key}'s own place (npc.HomePlace) as this world built it. */
+    public static boolean atOwnPlace(String key, double x, double z) {
+        String place = com.hex.kagune.control.npc.HomePlace.of(key);
+        int[] chunk = place == null ? null : com.hex.kagune.control.PlaceClaims.claimed(place);
+        return chunk != null && com.hex.kagune.control.npc.HomePlace.within(place, x - ((chunk[0] << 4) + 8), z - ((chunk[1] << 4) + 8));
+    }
+
+    /**
+     * 4.1.82 (the owner: "the clown girl is not in the circus tent"): true if {@code body}, a body of {@code key}'s at her own place, takes
+     * her slot from the world's one, whose home is not there (npc.HomePlace#takesOver: never a married one's).
+     */
+    public static boolean takesOver(ServerLevel level, String key, Mob body) {
+        UniqueNpc slot = get(level, key);
+        int[] home = slot.spawn();
+        boolean slotHome = (slot.origined || slot.homed) && atOwnPlace(key, home[0] + 0.5, home[2] + 0.5);
+        return com.hex.kagune.control.npc.HomePlace.takesOver(atOwnPlace(key, body.m_20185_(), body.m_20189_()), slotHome,
+            slot.stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED);
+    }
+
     /**
      * 1.3.14: {@code body} is {@code key}'s from now on (a command made it where the old one could not be found): whoever it is with and
      * everything the world remembers of it stay; the old body, if it ever loads again, is sent away.
@@ -368,6 +387,71 @@ public final class UniqueNpcs {
             level.m_7967_(body);
             TICKING.put(entry.getKey(), now);
             changed(level);
+        }
+        keepPlaces(level, now); // 4.1.82
+    }
+
+    /** 4.1.82: since when a player has been in each place with none of its official NPC in it ("roma"). */
+    private static final Map<String, Long> PLACE_WATCHED = WorldTimes.map();
+
+    /**
+     * 4.1.82 (the owner: "the clown girl is not in the circus tent"): an official NPC whose place's middle is her spot (npc.HomePlace#middle:
+     * Roma) is made there when a player has been in it half a minute and none of her is (her body sent away by an older version as one met
+     * elsewhere held her, lost, or never made), unless she is out with someone or married; whatever body of hers is elsewhere is sent away.
+     */
+    static void keepPlaces(ServerLevel level, long now) {
+        for (String key : KINDS.keySet()) {
+            if (!com.hex.kagune.control.npc.HomePlace.middle(key)) {
+                continue;
+            }
+            int[] spot = com.hex.kagune.control.ControlStructures.middle(level, com.hex.kagune.control.npc.HomePlace.of(key));
+            if (spot == null || !someoneNear(level, new BlockPos(spot[0], spot[1], spot[2]), 24.0)) {
+                PLACE_WATCHED.remove(key);
+                continue;
+            }
+            com.hex.kagune.control.npc.EtoNpc live = null;
+            for (com.hex.kagune.control.npc.EtoNpc one : EtoBrain.live()) {
+                if (one.persona().key().equals(key) && one.m_6084_() && one.m_9236_() == level) {
+                    live = one;
+                }
+            }
+            UniqueNpc slot = known(level, key);
+            if (slot != null && !slot.alive && slot.diedAt != Long.MIN_VALUE) {
+                // Dead: she comes back a day after, as ever (dueBack), but in her place, unless married (her home is their home).
+                int[] back = slot.spawn();
+                if (slot.stage != com.hex.kagune.control.npc.Romance.Stage.MARRIED && !atOwnPlace(key, back[0] + 0.5, back[2] + 0.5)) {
+                    slot.originX = spot[0];
+                    slot.originY = spot[1];
+                    slot.originZ = spot[2];
+                    slot.origined = true;
+                    changed(level);
+                }
+                PLACE_WATCHED.remove(key);
+                continue;
+            }
+            boolean inPlace = live != null && atOwnPlace(key, live.m_20185_(), live.m_20189_());
+            boolean along = live != null && (live.following() != null || live.mind != null && live.mind.holding != null);
+            boolean married = slot != null && slot.stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED;
+            long since = inPlace || along || married ? now : PLACE_WATCHED.computeIfAbsent(key, any -> now);
+            if (inPlace || along || married) {
+                PLACE_WATCHED.remove(key);
+            }
+            if (!com.hex.kagune.control.npc.HomePlace.remade(inPlace, along, married, now - since, UniqueNpc.MISSING)) {
+                continue;
+            }
+            Supplier<? extends EntityType<? extends Mob>> kind = kindOf(key);
+            Mob body = kind == null ? null : kind.get().m_20615_(level);
+            if (body == null) {
+                continue;
+            }
+            PLACE_WATCHED.remove(key);
+            body.m_7678_(spot[0] + 0.5, NpcFooting.feet(level, body, spot[0] + 0.5, spot[1], spot[2] + 0.5), spot[2] + 0.5, 0.0F, 0.0F);
+            made(body, key);
+            level.m_7967_(body);
+            adopt(level, key, body, new BlockPos(spot[0], spot[1], spot[2]));
+            if (live != null) {
+                live.m_146870_(); // the one elsewhere: she is home now
+            }
         }
     }
 

@@ -1230,6 +1230,9 @@ public final class AgentBrain {
         if (body instanceof Player player && player.m_7500_()) {
             return false;
         }
+        if (JoinServer.othersTrial(agent, body)) {
+            return false; // 4.1.82 (the owner: "Quests are PER player"): one of a trial's never goes for another player
+        }
         if (body instanceof ServerPlayer player && JoinServer.partnered(agent, player)) {
             return false; // 4.1.79: the hunt's partner never goes for the one he was assigned to, their kagune out or not
         }

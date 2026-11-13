@@ -9,6 +9,16 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.82 (HexGhoul): the owner's bug list: the control bar gone, Roma kept in her tent, the ghoul division at its tower, a trial's bodies its player's alone, Anteiku's regulars at the counter (testing)
+
+See `.github/release-notes-4.1.82.md`. `client/ControlHud` and the `controlIndicator` setting deleted (the 1.0.43 notes below are history).
+`npc/HomePlace` (each official's place, `reach`, `within`, `takesOver`, `middle`, `remade`); `UniqueNpcs.atOwnPlace`/`takesOver`/`keepPlaces`
+(Roma remade in her tent's middle: `ControlStructures.middle`, the start's box); `EtoBrain`'s first tick adopts a body at its own place.
+`AgentSpawner.station` and `GhoulNpcBrain.posted` (a squad of the CCG's ghoul division posted at its tower). `JoinServer.mark` (sparks sent
+to the trial's player only), `othersTrial` (no other player's blows, no other player hunted), `counterSeat` and `JoinTrial.counter` (the
+regulars in front of the counter), `cup` (a right click with the cup near the regular serves). `CompanionTests.bugs482`, 71 rules sabotaged
+(`docs/handoff/sabotage-4.1.82.json`). Render `docs/handoff/cafe-4.1.82.png` (`tools/cafe_seats.py`).
+
 ## 4.1.81 (HexGhoul): dates at real places: they follow you there, and the date happens when you arrive together (testing)
 
 See `.github/release-notes-4.1.81.md`. `DateSpot` (every date's `Place` and `When`: the companions' own places by their homes, and kinds of

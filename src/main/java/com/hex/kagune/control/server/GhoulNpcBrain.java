@@ -570,6 +570,9 @@ public final class GhoulNpcBrain {
         if (body == npc || !body.m_6084_() || ReviveForget.presumedDead(body, now)) {
             return false; // 2.4.2: never one thought dead
         }
+        if (JoinServer.othersTrial(npc, body)) {
+            return false; // 4.1.82 (the owner: "Quests are PER player"): one of a trial's never goes for another player
+        }
         if (body instanceof Player player && player.m_5833_()) {
             return false;
         }
@@ -861,6 +864,10 @@ public final class GhoulNpcBrain {
         if (atCircus(npc, mind, level, now)) {
             return;
         }
+        // 4.1.82: a squad of the CCG's ghoul division posted at its tower keeps to its post.
+        if (posted(npc, mind, now)) {
+            return;
+        }
         // 4.1.45: a gang walks together: one leads (wandering as any ghoul does), the rest keep up with it.
         if (who.gang() != 0 && roam(npc, mind, level, now)) {
             return;
@@ -893,6 +900,29 @@ public final class GhoulNpcBrain {
         if (Math.abs(y - npc.m_20186_()) <= 6.0) {
             npc.m_21573_().m_26519_(x, y, z, 0.7);
         }
+    }
+
+    /**
+     * 4.1.82 (the owner: "where tf is the human ghoul division from the ccg?"): one of the squad posted at the CCG's tower (AgentSpawner.station),
+     * strayed past AgentSpawner.POST_REACH of its post, walks back to it (true: that is what it does now); within it, it roams as its squad does.
+     */
+    static boolean posted(GhoulNpc npc, Mind mind, long now) {
+        net.minecraft.nbt.CompoundTag d = npc.getPersistentData();
+        if (!d.m_128441_(AgentSpawner.POST + "X")) {
+            return false;
+        }
+        double px = d.m_128451_(AgentSpawner.POST + "X") + 0.5;
+        double pz = d.m_128451_(AgentSpawner.POST + "Z") + 0.5;
+        double dx = npc.m_20185_() - px;
+        double dz = npc.m_20189_() - pz;
+        if (dx * dx + dz * dz <= AgentSpawner.POST_REACH * AgentSpawner.POST_REACH) {
+            return false;
+        }
+        if (now >= mind.wanderAt || npc.m_21573_().m_26571_()) {
+            mind.wanderAt = now + 60L;
+            npc.m_21573_().m_26519_(px, d.m_128451_(AgentSpawner.POST + "Y"), pz, 0.8);
+        }
+        return true;
     }
 
     /** No fight: whatever it was making ends; a while after its last fight (or at once when it runs) the kagune goes back in. */

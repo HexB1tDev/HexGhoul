@@ -257,6 +257,34 @@ public final class JoinTrial {
     public static final double SHIFT_ZONE = 24.0;
     /** What is served: the cookbook's Anteiku Blend, brewed (crafted) by the player. */
     public static final String CUP = "hexkagune:anteiku_blend";
+    /** 4.1.82: how near (blocks) the waiting regular a right click with the cup serves them, aimed at them or not. */
+    public static final double SERVE_NEAR = 4.0;
+    /** 4.1.82: the seats in front of the counter: this far out from Touka's spot, the way she faces, and this far to either side. */
+    public static final int COUNTER_NEAR = 2;
+    public static final int COUNTER_FAR = 6;
+    public static final int COUNTER_SIDE = 3;
+
+    /**
+     * 4.1.82 (the owner: "clients are spawning in areas that are not infront of the reception"): where a regular may sit, as offsets {dx, dz}
+     * from Touka's spot behind the counter: {@link #COUNTER_NEAR} to {@link #COUNTER_FAR} blocks the way she faces ({@code yaw}, Minecraft's:
+     * 0 south, 90 west), the tables' side, and up to {@link #COUNTER_SIDE} to either side; the nearest rows first.
+     */
+    public static java.util.List<int[]> counter(float yaw) {
+        double fx = -Math.sin(Math.toRadians(yaw));
+        double fz = Math.cos(Math.toRadians(yaw));
+        java.util.List<int[]> out = new java.util.ArrayList<>();
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        for (int ahead = COUNTER_NEAR; ahead <= COUNTER_FAR; ahead++) {
+            for (int side = -COUNTER_SIDE; side <= COUNTER_SIDE; side++) {
+                int dx = (int)Math.round(fx * ahead - fz * side);
+                int dz = (int)Math.round(fz * ahead + fx * side);
+                if (seen.add((long)dx << 32 ^ dz & 0xFFFFFFFFL)) {
+                    out.add(new int[] {dx, dz});
+                }
+            }
+        }
+        return out;
+    }
     /** What Ken hands over for it, once: the blend's makings, three cups' worth (item id, count). */
     public static final String[][] MAKINGS = {{"minecraft:glass_bottle", "3"}, {"minecraft:cocoa_beans", "6"}, {"hexkagune:blood_sugar", "3"}};
 

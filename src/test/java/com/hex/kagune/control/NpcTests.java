@@ -1189,7 +1189,7 @@ public final class NpcTests {
                 && join.contains("com.hex.kagune.control.npc.Gang gang = com.hex.kagune.control.npc.Gang.CLOWNS;"), "the raid is the Clowns (rivals of the Gas Masks on sight)");
             // The shift.
             int serve = join.indexOf("static boolean serve(ServerPlayer player, GhoulNpc npc) {");
-            check(within(join, serve, "held.m_41720_() != cup", 600) && within(join, serve, "held.m_41774_(1);", 1000) && within(join, serve, "live.done++;", 1300),
+            check(within(join, serve, "held.m_41720_() != cup", 900) && within(join, serve, "held.m_41774_(1);", 1300) && within(join, serve, "live.done++;", 1600),
                 "a regular served only a cup of the blend, taken from the hand");
             check(talk.contains("if (JoinServer.serve(player, npc)) {\n                return;") && talk.indexOf("JoinServer.serve(player, npc)") < talk.indexOf("open(player, npc);\n        }"),
                 "a right click on a waiting regular serves before any talk opens");

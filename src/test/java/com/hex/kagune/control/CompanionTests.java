@@ -151,6 +151,7 @@ public final class CompanionTests {
         courtship();
         courtship480();
         dates481();
+        bugs482();
         proofs();
         oneSpouse();
         jealous();
@@ -2143,6 +2144,142 @@ public final class CompanionTests {
             "there together: she comes up with its scene, and it is had; too long: off");
         check(near(trials, "public static void loggedOut(", "DATING.remove(event.getEntity().m_20148_());", 150), "logged out: off");
         check(near(trials, "Dating d = DATING.get(player.m_20148_());", "if (d != null && player.f_19797_ % 20 == 0) {", 60), "looked at each second");
+    }
+
+    /**
+     * 4.1.82, the owner's list: the control bar gone ("Yes"); Roma in her tent ("the clown girl is not in the circus tent"); the CCG's ghoul
+     * division at its tower ("where tf is the human ghoul division"); a trial's bodies its player's alone ("Quests are PER player"); Anteiku's
+     * regulars in front of the counter, served by a right click ("clients are spawning in areas that are not infront of the reception";
+     * "sometimes they dont even accept it").
+     */
+    static void bugs482() {
+        check(!new java.io.File("src/main/java/com/hex/kagune/control/client/ControlHud.java").exists()
+            && !read("src/main/java/com/hex/kagune/control/ControlConfig.java").contains("controlIndicator"), "the control bar and its setting are gone");
+        // Roma's place, and when hers wins.
+        String[][] homes = {{"eto", "library"}, {"touka", "anteiku"}, {"ken", "anteiku"}, {"ayato", "aogiri_hideout"}, {"noro", "aogiri_hideout"},
+            {"general", "ccg_building"}, {"roma", "circus"}, {"banjou", "gas_hideout"}};
+        for (String[] h : homes) {
+            check(h[1].equals(com.hex.kagune.control.npc.HomePlace.of(h[0])), h[0] + " lives in " + h[1]);
+        }
+        check(com.hex.kagune.control.npc.HomePlace.of("child:1") == null && com.hex.kagune.control.npc.HomePlace.of(null) == null, "no one else has a place");
+        check(com.hex.kagune.control.npc.HomePlace.reach("circus") == 80.0 && com.hex.kagune.control.npc.HomePlace.reach("aogiri_hideout") == 180.0,
+            "the tent reaches 80 from its chunk, the mansion's grounds 180");
+        check(com.hex.kagune.control.npc.HomePlace.within("circus", 79.0, 10.0) && !com.hex.kagune.control.npc.HomePlace.within("circus", 79.0, 13.0)
+            && !com.hex.kagune.control.npc.HomePlace.within(null, 0.0, 0.0), "in the tent, or not");
+        check(com.hex.kagune.control.npc.HomePlace.takesOver(true, false, false), "her tent's body takes her from one whose home is elsewhere");
+        check(!com.hex.kagune.control.npc.HomePlace.takesOver(true, true, false) && !com.hex.kagune.control.npc.HomePlace.takesOver(false, false, false)
+            && !com.hex.kagune.control.npc.HomePlace.takesOver(true, false, true), "not from one at home, not from elsewhere, never from a married one");
+        check(com.hex.kagune.control.npc.HomePlace.middle("roma") && !com.hex.kagune.control.npc.HomePlace.middle("banjou")
+            && !com.hex.kagune.control.npc.HomePlace.middle("eto"), "only Roma's spot is her place's middle");
+        check(java.util.Arrays.equals(com.hex.kagune.control.npc.HomePlace.middle(0, 76, 0, 48, 10), new int[] {38, 11, 24})
+            && java.util.Arrays.equals(com.hex.kagune.control.npc.HomePlace.middle(-77, -1, 100, 148, 63), new int[] {-39, 64, 124})
+            && java.util.Arrays.equals(com.hex.kagune.control.npc.HomePlace.middle(-78, -1, -149, -100, 63), new int[] {-40, 64, -125}),
+            "a box's middle, on its floor (rounded down west and north of 0 too)");
+        check(read("tools/companion_structures.py").contains("{\"who\": \"hexkagune:roma\", \"at\": (38, 0, 24), \"yaw\": 0.0}"),
+            "her spot in the tent's template (77 x 49) is its middle");
+        check(com.hex.kagune.control.npc.HomePlace.remade(false, false, false, 600L, 600L), "a player in her tent half a minute, none of her: made there");
+        check(!com.hex.kagune.control.npc.HomePlace.remade(true, false, false, 9000L, 600L) && !com.hex.kagune.control.npc.HomePlace.remade(false, true, false, 9000L, 600L)
+            && !com.hex.kagune.control.npc.HomePlace.remade(false, false, true, 9000L, 600L) && !com.hex.kagune.control.npc.HomePlace.remade(false, false, false, 599L, 600L),
+            "never while she's in it, out with someone, married, or before half a minute");
+        String brain = read("src/main/java/com/hex/kagune/control/server/EtoBrain.java");
+        check(near(brain, "boolean mine = UniqueNpcs.claim(level, npc.persona().key(), npc.m_20148_(), first);",
+            "if (!mine && UniqueNpcs.takesOver(level, npc.persona().key(), npc)) {", 100)
+            && near(brain, "if (!mine && UniqueNpcs.takesOver(level, npc.persona().key(), npc)) {", "UniqueNpcs.adopt(level, npc.persona().key(), npc, first);", 500)
+            && near(brain, "UniqueNpcs.adopt(level, npc.persona().key(), npc, first);\n            } else if (!mine) {", "npc.m_146870_();", 900),
+            "her place's body adopted before any other is sent away");
+        String unique = read("src/main/java/com/hex/kagune/control/server/UniqueNpcs.java");
+        check(near(unique, "public static boolean takesOver(", "slot.stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED", 700)
+            && near(unique, "public static boolean takesOver(", "boolean slotHome = (slot.origined || slot.homed) && atOwnPlace(key, home[0] + 0.5, home[2] + 0.5);", 400),
+            "her slot's home looked at, and her marriage");
+        check(near(unique, "public static boolean atOwnPlace(", "com.hex.kagune.control.PlaceClaims.claimed(place);", 250)
+            && near(unique, "public static boolean atOwnPlace(", "HomePlace.within(place, x - ((chunk[0] << 4) + 8), z - ((chunk[1] << 4) + 8));", 400), "her place as the world built it");
+        check(near(unique, "static void keepPlaces(", "!someoneNear(level, new BlockPos(spot[0], spot[1], spot[2]), 24.0)", 600)
+            && near(unique, "static void keepPlaces(", "HomePlace.remade(inPlace, along, married, now - since, UniqueNpc.MISSING)", 3200)
+            && near(unique, "adopt(level, key, body, new BlockPos(spot[0], spot[1], spot[2]));", "live.m_146870_();", 200)
+            && unique.contains("        keepPlaces(level, now); // 4.1.82"), "made in her place, the stray one sent away, looked at with the others");
+        check(near(unique, "if (slot != null && !slot.alive && slot.diedAt != Long.MIN_VALUE) {", "slot.originX = spot[0];", 500),
+            "dead, she comes back in her place");
+        check(near(unique, "boolean along = live != null && (", "live.following() != null || live.mind != null && live.mind.holding != null", 60),
+            "out with someone: left alone");
+        String structures = read("src/main/java/com/hex/kagune/control/ControlStructures.java");
+        check(near(structures, "public static int[] middle(", "BoundingBox box = found.m_73601_();", 1200)
+            && near(structures, "public static int[] middle(", "!level.m_46805_(", 300)
+            && near(structures, "public static int[] middle(", "if (found == null || !found.m_73603_()) {\n            return null;", 1000),
+            "the tent's middle from its start's box, only where it's loaded and built");
+        // The trials: each player's alone.
+        String join = read("src/main/java/com/hex/kagune/control/server/JoinServer.java");
+        check(!join.contains("MobEffects.f_19619_"), "no glowing (every player's to see)");
+        check(near(join, "static void mark(ServerPlayer owner, LivingEntity body) {", "owner.m_284548_().m_8624_(owner, ParticleTypes.f_123748_, true,", 120)
+            && near(join, "static void glow(ServerLevel level, Live live) {", "if (!(level.m_8791_(live.player) instanceof ServerPlayer owner)) {", 100)
+            && near(join, "static void glow(ServerLevel level, Live live) {", "mark(owner, body);", 500)
+            && near(join, "if (player.f_19797_ % 10 == 0) {", "mark(player, npc);", 60), "marked to their own player alone");
+        check(near(join, "public static boolean othersTrial(", "return owner != null && other instanceof ServerPlayer player && !player.m_20148_().equals(owner);", 200),
+            "another player is one whose trial it isn't");
+        check(near(join, "public static void attacked(", "if (othersTrial(event.getEntity(), event.getSource().m_7639_())) {\n            event.setCanceled(true);", 700),
+            "no other player's blow lands on them");
+        check(near(read("src/main/java/com/hex/kagune/control/server/AgentBrain.java"), "static boolean wanted(CcgAgent", "if (JoinServer.othersTrial(agent, body)) {\n            return false;", 700)
+            && near(read("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java"), "static boolean wanted(GhoulNpc", "if (JoinServer.othersTrial(npc, body)) {\n            return false;", 400),
+            "and they go for no other player");
+        // Anteiku's regulars.
+        for (float yaw : new float[] {0.0F, 90.0F, 180.0F, 270.0F, -90.0F}) {
+            List<int[]> seats = com.hex.kagune.control.npc.JoinTrial.counter(yaw);
+            double fx = -Math.sin(Math.toRadians(yaw));
+            double fz = Math.cos(Math.toRadians(yaw));
+            check(seats.size() == 35, yaw + ": five rows of seven: " + seats.size());
+            boolean front = true;
+            for (int[] at : seats) {
+                double ahead = at[0] * fx + at[1] * fz;
+                double side = Math.abs(at[0] * -fz + at[1] * fx);
+                front &= ahead >= com.hex.kagune.control.npc.JoinTrial.COUNTER_NEAR - 0.01 && ahead <= com.hex.kagune.control.npc.JoinTrial.COUNTER_FAR + 0.01
+                    && side <= com.hex.kagune.control.npc.JoinTrial.COUNTER_SIDE + 0.01;
+            }
+            check(front, yaw + ": every seat in front of her, 2 to 6 out, 3 to a side");
+            double first = seats.get(0)[0] * fx + seats.get(0)[1] * fz;
+            check(Math.abs(first - com.hex.kagune.control.npc.JoinTrial.COUNTER_NEAR) < 0.01, yaw + ": the nearest row first");
+            boolean rows = true;
+            for (int i = 1; i < seats.size(); i++) {
+                rows &= seats.get(i)[0] * fx + seats.get(i)[1] * fz >= seats.get(i - 1)[0] * fx + seats.get(i - 1)[1] * fz - 0.01;
+            }
+            check(rows, yaw + ": row by row, nearest to farthest");
+        }
+        java.util.Set<String> once = new java.util.HashSet<>();
+        for (int[] at : com.hex.kagune.control.npc.JoinTrial.counter(45.0F)) {
+            check(once.add(at[0] + "," + at[1]), "turned half way: no seat twice: " + at[0] + "," + at[1]);
+        }
+        check(com.hex.kagune.control.npc.JoinTrial.counter(0.0F).get(3)[0] == 0 && com.hex.kagune.control.npc.JoinTrial.counter(0.0F).get(3)[1] == 2,
+            "facing south: the middle of the nearest row is two south of her");
+        check(near(join, "BlockPos seat = counterSeat(level, live.anchor, player);", "if (seat == null) {\n            seat = floor(level, live.anchor, JoinTrial.SHIFT_NEAR, JoinTrial.SHIFT_FAR, true, false, player);", 80)
+            && !join.contains("seat = floor(level, live.anchor, 1.0, JoinTrial.SHIFT_FAR, false, false, player);"), "in front of the counter; never outside");
+        check(near(join, "static BlockPos counterSeat(", "one.getPersistentData().m_128441_(EtoBrain.SIT_YAW)", 500)
+            && near(join, "static BlockPos counterSeat(", "for (int[] at : JoinTrial.counter(yaw)) {", 1200)
+            && near(join, "for (int[] at : JoinTrial.counter(yaw)) {", "if (standable(level, x, y, z) && roofed(level, x, y, z)) {", 400)
+            && near(join, "for (int[] at : JoinTrial.counter(yaw)) {", "if (seats.size() >= 6) {\n                break; // the nearest rows", 900),
+            "the way Touka faces, on her floor, under the roof");
+        check(near(join, "public static void cup(", "regular.m_20280_(player) > JoinTrial.SERVE_NEAR * JoinTrial.SERVE_NEAR) {", 1200)
+            && near(join, "public static void cup(", "if (live == null || live.kind != JoinTrial.Kind.SHIFT || live.current == null) {\n                return;", 400)
+            && near(join, "public static void cup(", "event.setCanceled(true);\n            serve(player, regular);", 1400)
+            && com.hex.kagune.control.npc.JoinTrial.SERVE_NEAR == 4.0, "a right click with the cup near them serves them, never drunk");
+        check(near(join, "player.m_21206_().m_41720_() == cup && player.m_21205_().m_41720_() != cup", "? player.m_21206_() : player.m_21205_();", 120),
+            "the cup in either hand");
+        // The ghoul division at its tower.
+        String spawner = read("src/main/java/com/hex/kagune/control/server/AgentSpawner.java");
+        String station = spawner.substring(Math.max(0, spawner.indexOf("static void station(ServerLevel level) {")));
+        check(station.length() < spawner.length() && near(spawner, "static void station(ServerLevel level) {", "ControlStructures.middle(level, \"ccg_building\");", 150)
+            && near(spawner, "static void station(ServerLevel level) {", "dx * dx + dz * dz <= STATION_NEAR * STATION_NEAR", 700)
+            && near(spawner, "g -> g.m_6084_() && g.getPersistentData().m_128441_(POST + \"X\")).isEmpty()) {", "return; // its squad is there", 120)
+            && near(spawner, "if (last != null && now - last < POST_EVERY && now >= last) {", "return;", 100)
+            && near(station, "if (made.size() < com.hex.kagune.control.npc.Gang.TRIO) {", "made.forEach(com.hex.kagune.control.npc.GhoulNpc::m_146870_);", 80)
+            && station.contains(".ganged(com.hex.kagune.control.npc.Gang.CCG_DIVISION, 0);\n                double side")
+            && spawner.contains("station(level); // 4.1.82"), "a squad of three of the division at the tower when someone comes, one at a time");
+        check(near(spawner, "for (com.hex.kagune.control.npc.GhoulNpc one : made) {", "one.getPersistentData().m_128405_(POST + \"X\", (int)Math.floor(x));", 120)
+            && near(spawner, "for (com.hex.kagune.control.npc.GhoulNpc one : made) {", "one.getPersistentData().m_128405_(POST + \"Z\", (int)Math.floor(z));", 400)
+            && near(spawner, "if (!made.isEmpty()) {", "POSTED.put(\"ccg_building\", now);", 80), "each of the squad knows its post; the time it was posted kept");
+        check(read("src/main/java/com/hex/kagune/control/server/AgentSpawner.java").contains("static final double POST_NEAREST = 32.0;")
+            && read("src/main/java/com/hex/kagune/control/server/AgentSpawner.java").contains("static final long POST_EVERY = 6000L;"), "outside the tower, five minutes apart");
+        String ghouls = read("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java");
+        check(near(ghouls, "static boolean posted(", "if (dx * dx + dz * dz <= AgentSpawner.POST_REACH * AgentSpawner.POST_REACH) {\n            return false;", 600)
+            && near(ghouls, "if (posted(npc, mind, now)) {", "return;", 60) && ghouls.indexOf("if (posted(npc, mind, now)) {") < ghouls.indexOf("if (who.gang() != 0 && roam(npc, mind, level, now)) {"),
+            "a posted one strayed walks back, before it roams with its squad");
     }
 
     /** {@code p}'s courtship on chapter {@code closed} + 1 with {@code done} of it done and {@code held} of what it asks for in hand. */

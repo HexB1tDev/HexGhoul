@@ -418,6 +418,67 @@ public final class JoinServer {
         return null;
     }
 
+    /**
+     * 4.1.82: a seat in front of Anteiku's counter ({@code anchor}: Touka's spot behind it): JoinTrial.counter's offsets the way she faced
+     * when the cafe was built (her body's, EtoBrain.SIT_YAW), on her floor (or a step up or down), under the roof; one of the nearest rows,
+     * by chance. Null if she isn't about to say which way, or there's no room.
+     */
+    static BlockPos counterSeat(ServerLevel level, BlockPos anchor, ServerPlayer player) {
+        Float yaw = null;
+        for (EtoNpc one : EtoBrain.live()) {
+            if (one.persona().key().equals("touka") && one.m_6084_() && one.m_9236_() == level && one.getPersistentData().m_128441_(EtoBrain.SIT_YAW)) {
+                yaw = one.getPersistentData().m_128451_(EtoBrain.SIT_YAW) / 10.0F;
+            }
+        }
+        if (yaw == null || anchor == null) {
+            return null;
+        }
+        List<BlockPos> seats = new ArrayList<>();
+        int[] heights = {0, -1, 1};
+        for (int[] at : JoinTrial.counter(yaw)) {
+            for (int dy : heights) {
+                int x = anchor.m_123341_() + at[0];
+                int y = anchor.m_123342_() + dy;
+                int z = anchor.m_123343_() + at[1];
+                if (standable(level, x, y, z) && roofed(level, x, y, z)) {
+                    seats.add(new BlockPos(x, y, z));
+                    break;
+                }
+            }
+            if (seats.size() >= 6) {
+                break; // the nearest rows
+            }
+        }
+        return seats.isEmpty() ? null : seats.get(player.m_217043_().m_188503_(seats.size()));
+    }
+
+    /**
+     * 4.1.82 (the owner: "giving items to NPCS like coffee should be right clicking them ... sometimes they dont even accept it"): a right
+     * click with the cup near the regular waiting (within JoinTrial.SERVE_NEAR), aimed at them or not, serves them; never drunk instead.
+     */
+    @SubscribeEvent
+    public static void cup(net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem event) {
+        try {
+            if (!(event.getEntity() instanceof ServerPlayer player)) {
+                return;
+            }
+            Live live = LIVE.get(player.m_20148_());
+            if (live == null || live.kind != JoinTrial.Kind.SHIFT || live.current == null) {
+                return;
+            }
+            net.minecraft.world.item.ItemStack held = event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND ? player.m_21205_() : player.m_21206_();
+            net.minecraft.world.item.Item cup = com.hex.kagune.control.ControlItems.vanilla(JoinTrial.CUP);
+            if (cup == null || held.m_41720_() != cup || !(player.m_284548_().m_8791_(live.current) instanceof GhoulNpc regular)
+                || regular.m_20280_(player) > JoinTrial.SERVE_NEAR * JoinTrial.SERVE_NEAR) {
+                return;
+            }
+            event.setCanceled(true);
+            serve(player, regular);
+        } catch (RuntimeException | LinkageError failure) {
+            Safety.caught(failure, "JoinServer.cup");
+        }
+    }
+
     /** True if a body can stand at x, y, z: solid ground under it, no fluid, its feet and head in the open. */
     static boolean standable(ServerLevel level, int x, int y, int z) {
         BlockState ground = level.m_8055_(new BlockPos(x, y - 1, z));
@@ -743,17 +804,19 @@ public final class JoinServer {
                     + " walked out)"), false);
                 return;
             }
-            if (player.f_19797_ % 20 == 0) {
-                npc.m_7292_(new MobEffectInstance(MobEffects.f_19619_, 30, 0, false, false, false));
+            if (player.f_19797_ % 10 == 0) {
+                mark(player, npc); // 4.1.82: theirs alone to see
             }
             return;
         }
         if (now < live.nextAt) {
             return;
         }
-        BlockPos seat = floor(level, live.anchor, JoinTrial.SHIFT_NEAR, JoinTrial.SHIFT_FAR, true, false, player);
+        // 4.1.82 (the owner: "clients are spawning in areas that are not infront of the reception"): in front of the counter, the way
+        // Touka faces from behind it; only if she isn't there to say which way that is, anywhere on the cafe's floor round her spot.
+        BlockPos seat = counterSeat(level, live.anchor, player);
         if (seat == null) {
-            seat = floor(level, live.anchor, 1.0, JoinTrial.SHIFT_FAR, false, false, player);
+            seat = floor(level, live.anchor, JoinTrial.SHIFT_NEAR, JoinTrial.SHIFT_FAR, true, false, player);
         }
         if (seat == null) {
             live.nextAt = now + 40L;
@@ -793,7 +856,9 @@ public final class JoinServer {
             return false;
         }
         net.minecraft.world.item.Item cup = com.hex.kagune.control.ControlItems.vanilla(JoinTrial.CUP);
-        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        // 4.1.82 (the owner: "sometimes they dont even accept it"): the cup in either hand.
+        net.minecraft.world.item.ItemStack held = cup != null && player.m_21206_().m_41720_() == cup && player.m_21205_().m_41720_() != cup
+            ? player.m_21206_() : player.m_21205_();
         if (cup == null || held.m_41619_() || held.m_41720_() != cup) {
             player.m_5661_(Component.m_237113_("§6" + npc.identity().displayName() + ": §f\"An Anteiku Blend, please.\" §7(in your hand)"), true);
             return true;
@@ -938,11 +1003,34 @@ public final class JoinServer {
 
     /** The marked bodies of {@code live} glowing (the patrol, the reported ghoul): they can be found. */
     static void glow(ServerLevel level, Live live) {
+        if (!(level.m_8791_(live.player) instanceof ServerPlayer owner)) {
+            return;
+        }
         for (UUID one : live.marked) {
             if (level.m_8791_(one) instanceof LivingEntity body && body.m_6084_() && !PARTNER.equals(role(body))) {
-                body.m_7292_(new MobEffectInstance(MobEffects.f_19619_, 40, 0, false, false, false));
+                mark(owner, body);
             }
         }
+    }
+
+    /**
+     * 4.1.82 (the owner: "Clients should be PER player, only highlight the ones that are OF THE PLAYER DOING THE QUEST"): {@code body}
+     * marked for {@code owner} alone: a column of green sparks over its head, sent to them and no one else (the glowing effect it had was
+     * every player's to see).
+     */
+    static void mark(ServerPlayer owner, LivingEntity body) {
+        owner.m_284548_().m_8624_(owner, ParticleTypes.f_123748_, true, body.m_20185_(), body.m_20186_() + MARK_HEIGHT, body.m_20189_(), MARK_SPARKS,
+            0.12, 0.35, 0.12, 0.0);
+    }
+
+    /** 4.1.82: how high over a body's feet its mark is (blocks: over a head), and how many sparks a look. */
+    static final double MARK_HEIGHT = 2.3;
+    static final int MARK_SPARKS = 4;
+
+    /** 4.1.82: true if {@code body} is one of a trial's and {@code other} a player whose trial it is not (it never goes for them; nor they for it). */
+    public static boolean othersTrial(Entity body, Entity other) {
+        UUID owner = OWNER.get(body.m_20148_());
+        return owner != null && other instanceof ServerPlayer player && !player.m_20148_().equals(owner);
     }
 
     /** How many of {@code live}'s bodies are up. */
@@ -1029,6 +1117,12 @@ public final class JoinServer {
     @SubscribeEvent
     public static void attacked(LivingAttackEvent event) {
         if (OWNER.containsKey(event.getEntity().m_20148_()) && event.getEntity().getPersistentData().m_128471_(BROKE)) {
+            event.setCanceled(true);
+            return;
+        }
+        // 4.1.82 (the owner: "Quests are PER player, currently i'm 90% sure Im taking another player's quest"): a trial's bodies are its
+        // player's alone: no other player's blow lands on them (nor kills them for that player).
+        if (othersTrial(event.getEntity(), event.getSource().m_7639_())) {
             event.setCanceled(true);
         }
     }

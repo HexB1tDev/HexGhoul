@@ -267,7 +267,12 @@ public final class EtoBrain {
         if (mind == null) {
             // 1.3.2: only one of her lives; any other body leaves on its first tick.
             BlockPos first = npc.home() != null ? npc.home() : npc.settle();
-            if (!UniqueNpcs.claim(level, npc.persona().key(), npc.m_20148_(), first)) {
+            boolean mine = UniqueNpcs.claim(level, npc.persona().key(), npc.m_20148_(), first);
+            if (!mine && UniqueNpcs.takesOver(level, npc.persona().key(), npc)) {
+                // 4.1.82 (the owner: "the clown girl is not in the circus tent"): a body of hers at her own place is her, whatever body the
+                // world had elsewhere (made by an egg or a command, or carried off and lost), unless she is married: that one is sent away.
+                UniqueNpcs.adopt(level, npc.persona().key(), npc, first);
+            } else if (!mine) {
                 // 3.0.4 (the owner: "I see the library, but Eto is not in it"): a world has three libraries, and whichever was loaded first
                 // (a player passing within range, unseen) took her; the one they then found sent its own body away. Until someone has met
                 // her, a body of hers waits where it was made, and the one a player comes to is her.

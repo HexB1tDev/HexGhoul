@@ -1,0 +1,499 @@
+[
+ {
+  "name": "the control bar's setting back",
+  "file": "src/main/java/com/hex/kagune/control/ControlConfig.java",
+  "old": "    private static final ForgeConfigSpec.BooleanValue ABILITY_HUD;",
+  "new": "    private static final ForgeConfigSpec.BooleanValue ABILITY_HUD; // controlIndicator",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma's place not the circus",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"roma\" -> \"circus\";",
+  "new": "case \"roma\" -> \"circus_tent\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General's place not the tower",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"general\" -> \"ccg_building\";",
+  "new": "case \"general\" -> \"anteiku\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Banjou's place not the den",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"banjou\" -> \"gas_hideout\";",
+  "new": "case \"banjou\" -> \"aogiri_hideout\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ken with no place",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"touka\", \"ken\" -> \"anteiku\";",
+  "new": "case \"touka\" -> \"anteiku\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "everyone else has a place",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "default -> null;\n        };\n    }\n\n    /**\n     * How far",
+  "new": "default -> \"library\";\n        };\n    }\n\n    /**\n     * How far",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the tent smaller",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"circus\" -> 80.0;",
+  "new": "case \"circus\" -> 60.0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the mansion's grounds small",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "case \"aogiri_hideout\" -> 180.0;",
+  "new": "case \"aogiri_hideout\" -> 64.0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "within looks only across",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return place != null && dx * dx + dz * dz <= r * r;",
+  "new": "return place != null && dx * dx <= r * r;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "within no place",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return place != null && dx * dx + dz * dz <= r * r;",
+  "new": "return dx * dx + dz * dz <= r * r;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "takes over a married one",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return bodyHome && !slotHome && !married;",
+  "new": "return bodyHome && !slotHome;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "takes over one at home",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return bodyHome && !slotHome && !married;",
+  "new": "return bodyHome && !married;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "takes over from elsewhere",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return bodyHome && !slotHome && !married;",
+  "new": "return !slotHome && !married;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Banjou made in his den's middle",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return \"roma\".equals(key);",
+  "new": "return \"roma\".equals(key) || \"banjou\".equals(key);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the middle under the floor",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "Math.floorDiv(minX + maxX, 2), minY + 1,",
+  "new": "Math.floorDiv(minX + maxX, 2), minY,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the middle rounded toward 0",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "Math.floorDiv(minZ + maxZ, 2)};",
+  "new": "(minZ + maxZ) / 2};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "remade while she's in it",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return !inPlace && !along && !married && waited >= missing;",
+  "new": "return !along && !married && waited >= missing;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "remade while she's out with someone",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return !inPlace && !along && !married && waited >= missing;",
+  "new": "return !inPlace && !married && waited >= missing;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "remade though married",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return !inPlace && !along && !married && waited >= missing;",
+  "new": "return !inPlace && !along && waited >= missing;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "remade a tick late",
+  "file": "src/main/java/com/hex/kagune/control/npc/HomePlace.java",
+  "old": "return !inPlace && !along && !married && waited >= missing;",
+  "new": "return !inPlace && !along && !married && waited > missing;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her slot's marriage ignored",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "            slot.stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED);\n    }",
+  "new": "            false);\n    }",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her slot's home any spot",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "boolean slotHome = (slot.origined || slot.homed) && atOwnPlace(key, home[0] + 0.5, home[2] + 0.5);",
+  "new": "boolean slotHome = atOwnPlace(key, home[0] + 0.5, home[2] + 0.5);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her place a chunk's corner",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "HomePlace.within(place, x - ((chunk[0] << 4) + 8), z - ((chunk[1] << 4) + 8));",
+  "new": "HomePlace.within(place, x - (chunk[0] << 4), z - (chunk[1] << 4));",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her place unclaimed",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "int[] chunk = place == null ? null : com.hex.kagune.control.PlaceClaims.claimed(place);",
+  "new": "int[] chunk = place == null ? null : new int[] {0, 0};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "places never kept",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "        keepPlaces(level, now); // 4.1.82\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "kept with no one near",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "if (spot == null || !someoneNear(level, new BlockPos(spot[0], spot[1], spot[2]), 24.0)) {",
+  "new": "if (spot == null) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "remade at once",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "HomePlace.remade(inPlace, along, married, now - since, UniqueNpc.MISSING)",
+  "new": "HomePlace.remade(inPlace, along, married, now - since, 0L)",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the stray one kept",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "            if (live != null) {\n                live.m_146870_(); // the one elsewhere: she is home now",
+  "new": "            if (live == null) {\n                live = null; // the one elsewhere: she is home now",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "dead, back where she was",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "                    slot.originX = spot[0];\n",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "out with someone: not seen",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "boolean along = live != null && (live.following() != null || live.mind != null && live.mind.holding != null);",
+  "new": "boolean along = live != null && live.mind != null && live.mind.holding != null;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her place's body sent away",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoBrain.java",
+  "old": "if (!mine && UniqueNpcs.takesOver(level, npc.persona().key(), npc)) {",
+  "new": "if (!mine && false && UniqueNpcs.takesOver(level, npc.persona().key(), npc)) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the tent's middle where nothing is loaded",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "if (chunk == null || !level.m_46805_(new BlockPos((chunk[0] << 4) + 8, 64, (chunk[1] << 4) + 8))) {",
+  "new": "if (chunk == null) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the tent's middle though not built",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "        if (found == null || !found.m_73603_()) {\n            return null;\n        }\n        BoundingBox box = found.m_73601_();",
+  "new": "        if (found == null) {\n            return null;\n        }\n        BoundingBox box = found.m_73601_();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the trial's bodies glowing",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "                mark(player, npc); // 4.1.82: theirs alone to see",
+  "new": "                npc.m_7292_(new MobEffectInstance(MobEffects.f_19619_, 30, 0, false, false, false));",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the marks seldom",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "if (player.f_19797_ % 10 == 0) {\n                mark(player, npc);",
+  "new": "if (player.f_19797_ % 200 == 0) {\n                mark(player, npc);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the marks to everyone",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "owner.m_284548_().m_8624_(owner, ParticleTypes.f_123748_, true, body.m_20185_(), body.m_20186_() + MARK_HEIGHT, body.m_20189_(), MARK_SPARKS,\n            0.12, 0.35, 0.12, 0.0);",
+  "new": "owner.m_284548_().m_8767_(ParticleTypes.f_123748_, body.m_20185_(), body.m_20186_() + MARK_HEIGHT, body.m_20189_(), MARK_SPARKS,\n            0.12, 0.35, 0.12, 0.0);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the patrol unmarked",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "                mark(owner, body);",
+  "new": "                body.m_6084_();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "others' trial: its own player",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "return owner != null && other instanceof ServerPlayer player && !player.m_20148_().equals(owner);",
+  "new": "return owner != null && other instanceof ServerPlayer player && player.m_20148_().equals(owner);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "others' blows land",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        if (othersTrial(event.getEntity(), event.getSource().m_7639_())) {\n            event.setCanceled(true);",
+  "new": "        if (othersTrial(event.getEntity(), event.getSource().m_7639_())) {\n            event.setCanceled(false);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "an agent goes for another's",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentBrain.java",
+  "old": "        if (JoinServer.othersTrial(agent, body)) {\n            return false;",
+  "new": "        if (JoinServer.othersTrial(agent, body)) {\n            body.m_6084_();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a ghoul goes for another's",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java",
+  "old": "        if (JoinServer.othersTrial(npc, body)) {\n            return false;",
+  "new": "        if (JoinServer.othersTrial(npc, body)) {\n            body.m_6084_();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the counter's seats nearer",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "public static final int COUNTER_NEAR = 2;",
+  "new": "public static final int COUNTER_NEAR = 1;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the counter's seats farther",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "public static final int COUNTER_FAR = 6;",
+  "new": "public static final int COUNTER_FAR = 7;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the counter's seats wider",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "public static final int COUNTER_SIDE = 3;",
+  "new": "public static final int COUNTER_SIDE = 4;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the seats behind her (across)",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "double fx = -Math.sin(Math.toRadians(yaw));",
+  "new": "double fx = Math.sin(Math.toRadians(yaw));",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the seats behind her (along)",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "double fz = Math.cos(Math.toRadians(yaw));\n        java.util.List<int[]> out",
+  "new": "double fz = -Math.cos(Math.toRadians(yaw));\n        java.util.List<int[]> out",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the farthest rows first",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "for (int ahead = COUNTER_NEAR; ahead <= COUNTER_FAR; ahead++) {",
+  "new": "for (int ahead = COUNTER_FAR; ahead >= COUNTER_NEAR; ahead--) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "side by side, not row by row",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "        for (int ahead = COUNTER_NEAR; ahead <= COUNTER_FAR; ahead++) {\n            for (int side = -COUNTER_SIDE; side <= COUNTER_SIDE; side++) {",
+  "new": "        for (int side = -COUNTER_SIDE; side <= COUNTER_SIDE; side++) {\n            for (int ahead = COUNTER_NEAR; ahead <= COUNTER_FAR; ahead++) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a seat twice",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "if (seen.add((long)dx << 32 ^ dz & 0xFFFFFFFFL)) {",
+  "new": "if (seen.add((long)dx << 32 ^ dz & 0xFFFFFFFFL) || true) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a seat out of doors",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "if (standable(level, x, y, z) && roofed(level, x, y, z)) {\n                    seats.add",
+  "new": "if (standable(level, x, y, z)) {\n                    seats.add",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "any row of the counter",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "            if (seats.size() >= 6) {\n                break; // the nearest rows",
+  "new": "            if (seats.size() >= 60) {\n                break; // the nearest rows",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the counter's way not hers",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "for (int[] at : JoinTrial.counter(yaw)) {",
+  "new": "for (int[] at : JoinTrial.counter(0.0F)) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the regulars anywhere round her",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        BlockPos seat = counterSeat(level, live.anchor, player);\n",
+  "new": "        BlockPos seat = null;\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the regulars outdoors again",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "            seat = floor(level, live.anchor, JoinTrial.SHIFT_NEAR, JoinTrial.SHIFT_FAR, true, false, player);\n        }\n        if (seat == null) {\n            live.nextAt",
+  "new": "            seat = floor(level, live.anchor, 1.0, JoinTrial.SHIFT_FAR, false, false, player);\n        }\n        if (seat == null) {\n            live.nextAt",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "served from far off",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "public static final double SERVE_NEAR = 4.0;",
+  "new": "public static final double SERVE_NEAR = 12.0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "served at any distance",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "                || regular.m_20280_(player) > JoinTrial.SERVE_NEAR * JoinTrial.SERVE_NEAR) {",
+  "new": "                || regular.m_20280_(player) < 0.0) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the cup drunk as well",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "            event.setCanceled(true);\n            serve(player, regular);",
+  "new": "            event.setCanceled(false);\n            serve(player, regular);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "served with no shift",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "if (live == null || live.kind != JoinTrial.Kind.SHIFT || live.current == null) {\n                return;",
+  "new": "if (live == null || live.current == null) {\n                return;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the cup only in the main hand",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "net.minecraft.world.item.ItemStack held = cup != null && player.m_21206_().m_41720_() == cup && player.m_21205_().m_41720_() != cup\n            ? player.m_21206_() : player.m_21205_();",
+  "new": "net.minecraft.world.item.ItemStack held = player.m_21205_();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the division never posted",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "            station(level); // 4.1.82\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "posted with no one near",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "if (!player.m_5833_() && dx * dx + dz * dz <= STATION_NEAR * STATION_NEAR) {",
+  "new": "if (!player.m_5833_()) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a squad more though one's there",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "            return; // its squad is there",
+  "new": "            ; // its squad is there",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "squads one after another",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "        if (last != null && now - last < POST_EVERY && now >= last) {\n            return;",
+  "new": "        if (last != null && now - last < 0L && now >= last) {\n            return;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "squads every minute",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "static final long POST_EVERY = 6000L;",
+  "new": "static final long POST_EVERY = 1200L;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "posted inside the tower",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "static final double POST_NEAREST = 32.0;",
+  "new": "static final double POST_NEAREST = 4.0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a squad of two",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "                made.forEach(com.hex.kagune.control.npc.GhoulNpc::m_146870_); // never fewer than three\n                made.clear();\n                continue;",
+  "new": "                made.size(); // never fewer than three\n                made.clear();\n                continue;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the posted squad any gang",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "() -> them.m_217043_().m_188500_())\n                    .ganged(com.hex.kagune.control.npc.Gang.CCG_DIVISION, 0);",
+  "new": "() -> them.m_217043_().m_188500_())\n                    .ganged(com.hex.kagune.control.npc.Gang.CLOWNS, 0);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the squad never told its post",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "                one.getPersistentData().m_128405_(POST + \"X\", (int)Math.floor(x));\n",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the time it was posted forgotten",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentSpawner.java",
+  "old": "            POSTED.put(\"ccg_building\", now);",
+  "new": "            POSTED.remove(\"ccg_building\");",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a strayed one stays strayed",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java",
+  "old": "        if (dx * dx + dz * dz <= AgentSpawner.POST_REACH * AgentSpawner.POST_REACH) {\n            return false;",
+  "new": "        if (dx * dx + dz * dz >= 0.0) {\n            return false;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the post after the squad's roam",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java",
+  "old": "        if (posted(npc, mind, now)) {\n            return;\n        }\n",
+  "new": "",
+  "suite": "CompanionTests"
+ }
+]
