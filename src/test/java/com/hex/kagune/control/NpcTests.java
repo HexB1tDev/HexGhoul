@@ -1193,7 +1193,7 @@ public final class NpcTests {
                 "a regular served only a cup of the blend, taken from the hand");
             check(talk.contains("if (JoinServer.serve(player, npc)) {\n                return;") && talk.indexOf("JoinServer.serve(player, npc)") < talk.indexOf("open(player, npc);\n        }"),
                 "a right click on a waiting regular serves before any talk opens");
-            check(within(join, join.indexOf("case SHIFT -> {"), "makings(player);", 80) && join.contains("kept.m_128454_(MAKINGS_DAY) == today"),
+            check(within(join, join.indexOf("case SHIFT -> {"), "makings(player);", 80) && join.contains("if (kept.m_128441_(MAKINGS_DAY) && kept.m_128454_(MAKINGS_DAY) == today) {"),
                 "Ken hands over the makings, once a day");
             check(ghouls.contains("calm(npc, mind, now, false);\n        // 4.1.79: a regular of Anteiku's shift waits at their seat for their cup.\n        if (JoinServer.held(npc, level, now)) {"),
                 "a regular waits at their seat");

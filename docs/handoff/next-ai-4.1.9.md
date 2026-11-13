@@ -43,7 +43,11 @@ sparks, `JoinVoice.scene`):
   regular may sit outside if the café's floor isn't found; the raids come over the ground (a roof in the way stops them).
 
 **Tools:** `tools/UiPreview.java <dir> joining` (every trial's page, the test, Roma's job, the scenes); `docs/handoff/sabotage-4.1.79.json`
-(50 rules, all caught). The rest as below (fast_tests, sabotage, the previews).
+(50 rules, all caught). The rest as below (fast_tests, sabotage, the previews). Ran in two halves at once, each in its own scratch copy of
+the repo (`git archive HEAD`, `build/fast/base.jar` and `stubs` copied in): never run it in the tree you commit from, as it swaps rules in.
+- **Lessons (three holes the first pass found, closed):** a boundary never tested (4.1.50's quest read as done at four doves: test 4 as well
+  as 5); a sabotage that broke nothing (it flipped the poison's particles, not the poison: break the rule itself); a checked string the
+  sabotaged text still contains (`== today` is in `== today + 1L`: check the whole condition, to its `{`).
 
 **Next (4.1.80+): romance**, as planned: keep all 35 scenes and lines; swap the repeated tasks so each companion's five differ (Roma's
 "kill 3 investigators" a circus show for her; Ken's "kill one beside me" a night reading at the library; Ayato's a spar at the hideout,

@@ -56,4 +56,4 @@ are now the shift, his three investigators the raid. The General's five ghouls a
   screen).
 - Tests: `NpcTests.trials` and the rewritten `joining`, `anteiku`, `ccg` (each chain's order, each step a different kind, every trial's
   rules, the test's questions and day, the makings against the recipe, the words, and how the server holds each trial); 50 rules sabotaged
-  one at a time (`docs/handoff/sabotage-4.1.79.json`), each caught.
+  one at a time (`docs/handoff/sabotage-4.1.79.json`), each caught (three holes the first pass found were closed first).
