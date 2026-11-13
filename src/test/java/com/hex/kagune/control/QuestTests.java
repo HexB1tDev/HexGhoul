@@ -49,6 +49,7 @@ public final class QuestTests {
         graftMenu();
         paleMenu();
         kingChoice();
+        cookbook();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -519,6 +520,65 @@ public final class QuestTests {
                 && !screen.contains("m_280024_"), "the king's choice sized from its box, no overlay over the world");
         } catch (java.io.IOException failure) {
             check(false, "the king's choice screen's source: " + failure);
+        }
+    }
+
+    /**
+     * 4.1.66 (the owner: "new Menus: Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is,
+     * Dialog, mastery menus ALL OF THEM"): the cookbook is the quest menu's box: a tab per chapter and the effects; every dish of the chapter
+     * open a slot to click, every kitchen effect a card, every dish giving the effect shown a slot that opens it; everything clickable and
+     * every word inside the box, apart; the screen draws through its view, sized from the box, no overlay.
+     */
+    static void cookbook() {
+        Recorder canvas = new Recorder();
+        int width = com.hex.kagune.control.client.CookbookView.BOX_WIDTH;
+        int height = com.hex.kagune.control.client.CookbookView.BOX_HEIGHT;
+        long seen = 0;
+        int dishes = 0;
+        for (String tab : com.hex.kagune.control.client.CookbookView.tabs()) {
+            java.util.List<String> picks = new java.util.ArrayList<>(java.util.Arrays.asList(null, "junk"));
+            boolean effects = tab.equals(com.hex.kagune.control.client.CookbookView.EFFECTS);
+            if (effects) {
+                for (com.hex.kagune.control.kitchen.Menu.Kitchen effect : com.hex.kagune.control.kitchen.Menu.EFFECTS) {
+                    picks.add("pick:e:" + effect.key());
+                }
+            } else {
+                for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Dishes.chapter(tab)) {
+                    picks.add("pick:d:" + dish.id());
+                }
+            }
+            for (String pick : picks) {
+                for (double[] mouse : new double[][] {{-1, -1}, {40, 120}, {470, 160}, {460, 120}}) {
+                    canvas.clear();
+                    java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits = com.hex.kagune.control.client.CookbookView.draw(canvas,
+                        new com.hex.kagune.control.client.CookbookView.Model(tab, pick), mouse[0], mouse[1], 2.0);
+                    String where = "cookbook " + tab + " (" + pick + ")";
+                    seen += canvas.texts.size();
+                    for (String each : com.hex.kagune.control.client.CookbookView.tabs()) {
+                        check(hits.containsKey("tab:" + each), where + ": the " + each + " tab");
+                    }
+                    boxed(hits, canvas, width, height, where);
+                    if (effects) {
+                        for (com.hex.kagune.control.kitchen.Menu.Kitchen effect : com.hex.kagune.control.kitchen.Menu.EFFECTS) {
+                            check(hits.containsKey("pick:e:" + effect.key()), where + ": " + effect.key() + " a card to click");
+                        }
+                        check(hits.keySet().stream().anyMatch(k -> k.startsWith("goto:")), where + ": the dishes that give it, to open");
+                    } else {
+                        for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Dishes.chapter(tab)) {
+                            check(hits.containsKey("pick:d:" + dish.id()), where + ": " + dish.id() + " a slot to click");
+                            dishes++;
+                        }
+                    }
+                }
+            }
+        }
+        check(seen > 3000 && dishes > 500, "the cookbook's words and slots drawn and checked (" + seen + ", " + dishes + ")");
+        try {
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/CookbookScreen.java"));
+            check(screen.contains("CookbookView.draw(canvas") && screen.contains("CookbookView.BOX_WIDTH") && !screen.contains("m_280273_")
+                && !screen.contains("m_280024_"), "the cookbook drawn by its view, sized from its box, no overlay over the world");
+        } catch (java.io.IOException failure) {
+            check(false, "the cookbook screen's source: " + failure);
         }
     }
 

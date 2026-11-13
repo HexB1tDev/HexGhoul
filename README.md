@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.66 (HexGhoul): the cookbook in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.66.md`. New `CookbookView` (pure: `Model(tab, picked)`, `tabs()`; chapter tab: picture, words, dish slots "pick:d:ID", the dish page with its picture, recipe slots and tooltips, fills, meat, effects; effects tab: cards "pick:e:KEY", the dishes that give it "goto:ID"). `CookbookScreen` draws through it (box, no overlay; remembers tab and pick; arrows and wheel step dish to dish). `UiCanvas` gains `item`, `texture`, `tr`, `itemTooltip` (`GuiCanvas`: the real item, blit, translation, tooltip; `tools/UiPreview.java`'s canvas: the mod's own PNGs and `en_us.json`). `verify/api-allowlist.txt`: `Screen.m_280273_` (renderBackground) removed, no screen uses it now. `QuestTests.cookbook`; `KitchenTests` reads the view's words. `tools/UiPreview.java cookbook`. Render `docs/handoff/cookbook-4.1.66.png`. Protocol 125.
+
 ## 4.1.65 (HexGhoul): the king's choice in the quest menu's style (testing)
 
 See `.github/release-notes-4.1.65.md`. `KingChoiceView.draw` in the quest menu's box (`BOX_WIDTH` x `BOX_HEIGHT`: `QuestStyle.backdrop`, title, rule; `CARD_Y` 66; the cards side by side in the box; "choose" a quest button filling as held; "later"); `KingChoiceScreen` scales the box, no overlay. `QuestTests.kingChoice`. `tools/UiPreview.java king` (the cards over a scene). Render `docs/handoff/king-choice-4.1.65.png`. Protocol 125.

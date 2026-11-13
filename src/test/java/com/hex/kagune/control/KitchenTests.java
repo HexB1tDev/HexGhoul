@@ -366,14 +366,15 @@ public final class KitchenTests {
         check(Files.isRegularFile(Path.of("src/main/resources/assets/hexkagune/textures/gui/cookbook.png")), "the book drawn");
         check(Files.isRegularFile(Path.of("src/main/resources/assets/hexkagune/textures/item/ghoul_cookbook.png")), "the book's icon");
         String lang = read("src/main/resources/assets/hexkagune/lang/en_us.json");
-        String screen = read("src/main/java/com/hex/kagune/control/client/CookbookScreen.java");
+        // 4.1.66: the book's words are its view's now (CookbookView, the quest menu's look).
+        String screen = read("src/main/java/com/hex/kagune/control/client/CookbookView.java");
         java.util.regex.Matcher keys = java.util.regex.Pattern.compile("\"(book\\.hexkagune\\.cookbook\\.[a-z_]+)\"").matcher(screen);
         int found = 0;
         while (keys.find()) {
             found++;
             check(lang.contains("\"" + keys.group(1) + "\":"), "the book's words: " + keys.group(1));
         }
-        check(found >= 10, "the screen's words checked: " + found);
+        check(found >= 10, "the book's words checked: " + found);
         for (String chapter : Menu.CHAPTERS) {
             check(lang.contains("\"book.hexkagune.cookbook.chapter." + chapter + ".intro\":"), chapter + " has its few words");
         }

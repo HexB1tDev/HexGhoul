@@ -189,7 +189,6 @@ M net/minecraft/nbt/CompoundTag m_128473_ (Ljava/lang/String;)V                 
 
 # --- 1.2.0 Ukaku menu ------------------------------------------------------------------------------------
 M net/minecraft/client/gui/screens/Screen m_7379_ ()V                                # [srg] onClose, euq.aw_()V (yarn close method_25419); the original menu calls it too
-M net/minecraft/client/gui/screens/Screen m_280273_ (Lnet/minecraft/client/gui/GuiGraphics;)V  # [srg] renderBackground, euq.a(Leox;)V (yarn method_25420); the original menu calls it too
 
 F net/minecraft/world/entity/Entity f_19802_ I                                        # [srg] invulnerableTime (yarn timeUntilRegen field_6008, obf ak)
 M net/minecraft/world/entity/Entity m_20254_ (I)V                                     # [srg] setSecondsOnFire (yarn setOnFireFor method_5639, obf g)

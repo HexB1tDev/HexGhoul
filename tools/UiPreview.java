@@ -47,6 +47,74 @@ public class UiPreview {
             return new Color((argb >> 16) & 255, (argb >> 8) & 255, argb & 255, (argb >>> 24) & 255);
         }
 
+        // 4.1.66: items, textures and words from the mod's own assets (the game's own are not here: a plain square, the key).
+        static final java.util.Map<String, BufferedImage> IMAGES = new java.util.HashMap<>();
+        static java.util.Map<String, String> lang;
+
+        static BufferedImage image(String ns, String path) {
+            return IMAGES.computeIfAbsent(ns + ":" + path, k -> {
+                File file = new File("src/main/resources/assets/" + ns + "/" + path);
+                try {
+                    return file.isFile() ? ImageIO.read(file) : null;
+                } catch (java.io.IOException failure) {
+                    return null;
+                }
+            });
+        }
+
+        public void item(String id, int count, int x, int y, int size) {
+            String ns = id.indexOf(':') >= 0 ? id.substring(0, id.indexOf(':')) : "hexkagune";
+            String name = id.indexOf(':') >= 0 ? id.substring(id.indexOf(':') + 1) : id;
+            BufferedImage icon = image(ns, "textures/item/" + name + ".png");
+            if (icon == null) {
+                this.fill(x + 1, y + 1, x + size - 1, y + size - 1, 0xFF6A5A50);
+                this.fill(x + 2, y + 2, x + size - 2, y + size - 2, 0xFF8A7A6A);
+                this.text(name.substring(0, 1).toUpperCase(), x + size / 2 - 3, y + size / 2 - 4, 0xFF2A2018, false);
+            } else {
+                this.g.drawImage(icon, x, y, x + size, y + size, 0, 0, icon.getWidth(), Math.min(icon.getHeight(), icon.getWidth()), null);
+            }
+            if (count > 1) {
+                this.text(String.valueOf(count), x + size - this.width(String.valueOf(count)), y + size - 8, 0xFFFFFFFF, true);
+            }
+        }
+
+        public void texture(String id, int x, int y, int w, int h, int u, int v, int uw, int vh, int texW, int texH) {
+            int colon = id.indexOf(':');
+            BufferedImage sheet = colon < 0 ? null : image(id.substring(0, colon), id.substring(colon + 1));
+            if (sheet == null) {
+                this.fill(x, y, x + w, y + h, 0xFF5A4A44);
+                return;
+            }
+            float sx = sheet.getWidth() / (float)texW;
+            float sy = sheet.getHeight() / (float)texH;
+            this.g.drawImage(sheet, x, y, x + w, y + h, Math.round(u * sx), Math.round(v * sy), Math.round((u + uw) * sx), Math.round((v + vh) * sy), null);
+        }
+
+        public String tr(String key, Object... args) {
+            if (lang == null) {
+                lang = new java.util.HashMap<>();
+                try {
+                    String json = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/assets/hexkagune/lang/en_us.json"));
+                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"").matcher(json);
+                    while (m.find()) {
+                        lang.put(m.group(1), m.group(2).replace("\\\"", "\"").replace("\\n", "\n").replace("\\u00a7", "\u00a7"));
+                    }
+                } catch (java.io.IOException failure) {
+                    // no words: the keys
+                }
+            }
+            String text = lang.get(key);
+            if (text == null) {
+                String last = key.substring(key.lastIndexOf('.') + 1).replace('_', ' ');
+                return last.isEmpty() ? key : Character.toUpperCase(last.charAt(0)) + last.substring(1);
+            }
+            try {
+                return args.length == 0 ? text : String.format(text, args);
+            } catch (java.util.IllegalFormatException wrong) {
+                return text;
+            }
+        }
+
         public void fill(int x0, int y0, int x1, int y1, int argb) {
             this.g.setColor(colour(argb));
             this.g.fillRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0));
@@ -958,6 +1026,41 @@ public class UiPreview {
         System.out.println("wrote " + out);
     }
 
+    /** 4.1.66: the cookbook in its box over a scene; the mouse on the first area named {@code over} ("slot": the recipe's first slot). */
+    static void cookbook(File out, String tab, String picked, String over) throws Exception {
+        int w = 960;
+        int h = 540;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        int bw = com.hex.kagune.control.client.CookbookView.BOX_WIDTH;
+        int bh = com.hex.kagune.control.client.CookbookView.BOX_HEIGHT;
+        com.hex.kagune.control.client.CookbookView.Model model = new com.hex.kagune.control.client.CookbookView.Model(tab, picked);
+        double mx = -1;
+        double my = -1;
+        if ("slot".equals(over)) {
+            mx = 244 + 190 + 12 + 9;
+            my = 78 + 16 + 13 + 40;
+        } else if (over != null) {
+            BufferedImage scratch = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for (java.util.Map.Entry<String, UkakuMenuView.Rect> hit : com.hex.kagune.control.client.CookbookView.draw(new ImageCanvas(graphics(scratch, 1),
+                false), model, -1, -1, 1.3).entrySet()) {
+                if (hit.getKey().startsWith(over)) {
+                    mx = hit.getValue().x() + hit.getValue().width() * 0.6;
+                    my = hit.getValue().y() + hit.getValue().height() * 0.5;
+                    break;
+                }
+            }
+        }
+        c.push();
+        c.translate((w - bw) / 2.0F, (h - bh) / 2.0F);
+        com.hex.kagune.control.client.CookbookView.draw(c, model, mx, my, 1.3);
+        c.pop();
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
     /** 4.1.64: the path choice at a GUI size; the mouse on card {@code over} (-2: on Awaken, -1: nowhere), {@code hold} how far it is held. */
     static void pathChoice(File out, int w, int h, KagunePath selected, int over, int unused, float hold, int zoom) throws Exception {
         BufferedImage image = new BufferedImage(w * zoom, h * zoom, BufferedImage.TYPE_INT_RGB);
@@ -1091,6 +1194,15 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("pale-menu")) {
             paleQuest(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("cookbook")) {
+            // 4.1.66: the cookbook as the quest menu: a chapter and a dish, a dish's recipe with the pointer on an ingredient, the effects.
+            cookbook(new File(dir, "cookbook-basics.png"), "basics", null, null);
+            cookbook(new File(dir, "cookbook-bowls.png"), "bowls", "pick:d:" + com.hex.kagune.control.kitchen.Dishes.chapter("bowls").get(3).id(), "slot");
+            cookbook(new File(dir, "cookbook-plates.png"), "plates", "pick:d:" + com.hex.kagune.control.kitchen.Dishes.chapter("plates").get(7).id(),
+                "pick:d:" + com.hex.kagune.control.kitchen.Dishes.chapter("plates").get(12).id());
+            cookbook(new File(dir, "cookbook-effects.png"), com.hex.kagune.control.client.CookbookView.EFFECTS, "pick:e:replenished", "goto:");
             return;
         }
         if (args.length > 1 && args[1].equals("path-choice")) {

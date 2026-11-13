@@ -105,4 +105,49 @@ public final class GuiCanvas implements UiCanvas {
     public void batch(Runnable draw) {
         this.graphics.m_286007_(draw);
     }
+
+    /** 4.1.66: the item for an id ("ns:path", or a dish's bare id). */
+    private static net.minecraft.world.item.ItemStack stack(String id, int count) {
+        net.minecraft.world.item.Item item = id.indexOf(':') >= 0 && !id.startsWith("hexkagune:") ? com.hex.kagune.control.ControlItems.vanilla(id)
+            : com.hex.kagune.control.ControlItems.dishItem(id.startsWith("hexkagune:") ? id.substring(10) : id);
+        return item == null ? null : new net.minecraft.world.item.ItemStack(item, Math.max(1, count));
+    }
+
+    @Override
+    public void item(String id, int count, int x, int y, int size) {
+        net.minecraft.world.item.ItemStack stack = stack(id, count);
+        if (stack == null) {
+            UiCanvas.super.item(id, count, x, y, size);
+            return;
+        }
+        PoseStack pose = this.graphics.m_280168_();
+        pose.m_85836_();
+        pose.m_252880_(x, y, 0.0F);
+        pose.m_85841_(size / 16.0F, size / 16.0F, 1.0F);
+        this.graphics.m_280480_(stack, 0, 0);
+        this.graphics.m_280370_(this.font, stack, 0, 0);
+        pose.m_85849_();
+    }
+
+    @Override
+    public void texture(String id, int x, int y, int w, int h, int u, int v, int uw, int vh, int texW, int texH) {
+        int colon = id.indexOf(':');
+        ResourceLocation location = colon < 0 ? null : ResourceLocation.m_214293_(id.substring(0, colon), id.substring(colon + 1));
+        if (location != null) {
+            this.graphics.m_280411_(location, x, y, w, h, u, v, uw, vh, texW, texH);
+        }
+    }
+
+    @Override
+    public String tr(String key, Object... args) {
+        return (args.length == 0 ? net.minecraft.network.chat.Component.m_237115_(key) : net.minecraft.network.chat.Component.m_237110_(key, args)).getString();
+    }
+
+    @Override
+    public void itemTooltip(String id, int x, int y) {
+        net.minecraft.world.item.ItemStack stack = stack(id, 1);
+        if (stack != null) {
+            this.graphics.m_280153_(this.font, stack, x, y);
+        }
+    }
 }
