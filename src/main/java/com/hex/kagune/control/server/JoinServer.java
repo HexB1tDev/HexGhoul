@@ -93,6 +93,8 @@ public final class JoinServer {
         /** 4.1.95: its timed quest's kind (Missions) and when its clock runs out. */
         String mission;
         long endsAt = Long.MAX_VALUE;
+        /** 4.1.97: until when the action bar holds a flash ({@link #flash}) before the trial's own bar comes back. */
+        long quietUntil = Long.MIN_VALUE;
         /** 4.1.96: the waiting regular's name (the action bar says whom to serve); the progress its quest last showed. */
         String currentName = "";
         int shown = -1;
@@ -220,10 +222,10 @@ public final class JoinServer {
         // 4.1.95: a timed quest from now on, in the quest menu's TIMED tab (its steps, its clock).
         log.startMission(mission, now, com.hex.kagune.control.quest.Missions.limit(mission));
         QuestServer.changed(player);
-        player.m_5661_(Component.m_237113_("§6Timed quest: §f" + log.mission(mission).quest().title() + " §7("
-            + com.hex.kagune.control.quest.Missions.minutes(com.hex.kagune.control.quest.Missions.limit(mission)) + ", quest menu: TIMED)"), false);
+        // 4.1.97 (the owner: "Its not needed in chat telling you how to craft, details are in the Quest menu"; "that applies for every quest
+        // info"): the new timed quest flashed on the action bar; how it is done is in the quest menu only.
+        flash(player, live, "§6New timed quest: §f" + log.mission(mission).quest().title() + " §7(quest menu)", now);
         UkakuFire.sound(level, player.m_20182_(), "block.note_block.bell", 0.7F, kind == JoinTrial.Kind.SPAR ? 0.6F : 1.0F);
-        bar(player, live, now);
         return courting != null ? com.hex.kagune.control.npc.CourtVoice.spar("start", seed) : JoinVoice.say(kind, "start", seed);
     }
 
@@ -264,10 +266,8 @@ public final class JoinServer {
                 player.m_36176_(stack, false);
             }
         }
-        // 4.1.95 (the owner: "the player has no idea how to craft the coffee ... You can just like tell the player how it's done"). 4.1.96
-        // (the owner: "the quests are super spammy"; "I can't craft the coffee"): one line, and a way to brew that needs no crafting grid.
-        player.m_5661_(Component.m_237113_("§6Anteiku: §fKen hands you the makings §7(3 glass bottles, 6 cocoa beans, 3 blood sugar)§f. "
-            + "To brew a cup, hold a §eglass bottle §fand §eright click §fin the café §7(or craft 1 bottle + 2 cocoa beans + 1 blood sugar)§f."), false);
+        // 4.1.95 (the owner: "You can just like tell the player how it's done"): how is in the shift's timed quest (JoinTrial.how). 4.1.97 (the
+        // owner: "Its not needed in chat telling you how to craft, details are in the Quest menu"): nothing in chat.
     }
 
     // ---------------------------------------------------------------- the bodies
@@ -556,7 +556,7 @@ public final class JoinServer {
             }
             if (now >= live.endsAt) {
                 // 4.1.95: a timed quest: out of time, failed.
-                player.m_5661_(Component.m_237113_("§cOut of time: §f" + JoinTrial.title(live.kind) + " §7failed (again tomorrow)"), false);
+                flash(player, live, "§cOut of time: §f" + JoinTrial.title(live.kind) + " §7failed (again tomorrow)", now);
                 end(player, live, false, timeUp(live.kind));
                 return;
             }
@@ -696,8 +696,8 @@ public final class JoinServer {
         live.currentAt = now;
         level.m_8767_(ParticleTypes.f_123759_, act.m_20185_(), act.m_20186_() + 0.5, act.m_20189_(), 20, 0.4, 0.6, 0.4, 0.02);
         UkakuFire.sound(level, act.m_20182_(), "block.note_block.harp", 1.0F, 1.4F);
-        player.m_5661_(Component.m_237113_("§9Roma: §f" + (live.done == 0 ? "Volunteer number one!" : live.done == 1 ? "Volunteer number two! Give it up!"
-            : "And our last volunteer of the night!") + " §7(" + (live.done + 1) + "/" + JoinTrial.RING_ACTS + ")"), false);
+        flash(player, live, "§9Roma: §f" + (live.done == 0 ? "Volunteer number one!" : live.done == 1 ? "Volunteer number two! Give it up!"
+            : "And our last volunteer of the night!") + " §7(" + (live.done + 1) + "/" + JoinTrial.RING_ACTS + ")", now);
     }
 
     static void gas(ServerPlayer player, Live live, ServerLevel level, long now) {
@@ -710,7 +710,7 @@ public final class JoinServer {
             if (JoinTrial.gasStarts(from)) {
                 live.first = now;
                 UkakuFire.sound(level, player.m_20182_(), "block.fire.extinguish", 1.0F, 0.6F);
-                player.m_5661_(Component.m_237113_("§aThe Gas Masks: §fthe valves hiss open. §7Walk back to Banjou. Don't stop."), false);
+                flash(player, live, "§aThe Gas Masks: §fthe valves hiss open. §7Walk back to Banjou. Don't stop.", now);
             }
             return;
         }
@@ -749,8 +749,8 @@ public final class JoinServer {
                 live.wave++;
                 live.waveAt = now;
                 UkakuFire.sound(level, player.m_20182_(), "block.bell.use", 1.0F, 0.7F);
-                player.m_5661_(Component.m_237113_("§aBanjou: §f" + (live.wave == 1 ? "Clowns! At the gate!" : "More of them! Hold it!") + " §7(wave " + live.wave
-                    + "/" + JoinTrial.GATE_WAVES + ")"), false);
+                flash(player, live, "§aBanjou: §f" + (live.wave == 1 ? "Clowns! At the gate!" : "More of them! Hold it!") + " §7(wave " + live.wave
+                    + "/" + JoinTrial.GATE_WAVES + ")", now);
             }
             return;
         }
@@ -845,8 +845,8 @@ public final class JoinServer {
                 live.current = null;
                 live.nextAt = now + JoinTrial.SHIFT_GAP;
                 UkakuFire.sound(level, npc.m_20182_(), "block.candle.extinguish", 0.9F, 0.7F);
-                player.m_5661_(Component.m_237113_("§6Anteiku: §f" + live.currentName + " gave up waiting and left §7(" + live.strikes + " of "
-                    + JoinTrial.SHIFT_STRIKES + " and the shift is lost)"), false);
+                flash(player, live, "§6Anteiku: §f" + live.currentName + " gave up waiting and left §7(" + live.strikes + " of "
+                    + JoinTrial.SHIFT_STRIKES + " and the shift is lost)", now);
                 return;
             }
             if (player.f_19797_ % 10 == 0) {
@@ -928,8 +928,8 @@ public final class JoinServer {
         level.m_8767_(ParticleTypes.f_123748_, npc.m_20185_(), npc.m_20186_() + 1.8, npc.m_20189_(), 6, 0.3, 0.2, 0.3, 0.0);
         String[] thanks = {"*sips* ...Mm. Thank you. Better than Touka's. Don't tell her.", "*wraps both hands round the cup* ...Warm. Thank you.",
             "*a long, grateful breath over the cup* You're new. You're good at this."};
-        player.m_5661_(Component.m_237113_("§6" + npc.identity().displayName() + ": §f" + thanks[Math.floorMod(live.seed + live.done, thanks.length)]
-            + " §7(" + live.done + "/" + JoinTrial.SHIFT_CUSTOMERS + ")"), false);
+        flash(player, live, "§6" + npc.identity().displayName() + ": §f" + thanks[Math.floorMod(live.seed + live.done, thanks.length)]
+            + " §7(" + live.done + "/" + JoinTrial.SHIFT_CUSTOMERS + ")", now);
         return true;
     }
 
@@ -997,8 +997,8 @@ public final class JoinServer {
         live.done++;
         level.m_8767_(ParticleTypes.f_123759_, raider.m_20185_(), raider.m_20186_() + 0.8, raider.m_20189_(), 16, 0.4, 0.6, 0.4, 0.03);
         String[] lines = {"Fall back! FALL BACK!", "It's not worth it, retreat!", "We'll come back with more!"};
-        player.m_5661_(Component.m_237113_("§bInvestigator: §f\"" + lines[Math.floorMod(live.done, lines.length)] + "\" §7(driven off: "
-            + live.done + "/" + JoinTrial.CAFE_RAIDERS + ")"), false);
+        flash(player, live, "§bInvestigator: §f\"" + lines[Math.floorMod(live.done, lines.length)] + "\" §7(driven off: "
+            + live.done + "/" + JoinTrial.CAFE_RAIDERS + ")", player.m_284548_().m_46467_());
         raider.m_146870_();
     }
 
@@ -1236,8 +1236,8 @@ public final class JoinServer {
                         live.current = null;
                         live.nextAt = player.m_9236_().m_46467_() + JoinTrial.RING_GAP;
                         UkakuFire.sound(player.m_284548_(), dead.m_20182_(), "entity.player.levelup", 0.6F, 1.6F);
-                        player.m_5661_(Component.m_237113_("§9Roma: §f" + (live.done >= JoinTrial.RING_ACTS ? "*standing ovation*" : "*whistles* Next!")
-                            + " §7(" + live.done + "/" + JoinTrial.RING_ACTS + ")"), false);
+                        flash(player, live, "§9Roma: §f" + (live.done >= JoinTrial.RING_ACTS ? "*standing ovation*" : "*whistles* Next!")
+                            + " §7(" + live.done + "/" + JoinTrial.RING_ACTS + ")", player.m_284548_().m_46467_());
                     }
                 }
                 case AMBUSH -> player.m_5661_(Component.m_237113_("§4Aogiri Tree: §fa dove down. §7(" + (JoinTrial.AMBUSH_SIZE - live.marked.size()) + "/"
@@ -1409,6 +1409,9 @@ public final class JoinServer {
     /** Each second: where they are in it, in the action bar (time left, what is next, which way). */
     static void bar(ServerPlayer player, Live live, long now) {
         progress(player, live);
+        if (now < live.quietUntil) {
+            return; // 4.1.97: a flash is showing
+        }
         int gang = JoinTrial.gang(live.kind);
         String head = live.courting != null ? com.hex.kagune.control.npc.Persona.of(live.courting).colour() + "❤ " // 4.1.80: his courtship's
             : GangServer.colour(gang) + GangPlayer.title(gang) + ": §f";
@@ -1527,7 +1530,7 @@ public final class JoinServer {
         int taken = takeBack(player, live.mission, live.made);
         QuestServer.changed(player);
         if (taken > 0) {
-            player.m_5661_(Component.m_237113_("§7The mission's things were taken back (" + taken + ")."), false);
+            flash(player, live, "§7The mission's things were taken back (" + taken + ").", now);
         }
     }
 
@@ -1700,5 +1703,14 @@ public final class JoinServer {
         level.m_8767_(ParticleTypes.f_123769_, player.m_20185_(), player.m_20186_() + 1.2, player.m_20189_(), 6, 0.2, 0.2, 0.2, 0.01);
         player.m_5661_(Component.m_237113_("§6Anteiku: §fyou brew an Anteiku Blend §7(" + count(player, cup) + " ready)"), true);
         return true;
+    }
+
+    /**
+     * 4.1.97 (the owner: "Its not needed in chat telling you how to craft, details are in the Quest menu"; "that applies for every quest
+     * info"): a trial's news on the action bar (never the chat), held three seconds before the trial's own bar comes back.
+     */
+    static void flash(ServerPlayer player, Live live, String text, long now) {
+        player.m_5661_(Component.m_237113_(text), true);
+        live.quietUntil = now + 60L;
     }
 }

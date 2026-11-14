@@ -241,7 +241,7 @@ public final class GangServer {
                 reputation(player, by);
             }
             if (now.clownStep() != was.clownStep()) {
-                player.m_5661_(Component.m_237113_("§9The Clowns: §fthe job's done, in her face. §7(now the dove's quinque case, for Roma)"), false);
+                player.m_5661_(Component.m_237113_("§9The Clowns: §fthe job's done, in her face. §7(now the dove's quinque case, for Roma)"), true); // 4.1.97: quest info on the action bar
             }
             if (now.gang() == GangPlayer.NONE && was.gang() != GangPlayer.NONE) {
                 player.m_5661_(Component.m_237113_("§c" + cap(GangPlayer.title(was.gang())) + " has banned you for killing its own. Your tag is gone, "
@@ -695,7 +695,7 @@ public final class GangServer {
         }
         reputation(player, com.hex.kagune.control.npc.GangStanding.DAILY);
         player.m_5661_(Component.m_237113_(colour(gang) + "Daily done: §f" + paid + " §7(+" + com.hex.kagune.control.npc.GangStanding.DAILY
-            + "% reputation" + (days > 1 ? ", " + days + " days in a row" : "") + ")"), false);
+            + "% reputation" + (days > 1 ? ", " + days + " days in a row" : "") + ")"), true); // 4.1.97: quest info on the action bar
     }
 
     static String voice(int gang, String moment, int seed, String what, GangDaily d) {
@@ -732,7 +732,7 @@ public final class GangServer {
             player.m_36176_(stack, false);
         }
         player.m_5661_(Component.m_237113_(gang == GangPlayer.CCG ? colour(gang) + "The CCG: §fyour quinque, standard issue. §7(a bikaku blade, in its case)"
-            : colour(gang) + cap(GangPlayer.title(gang)) + ": §fyour mask. §7Wear it with pride (on your head)."), false);
+            : colour(gang) + cap(GangPlayer.title(gang)) + ": §fyour mask. §7Wear it with pride (on your head)."), true); // 4.1.97: quest info on the action bar
     }
 
     // ---------------------------------------------------------------- 4.1.53: the gangs' traits
@@ -1030,7 +1030,7 @@ public final class GangServer {
         GangPlayer after = g.advance(gang, from, to);
         if (!after.equals(g)) {
             set(player, after);
-            player.m_5661_(Component.m_237113_(colour(gang) + cap(GangPlayer.title(gang)) + ": §f" + com.hex.kagune.control.npc.JoinTrial.goal(gang, to)), false);
+            player.m_5661_(Component.m_237113_(colour(gang) + cap(GangPlayer.title(gang)) + ": §f" + com.hex.kagune.control.npc.JoinTrial.goal(gang, to)), true); // 4.1.97: quest info on the action bar
         }
         return after;
     }

@@ -239,8 +239,8 @@ public final class QuestServer {
         }
         write(player, cached);
         QuestLog.Favour favour = cached.log.favourFrom(giver);
-        player.m_5661_(Component.m_237113_("Favour taken on: " + favour.quest().objectives().get(0).text() + ". It is in your journal, the ghoul's way."),
-            false);
+        // 4.1.97 (the owner: quest info isn't for the chat: "details are in the Quest menu"): on the action bar.
+        player.m_5661_(Component.m_237113_("§eFavour taken on: §f" + favour.quest().title() + " §7(quest menu)"), true);
         return true;
     }
 
@@ -526,7 +526,7 @@ public final class QuestServer {
 
     private static void hunts(ServerPlayer player, Cached cached, long now) {
         for (Quest gone : cached.log.expire(now)) {
-            player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt_over", gone.title()), false);
+            player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt_over", gone.title()), true); // 4.1.97: the action bar
             write(player, cached);
         }
         // 1.3.29: no hunt comes by itself any more (the owner: no quest given at random): a ghoul asked at night gives one (huntable).
@@ -569,8 +569,7 @@ public final class QuestServer {
         Hunts.Spec spec = Hunts.draw(random, GhoulKinds.roaming());
         cached.log.startHunt(spec, now + untilDawn);
         Quest quest = Hunts.quest(spec);
-        player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt", quest.title(), quest.objectives().get(0).text(),
-            quest.objectives().get(0).count(), Hunts.payText(spec)), false);
+        player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt", quest.title()), true); // 4.1.97: its details in the quest menu
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.wolf.howl", 0.5F, 0.6F);
     }
 
@@ -591,7 +590,7 @@ public final class QuestServer {
             for (String id : open) {
                 if (!cached.open.contains(id)) {
                     Quest quest = QuestBook.get(id);
-                    player.m_5661_(Component.m_237110_("message.hexkagune.quest.new", quest.title()), false);
+                    player.m_5661_(Component.m_237110_("message.hexkagune.quest.new", quest.title()), true); // 4.1.97: the action bar
                     cached.dirty = true;
                 }
             }
@@ -640,18 +639,14 @@ public final class QuestServer {
         if (reward.ghoulMeat() > 0) {
             pays.append(pays.length() > 0 ? ", " : "").append(reward.ghoulMeat()).append(" Ghoul Meat");
         }
-        if (QuestBook.giver(quest) == QuestBook.Giver.FEAT) {
-            // 1.3.29: a feat: never handed out, only told once it is done.
-            player.m_5661_(Component.m_237113_("\u00a76\u2726 Feat: \u00a7f" + quest.title() + " \u00a77(" + (pays.length() == 0 ? "-" : pays.toString()) + ")"), false);
-        } else {
-            player.m_5661_(Component.m_237110_("message.hexkagune.quest.done", quest.title(), pays.length() == 0 ? "-" : pays.toString()), false);
-        }
+        // 4.1.97 (the owner: quest info isn't for the chat: "details are in the Quest menu"): one line on the action bar: done, what it paid,
+        // what it opened (what it closed is in the DONE tab).
+        StringBuilder told = new StringBuilder(QuestBook.giver(quest) == QuestBook.Giver.FEAT ? "\u00a76\u2726 Feat: \u00a7f" : "\u00a76Quest complete: \u00a7f");
+        told.append(quest.title()).append(pays.length() == 0 ? "" : " \u00a77(" + pays + ")");
         for (Gate gate : reward.gates()) {
-            player.m_5661_(Component.m_237110_("message.hexkagune.quest.unlocked", gate.displayName()), false);
+            told.append(" \u00a7c\u00b7 ").append(gate.displayName());
         }
-        for (Quest rival : closed) {
-            player.m_5661_(Component.m_237110_("message.hexkagune.quest.closed", rival.title()), false);
-        }
+        player.m_5661_(Component.m_237113_(told.toString()), true);
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "ui.toast.challenge_complete", 0.6F, 1.0F);
         cached.dirty = true;
     }

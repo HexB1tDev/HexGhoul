@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.97 (HexGhoul): quest info out of the chat: the details in the quest menu, short notices on the action bar (testing)
+
+See `.github/release-notes-4.1.97.md`. `JoinServer.flash` (the action bar, `Live.quietUntil` holds it 3 s over `bar`); the makings and
+how-to lines gone; `QuestServer`: new, favour, hunt, done (one line with its pay and gates) on the action bar; `GangServer`: the next
+step, a daily done, the quinque, the Clowns' job on the action bar. NPC speech and warnings stay in the chat.
+
 ## 4.1.96 (HexGhoul): officials named when you look at them; /kagune places says where each is; the café shift reworked (testing)
 
 See `.github/release-notes-4.1.96.md`. `EtoRenderer`: an untaken companion's name while `Minecraft.f_91076_` (crosshairPickEntity) is her
