@@ -9,7 +9,6 @@ import com.hex.kagune.gameplay.KaguneRuntime;
 import com.hex.kagune.gameplay.KaguneServerController;
 import com.hex.kagune.gameplay.TendrilMode;
 import com.hex.kagune.network.KaguneNetwork;
-import com.hex.kagune.sound.HexKaguneSounds;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -146,7 +145,7 @@ public final class UkakuVortex {
         state.vortexRegrowAt = launch + UkakuRules.vortexFlight(mastery) + UkakuRules.VORTEX_FADE_TICKS;
         state.nextVortexAt = now + (Cooldowns.off(player) ? UkakuRules.vortexBusy(mastery) : UkakuRules.vortexCooldown(mastery));
         THROWS.put(player.m_20148_(), new Throw(target == null ? 0 : target.m_19879_(), launch));
-        UkakuFire.sound(player.m_284548_(), shoulder(player, side), "item.trident.riptide_1", 0.6F, KaguneServerController.vary(player, 1.5F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), shoulder(player, side), com.hex.kagune.control.ukaku.UkakuSounds.VORTEX_SPIN, 0.6F, KaguneServerController.vary(player, 1.5F, 0.05F));
         UkakuServer.broadcast(player);
         return true;
     }
@@ -237,8 +236,8 @@ public final class UkakuVortex {
         }
         VORTICES.computeIfAbsent(player.m_20148_(), ignored -> new ArrayList<>()).add(vortex);
         UkakuFire.fx(player, S2CUkakuFx.VORTEX, vortex.id, from, vortex.velocity, vortex.size, vortex.life);
-        UkakuFire.sound(level, from, "item.trident.riptide_3", 1.0F, KaguneServerController.vary(player, 1.1F, 0.05F));
-        UkakuFire.sound(level, from, "entity.blaze.shoot", 0.9F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        UkakuFire.sound(level, from, com.hex.kagune.control.ukaku.UkakuSounds.VORTEX_THROW, 1.0F, KaguneServerController.vary(player, 1.1F, 0.05F));
+        UkakuFire.sound(level, from, com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.9F, KaguneServerController.vary(player, 0.6F, 0.05F));
     }
 
     /**
@@ -313,8 +312,9 @@ public final class UkakuVortex {
         target.f_19864_ = true;
         Vec3 at = KaguneServerController.center(target);
         UkakuFire.fx(player, S2CUkakuFx.VORTEX_HIT, vortex.id, at, heading, vortex.size, 0);
-        UkakuFire.sound(player.m_284548_(), at, "entity.generic.burn", 0.8F, KaguneServerController.vary(player, 1.0F, 0.1F));
-        KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.9F, KaguneServerController.vary(player, 0.9F, 0.06F));
+        UkakuFire.sound(player.m_284548_(), at, com.hex.kagune.control.ukaku.UkakuSounds.BURN, 0.8F, KaguneServerController.vary(player, 1.0F, 0.1F));
+        UkakuFire.sound(player.m_284548_(), target.m_20182_().m_82520_(0.0, target.m_20206_() * 0.5, 0.0), com.hex.kagune.control.ukaku.UkakuSounds.SLAP_HEAVY, 1.0F,
+            KaguneServerController.vary(player, 0.9F, 0.06F));
         ControlServer.onKaguneHit(player, 1);
         if (!vortex.landed) {
             vortex.landed = true;
@@ -326,7 +326,7 @@ public final class UkakuVortex {
     /** The vortex ends: the wing detaches from his back, unwinds and fades, and the new one starts to grow once it has faded. */
     private static void finish(ServerPlayer player, UkakuServer.UkakuState state, Vortex vortex, long now) {
         UkakuFire.fx(player, S2CUkakuFx.VORTEX_END, vortex.id, vortex.position, vortex.velocity, vortex.size, UkakuRules.VORTEX_FADE_TICKS);
-        UkakuFire.sound(player.m_284548_(), vortex.position, "block.fire.extinguish", 0.6F, KaguneServerController.vary(player, 0.8F, 0.1F));
+        UkakuFire.sound(player.m_284548_(), vortex.position, com.hex.kagune.control.ukaku.UkakuSounds.SNUFF, 0.6F, KaguneServerController.vary(player, 0.8F, 0.1F));
         long regrow = now + UkakuRules.VORTEX_FADE_TICKS;
         if (regrow < state.vortexRegrowAt) {
             state.vortexRegrowAt = regrow;

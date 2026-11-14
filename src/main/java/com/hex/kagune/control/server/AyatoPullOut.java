@@ -62,7 +62,7 @@ public final class AyatoPullOut {
             if (!KaguneProfile.isActive(player)) {
                 com.hex.kagune.gameplay.KaguneServerController.toggleLegacy(player);
                 Vec3 back = player.m_20182_().m_82520_(0.0, 1.2, 0.0);
-                UkakuFire.sound(level, back, "hexkagune:manifest_ukaku", 1.4F, 1.0F);
+                UkakuFire.sound(level, back, com.hex.kagune.control.ukaku.UkakuSounds.MANIFEST, 1.4F, 1.0F);
                 UkakuFire.sound(level, back, "hexkagune:sfx.air_burst", 1.0F, 0.9F);
             }
         }

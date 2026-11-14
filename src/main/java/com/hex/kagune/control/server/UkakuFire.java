@@ -126,12 +126,12 @@ final class UkakuFire {
             case FLAME_SHOT -> {
                 Vec3 tip = tip(player, right ? 1 : -1, aim);
                 launch(player, tip, aim, speed, radius, damage, UkakuRules.flamePierce(mastery), Kind.SHOT, mastery, 0.0);
-                sound(level, tip, "entity.blaze.shoot", 0.5F, KaguneServerController.vary(player, 1.4F, 0.08F));
+                sound(level, tip, com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.5F, KaguneServerController.vary(player, 1.4F, 0.08F));
             }
             case FLARE -> {
                 Vec3 tip = form.rightWing() ? tip(player, 1, aim).m_82549_(tip(player, -1, aim)).m_82490_(0.5) : tip(player, -1, aim);
                 launch(player, tip, aim, speed * 0.85F, radius * 2.2F, damage, 0, Kind.FLARE, mastery, 0.0);
-                sound(level, tip, "item.firecharge.use", 1.0F, KaguneServerController.vary(player, 0.85F, 0.05F));
+                sound(level, tip, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 1.0F, KaguneServerController.vary(player, 0.85F, 0.05F));
             }
             case RISING_FLAME -> pillar(player, state, aim, damage, mastery);
             case FIRE_FAN -> {
@@ -141,7 +141,7 @@ final class UkakuFire {
                     int side = form.rightWing() && index % 2 == 0 ? 1 : -1;
                     launch(player, tip(player, side, aim), aim, speed, radius, damage, UkakuRules.flamePierce(mastery) + 1, Kind.FAN, mastery, yaw);
                 }
-                sound(level, player.m_146892_(), "item.firecharge.use", 0.9F, KaguneServerController.vary(player, 1.1F, 0.05F));
+                sound(level, player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 0.9F, KaguneServerController.vary(player, 1.1F, 0.05F));
             }
             case RABBIT_HOP -> {
                 // Fire Dash (mutation): the downbeat throws him much further.
@@ -149,7 +149,7 @@ final class UkakuFire {
                 Vec3 back = horizontal(player.m_20154_()).m_82490_(-(dash ? UkakuRules.FIRE_DASH_BACK : 0.95));
                 push(player, new Vec3(back.f_82479_, dash ? UkakuRules.FIRE_DASH_LIFT : 0.5, back.f_82481_));
                 fx(player, S2CUkakuFx.HOP, 0, player.m_20182_(), back, dash ? 1.4F : 1.0F, 0);
-                sound(level, player.m_20182_(), "entity.ender_dragon.flap", 0.55F, KaguneServerController.vary(player, 1.5F, 0.08F));
+                sound(level, player.m_20182_(), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.55F, KaguneServerController.vary(player, 1.5F, 0.08F));
             }
             case RABBIT_DASH -> {
                 Vec3 heading = horizontal(direction.m_82556_() > 1.0E-6 ? direction : player.m_20154_());
@@ -157,7 +157,7 @@ final class UkakuFire {
                 art.heading = heading;
                 push(player, new Vec3(heading.f_82479_ * DASH_SPEED, player.m_20096_() ? 0.12 : 0.04, heading.f_82481_ * DASH_SPEED));
                 fx(player, S2CUkakuFx.DASH, 0, player.m_20182_(), heading.m_82490_(DASH_SPEED), 1.0F, 8);
-                sound(level, player.m_20182_(), "entity.blaze.shoot", 0.9F, KaguneServerController.vary(player, 0.7F, 0.05F));
+                sound(level, player.m_20182_(), com.hex.kagune.control.ukaku.UkakuSounds.WING_RUSH, 1.0F, KaguneServerController.vary(player, 0.9F, 0.05F));
             }
             case BLACK_RABBIT -> {
                 // About three and a half blocks up and a little back: the top of the jump comes as the barrage starts.
@@ -165,7 +165,7 @@ final class UkakuFire {
                 push(player, new Vec3(back.f_82479_, 0.82, back.f_82481_));
                 Art art = art(player, pattern, started, duration, damage, aim, state.actionTargetId);
                 art.shards = UkakuRules.barrageShards(mastery);
-                sound(level, player.m_20182_(), "entity.ender_dragon.flap", 0.8F, KaguneServerController.vary(player, 1.1F, 0.05F));
+                sound(level, player.m_20182_(), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.8F, KaguneServerController.vary(player, 1.1F, 0.05F));
             }
             default -> {
             }
@@ -288,7 +288,7 @@ final class UkakuFire {
                 Kind.BARRAGE, mastery, spread);
             art.fired++;
             if (art.fired % 2 == 1) {
-                sound(player.m_284548_(), player.m_146892_(), "entity.blaze.shoot", 0.4F, KaguneServerController.vary(player, 1.6F, 0.1F));
+                sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.4F, KaguneServerController.vary(player, 1.6F, 0.1F));
             }
             return true;
         }
@@ -323,8 +323,8 @@ final class UkakuFire {
             }
         }
         fx(player, S2CUkakuFx.PILLAR, 0, base, Vec3.f_82478_, (float)radius, landed);
-        sound(level, base, "entity.blaze.shoot", 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
-        sound(level, base, "item.firecharge.use", 0.8F, KaguneServerController.vary(player, 0.8F, 0.05F));
+        sound(level, base, com.hex.kagune.control.ukaku.UkakuSounds.FIREBALL, 1.0F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        sound(level, base, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 0.8F, KaguneServerController.vary(player, 0.8F, 0.05F));
     }
 
     // ------------------------------------------------------------------ bolts
@@ -406,7 +406,7 @@ final class UkakuFire {
             }
         }
         fx(player, S2CUkakuFx.BURST_BLAST, 0, at, Vec3.f_82478_, (float)(radius / 2.2), 1);
-        sound(player.m_284548_(), at, "item.firecharge.use", 0.6F, KaguneServerController.vary(player, 1.3F, 0.1F));
+        sound(player.m_284548_(), at, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 0.6F, KaguneServerController.vary(player, 1.3F, 0.1F));
     }
 
     /** Damages and sets fire to {@code target} for the final kakuja's own moves (the Ember Hop's burst). */
@@ -562,7 +562,7 @@ final class UkakuFire {
         }
         if (burnSeconds > 0) {
             target.m_20254_(burnSeconds);
-            sound(player.m_284548_(), KaguneServerController.center(target), "entity.generic.burn", 0.5F, KaguneServerController.vary(player, 1.2F, 0.1F));
+            sound(player.m_284548_(), KaguneServerController.center(target), com.hex.kagune.control.ukaku.UkakuSounds.BURN, 0.5F, KaguneServerController.vary(player, 1.2F, 0.1F));
         }
         ControlServer.onKaguneHit(player, 1);
         return true;
@@ -594,7 +594,7 @@ final class UkakuFire {
         }
         if (bolt.kind == Kind.FLARE) {
             splash(player, bolt, at, 2.6, bolt.damage * 0.6F);
-            sound(level, at, "entity.generic.explode", 0.5F, KaguneServerController.vary(player, 1.45F, 0.1F));
+            sound(level, at, com.hex.kagune.control.ukaku.UkakuSounds.BLAST, 0.5F, KaguneServerController.vary(player, 1.45F, 0.1F));
         }
         if (bolt.embers) {
             EMBERS.computeIfAbsent(player.m_20148_(), ignored -> new ArrayList<>()).add(new Embers(at, now + 40L, 1.0F));
@@ -618,7 +618,7 @@ final class UkakuFire {
             }
         }
         fx(player, S2CUkakuFx.BURST_BLAST, 0, at, Vec3.f_82478_, (float)(radius / 2.2), 1);
-        sound(player.m_284548_(), at, "entity.generic.explode", 0.35F, KaguneServerController.vary(player, 1.6F, 0.1F));
+        sound(player.m_284548_(), at, com.hex.kagune.control.ukaku.UkakuSounds.POP, 0.8F, KaguneServerController.vary(player, 1.0F, 0.1F));
     }
 
     /** Area damage around {@code at} for everyone the bolt hasn't already hit. */

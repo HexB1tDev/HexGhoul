@@ -134,7 +134,7 @@ public final class KakujaPassive {
         if (!vanished(player)) {
             // 6.0.5: vanished, the dash gives nothing away: no rush of wind, no sound.
             UkakuFire.fx(player, S2CUkakuFx.GUST, 0, player.m_20182_(), state.heading.m_82490_(state.dashSpeed), kind == Kind.BLADE ? 1.0F : 0.6F, 0);
-            UkakuFire.sound(player.m_284548_(), player.m_20182_(), "item.trident.riptide_1", kind == Kind.BLADE ? 0.9F : 0.6F,
+            UkakuFire.sound(player.m_284548_(), player.m_20182_(), kind == Kind.BLADE ? com.hex.kagune.control.ukaku.UkakuSounds.VORTEX_SPIN : "item.trident.riptide_1", kind == Kind.BLADE ? 0.9F : 0.6F,
                 kind == Kind.BLADE ? 1.3F : 1.0F);
         }
         return true;
@@ -210,8 +210,10 @@ public final class KakujaPassive {
         }
         Vec3 at = player.m_20182_();
         UkakuFire.fx(player, S2CUkakuFx.VANISH, 0, at, Vec3.f_82478_, 1.0F, 0);
-        UkakuFire.sound(player.m_284548_(), at, "entity.illusioner.mirror_move", 1.0F, 0.9F);
-        UkakuFire.sound(player.m_284548_(), at, "entity.ender_dragon.flap", 0.6F, 1.5F);
+        // 4.1.91: the Ukaku's Steel Blade vanishes with the game's own sounds (UkakuSounds), never the pack's.
+        boolean ukaku = UkakuServer.isUkaku(player);
+        UkakuFire.sound(player.m_284548_(), at, ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.SHADOW_STEP : "entity.illusioner.mirror_move", 1.0F, 0.9F);
+        UkakuFire.sound(player.m_284548_(), at, ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP : "entity.ender_dragon.flap", 0.6F, 1.5F);
         player.m_5661_(Component.m_237115_("message.hexkagune.vanish"), true);
     }
 
@@ -224,7 +226,7 @@ public final class KakujaPassive {
         state.ourInvisibility = false;
         Vec3 at = player.m_20182_();
         UkakuFire.fx(player, S2CUkakuFx.REVEAL, 0, at, Vec3.f_82478_, 0.6F, 0);
-        UkakuFire.sound(player.m_284548_(), at, "entity.illusioner.mirror_move", 0.7F, 1.4F);
+        UkakuFire.sound(player.m_284548_(), at, UkakuServer.isUkaku(player) ? com.hex.kagune.control.ukaku.UkakuSounds.SHADOW_STEP : "entity.illusioner.mirror_move", 0.7F, 1.4F);
     }
 
     // ------------------------------------------------------------------ what ends it, and the mobs

@@ -239,8 +239,8 @@ public final class CrystalShots {
             }
         }
         fx(shot, S2CUkakuFx.DAWN_BURST, at, shot.velocity, (float)radius, 0);
-        UkakuFire.sound(shot.level, at, "hexkagune:sfx.thunder", 1.1F, 1.05F);
-        UkakuFire.sound(shot.level, at, "hexkagune:sfx.burst", 0.9F, 1.1F);
+        UkakuFire.sound(shot.level, at, com.hex.kagune.control.ukaku.UkakuSounds.CRACK, 1.1F, 1.05F);
+        UkakuFire.sound(shot.level, at, com.hex.kagune.control.ukaku.UkakuSounds.BIG_BURST, 0.9F, 1.1F);
     }
 
     private static void pierce(Shot shot, LivingEntity body) {
@@ -259,7 +259,7 @@ public final class CrystalShots {
             if (shot.velocity.m_165925_() > 1.0E-6) {
                 body.m_147240_(0.08, -shot.velocity.f_82479_, -shot.velocity.f_82481_);
             }
-            UkakuFire.sound(shot.level, centre, "block.amethyst_block.break", 0.5F, 1.5F);
+            UkakuFire.sound(shot.level, centre, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_SHATTER, 0.5F, 1.5F);
         }
     }
 

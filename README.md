@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.91 (HexGhoul): every Ukaku sound is Minecraft's own (the clash untouched) (testing)
+
+See `.github/release-notes-4.1.91.md`. `ukaku/UkakuSounds` (pure): every Ukaku sound, one of the game's own named with its namespace (so
+`Sfx` never draws it from the recorded pack), `ALL` checked against vanilla 1.20.1's `tools/vanilla_sounds_1.20.1.txt`. The Ukaku's files
+(`UkakuFire`, `UkakuServer`, `UkakuRush`, `UkakuCombat`, `UkakuGatling`, `CrystalShots`, `UkakuVortex`, `UkakuThorns`, `UkakuCrystalCombat`,
+`UkakuPyre`, `NpcWings`) play only those; `UkakuCombat.swing`/`hit`/`slam` (its M1, from `KaguneCombat`), `UkakuForms`' kakuja sounds,
+`ManifestSounds.UKAKU`, `AyatoPullOut`, `KakujaPassive`'s Steel Blade branch. `KaguneClash` untouched. `SfxTests.ukakuVanilla491`, 20 rules
+sabotaged (`docs/handoff/sabotage-4.1.91.json`).
+
 ## 4.1.90 (HexGhoul): the structures at home in TerraBlender's biomes (testing)
 
 See `.github/release-notes-4.1.90.md`. `data/hexkagune/tags/worldgen/biome/plains.json` (the hotel's land) takes Regions Unexplored's and Oh

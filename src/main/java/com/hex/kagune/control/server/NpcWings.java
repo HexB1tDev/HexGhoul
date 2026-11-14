@@ -117,7 +117,7 @@ final class NpcWings {
                 st.kakuja = false;
                 st.kakujaAt = now;
                 fx(npc, S2CUkakuFx.CRYSTALLIZE, 0, back(npc), Vec3.f_82478_, 1.6F, 0);
-                UkakuFire.sound(level, back(npc), "block.amethyst_block.break", 1.0F, 0.8F);
+                UkakuFire.sound(level, back(npc), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_SHATTER, 1.0F, 0.8F);
             }
             if (st.crystal) {
                 st.crystal = false;
@@ -128,7 +128,7 @@ final class NpcWings {
             st.prey = 0;
             st.slap = -1; // 4.1.54
             st.dirty = true;
-            UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.2, 0.0), "entity.ender_dragon.flap", 0.5F, 1.6F);
+            UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.2, 0.0), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.5F, 1.6F);
         }
         if (st.dirty) {
             st.dirty = false;
@@ -147,14 +147,14 @@ final class NpcWings {
             st.out = true;
             st.outAt = now;
             st.dirty = true;
-            UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.2, 0.0), "entity.ender_dragon.flap", 0.8F, 1.4F);
+            UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.2, 0.0), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.8F, 1.4F);
         }
         if (!st.crystal && now - st.outAt >= WingRules.CRYSTAL_AFTER) {
             st.crystal = true;
             st.crystalAt = now;
             st.dirty = true;
             fx(npc, S2CUkakuFx.CRYSTALLIZE, 0, back(npc), Vec3.f_82478_, 1.0F, 1);
-            UkakuFire.sound(level, back(npc), "block.amethyst_block.resonate", 1.0F, 1.2F);
+            UkakuFire.sound(level, back(npc), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HUM, 1.0F, 1.2F);
         }
         if (st.prey != target.m_19879_()) {
             st.prey = target.m_19879_();
@@ -170,8 +170,8 @@ final class NpcWings {
             st.dirty = true;
             st.barrageReady = now + 30L;
             fx(npc, S2CUkakuFx.CRYSTALLIZE, 0, back(npc), Vec3.f_82478_, 2.2F, 1);
-            UkakuFire.sound(level, back(npc), "block.amethyst_block.resonate", 1.4F, 0.6F);
-            UkakuFire.sound(level, back(npc), "entity.ender_dragon.flap", 1.2F, 0.7F);
+            UkakuFire.sound(level, back(npc), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HUM, 1.4F, 0.6F);
+            UkakuFire.sound(level, back(npc), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 1.2F, 0.7F);
             npc.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19606_, 20 * 120, 1, false, false, false));
             npc.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19596_, 20 * 120, 1, false, false, false));
             EtoBrain.bark(npc, level, npc.persona().script().maniac(npc.m_217043_().m_188503_(100)));
@@ -180,7 +180,7 @@ final class NpcWings {
             // 4.0.0: up close in his kakuja: a crystal burst out of every wing at once, everything near thrown back and cut.
             st.burstReady = now + BURST_EVERY;
             fx(npc, S2CUkakuFx.CRYSTALLIZE, 0, back(npc), Vec3.f_82478_, 2.6F, 1);
-            UkakuFire.sound(level, back(npc), "block.amethyst_cluster.break", 1.3F, 0.7F);
+            UkakuFire.sound(level, back(npc), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.3F, 0.7F);
             for (LivingEntity body : level.m_6443_(LivingEntity.class, npc.m_20191_().m_82400_(BURST_REACH),
                 b -> b != npc && b.m_6084_() && EtoBrain.foe(npc, b))) {
                 if (body.m_6469_(npc.m_269291_().m_269333_(npc), BURST_DAMAGE)) {
@@ -229,7 +229,7 @@ final class NpcWings {
                 st.barrageReady = now + every(npc, st, WingRules.BARRAGE_EVERY) / (st.kakuja ? 2 : 1);
                 st.volleyAt = now;
                 st.dirty = true;
-                UkakuFire.sound(level, back(npc), "entity.ender_dragon.flap", 0.9F, 1.7F);
+                UkakuFire.sound(level, back(npc), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.9F, 1.7F);
             }
             case FAN -> {
                 int spikes = st.kakuja ? KAKUJA_FAN : WingRules.FAN_SPIKES;
@@ -238,7 +238,7 @@ final class NpcWings {
                 }
                 st.fanReady = now + every(npc, st, WingRules.FAN_EVERY);
                 st.nextShot = now + every(npc, st, WingRules.VOLLEY_REST);
-                UkakuFire.sound(level, back(npc), "block.amethyst_cluster.break", 1.0F, 1.3F);
+                UkakuFire.sound(level, back(npc), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.0F, 1.3F);
             }
             case VOLLEY -> {
                 if (st.volleyAt == Long.MIN_VALUE) {
@@ -308,7 +308,7 @@ final class NpcWings {
             st.slapAt = now;
             st.dirty = true;
             npc.m_21573_().m_26573_();
-            UkakuFire.sound(level, back(npc), "entity.ender_dragon.flap", 0.45F, 1.8F + 0.1F * st.slap);
+            UkakuFire.sound(level, back(npc), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.45F, 1.8F + 0.1F * st.slap);
             return true;
         }
         if (gap > WingRules.SLAP_START * size - 0.3) {
@@ -357,7 +357,7 @@ final class NpcWings {
             body.m_20256_(body.m_20184_().m_82490_(0.4).m_82549_(new Vec3(facing.f_82479_ * push, up, facing.f_82481_ * push)));
             body.f_19864_ = true;
         }
-        UkakuFire.sound(level, hand, any ? slap == 2 ? "entity.player.attack.strong" : "entity.player.attack.knockback" : "entity.player.attack.sweep",
+        UkakuFire.sound(level, hand, any ? slap == 2 ? com.hex.kagune.control.ukaku.UkakuSounds.SLAP : com.hex.kagune.control.ukaku.UkakuSounds.SLAP_HEAVY : com.hex.kagune.control.ukaku.UkakuSounds.WING_CUT,
             any ? 0.9F : 0.5F, any ? 0.9F + 0.08F * slap : 1.4F);
     }
 
@@ -406,7 +406,7 @@ final class NpcWings {
         st.shotSide = side;
         st.dirty = true;
         fx(npc, S2CUkakuFx.SPIKE + kind, spike.id, from, spike.velocity, kind == BARRAGE ? 0.7F : 0.85F, spike.life);
-        UkakuFire.sound(level, from, "block.amethyst_block.hit", 0.6F, 1.4F + 0.2F * (float)npc.m_217043_().m_188500_());
+        UkakuFire.sound(level, from, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.6F, 1.4F + 0.2F * (float)npc.m_217043_().m_188500_());
     }
 
     /** Where a wing's spike leaves: its tip as it curls to aim ({@link WingRig#aimTip}), at her size. */
@@ -473,7 +473,7 @@ final class NpcWings {
         if (spike.velocity.m_165925_() > 1.0E-6) {
             body.m_147240_(0.15, -spike.velocity.f_82479_, -spike.velocity.f_82481_);
         }
-        UkakuFire.sound((ServerLevel)npc.m_9236_(), centre, "block.amethyst_block.break", 0.6F, 1.3F);
+        UkakuFire.sound((ServerLevel)npc.m_9236_(), centre, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_SHATTER, 0.6F, 1.3F);
     }
 
     /** Her spikes in flight crumble away (she died, or left). */

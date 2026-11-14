@@ -212,14 +212,16 @@ public final class UkakuForms {
      */
     static final String CENTIPEDE_SOUND = "hexkagune:sfx.transform.body_warp";
     static final String RINKAKU_KAKUJA_SOUND = "hexkagune:sfx.transform.heavy_morph";
-    static final String UKAKU_KAKUJA_SOUND = "hexkagune:sfx.transform.energy_metamorphosis";
-    static final String FINAL_KAKUJA_SOUND = "hexkagune:sfx.transform.final_form";
+    // 4.1.91: the Ukaku's, the game's own (UkakuSounds).
+    static final String UKAKU_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA;
+    static final String FINAL_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.FINAL_KAKUJA;
     static final String KAKUJA_OFF_SOUND = "hexkagune:sfx.transform.organic_armor_shift";
 
     private static void announce(ServerPlayer player, boolean on, String name, String sound) {
         player.m_5661_(Component.m_237110_(on ? "message.hexkagune.kakuja_on" : "message.hexkagune.kakuja_off", name), true);
         boolean centipede = sound.equals(CENTIPEDE_SOUND) || sound.equals(RINKAKU_KAKUJA_SOUND);
-        String selected = on ? sound : centipede ? "hexkagune:sfx.chitin" : KAKUJA_OFF_SOUND;
+        boolean ukaku = sound.equals(UKAKU_KAKUJA_SOUND) || sound.equals(FINAL_KAKUJA_SOUND);
+        String selected = on ? sound : centipede ? "hexkagune:sfx.chitin" : ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : KAKUJA_OFF_SOUND;
         UkakuFire.sound(player.m_284548_(), player.m_20182_().m_82520_(0.0, 1.0, 0.0), selected, on ? 1.8F : 1.0F, 1.0F);
     }
 }

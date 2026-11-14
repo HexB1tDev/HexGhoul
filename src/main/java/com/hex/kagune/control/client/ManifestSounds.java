@@ -19,7 +19,8 @@ import net.minecraft.sounds.SoundSource;
 public final class ManifestSounds {
     private static final SoundEvent RINKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_rinkaku"));
     private static final SoundEvent CENTIPEDE = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_centipede"));
-    private static final SoundEvent UKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_ukaku"));
+    // 4.1.91: the Ukaku's wings tear out ablaze with the game's own sound (UkakuSounds.MANIFEST).
+    private static final SoundEvent UKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_("minecraft", com.hex.kagune.control.ukaku.UkakuSounds.MANIFEST.substring("minecraft:".length())));
     private static final Map<UUID, Tear> PLAYING = new HashMap<>();
 
     private ManifestSounds() {

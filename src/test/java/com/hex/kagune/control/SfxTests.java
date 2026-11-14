@@ -190,6 +190,7 @@ public final class SfxTests {
         Sfx.Sound journal = Sfx.play("ui.toast.challenge_complete", 0.6F, 1.0F);
         check(journal.namespace().equals("minecraft") && journal.pitch() == 1.0F, "the journal's cue stays the game's");
         limit();
+        ukakuVanilla491();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -211,6 +212,79 @@ public final class SfxTests {
             return ogg[i + 11] & 0xFF;
         }
         return -1;
+    }
+
+    /**
+     * 4.1.91 (the owner: "rework the the Ukaku sounds to use only Minecraft sounds that are ideal for every single thing that form does.
+     * The only thing you're not allowed to touch is the clash sounds. ... change every sound in the Ukaku so that every sound is Minecraft
+     * based. Just make sure that you pick the most badass sounds possible."): every sound the Ukaku makes is one of the game's own (in
+     * vanilla 1.20.1's sounds.json, tools/vanilla_sounds_1.20.1.txt), named with its namespace so the pack never stands in for it; the clash
+     * keeps its own.
+     */
+    static void ukakuVanilla491() throws IOException {
+        Set<String> vanilla = new HashSet<>(Files.readAllLines(Path.of("tools/vanilla_sounds_1.20.1.txt"), StandardCharsets.UTF_8));
+        check(vanilla.size() > 1400 && vanilla.contains("entity.warden.attack_impact") && vanilla.contains("block.amethyst_block.chime"),
+            "vanilla 1.20.1's sound events are all there: " + vanilla.size());
+        // ALL holds every one of them (none escapes the check below).
+        Set<String> declared = new HashSet<>();
+        for (java.lang.reflect.Field field : com.hex.kagune.control.ukaku.UkakuSounds.class.getFields()) {
+            if (field.getType() == String.class && java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+                try {
+                    declared.add((String)field.get(null));
+                } catch (IllegalAccessException failure) {
+                    check(false, "read " + field.getName());
+                }
+            }
+        }
+        check(declared.size() > 30 && declared.equals(new HashSet<>(java.util.Arrays.asList(com.hex.kagune.control.ukaku.UkakuSounds.ALL))),
+            "UkakuSounds.ALL lists every Ukaku sound: " + declared.size());
+        for (String id : com.hex.kagune.control.ukaku.UkakuSounds.ALL) {
+            check(id.startsWith("minecraft:") && vanilla.contains(id.substring("minecraft:".length())), id + " is one of the game's own sounds");
+            Sfx.Sound played = Sfx.play(id, 0.7F, 0.6F);
+            check(played.namespace().equals("minecraft") && ("minecraft:" + played.path()).equals(id) && played.pitch() == 0.6F && played.volume() == 0.7F,
+                id + " plays as named, at the volume and pitch asked (never the pack's)");
+        }
+        // Every sound call in the Ukaku's own files names one of them; nothing of the pack's, no bare name the pack would stand in for.
+        String server = "src/main/java/com/hex/kagune/control/server/";
+        for (String file : new String[] {"UkakuFire", "UkakuServer", "UkakuRush", "UkakuCombat", "UkakuGatling", "CrystalShots", "UkakuVortex",
+            "UkakuThorns", "UkakuCrystalCombat", "UkakuPyre", "NpcWings"}) {
+            String source = Files.readString(Path.of(server + file + ".java"), StandardCharsets.UTF_8);
+            int calls = 0;
+            boolean named = true;
+            for (String line : source.split("\n")) {
+                if (line.matches(".*\\bsound\\(.*") && !line.contains("static void sound(")) {
+                    calls++;
+                    named &= line.contains("UkakuSounds.");
+                }
+            }
+            check(calls > 0 && named, file + ": every one of its " + calls + " sounds is the game's own (UkakuSounds)");
+            check(!source.contains("\"hexkagune:") && !source.contains("HexKaguneSounds") && !source.matches("(?s).*\"(entity|block|item)\\.[a-z_.]+\".*"),
+                file + ": nothing of the pack's, and no bare vanilla name the pack would draw from");
+        }
+        String combat = Files.readString(Path.of(server + "KaguneCombat.java"), StandardCharsets.UTF_8);
+        String ukakuCombat = Files.readString(Path.of(server + "UkakuCombat.java"), StandardCharsets.UTF_8);
+        check(combat.contains("UkakuCombat.hit(player, target, stage.weight() >= 0.5F);") && combat.contains("UkakuCombat.slam(player, impactPoint);")
+            && ukakuCombat.contains("heavy ? UkakuSounds.SLAP_HEAVY") && ukakuCombat.contains("UkakuSounds.SLAP, 1.0F")
+            && ukakuCombat.contains("UkakuFire.sound(player.m_284548_(), at, UkakuSounds.SLAM, 1.0F"),
+            "the Ukaku's blows land with a slap (a heavy one throwing them), its slams with the Warden's blow");
+        check(ukakuCombat.contains("case KICK -> UkakuFire.sound(level, at, UkakuSounds.KICK,")
+            && ukakuCombat.contains("default -> UkakuFire.sound(level, at, UkakuSounds.WING_FLAP, 0.75F + 0.35F * weight,")
+            && ukakuCombat.contains("case WING_SLASH, WING_CROSS, ONE_WING_SLASH, ONE_WING_RETURN, BEHEADING -> {"),
+            "its swings: a kick's swish, the wings' heavy beat for a slap, a blade's sweep with it for a cut");
+        String forms = Files.readString(Path.of(server + "UkakuForms.java"), StandardCharsets.UTF_8);
+        check(forms.contains("static final String UKAKU_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA;")
+            && forms.contains("static final String FINAL_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.FINAL_KAKUJA;")
+            && forms.contains("ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : KAKUJA_OFF_SOUND"),
+            "the Ukaku's kakuja, final kakuja and coming out of them: the game's own");
+        check(Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/ManifestSounds.java"), StandardCharsets.UTF_8)
+                .contains("UKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_(\"minecraft\", com.hex.kagune.control.ukaku.UkakuSounds.MANIFEST.substring(")
+            && Files.readString(Path.of(server + "AyatoPullOut.java"), StandardCharsets.UTF_8).contains("UkakuSounds.MANIFEST, 1.4F")
+            && Files.readString(Path.of(server + "KakujaPassive.java"), StandardCharsets.UTF_8).contains("ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.SHADOW_STEP"),
+            "the wings tearing out (a player's, Ayato's) and the Steel Blade's vanish: the game's own");
+        // The clash is not the Ukaku's: it keeps the pack's own.
+        String clash = Files.readString(Path.of(server + "KaguneClash.java"), StandardCharsets.UTF_8);
+        check(clash.contains("UkakuFire.sound(level, at, \"hexkagune:sfx.clash\", volume,") && !clash.contains("UkakuSounds"),
+            "the clash keeps its own sound, untouched");
     }
 
     static void limit() {

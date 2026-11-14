@@ -2,7 +2,7 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.ComboStage;
 import com.hex.kagune.gameplay.KaguneServerController;
-import com.hex.kagune.sound.HexKaguneSounds;
+import com.hex.kagune.control.ukaku.UkakuSounds;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -24,38 +24,51 @@ final class UkakuCombat {
     private UkakuCombat() {
     }
 
-    /** The swing sound as a strike starts; hits use the shared flesh impact. */
+    /**
+     * The swing sound as a strike starts (4.1.91: the game's own, {@link UkakuSounds}): a kick's swish; a wing's deep beat, by the blow's
+     * weight, and a blade's sweep where a wing or the Steel Blade cuts; a light flick of the wings before a shot.
+     */
     static void swing(ServerPlayer player, ComboStage stage) {
         float weight = stage.weight();
+        ServerLevel level = player.m_284548_();
+        Vec3 at = player.m_146892_();
         switch (stage.pattern()) {
-            case KICK -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.45F,
-                KaguneServerController.vary(player, 1.6F, 0.08F));
+            case KICK -> UkakuFire.sound(level, at, UkakuSounds.KICK, 0.8F, KaguneServerController.vary(player, 1.1F, 0.08F));
             case STEEL_SWEEP, STEEL_RETURN, STEEL_EXECUTION -> {
-                // 3.0.7: recorded air only; the old trident layer brought the metallic ring back.
-                net.minecraft.world.phys.Vec3 at = player.m_146892_();
-                UkakuFire.sound(player.m_284548_(), at, "hexkagune:sfx.blade_heavy", 1.0F,
-                    KaguneServerController.vary(player, stage.pattern() == com.hex.kagune.control.StrikePattern.STEEL_EXECUTION ? 0.6F : 0.75F, 0.05F));
+                boolean execution = stage.pattern() == com.hex.kagune.control.StrikePattern.STEEL_EXECUTION;
+                UkakuFire.sound(level, at, UkakuSounds.WING_CUT, 1.0F, KaguneServerController.vary(player, execution ? 0.6F : 0.75F, 0.05F));
+                if (execution) {
+                    UkakuFire.sound(level, at, UkakuSounds.WING_FLAP, 0.8F, KaguneServerController.vary(player, 0.8F, 0.05F));
+                }
             }
-            case FLAME_SHOT -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.3F,
-                KaguneServerController.vary(player, 1.75F, 0.08F));
-            case RABBIT_HOP, FLARE, RISING_FLAME, FIRE_FAN, RABBIT_DASH, BLACK_RABBIT -> KaguneServerController.playSelf(player,
-                HexKaguneSounds.KAGUNE_WHIP, 0.55F, KaguneServerController.vary(player, 1.15F, 0.06F));
-            case CRYSTAL_SHOT -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.25F,
-                KaguneServerController.vary(player, 1.9F, 0.08F));
-            case NEEDLE_VOLLEY, NEEDLE_PAIR, NEEDLE_FAN, CROSSFIRE -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.2F,
-                KaguneServerController.vary(player, 2.0F, 0.1F));
-            case FIRE_LASH, FIREBALL -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.3F,
-                KaguneServerController.vary(player, 1.6F, 0.08F));
-            case HARROW, PIERCING_LINE, THORN_FAN, HAIL_OF_THORNS, SIX_TAIL_BARRAGE, CRIMSON_BLOOM, EMBER_HOP, SEARING_HARROW, TWIN_SERPENTS,
-                 PYRE_LANCE, HELLRAIN, CRIMSON_PYRE -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.6F,
-                KaguneServerController.vary(player, 1.0F, 0.06F));
-            case CRYSTAL_LANCE, SPIKE_FAN, SPIKE_RAIN, SPIKE_BARRAGE, CRYSTAL_BLOOM -> KaguneServerController.playSelf(player,
-                HexKaguneSounds.KAGUNE_WHIP, 0.5F, KaguneServerController.vary(player, 1.35F, 0.06F));
-            case SHARD_BURST -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.4F,
-                KaguneServerController.vary(player, 1.35F, 0.05F));
-            default -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.7F + 0.35F * weight,
-                KaguneServerController.vary(player, 1.3F - 0.4F * weight, 0.05F));
+            case FLAME_SHOT, FIRE_LASH, FIREBALL, CRYSTAL_SHOT, SHARD_BURST -> UkakuFire.sound(level, at, UkakuSounds.WING_FLICK, 0.45F,
+                KaguneServerController.vary(player, 1.4F, 0.08F));
+            case NEEDLE_VOLLEY, NEEDLE_PAIR, NEEDLE_FAN, CROSSFIRE -> UkakuFire.sound(level, at, UkakuSounds.WING_FLICK, 0.35F,
+                KaguneServerController.vary(player, 1.7F, 0.1F));
+            case RABBIT_HOP, FLARE, RISING_FLAME, FIRE_FAN, RABBIT_DASH, BLACK_RABBIT, HARROW, PIERCING_LINE, THORN_FAN, HAIL_OF_THORNS,
+                 SIX_TAIL_BARRAGE, CRIMSON_BLOOM, EMBER_HOP, SEARING_HARROW, TWIN_SERPENTS, PYRE_LANCE, HELLRAIN, CRIMSON_PYRE, CRYSTAL_LANCE,
+                 SPIKE_FAN, SPIKE_RAIN, SPIKE_BARRAGE, CRYSTAL_BLOOM -> UkakuFire.sound(level, at, UkakuSounds.WING_FLAP, 0.6F,
+                KaguneServerController.vary(player, 1.25F, 0.06F));
+            case WING_SLASH, WING_CROSS, ONE_WING_SLASH, ONE_WING_RETURN, BEHEADING -> {
+                UkakuFire.sound(level, at, UkakuSounds.WING_FLAP, 0.6F + 0.3F * weight, KaguneServerController.vary(player, 1.2F - 0.3F * weight, 0.05F));
+                UkakuFire.sound(level, at, UkakuSounds.WING_CUT, 0.8F + 0.3F * weight, KaguneServerController.vary(player, 1.0F - 0.25F * weight, 0.05F));
+            }
+            // The wing slaps and slams (WING_SLAP, WING_SWING, WING_RISE, WING_SLAM, TWIN_SLAM) and anything else: the wings' heavy beat.
+            default -> UkakuFire.sound(level, at, UkakuSounds.WING_FLAP, 0.75F + 0.35F * weight,
+                KaguneServerController.vary(player, 1.3F - 0.45F * weight, 0.05F));
         }
+    }
+
+    /** 4.1.91: a blow of the Ukaku's combo landing on {@code target} ({@code heavy}: one that throws them): a slap, the game's own. */
+    static void hit(ServerPlayer player, net.minecraft.world.entity.Entity target, boolean heavy) {
+        UkakuFire.sound(player.m_284548_(), target.m_20182_().m_82520_(0.0, target.m_20206_() * 0.5, 0.0), heavy ? UkakuSounds.SLAP_HEAVY
+            : UkakuSounds.SLAP, 1.0F, KaguneServerController.vary(player, heavy ? 0.85F : 1.0F, 0.06F));
+    }
+
+    /** 4.1.91: a wing slam coming down at {@code at}: the Warden's blow, and the ground's thump under it. */
+    static void slam(ServerPlayer player, Vec3 at) {
+        UkakuFire.sound(player.m_284548_(), at, UkakuSounds.SLAM, 1.0F, KaguneServerController.vary(player, 0.9F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), at, UkakuSounds.BLAST, 0.35F, KaguneServerController.vary(player, 1.5F, 0.08F));
     }
 
     /** RC left in the air at the impact tick, hit or miss. */
@@ -73,7 +86,7 @@ final class UkakuCombat {
             case KICK -> level.m_8767_(ParticleTypes.f_123797_, impactPoint.f_82479_, impactPoint.f_82480_, impactPoint.f_82481_, 7,
                 0.2, 0.2, 0.2, 0.3);
             case SHARD_BURST -> {
-                KaguneServerController.playSelf(player, HexKaguneSounds.SHARD_LAUNCH, 0.9F, KaguneServerController.vary(player, 1.05F, 0.05F));
+                UkakuFire.sound(level, eye, UkakuSounds.FLAME_BURST, 0.9F, KaguneServerController.vary(player, 1.05F, 0.05F));
                 // Shards leave from the shoulder blades: both wings, or only the left one in Rabbit Guise.
                 double y = eye.f_82480_ - 0.25;
                 streak(level, eye.f_82479_ - rightX * 0.35 - forwardX * 0.15, y, eye.f_82481_ - rightZ * 0.35 - forwardZ * 0.15, impactPoint);

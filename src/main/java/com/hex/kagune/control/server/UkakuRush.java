@@ -45,8 +45,8 @@ final class UkakuRush {
         // Up and back, away from where he is looking.
         Vec3 back = UkakuFire.horizontal(player.m_20154_()).m_82490_(-UkakuRules.RUSH_BACK);
         UkakuFire.push(player, new Vec3(back.f_82479_, UkakuRules.RUSH_UP, back.f_82481_));
-        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.ender_dragon.flap", 0.9F, KaguneServerController.vary(player, 0.9F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.attack.sweep", 0.6F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.9F, KaguneServerController.vary(player, 0.9F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), com.hex.kagune.control.ukaku.UkakuSounds.WING_CUT, 0.6F, KaguneServerController.vary(player, 0.6F, 0.05F));
         return true;
     }
 

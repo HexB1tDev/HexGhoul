@@ -552,8 +552,12 @@ public final class KaguneCombat {
                 KaguneServerController.applyCentipedeBleed(player, target);
             }
             if (landed <= 3) {
-                KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.9F,
-                    KaguneServerController.vary(player, bleeds ? 0.9F : 1.0F, 0.06F));
+                if (ukaku) {
+                    UkakuCombat.hit(player, target, stage.weight() >= 0.5F); // 4.1.91: a wing slap, the game's own
+                } else {
+                    KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.9F,
+                        KaguneServerController.vary(player, bleeds ? 0.9F : 1.0F, 0.06F));
+                }
             }
             Vec3 away = target.m_20182_().m_82546_(player.m_20182_());
             if (away.m_165925_() > 1.0E-4) {
@@ -564,8 +568,12 @@ public final class KaguneCombat {
         if (stage.shape() == HitShape.SLAM) {
             player.m_284548_().m_8767_(ParticleTypes.f_123797_, impactPoint.f_82479_, impactPoint.f_82480_, impactPoint.f_82481_,
                 14, 0.45, 0.15, 0.45, 0.1);
-            KaguneServerController.playAt(player, impactPoint, HexKaguneSounds.KAGUNE_SLAM, 0.75F,
-                KaguneServerController.vary(player, KaguneServerController.formPitch(player), 0.05F));
+            if (ukaku) {
+                UkakuCombat.slam(player, impactPoint); // 4.1.91: the Warden's blow
+            } else {
+                KaguneServerController.playAt(player, impactPoint, HexKaguneSounds.KAGUNE_SLAM, 0.75F,
+                    KaguneServerController.vary(player, KaguneServerController.formPitch(player), 0.05F));
+            }
         }
         if (ukaku) {
             UkakuCombat.impact(player, stage, combo.direction, impactPoint, range);

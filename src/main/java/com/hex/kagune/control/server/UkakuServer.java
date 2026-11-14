@@ -146,7 +146,7 @@ public final class UkakuServer {
         }
         KaguneProfile.root(player).m_128405_(MUTATIONS_KEY, mask | mutation.bit());
         player.m_5661_(Component.m_237110_("message.hexkagune.ukaku.mutation_unlocked", mutation.displayName()), true);
-        KaguneServerController.playSelf(player, com.hex.kagune.sound.HexKaguneSounds.KAGUNE_RESHAPE, 0.8F, KaguneServerController.vary(player, 1.3F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.MUTATION, 1.0F, KaguneServerController.vary(player, 1.0F, 0.05F));
         state(player).dirty = true;
     }
 
@@ -220,9 +220,9 @@ public final class UkakuServer {
         state.bladeChangedAt = now;
         state.dirty = true;
         net.minecraft.world.phys.Vec3 arm = player.m_20182_().m_82520_(0.0, 1.2, 0.0);
-        UkakuFire.sound(player.m_284548_(), arm, state.blade ? "item.trident.return" : "item.armor.equip_iron", 1.2F,
+        UkakuFire.sound(player.m_284548_(), arm, state.blade ? com.hex.kagune.control.ukaku.UkakuSounds.BLADE_DRAW : com.hex.kagune.control.ukaku.UkakuSounds.BLADE_SHEATHE, 1.2F,
             KaguneServerController.vary(player, state.blade ? 0.6F : 0.8F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), arm, "block.anvil.place", 0.5F, KaguneServerController.vary(player, 1.6F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), arm, com.hex.kagune.control.ukaku.UkakuSounds.BLADE_SET, 0.5F, KaguneServerController.vary(player, 1.6F, 0.05F));
     }
 
     /**

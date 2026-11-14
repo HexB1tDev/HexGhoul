@@ -1,0 +1,142 @@
+[
+ {
+  "name": "a Ukaku sound not the game's",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/UkakuSounds.java",
+  "old": "WING_FLAP = \"minecraft:entity.ender_dragon.flap\";",
+  "new": "WING_FLAP = \"minecraft:entity.ender_dragon.flapp\";",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a Ukaku sound the pack stands in for",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/UkakuSounds.java",
+  "old": "SLAP = \"minecraft:entity.player.attack.strong\";",
+  "new": "SLAP = \"entity.player.attack.strong\";",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a Ukaku sound left out of ALL",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/UkakuSounds.java",
+  "old": "SPIKES, STAB, CRACK,",
+  "new": "SPIKES, CRACK,",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a namespaced sound's pitch drawn back",
+  "file": "src/main/java/com/hex/kagune/control/Sfx.java",
+  "old": "            return new Sound(id.substring(0, colon), id.substring(colon + 1), volume, pitch);",
+  "new": "            return new Sound(id.substring(0, colon), id.substring(colon + 1), volume, pitch(pitch));",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the flare back on the pack",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuFire.java",
+  "old": "sound(level, tip, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 1.0F, KaguneServerController.vary(player, 0.85F, 0.05F));",
+  "new": "sound(level, tip, \"item.firecharge.use\", 1.0F, KaguneServerController.vary(player, 0.85F, 0.05F));",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a crystal shot's thunder the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/CrystalShots.java",
+  "old": "com.hex.kagune.control.ukaku.UkakuSounds.CRACK,",
+  "new": "\"hexkagune:sfx.thunder\",",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "an NPC's wing slap the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcWings.java",
+  "old": "any ? slap == 2 ? com.hex.kagune.control.ukaku.UkakuSounds.SLAP : ",
+  "new": "any ? slap == 2 ? \"entity.player.attack.strong\" : ",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Thorns back on the pack",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuThorns.java",
+  "old": "com.hex.kagune.control.ukaku.UkakuSounds.SPIKES, 1.3F",
+  "new": "\"block.amethyst_block.chime\", 1.3F",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Ukaku's blows the flesh impact",
+  "file": "src/main/java/com/hex/kagune/control/server/KaguneCombat.java",
+  "old": "UkakuCombat.hit(player, target, stage.weight() >= 0.5F); // 4.1.91: a wing slap, the game's own",
+  "new": "KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.9F, 1.0F);",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Ukaku's slam the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/KaguneCombat.java",
+  "old": "UkakuCombat.slam(player, impactPoint); // 4.1.91: the Warden's blow",
+  "new": "KaguneServerController.playAt(player, impactPoint, HexKaguneSounds.KAGUNE_SLAM, 0.75F, 1.0F);",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a heavy slap no heavier",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuCombat.java",
+  "old": "heavy ? UkakuSounds.SLAP_HEAVY\n            : UkakuSounds.SLAP,",
+  "new": "UkakuSounds.SLAP,",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a slam not the Warden's",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuCombat.java",
+  "old": "UkakuFire.sound(player.m_284548_(), at, UkakuSounds.SLAM, 1.0F",
+  "new": "UkakuFire.sound(player.m_284548_(), at, UkakuSounds.SLAP, 1.0F",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a kick the pack's whip",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuCombat.java",
+  "old": "case KICK -> UkakuFire.sound(level, at, UkakuSounds.KICK, 0.8F, KaguneServerController.vary(player, 1.1F, 0.08F));",
+  "new": "case KICK -> KaguneServerController.playSelf(player, com.hex.kagune.sound.HexKaguneSounds.KAGUNE_WHIP, 0.45F, 1.6F);",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a cut without the blade's sweep",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuCombat.java",
+  "old": "case WING_SLASH, WING_CROSS, ONE_WING_SLASH, ONE_WING_RETURN, BEHEADING -> {",
+  "new": "case WING_CROSS, ONE_WING_SLASH, ONE_WING_RETURN, BEHEADING -> {",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Ukaku's kakuja the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuForms.java",
+  "old": "UKAKU_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA;",
+  "new": "UKAKU_KAKUJA_SOUND = \"hexkagune:sfx.transform.energy_metamorphosis\";",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "out of the Ukaku's kakuja the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuForms.java",
+  "old": "ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : KAKUJA_OFF_SOUND",
+  "new": "KAKUJA_OFF_SOUND",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the wings tear out with the pack's",
+  "file": "src/main/java/com/hex/kagune/control/client/ManifestSounds.java",
+  "old": "ResourceLocation.m_214293_(\"minecraft\", com.hex.kagune.control.ukaku.UkakuSounds.MANIFEST.substring(\"minecraft:\".length()))",
+  "new": "ResourceLocation.m_214293_(\"hexkagune\", \"manifest_ukaku\")",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "Ayato's wings with the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/AyatoPullOut.java",
+  "old": "com.hex.kagune.control.ukaku.UkakuSounds.MANIFEST, 1.4F",
+  "new": "\"hexkagune:manifest_ukaku\", 1.4F",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Steel Blade's vanish the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/KakujaPassive.java",
+  "old": "ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.SHADOW_STEP : \"entity.illusioner.mirror_move\", 1.0F, 0.9F",
+  "new": "\"entity.illusioner.mirror_move\", 1.0F, 0.9F",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the clash touched",
+  "file": "src/main/java/com/hex/kagune/control/server/KaguneClash.java",
+  "old": "UkakuFire.sound(level, at, \"hexkagune:sfx.clash\", volume,",
+  "new": "UkakuFire.sound(level, at, com.hex.kagune.control.ukaku.UkakuSounds.SLAM, volume,",
+  "suite": "SfxTests"
+ }
+]
