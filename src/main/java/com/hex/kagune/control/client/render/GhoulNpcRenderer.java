@@ -77,62 +77,67 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
      */
     @Override
     public void m_7392_(GhoulNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
-        // 2.0.27: noted as drawn before anything else (not only from its eyes' layer: a layer skipped or failing left its kagune undrawn).
-        note(npc);
-        GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());
-        this.f_115290_ = view != null && view.identity().girl() ? this.slim : this.wide;
-        double clock = PaleClient.clock(partial);
-        RigPose posed = GhoulNpcClient.flip(view, clock, npc.m_20096_());
-        if (posed == null) {
-            // 1.3.36: an arm blade's guard, cuts, wrap and sprint.
-            try {
-                double speed = Math.hypot(npc.m_20185_() - npc.f_19790_, npc.m_20189_() - npc.f_19792_);
-                posed = GhoulNpcClient.blade(view, clock, speed, npc.f_267362_.m_267590_(partial) * 0.6662);
-            } catch (RuntimeException failure) {
-                PlayerLayers.failed("a ghoul's arm blade pose", failure);
-                posed = null;
-            }
-        }
-        GhoulModel.pose = posed;
-        boolean shaking = npc.afraid(); // 2.1.9: trembling before Peace or War
-        if (shaking) {
-            float shiver = com.hex.kagune.control.npc.FinalSight.tremble(npc.m_19879_(), npc.f_19797_ + partial);
-            pose.m_85836_();
-            pose.m_252781_(new Quaternionf().rotateAxis(shiver, 0.0F, 1.0F, 0.0F));
-            pose.m_252781_(new Quaternionf().rotateAxis(shiver * 0.5F, 0.0F, 0.0F, 1.0F));
-        }
-        boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
-            || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);
+        PoseStack.Pose mark = pose.m_85850_(); // 4.1.103: a failing draw skipped, the stack put back (RenderGuard)
         try {
-            if (turned) {
-                float delta = ((npc.f_20883_ - npc.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
-                double body = Math.toRadians(npc.f_20884_ + delta * partial);
-                float rightX = (float)-Math.cos(body);
-                float rightZ = (float)-Math.sin(body);
-                pose.m_85836_();
-                // 1.3.36: a step in and a drop carry the whole body, and a spin turns it (as the investigators' do).
-                pose.m_85837_(-Math.sin(body) * posed.lunge / 16.0, 0.0, Math.cos(body) * posed.lunge / 16.0);
-                pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
-                pose.m_252781_(new Quaternionf().rotateAxis(posed.spin, 0.0F, 1.0F, 0.0F));
-                // A backflip (+) takes the head back over: about its right; a roll (+) lifts its right side: about its back-to-front line.
-                pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
-                pose.m_252781_(new Quaternionf().rotateAxis(-posed.roll, rightZ, 0.0F, -rightX));
-                pose.m_85837_(0.0, -BodyFrame.TURN_PIVOT, 0.0);
+            // 2.0.27: noted as drawn before anything else (not only from its eyes' layer: a layer skipped or failing left its kagune undrawn).
+            note(npc);
+            GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());
+            this.f_115290_ = view != null && view.identity().girl() ? this.slim : this.wide;
+            double clock = PaleClient.clock(partial);
+            RigPose posed = GhoulNpcClient.flip(view, clock, npc.m_20096_());
+            if (posed == null) {
+                // 1.3.36: an arm blade's guard, cuts, wrap and sprint.
+                try {
+                    double speed = Math.hypot(npc.m_20185_() - npc.f_19790_, npc.m_20189_() - npc.f_19792_);
+                    posed = GhoulNpcClient.blade(view, clock, speed, npc.f_267362_.m_267590_(partial) * 0.6662);
+                } catch (RuntimeException failure) {
+                    PlayerLayers.failed("a ghoul's arm blade pose", failure);
+                    posed = null;
+                }
             }
-            super.m_7392_(npc, yaw, partial, pose, buffers, light);
-        } finally {
-            if (turned) {
-                pose.m_85849_();
-            }
+            GhoulModel.pose = posed;
+            boolean shaking = npc.afraid(); // 2.1.9: trembling before Peace or War
             if (shaking) {
-                pose.m_85849_();
+                float shiver = com.hex.kagune.control.npc.FinalSight.tremble(npc.m_19879_(), npc.f_19797_ + partial);
+                pose.m_85836_();
+                pose.m_252781_(new Quaternionf().rotateAxis(shiver, 0.0F, 1.0F, 0.0F));
+                pose.m_252781_(new Quaternionf().rotateAxis(shiver * 0.5F, 0.0F, 0.0F, 1.0F));
             }
-            GhoulModel.pose = null;
-        }
-        // 1.3.30: what it says, in a bubble over its head (never the chat). 1.3.38: a real bubble (SpeechBubbles).
-        java.util.List<String> said = com.hex.kagune.control.client.NpcSpeech.lines(npc);
-        if (!npc.m_20145_()) {
-            SpeechBubbles.draw(npc, said, 0.3, com.hex.kagune.control.client.NpcSpeech.age(npc.m_19879_(), partial), pose, buffers);
+            boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
+                || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);
+            try {
+                if (turned) {
+                    float delta = ((npc.f_20883_ - npc.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+                    double body = Math.toRadians(npc.f_20884_ + delta * partial);
+                    float rightX = (float)-Math.cos(body);
+                    float rightZ = (float)-Math.sin(body);
+                    pose.m_85836_();
+                    // 1.3.36: a step in and a drop carry the whole body, and a spin turns it (as the investigators' do).
+                    pose.m_85837_(-Math.sin(body) * posed.lunge / 16.0, 0.0, Math.cos(body) * posed.lunge / 16.0);
+                    pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
+                    pose.m_252781_(new Quaternionf().rotateAxis(posed.spin, 0.0F, 1.0F, 0.0F));
+                    // A backflip (+) takes the head back over: about its right; a roll (+) lifts its right side: about its back-to-front line.
+                    pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
+                    pose.m_252781_(new Quaternionf().rotateAxis(-posed.roll, rightZ, 0.0F, -rightX));
+                    pose.m_85837_(0.0, -BodyFrame.TURN_PIVOT, 0.0);
+                }
+                super.m_7392_(npc, yaw, partial, pose, buffers, light);
+            } finally {
+                if (turned) {
+                    pose.m_85849_();
+                }
+                if (shaking) {
+                    pose.m_85849_();
+                }
+                GhoulModel.pose = null;
+            }
+            // 1.3.30: what it says, in a bubble over its head (never the chat). 1.3.38: a real bubble (SpeechBubbles).
+            java.util.List<String> said = com.hex.kagune.control.client.NpcSpeech.lines(npc);
+            if (!npc.m_20145_()) {
+                SpeechBubbles.draw(npc, said, 0.3, com.hex.kagune.control.client.NpcSpeech.age(npc.m_19879_(), partial), pose, buffers);
+            }
+        } catch (RuntimeException failure) {
+            RenderGuard.failed(pose, mark, "a wild ghoul", failure);
         }
     }
 

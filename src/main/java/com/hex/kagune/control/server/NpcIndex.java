@@ -37,8 +37,11 @@ public final class NpcIndex {
             || entity instanceof com.hex.kagune.control.npc.ChildNpc || entity instanceof com.hex.kagune.control.npc.FleshThrall;
     }
 
-    /** Kept as each joins its world: a server's, and 4.1.102 a client's too (its renderers' "the ghouls near you" walk it each frame). */
-    @SubscribeEvent
+    /**
+     * Kept as each joins its world: a server's, and 4.1.102 a client's too (its renderers' "the ghouls near you" walk it each frame). 4.1.103:
+     * last of the listeners, so a join another mod cancels (a mob limit) is never kept (a cancelled event is not passed on).
+     */
+    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
     public static void join(EntityJoinLevelEvent event) {
         if (event.getLevel() != null && ours(event.getEntity())) {
             add(event.getLevel(), (LivingEntity)event.getEntity());
@@ -69,7 +72,8 @@ public final class NpcIndex {
                     it.remove(); // unloaded, gone, or moved to another world (its copy there joined that world's list)
                     continue;
                 }
-                if (type.isInstance(body) && body.m_20191_().m_82381_(box)) {
+                // 4.1.103: and really in its world now (the world's own id lookup: a body whose join was cancelled after ours is not).
+                if (type.isInstance(body) && body.m_20191_().m_82381_(box) && level.m_6815_(body.m_19879_()) == body) {
                     found.add(type.cast(body));
                 }
             }

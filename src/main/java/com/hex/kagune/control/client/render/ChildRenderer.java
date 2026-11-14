@@ -326,78 +326,83 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
 
     @Override
     public void m_7392_(ChildNpc child, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
-        ChildClient.View view = ChildClient.get(child.m_19879_());
-        ChildStage stage = view == null ? child.stage : view.stage();
-        child.carriedBy = view == null ? 0 : view.carrier();
-        if (view != null && com.hex.kagune.control.family.KaguneGenes.any(view.genome().kagune())) {
-            DRAWN.add(child); // 1.3.43: its kagune drawn after entities
-        }
-        ChildSkins.Skin skin = skin(view);
-        this.f_115290_ = skin != null && skin.slim() ? this.slim : this.wide;
-        // 1.3.56: Eto's child fighting with her flesh: its body posed for it this frame (its model's parts; her flesh drawn on it after).
-        FIGHT.remove(child.m_19879_());
-        if (view != null && com.hex.kagune.control.family.KaguneGenes.owl(view.genome().kagune()) && !child.m_5803_() && !stage.young) {
-            com.hex.kagune.control.client.animation.RigPose fight = com.hex.kagune.control.client.animation.ChildFight.pose(child,
-                com.hex.kagune.control.client.PaleClient.clock(partial), partial);
-            if (fight != null) {
-                FIGHT.put(child.m_19879_(), fight);
-            }
-        }
-        pose.m_85836_();
+        PoseStack.Pose mark = pose.m_85850_(); // 4.1.103: a failing draw skipped, the stack put back (RenderGuard)
         try {
-            boolean asleep = child.m_5803_();
-            if (!asleep) {
-                glue(child, view, partial, pose);
+            ChildClient.View view = ChildClient.get(child.m_19879_());
+            ChildStage stage = view == null ? child.stage : view.stage();
+            child.carriedBy = view == null ? 0 : view.carrier();
+            if (view != null && com.hex.kagune.control.family.KaguneGenes.any(view.genome().kagune())) {
+                DRAWN.add(child); // 1.3.43: its kagune drawn after entities
             }
-            if (view != null && !asleep && (stage.sits() || view.carrier() != 0) && view.ride() != com.hex.kagune.control.family.ChildRules.RIDE_SPIN
-                && view.ride() != ChildRules.RIDE_HAND) {
-                // Sat down: its legs (a little one's are half as long) out in front, not under it.
-                pose.m_85837_(0.0, -0.75 * stage.draw * (stage.young ? 0.5 : 1.0), 0.0);
-            }
-            // 2.3.0: a girl grows to her mother's height, give or take her own (as a teen never taller than she'll be grown).
-            float drawn = view != null && view.genome().gender().female()
-                ? ChildRules.girl(stage, ChildRules.daughter(view.mother(), view.genome().seed() ^ view.name().hashCode())) : stage.draw;
-            pose.m_85841_(drawn, drawn, drawn);
-            // 1.3.20: its moment's hop, sway and tip, about its middle.
-            com.hex.kagune.control.client.animation.RigPose body = asleep ? null : posed(child, view, child.f_19797_ + partial);
-            if (body != null && (body.drop != 0.0F || body.roll != 0.0F || body.flip != 0.0F)) {
-                float delta = ((child.f_20883_ - child.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
-                double turn = Math.toRadians(child.f_20884_ + delta * partial);
-                float rightX = (float)-Math.cos(turn);
-                float rightZ = (float)-Math.sin(turn);
-                double middle = stage.young ? 0.62 : 0.9; // its middle, in its own (unscaled) blocks
-                pose.m_85837_(0.0, -body.drop / 16.0, 0.0);
-                pose.m_85837_(0.0, middle, 0.0);
-                pose.m_252781_(new org.joml.Quaternionf().rotateAxis(body.flip, rightX, 0.0F, rightZ));
-                pose.m_252781_(new org.joml.Quaternionf().rotateAxis(-body.roll, rightZ, 0.0F, -rightX));
-                pose.m_85837_(0.0, -middle, 0.0);
-            }
-            // 1.3.50: Eto's child's Mutated Arm out: its own right arm is the flesh now (drawn by PaleFleshRenderer), not drawn here.
-            boolean mutated = com.hex.kagune.control.client.ArmClient.out(child);
-            if (mutated) {
-                this.f_115290_.f_102811_.f_104207_ = false;
-                this.f_115290_.f_103375_.f_104207_ = false;
-            }
-            try {
-                super.m_7392_(child, yaw, partial, pose, buffers, light);
-            } finally {
-                if (mutated) {
-                    this.f_115290_.f_102811_.f_104207_ = true;
-                    this.f_115290_.f_103375_.f_104207_ = true;
+            ChildSkins.Skin skin = skin(view);
+            this.f_115290_ = skin != null && skin.slim() ? this.slim : this.wide;
+            // 1.3.56: Eto's child fighting with her flesh: its body posed for it this frame (its model's parts; her flesh drawn on it after).
+            FIGHT.remove(child.m_19879_());
+            if (view != null && com.hex.kagune.control.family.KaguneGenes.owl(view.genome().kagune()) && !child.m_5803_() && !stage.young) {
+                com.hex.kagune.control.client.animation.RigPose fight = com.hex.kagune.control.client.animation.ChildFight.pose(child,
+                    com.hex.kagune.control.client.PaleClient.clock(partial), partial);
+                if (fight != null) {
+                    FIGHT.put(child.m_19879_(), fight);
                 }
             }
-        } finally {
-            pose.m_85849_();
-        }
-        // 1.3.30: what it says, in a bubble over its head (never the chat). 1.3.38: a real bubble (SpeechBubbles), a thought cloud for
-        // what it does; asleep with nothing said, now and then a cloud of z's.
-        java.util.List<String> said = com.hex.kagune.control.client.NpcSpeech.lines(child);
-        if (!child.m_20145_()) {
-            if (said.isEmpty() && child.m_5803_()) {
-                SpeechBubbles.snore(child, com.hex.kagune.control.client.PaleClient.clock(partial), pose, buffers);
-            } else {
-                SpeechBubbles.draw(child, said, 0.3, com.hex.kagune.control.client.NpcSpeech.age(child.m_19879_(), partial), pose, buffers);
+            pose.m_85836_();
+            try {
+                boolean asleep = child.m_5803_();
+                if (!asleep) {
+                    glue(child, view, partial, pose);
+                }
+                if (view != null && !asleep && (stage.sits() || view.carrier() != 0) && view.ride() != com.hex.kagune.control.family.ChildRules.RIDE_SPIN
+                    && view.ride() != ChildRules.RIDE_HAND) {
+                    // Sat down: its legs (a little one's are half as long) out in front, not under it.
+                    pose.m_85837_(0.0, -0.75 * stage.draw * (stage.young ? 0.5 : 1.0), 0.0);
+                }
+                // 2.3.0: a girl grows to her mother's height, give or take her own (as a teen never taller than she'll be grown).
+                float drawn = view != null && view.genome().gender().female()
+                    ? ChildRules.girl(stage, ChildRules.daughter(view.mother(), view.genome().seed() ^ view.name().hashCode())) : stage.draw;
+                pose.m_85841_(drawn, drawn, drawn);
+                // 1.3.20: its moment's hop, sway and tip, about its middle.
+                com.hex.kagune.control.client.animation.RigPose body = asleep ? null : posed(child, view, child.f_19797_ + partial);
+                if (body != null && (body.drop != 0.0F || body.roll != 0.0F || body.flip != 0.0F)) {
+                    float delta = ((child.f_20883_ - child.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+                    double turn = Math.toRadians(child.f_20884_ + delta * partial);
+                    float rightX = (float)-Math.cos(turn);
+                    float rightZ = (float)-Math.sin(turn);
+                    double middle = stage.young ? 0.62 : 0.9; // its middle, in its own (unscaled) blocks
+                    pose.m_85837_(0.0, -body.drop / 16.0, 0.0);
+                    pose.m_85837_(0.0, middle, 0.0);
+                    pose.m_252781_(new org.joml.Quaternionf().rotateAxis(body.flip, rightX, 0.0F, rightZ));
+                    pose.m_252781_(new org.joml.Quaternionf().rotateAxis(-body.roll, rightZ, 0.0F, -rightX));
+                    pose.m_85837_(0.0, -middle, 0.0);
+                }
+                // 1.3.50: Eto's child's Mutated Arm out: its own right arm is the flesh now (drawn by PaleFleshRenderer), not drawn here.
+                boolean mutated = com.hex.kagune.control.client.ArmClient.out(child);
+                if (mutated) {
+                    this.f_115290_.f_102811_.f_104207_ = false;
+                    this.f_115290_.f_103375_.f_104207_ = false;
+                }
+                try {
+                    super.m_7392_(child, yaw, partial, pose, buffers, light);
+                } finally {
+                    if (mutated) {
+                        this.f_115290_.f_102811_.f_104207_ = true;
+                        this.f_115290_.f_103375_.f_104207_ = true;
+                    }
+                }
+            } finally {
+                pose.m_85849_();
             }
+            // 1.3.30: what it says, in a bubble over its head (never the chat). 1.3.38: a real bubble (SpeechBubbles), a thought cloud for
+            // what it does; asleep with nothing said, now and then a cloud of z's.
+            java.util.List<String> said = com.hex.kagune.control.client.NpcSpeech.lines(child);
+            if (!child.m_20145_()) {
+                if (said.isEmpty() && child.m_5803_()) {
+                    SpeechBubbles.snore(child, com.hex.kagune.control.client.PaleClient.clock(partial), pose, buffers);
+                } else {
+                    SpeechBubbles.draw(child, said, 0.3, com.hex.kagune.control.client.NpcSpeech.age(child.m_19879_(), partial), pose, buffers);
+                }
+            }
+        } catch (RuntimeException failure) {
+            RenderGuard.failed(pose, mark, "a child", failure);
         }
     }
 

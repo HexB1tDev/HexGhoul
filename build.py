@@ -10,7 +10,8 @@ Pipeline (Java 17+ and Python 3, no downloads):
   7. prove the JAR loads and runs on a dedicated server (no client class on any path a server runs, patch/KaguneServerCheck),
   8. guard every way Minecraft calls into the mod (event listeners, the spike's and the bleeding effect's callbacks): an error
      inside is logged and the game carries on, never a kicked player or a crashed server (patch/KaguneGuard); the archive scope
-     and the dedicated server are checked again on the guarded JAR,
+     and the dedicated server are checked again on the guarded JAR, and (4.1.103) every rewritten class passes the JVM's own
+     verifier (patch/KaguneLinkCheck),
   9. compile and run the pure-logic tests in src/test/java.
 """
 from pathlib import Path
@@ -24,7 +25,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "4.1.102"
+VERSION = "4.1.103"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -254,7 +255,7 @@ def main():
 
     run("java", "-m", "jdk.compiler/com.sun.tools.javac.Main", *EXPORTS, "-nowarn",
         "-d", TOOLS, "patch/KagunePatch.java", "patch/KaguneVerify.java", "patch/KaguneServerCheck.java", "patch/KaguneGuard.java",
-        "patch/KaguneRemap.java")
+        "patch/KaguneRemap.java", "patch/KaguneLinkCheck.java")
     run("java", *EXPORTS, "-cp", TOOLS, "KagunePatch", INPUT, BASE)
 
     javac("--release", "17", "-d", STUBS, *sources("stubs"))
@@ -270,6 +271,8 @@ def main():
     run("java", *EXPORTS, "-cp", TOOLS, "KaguneGuard", OUTPUT, report)
     check_guarded_scope(report)
     run("java", *EXPORTS, "-cp", TOOLS, "KaguneServerCheck", OUTPUT, STUBS)
+    # 4.1.103: every class the guard rewrote loaded by the JVM itself, its own verifier run on each (ASM's check reads no stack map frames).
+    run("java", "-cp", TOOLS, "KaguneLinkCheck", OUTPUT, STUBS, report)
     check_names()
 
     javac("--release", "17", "-cp", os.pathsep.join(map(str, (CLASSES, BASE, STUBS))), "-d", TEST_CLASSES, *sources("src/test/java"))

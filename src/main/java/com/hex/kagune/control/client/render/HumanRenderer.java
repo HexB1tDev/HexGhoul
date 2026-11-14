@@ -200,63 +200,68 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
 
     @Override
     public void m_7392_(HumanNpc human, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
-        this.f_115290_ = HumanRules.slim(human.look()) ? this.slim : this.wide;
-        boolean woman = HumanRules.female(human.look()); // 2.0.34: her body
-        Model.woman = woman;
-        // 1.3.77: its gesture (Eto's, in its temper's way, or a child's cue), posed as Eto's model poses hers, its hop and tip too.
-        RigPose posed = human.scared() ? null : posed(human, human.f_19797_ + partial);
-        boolean glued = glue(human, partial, pose); // 1.3.78: hand in hand on a date
-        if (glued && posed != null) {
-            // 1.3.78: its held arm alive, as Eto's (HandSway): reaching to their hand as it trails, out as it swings wide.
-            com.hex.kagune.control.npc.HandSway sway = com.hex.kagune.control.client.HandClient.of(human.m_19879_());
-            if (sway != null) {
-                double trail = sway.trail(partial);
-                float[] arm = com.hex.kagune.control.npc.HandSway.arm(trail, sway.out(partial), com.hex.kagune.control.client.HandClient.clock(sway, partial),
-                    false, 1.0);
-                posed.leftArmX += arm[0];
-                posed.leftArmZ -= arm[1];
-                posed.lean += (float)com.hex.kagune.control.npc.HandSway.pulled(trail);
-            }
-        }
-        Model.pose = posed;
-        if (woman) {
-            // 2.0.34: drawn at her height and a touch slimmer for it.
-            pose.m_85836_();
-            pose.m_85841_(HumanRules.WOMAN_SIZE * HumanRules.WOMAN_BUILD, HumanRules.WOMAN_SIZE, HumanRules.WOMAN_SIZE * HumanRules.WOMAN_BUILD);
-        }
-        boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
-            || Math.abs(posed.drop) > 1.0E-3F);
+        PoseStack.Pose mark = pose.m_85850_(); // 4.1.103: a failing draw skipped, the stack put back (RenderGuard)
         try {
-            if (turned) {
-                float delta = ((human.f_20883_ - human.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
-                double body = Math.toRadians(human.f_20884_ + delta * partial);
-                float rightX = (float)-Math.cos(body);
-                float rightZ = (float)-Math.sin(body);
-                pose.m_85836_();
-                pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
-                pose.m_252781_(new Quaternionf().rotateAxis(posed.spin, 0.0F, 1.0F, 0.0F));
-                pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
-                pose.m_252781_(new Quaternionf().rotateAxis(-posed.roll, rightZ, 0.0F, -rightX));
-                pose.m_85837_(0.0, -BodyFrame.TURN_PIVOT, 0.0);
+            this.f_115290_ = HumanRules.slim(human.look()) ? this.slim : this.wide;
+            boolean woman = HumanRules.female(human.look()); // 2.0.34: her body
+            Model.woman = woman;
+            // 1.3.77: its gesture (Eto's, in its temper's way, or a child's cue), posed as Eto's model poses hers, its hop and tip too.
+            RigPose posed = human.scared() ? null : posed(human, human.f_19797_ + partial);
+            boolean glued = glue(human, partial, pose); // 1.3.78: hand in hand on a date
+            if (glued && posed != null) {
+                // 1.3.78: its held arm alive, as Eto's (HandSway): reaching to their hand as it trails, out as it swings wide.
+                com.hex.kagune.control.npc.HandSway sway = com.hex.kagune.control.client.HandClient.of(human.m_19879_());
+                if (sway != null) {
+                    double trail = sway.trail(partial);
+                    float[] arm = com.hex.kagune.control.npc.HandSway.arm(trail, sway.out(partial), com.hex.kagune.control.client.HandClient.clock(sway, partial),
+                        false, 1.0);
+                    posed.leftArmX += arm[0];
+                    posed.leftArmZ -= arm[1];
+                    posed.lean += (float)com.hex.kagune.control.npc.HandSway.pulled(trail);
+                }
             }
-            super.m_7392_(human, yaw, partial, pose, buffers, light);
-        } finally {
-            if (turned) {
-                pose.m_85849_();
-            }
+            Model.pose = posed;
             if (woman) {
-                pose.m_85849_();
+                // 2.0.34: drawn at her height and a touch slimmer for it.
+                pose.m_85836_();
+                pose.m_85841_(HumanRules.WOMAN_SIZE * HumanRules.WOMAN_BUILD, HumanRules.WOMAN_SIZE, HumanRules.WOMAN_SIZE * HumanRules.WOMAN_BUILD);
             }
-            if (glued) {
-                pose.m_85849_();
+            boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
+                || Math.abs(posed.drop) > 1.0E-3F);
+            try {
+                if (turned) {
+                    float delta = ((human.f_20883_ - human.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+                    double body = Math.toRadians(human.f_20884_ + delta * partial);
+                    float rightX = (float)-Math.cos(body);
+                    float rightZ = (float)-Math.sin(body);
+                    pose.m_85836_();
+                    pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
+                    pose.m_252781_(new Quaternionf().rotateAxis(posed.spin, 0.0F, 1.0F, 0.0F));
+                    pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
+                    pose.m_252781_(new Quaternionf().rotateAxis(-posed.roll, rightZ, 0.0F, -rightX));
+                    pose.m_85837_(0.0, -BodyFrame.TURN_PIVOT, 0.0);
+                }
+                super.m_7392_(human, yaw, partial, pose, buffers, light);
+            } finally {
+                if (turned) {
+                    pose.m_85849_();
+                }
+                if (woman) {
+                    pose.m_85849_();
+                }
+                if (glued) {
+                    pose.m_85849_();
+                }
+                Model.pose = null;
+                Model.woman = false;
             }
-            Model.pose = null;
-            Model.woman = false;
-        }
-        // 1.3.65: its screams, in a bubble over its head.
-        if (!human.m_20145_()) {
-            SpeechBubbles.draw(human, com.hex.kagune.control.client.NpcSpeech.lines(human), 0.3,
-                com.hex.kagune.control.client.NpcSpeech.age(human.m_19879_(), partial), pose, buffers);
+            // 1.3.65: its screams, in a bubble over its head.
+            if (!human.m_20145_()) {
+                SpeechBubbles.draw(human, com.hex.kagune.control.client.NpcSpeech.lines(human), 0.3,
+                    com.hex.kagune.control.client.NpcSpeech.age(human.m_19879_(), partial), pose, buffers);
+            }
+        } catch (RuntimeException failure) {
+            RenderGuard.failed(pose, mark, "a townsperson", failure);
         }
     }
 

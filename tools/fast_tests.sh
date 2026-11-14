@@ -18,7 +18,7 @@ mkdir -p "$FB"
 if [ ! -f "$FB/base.jar" ]; then
   mkdir -p "$FB/patch-classes"
   java -m jdk.compiler/com.sun.tools.javac.Main $EXP -nowarn -d "$FB/patch-classes" patch/KagunePatch.java patch/KaguneVerify.java \
-    patch/KaguneServerCheck.java patch/KaguneGuard.java patch/KaguneRemap.java
+    patch/KaguneServerCheck.java patch/KaguneGuard.java patch/KaguneRemap.java patch/KaguneLinkCheck.java
   java $EXP -cp "$FB/patch-classes" KagunePatch input/hexkagune-1.0.0.jar "$FB/base.jar" >/dev/null
 fi
 if [ ! -d "$FB/stubs" ] || [ -n "$STUBS" ]; then

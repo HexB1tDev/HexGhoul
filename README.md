@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.103 (HexGhoul): the no-fail audit: the ways a bug could still crash the game or the server, closed (the lag patch, part 5) (testing)
+
+See `.github/release-notes-4.1.103.md`. `patch/KaguneGuard`: CALLBACKS += CcgAgent and HumanNpc `m_8024_`/`m_7472_`, EtoNpc `m_8024_`,
+ChildNpc `m_8024_`/`m_6138_`; DISCARD += FleshThrall `m_8024_` (the brains left `TIMED`: timed with their guard); `GUARDED_NAMES`
+(`m_88315_`, every screen's render, `SCREEN_FLOOR` 10; 13 found). `client/render/RenderGuard` round each NPC renderer's `m_7392_` (the pose
+stack popped back to its mark, `PlayerLayers.failed`). `patch/KaguneLinkCheck` (build step after the guard): every class in the guard's
+report loaded and initialized by the JVM (its verifier: ASM's `BasicVerifier` reads no stack map frames); a VerifyError fails the build.
+`NoFailTests`; `docs/handoff/sabotage-4.1.103.json`.
+
 ## 4.1.102 (HexGhoul): your game finds the mod's NPCs from a list too (the lag patch, part 4: the client) (testing)
 
 See `.github/release-notes-4.1.102.md`. `NpcIndex` keeps every world's list, a client's too (`join` on any level; `of` walks the list

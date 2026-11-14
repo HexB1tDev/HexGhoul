@@ -67,67 +67,72 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
 
     @Override
     public void m_7392_(CcgAgent agent, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
-        AgentRules.Look look = agent.look();
-        this.f_115290_ = look.female() ? this.female : look.slim() ? this.slim : this.wide;
-        float delta = ((agent.f_20883_ - agent.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
-        float limbSwing = agent.f_267362_.m_267590_(partial);
-        RigPose posed;
+        PoseStack.Pose mark = pose.m_85850_(); // 4.1.103: a failing draw skipped, the stack put back (RenderGuard)
         try {
-            posed = AgentClient.pose(agent, limbSwing, partial);
-        } catch (RuntimeException failure) {
-            PlayerLayers.failed("an investigator's pose", failure);
-            posed = null;
-        }
-        AgentModel.pose = posed;
-        AgentModel.brawny = AgentRules.reaperLook(agent.lookIndex()); // 2.0.45: his arms set out round his broader chest
-        try {
-            AgentClient.afterimages(agent, posed, partial);
-        } catch (RuntimeException failure) {
-            PlayerLayers.failed("an investigator's afterimage", failure);
-        }
-        boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
-            || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);
-        float size = AgentRules.size(look);
-        float wide = size * AgentRules.build(look);
-        pose.m_85836_();
-        if (agent.afraid()) {
-            // 2.1.9: trembling before Peace or War.
-            float shiver = com.hex.kagune.control.npc.FinalSight.tremble(agent.m_19879_(), agent.f_19797_ + partial);
-            pose.m_252781_(new Quaternionf().rotateAxis(shiver, 0.0F, 1.0F, 0.0F));
-            pose.m_252781_(new Quaternionf().rotateAxis(shiver * 0.5F, 0.0F, 0.0F, 1.0F));
-        }
-        pose.m_85841_(wide, size, wide);
-        try {
-            if (turned) {
-                double body = Math.toRadians(agent.f_20884_ + delta * partial);
-                float rightX = (float)-Math.cos(body);
-                float rightZ = (float)-Math.sin(body);
-                pose.m_85836_();
-                pose.m_85837_(-Math.sin(body) * posed.lunge / 16.0, 0.0, Math.cos(body) * posed.lunge / 16.0);
-                pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
-                // 1.3.32: a pose's spin turns the body as PlayerAnimator turns a player's (+ to their left, seen from above anticlockwise): it was
-                // the other way here, so an NPC parent's airplane spun against the child it carries round (ChildMomentPose.spinning).
-                pose.m_252781_(new Quaternionf().rotateAxis(posed.spin, 0.0F, 1.0F, 0.0F));
-                pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
-                pose.m_252781_(new Quaternionf().rotateAxis(-posed.roll, rightZ, 0.0F, -rightX));
-                pose.m_85837_(0.0, -BodyFrame.TURN_PIVOT, 0.0);
+            AgentRules.Look look = agent.look();
+            this.f_115290_ = look.female() ? this.female : look.slim() ? this.slim : this.wide;
+            float delta = ((agent.f_20883_ - agent.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+            float limbSwing = agent.f_267362_.m_267590_(partial);
+            RigPose posed;
+            try {
+                posed = AgentClient.pose(agent, limbSwing, partial);
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("an investigator's pose", failure);
+                posed = null;
             }
-            super.m_7392_(agent, yaw, partial, pose, buffers, light);
-        } finally {
-            if (turned) {
+            AgentModel.pose = posed;
+            AgentModel.brawny = AgentRules.reaperLook(agent.lookIndex()); // 2.0.45: his arms set out round his broader chest
+            try {
+                AgentClient.afterimages(agent, posed, partial);
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("an investigator's afterimage", failure);
+            }
+            boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
+                || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);
+            float size = AgentRules.size(look);
+            float wide = size * AgentRules.build(look);
+            pose.m_85836_();
+            if (agent.afraid()) {
+                // 2.1.9: trembling before Peace or War.
+                float shiver = com.hex.kagune.control.npc.FinalSight.tremble(agent.m_19879_(), agent.f_19797_ + partial);
+                pose.m_252781_(new Quaternionf().rotateAxis(shiver, 0.0F, 1.0F, 0.0F));
+                pose.m_252781_(new Quaternionf().rotateAxis(shiver * 0.5F, 0.0F, 0.0F, 1.0F));
+            }
+            pose.m_85841_(wide, size, wide);
+            try {
+                if (turned) {
+                    double body = Math.toRadians(agent.f_20884_ + delta * partial);
+                    float rightX = (float)-Math.cos(body);
+                    float rightZ = (float)-Math.sin(body);
+                    pose.m_85836_();
+                    pose.m_85837_(-Math.sin(body) * posed.lunge / 16.0, 0.0, Math.cos(body) * posed.lunge / 16.0);
+                    pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
+                    // 1.3.32: a pose's spin turns the body as PlayerAnimator turns a player's (+ to their left, seen from above anticlockwise): it was
+                    // the other way here, so an NPC parent's airplane spun against the child it carries round (ChildMomentPose.spinning).
+                    pose.m_252781_(new Quaternionf().rotateAxis(posed.spin, 0.0F, 1.0F, 0.0F));
+                    pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
+                    pose.m_252781_(new Quaternionf().rotateAxis(-posed.roll, rightZ, 0.0F, -rightX));
+                    pose.m_85837_(0.0, -BodyFrame.TURN_PIVOT, 0.0);
+                }
+                super.m_7392_(agent, yaw, partial, pose, buffers, light);
+            } finally {
+                if (turned) {
+                    pose.m_85849_();
+                }
                 pose.m_85849_();
+                AgentModel.pose = null;
+                AgentModel.brawny = false;
+                if (this.f_115290_ instanceof AgentModel model) {
+                    model.settle();
+                }
             }
-            pose.m_85849_();
-            AgentModel.pose = null;
-            AgentModel.brawny = false;
-            if (this.f_115290_ instanceof AgentModel model) {
-                model.settle();
+            // 1.3.65: what it says (faltering at War, its nerve back), in a bubble over its head.
+            if (!agent.m_20145_()) {
+                SpeechBubbles.draw(agent, com.hex.kagune.control.client.NpcSpeech.lines(agent), 0.3,
+                    com.hex.kagune.control.client.NpcSpeech.age(agent.m_19879_(), partial), pose, buffers);
             }
-        }
-        // 1.3.65: what it says (faltering at War, its nerve back), in a bubble over its head.
-        if (!agent.m_20145_()) {
-            SpeechBubbles.draw(agent, com.hex.kagune.control.client.NpcSpeech.lines(agent), 0.3,
-                com.hex.kagune.control.client.NpcSpeech.age(agent.m_19879_(), partial), pose, buffers);
+        } catch (RuntimeException failure) {
+            RenderGuard.failed(pose, mark, "an investigator", failure);
         }
     }
 

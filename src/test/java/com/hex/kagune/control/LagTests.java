@@ -294,7 +294,10 @@ public final class LagTests {
         check(index.contains("if (event.getLevel() != null && ours(event.getEntity())) {\n            add(event.getLevel(), (LivingEntity)event.getEntity());"),
             "kept as each joins its world (4.1.102: a client's too)");
         check(index.contains("if (body.m_213877_() || body.m_9236_() != level) {\n                    it.remove();"), "the gone dropped as walked");
-        check(index.contains("if (type.isInstance(body) && body.m_20191_().m_82381_(box)) {"), "the game's own answer: its kind, its box meeting the asked");
+        check(index.contains("if (type.isInstance(body) && body.m_20191_().m_82381_(box) && level.m_6815_(body.m_19879_()) == body) {"),
+            "the game's own answer: its kind, its box meeting the asked, really in its world (4.1.103)");
+        check(index.contains("@SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)\n    public static void join("),
+            "kept last of the listeners: a cancelled join never kept (4.1.103)");
         check(index.contains("found.removeIf(body -> !filter.test(body));"), "and the asker's filter");
         check(index.contains("Collections.newSetFromMap(new WeakHashMap<>())") && index.contains("new WeakHashMap<>();"),
             "held weakly (nothing kept alive by the list)");
@@ -485,8 +488,9 @@ public final class LagTests {
     /** The build's guard and the game's side, as written. */
     private static void wiring() throws Exception {
         String guard = read("patch/KaguneGuard.java");
+        // 4.1.103: the brains are guarded now (so timed with their guard, NoFailTests); before, timed only.
         for (String npc : new String[] {"CcgAgent", "HumanNpc", "EtoNpc", "ChildNpc", "FleshThrall"}) {
-            check(guard.contains("\"com/hex/kagune/control/npc/" + npc + "\", Set.of(\"m_8024_\")"), npc + "'s brain is timed");
+            check(guard.contains("\"com/hex/kagune/control/npc/" + npc + "\", Set.of(\"m_8024_\""), npc + "'s brain is guarded, so timed");
         }
         check(guard.contains("GHOUL, Set.of(\"m_8024_\")"), "GhoulNpc's brain guarded (so timed with its guard)");
         for (String part : new String[] {"DryJigsaw", "Site", "DryPlace"}) {

@@ -213,23 +213,28 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
 
     @Override
     public void m_7392_(EtoNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
-        EtoClient.View view = EtoClient.get(npc.m_19879_());
-        double now = PaleClient.clock(partial);
-        if (com.hex.kagune.control.client.OwlClient.creature(npc, now)) {
-            // 1.3.8: the Owl's creature is drawn in her place (PaleFleshRenderer), carried over from her body as posed this frame: posed,
-            // never drawn.
-            RigPose posed = pose(npc, view, now, partial);
-            DRAWN.put(npc.m_19879_(), posed == null ? new RigPose() : new RigPose().add(posed, 1.0F));
-            DRAWN_AT.put(npc.m_19879_(), now);
-            return;
-        }
-        boolean glued = !npc.m_5803_() && glue(npc, view, partial, pose); // 1.3.21: asleep in her bed, where the bed lays her
+        PoseStack.Pose mark = pose.m_85850_(); // 4.1.103: a failing draw skipped, the stack put back (RenderGuard)
         try {
-            this.draw(npc, yaw, partial, pose, buffers, light, view);
-        } finally {
-            if (glued) {
-                pose.m_85849_();
+            EtoClient.View view = EtoClient.get(npc.m_19879_());
+            double now = PaleClient.clock(partial);
+            if (com.hex.kagune.control.client.OwlClient.creature(npc, now)) {
+                // 1.3.8: the Owl's creature is drawn in her place (PaleFleshRenderer), carried over from her body as posed this frame: posed,
+                // never drawn.
+                RigPose posed = pose(npc, view, now, partial);
+                DRAWN.put(npc.m_19879_(), posed == null ? new RigPose() : new RigPose().add(posed, 1.0F));
+                DRAWN_AT.put(npc.m_19879_(), now);
+                return;
             }
+            boolean glued = !npc.m_5803_() && glue(npc, view, partial, pose); // 1.3.21: asleep in her bed, where the bed lays her
+            try {
+                this.draw(npc, yaw, partial, pose, buffers, light, view);
+            } finally {
+                if (glued) {
+                    pose.m_85849_();
+                }
+            }
+        } catch (RuntimeException failure) {
+            RenderGuard.failed(pose, mark, "a companion", failure);
         }
     }
 

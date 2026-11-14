@@ -58,14 +58,25 @@ public final class KaguneGuard {
     static final String GHOUL = "com/hex/kagune/control/npc/GhoulNpc";
     static final Map<String, Set<String>> DISCARD = Map.of(SPIKE, Set.of("m_8119_", "m_5790_", "m_8060_"),
         // 7.0.2: the ghoul NPC's AI step (run in its tick): one that fails is removed rather than failing every tick.
-        GHOUL, Set.of("m_8024_"));
+        GHOUL, Set.of("m_8024_"),
+        // 4.1.103: a flesh creature's too (as its own catch did, for RuntimeExceptions only).
+        "com/hex/kagune/control/npc/FleshThrall", Set.of("m_8024_"));
     /** And the ones where logging is enough: the spike's saves, the bleeding effect's tick, the spike's renderer. */
     static final Map<String, Set<String>> CALLBACKS = Map.of(
         SPIKE, Set.of("m_7380_", "m_7378_"),
         "com/hex/kagune/effect/BleedingEffect", Set.of("m_6742_"),
         "com/hex/kagune/client/render/KaguneSpikeRenderer", Set.of("m_7392_"),
         // 7.0.2: the ghoul NPC's goals (set up as it is made) and its drops.
-        GHOUL, Set.of("m_8099_", "m_7472_"));
+        GHOUL, Set.of("m_8099_", "m_7472_"),
+        // 4.1.103 (the owner: "making sure absolutely nothing in the mod fails"): the investigators' and the townspeople's brains (every
+        // tick: a throw was a "Ticking entity" crash of the server) and drops; the companions' and the children's brains (their own catches
+        // took RuntimeExceptions only) and a child's push. Logged and carried on: an official or the Reaper is never removed for a bug.
+        "com/hex/kagune/control/npc/CcgAgent", Set.of("m_8024_", "m_7472_"),
+        "com/hex/kagune/control/npc/HumanNpc", Set.of("m_8024_", "m_7472_"),
+        "com/hex/kagune/control/npc/EtoNpc", Set.of("m_8024_"),
+        "com/hex/kagune/control/npc/ChildNpc", Set.of("m_8024_", "m_6138_"));
+    /** 4.1.103: and by name in every class of the mod: each screen's drawing (Screen.render; a throw there was a crash of the game). */
+    static final Set<String> GUARDED_NAMES = Set.of("m_88315_");
     /** At least this many listeners exist (a sanity floor: the annotation not being found would guard nothing). */
     static final int LISTENER_FLOOR = 100;
     /**
@@ -78,11 +89,7 @@ public final class KaguneGuard {
     static final String METER = "com/hex/kagune/control/LagMeter";
     static final String STRUCTURES = "com/hex/kagune/control/ControlStructures$";
     static final Map<String, Set<String>> TIMED = Map.of(
-        "com/hex/kagune/control/npc/CcgAgent", Set.of("m_8024_"),
-        "com/hex/kagune/control/npc/HumanNpc", Set.of("m_8024_"),
-        "com/hex/kagune/control/npc/EtoNpc", Set.of("m_8024_"),
-        "com/hex/kagune/control/npc/ChildNpc", Set.of("m_8024_"),
-        "com/hex/kagune/control/npc/FleshThrall", Set.of("m_8024_"),
+        // 4.1.103: the NPCs' brains are guarded now (CALLBACKS, DISCARD), so timed with their guard.
         STRUCTURES + "DryJigsaw", Set.of("m_214086_", "m_262864_", "m_214110_"),
         STRUCTURES + "Site", Set.of("m_214086_", "m_262864_", "m_214110_"),
         STRUCTURES + "DryPlace", Set.of("m_214086_", "m_262864_", "m_214110_"));
@@ -120,6 +127,7 @@ public final class KaguneGuard {
         int listeners = 0;
         int callbacks = 0;
         int timedOnly = 0;
+        int screens = 0;
         Map<String, Set<String>> expected = new LinkedHashMap<>();
         DISCARD.forEach((owner, names) -> expected.computeIfAbsent(owner, k -> new java.util.HashSet<>()).addAll(names));
         CALLBACKS.forEach((owner, names) -> expected.computeIfAbsent(owner, k -> new java.util.HashSet<>()).addAll(names));
@@ -135,7 +143,7 @@ public final class KaguneGuard {
             for (MethodNode method : node.methods) {
                 boolean listener = subscribes(method);
                 boolean discard = DISCARD.getOrDefault(node.name, Set.of()).contains(method.name);
-                boolean callback = CALLBACKS.getOrDefault(node.name, Set.of()).contains(method.name);
+                boolean callback = CALLBACKS.getOrDefault(node.name, Set.of()).contains(method.name) || guardedByName(node, method);
                 if (!listener && !discard && !callback) {
                     if (timesOnly(node, method)) {
                         if ((method.access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE)) != 0 || method.instructions.size() == 0) {
@@ -170,6 +178,8 @@ public final class KaguneGuard {
                 wrapped.add(method.name + method.desc);
                 if (listener) {
                     listeners++;
+                } else if (guardedByName(node, method)) {
+                    screens++;
                 } else {
                     callbacks++;
                     Set<String> left = expected.get(node.name);
@@ -189,7 +199,7 @@ public final class KaguneGuard {
             for (MethodNode method : check.methods) {
                 if (wrapped.contains(method.name + method.desc)) {
                     boolean guardable = subscribes(method) || DISCARD.getOrDefault(check.name, Set.of()).contains(method.name)
-                        || CALLBACKS.getOrDefault(check.name, Set.of()).contains(method.name);
+                        || CALLBACKS.getOrDefault(check.name, Set.of()).contains(method.name) || guardedByName(check, method);
                     if (guardable && !guarded(method)) {
                         throw new IllegalStateException(check.name + "." + method.name + " lost its guard");
                     }
@@ -212,6 +222,9 @@ public final class KaguneGuard {
                 throw new IllegalStateException("Methods not found to time in " + left.getKey() + ": " + left.getValue());
             }
         }
+        if (screens < SCREEN_FLOOR) {
+            throw new IllegalStateException("Only " + screens + " screens' drawing found to guard (expected at least " + SCREEN_FLOOR + ")");
+        }
         if (timedOnly < TIMED_FLOOR) {
             throw new IllegalStateException("Only " + timedOnly + " methods found to time (expected at least " + TIMED_FLOOR + ")");
         }
@@ -223,8 +236,8 @@ public final class KaguneGuard {
             if (entry.getKey().startsWith("com/hex/kagune/") && entry.getKey().endsWith(".class")) {
                 ClassNode node = read(entry.getValue());
                 for (MethodNode method : node.methods) {
-                    if (subscribes(method) && !guarded(method)) {
-                        throw new IllegalStateException(node.name + "." + method.name + " is an unguarded listener");
+                    if ((subscribes(method) || guardedByName(node, method)) && !guarded(method)) {
+                        throw new IllegalStateException(node.name + "." + method.name + " is an unguarded listener or screen");
                     }
                     if ((subscribes(method) || timesOnly(node, method)) && !timed(method, meterSite(node.name, method.name))) {
                         throw new IllegalStateException(node.name + "." + method.name + " is an untimed listener or timed place");
@@ -244,7 +257,7 @@ public final class KaguneGuard {
         java.util.Collections.sort(changed);
         Files.writeString(report, String.join("\n", changed) + "\n", StandardCharsets.UTF_8);
         System.out.println("Guarded " + listeners + " event listeners and " + callbacks + " callbacks in " + changed.size()
-            + " classes: an error inside any of them is logged and the game carries on. Timed them and " + timedOnly
+            + " classes, and " + screens + " screens' drawing: an error inside any of them is logged and the game carries on. Timed them and " + timedOnly
             + " more (NPC brains, renderers, structures, packets) for /kagune lag.");
     }
 
@@ -276,6 +289,16 @@ public final class KaguneGuard {
         String name = method.startsWith("lambda$handle$") ? "handle" : NAMES.getOrDefault(method, method);
         return site(owner, name);
     }
+
+    /** 4.1.103: a screen's drawing (by name, {@link #GUARDED_NAMES}): every class of the mod's, not a bridge, with a body, void. */
+    static boolean guardedByName(ClassNode owner, MethodNode method) {
+        return owner.name.startsWith("com/hex/kagune/") && GUARDED_NAMES.contains(method.name)
+            && (method.access & (Opcodes.ACC_BRIDGE | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_ABSTRACT)) == 0
+            && Type.getReturnType(method.desc) == Type.VOID_TYPE;
+    }
+
+    /** At least this many screens' drawing is guarded (a floor: the name not found would guard nothing). */
+    static final int SCREEN_FLOOR = 10;
 
     /** 4.1.99: a method timed but not guarded (the {@link #TIMED} ones, renderers and layers, packets' encoders and handlers' work). */
     static boolean timesOnly(ClassNode owner, MethodNode method) {
