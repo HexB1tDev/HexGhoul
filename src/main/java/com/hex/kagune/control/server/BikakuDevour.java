@@ -178,8 +178,8 @@ public final class BikakuDevour {
         HELD.put(victim.m_19879_(), player.m_20148_());
         strip(victim);
         ServerLevel level = player.m_284548_();
-        UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 3.0, 0.0), "hexkagune:sfx.dragon_roar", 1.3F, KaguneServerController.vary(player, 0.55F, 0.04F));
-        UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 2.0, 0.0), "hexkagune:sfx.writhe", 1.0F, 0.7F);
+        UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 3.0, 0.0), com.hex.kagune.control.BikakuSounds.DRAGON_ROAR, 1.3F, KaguneServerController.vary(player, 0.55F, 0.04F));
+        UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 2.0, 0.0), com.hex.kagune.control.BikakuSounds.WRITHE, 1.0F, 0.7F);
         BikakuServer.broadcast(player, state);
     }
 
@@ -302,7 +302,7 @@ public final class BikakuDevour {
         victim.f_19802_ = 0;
         victim.m_6469_(player.m_269291_().m_269075_(player), victim.m_21233_() * 50.0F + 1000.0F);
         ServerLevel level = player.m_284548_();
-        UkakuFire.sound(level, state.devourSpot.m_82520_(0.0, state.devourHeight, 0.0), "hexkagune:sfx.gush_long", 1.0F, 0.7F);
+        UkakuFire.sound(level, state.devourSpot.m_82520_(0.0, state.devourHeight, 0.0), com.hex.kagune.control.BikakuSounds.GUSH, 1.0F, 0.7F);
         if (victim.m_6084_()) {
             // Something kept it alive (a totem, a god's own guard): it is spat out, the worm goes back to itself.
             cancel(player, state, victim);
@@ -316,7 +316,7 @@ public final class BikakuDevour {
     private static void fed(ServerPlayer player, BikakuServer.State state) {
         float worth = Math.min(KaguneProfile.MAX_ENERGY, 35.0F + 2.0F * Math.max(2.0F, state.devourWorth));
         SharedBar.setEnergy(player, Math.min(KaguneProfile.MAX_ENERGY, SharedBar.energy(player) + worth));
-        UkakuFire.sound(player.m_284548_(), player.m_20182_().m_82520_(0.0, 1.0, 0.0), "hexkagune:sfx.dragon_roar", 0.6F, 0.9F);
+        UkakuFire.sound(player.m_284548_(), player.m_20182_().m_82520_(0.0, 1.0, 0.0), com.hex.kagune.control.BikakuSounds.DRAGON_ROAR, 0.6F, 0.9F);
         KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 0.8F, KaguneServerController.vary(player, 0.55F, 0.05F));
         absorbed(player);
     }
@@ -370,18 +370,18 @@ public final class BikakuDevour {
         Vec3 mouth = spot.m_82520_(0.0, state.devourHeight * 0.6, 0.0);
         Vec3 back = player.m_20182_().m_82520_(0.0, 1.2, 0.0);
         if (age == GrandDevour.RISE + GrandDevour.REACH) {
-            UkakuFire.sound(level, mouth, "hexkagune:sfx.eat", 1.0F, 0.6F);
+            UkakuFire.sound(level, mouth, com.hex.kagune.control.BikakuSounds.EAT, 1.0F, 0.6F);
         } else if (age == GrandDevour.CAUGHT) {
-            UkakuFire.sound(level, mouth, "hexkagune:sfx.dragon_bite", 1.2F, 0.6F);
-            UkakuFire.sound(level, mouth, "hexkagune:sfx.grab", 1.0F, 0.7F);
+            UkakuFire.sound(level, mouth, com.hex.kagune.control.BikakuSounds.BITE, 1.2F, 0.6F);
+            UkakuFire.sound(level, mouth, com.hex.kagune.control.BikakuSounds.SNAP, 1.0F, 0.7F);
         } else if (age > GrandDevour.CAUGHT && age < GrandDevour.SHUT && (age - GrandDevour.CAUGHT) % 16 == 0) {
-            UkakuFire.sound(level, mouth, (age / 16) % 2 == 0 ? "hexkagune:sfx.grab" : "hexkagune:sfx.drips", 0.8F, 0.6F + 0.1F * (float)((age / 16) % 3));
+            UkakuFire.sound(level, mouth, (age / 16) % 2 == 0 ? com.hex.kagune.control.BikakuSounds.SNAP : com.hex.kagune.control.BikakuSounds.DRIP, 0.8F, 0.6F + 0.1F * (float)((age / 16) % 3));
         } else if (age == GrandDevour.SHUT) {
-            UkakuFire.sound(level, mouth, "hexkagune:sfx.dragon_bite", 1.4F, 0.5F);
+            UkakuFire.sound(level, mouth, com.hex.kagune.control.BikakuSounds.BITE, 1.4F, 0.5F);
         } else if (age == GrandDevour.SHUT + GrandDevour.SWALLOW / 2) {
-            UkakuFire.sound(level, mouth, "hexkagune:sfx.dragon_slam", 0.9F, 0.55F); // the gulp
+            UkakuFire.sound(level, mouth, com.hex.kagune.control.BikakuSounds.GULP, 0.9F, 0.55F); // the gulp
         } else if (age > GrandDevour.KILL && age < GrandDevour.FED && (age - GrandDevour.KILL) % 22 == 0) {
-            UkakuFire.sound(level, back, (age / 22) % 3 == 0 ? "hexkagune:sfx.dragon_slam" : "hexkagune:sfx.grab", 0.6F, 0.5F);
+            UkakuFire.sound(level, back, (age / 22) % 3 == 0 ? com.hex.kagune.control.BikakuSounds.DIG : com.hex.kagune.control.BikakuSounds.SNAP, 0.6F, 0.5F);
         }
     }
 

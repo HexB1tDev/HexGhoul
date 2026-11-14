@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.93 (HexGhoul): every Rinkaku and Bikaku sound is Minecraft's own (none the Ukaku's) (testing)
+
+See `.github/release-notes-4.1.93.md`. `RinkakuSounds`, `BikakuSounds` (pure; vanilla 1.20.1's, none the Ukaku's but the Wither's spawn).
+`KaguneVoices` (pure): the original's sixteen `HexKaguneSounds` events by path. `KagunePatch.trampolineExact` sends the controller's
+`playAt(ServerPlayer, Vec3, RegistryObject, F, F)` to `server/KaguneVoice` (other paths: `playAtLegacy`); `patchWritheSound` sends the
+writhing loop's sound to `client/KaguneVoiceClient.writhe` (`build.py` `CHANGED` lists `KaguneAmbientSounds$WritheSound`). The Rinkaku's and
+Bikaku's own files, `NpcTendrils`, `GhoulNpcCombat` (its Rinkaku and Ukaku), `UkakuForms`' Rinkaku kakuja, `ManifestSounds`, `KakujaFx`.
+`SfxTests.kaguneVanilla493`, 24 rules sabotaged (`docs/handoff/sabotage-4.1.93.json`).
+
 ## 4.1.92 (HexGhoul): Kick Master's right click animates again (testing)
 
 See `.github/release-notes-4.1.92.md`. `PaleMotions.animates` lets `TWIRL_CHARGE` and `DASH_KICK` through (they never were: `PaleAnimator.apply`

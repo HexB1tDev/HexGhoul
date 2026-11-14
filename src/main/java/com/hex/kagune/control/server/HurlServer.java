@@ -180,7 +180,7 @@ public final class HurlServer {
         }
         Vec3 at = new Vec3(hurl.from[0], hurl.from[1], hurl.from[2]);
         KaguneServerController.playAt(player, at, HexKaguneSounds.KAGUNE_GRAB, 0.9F, KaguneServerController.vary(player, 0.85F, 0.06F));
-        UkakuFire.sound(level, at, "block.stone.break", 1.0F, KaguneServerController.vary(player, 0.8F, 0.06F));
+        UkakuFire.sound(level, at, com.hex.kagune.control.RinkakuSounds.RUBBLE, 1.0F, KaguneServerController.vary(player, 0.8F, 0.06F));
         tell(player, hurl, 0, S2CHurl.HOLD, hurl.holdAt, RinkakuHurl.size(0.0, 1));
     }
 
@@ -283,7 +283,7 @@ public final class HurlServer {
         }
         if (held && age > RinkakuHurl.RISE && age <= RinkakuHurl.CHARGE && age % 8 == 0) {
             // It grows: more of the ground torn up with it.
-            UkakuFire.sound(level, new Vec3(hurl.holdAt[0], hurl.holdAt[1], hurl.holdAt[2]), "block.gravel.break", 0.6F,
+            UkakuFire.sound(level, new Vec3(hurl.holdAt[0], hurl.holdAt[1], hurl.holdAt[2]), com.hex.kagune.control.RinkakuSounds.GRAVEL, 0.6F,
                 KaguneServerController.vary(player, 0.7F, 0.06F));
         }
         tell(player, hurl, 0, S2CHurl.HOLD, hurl.holdAt, size);
@@ -316,7 +316,7 @@ public final class HurlServer {
         hurl.thrownAt = now;
         Vec3 at = new Vec3(hurl.holdAt[0], hurl.holdAt[1], hurl.holdAt[2]);
         KaguneServerController.playAt(player, at, HexKaguneSounds.KAGUNE_WHIP, 1.0F, KaguneServerController.vary(player, 0.8F, 0.06F));
-        UkakuFire.sound(level, at, "entity.ender_dragon.flap", 0.6F + 0.4F * (float)hurl.charge, KaguneServerController.vary(player, 0.9F, 0.06F));
+        UkakuFire.sound(level, at, com.hex.kagune.control.RinkakuSounds.HURL, 0.6F + 0.4F * (float)hurl.charge, KaguneServerController.vary(player, 0.9F, 0.06F));
         for (int k = 0; k < hurl.pieces.size(); k++) {
             tell(player, hurl, k, S2CHurl.FLY, hurl.pieces.get(k).pos, hurl.pieces.get(k).size);
         }
@@ -420,8 +420,8 @@ public final class HurlServer {
                 level.m_46796_(2001, BlockPos.m_274561_(at.f_82479_ + off[0], at.f_82480_, at.f_82481_ + off[1]), id);
             }
         }
-        UkakuFire.sound(level, at, "entity.generic.explode", 0.45F + 0.5F * (float)hurl.charge, KaguneServerController.vary(player, 1.0F, 0.08F));
-        UkakuFire.sound(level, at, "block.stone.break", 1.0F, KaguneServerController.vary(player, 0.75F, 0.06F));
+        UkakuFire.sound(level, at, com.hex.kagune.control.RinkakuSounds.SMASH, 0.45F + 0.5F * (float)hurl.charge, KaguneServerController.vary(player, 1.0F, 0.08F));
+        UkakuFire.sound(level, at, com.hex.kagune.control.RinkakuSounds.RUBBLE, 1.0F, KaguneServerController.vary(player, 0.75F, 0.06F));
         if (hurl.charge >= RinkakuHurl.CRATERS) {
             BlockSmash.crater(player, at.m_82520_(0.0, -piece.size * 0.5, 0.0), 1.0 + 0.5 * piece.size);
         }

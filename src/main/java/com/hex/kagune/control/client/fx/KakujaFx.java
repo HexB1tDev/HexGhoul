@@ -611,14 +611,16 @@ public final class KakujaFx {
     /** The kakuja breaking: a low glass break, twice over for weight. */
     private static void glass(AbstractClientPlayer player) {
         double y = player.m_20186_() + player.m_20206_() * 0.6;
-        Minecraft.m_91087_().m_91106_().m_120367_(new Shatter(player.m_20185_(), y, player.m_20189_(), 1.4F, 0.5F));
-        Minecraft.m_91087_().m_91106_().m_120367_(new Shatter(player.m_20185_(), y, player.m_20189_(), 1.0F, 0.62F));
+        // 4.1.93: each kagune's own break, the game's (KaguneVoiceClient); the others keep the pack's glass.
+        SoundEvent sound = com.hex.kagune.control.client.KaguneVoiceClient.kakujaBreak(player);
+        Minecraft.m_91087_().m_91106_().m_120367_(new Shatter(sound == null ? GLASS : sound, player.m_20185_(), y, player.m_20189_(), 1.4F, 0.5F));
+        Minecraft.m_91087_().m_91106_().m_120367_(new Shatter(sound == null ? GLASS : sound, player.m_20185_(), y, player.m_20189_(), 1.0F, 0.62F));
     }
 
     /** A one-shot glass break where the kakuja broke. */
     private static final class Shatter extends AbstractTickableSoundInstance {
-        private Shatter(double x, double y, double z, float volume, float pitch) {
-            super(GLASS, SoundSource.PLAYERS, SoundInstance.m_235150_());
+        private Shatter(SoundEvent sound, double x, double y, double z, float volume, float pitch) {
+            super(sound, SoundSource.PLAYERS, SoundInstance.m_235150_());
             this.f_119578_ = false;
             this.f_119579_ = 0;
             this.f_119573_ = volume;

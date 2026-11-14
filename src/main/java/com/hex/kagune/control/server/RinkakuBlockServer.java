@@ -101,7 +101,7 @@ public final class RinkakuBlockServer {
         }
         ControlNetwork.broadcast(player, new S2CRinkakuBlock(player.m_20148_(), S2CRinkakuBlock.UP, 0));
         if (player.m_9236_() instanceof ServerLevel level) {
-            UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 1.2, 0.0), "hexkagune:sfx.grab", 0.35F, 1.35F);
+            UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 1.2, 0.0), com.hex.kagune.control.RinkakuSounds.GRAB, 0.35F, 1.35F);
         }
     }
 
@@ -243,7 +243,7 @@ public final class RinkakuBlockServer {
         if (now - block.lastFx >= 2 && player.m_9236_() instanceof ServerLevel level) {
             block.lastFx = now;
             KaguneClash.burst(player, at, way, 0.55F, 0.6F);
-            UkakuFire.sound(level, at, "hexkagune:sfx.punch_hit_heavy", 0.7F, 0.8F);
+            UkakuFire.sound(level, at, com.hex.kagune.control.RinkakuSounds.GUARD, 0.9F, 0.9F);
         }
     }
 
@@ -276,7 +276,7 @@ public final class RinkakuBlockServer {
         push(player, way, RinkakuBlock.BREAK_PUSH, 0.22);
         KaguneClash.burst(player, at, way, 1.1F, 0.9F);
         if (player.m_9236_() instanceof ServerLevel level) {
-            UkakuFire.sound(level, at, "hexkagune:sfx.crunch", 1.0F, 0.75F);
+            UkakuFire.sound(level, at, com.hex.kagune.control.RinkakuSounds.GUARD_BREAK, 1.0F, 0.8F);
         }
         player.m_5661_(Component.m_237115_("message.hexkagune.rinkaku_block.broken"), true);
     }

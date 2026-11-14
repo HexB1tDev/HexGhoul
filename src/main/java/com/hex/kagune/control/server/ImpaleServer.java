@@ -156,7 +156,7 @@ public final class ImpaleServer {
         Vec3 launch = launch(player, form, limb);
         spear.way = aim(player, launch, spear.reach);
         SPEARS.put(player.m_20148_(), spear);
-        UkakuFire.sound(level, launch, "entity.illusioner.mirror_move", 0.75F, KaguneServerController.vary(player, 1.2F, 0.08F));
+        UkakuFire.sound(level, launch, com.hex.kagune.control.RinkakuSounds.HURL, 0.75F, KaguneServerController.vary(player, 1.2F, 0.08F));
         KaguneServerController.playAt(player, launch, HexKaguneSounds.KAGUNE_WHIP, 0.95F, KaguneServerController.vary(player, 1.3F, 0.08F));
         tell(player, spear, S2CImpale.OUT);
     }
@@ -215,7 +215,7 @@ public final class ImpaleServer {
             if (wall.m_6662_() == HitResult.Type.BLOCK) {
                 double to = Math.max(0.4, Math.sqrt(wall.m_82450_().m_82557_(launch)) - 0.12);
                 if (!spear.stopped) {
-                    UkakuFire.sound(level, wall.m_82450_(), "block.stone.hit", 0.9F, KaguneServerController.vary(player, 0.85F, 0.08F));
+                    UkakuFire.sound(level, wall.m_82450_(), com.hex.kagune.control.RinkakuSounds.SLAM, 0.9F, KaguneServerController.vary(player, 0.85F, 0.08F));
                 }
                 spear.stopped = true;
                 length = Math.min(length, to);
@@ -274,7 +274,7 @@ public final class ImpaleServer {
         Vec3 at = KaguneServerController.center(body);
         body.m_6469_(player.m_269291_().m_269333_(player), KaguneProfile.swipeDamage(player) * RinkakuImpale.THROUGH);
         UkakuCrystalCombat.rinkakuBleed(body, player, now);
-        UkakuFire.sound(level, at, "hexkagune:sfx.stab", 1.0F, KaguneServerController.vary(player, 0.9F, 0.08F));
+        UkakuFire.sound(level, at, com.hex.kagune.control.RinkakuSounds.IMPACT, 1.0F, KaguneServerController.vary(player, 0.9F, 0.08F));
         KaguneServerController.playAt(player, body, HexKaguneSounds.FLESH_IMPACT, 0.9F, KaguneServerController.vary(player, 0.85F, 0.06F));
         KaguneProfile.addMastery(player, "Swipe", 2);
         if (body.m_6084_() && spear.carried.size() < RinkakuImpale.MOST_CARRIED) {
@@ -340,7 +340,7 @@ public final class ImpaleServer {
         Vec3 at = KaguneServerController.center(body);
         body.m_6469_(player.m_269291_().m_269333_(player), KaguneProfile.swipeDamage(player) * RinkakuImpale.TEAR);
         UkakuCrystalCombat.rinkakuBleed(body, player, level.m_46467_());
-        UkakuFire.sound(level, at, "hexkagune:sfx.blood_spray", 0.9F, KaguneServerController.vary(player, 0.95F, 0.08F));
+        UkakuFire.sound(level, at, com.hex.kagune.control.RinkakuSounds.BLOOD, 0.9F, KaguneServerController.vary(player, 0.95F, 0.08F));
         body.m_20256_(new Vec3(spear.way.f_82479_ * 0.12, 0.05, spear.way.f_82481_ * 0.12));
         body.f_19864_ = true;
         body.f_19789_ = 0.0F;

@@ -191,6 +191,7 @@ public final class SfxTests {
         check(journal.namespace().equals("minecraft") && journal.pitch() == 1.0F, "the journal's cue stays the game's");
         limit();
         ukakuVanilla491();
+        kaguneVanilla493();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -274,7 +275,7 @@ public final class SfxTests {
         String forms = Files.readString(Path.of(server + "UkakuForms.java"), StandardCharsets.UTF_8);
         check(forms.contains("static final String UKAKU_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA;")
             && forms.contains("static final String FINAL_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.FINAL_KAKUJA;")
-            && forms.contains("ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : KAKUJA_OFF_SOUND"),
+            && forms.contains("ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : com.hex.kagune.control.RinkakuSounds.KAKUJA_OFF"),
             "the Ukaku's kakuja, final kakuja and coming out of them: the game's own");
         check(Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/ManifestSounds.java"), StandardCharsets.UTF_8)
                 .contains("UKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_(\"minecraft\", com.hex.kagune.control.ukaku.UkakuSounds.MANIFEST.substring(")
@@ -285,6 +286,123 @@ public final class SfxTests {
         String clash = Files.readString(Path.of(server + "KaguneClash.java"), StandardCharsets.UTF_8);
         check(clash.contains("UkakuFire.sound(level, at, \"hexkagune:sfx.clash\", volume,") && !clash.contains("UkakuSounds"),
             "the clash keeps its own sound, untouched");
+    }
+
+    /** Every public String constant of {@code type} (a sound table). */
+    static Set<String> declared(Class<?> type) {
+        Set<String> out = new HashSet<>();
+        for (java.lang.reflect.Field field : type.getFields()) {
+            if (field.getType() == String.class && java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+                try {
+                    out.add((String)field.get(null));
+                } catch (IllegalAccessException failure) {
+                    check(false, "read " + field.getName());
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * 4.1.93 (the owner: "now you're gonna do the same sound thing that you just did for ukaku. You're gonna do for both of the other
+     * cognates completely. Replace all sounds. Just make sure not to use the same ones as ukaku. Like that's a no go. The only one you're
+     * allowed to use is the transformation in kakuja, the wither sound, if you want."): the Rinkaku's and the Bikaku's every sound the
+     * game's own, none the Ukaku's (but the Wither's birth), each kagune its own; the original's sounds by the player's kagune.
+     */
+    static void kaguneVanilla493() throws IOException {
+        Set<String> vanilla = new HashSet<>(Files.readAllLines(Path.of("tools/vanilla_sounds_1.20.1.txt"), StandardCharsets.UTF_8));
+        String wither = "minecraft:entity.wither.spawn";
+        Set<String> ukaku = new HashSet<>(java.util.Arrays.asList(com.hex.kagune.control.ukaku.UkakuSounds.ALL));
+        Set<String> rinkaku = new HashSet<>(java.util.Arrays.asList(RinkakuSounds.ALL));
+        Set<String> bikaku = new HashSet<>(java.util.Arrays.asList(BikakuSounds.ALL));
+        check(declared(RinkakuSounds.class).equals(rinkaku) && rinkaku.size() >= 20, "RinkakuSounds.ALL lists every one: " + rinkaku.size());
+        check(declared(BikakuSounds.class).equals(bikaku) && bikaku.size() >= 18, "BikakuSounds.ALL lists every one: " + bikaku.size());
+        for (Set<String> table : java.util.List.of(rinkaku, bikaku)) {
+            for (String id : table) {
+                check(id.startsWith("minecraft:") && vanilla.contains(id.substring("minecraft:".length())), id + " is one of the game's own sounds");
+                Sfx.Sound played = Sfx.play(id, 0.7F, 0.6F);
+                check(("minecraft:" + played.path()).equals(id) && played.namespace().equals("minecraft") && played.pitch() == 0.6F,
+                    id + " plays as named (never the pack's)");
+                check(id.equals(wither) || !ukaku.contains(id), id + " is not one of the Ukaku's");
+            }
+        }
+        for (String id : rinkaku) {
+            check(id.equals(wither) || !bikaku.contains(id), id + " is the Rinkaku's alone, not the Bikaku's too");
+        }
+        // The original's sixteen events, by kagune: every one the kagune's own, the other paths as they were.
+        check(KaguneVoices.EVENTS.length == 16, "the original's sixteen kagune events");
+        for (String event : KaguneVoices.EVENTS) {
+            check(rinkaku.contains(KaguneVoices.of(KagunePath.RINKAKU, event)), "a Rinkaku's " + event + " is the Rinkaku's own: " + KaguneVoices.of(KagunePath.RINKAKU, event));
+            check(bikaku.contains(KaguneVoices.of(KagunePath.BIKAKU, event)), "a Bikaku's " + event + " is the Bikaku's own: " + KaguneVoices.of(KagunePath.BIKAKU, event));
+            check(ukaku.contains(KaguneVoices.of(KagunePath.UKAKU, event)), "an Ukaku's " + event + " is the Ukaku's own: " + KaguneVoices.of(KagunePath.UKAKU, event));
+            check(KaguneVoices.of(KagunePath.PALE, event) == null && KaguneVoices.of(KagunePath.GRAFT, event) == null && KaguneVoices.of(KagunePath.NONE, event) == null,
+                "Owl DNA, Graft DNA and no path keep the original's " + event);
+        }
+        check(KaguneVoices.of(KagunePath.RINKAKU, "some_other_sound") == null && KaguneVoices.of(null, "kagune_whip") == null, "any other sound as it was");
+        check(RinkakuSounds.WHIP.equals(KaguneVoices.of(KagunePath.RINKAKU, "kagune_whip")) && BikakuSounds.SNAP.equals(KaguneVoices.of(KagunePath.BIKAKU, "kagune_grab"))
+            && RinkakuSounds.WRITHE.equals(KaguneVoices.of(KagunePath.RINKAKU, "kagune_idle"))
+            && com.hex.kagune.control.ukaku.UkakuSounds.SNUFF.equals(KaguneVoices.of(KagunePath.UKAKU, "kagune_dismiss")), "the lash a whip's crack, the worm's grab a fox's bite, the writhe the sensor's clicking, the wings put away a fire put out");
+        String server = "src/main/java/com/hex/kagune/control/server/";
+        String voice = Files.readString(Path.of(server + "KaguneVoice.java"), StandardCharsets.UTF_8);
+        boolean named = true;
+        for (String event : KaguneVoices.EVENTS) {
+            named &= voice.contains("map.put(HexKaguneSounds." + event.toUpperCase(java.util.Locale.ROOT) + ", \"" + event + "\");");
+        }
+        check(named && voice.contains("KaguneVoices.of(PathServer.path(player), eventName(sound))") && voice.contains("KaguneServerController.playAtLegacy(player, at, sound, volume, pitch);"),
+            "each of the original's events known by its field; the other paths and sounds played as before");
+        // The jar: the original's playAt goes through KaguneVoice, its writhing loop through KaguneVoiceClient.
+        byte[] controller = SfxTests.class.getClassLoader().getResourceAsStream("com/hex/kagune/gameplay/KaguneServerController.class").readAllBytes();
+        byte[] writhe = SfxTests.class.getClassLoader().getResourceAsStream("com/hex/kagune/client/KaguneAmbientSounds$WritheSound.class").readAllBytes();
+        String controllerText = new String(controller, StandardCharsets.ISO_8859_1);
+        String writheText = new String(writhe, StandardCharsets.ISO_8859_1);
+        check(controllerText.contains("com/hex/kagune/control/server/KaguneVoice") && controllerText.contains("playAtLegacy"),
+            "the patched controller's playAt goes through KaguneVoice (its own kept as playAtLegacy)");
+        check(writheText.contains("com/hex/kagune/control/client/KaguneVoiceClient") && !writheText.contains("KAGUNE_IDLE"),
+            "the writhing loop takes its sound from the player's kagune");
+        check(Files.readString(Path.of("build.py"), StandardCharsets.UTF_8).contains("\"com/hex/kagune/client/KaguneAmbientSounds$WritheSound.class\","),
+            "the jar's checker expects the writhing loop changed");
+        String patch = Files.readString(Path.of("patch/KagunePatch.java"), StandardCharsets.UTF_8);
+        check(patch.contains("trampolineExact(node, \"playAt\", PLAY_AT_DESC, \"com/hex/kagune/control/server/KaguneVoice\", \"playAt\");")
+            && patch.contains("patchWritheSound(writhe);") && patch.contains("expect(changed, 1, \"writhe sound by kagune\");"),
+            "the patcher sends the controller's playAt and the writhing loop's sound to the kagune's");
+        // The Rinkaku's and the Bikaku's own files: every sound of theirs named from their table; nothing of the pack's but the clash.
+        String[][] owners = {{"ImpaleServer", "RinkakuSounds."}, {"HurlServer", "RinkakuSounds."}, {"RinkakuBlockServer", "RinkakuSounds."},
+            {"RinkakuGrab", "RinkakuSounds."}, {"NpcTendrils", "RinkakuSounds."}, {"BikakuMoves", "BikakuSounds."}, {"BikakuDevour", "BikakuSounds."},
+            {"BikakuServer", "BikakuSounds."}, {"BikakuPotential", "BikakuSounds."}};
+        for (String[] owner : owners) {
+            String source = Files.readString(Path.of(server + owner[0] + ".java"), StandardCharsets.UTF_8);
+            int calls = 0;
+            boolean theirs = true;
+            for (String line : source.split("\n")) {
+                if ((line.contains("UkakuFire.sound(") || line.contains("KaguneVoice.event(")) && !line.contains("sfx.clash")) {
+                    calls++;
+                    theirs &= line.contains(owner[1]);
+                }
+            }
+            check(calls > 0 && theirs, owner[0] + ": every one of its " + calls + " sounds is its kagune's own (" + owner[1] + ")");
+            String rest = source.replace("\"hexkagune:sfx.clash_big\"", "");
+            check(!rest.contains("\"hexkagune:") && !rest.contains("HexKaguneSounds.KAGUNE_IDLE") && !rest.matches("(?s).*UkakuFire\\.sound\\([^;]*\"(entity|block|item)\\.[a-z_.]+\".*"),
+                owner[0] + ": nothing of the pack's (but the clash), no bare name the pack would draw from");
+        }
+        String npc = Files.readString(Path.of(server + "GhoulNpcCombat.java"), StandardCharsets.UTF_8);
+        check(npc.contains("KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.STRAIN)") && npc.contains("KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.WHIP)")
+            && npc.contains("KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.SLAM)") && npc.contains("KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.IMPACT)")
+            && npc.contains("com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.9F, 1.6F") && npc.contains("com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.5F,")
+            && npc.contains("com.hex.kagune.control.ukaku.UkakuSounds.BURN, 0.5F, 1.2F") && npc.contains("\"hexkagune:sfx.blade_heavy\""),
+            "a wild ghoul's Rinkaku and Ukaku sound as the players' do (its Koukaku's blade keeps its own)");
+        String forms = Files.readString(Path.of(server + "UkakuForms.java"), StandardCharsets.UTF_8);
+        check(forms.contains("static final String CENTIPEDE_SOUND = com.hex.kagune.control.RinkakuSounds.CENTIPEDE;")
+            && forms.contains("static final String RINKAKU_KAKUJA_SOUND = com.hex.kagune.control.RinkakuSounds.FULL_KAKUJA;")
+            && forms.contains("centipede ? com.hex.kagune.control.RinkakuSounds.CHITIN_OFF : ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : com.hex.kagune.control.RinkakuSounds.KAKUJA_OFF;"),
+            "the Rinkaku's centipede, full kakuja and coming out of them: the game's own");
+        String client = "src/main/java/com/hex/kagune/control/client/";
+        check(Files.readString(Path.of(client + "ManifestSounds.java"), StandardCharsets.UTF_8).contains("SoundEvent own = ukaku ? null : KaguneVoiceClient.tear(player, centipede);")
+            && Files.readString(Path.of(client + "fx/KakujaFx.java"), StandardCharsets.UTF_8).contains("KaguneVoiceClient.kakujaBreak(player)")
+            && Files.readString(Path.of(client + "KaguneVoiceClient.java"), StandardCharsets.UTF_8).contains("return event(centipede ? RinkakuSounds.CHITTER : RinkakuSounds.MANIFEST);"),
+            "the tendrils tearing out and a kakuja breaking: each kagune's own");
+        check(Files.readString(Path.of(server + "KaguneClash.java"), StandardCharsets.UTF_8).contains("UkakuFire.sound(level, at, \"hexkagune:sfx.clash\", volume,")
+            && Files.readString(Path.of(server + "RinkakuBlockServer.java"), StandardCharsets.UTF_8).contains("\"hexkagune:sfx.clash_big\""),
+            "the clash untouched, the Rinkaku's guard's too");
     }
 
     static void limit() {

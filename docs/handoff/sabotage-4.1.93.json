@@ -1,0 +1,170 @@
+[
+ {
+  "name": "a Rinkaku sound not the game's",
+  "file": "src/main/java/com/hex/kagune/control/RinkakuSounds.java",
+  "old": "WHIP = \"minecraft:entity.fishing_bobber.throw\";",
+  "new": "WHIP = \"minecraft:entity.fishing_bobber.throww\";",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a Rinkaku sound the Ukaku's",
+  "file": "src/main/java/com/hex/kagune/control/RinkakuSounds.java",
+  "old": "WHIP = \"minecraft:entity.fishing_bobber.throw\";",
+  "new": "WHIP = \"minecraft:entity.player.attack.sweep\";",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a Bikaku sound the Rinkaku's",
+  "file": "src/main/java/com/hex/kagune/control/BikakuSounds.java",
+  "old": "BITE = \"minecraft:entity.ravager.attack\";",
+  "new": "BITE = \"minecraft:entity.fishing_bobber.throw\";",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a Rinkaku sound left out of ALL",
+  "file": "src/main/java/com/hex/kagune/control/RinkakuSounds.java",
+  "old": "BLOOD, CUE,",
+  "new": "BLOOD,",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a Bikaku sound left out of ALL",
+  "file": "src/main/java/com/hex/kagune/control/BikakuSounds.java",
+  "old": "SQUELCH, CATACLYSM,",
+  "new": "SQUELCH,",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a Rinkaku's lash the Bikaku's",
+  "file": "src/main/java/com/hex/kagune/control/KaguneVoices.java",
+  "old": "case \"kagune_whip\" -> RinkakuSounds.WHIP;",
+  "new": "case \"kagune_whip\" -> BikakuSounds.LUNGE;",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a Bikaku's grab as it was",
+  "file": "src/main/java/com/hex/kagune/control/KaguneVoices.java",
+  "old": "case \"kagune_grab\" -> BikakuSounds.SNAP;\n",
+  "new": "",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Owl's sounds the Rinkaku's",
+  "file": "src/main/java/com/hex/kagune/control/KaguneVoices.java",
+  "old": "            case RINKAKU -> rinkaku(event);",
+  "new": "            case RINKAKU, PALE -> rinkaku(event);",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Ukaku's wings put away the Rinkaku's",
+  "file": "src/main/java/com/hex/kagune/control/KaguneVoices.java",
+  "old": "case \"kagune_dismiss\" -> UkakuSounds.SNUFF;",
+  "new": "case \"kagune_dismiss\" -> RinkakuSounds.DISMISS;",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "an event unknown by its field",
+  "file": "src/main/java/com/hex/kagune/control/server/KaguneVoice.java",
+  "old": "            map.put(HexKaguneSounds.KAGUNE_GUARD, \"kagune_guard\");\n",
+  "new": "",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the other paths silenced",
+  "file": "src/main/java/com/hex/kagune/control/server/KaguneVoice.java",
+  "old": "            KaguneServerController.playAtLegacy(player, at, sound, volume, pitch);\n",
+  "new": "",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the controller's sounds not sent",
+  "file": "patch/KagunePatch.java",
+  "old": "        trampolineExact(node, \"playAt\", PLAY_AT_DESC, \"com/hex/kagune/control/server/KaguneVoice\", \"playAt\");\n",
+  "new": "",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the writhing loop not sent",
+  "file": "patch/KagunePatch.java",
+  "old": "        patchWritheSound(writhe);\n",
+  "new": "",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the checker not told of the writhe",
+  "file": "build.py",
+  "old": "    \"com/hex/kagune/client/KaguneAmbientSounds$WritheSound.class\",\n",
+  "new": "",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Impale's launch the Ukaku's",
+  "file": "src/main/java/com/hex/kagune/control/server/ImpaleServer.java",
+  "old": "UkakuFire.sound(level, launch, com.hex.kagune.control.RinkakuSounds.HURL,",
+  "new": "UkakuFire.sound(level, launch, \"entity.illusioner.mirror_move\",",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Rubble Hurl's throw the dragon's flap",
+  "file": "src/main/java/com/hex/kagune/control/server/HurlServer.java",
+  "old": "com.hex.kagune.control.RinkakuSounds.HURL, 0.6F + 0.4F",
+  "new": "\"entity.ender_dragon.flap\", 0.6F + 0.4F",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Bikaku's kakuja the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/BikakuServer.java",
+  "old": "com.hex.kagune.control.BikakuSounds.KAKUJA, 1.0F, 0.85F)",
+  "new": "\"hexkagune:sfx.transform.heavy_morph\", 1.0F, 0.85F)",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a wild ghoul's Ukaku burning the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcCombat.java",
+  "old": "com.hex.kagune.control.ukaku.UkakuSounds.BURN, 0.5F, 1.2F",
+  "new": "\"entity.generic.burn\", 0.5F, 1.2F",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a wild ghoul's Rinkaku lash the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcCombat.java",
+  "old": "KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.WHIP), 0.6F",
+  "new": "HexKaguneSounds.KAGUNE_WHIP.get(), 0.6F",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the centipede the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuForms.java",
+  "old": "static final String CENTIPEDE_SOUND = com.hex.kagune.control.RinkakuSounds.CENTIPEDE;",
+  "new": "static final String CENTIPEDE_SOUND = \"hexkagune:sfx.transform.body_warp\";",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the tendrils tear out with the pack's",
+  "file": "src/main/java/com/hex/kagune/control/client/ManifestSounds.java",
+  "old": "SoundEvent own = ukaku ? null : KaguneVoiceClient.tear(player, centipede);",
+  "new": "SoundEvent own = null;",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "a kakuja breaks with the pack's glass",
+  "file": "src/main/java/com/hex/kagune/control/client/fx/KakujaFx.java",
+  "old": "SoundEvent sound = com.hex.kagune.control.client.KaguneVoiceClient.kakujaBreak(player);",
+  "new": "SoundEvent sound = null;",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "the Rinkaku's guard's clash touched",
+  "file": "src/main/java/com/hex/kagune/control/server/RinkakuBlockServer.java",
+  "old": "\"hexkagune:sfx.clash_big\", 1.0F, 1.1F)",
+  "new": "com.hex.kagune.control.RinkakuSounds.GUARD, 1.0F, 1.1F)",
+  "suite": "SfxTests"
+ },
+ {
+  "name": "an NPC's tendrils come out with the pack's",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcTendrils.java",
+  "old": "KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.MANIFEST), SoundSource.HOSTILE",
+  "new": "KaguneVoice.event(\"hexkagune:manifest_rip\"), SoundSource.HOSTILE",
+  "suite": "SfxTests"
+ }
+]

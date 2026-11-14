@@ -107,8 +107,8 @@
  {
   "name": "out of the Ukaku's kakuja the pack's",
   "file": "src/main/java/com/hex/kagune/control/server/UkakuForms.java",
-  "old": "ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : KAKUJA_OFF_SOUND",
-  "new": "KAKUJA_OFF_SOUND",
+  "old": "ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : com.hex.kagune.control.RinkakuSounds.KAKUJA_OFF",
+  "new": "com.hex.kagune.control.RinkakuSounds.KAKUJA_OFF",
   "suite": "SfxTests"
  },
  {

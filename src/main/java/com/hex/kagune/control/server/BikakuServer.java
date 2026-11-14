@@ -342,7 +342,7 @@ public final class BikakuServer {
         }
         state.kakuja = true;
         state.kakujaAt = now;
-        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.heavy_morph", 1.0F, 0.85F);
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), com.hex.kagune.control.BikakuSounds.KAKUJA, 1.0F, 0.85F); // 4.1.93: the kakuja on: the Wither's birth
         KaguneNetwork.sendTo(player, player);
         broadcast(player, state);
     }
@@ -371,7 +371,7 @@ public final class BikakuServer {
         state.startedAt = Long.MIN_VALUE;
         state.walker = true;
         state.walkerAt = now;
-        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.heavy_morph", 0.8F, 1.15F);
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), com.hex.kagune.control.BikakuSounds.WARP, 0.8F, 1.15F);
         broadcast(player, state);
     }
 

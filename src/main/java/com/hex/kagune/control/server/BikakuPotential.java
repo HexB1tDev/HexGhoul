@@ -145,8 +145,8 @@ public final class BikakuPotential {
         }
         ServerLevel level = player.m_284548_();
         torn.add(new Torn(part, random.nextLong(), (float)bx, (float)bz, at, player.f_20883_, (float)PaleRevive.ground(level, player, at)));
-        UkakuFire.sound(level, at.m_82520_(0.0, 1.2, 0.0), "hexkagune:sfx.gush_big", 1.0F, 0.9F);
-        UkakuFire.sound(level, at.m_82520_(0.0, 1.2, 0.0), "hexkagune:sfx.crunch", 0.9F, 0.8F);
+        UkakuFire.sound(level, at.m_82520_(0.0, 1.2, 0.0), com.hex.kagune.control.BikakuSounds.GUSH_BIG, 1.0F, 0.9F);
+        UkakuFire.sound(level, at.m_82520_(0.0, 1.2, 0.0), com.hex.kagune.control.BikakuSounds.BONE_CRUSH, 0.9F, 0.8F);
         sync(player);
     }
 
@@ -176,10 +176,10 @@ public final class BikakuPotential {
             }
             t.age += 1.0;
             if (was < PotentialRules.HAUL_AT && t.age >= PotentialRules.HAUL_AT) {
-                UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 1.0, 0.0), "hexkagune:sfx.writhe", 0.8F, 1.0F); // they take hold and haul
+                UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 1.0, 0.0), com.hex.kagune.control.BikakuSounds.WRITHE, 0.8F, 1.0F); // they take hold and haul
             }
             if (was < PotentialRules.HOME_AT && t.age >= PotentialRules.HOME_AT) {
-                UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 1.0, 0.0), "hexkagune:sfx.crunch", 0.7F, 1.1F); // back on
+                UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 1.0, 0.0), com.hex.kagune.control.BikakuSounds.BONE_CRUSH, 0.7F, 1.1F); // back on
             }
             if (t.age >= PotentialRules.WHOLE) {
                 it.remove();

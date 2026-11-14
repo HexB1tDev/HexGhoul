@@ -15,7 +15,6 @@ import com.hex.kagune.control.npc.NpcTemper;
 import com.hex.kagune.control.pale.PaleMove;
 import com.hex.kagune.control.wound.WoundBook;
 import com.hex.kagune.gameplay.KaguneServerController;
-import com.hex.kagune.sound.HexKaguneSounds;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -122,7 +121,7 @@ final class NpcTendrils {
             st.out = false;
             st.outAt = now;
             st.dirty = true;
-            level.m_6263_(null, npc.m_20185_(), npc.m_20186_() + 1.0, npc.m_20189_(), HexKaguneSounds.KAGUNE_DISMISS.get(), SoundSource.HOSTILE, 0.8F,
+            level.m_6263_(null, npc.m_20185_(), npc.m_20186_() + 1.0, npc.m_20189_(), KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.DISMISS), SoundSource.HOSTILE, 0.8F,
                 1.1F);
         }
         if (st.dirty) {
@@ -156,7 +155,7 @@ final class NpcTendrils {
             st.outAt = now;
             st.dirty = true;
             // Four of them, out of her back at once.
-            level.m_6263_(null, npc.m_20185_(), npc.m_20186_() + 1.0, npc.m_20189_(), HexKaguneSounds.MANIFEST_RIP.get(), SoundSource.HOSTILE, 1.1F, 1.15F);
+            level.m_6263_(null, npc.m_20185_(), npc.m_20186_() + 1.0, npc.m_20189_(), KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.MANIFEST), SoundSource.HOSTILE, 1.1F, 1.15F);
         }
         if (st.move != GraftMove.NONE) {
             advance(npc, st, target, level, now, limbs);
@@ -213,7 +212,7 @@ final class NpcTendrils {
         st.hits.clear();
         st.dirty = true;
         npc.m_21573_().m_26573_();
-        sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_WHIP.get(), 0.6F, 1.05F + 0.1F * (float)npc.m_217043_().m_188500_());
+        sound(level, npc.m_20182_(), KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.WHIP), 0.6F, 1.05F + 0.1F * (float)npc.m_217043_().m_188500_());
         if (move.slot() == GraftMove.Slot.M1) {
             int lands = move.ticks();
             float power = 0.0F;
@@ -365,7 +364,7 @@ final class NpcTendrils {
                 }
                 BlockPos below = BlockPos.m_274561_(down.f_82479_, down.f_82480_ - 0.01, down.f_82481_);
                 PaleBlitz.fxAround(npc, npc.m_19879_(), S2CPaleFx.SHOCKWAVE, down, UkakuFire.horizontal(dir), 3.0F, Block.m_49956_(level.m_8055_(below)));
-                sound(level, down, HexKaguneSounds.KAGUNE_SLAM.get(), 0.9F, 0.9F);
+                sound(level, down, KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.SLAM), 0.9F, 0.9F);
             }
             default -> {
             }
@@ -396,14 +395,14 @@ final class NpcTendrils {
             }
             if (caught == null) {
                 // Missed: the tendril snaps back.
-                sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_WHIP.get(), 0.7F, 0.85F);
+                sound(level, npc.m_20182_(), KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.WHIP), 0.7F, 0.85F);
                 st.moveAt = now - Math.max(0, st.move.ticks() - 6);
                 st.dirty = true;
                 return;
             }
             st.held = caught.m_19879_();
             strike(npc, caught, beat, dir, now, WoundBook.Blow.STAB, S2CPaleFx.IMPALED);
-            sound(level, KaguneServerController.center(caught), HexKaguneSounds.KAGUNE_GRAB.get(), 1.0F, 0.9F);
+            sound(level, KaguneServerController.center(caught), KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.GRAB), 1.0F, 0.9F);
             st.dirty = true;
             return;
         }
@@ -429,7 +428,7 @@ final class NpcTendrils {
             held.m_20256_(new Vec3(0.0, -0.2, 0.0));
             held.f_19864_ = true;
             PaleBlitz.fxAround(held, npc.m_19879_(), S2CPaleFx.IMPALED, centre, UkakuFire.horizontal(centre.m_82546_(npc.m_20182_())), held.m_20206_(), 0);
-            sound(level, centre, HexKaguneSounds.FLESH_IMPACT.get(), 1.0F, 0.7F);
+            sound(level, centre, KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.IMPACT), 1.0F, 0.7F);
         }
         st.held = 0;
         st.dirty = true;
@@ -462,8 +461,8 @@ final class NpcTendrils {
         st.chunk = new double[] {st.dug.f_82479_, st.dug.f_82480_, st.dug.f_82481_};
         st.phase = S2CHurl.HOLD;
         PaleBlitz.fxAround(npc, npc.m_19879_(), S2CPaleFx.SHOCKWAVE, st.dug.m_82520_(0.0, 0.5, 0.0), ahead, 1.6F, Block.m_49956_(torn));
-        UkakuFire.sound(level, st.dug, "block.stone.break", 1.0F, 0.85F);
-        sound(level, st.dug, HexKaguneSounds.KAGUNE_GRAB.get(), 0.9F, 0.9F);
+        UkakuFire.sound(level, st.dug, com.hex.kagune.control.RinkakuSounds.RUBBLE, 1.0F, 0.85F);
+        sound(level, st.dug, KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.GRAB), 0.9F, 0.9F);
         tell(npc, st);
         return true;
     }
@@ -492,7 +491,7 @@ final class NpcTendrils {
         st.velocity = RinkakuHurl.aim(st.chunk, new double[] {mark.f_82479_, mark.f_82480_, mark.f_82481_}, RinkakuHurl.speed(0.6));
         st.phase = S2CHurl.FLY;
         st.flownAt = now;
-        sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_WHIP.get(), 1.0F, 0.7F);
+        sound(level, npc.m_20182_(), KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.WHIP), 1.0F, 0.7F);
         tell(npc, st);
     }
 
@@ -543,7 +542,7 @@ final class NpcTendrils {
         tell(npc, st);
         PaleBlitz.fxAround(npc, npc.m_19879_(), S2CPaleFx.SHOCKWAVE, at, Vec3.f_82478_, (float)radius, Block.m_49956_(level.m_8055_(BlockPos.m_274561_(at.f_82479_,
             at.f_82480_ - 0.5, at.f_82481_))));
-        sound(level, at, HexKaguneSounds.KAGUNE_SLAM.get(), 1.1F, 0.75F);
+        sound(level, at, KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.SLAM), 1.1F, 0.75F);
         st.phase = S2CHurl.GONE;
         ControlNetwork.broadcastAround(npc, new S2CHurl(npc.m_19879_(), 0, S2CHurl.GONE, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, -1, -1, ""));
     }
@@ -579,7 +578,7 @@ final class NpcTendrils {
             body.f_19864_ = true;
         }
         PaleBlitz.fxAround(body, npc.m_19879_(), fx, centre, into, fx == S2CPaleFx.IMPALED ? body.m_20206_() : 1.0F, fx == S2CPaleFx.IMPACT ? S2CPaleFx.BONE : 0);
-        sound((ServerLevel)npc.m_9236_(), centre, HexKaguneSounds.FLESH_IMPACT.get(), 0.8F, 0.95F + 0.2F * (float)npc.m_217043_().m_188500_());
+        sound((ServerLevel)npc.m_9236_(), centre, KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.IMPACT), 0.8F, 0.95F + 0.2F * (float)npc.m_217043_().m_188500_());
         return false;
     }
 

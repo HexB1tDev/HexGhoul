@@ -224,7 +224,7 @@ final class GhoulNpcCombat {
             mind.strung = 0;
             mind.heavyReadyAt = now + NpcRules.heavyEvery(who.tier());
             mind.readyAt = now + GraftMove.OWLS_EXECUTION.ticks() + pause(npc);
-            sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_STRAIN.get(), 0.9F, 0.75F);
+            sound(level, npc.m_20182_(), KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.STRAIN), 0.9F, 0.75F);
             return;
         }
         // 1.0.41: a lancer opens from the full length of its tails, with the skewer.
@@ -264,7 +264,7 @@ final class GhoulNpcCombat {
         mind.yaw = Math.toDegrees(Math.atan2(-facing.f_82479_, facing.f_82481_));
         mind.hits.clear();
         mind.dirty = true;
-        sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_WHIP.get(), 0.6F, 0.95F + 0.1F * (float)npc.m_217043_().m_188500_());
+        sound(level, npc.m_20182_(), KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.WHIP), 0.6F, 0.95F + 0.1F * (float)npc.m_217043_().m_188500_());
         int limbs = limbs(who);
         int lands = move.ticks();
         float power = 0.0F;
@@ -375,7 +375,7 @@ final class GhoulNpcCombat {
                 }
                 BlockPos below = BlockPos.m_274561_(down.f_82479_, down.f_82480_ - 0.01, down.f_82481_);
                 PaleBlitz.fxAround(npc, npc.m_19879_(), S2CPaleFx.SHOCKWAVE, down, flat(dir), 3.0F, Block.m_49956_(level.m_8055_(below)));
-                sound(level, down, HexKaguneSounds.KAGUNE_SLAM.get(), 0.9F, 0.8F);
+                sound(level, down, KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.SLAM), 0.9F, 0.8F);
             }
             default -> {
             }
@@ -405,7 +405,7 @@ final class GhoulNpcCombat {
         body.m_20256_(body.m_20184_().m_82490_(0.3).m_82549_(shove).m_82520_(0.0, up, 0.0));
         body.f_19864_ = true;
         PaleBlitz.fxAround(body, npc.m_19879_(), fx, centre, into, fx == S2CPaleFx.IMPALED ? body.m_20206_() : 1.0F, fx == S2CPaleFx.IMPACT ? S2CPaleFx.BONE : 0);
-        sound((ServerLevel)npc.m_9236_(), centre, HexKaguneSounds.FLESH_IMPACT.get(), 0.8F, 0.9F + 0.2F * (float)npc.m_217043_().m_188500_());
+        sound((ServerLevel)npc.m_9236_(), centre, KaguneVoice.event(com.hex.kagune.control.RinkakuSounds.IMPACT), 0.8F, 0.9F + 0.2F * (float)npc.m_217043_().m_188500_());
         return false;
     }
 
@@ -496,8 +496,8 @@ final class GhoulNpcCombat {
         mind.heavyReadyAt = now + NpcRules.heavyEvery(who.tier());
         mind.readyAt = now + 24L + pause(npc);
         mind.dirty = true;
-        UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.4, 0.0), "entity.ender_dragon.flap", 0.9F, 1.6F);
-        UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.4, 0.0), "entity.blaze.shoot", 1.0F, 0.8F);
+        UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.4, 0.0), com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.9F, 1.6F);
+        UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.4, 0.0), com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 1.0F, 0.8F);
     }
 
     /**
@@ -521,7 +521,7 @@ final class GhoulNpcCombat {
         bolt.damage = GhoulNpcBrain.damage(npc, who) * harder;
         mind.bolts.add(bolt);
         fx(npc, S2CUkakuFx.BOLT, bolt.id, from, bolt.velocity, 1.0F, bolt.life);
-        UkakuFire.sound(level, from, "entity.blaze.shoot", 0.5F, 1.35F + 0.1F * (float)npc.m_217043_().m_188500_());
+        UkakuFire.sound(level, from, com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.5F, 1.35F + 0.1F * (float)npc.m_217043_().m_188500_());
     }
 
     /** Where a wing's shot leaves: its tip as the wing curls to aim ({@link WingRig#aimTip}), as Ukaku's. */
@@ -601,7 +601,7 @@ final class GhoulNpcCombat {
         if (bolt.velocity.m_165925_() > 1.0E-6) {
             body.m_147240_(0.2, -bolt.velocity.f_82479_, -bolt.velocity.f_82481_);
         }
-        UkakuFire.sound((ServerLevel)npc.m_9236_(), centre, "entity.generic.burn", 0.5F, 1.2F);
+        UkakuFire.sound((ServerLevel)npc.m_9236_(), centre, com.hex.kagune.control.ukaku.UkakuSounds.BURN, 0.5F, 1.2F);
     }
 
     /** Its shots in flight put out (it died, or left): every client stops drawing them. */

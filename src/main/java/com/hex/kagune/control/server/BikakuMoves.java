@@ -84,7 +84,7 @@ final class BikakuMoves {
         state.undyingAt = now;
         state.undyingSlowUntil = Long.MIN_VALUE;
         state.readyAt.put(move, now + Cooldowns.of(player, (long)move.cooldown()));
-        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.organic_armor_shift", 1.0F, 0.75F);
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), com.hex.kagune.control.BikakuSounds.ARMOUR, 1.0F, 0.75F);
         KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
         BikakuServer.broadcast(player, state);
     }
@@ -819,17 +819,17 @@ final class BikakuMoves {
             case JAWS -> {
                 jawsTargets(player, state, aimed, centre);
                 state.movePoint = aimed != null ? KaguneServerController.center(aimed) : centre;
-                UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.writhe", 1.2F, 0.7F);
+                UkakuFire.sound(player.m_284548_(), centre, com.hex.kagune.control.BikakuSounds.WRITHE, 1.2F, 0.7F);
             }
             case HUNGER -> {
                 state.targets[0] = aimed == null ? 0 : aimed.m_19879_();
                 state.movePoint = aimed != null ? KaguneServerController.center(aimed)
                     : player.m_146892_().m_82549_(player.m_20154_().m_82490_(BikakuRules.KAKUJA_REACH * 0.7));
-                UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.writhe", 1.2F, 0.6F);
+                UkakuFire.sound(player.m_284548_(), centre, com.hex.kagune.control.BikakuSounds.WRITHE, 1.2F, 0.6F);
             }
             default -> { // Flesh Cataclysm: drawing in
                 state.movePoint = centre;
-                UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.transform.body_warp", 1.3F, 0.7F);
+                UkakuFire.sound(player.m_284548_(), centre, com.hex.kagune.control.BikakuSounds.WARP, 1.3F, 0.7F);
             }
         }
         state.readyAt.put(move, now + Cooldowns.of(player, (long)move.cooldown()));
@@ -918,7 +918,7 @@ final class BikakuMoves {
                         body.f_19864_ = true;
                     }
                 }
-                UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.dragon_bite", 1.1F, 0.8F);
+                UkakuFire.sound(player.m_284548_(), centre, com.hex.kagune.control.BikakuSounds.BITE, 1.1F, 0.8F);
             }
         }
         if (told) {
@@ -981,7 +981,7 @@ final class BikakuMoves {
             if (held != null) {
                 hurt(player, held, BikakuRules.HUNGER_CRUSH_POWER, 5, BikakuRules.HUNGER_STUN, BikakuRules.HUNGER_CRUSH_HEAL, now, true);
             }
-            UkakuFire.sound(player.m_284548_(), BikakuServer.world(player, com.hex.kagune.control.bikaku.KakujaActs.MAW_GRIP), "hexkagune:sfx.dragon_bite",
+            UkakuFire.sound(player.m_284548_(), BikakuServer.world(player, com.hex.kagune.control.bikaku.KakujaActs.MAW_GRIP), com.hex.kagune.control.BikakuSounds.BITE,
                 1.4F, 0.65F);
         }
         if (age == BikakuMove.HUNGER_RELEASE && state.heldId != 0) {
@@ -1004,8 +1004,8 @@ final class BikakuMoves {
         double reach = BikakuRules.KAKUJA_REACH * 1.15;
         if (age == burst) {
             // It bursts out: every mouth roars; what is close is hurled away.
-            UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.dragon_roar", 2.0F, 0.6F);
-            UkakuFire.sound(player.m_284548_(), centre, "hexkagune:kagune_burst", 1.4F, 0.6F);
+            UkakuFire.sound(player.m_284548_(), centre, com.hex.kagune.control.BikakuSounds.DRAGON_ROAR, 2.0F, 0.6F);
+            UkakuFire.sound(player.m_284548_(), centre, com.hex.kagune.control.BikakuSounds.CATACLYSM, 1.4F, 0.6F);
             for (LivingEntity body : player.m_284548_().m_6443_(LivingEntity.class, box(centre, BikakuRules.CATA_NEAR + 1.0),
                 living -> inKakujaReach(player, living, centre, BikakuRules.CATA_NEAR))) {
                 state.struck.add(body.m_19879_());

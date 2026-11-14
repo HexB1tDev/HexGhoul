@@ -40,7 +40,7 @@ public final class KagunePatch implements Opcodes {
     private static final String COOLDOWN = "slingshotCooldownUntil";
     /** 3.0.0: the grapple's flight onto the grabbed block. */
     static final String SLINGSHOT = "com/hex/kagune/control/server/RinkakuSlingshot";
-    static final String VERSION = "4.1.92";
+    static final String VERSION = "4.1.93";
     private static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
     private static final String VECTOR = "net/minecraft/world/phys/Vec3";
     // 1.1.0 kagune control expansion hooks
@@ -311,6 +311,49 @@ public final class KagunePatch implements Opcodes {
     }
 
     /** Renames {@code name} to {@code name + "Legacy"} (public) and adds a same-signature trampoline to {@code owner.target}. */
+    /** 4.1.93: {@link #trampoline} for one overload of {@code name} (its {@code desc}); the original becomes {@code name}Legacy. */
+    private static void trampolineExact(ClassNode node, String name, String desc, String owner, String target) {
+        java.util.List<MethodNode> found = node.methods.stream().filter(m -> m.name.equals(name) && m.desc.equals(desc)).toList();
+        if (found.size() != 1) throw new IllegalStateException("No single " + node.name + "." + name + desc);
+        MethodNode original = found.get(0);
+        if ((original.access & ACC_STATIC) == 0) throw new IllegalStateException("Trampolines are for static methods: " + name);
+        int access = original.access;
+        original.name = name + "Legacy";
+        original.access = original.access & ~(ACC_PRIVATE | ACC_PROTECTED) | ACC_PUBLIC;
+        MethodNode bridge = new MethodNode(access, name, desc, null, null);
+        int slot = 0;
+        for (jdk.internal.org.objectweb.asm.Type argument : jdk.internal.org.objectweb.asm.Type.getArgumentTypes(desc)) {
+            bridge.instructions.add(new VarInsnNode(argument.getOpcode(ILOAD), slot));
+            slot += argument.getSize();
+        }
+        bridge.instructions.add(new MethodInsnNode(INVOKESTATIC, owner, target, desc, false));
+        bridge.instructions.add(new InsnNode(jdk.internal.org.objectweb.asm.Type.getReturnType(desc).getOpcode(IRETURN)));
+        node.methods.add(bridge);
+    }
+
+    /**
+     * 4.1.93: the tendrils' writhing loop takes its sound from the player's kagune: in its constructor the original's
+     * {@code HexKaguneSounds.KAGUNE_IDLE.get()} becomes {@code KaguneVoiceClient.writhe(player)} (the player is its one argument).
+     */
+    private static void patchWritheSound(ClassNode node) {
+        MethodNode init = node.methods.stream().filter(m -> m.name.equals("<init>")).findFirst().orElseThrow();
+        int changed = 0;
+        for (AbstractInsnNode instruction : init.instructions.toArray()) {
+            if (instruction instanceof FieldInsnNode field && field.getOpcode() == GETSTATIC && field.name.equals("KAGUNE_IDLE")
+                    && field.getNext() instanceof MethodInsnNode get && get.name.equals("get")
+                    && get.getNext() instanceof jdk.internal.org.objectweb.asm.tree.TypeInsnNode cast && cast.getOpcode() == CHECKCAST) {
+                init.instructions.insertBefore(field, new VarInsnNode(ALOAD, 1));
+                init.instructions.insertBefore(field, new MethodInsnNode(INVOKESTATIC, "com/hex/kagune/control/client/KaguneVoiceClient", "writhe",
+                    "(Lnet/minecraft/client/player/AbstractClientPlayer;)Lnet/minecraft/sounds/SoundEvent;", false));
+                init.instructions.remove(get);
+                init.instructions.remove(cast);
+                init.instructions.remove(field);
+                changed++;
+            }
+        }
+        expect(changed, 1, "writhe sound by kagune");
+    }
+
     private static void trampoline(ClassNode node, String name, String owner, String target) {
         MethodNode original = method(node, name);
         if (node.methods.stream().filter(m -> m.name.equals(name)).count() != 1)
@@ -345,8 +388,14 @@ public final class KagunePatch implements Opcodes {
         method(node, name).visibleAnnotations = annotations;
     }
 
+    /** 4.1.93: the original's playAt for a point, which every one of its sounds goes through (the other overloads call it). */
+    static final String PLAY_AT_DESC = "(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/phys/Vec3;Lnet/minecraftforge/registries/RegistryObject;FF)V";
+
     private static void patchControllerForControl(ClassNode node) {
         for (String name : CONTROLLER_REUSED) widen(node, name);
+        // 4.1.93 (the owner: "do for both of the other cognates completely. Replace all sounds"): every sound the controller plays is
+        // played as the player's kagune plays it (KaguneVoice): a Rinkaku's, a Bikaku's, an Ukaku's the game's own.
+        trampolineExact(node, "playAt", PLAY_AT_DESC, "com/hex/kagune/control/server/KaguneVoice", "playAt");
         // Every M1 path (C2S SWIPE action, vanilla attack, instinct) funnels through startSwipe.
         trampoline(node, "startSwipe", COMBAT, "startSwipe");
         // 1.3.0: the single manifest rip is replaced by per-limb sounds every client plays (ManifestSounds).
@@ -970,6 +1019,10 @@ public final class KagunePatch implements Opcodes {
         redirectTendrilView(ambient, "clientTick");
         entries.put(WORLD_RENDERER + ".class", write(worldRenderer));
         entries.put(AMBIENT + ".class", write(ambient));
+        // 4.1.93: the writhing loop's sound by the player's kagune (KaguneVoiceClient.writhe).
+        ClassNode writhe = read(entries.get(AMBIENT + "$WritheSound.class"));
+        patchWritheSound(writhe);
+        entries.put(AMBIENT + "$WritheSound.class", write(writhe));
         // 7.0.0: the original RC bar is not drawn while the shared bar (ReserveHud) shows: it is the same bar.
         ClassNode energyHud = read(entries.get(ENERGY_HUD + ".class"));
         trampolineListener(energyHud, "render", "com/hex/kagune/control/client/ReserveHud", "energyHud");

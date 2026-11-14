@@ -59,7 +59,9 @@ public final class ManifestSounds {
         boolean centipede = !ukaku && (GraftClient.isGraft(player)
             ? GraftClient.get(player).kakuja() || GraftClient.get(player).stage() == com.hex.kagune.control.graft.GraftStage.CENTIPEDE
             : com.hex.kagune.client.KaguneClientState.get(player).form().hasCentipedeLegs());
-        Tear tear = new Tear(player, ukaku ? UKAKU : centipede ? CENTIPEDE : RINKAKU, ukaku ? 1.0F : 0.95F, pitch);
+        // 4.1.93: a Rinkaku's and a Bikaku's tear out with the game's own (KaguneVoiceClient); Graft's centipede bodies keep theirs.
+        SoundEvent own = ukaku ? null : KaguneVoiceClient.tear(player, centipede);
+        Tear tear = new Tear(player, ukaku ? UKAKU : own != null ? own : centipede ? CENTIPEDE : RINKAKU, ukaku ? 1.0F : 0.95F, pitch);
         PLAYING.put(id, tear);
         Minecraft.m_91087_().m_91106_().m_120367_(tear);
     }

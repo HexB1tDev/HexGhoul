@@ -24,7 +24,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "4.1.92"
+VERSION = "4.1.93"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -60,6 +60,8 @@ CHANGED = {
     "com/hex/kagune/data/KaguneProfile.class",
     "com/hex/kagune/client/render/KaguneWorldRenderer.class",
     "com/hex/kagune/client/KaguneAmbientSounds.class",
+    # 4.1.93: the tendrils' writhing loop takes its sound from the player's kagune (KaguneVoiceClient.writhe).
+    "com/hex/kagune/client/KaguneAmbientSounds$WritheSound.class",
     "com/hex/kagune/client/render/KaguneSpikeRenderer.class",
     "com/hex/kagune/gameplay/KaguneForm.class",
     "com/hex/kagune/gameplay/KaguneForm$1.class",
