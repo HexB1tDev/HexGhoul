@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.92 (HexGhoul): Kick Master's right click animates again (testing)
+
+See `.github/release-notes-4.1.92.md`. `PaleMotions.animates` lets `TWIRL_CHARGE` and `DASH_KICK` through (they never were: `PaleAnimator.apply`
+returned before their poses); `facesLook(TWIRL_CHARGE)`. `CompanionTests.dashKickDrawn492` drives the real `PaleAnimator`; 4 rules sabotaged
+(`docs/handoff/sabotage-4.1.92.json`). Render `docs/handoff/dash-kick-drawn-4.1.92.png` (`tools/DashDrawnPreview.java`, through the animator).
+
 ## 4.1.91 (HexGhoul): every Ukaku sound is Minecraft's own (the clash untouched) (testing)
 
 See `.github/release-notes-4.1.91.md`. `ukaku/UkakuSounds` (pure): every Ukaku sound, one of the game's own named with its namespace (so

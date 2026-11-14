@@ -1,0 +1,30 @@
+[
+ {
+  "name": "the charge and the dash kick never drawn",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "            case TWIRL_CHARGE, DASH_KICK -> true;\n",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the dash kick never drawn",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "            case TWIRL_CHARGE, DASH_KICK -> true;",
+  "new": "            case TWIRL_CHARGE -> true;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the charge never drawn",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "            case TWIRL_CHARGE, DASH_KICK -> true;",
+  "new": "            case DASH_KICK -> true;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "charging she faces the way she began",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "move == PaleMove.PUNCH_CHARGE || move == PaleMove.TWIRL_CHARGE || move == PaleMove.GRAB_HOLD",
+  "new": "move == PaleMove.PUNCH_CHARGE || move == PaleMove.GRAB_HOLD",
+  "suite": "CompanionTests"
+ }
+]

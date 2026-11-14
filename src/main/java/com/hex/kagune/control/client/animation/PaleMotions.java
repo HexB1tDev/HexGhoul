@@ -508,6 +508,10 @@ public final class PaleMotions {
     public static boolean animates(PaleMove move) {
         return switch (move) {
             case STRIKE, FLIP, PUNCH_CHARGE, PUNCH, SWIPE, GRAB_REACH, GRAB_HOLD, GRAB_THROW, GRAB_MISS, KICK, HAMMER_CHARGE, HAMMER, WATCH, WITNESS -> true;
+            // 4.1.92 (the owner: "the right-click animation is not working for the kick of the Kickmaster ... there's no running towards
+            // them animation, and there's no kick animation at all"): Kick Master's charge (4.1.8) and dash kick (4.1.87) were never let
+            // through here, so her body never took either: their poses (twirlCharge, dashKick) were made and tested, never drawn.
+            case TWIRL_CHARGE, DASH_KICK -> true;
             // 6.2.0: the Owl's own moves (OwlMotions).
             default -> move.owl();
         };
@@ -518,7 +522,8 @@ public final class PaleMotions {
      * it); every other move is thrown the way she faced when it began, whatever her body has turned to since.
      */
     public static boolean facesLook(PaleMove move) {
-        return move == PaleMove.PUNCH_CHARGE || move == PaleMove.GRAB_HOLD || move == PaleMove.HAMMER_CHARGE || move == PaleMove.OWL_PUNCH_CHARGE
+        return move == PaleMove.PUNCH_CHARGE || move == PaleMove.TWIRL_CHARGE || move == PaleMove.GRAB_HOLD || move == PaleMove.HAMMER_CHARGE
+            || move == PaleMove.OWL_PUNCH_CHARGE
             || move == PaleMove.OWL_FISSURE_CHARGE || move == PaleMove.OWL_VOLLEY || move == PaleMove.OWL_GRAB_REACH || move == PaleMove.OWL_GRAB_HOLD
             || move == PaleMove.OWL_GRAB_SLAM;
     }

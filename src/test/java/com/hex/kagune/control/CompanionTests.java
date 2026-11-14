@@ -2,6 +2,7 @@ package com.hex.kagune.control;
 
 import com.hex.kagune.control.client.animation.EtoPose;
 import com.hex.kagune.control.client.animation.RigPose;
+import com.hex.kagune.control.pale.PaleMove;
 import com.hex.kagune.control.npc.EtoGesture;
 import com.hex.kagune.control.npc.EtoInitiative;
 import com.hex.kagune.control.npc.EtoMood;
@@ -593,6 +594,82 @@ public final class CompanionTests {
         kickMaster();
         dashKick487();
         kickStance488();
+        dashKickDrawn492();
+    }
+
+    /**
+     * 4.1.92 (the owner: "the right-click animation is not working for the kick of the Kickmaster. It sends stuff flying, yeah, sure, but
+     * there's no running towards them animation, and there's no kick animation at all. Like, you just walk towards them, like, without
+     * moving"): the animator only puts a move on her body if PaleMotions.animates lets it, and the charge and the dash kick were never let
+     * through: their poses were made and tested, never drawn. Now the real animator, driven through the charge and the whole dash kick,
+     * puts exactly those poses on her; and every move it has a pose for is let through.
+     */
+    static void dashKickDrawn492() {
+        check(com.hex.kagune.control.client.animation.PaleMotions.animates(PaleMove.TWIRL_CHARGE)
+            && com.hex.kagune.control.client.animation.PaleMotions.animates(PaleMove.DASH_KICK), "the charge and the dash kick take her body");
+        check(com.hex.kagune.control.client.animation.PaleMotions.facesLook(PaleMove.TWIRL_CHARGE)
+            && !com.hex.kagune.control.client.animation.PaleMotions.facesLook(PaleMove.DASH_KICK),
+            "charging she faces where she aims; the dash kick goes the way she dashed");
+        String animatorSource = read("src/main/java/com/hex/kagune/control/client/animation/PaleAnimator.java");
+        java.util.regex.Matcher branch = java.util.regex.Pattern.compile("now == PaleMove\\.([A-Z_]+)\\)").matcher(animatorSource);
+        int branches = 0;
+        boolean all = true;
+        while (branch.find()) {
+            branches++;
+            PaleMove move = PaleMove.valueOf(branch.group(1));
+            all &= com.hex.kagune.control.client.animation.PaleMotions.animates(move);
+            check(com.hex.kagune.control.client.animation.PaleMotions.animates(move), "the animator's pose for " + move + " is drawn (animates lets it)");
+        }
+        check(branches >= 10 && all, "every move the animator has a pose for is let through: " + branches);
+        try {
+            Class<?> type = Class.forName("com.hex.kagune.control.client.animation.PaleAnimator");
+            java.lang.reflect.Constructor<?> make = type.getDeclaredConstructor();
+            make.setAccessible(true);
+            java.lang.reflect.Method apply = type.getDeclaredMethod("apply", com.hex.kagune.control.client.animation.RigPose.class,
+                com.hex.kagune.control.client.PaleClient.PaleView.class, double.class, float.class, float.class, float.class);
+            apply.setAccessible(true);
+            // The dash kick: 6 ticks of run, a full charge, begun at clock 100.
+            int detail = com.hex.kagune.control.pale.PaleRules.dashDetail(6, 1.0F);
+            Object animator = make.newInstance();
+            com.hex.kagune.control.client.PaleClient.PaleView dash = new com.hex.kagune.control.client.PaleClient.PaleView(PaleMove.DASH_KICK, detail,
+                100L, 0, 1.0F, 0.0F, 0.0, 0.0, 0.0, 100.0);
+            int end = com.hex.kagune.control.pale.PaleRules.dashEnd(detail);
+            double legsMoved = 0.0;
+            double kickHighest = 0.0;
+            double offTheMove = 0.0;
+            com.hex.kagune.control.client.animation.RigPose first = null;
+            for (double t = 0.0; t <= end; t += 0.5) {
+                com.hex.kagune.control.client.animation.RigPose stance = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+                apply.invoke(animator, stance, dash, 100.0 + t, (float)(100.0 + t), 0.0F, 0.0F);
+                if (first == null) {
+                    first = com.hex.kagune.control.client.animation.PaleMotions.copy(stance);
+                }
+                legsMoved = Math.max(legsMoved, Math.abs(stance.rightLegX - stance.leftLegX));
+                kickHighest = Math.max(kickHighest, -stance.rightLegX);
+                if (t >= 2.0) {
+                    // Past the blend in, her body is the dash kick's own pose.
+                    com.hex.kagune.control.client.animation.RigPose want = com.hex.kagune.control.client.animation.PaleMotions.dashKick(t, detail, first);
+                    offTheMove = Math.max(offTheMove, Math.abs(stance.rightLegX - want.rightLegX) + Math.abs(stance.leftLegX - want.leftLegX));
+                }
+            }
+            check(legsMoved > 1.0, "drawn through the animator, she runs: her legs swing apart (" + legsMoved + " rad)");
+            check(kickHighest > 1.2, "and the kick comes up: the right leg raised " + kickHighest + " rad");
+            check(offTheMove < 0.6, "her body is the dash kick's own pose, not the stance walked about: off by " + offTheMove);
+            // The charge: held, she sinks into its coil (not her stance unchanged).
+            Object charging = make.newInstance();
+            com.hex.kagune.control.client.PaleClient.PaleView charge = new com.hex.kagune.control.client.PaleClient.PaleView(PaleMove.TWIRL_CHARGE, 0,
+                200L, 0, 0.0F, 0.0F, 0.0, 0.0, 0.0, 200.0);
+            com.hex.kagune.control.client.animation.RigPose held = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+            com.hex.kagune.control.client.animation.RigPose plain = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+            apply.invoke(charging, held, charge, 230.0, 230.0F, 0.0F, 0.0F);
+            com.hex.kagune.control.client.animation.RigPose coil = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(30.0, plain);
+            double changed = Math.abs(held.twist - plain.twist) + Math.abs(held.rightLegX - plain.rightLegX) + Math.abs(held.leftLegX - plain.leftLegX)
+                + Math.abs(held.drop - plain.drop) + Math.abs(held.spin - plain.spin);
+            double fromCoil = Math.abs(held.twist - coil.twist) + Math.abs(held.rightLegX - coil.rightLegX) + Math.abs(held.leftLegX - coil.leftLegX);
+            check(changed > 0.2 && fromCoil < 0.3, "held, the charge's coil is on her body: changed " + changed + ", off the coil " + fromCoil);
+        } catch (ReflectiveOperationException failure) {
+            check(false, "drive the animator: " + failure);
+        }
     }
 
     /**
