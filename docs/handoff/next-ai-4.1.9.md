@@ -21,6 +21,17 @@ Do your work and only at the end do the checks. This is taking so long." So: wri
 status lines to the owner while you work; the house rules (EXIT 0, GitHub green, allowlist, sabotage) still hold at the end.
 
 **Progress of the lag patch (newest first):**
+- **4.1.100, the NPC registry and the look pace:** `server/NpcIndex` (each server world's weak set of the mod's NPCs, filled on
+  `EntityJoinLevelEvent`; `of` answers as `getEntitiesOfClass` would; the gone dropped as walked; a client asks the game): every one of the
+  55 server searches for GhoulNpc/CcgAgent/HumanNpc/EtoNpc/ChildNpc/FleshThrall goes through it (`LagTests.registry` fails on any new
+  `m_6443_(<ours>.class` outside `client/`). `server/NpcPace`: the ghouls' and investigators' prey look every 10 ticks near a player, 40
+  with none within 64. **Rejected:** skipping whole brain ticks far from players: the brains hold ~21 constant-phased checks (`now % 20L ==
+  0L || navigation done`, `now % 20L == 15L`, `(now + id) % 200L == 0L`) that would stop firing for most NPCs, and aligning them stacks every
+  NPC's thinking on one tick. The client's searches (`GhoulNpcRenderer`, `ChildRenderer`, `GraftRenderer`, `PeaceFx`) are the client
+  version's. `/kagune lag` reports the NPCs and players loaded. `sabotage-4.1.100.json` (13, all caught). The lists owed for 4.1.94 to
+  4.1.98 were made (`sabotage-4.1.94.json` ... `-4.1.98.json`); 4.1.94's found three holes, closed in NpcTests (`DryLand.flatFor` by size,
+  the overworld's own generator only, a stale claim looked in once a run). `LagTests`' nesting checks made exact (a 1 ms spin preempted
+  past a "< 2 ms" bound under load: own time is checked as whole less inner whole, by construction).
 - **4.1.99, the profiler (`/kagune lag`, `/kagune lag log`):** `LagMeter` (pure), `server/LagServer`, `client/LagClient`, `S2CLag` (message 58,
   protocol 128); `patch/KaguneGuard` times every guarded method and, timed only, `TIMED` (CcgAgent, HumanNpc, EtoNpc, ChildNpc,
   FleshThrall brains; GhoulNpc's is guarded so timed with it; DryJigsaw/Site/DryPlace `m_214086_`/`m_262864_`/`m_214110_`), every

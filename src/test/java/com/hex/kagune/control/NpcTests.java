@@ -3400,6 +3400,14 @@ public final class NpcTests {
                 && near(structures, "ChunkPos home = context.f_226628_();\n                if (inHotel(context, home.f_45578_, home.f_45579_)) {",
                     "Optional<Structure.GenerationStub> stub = this.flattest(context);", 200),
                 "kept clear of the hotels, looked at before any ground (4.1.94: no longer of the other sets' spots)");
+            // 4.1.94 (4.1.100: sabotage-4.1.94 found it untested): a place's flatness by its size, the mansion's 121 blocks no longer held to a small
+            // place's 6.
+            check(com.hex.kagune.control.village.DryLand.flatFor(48) == 6 && com.hex.kagune.control.village.DryLand.flatFor(49) == 8
+                && com.hex.kagune.control.village.DryLand.flatFor(80) == 8 && com.hex.kagune.control.village.DryLand.flatFor(81) == 10
+                && com.hex.kagune.control.village.DryLand.flatFor(121) == 10 && com.hex.kagune.control.village.DryLand.flatFor(16) == 6,
+                "a place's flatness by its size: 6 up to 48 blocks across, 8 up to 80, 10 above");
+            check(structures.contains("int flat = DryLand.flatFor(Math.max(maxX - minX + 1, maxZ - minZ + 1));")
+                && structures.contains("            return DryLand.flatFor(size);"), "the jigsaw places and the sites judged by their own size's flatness");
             check(structures.contains("if (id == null) {\n                return Optional.empty();"), "a place whose name can't be read is never built many times over");
             // 4.1.14: nothing worked out once a world any more (whatever stopped the world's one chunk left the world without it).
             check(!structures.contains("chosen(context, id)") && !structures.contains("= hideout(context)") && !structures.contains("= ccg(context)")
@@ -3417,6 +3425,15 @@ public final class NpcTests {
                 && structures.contains("if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {\n            if (!PlaceClaims.stale(id, taken, context.f_226629_())) {\n                return Optional.empty();")
                 && structures.contains("taken = PlaceClaims.claimed(id);\n            if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {\n                return Optional.empty();"),
                 "a spot is taken as the place is really built, by whatever builds it; every other spot builds nothing from then on");
+            // 4.1.94 (4.1.100: sabotage-4.1.94 found these untested): the world's one only in the overworld's own generator (a mod's world of
+            // overworld biomes took its only spot first); a claimed spot elsewhere made and looked in once a run, never at every ask.
+            String claimed = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java"));
+            check(structures.contains("        if (!PlaceClaims.overworld(context.f_226622_())) {")
+                && near(structures, "        if (!PlaceClaims.overworld(context.f_226622_())) {", "return Optional.empty();", 520)
+                && claimed.contains("if (level.m_46472_() == Level.f_46428_) {\n                    return level.m_7726_().m_8481_() == generator;"),
+                "a one-of-a-kind place built only by the overworld's own generator");
+            check(claimed.contains("|| !CHECKED.add(id + \"@\" + taken[0] + \",\" + taken[1])) {\n            return false;")
+                && claimed.contains("        current = null;\n        CHECKED.clear();"), "a stale claim looked in once a run (forgotten as the server stops)");
             // 4.1.17 (the owner: "there's multiple structures of each, which cannot happen"): a place found standing is the world's one if
             // none is taken (a world from before the claims); a second is told in the log; every one-of-a-kind place is looked for.
             String adopt = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java")));

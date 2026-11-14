@@ -1386,7 +1386,7 @@ public final class GangServer {
         if (g.gang() == GangPlayer.NONE || last != null && now - last < NAG_EVERY) {
             return;
         }
-        for (com.hex.kagune.control.npc.EtoNpc npc : player.m_284548_().m_6443_(com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(12.0),
+        for (com.hex.kagune.control.npc.EtoNpc npc : NpcIndex.of(player.m_284548_(), com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(12.0),
             body -> body.m_6084_() && body.mind != null)) {
             Persona spouse = npc.persona();
             if (!leads(spouse) || gangOf(spouse) == g.gang()

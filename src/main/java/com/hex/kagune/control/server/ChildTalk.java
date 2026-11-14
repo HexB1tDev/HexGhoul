@@ -464,7 +464,7 @@ public final class ChildTalk {
                         mother = parentKey.equals(child.mother);
                     }
                 }
-                for (com.hex.kagune.control.npc.EtoNpc companion : level.m_6443_(com.hex.kagune.control.npc.EtoNpc.class, npc.m_20191_().m_82400_(48.0),
+                for (com.hex.kagune.control.npc.EtoNpc companion : NpcIndex.of(level, com.hex.kagune.control.npc.EtoNpc.class, npc.m_20191_().m_82400_(48.0),
                     body -> body.m_6084_() && body.mind != null)) {
                     String companionKey = Pregnancies.npc(companion.persona().key());
                     if (child.parent(companionKey) && companion.m_20280_(npc) < best) {

@@ -9,6 +9,14 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.100 (HexGhoul): the mod's NPCs found from a list, not a search of the world; far-off NPCs look round less (the lag patch, part 2) (testing)
+
+See `.github/release-notes-4.1.100.md`. `server/NpcIndex`: each server world's weak set of the mod's NPCs (`EntityJoinLevelEvent`), `of(level,
+type, box, filter)` answering what `getEntitiesOfClass` would (box met, filter passed; removed or moved bodies dropped as walked; a client
+asks the game); the 55 server searches for GhoulNpc, CcgAgent, HumanNpc, EtoNpc, ChildNpc, FleshThrall go through it. `server/NpcPace`: a
+ghoul's and an investigator's look for prey every 10 ticks near a player, every 40 with none within 64 blocks. `LagServer` reports the NPCs
+and players loaded. `LagTests` (`registry`, `pace`); `docs/handoff/sabotage-4.1.100.json`.
+
 ## 4.1.99 (HexGhoul): /kagune lag, the mod's own lag profiler (the lag patch, part 1) (testing)
 
 See `.github/release-notes-4.1.99.md`. `LagMeter` (pure): `enter`/`exit` read one volatile flag unless a window is open; then each call's

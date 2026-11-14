@@ -160,7 +160,7 @@ public final class Sightings {
      */
     private static void terror(ServerLevel level, ServerPlayer player, FinalSight sight, long now) {
         boolean shout = now - SHOUTED.getOrDefault(player.m_20148_(), Long.MIN_VALUE / 2) >= FinalSight.SHOUTS;
-        for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, player.m_20191_().m_82400_(FinalSight.KEEPS_RUNNING),
+        for (GhoulNpc npc : NpcIndex.of(level, GhoulNpc.class, player.m_20191_().m_82400_(FinalSight.KEEPS_RUNNING),
                 ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.m_142582_(player))) {
             if (player.m_20148_().equals(npc.mind.owner) || sight.kingly() && npc.identity() != null
                 && FinalSight.ghoul(npc.identity().tier(), com.hex.kagune.control.npc.NpcIdentity.TIERS) == FinalSight.Nerve.SHAKE) {
@@ -176,7 +176,7 @@ public final class Sightings {
             }
         }
         String me = Pregnancies.player(player.m_20148_());
-        for (ChildNpc npc : level.m_6443_(ChildNpc.class, player.m_20191_().m_82400_(NOTICE), child -> child.m_6084_() && child.mind != null)) {
+        for (ChildNpc npc : NpcIndex.of(level, ChildNpc.class, player.m_20191_().m_82400_(NOTICE), child -> child.m_6084_() && child.mind != null)) {
             Children.Child child = Children.get(level, npc.childId());
             if (child != null && child.parent(me) && (npc.m_20280_(player) <= 8.0 * 8.0 || npc.m_142582_(player))) {
                 ChildBrain.dread(npc, player, level, now);
@@ -191,7 +191,7 @@ public final class Sightings {
      */
     private static void dread(ServerLevel level, ServerPlayer player, FinalSight sight, long now) {
         net.minecraft.world.phys.AABB around = player.m_20191_().m_82400_(FinalSight.DREAD_RANGE);
-        for (com.hex.kagune.control.npc.CcgAgent agent : level.m_6443_(com.hex.kagune.control.npc.CcgAgent.class, around,
+        for (com.hex.kagune.control.npc.CcgAgent agent : NpcIndex.of(level, com.hex.kagune.control.npc.CcgAgent.class, around,
                 a -> a.m_6084_() && a.mind != null && (a.m_142582_(player) || a.m_20280_(player) <= 10.0 * 10.0))) {
             switch (FinalSight.investigator(AgentBrain.rankLevel(agent))) {
                 case RUN -> {
@@ -208,13 +208,13 @@ public final class Sightings {
         }
         // 2.4.4: their own children near, before Peace as before War: the little ones shake where they stand, the grown back away.
         String me = Pregnancies.player(player.m_20148_());
-        for (ChildNpc npc : level.m_6443_(ChildNpc.class, around, child -> child.m_6084_() && child.mind != null)) {
+        for (ChildNpc npc : NpcIndex.of(level, ChildNpc.class, around, child -> child.m_6084_() && child.mind != null)) {
             Children.Child child = Children.get(level, npc.childId());
             if (child != null && child.parent(me) && (npc.m_20280_(player) <= 8.0 * 8.0 || npc.m_142582_(player))) {
                 ChildBrain.dread(npc, player, level, now);
             }
         }
-        for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, around, ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.identity() != null
+        for (GhoulNpc npc : NpcIndex.of(level, GhoulNpc.class, around, ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.identity() != null
                 && (ghoul.m_142582_(player) || ghoul.m_20280_(player) <= 10.0 * 10.0))) {
             if (player.m_20148_().equals(npc.mind.owner)) {
                 continue;
@@ -232,7 +232,7 @@ public final class Sightings {
     // ---------------------------------------------------------------- the NPCs
 
     private static void eto(ServerLevel level, ServerPlayer player, Display shown, Display before, long now) {
-        for (EtoNpc npc : level.m_6443_(EtoNpc.class, player.m_20191_().m_82400_(NOTICE), eto -> eto.m_6084_() && eto.m_142582_(player))) {
+        for (EtoNpc npc : NpcIndex.of(level, EtoNpc.class, player.m_20191_().m_82400_(NOTICE), eto -> eto.m_6084_() && eto.m_142582_(player))) {
             EtoBrain.saw(npc, player, shown, seen(player), level, now);
         }
     }
@@ -240,7 +240,7 @@ public final class Sightings {
     private static void ghouls(ServerLevel level, ServerPlayer player, Display shown, Display before, long now) {
         boolean told = false;
         FinalSight sight = seen(player);
-        for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, player.m_20191_().m_82400_(NOTICE), ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.m_142582_(player))) {
+        for (GhoulNpc npc : NpcIndex.of(level, GhoulNpc.class, player.m_20191_().m_82400_(NOTICE), ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.m_142582_(player))) {
             boolean ally = player.m_20148_().equals(npc.mind.owner);
             boolean shaker = sight.kingly() && npc.identity() != null
                 && FinalSight.ghoul(npc.identity().tier(), com.hex.kagune.control.npc.NpcIdentity.TIERS) == FinalSight.Nerve.SHAKE; // 2.1.9
@@ -265,7 +265,7 @@ public final class Sightings {
 
     private static void children(ServerLevel level, ServerPlayer player, Display shown, Display before, long now) {
         String me = Pregnancies.player(player.m_20148_());
-        for (ChildNpc npc : level.m_6443_(ChildNpc.class, player.m_20191_().m_82400_(NOTICE), child -> child.m_6084_())) {
+        for (ChildNpc npc : NpcIndex.of(level, ChildNpc.class, player.m_20191_().m_82400_(NOTICE), child -> child.m_6084_())) {
             Children.Child child = Children.get(level, npc.childId());
             if (child != null && !child.parent(me) && shown != Display.NONE && (npc.m_20280_(player) <= 12.0 * 12.0 || npc.m_142582_(player))) {
                 stranger(level, player, npc, child, shown, now); // 2.0.5: someone else's child

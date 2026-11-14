@@ -77,7 +77,7 @@ public final class HumanErrandServer {
             return;
         }
         String neighbour = null;
-        for (HumanNpc other : level.m_6443_(HumanNpc.class, human.m_20191_().m_82400_(40.0), o -> o != human && o.m_6084_())) {
+        for (HumanNpc other : NpcIndex.of(level, HumanNpc.class, human.m_20191_().m_82400_(40.0), o -> o != human && o.m_6084_())) {
             neighbour = HumanBrain.name(other);
             break;
         }

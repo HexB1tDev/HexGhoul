@@ -1,0 +1,93 @@
+[
+ {
+  "name": "a gang's members searched in the world box again",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java",
+  "old": "NpcIndex.of(player.m_284548_(), GhoulNpc.class, npc.m_20191_().m_82400_(160.0),",
+  "new": "player.m_284548_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(160.0),",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a partner searched in the world box again",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentBrain.java",
+  "old": "for (CcgAgent other : NpcIndex.of(level, CcgAgent.class, agent.m_20191_().m_82400_(72.0),",
+  "new": "for (CcgAgent other : level.m_6443_(CcgAgent.class, agent.m_20191_().m_82400_(72.0),",
+  "suite": "LagTests"
+ },
+ {
+  "name": "flesh creatures left off the list",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": "\n            || entity instanceof com.hex.kagune.control.npc.ChildNpc || entity instanceof com.hex.kagune.control.npc.FleshThrall;",
+  "new": "\n            || entity instanceof com.hex.kagune.control.npc.ChildNpc;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the gone kept on the list",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": "if (body.m_213877_() || body.m_9236_() != level) {",
+  "new": "if (false) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a body far outside the box found",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": "if (type.isInstance(body) && body.m_20191_().m_82381_(box)) {",
+  "new": "if (type.isInstance(body)) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the asker's filter ignored",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": "        found.removeIf(body -> !filter.test(body));\n",
+  "new": "",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a client's search answered from the server's list",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": "        if (!(level instanceof ServerLevel)) {\n            return level.m_6443_(type, box, filter);\n        }\n",
+  "new": "",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the list held strongly",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": "Collections.newSetFromMap(new WeakHashMap<>())",
+  "new": "new java.util.HashSet<>()",
+  "suite": "LagTests"
+ },
+ {
+  "name": "far-off NPCs look round every 20 seconds",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcPace.java",
+  "old": "FAR_LOOK = 40L;",
+  "new": "FAR_LOOK = 400L;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "far means 16 blocks",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcPace.java",
+  "old": "if (player.m_20280_(body) <= FAR * FAR) {",
+  "new": "if (player.m_20280_(body) <= 16.0 * 16.0) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "near players, slowed too",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcPace.java",
+  "old": "return ago >= FAR_LOOK || ago >= NEAR_LOOK && !far(body, level);",
+  "new": "return ago >= FAR_LOOK;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a ghoul's look never paced",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java",
+  "old": "NpcPace.looks(npc, level, now - mind.preySought)",
+  "new": "now - mind.preySought >= 10L",
+  "suite": "LagTests"
+ },
+ {
+  "name": "an investigator's look never paced",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentBrain.java",
+  "old": "current == null && NpcPace.looks(agent, level, ago(now, mind.preySought))",
+  "new": "current == null && ago(now, mind.preySought) >= 10L",
+  "suite": "LagTests"
+ }
+]

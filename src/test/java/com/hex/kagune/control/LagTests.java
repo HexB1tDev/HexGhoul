@@ -49,6 +49,8 @@ public final class LagTests {
         threads();
         lines();
         wiring();
+        registry();
+        pace();
         if (!FAILURES.isEmpty()) {
             FAILURES.forEach(failure -> System.out.println("FAILED: " + failure));
             System.exit(1);
@@ -73,7 +75,7 @@ public final class LagTests {
         LagMeter.enter("Outer.tick");
         spin(2.0);
         LagMeter.enter("Inner.tick");
-        spin(5.0);
+        spin(12.0); // well over the outer one's own 2.5 ms, so a pause on a busy machine can't reorder them
         LagMeter.exit("Inner.tick");
         spin(0.5);
         LagMeter.exit("Outer.tick");
@@ -99,8 +101,8 @@ public final class LagTests {
         }
         double outerSelf = outer.msPerSecond() * s;
         double innerSelf = inner.msPerSecond() * s;
-        check(innerSelf >= 4.9, "the inner call's own time is its whole time: " + innerSelf + " ms");
-        check(outerSelf >= 2.4 && outerSelf < outer.worstMs() - 4.9, "the outer call's own time leaves out the inner one's: " + outerSelf
+        check(innerSelf >= 11.9, "the inner call's own time is its whole time: " + innerSelf + " ms");
+        check(outerSelf >= 2.4 && outerSelf < outer.worstMs() - 11.9, "the outer call's own time leaves out the inner one's: " + outerSelf
             + " ms of " + outer.worstMs());
         check(Math.abs(outerSelf + innerSelf - outer.worstMs()) < 0.01, "own times add up to the outer call's whole time (nothing counted twice)");
         check(Math.abs(inner.worstMs() - innerSelf) < 0.01, "a call with nothing inside: its worst is its own time");
@@ -130,7 +132,11 @@ public final class LagTests {
         LagMeter.Entry c = entry(report, "C.tick");
         check(a != null && b != null && c != null && Math.abs((a.msPerSecond() + b.msPerSecond() + c.msPerSecond()) * s - a.worstMs()) < 0.01,
             "three deep, the own times add up to the outermost call's whole time");
-        check(a != null && b != null && a.msPerSecond() * s < 2.0 && b.msPerSecond() * s < 2.0 && b.worstMs() >= 2.9, "each one's own: " + a + " " + b);
+        // Exact by construction (no timing bound: a busy machine may pause the thread anywhere): each one's own is its whole less the
+        // whole of the one it called.
+        check(a != null && b != null && c != null && Math.abs(a.msPerSecond() * s - (a.worstMs() - b.worstMs())) < 0.01
+            && Math.abs(b.msPerSecond() * s - (b.worstMs() - c.worstMs())) < 0.01 && b.worstMs() >= 2.9 && c.worstMs() >= 1.9,
+            "each one's own: its whole less the whole of what it called: " + a + " " + b + " " + c);
     }
 
     /** Frames from an older window, or left by a call that never exited, are dropped. */
@@ -257,6 +263,55 @@ public final class LagTests {
         check(LagMeter.lines(frames).get(0).contains("a frame takes 5.00 ms on average") && LagMeter.lines(frames).get(0).contains("(60 fps)"),
             "the client's frames and fps");
         check(LagMeter.ms(3.14159).equals("3.14") && LagMeter.ms(31.4159).equals("31.4") && LagMeter.ms(314.159).equals("314"), "ms as read");
+    }
+
+    /**
+     * 4.1.100: no server code searches the world for the mod's own NPCs: each asks its world's list (NpcIndex), which keeps every one of
+     * them as it joins (server worlds only), answers what the game's search would (box met, filter passed) and drops the gone.
+     */
+    private static void registry() throws Exception {
+        java.util.regex.Pattern search = java.util.regex.Pattern.compile(
+            "m_6443_\\((?:com\\.hex\\.kagune\\.control\\.npc\\.)?(GhoulNpc|EtoNpc|ChildNpc|HumanNpc|CcgAgent|FleshThrall)\\.class");
+        List<String> left = new ArrayList<>();
+        int asked = 0;
+        try (var files = Files.walk(Path.of("src/main/java/com/hex/kagune/control"))) {
+            for (Path file : (Iterable<Path>)files.filter(f -> f.toString().endsWith(".java"))::iterator) {
+                String source = Files.readString(file);
+                boolean client = file.toString().contains("/client/");
+                asked += source.split("NpcIndex\\.of\\(", -1).length - 1;
+                if (!client && !file.getFileName().toString().equals("NpcIndex.java") && search.matcher(source).find()) {
+                    left.add(file.getFileName().toString());
+                }
+            }
+        }
+        check(left.isEmpty(), "no server code searches the world box for the mod's NPCs: " + left);
+        check(asked >= 55, "the mod's NPC searches go through the list (" + asked + ")");
+        String index = read("src/main/java/com/hex/kagune/control/server/NpcIndex.java");
+        for (String kind : new String[] {"GhoulNpc", "CcgAgent", "HumanNpc", "EtoNpc", "ChildNpc", "FleshThrall"}) {
+            check(index.contains("entity instanceof com.hex.kagune.control.npc." + kind), "the list keeps every " + kind);
+        }
+        check(index.contains("if (event.getLevel() instanceof ServerLevel level && ours(event.getEntity())) {"), "kept as each joins a server world");
+        check(index.contains("if (body.m_213877_() || body.m_9236_() != level) {\n                    it.remove();"), "the gone dropped as walked");
+        check(index.contains("if (type.isInstance(body) && body.m_20191_().m_82381_(box)) {"), "the game's own answer: its kind, its box meeting the asked");
+        check(index.contains("found.removeIf(body -> !filter.test(body));"), "and the asker's filter");
+        check(index.contains("Collections.newSetFromMap(new WeakHashMap<>())") && index.contains("new WeakHashMap<>();"),
+            "held weakly (nothing kept alive by the list)");
+        check(index.contains("if (!(level instanceof ServerLevel)) {\n            return level.m_6443_(type, box, filter);"), "a client asks the game");
+    }
+
+    /** 4.1.100: an NPC looks round for a foe every half second near a player, every two seconds when none is within 64 blocks. */
+    private static void pace() throws Exception {
+        String pace = read("src/main/java/com/hex/kagune/control/server/NpcPace.java");
+        check(pace.contains("FAR = 64.0;") && pace.contains("NEAR_LOOK = 10L;") && pace.contains("FAR_LOOK = 40L;"), "64 blocks, 10 and 40 ticks");
+        check(pace.contains("return ago >= FAR_LOOK || ago >= NEAR_LOOK && !far(body, level);"), "near: every 10 ticks; far: every 40");
+        check(pace.contains("if (player.m_20280_(body) <= FAR * FAR) {"), "any player within 64 blocks (spectators see too)");
+        check(com.hex.kagune.control.server.NpcPace.due(10L, false) && !com.hex.kagune.control.server.NpcPace.due(9L, false)
+            && !com.hex.kagune.control.server.NpcPace.due(39L, true) && com.hex.kagune.control.server.NpcPace.due(40L, true),
+            "due: 10 ticks near, 40 far");
+        String ghoul = read("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java");
+        String agent = read("src/main/java/com/hex/kagune/control/server/AgentBrain.java");
+        check(ghoul.contains("mind.preySought == Long.MIN_VALUE || NpcPace.looks(npc, level, now - mind.preySought)"), "a ghoul's look paced");
+        check(agent.contains("current == null && NpcPace.looks(agent, level, ago(now, mind.preySought))"), "an investigator's look paced");
     }
 
     /** The build's guard and the game's side, as written. */

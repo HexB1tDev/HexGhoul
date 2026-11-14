@@ -203,7 +203,7 @@ public final class GhoulNpcBrain {
         if (AgentBrain.ccg(attacker) || attacker instanceof Player player && player.m_7500_()) {
             return;
         }
-        for (GhoulNpc one : near.m_9236_().m_6443_(GhoulNpc.class, near.m_20191_().m_82400_(GANG_CALL),
+        for (GhoulNpc one : NpcIndex.of(near.m_9236_(), GhoulNpc.class, near.m_20191_().m_82400_(GANG_CALL),
             o -> o.m_6084_() && o.mind != null && o.identity() != null && o.identity().ccg())) {
             Long was = one.mind.grudges.get(attacker.m_20148_());
             one.mind.grudges.put(attacker.m_20148_(), was == null ? until : Math.max(was, until));
@@ -239,7 +239,7 @@ public final class GhoulNpcBrain {
             }
             long until = now + com.hex.kagune.control.npc.AgentRules.MARKED;
             mind.grudges.put(player.m_20148_(), until);
-            for (GhoulNpc mate : npc.m_9236_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(GANG_KEEP),
+            for (GhoulNpc mate : NpcIndex.of(npc.m_9236_(), GhoulNpc.class, npc.m_20191_().m_82400_(GANG_KEEP),
                 other -> other != npc && other.m_6084_() && other.mind != null && mates(npc, other))) {
                 Long theirs = mate.mind.grudges.get(player.m_20148_());
                 mate.mind.grudges.put(player.m_20148_(), theirs == null ? until : Math.max(theirs, until));
@@ -276,7 +276,7 @@ public final class GhoulNpcBrain {
             return mind.wanderAt == Long.MAX_VALUE; // a follower does nothing else between looks (no stopping for passers-by)
         }
         GhoulNpc leader = npc;
-        for (GhoulNpc other : level.m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(GANG_KEEP), o -> o != npc && o.m_6084_() && mates(npc, o))) {
+        for (GhoulNpc other : NpcIndex.of(level, GhoulNpc.class, npc.m_20191_().m_82400_(GANG_KEEP), o -> o != npc && o.m_6084_() && mates(npc, o))) {
             if (other.m_20148_().compareTo(leader.m_20148_()) < 0) {
                 leader = other;
             }
@@ -537,7 +537,7 @@ public final class GhoulNpcBrain {
         }
         // 1.0.15: "never looked" is Long.MIN_VALUE, and now minus that overflows negative: it never looked round at all (wild ghouls
         // never fought back). Never-looked looks at once.
-        if (current == null && (mind.preySought == Long.MIN_VALUE || now - mind.preySought >= 10L)) {
+        if (current == null && (mind.preySought == Long.MIN_VALUE || NpcPace.looks(npc, level, now - mind.preySought))) { // 4.1.100: slower far from players
             mind.preySought = now;
             double best = Double.MAX_VALUE;
             ServerPlayer owner = owner(npc, mind);
@@ -1060,7 +1060,7 @@ public final class GhoulNpcBrain {
 
     /** True if a ghoul NPC walking with {@code player} is near them (the quests' ally tag). */
     public static boolean allyNear(ServerPlayer player) {
-        for (GhoulNpc npc : player.m_284548_().m_6443_(GhoulNpc.class, player.m_20191_().m_82400_(16.0), GhoulNpc::m_6084_)) {
+        for (GhoulNpc npc : NpcIndex.of(player.m_284548_(), GhoulNpc.class, player.m_20191_().m_82400_(16.0), GhoulNpc::m_6084_)) {
             if (allyOf(npc, player)) {
                 return true;
             }
@@ -1071,7 +1071,7 @@ public final class GhoulNpcBrain {
     /** How many ghoul NPCs walk with {@code player} round them now. */
     static int allies(ServerPlayer player) {
         int count = 0;
-        for (GhoulNpc npc : player.m_284548_().m_6443_(GhoulNpc.class, player.m_20191_().m_82400_(128.0), GhoulNpc::m_6084_)) {
+        for (GhoulNpc npc : NpcIndex.of(player.m_284548_(), GhoulNpc.class, player.m_20191_().m_82400_(128.0), GhoulNpc::m_6084_)) {
             if (allyOf(npc, player)) {
                 count++;
             }
@@ -1196,7 +1196,7 @@ public final class GhoulNpcBrain {
                 holds = true;
                 grudge = AOGIRI_GRUDGE;
                 if (!(attacker instanceof GhoulNpc kin && kin.identity() != null && kin.identity().aogiri())) {
-                    for (GhoulNpc comrade : npc.m_9236_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(AOGIRI_CALL),
+                    for (GhoulNpc comrade : NpcIndex.of(npc.m_9236_(), GhoulNpc.class, npc.m_20191_().m_82400_(AOGIRI_CALL),
                         other -> other != npc && other.m_6084_() && other.identity() != null && other.identity().aogiri() && other.mind != null)) {
                         comrade.mind.grudges.put(attacker.m_20148_(), now + AOGIRI_GRUDGE);
                         comrade.mind.preySought = Long.MIN_VALUE;
@@ -1210,7 +1210,7 @@ public final class GhoulNpcBrain {
                 holds = !own;
                 grudge = GANG_GRUDGE;
                 if (!own) {
-                    for (GhoulNpc mate : npc.m_9236_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(GANG_CALL),
+                    for (GhoulNpc mate : NpcIndex.of(npc.m_9236_(), GhoulNpc.class, npc.m_20191_().m_82400_(GANG_CALL),
                         other -> other != npc && other.m_6084_() && other.mind != null && mates(npc, other))) {
                         mate.mind.grudges.put(attacker.m_20148_(), now + GANG_GRUDGE);
                         mate.mind.preySought = Long.MIN_VALUE;

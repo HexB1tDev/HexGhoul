@@ -55,7 +55,7 @@ public final class VillageHumans {
                     if (!(villager instanceof net.minecraft.world.entity.npc.Villager) || villager.m_217043_().m_188503_(ODDS) != 0) {
                         continue;
                     }
-                    if (level.m_6443_(HumanNpc.class, villager.m_20191_().m_82400_(CROWD), human -> human.m_6084_()).size() >= MOST) {
+                    if (NpcIndex.of(level, HumanNpc.class, villager.m_20191_().m_82400_(CROWD), human -> human.m_6084_()).size() >= MOST) {
                         continue;
                     }
                     bring(level, villager);

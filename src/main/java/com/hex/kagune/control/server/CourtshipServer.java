@@ -82,7 +82,7 @@ public final class CourtshipServer {
 
     /** 2.1.5: true if a human village's people are about {@code player} (two at least, within {@link #VILLAGE_NEAR}). */
     static boolean villagers(ServerPlayer player) {
-        return player.m_284548_().m_6443_(com.hex.kagune.control.npc.HumanNpc.class, player.m_20191_().m_82400_(VILLAGE_NEAR), human -> human.m_6084_())
+        return NpcIndex.of(player.m_284548_(), com.hex.kagune.control.npc.HumanNpc.class, player.m_20191_().m_82400_(VILLAGE_NEAR), human -> human.m_6084_())
             .size() >= 2;
     }
 

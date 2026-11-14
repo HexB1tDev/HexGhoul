@@ -1,0 +1,58 @@
+[
+ {
+  "name": "one village in four for a hotel",
+  "file": "src/main/java/com/hex/kagune/control/village/HotelPlan.java",
+  "old": "ONE_IN = 2;",
+  "new": "ONE_IN = 4;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "the whole hotel on plains",
+  "file": "src/main/java/com/hex/kagune/control/village/HotelPlan.java",
+  "old": "PLAINS_SHARE = 75;",
+  "new": "PLAINS_SHARE = 100;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "every place held to the small one's flatness",
+  "file": "src/main/java/com/hex/kagune/control/village/DryLand.java",
+  "old": "return side <= SMALL_SIDE ? PLACE_FLAT : side <= MID_SIDE ? MID_PLACE_FLAT : BIG_PLACE_FLAT;",
+  "new": "return PLACE_FLAT;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "the hotels looked at after the ground",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "return inHotel(context, x, z) ? Optional.empty() : stub;",
+  "new": "return stub;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a stale claim never given up",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "if (!PlaceClaims.stale(id, taken, context.f_226629_())) {",
+  "new": "if (true) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a place built in any world of overworld biomes",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "if (!PlaceClaims.overworld(context.f_226622_())) {",
+  "new": "if (false) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a stale claim looked in every time asked",
+  "file": "src/main/java/com/hex/kagune/control/PlaceClaims.java",
+  "old": " || !CHECKED.add(id + \"@\" + taken[0] + \",\" + taken[1])) {",
+  "new": ") {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "the officials made at the claim's spot, not the place a player stands in",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "            // 4.1.94: her spot in the place a player stands in (any of hers this world built), else in the one her claim names.\n            int[] spot = spotByPlayers(level, key);",
+  "new": "            // 4.1.94: her spot in the place a player stands in (any of hers this world built), else in the one her claim names.\n            int[] spot = null;",
+  "suite": "CompanionTests"
+ }
+]

@@ -132,7 +132,7 @@ public final class AgentSpawner {
         }
         double r = STATION_NEAR;
         AABB round = new AABB(middle[0] - r, middle[1] - 64.0, middle[2] - r, middle[0] + r, middle[1] + 128.0, middle[2] + r);
-        if (!level.m_6443_(com.hex.kagune.control.npc.GhoulNpc.class, round, g -> g.m_6084_() && g.getPersistentData().m_128441_(POST + "X")).isEmpty()) {
+        if (!NpcIndex.of(level, com.hex.kagune.control.npc.GhoulNpc.class, round, g -> g.m_6084_() && g.getPersistentData().m_128441_(POST + "X")).isEmpty()) {
             return; // its squad is there
         }
         long now = level.m_46467_();
@@ -213,11 +213,11 @@ public final class AgentSpawner {
         double y = level.m_6924_(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)Math.floor(x), (int)Math.floor(z));
         double r = AgentRules.ALONE;
         double nearest = Double.MAX_VALUE;
-        for (CcgAgent other : level.m_6443_(CcgAgent.class, new AABB(x - r, y - r, z - r, x + r, y + r, z + r), CcgAgent::m_6084_)) {
+        for (CcgAgent other : NpcIndex.of(level, CcgAgent.class, new AABB(x - r, y - r, z - r, x + r, y + r, z + r), CcgAgent::m_6084_)) {
             nearest = Math.min(nearest, Math.hypot(other.m_20185_() - x, other.m_20189_() - z));
         }
         // 4.1.46: the CCG's ghoul division counts as the CCG's.
-        for (com.hex.kagune.control.npc.GhoulNpc other : level.m_6443_(com.hex.kagune.control.npc.GhoulNpc.class, new AABB(x - r, y - r, z - r, x + r, y + r, z + r),
+        for (com.hex.kagune.control.npc.GhoulNpc other : NpcIndex.of(level, com.hex.kagune.control.npc.GhoulNpc.class, new AABB(x - r, y - r, z - r, x + r, y + r, z + r),
             g -> g.m_6084_() && AgentBrain.ccg(g))) {
             nearest = Math.min(nearest, Math.hypot(other.m_20185_() - x, other.m_20189_() - z));
         }

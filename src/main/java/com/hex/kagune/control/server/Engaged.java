@@ -95,17 +95,17 @@ public final class Engaged {
         }
         ServerLevel level = player.m_284548_();
         net.minecraft.world.phys.AABB around = player.m_20191_().m_82400_(AROUND);
-        for (EtoNpc npc : level.m_6443_(EtoNpc.class, around, body -> body.m_6084_() && body.mind != null && body.m_19879_() != me)) {
+        for (EtoNpc npc : NpcIndex.of(level, EtoNpc.class, around, body -> body.m_6084_() && body.mind != null && body.m_19879_() != me)) {
             if (has(npc, player)) {
                 return npc.m_19879_();
             }
         }
-        for (ChildNpc child : level.m_6443_(ChildNpc.class, around, body -> body.m_6084_() && body.mind != null && body.m_19879_() != me)) {
+        for (ChildNpc child : NpcIndex.of(level, ChildNpc.class, around, body -> body.m_6084_() && body.mind != null && body.m_19879_() != me)) {
             if (has(child, player)) {
                 return child.m_19879_();
             }
         }
-        for (HumanNpc human : level.m_6443_(HumanNpc.class, around, body -> body.m_6084_() && body.mind != null && body.m_19879_() != me)) {
+        for (HumanNpc human : NpcIndex.of(level, HumanNpc.class, around, body -> body.m_6084_() && body.mind != null && body.m_19879_() != me)) {
             if (has(human, player, now)) {
                 return human.m_19879_();
             }

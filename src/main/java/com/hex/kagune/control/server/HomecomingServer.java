@@ -110,7 +110,7 @@ final class HomecomingServer {
         ChildTemper temper = ChildTemper.of(child.id, child.mother, child.father);
         long at = now + SiblingWelcome.FIRST;
         int spoke = 0;
-        for (ChildNpc other : level.m_6443_(ChildNpc.class, npc.m_20191_().m_82400_(SiblingWelcome.NEAR), body -> body != npc && body.m_6084_() && body.mind != null)) {
+        for (ChildNpc other : NpcIndex.of(level, ChildNpc.class, npc.m_20191_().m_82400_(SiblingWelcome.NEAR), body -> body != npc && body.m_6084_() && body.mind != null)) {
             if (spoke >= SiblingWelcome.MOST) {
                 break;
             }
@@ -178,7 +178,7 @@ final class HomecomingServer {
     private static EtoNpc waiting(Children.Child child, ServerPlayer player, ServerLevel level) {
         EtoNpc best = null;
         double bestDistance = WAITING * WAITING;
-        for (EtoNpc npc : level.m_6443_(EtoNpc.class, player.m_20191_().m_82400_(WAITING), body -> body.m_6084_() && body.mind != null)) {
+        for (EtoNpc npc : NpcIndex.of(level, EtoNpc.class, player.m_20191_().m_82400_(WAITING), body -> body.m_6084_() && body.mind != null)) {
             if (!child.parent(Pregnancies.npc(npc.persona().key())) || npc.mind.target != 0 || npc.m_5803_() || npc.following() != null
                 || Conversation.in(npc) != null || npc.mind.duty != null) {
                 continue;

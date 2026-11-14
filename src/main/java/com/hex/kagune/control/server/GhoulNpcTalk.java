@@ -263,7 +263,7 @@ public final class GhoulNpcTalk {
         GhoulNpcBrain.listen(npc, npc.mind, null, now);
         if (!answer.welcome()) {
             // Every member about the hideout turns on them.
-            for (GhoulNpc member : player.m_284548_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(160.0),
+            for (GhoulNpc member : NpcIndex.of(player.m_284548_(), GhoulNpc.class, npc.m_20191_().m_82400_(160.0),
                 m -> m.m_6084_() && m.identity() != null && m.identity().aogiri() && m.mind != null)) {
                 member.mind.grudges.put(player.m_20148_(), now + AogiriGuard.BAN);
             }

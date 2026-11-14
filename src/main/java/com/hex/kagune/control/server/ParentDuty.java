@@ -176,7 +176,7 @@ final class ParentDuty {
      * home. One that already reached it carries on (their talk, the walk home, the word at the door).
      */
     static void broughtHome(ChildNpc child, ServerLevel level) {
-        for (EtoNpc npc : level.m_6443_(EtoNpc.class, child.m_20191_().m_82400_(96.0), body -> body.mind != null && body.mind.duty != null)) {
+        for (EtoNpc npc : NpcIndex.of(level, EtoNpc.class, child.m_20191_().m_82400_(96.0), body -> body.mind != null && body.mind.duty != null)) {
             if (child.m_20148_().equals(npc.mind.duty.child) && !npc.mind.duty.reached) {
                 finish(npc, npc.mind, child, level);
                 npc.m_21573_().m_26573_();
@@ -389,7 +389,7 @@ final class ParentDuty {
     private static EtoNpc nearParent(ChildNpc child, Children.Child known, ServerLevel level, double range) {
         EtoNpc best = null;
         double bestDistance = range * range;
-        for (EtoNpc npc : level.m_6443_(EtoNpc.class, child.m_20191_().m_82400_(range), body -> body.m_6084_() && body.mind != null)) {
+        for (EtoNpc npc : NpcIndex.of(level, EtoNpc.class, child.m_20191_().m_82400_(range), body -> body.m_6084_() && body.mind != null)) {
             String key = Pregnancies.npc(npc.persona().key());
             double distance = npc.m_20280_(child);
             if (known.parent(key) && distance <= bestDistance && npc.m_142582_(child)) {

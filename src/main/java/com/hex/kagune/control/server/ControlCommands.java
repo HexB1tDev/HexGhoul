@@ -432,7 +432,7 @@ final class ControlCommands {
     private static int familyGrow(CommandContext<CommandSourceStack> context, ServerPlayer player) {
         net.minecraft.server.level.ServerLevel level = player.m_284548_();
         String me = Pregnancies.player(player.m_20148_());
-        for (com.hex.kagune.control.npc.ChildNpc npc : level.m_6443_(com.hex.kagune.control.npc.ChildNpc.class, player.m_20191_().m_82400_(16.0),
+        for (com.hex.kagune.control.npc.ChildNpc npc : NpcIndex.of(level, com.hex.kagune.control.npc.ChildNpc.class, player.m_20191_().m_82400_(16.0),
             child -> child.m_6084_())) {
             Children.Child child = Children.get(level, npc.childId());
             if (child != null && child.parent(me)) {
@@ -579,7 +579,7 @@ final class ControlCommands {
     }
 
     private static int maxEto(CommandContext<CommandSourceStack> context, ServerPlayer player, com.hex.kagune.control.npc.Persona persona) {
-        if (player.m_9236_().m_6443_(com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(10.0),
+        if (NpcIndex.of(player.m_9236_(), com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(10.0),
             npc -> npc.m_6084_() && npc.persona() == persona).isEmpty()) {
             context.getSource().m_81352_(Component.m_237113_("No " + persona.name() + " within 10 blocks."));
             return 0;

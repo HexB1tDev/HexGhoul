@@ -207,7 +207,7 @@ public final class HumanApproachServer {
 
     /** Another of the people near it (within 32 blocks) to talk about, or null. */
     static HumanNpc neighbour(HumanNpc human, ServerLevel level, int roll) {
-        List<HumanNpc> near = level.m_6443_(HumanNpc.class, human.m_20191_().m_82400_(32.0), o -> o != human && o.m_6084_());
+        List<HumanNpc> near = NpcIndex.of(level, HumanNpc.class, human.m_20191_().m_82400_(32.0), o -> o != human && o.m_6084_());
         return near.isEmpty() ? null : near.get(Math.floorMod(roll >> 5, near.size()));
     }
 }

@@ -1223,7 +1223,7 @@ public final class ChildBrain {
                 bestDistance = player.m_20280_(npc);
             }
         }
-        for (EtoNpc companion : level.m_6443_(EtoNpc.class, npc.m_20191_().m_82400_(24.0), body -> body.m_6084_() && body.mind != null)) {
+        for (EtoNpc companion : NpcIndex.of(level, EtoNpc.class, npc.m_20191_().m_82400_(24.0), body -> body.m_6084_() && body.mind != null)) {
             if (child.parent(Pregnancies.npc(companion.persona().key())) && companion.m_20280_(npc) < bestDistance) {
                 best = companion;
                 bestDistance = companion.m_20280_(npc);

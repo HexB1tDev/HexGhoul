@@ -76,7 +76,7 @@ public final class BlendedServer {
             return;
         }
         NpcMemory memory = NpcMemoryServer.of(player);
-        for (EtoNpc npc : level.m_6443_(EtoNpc.class, player.m_20191_().m_82400_(10.0), npc -> npc.m_6084_() && npc.mind != null)) {
+        for (EtoNpc npc : NpcIndex.of(level, EtoNpc.class, player.m_20191_().m_82400_(10.0), npc -> npc.m_6084_() && npc.mind != null)) {
             String key = npc.persona().key();
             if (!partners.containsKey(key) || memory.get(key, NpcMemory.JEALOUS, Long.MIN_VALUE) <= now || !SceneServer.sees(npc, player, 10.0)
                 || !Conversation.free(npc, level, now) || EtoBrain.busy(npc) || npc.mind.kiss != null || npc.mind.holding != null || npc.mind.toward != null
@@ -96,7 +96,7 @@ public final class BlendedServer {
             return;
         }
         List<EtoNpc> near = new ArrayList<>();
-        for (EtoNpc npc : level.m_6443_(EtoNpc.class, player.m_20191_().m_82400_(AROUND), npc -> npc.m_6084_() && npc.mind != null)) {
+        for (EtoNpc npc : NpcIndex.of(level, EtoNpc.class, player.m_20191_().m_82400_(AROUND), npc -> npc.m_6084_() && npc.mind != null)) {
             if (partners.containsKey(npc.persona().key())) {
                 near.add(npc);
             }
@@ -190,7 +190,7 @@ public final class BlendedServer {
             byId.put(child.id, child);
         }
         List<ChildNpc> near = new ArrayList<>();
-        for (ChildNpc npc : level.m_6443_(ChildNpc.class, player.m_20191_().m_82400_(AROUND), npc -> npc.m_6084_() && npc.mind != null
+        for (ChildNpc npc : NpcIndex.of(level, ChildNpc.class, player.m_20191_().m_82400_(AROUND), npc -> npc.m_6084_() && npc.mind != null
             && byId.containsKey(npc.childId()))) {
             near.add(npc);
         }
@@ -294,7 +294,7 @@ public final class BlendedServer {
             return;
         }
         Persona sweet = Persona.of(key);
-        for (EtoNpc npc : level.m_6443_(EtoNpc.class, player.m_20191_().m_82400_(24.0), npc -> npc.m_6084_() && npc.mind != null)) {
+        for (EtoNpc npc : NpcIndex.of(level, EtoNpc.class, player.m_20191_().m_82400_(24.0), npc -> npc.m_6084_() && npc.mind != null)) {
             String own = npc.persona().key();
             if (!others.containsKey(own) || own.equals(key) || !SceneServer.sees(npc, player, 24.0)) {
                 continue;

@@ -553,7 +553,7 @@ public final class HumanBrain {
             }
         }
         // 1.3.68: a ghoul NPC only with its eyes on or its kagune out (by day a wild one hides both: just a person).
-        for (GhoulNpc ghoul : level.m_6443_(GhoulNpc.class, human.m_20191_().m_82400_(HumanRules.NOTICE),
+        for (GhoulNpc ghoul : NpcIndex.of(level, GhoulNpc.class, human.m_20191_().m_82400_(HumanRules.NOTICE),
                 living -> living.m_6084_() && living.mind != null && (living.mind.out || living.mind.eyes))) {
             double distance = Math.sqrt(ghoul.m_20280_(human));
             if (HumanRules.notices(distance, true) && distance < bestDistance) {
@@ -601,7 +601,7 @@ public final class HumanBrain {
         com.hex.kagune.control.npc.CcgAgent best = null;
         double bestDistance = Double.MAX_VALUE;
         double range = com.hex.kagune.control.npc.AgentRules.DEFEND;
-        for (com.hex.kagune.control.npc.CcgAgent agent : level.m_6443_(com.hex.kagune.control.npc.CcgAgent.class, human.m_20191_().m_82400_(range),
+        for (com.hex.kagune.control.npc.CcgAgent agent : NpcIndex.of(level, com.hex.kagune.control.npc.CcgAgent.class, human.m_20191_().m_82400_(range),
                 a -> a.m_6084_() && a != danger)) {
             // Not one it would have to run past the danger to reach.
             boolean past = danger.m_20280_(agent) < danger.m_20280_(human) && agent.m_20280_(human) > danger.m_20280_(human);
@@ -706,7 +706,7 @@ public final class HumanBrain {
      * then (when it may trade again) a trade with one within 20 who is free.
      */
     static void meet(HumanNpc human, Mind mind, VillagePlace.Place place, ServerLevel level, long now) {
-        for (HumanNpc other : level.m_6443_(HumanNpc.class, human.m_20191_().m_82400_(20.0), o -> o != human && o.m_6084_() && o.mind != null
+        for (HumanNpc other : NpcIndex.of(level, HumanNpc.class, human.m_20191_().m_82400_(20.0), o -> o != human && o.m_6084_() && o.mind != null
                 && o.mind.trade == null && now >= o.mind.shakenUntil && VillagePlace.of(o) != null)) {
             double d = other.m_20280_(human);
             if (d <= 4.0 * 4.0 && now - mind.greetAt >= 1200L && now - other.mind.greetAt >= 1200L && human.m_217043_().m_188503_(4) == 0) {

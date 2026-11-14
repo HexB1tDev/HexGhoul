@@ -1098,7 +1098,7 @@ public final class AgentBrain {
         if (now % every != Math.floorMod(agent.m_19879_(), every)) {
             return null;
         }
-        for (CcgAgent other : level.m_6443_(CcgAgent.class, agent.m_20191_().m_82400_(72.0), a -> a != agent && a.m_6084_())) {
+        for (CcgAgent other : NpcIndex.of(level, CcgAgent.class, agent.m_20191_().m_82400_(72.0), a -> a != agent && a.m_6084_())) {
             if (mind.partner.equals(other.m_20148_())) {
                 mind.partnerSeen = now;
                 mind.partnerId = other.m_19879_();
@@ -1159,7 +1159,7 @@ public final class AgentBrain {
             || !wanted(agent, mind, partner, current, now, true))) {
             current = null;
         }
-        if (current == null && ago(now, mind.preySought) >= 10L) {
+        if (current == null && NpcPace.looks(agent, level, ago(now, mind.preySought))) { // 4.1.100: slower far from players
             mind.preySought = now;
             // What its partner fights, it fights.
             Mind theirs = partner == null ? null : partner.mind;
@@ -1196,7 +1196,7 @@ public final class AgentBrain {
     static LivingEntity defend(CcgAgent agent, ServerLevel level, long now) {
         LivingEntity best = null;
         double bestDistance = Double.MAX_VALUE;
-        for (com.hex.kagune.control.npc.HumanNpc human : level.m_6443_(com.hex.kagune.control.npc.HumanNpc.class,
+        for (com.hex.kagune.control.npc.HumanNpc human : NpcIndex.of(level, com.hex.kagune.control.npc.HumanNpc.class,
                 agent.m_20191_().m_82400_(AgentRules.DEFEND), h -> h.m_6084_() && h.mind != null)) {
             if (human.mind.hurtBy == null || now >= human.mind.hurtUntil) {
                 continue;
@@ -1208,7 +1208,7 @@ public final class AgentBrain {
                 bestDistance = living.m_20280_(agent);
             }
         }
-        for (GhoulNpc ghoul : level.m_6443_(GhoulNpc.class, agent.m_20191_().m_82400_(AgentRules.DEFEND), g -> g.m_6084_() && g.mind != null)) {
+        for (GhoulNpc ghoul : NpcIndex.of(level, GhoulNpc.class, agent.m_20191_().m_82400_(AgentRules.DEFEND), g -> g.m_6084_() && g.mind != null)) {
             if (ghoul.mind.prey != 0 && level.m_6815_(ghoul.mind.prey) instanceof com.hex.kagune.control.npc.HumanNpc
                 && ghoul.m_20280_(agent) < bestDistance) {
                 best = ghoul;
@@ -2830,7 +2830,7 @@ public final class AgentBrain {
         mark(agent.mind, attacker.m_20148_(), until);
         agent.mind.preySought = Long.MIN_VALUE;
         if (agent.mind.partner != null) {
-            for (CcgAgent other : level.m_6443_(CcgAgent.class, agent.m_20191_().m_82400_(48.0), a -> a != agent && a.mind != null)) {
+            for (CcgAgent other : NpcIndex.of(level, CcgAgent.class, agent.m_20191_().m_82400_(48.0), a -> a != agent && a.mind != null)) {
                 if (agent.mind.partner.equals(other.m_20148_())) {
                     mark(other.mind, attacker.m_20148_(), until);
                     other.mind.preySought = Long.MIN_VALUE;
@@ -2853,7 +2853,7 @@ public final class AgentBrain {
         if (ccg(attacker) || attacker instanceof Player player && player.m_7500_()) {
             return;
         }
-        for (CcgAgent other : near.m_9236_().m_6443_(CcgAgent.class, near.m_20191_().m_82400_(GhoulNpcBrain.GANG_CALL), a -> a.m_6084_() && a.mind != null)) {
+        for (CcgAgent other : NpcIndex.of(near.m_9236_(), CcgAgent.class, near.m_20191_().m_82400_(GhoulNpcBrain.GANG_CALL), a -> a.m_6084_() && a.mind != null)) {
             mark(other.mind, attacker.m_20148_(), until);
             other.mind.preySought = Long.MIN_VALUE;
         }
@@ -2861,7 +2861,7 @@ public final class AgentBrain {
 
     /** 4.1.46: true if an investigator within 48 blocks of {@code near} holds something against {@code player} (marked, struck). */
     static boolean marked(LivingEntity near, ServerPlayer player, long now) {
-        for (CcgAgent other : near.m_9236_().m_6443_(CcgAgent.class, near.m_20191_().m_82400_(48.0), a -> a.m_6084_() && a.mind != null)) {
+        for (CcgAgent other : NpcIndex.of(near.m_9236_(), CcgAgent.class, near.m_20191_().m_82400_(48.0), a -> a.m_6084_() && a.mind != null)) {
             Long until = other.mind.grudges.get(player.m_20148_());
             if (until != null && until > now) {
                 return true;

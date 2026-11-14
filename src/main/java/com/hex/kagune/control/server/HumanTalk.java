@@ -755,7 +755,7 @@ public final class HumanTalk {
 
     /** 2.1.3: another of the village's people near {@code human} (for a word about them), or null. */
     private static HumanNpc neighbour(HumanNpc human, ServerLevel level) {
-        List<HumanNpc> near = level.m_6443_(HumanNpc.class, human.m_20191_().m_82400_(48.0), other -> other != human && other.m_6084_());
+        List<HumanNpc> near = NpcIndex.of(level, HumanNpc.class, human.m_20191_().m_82400_(48.0), other -> other != human && other.m_6084_());
         return near.isEmpty() ? null : near.get(human.m_217043_().m_188503_(near.size()));
     }
 

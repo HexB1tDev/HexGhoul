@@ -104,11 +104,27 @@ public final class LagServer {
         }
         LagMeter.Report report = LagMeter.close(LagMeter.Side.SERVER);
         if (report != null) {
-            tell(LagMeter.lines(report));
+            List<String> lines = new ArrayList<>(LagMeter.lines(report));
+            lines.add(loaded());
+            tell(lines);
         }
         if (logging) {
             open(LOG_SECONDS);
         }
+    }
+
+    /** 4.1.100: how many of the mod's NPCs and players the worlds hold now (NpcIndex), for the report's reader. */
+    private static String loaded() {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        int npcs = 0;
+        int players = 0;
+        if (server != null) {
+            for (net.minecraft.server.level.ServerLevel level : server.m_129785_()) {
+                npcs += NpcIndex.count(level);
+                players += level.m_6907_().size();
+            }
+        }
+        return "§7 Loaded now: §f" + npcs + "§7 of the mod's NPCs, §f" + players + "§7 players";
     }
 
     private static void tell(List<String> lines) {

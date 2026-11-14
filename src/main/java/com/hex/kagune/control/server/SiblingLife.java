@@ -68,7 +68,7 @@ final class SiblingLife {
         if (stage == ChildStage.BABY || !Conversation.free(npc, level, now)) {
             return;
         }
-        for (ChildNpc other : level.m_6443_(ChildNpc.class, npc.m_20191_().m_82400_(Siblings.NEAR), body -> body != npc && body.m_6084_())) {
+        for (ChildNpc other : NpcIndex.of(level, ChildNpc.class, npc.m_20191_().m_82400_(Siblings.NEAR), body -> body != npc && body.m_6084_())) {
             Children.Child known = Children.get(level, other.childId());
             ChildBrain.Mind them = other.mind;
             if (them == null || known == null || !siblings(child, known) || !Conversation.free(other, level, now) || !them.talk.isEmpty()
@@ -148,7 +148,7 @@ final class SiblingLife {
     private static void breakUp(Conversation squabble, ChildNpc npc, ChildNpc other, Children.Child child, Children.Child known, ServerLevel level,
                                 long now) {
         EtoNpc parent = null;
-        for (EtoNpc body : level.m_6443_(EtoNpc.class, npc.m_20191_().m_82400_(16.0), b -> b.m_6084_() && b.mind != null)) {
+        for (EtoNpc body : NpcIndex.of(level, EtoNpc.class, npc.m_20191_().m_82400_(16.0), b -> b.m_6084_() && b.mind != null)) {
             String key = Pregnancies.npc(body.persona().key());
             if (child.parent(key) && known.parent(key) && body.m_142582_(npc) && Conversation.free(body, level, now)) {
                 parent = body;
@@ -562,7 +562,7 @@ final class SiblingLife {
      * Its kagune just came out: a brother or sister near who sees it has a word (fighting the same thing: "got your back"), not too often.
      */
     static void kagune(ChildNpc npc, Children.Child child, ServerLevel level, long now) {
-        for (ChildNpc other : level.m_6443_(ChildNpc.class, npc.m_20191_().m_82400_(12.0), body -> body != npc && body.m_6084_() && body.mind != null)) {
+        for (ChildNpc other : NpcIndex.of(level, ChildNpc.class, npc.m_20191_().m_82400_(12.0), body -> body != npc && body.m_6084_() && body.mind != null)) {
             Children.Child known = Children.get(level, other.childId());
             if (known == null || !siblings(child, known) || now - other.mind.siblingRemarkAt < Siblings.REMARKS_EVERY || !other.m_142582_(npc)
                 || other.m_5803_() || Conversation.in(other) != null) {

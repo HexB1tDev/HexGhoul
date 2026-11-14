@@ -1810,7 +1810,7 @@ public final class EtoServer {
         // 2.1.2: a courtship chapter of kills counts. 2.1.5: Doves of a rank (alone or with the companion along), Pack ghouls, ghouls
         // preying on a village, as well as before (at night, at night with them along, any wild ghoul).
         int rank = dead instanceof com.hex.kagune.control.npc.CcgAgent agent ? AgentBrain.rankLevel(agent) : -1;
-        boolean nearHumans = dead instanceof GhoulNpc && !killer.m_284548_().m_6443_(com.hex.kagune.control.npc.HumanNpc.class,
+        boolean nearHumans = dead instanceof GhoulNpc && !NpcIndex.of(killer.m_284548_(), com.hex.kagune.control.npc.HumanNpc.class,
             dead.m_20191_().m_82400_(CourtshipServer.VILLAGE_NEAR), human -> human.m_6084_()).isEmpty();
         boolean pack = dead instanceof GhoulNpc packed && packed.identity() != null
             && packed.identity().temper() == com.hex.kagune.control.npc.NpcTemper.PACK;

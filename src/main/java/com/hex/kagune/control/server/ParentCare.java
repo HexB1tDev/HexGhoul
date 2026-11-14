@@ -36,7 +36,7 @@ final class ParentCare {
     /** Its children about it still young enough to be looked after (bodies in the world, nearest first not guaranteed). */
     static java.util.List<ChildNpc> children(EtoNpc npc, ServerLevel level) {
         String key = Pregnancies.npc(npc.persona().key());
-        return level.m_6443_(ChildNpc.class, npc.m_20191_().m_82400_(LOOKS), child -> {
+        return NpcIndex.of(level, ChildNpc.class, npc.m_20191_().m_82400_(LOOKS), child -> {
             if (!child.m_6084_() || child.stage.older() || child.m_5803_()) {
                 return false; // 1.3.21: a sleeping child is left to sleep
             }
