@@ -278,6 +278,7 @@ public final class EtoBrain {
                 // her, a body of hers waits where it was made, and the one a player comes to is her.
                 UniqueNpc slot = UniqueNpcs.get(level, npc.persona().key());
                 if (slot.met || slot.partner != null || metByAnyone(level, npc.persona().key())) {
+                    gone(npc, "the world's own is elsewhere (" + slot.body + ")");
                     npc.m_146870_();
                     return;
                 }
@@ -285,6 +286,7 @@ public final class EtoBrain {
                 // the last twenty seconds: loaded, ticking): she is there, so this one leaves at once (it waited, or took her place as a player
                 // came near, and both stayed). Only a body of hers lying unloaded far off is stood in for.
                 if (slot.alive && slot.body != null && !slot.body.equals(npc.m_20148_()) && slot.seen != Long.MIN_VALUE && now - slot.seen < 400L) {
+                    gone(npc, "her body is about elsewhere");
                     npc.m_146870_();
                     return;
                 }
@@ -323,6 +325,7 @@ public final class EtoBrain {
             home = npc.settle();
         }
         if (now % 200L == 7L && !UniqueNpcs.claim(level, npc.persona().key(), npc.m_20148_(), home)) {
+            gone(npc, "another body holds her slot");
             npc.m_146870_();
             return;
         }
@@ -2004,6 +2007,14 @@ public final class EtoBrain {
         return new ItemStack(item, id == null ? 0 : 1);
     }
 
+    /** 4.1.98: an official's body sent away, told in the log with why (so a missing one can be traced). */
+    static void gone(EtoNpc npc, String why) {
+        if (com.hex.kagune.control.npc.HomePlace.of(npc.persona().key()) != null) {
+            com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: a body of " + npc.persona().key() + " at " + (int)Math.floor(npc.m_20185_()) + " "
+                + (int)Math.floor(npc.m_20186_()) + " " + (int)Math.floor(npc.m_20189_()) + " sent away: " + why);
+        }
+    }
+
     /** She died: nothing of hers is dropped from her hands, the world remembers it, and her shards go out. */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void died(LivingDeathEvent event) {
@@ -2013,6 +2024,12 @@ public final class EtoBrain {
         npc.m_21008_(InteractionHand.MAIN_HAND, stack(null));
         npc.m_21008_(InteractionHand.OFF_HAND, stack(null));
         UniqueNpcs.died(level, npc.persona().key(), npc.m_20148_());
+        if (com.hex.kagune.control.npc.HomePlace.of(npc.persona().key()) != null) {
+            // 4.1.98: an official's death told in the log (where, of what): she is back at her spot a day after.
+            com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + npc.persona().key() + " died at " + (int)Math.floor(npc.m_20185_()) + " "
+                + (int)Math.floor(npc.m_20186_()) + " " + (int)Math.floor(npc.m_20189_()) + " (" + (event.getSource() == null ? "?" : event.getSource().m_19385_())
+                + "); back at her spot a day after");
+        }
         // 1.3.6: her tentacles go with her, and whatever her flesh held is let go.
         EtoWatch.forget(npc);
         EtoArm.forget(npc);

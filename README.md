@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.98 (HexGhoul): the gang leaders are made in their places even when the world remembers a lost body of theirs (testing)
+
+See `.github/release-notes-4.1.98.md`. `UniqueNpcs.takesOver`: the slot's body holds her place only if it is `about` (loaded, alive);
+`keepPlaces`: `slot.away` counts only while her body is live; the log says each remake (`keepPlaces`), each body sent away
+(`EtoBrain.gone`) and each official's death (`EtoBrain.died`).
+
 ## 4.1.97 (HexGhoul): quest info out of the chat: the details in the quest menu, short notices on the action bar (testing)
 
 See `.github/release-notes-4.1.97.md`. `JoinServer.flash` (the action bar, `Live.quietUntil` holds it 3 s over `bar`); the makings and

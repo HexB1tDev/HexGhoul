@@ -98,7 +98,12 @@ public final class UniqueNpcs {
     public static boolean takesOver(ServerLevel level, String key, Mob body) {
         UniqueNpc slot = get(level, key);
         int[] home = slot.spawn();
-        boolean slotHome = (slot.origined || slot.homed) && atOwnPlace(level, key, home[0] + 0.5, home[1], home[2] + 0.5);
+        // 4.1.98 (the owner: "same issue PRESISTS, 5 times ive asks for this to be patched, CCG general, Gas mask leader, Circus Leader ARE NOT
+        // SPAWNING"): the world's own body holds her place only if it is really about (loaded, alive). One remembered at home but lost (it lay
+        // in ground long unloaded, an older version's, gone with its chunk) made every body of hers her place built a stray, sent away on its
+        // first tick once anyone had met her: never her again.
+        boolean about = slot.body != null && level.m_8791_(slot.body) instanceof Mob there && there.m_6084_();
+        boolean slotHome = about && (slot.origined || slot.homed) && atOwnPlace(level, key, home[0] + 0.5, home[1], home[2] + 0.5);
         return com.hex.kagune.control.npc.HomePlace.takesOver(atOwnPlace(level, key, body.m_20185_(), body.m_20186_(), body.m_20189_()), slotHome,
             slot.stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED);
     }
@@ -526,7 +531,9 @@ public final class UniqueNpcs {
                 continue;
             }
             boolean inPlace = live != null && atOwnPlace(level, key, live.m_20185_(), live.m_20186_(), live.m_20189_());
-            boolean along = live != null && (live.following() != null || live.mind != null && live.mind.holding != null) || slot != null && slot.away;
+            // 4.1.98: left waiting somewhere counts only while that body of hers is about; one lost far off (her slot still "away") kept her
+            // from ever being made in her place again.
+            boolean along = live != null && (live.following() != null || live.mind != null && live.mind.holding != null || slot != null && slot.away);
             BlockPos was = live == null ? null : live.origin();
             if (inPlace && !along && !married && was != null
                 && com.hex.kagune.control.npc.HomePlace.astray(was.m_123341_(), was.m_123342_(), was.m_123343_(), home.m_123341_(), home.m_123342_(), home.m_123343_())) {
@@ -547,6 +554,9 @@ public final class UniqueNpcs {
             }
             PLACE_WATCHED.remove(key);
             body.m_7678_(spot[0] + 0.5, NpcFooting.feet(level, body, spot[0] + 0.5, spot[1], spot[2] + 0.5), spot[2] + 0.5, spot[3], 0.0F);
+            // 4.1.98: told in the log, so a missing official can be traced.
+            com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + key + " made at her spot " + spot[0] + " " + spot[1] + " " + spot[2]
+                + " (none of her in her place" + (live != null ? "; the one elsewhere sent away" : "") + ")");
             body.f_20885_ = spot[3];
             body.f_20883_ = spot[3];
             made(body, key);
