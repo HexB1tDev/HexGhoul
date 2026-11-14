@@ -9,6 +9,13 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.90 (HexGhoul): the structures at home in TerraBlender's biomes (testing)
+
+See `.github/release-notes-4.1.90.md`. `data/hexkagune/tags/worldgen/biome/plains.json` (the hotel's land) takes Regions Unexplored's and Oh
+The Biomes We've Gone's open fields; `data/minecraft/tags/worldgen/biome/has_structure/village_plains.json` (new, `replace: false`) lets
+vanilla's plains villages stand there too (a hotel stands only beside a village); `wet.json` and `steep.json` know those mods' swamps,
+rivers, beaches, peaks and slopes. Every modded entry `required: false`. `NpcTests`; 11 rules sabotaged (`docs/handoff/sabotage-4.1.90.json`).
+
 ## 4.1.89 (HexGhoul): a woman's coat takes her chest's shape (the CCG and ghoul outfits) (testing)
 
 See `.github/release-notes-4.1.89.md`. `outfit/OutfitFit` (pure): a coat's body cubes cut (`cutAll`: every `STEP` 0.5 px across the bust's

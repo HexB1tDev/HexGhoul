@@ -58,6 +58,90 @@
     {
       "id": "#c:is_beach",
       "required": false
+    },
+    {
+      "id": "regions_unexplored:marsh",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:fen",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:fungal_fen",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:bayou",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:old_growth_bayou",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:ancient_delta",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:muddy_river",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:cold_river",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:tropical_river",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:hyacinth_deeps",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:rocky_reef",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:grassy_beach",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:gravel_beach",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:bayou",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:cypress_swamplands",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:cypress_wetlands",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:white_mangrove_marshes",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:dead_sea",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:dacite_shore",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:rainbow_beach",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:lush_stacks",
+      "required": false
     }
   ]
 }

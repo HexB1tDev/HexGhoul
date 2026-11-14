@@ -4044,12 +4044,49 @@ public final class NpcTests {
         while (id.find()) {
             plainsIds.add(id.group(1));
         }
-        check(plainsIds.equals(java.util.List.of("minecraft:plains", "minecraft:sunflower_plains", "minecraft:snowy_plains", "biomesoplenty:field",
-                "biomesoplenty:grassland", "biomesoplenty:pasture", "biomesoplenty:prairie", "biomesoplenty:lavender_field"))
-            && plainsTag.split("\"required\": false").length == 6 && !plainsTag.contains("#") && !plainsTag.contains("meadow")
-            && !plainsTag.contains("highland") && !plainsTag.contains("rocky_shrubland"),
-            "a hotel's biomes: vanilla's plains and Biomes O' Plenty's open grasslands (each only if it is there); never forge:is_plains (the meadow, "
-                + "BOP's highland and rocky shrubland are in it): " + plainsIds);
+        // 4.1.90 (the owner: "adapt the mod so that the structures also spawn in the mod called Terra Blender. So research should add a bunch
+        // of flat biomes from that mod"): and the open fields of TerraBlender's biome mods, Regions Unexplored's and Oh The Biomes We've Gone's.
+        java.util.List<String> flat = java.util.List.of("regions_unexplored:barley_fields", "regions_unexplored:clover_plains",
+            "regions_unexplored:flower_fields", "regions_unexplored:grassland", "regions_unexplored:poppy_fields", "regions_unexplored:prairie",
+            "regions_unexplored:pumpkin_fields", "regions_unexplored:steppe", "regions_unexplored:shrubland", "biomeswevegone:allium_shrubland",
+            "biomeswevegone:amaranth_grassland", "biomeswevegone:prairie", "biomeswevegone:rose_fields", "biomeswevegone:pumpkin_valley");
+        java.util.List<String> hotelBiomes = new java.util.ArrayList<>(java.util.List.of("minecraft:plains", "minecraft:sunflower_plains",
+            "minecraft:snowy_plains", "biomesoplenty:field", "biomesoplenty:grassland", "biomesoplenty:pasture", "biomesoplenty:prairie",
+            "biomesoplenty:lavender_field"));
+        hotelBiomes.addAll(flat);
+        check(plainsIds.equals(hotelBiomes) && plainsTag.split("\"required\": false").length == 6 + flat.size() && !plainsTag.contains("#")
+            && !plainsTag.contains("meadow") && !plainsTag.contains("highland") && !plainsTag.contains("rocky_shrubland")
+            && !plainsTag.contains("mountain") && !plainsTag.contains("hills") && !plainsTag.contains("slopes"),
+            "a hotel's biomes: vanilla's plains, Biomes O' Plenty's open grasslands and TerraBlender's mods' open fields (each only if it is there); "
+                + "never forge:is_plains (the meadow, BOP's highland and rocky shrubland are in it), never a highland, hill or slope: " + plainsIds);
+        // A hotel stands only beside a village: plains villages may stand in the same fields (each only if it is there).
+        String villages = read("src/main/resources/data/minecraft/tags/worldgen/biome/has_structure/village_plains.json");
+        boolean everyField = villages.contains("\"replace\": false") && villages.split("\"required\": false").length == flat.size() + 1;
+        for (String field : flat) {
+            everyField &= villages.contains("\"" + field + "\"");
+        }
+        check(everyField, "vanilla's plains villages (never replaced) may stand in TerraBlender's mods' open fields too, so their hotels can");
+        String build = read("build.py");
+        check(build.contains("    \"data/minecraft/tags/worldgen/biome/has_structure/village_plains.json\",\n)") && !build.contains("    \"data/minecraft/\","),
+            "the jar may hold that one file of the game's data, nothing else of it");
+        String wetTagNow = read("src/main/resources/data/hexkagune/tags/worldgen/biome/wet.json");
+        String steepNow = read("src/main/resources/data/hexkagune/tags/worldgen/biome/steep.json");
+        boolean wetKnown = true;
+        for (String w : new String[] {"regions_unexplored:marsh", "regions_unexplored:bayou", "regions_unexplored:muddy_river", "regions_unexplored:cold_river",
+            "regions_unexplored:hyacinth_deeps", "regions_unexplored:grassy_beach", "biomeswevegone:cypress_swamplands", "biomeswevegone:white_mangrove_marshes",
+            "biomeswevegone:dead_sea", "biomeswevegone:rainbow_beach"}) {
+            wetKnown &= wetTagNow.contains("\"" + w + "\"");
+        }
+        boolean steepKnown = true;
+        for (String w : new String[] {"regions_unexplored:arid_mountains", "regions_unexplored:pine_slopes", "regions_unexplored:spires",
+            "biomeswevegone:howling_peaks", "biomeswevegone:red_rock_peaks", "biomeswevegone:dacite_ridges", "biomeswevegone:canadian_shield"}) {
+            steepKnown &= steepNow.contains("\"" + w + "\"");
+        }
+        boolean neither = true;
+        for (String field : flat) {
+            neither &= !wetTagNow.contains("\"" + field + "\"") && !steepNow.contains("\"" + field + "\"");
+        }
+        check(wetKnown && steepKnown && neither, "TerraBlender's mods' swamps, rivers and beaches are wet, their peaks and slopes steep, their fields neither");
         int px = 1000;
         int pz = -400;
         check(com.hex.kagune.control.village.HotelPlan.onPlains(px, pz, 196, 191, (x, z) -> true), "all plains: a hotel");

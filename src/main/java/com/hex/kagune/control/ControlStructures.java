@@ -1082,7 +1082,10 @@ public final class ControlStructures {
      * 4.1.72 (the owner: "Only spawns on plains or biomes o plenty equivallent biomes, we cant have that shit spawning on mountains"): the
      * biomes a hotel stands in (vanilla's plains, sunflower plains and snowy plains; Biomes O' Plenty's field, grassland, pasture, prairie
      * and lavender field, each only if it is there): data/hexkagune/tags/worldgen/biome/plains.json. Forge's forge:is_plains is not used:
-     * it holds the meadow, and Biomes O' Plenty puts its highland and rocky shrubland in it.
+     * it holds the meadow, and Biomes O' Plenty puts its highland and rocky shrubland in it. 4.1.90 (the owner: "adapt the mod so that the
+     * structures also spawn in the mod called Terra Blender. So research should add a bunch of flat biomes from that mod"): and the open
+     * fields of the biome mods TerraBlender carries (Regions Unexplored's, Oh The Biomes We've Gone's), which vanilla's plains villages may
+     * now stand in too (data/minecraft/tags/worldgen/biome/has_structure/village_plains.json): a hotel stands only beside a village.
      */
     static final net.minecraft.tags.TagKey<?> PLAINS = net.minecraft.tags.TagKey.m_203882_(Registries.f_256952_,
         net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", "plains"));
