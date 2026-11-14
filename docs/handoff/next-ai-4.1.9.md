@@ -21,6 +21,10 @@ Do your work and only at the end do the checks. This is taking so long." So: wri
 status lines to the owner while you work; the house rules (EXIT 0, GitHub green, allowlist, sabotage) still hold at the end.
 
 **Progress of the lag patch (newest first):**
+- **4.1.102, the client:** `NpcIndex` indexes client worlds too; the four per-frame client searches for our NPCs walk it (ghouls'
+  kagune, children's, Roma's tendrils 64 round, the flesh creatures). `OutfitLayer.texture` cached. Looked at and left: the 38 client
+  ticks (none scans entities) and 17 render stages (each returns at once, or loops the players only); `OutfitLayer.emit` (no per-vertex
+  allocation); `EtoRenderer` (a few short-lived objects per companion a frame). `sabotage-4.1.102.json`.
 - **4.1.101, world generation caches:** `HotelPlan.Memo` (offers, spots, near kept per world: 4,006,725 village offers worked out
   afresh against 26,648 kept over the test's 6,724 chunks asked twice) and `DryLand.Memo` (a search's heights by column, biomes by quart:
   ~55% fewer lookups, ~25% less time over a 25-spot search in the test's harness with 20 us a height, 2 us a biome). Not changed (it would

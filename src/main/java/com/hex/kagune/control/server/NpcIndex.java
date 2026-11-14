@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Predicate;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -22,7 +21,7 @@ import net.minecraftforge.fml.common.Mod;
  * officials, children, flesh creatures), kept as each one joins its world. "The gang mates within 160 blocks" was a search of every
  * entity in every chunk of a 320-block box; now it is a walk over this short list ({@link #of}: the same answer, those whose box meets
  * the asked box and pass the filter). A body unloaded, dead and gone or moved to another world is dropped from the list as it is next
- * walked; the list holds its bodies weakly, so nothing is ever kept alive by it.
+ * walked; the list holds its bodies weakly, so nothing is ever kept alive by it. 4.1.102: a client's world keeps its own list too.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class NpcIndex {
@@ -38,10 +37,11 @@ public final class NpcIndex {
             || entity instanceof com.hex.kagune.control.npc.ChildNpc || entity instanceof com.hex.kagune.control.npc.FleshThrall;
     }
 
+    /** Kept as each joins its world: a server's, and 4.1.102 a client's too (its renderers' "the ghouls near you" walk it each frame). */
     @SubscribeEvent
     public static void join(EntityJoinLevelEvent event) {
-        if (event.getLevel() instanceof ServerLevel level && ours(event.getEntity())) {
-            add(level, (LivingEntity)event.getEntity());
+        if (event.getLevel() != null && ours(event.getEntity())) {
+            add(event.getLevel(), (LivingEntity)event.getEntity());
         }
     }
 
@@ -51,12 +51,9 @@ public final class NpcIndex {
 
     /**
      * The mod's NPCs of {@code type} in {@code level} whose bounding box meets {@code box} and that pass {@code filter}: what
-     * {@code level.getEntitiesOfClass(type, box, filter)} finds of them, from the list. On a client, the game's own search.
+     * {@code level.getEntitiesOfClass(type, box, filter)} finds of them, from the list (4.1.102: a client's world's too).
      */
     public static <T extends Entity> List<T> of(Level level, Class<T> type, AABB box, Predicate<? super T> filter) {
-        if (!(level instanceof ServerLevel)) {
-            return level.m_6443_(type, box, filter);
-        }
         List<T> found = new ArrayList<>();
         synchronized (NpcIndex.class) {
             Set<LivingEntity> bodies = LEVELS.get(level);

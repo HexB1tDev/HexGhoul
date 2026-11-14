@@ -192,7 +192,7 @@ public final class GraftRenderer {
         // 4.1.49 (the owner: Roma "has a Rinkaku with 4 purple tendrils"): a companion's Rinkaku tendrils (Persona.tendrils), drawn as a wild
         // Rinkaku ghoul's tails are, from the same message under her id (NpcTendrils): the transplant's tails, four of them two a side, in
         // her purple, at her size, riding her body as it was drawn this frame.
-        for (com.hex.kagune.control.npc.EtoNpc npc : level.m_6443_(com.hex.kagune.control.npc.EtoNpc.class, self.m_20191_().m_82400_(64.0),
+        for (com.hex.kagune.control.npc.EtoNpc npc : com.hex.kagune.control.server.NpcIndex.of(level, com.hex.kagune.control.npc.EtoNpc.class, self.m_20191_().m_82400_(64.0),
             living -> living.m_6084_() && !living.m_20145_() && living.persona().tendrils() > 0)) {
             try {
                 com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(npc.m_19879_());

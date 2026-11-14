@@ -1,0 +1,30 @@
+[
+ {
+  "name": "a client's world left off the list",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": "        if (event.getLevel() != null && ours(event.getEntity())) {",
+  "new": "        if (event.getLevel() instanceof net.minecraft.server.level.ServerLevel && ours(event.getEntity())) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the ghouls' kagune searched every frame",
+  "file": "src/main/java/com/hex/kagune/control/client/render/GhoulNpcRenderer.java",
+  "old": "com.hex.kagune.control.server.NpcIndex.of(minecraft.f_91073_, GhoulNpc.class,",
+  "new": "minecraft.f_91073_.m_6443_(GhoulNpc.class,",
+  "suite": "LagTests"
+ },
+ {
+  "name": "Roma's tendrils searched every frame",
+  "file": "src/main/java/com/hex/kagune/control/client/render/GraftRenderer.java",
+  "old": "com.hex.kagune.control.server.NpcIndex.of(level, com.hex.kagune.control.npc.EtoNpc.class,",
+  "new": "level.m_6443_(com.hex.kagune.control.npc.EtoNpc.class,",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a sleeve's texture made every frame",
+  "file": "src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java",
+  "old": "        return TEXTURES.computeIfAbsent(model, id -> Objects.requireNonNull(KaguneMod.id(\"textures/outfit/\" + id + \".png\")));",
+  "new": "        return Objects.requireNonNull(KaguneMod.id(\"textures/outfit/\" + model + \".png\"));",
+  "suite": "LagTests"
+ }
+]

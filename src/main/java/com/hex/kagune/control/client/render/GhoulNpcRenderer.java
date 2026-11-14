@@ -174,7 +174,7 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
                 double clock = PaleClient.clock(0.0F);
                 Set<GhoulNpc> seen = Collections.newSetFromMap(new IdentityHashMap<>());
                 seen.addAll(out);
-                for (GhoulNpc npc : minecraft.f_91073_.m_6443_(GhoulNpc.class, minecraft.f_91074_.m_20191_().m_82400_(KAGUNE_ALWAYS),
+                for (GhoulNpc npc : com.hex.kagune.control.server.NpcIndex.of(minecraft.f_91073_, GhoulNpc.class, minecraft.f_91074_.m_20191_().m_82400_(KAGUNE_ALWAYS),
                     living -> living.m_6084_() && !living.m_20145_())) {
                     if (out.size() >= 256) {
                         break;

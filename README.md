@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.102 (HexGhoul): your game finds the mod's NPCs from a list too (the lag patch, part 4: the client) (testing)
+
+See `.github/release-notes-4.1.102.md`. `NpcIndex` keeps every world's list, a client's too (`join` on any level; `of` walks the list
+everywhere); `GhoulNpcRenderer`, `ChildRenderer`, `GraftRenderer` (Roma's tendrils) and `PeaceFx` (the flesh creatures) ask it.
+`OutfitLayer.texture` kept by model. `LagTests.registry` (no world search for the mod's NPCs anywhere); `docs/handoff/sabotage-4.1.102.json`.
+
 ## 4.1.101 (HexGhoul): world generation works each answer out once (the lag patch, part 3) (testing)
 
 See `.github/release-notes-4.1.101.md`. `HotelPlan.Memo` (pure): one world's village offers, each village's hotel spots and each chunk's

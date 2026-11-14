@@ -782,7 +782,7 @@ public final class PeaceFx {
             THRALLS.keySet().removeIf(id -> level.m_6815_(id) == null);
         }
         double r = THRALL_FAR;
-        java.util.List<com.hex.kagune.control.npc.FleshThrall> near = level.m_6443_(com.hex.kagune.control.npc.FleshThrall.class,
+        java.util.List<com.hex.kagune.control.npc.FleshThrall> near = com.hex.kagune.control.server.NpcIndex.of(level, com.hex.kagune.control.npc.FleshThrall.class,
             new net.minecraft.world.phys.AABB(camera.f_82479_ - r, camera.f_82480_ - r, camera.f_82481_ - r, camera.f_82479_ + r, camera.f_82480_ + r,
                 camera.f_82481_ + r), thrall -> true);
         int drawn = 0;

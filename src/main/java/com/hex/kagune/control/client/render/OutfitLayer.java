@@ -295,8 +295,10 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
         return TYPES.computeIfAbsent(model, id -> RenderType.m_110431_(Objects.requireNonNull(KaguneMod.id("textures/outfit/" + id + ".png"))));
     }
 
-    /** {@code model}'s texture's location (the first-person sleeves use it). */
+    /** {@code model}'s texture's location (the first-person sleeves use it). 4.1.102: made once a model, not every frame. */
     static ResourceLocation texture(String model) {
-        return Objects.requireNonNull(KaguneMod.id("textures/outfit/" + model + ".png"));
+        return TEXTURES.computeIfAbsent(model, id -> Objects.requireNonNull(KaguneMod.id("textures/outfit/" + id + ".png")));
     }
+
+    private static final Map<String, ResourceLocation> TEXTURES = new HashMap<>();
 }

@@ -64,7 +64,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 double clock = com.hex.kagune.control.client.PaleClient.clock(0.0F);
                 java.util.Set<ChildNpc> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
                 seen.addAll(out);
-                for (ChildNpc child : minecraft.f_91073_.m_6443_(ChildNpc.class, minecraft.f_91074_.m_20191_().m_82400_(KAGUNE_ALWAYS),
+                for (ChildNpc child : com.hex.kagune.control.server.NpcIndex.of(minecraft.f_91073_, ChildNpc.class, minecraft.f_91074_.m_20191_().m_82400_(KAGUNE_ALWAYS),
                     living -> living.m_6084_() && !living.m_20145_())) {
                     if (out.size() >= 256) {
                         break;

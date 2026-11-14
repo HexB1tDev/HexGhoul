@@ -278,26 +278,34 @@ public final class LagTests {
         try (var files = Files.walk(Path.of("src/main/java/com/hex/kagune/control"))) {
             for (Path file : (Iterable<Path>)files.filter(f -> f.toString().endsWith(".java"))::iterator) {
                 String source = Files.readString(file);
-                boolean client = file.toString().contains("/client/");
                 asked += source.split("NpcIndex\\.of\\(", -1).length - 1;
-                if (!client && !file.getFileName().toString().equals("NpcIndex.java") && search.matcher(source).find()) {
+                // 4.1.102: the client's too (its renderers' "the ghouls near you", every frame).
+                if (!file.getFileName().toString().equals("NpcIndex.java") && search.matcher(source).find()) {
                     left.add(file.getFileName().toString());
                 }
             }
         }
-        check(left.isEmpty(), "no server code searches the world box for the mod's NPCs: " + left);
-        check(asked >= 55, "the mod's NPC searches go through the list (" + asked + ")");
+        check(left.isEmpty(), "no code searches the world box for the mod's NPCs (4.1.102: the client's neither): " + left);
+        check(asked >= 59, "the mod's NPC searches go through the list (" + asked + ")");
         String index = read("src/main/java/com/hex/kagune/control/server/NpcIndex.java");
         for (String kind : new String[] {"GhoulNpc", "CcgAgent", "HumanNpc", "EtoNpc", "ChildNpc", "FleshThrall"}) {
             check(index.contains("entity instanceof com.hex.kagune.control.npc." + kind), "the list keeps every " + kind);
         }
-        check(index.contains("if (event.getLevel() instanceof ServerLevel level && ours(event.getEntity())) {"), "kept as each joins a server world");
+        check(index.contains("if (event.getLevel() != null && ours(event.getEntity())) {\n            add(event.getLevel(), (LivingEntity)event.getEntity());"),
+            "kept as each joins its world (4.1.102: a client's too)");
         check(index.contains("if (body.m_213877_() || body.m_9236_() != level) {\n                    it.remove();"), "the gone dropped as walked");
         check(index.contains("if (type.isInstance(body) && body.m_20191_().m_82381_(box)) {"), "the game's own answer: its kind, its box meeting the asked");
         check(index.contains("found.removeIf(body -> !filter.test(body));"), "and the asker's filter");
         check(index.contains("Collections.newSetFromMap(new WeakHashMap<>())") && index.contains("new WeakHashMap<>();"),
             "held weakly (nothing kept alive by the list)");
-        check(index.contains("if (!(level instanceof ServerLevel)) {\n            return level.m_6443_(type, box, filter);"), "a client asks the game");
+        check(!index.contains("m_6443_") && !index.contains("ServerLevel"), "4.1.102: every world walks its own list, a client's too (no world search left)");
+        for (String renderer : new String[] {"client/render/GhoulNpcRenderer.java", "client/render/ChildRenderer.java", "client/render/GraftRenderer.java",
+            "client/fx/PeaceFx.java"}) {
+            check(read("src/main/java/com/hex/kagune/control/" + renderer).contains("com.hex.kagune.control.server.NpcIndex.of("), renderer + " walks the list");
+        }
+        String outfit = read("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java");
+        check(outfit.contains("return TEXTURES.computeIfAbsent(model, id -> Objects.requireNonNull(KaguneMod.id(\"textures/outfit/\" + id + \".png\")));"),
+            "a sleeve's texture made once a model, not every frame");
     }
 
     /** 4.1.100: an NPC looks round for a foe every half second near a player, every two seconds when none is within 64 blocks. */
