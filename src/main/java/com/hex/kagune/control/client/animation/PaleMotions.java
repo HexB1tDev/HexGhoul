@@ -51,7 +51,9 @@ public final class PaleMotions {
      * impact tick, the overshoot, the hold, the recoil to the guard.
      */
     public static RigPose strike(PaleStrike strike, double age, RigPose from) {
-        RigPose start = from == null ? PaleStrikePoses.guard() : strike.right ? copy(from) : mirror(from);
+        // 4.1.88: out of nothing, Kick Master's blows come from her own stance (keyed right-handed: a left one from it mirrored).
+        RigPose rest = from != null ? from : strike.style == PaleStrike.Style.KICKS ? PaleStrikePoses.kickStance() : null;
+        RigPose start = rest == null ? PaleStrikePoses.guard() : strike.right ? copy(rest) : mirror(rest);
         // Whole turns are no turn: a strike that ended spun round starts the next from facing ahead, not a turn back.
         start.spin = wrap(start.spin);
         start.flip = wrap(start.flip);
@@ -627,7 +629,7 @@ public final class PaleMotions {
      * foot is the bottom of her, but in the hop ({@link PaleRules#dashRise}), where her body keeps its own height.
      */
     public static RigPose dashKick(double age, int detail, RigPose from) {
-        RigPose start = from == null ? PaleStrikePoses.guard() : copy(from);
+        RigPose start = from == null ? PaleStrikePoses.kickStance() : copy(from); // 4.1.88: out of her own stance
         start.spin = wrap(start.spin);
         start.flip = wrap(start.flip);
         start.roll = wrap(start.roll);
@@ -699,17 +701,17 @@ public final class PaleMotions {
     }
 
     /**
-     * 4.1.8, Kick Master's right click held ({@code age} ticks in, out of {@code from}, null: her guard): sunk side-on into the coil of the    /**
-     * 4.1.8, Kick Master's right click held ({@code age} ticks in, out of {@code from}, null: her guard): sunk side-on into the coil of the
-     * dash kick (4.1.87; the twirling speed kick before), the lead knee in, the weight low over the back foot, hands up (the guard's own lean: more tips the turned head
-     * onto a fist); fully wound ({@link PaleRules#TWIRL_CHARGE_TICKS}), a tremor runs through her (her turn and her crouch, never her lean).
+     * 4.1.8, Kick Master's right click held ({@code age} ticks in, out of {@code from}, null: her stance): sunk side-on into the coil of the
+     * dash kick (4.1.87; the twirling speed kick before), the lead knee in, the weight low over the back foot, the arms her stance's
+     * (4.1.88: low and loose, no longer the guard's fists up); fully wound ({@link PaleRules#TWIRL_CHARGE_TICKS}), a tremor runs through
+     * her (her turn and her crouch, never her lean).
      */
     public static RigPose twirlCharge(double age, RigPose from) {
-        RigPose start = from == null ? PaleStrikePoses.guard() : copy(from);
+        RigPose start = from == null ? PaleStrikePoses.kickStance() : copy(from);
         start.spin = wrap(start.spin);
         start.flip = wrap(start.flip);
         start.roll = wrap(start.roll);
-        RigPose coil = PaleStrikePoses.guard();
+        RigPose coil = PaleStrikePoses.kickStance(); // 4.1.88: her own stance's low hands, sunk into the coil
         coil.spin = TWIRL_COIL_SPIN;
         coil.headY = -0.3F * TWIRL_COIL_SPIN;
         coil.leftLegX = -0.75F;
@@ -930,6 +932,22 @@ public final class PaleMotions {
         RigPose pose = PaleStrikePoses.guard();
         grounded(pose);
         return pose;
+    }
+
+    /**
+     * 4.1.88 (the owner: "I think that the kick master should give you a different stance, especially on the arms"): Kick Master's own
+     * stance, as drawn between her blows and after them: side-on, the hands low and loose (not the boxer's fists up of {@link #guard}).
+     */
+    public static RigPose kickStance() {
+        RigPose pose = PaleStrikePoses.kickStance();
+        grounded(pose);
+        return pose;
+    }
+
+    /** 4.1.88: true if {@code move} (its {@code detail} as sent) is Kick Master's own: a blow of her string, the dash kick or its charge. */
+    public static boolean kickMasters(PaleMove move, int detail) {
+        return move == PaleMove.DASH_KICK || move == PaleMove.TWIRL_CHARGE
+            || move == PaleMove.STRIKE && PaleStrike.byOrdinal(detail).style == PaleStrike.Style.KICKS;
     }
 
     /**

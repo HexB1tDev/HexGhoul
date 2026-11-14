@@ -203,7 +203,10 @@ public final class PalePoseDesign {
             return this;
         }
 
-        /** 4.1.7: the arms held in the kicking guard ({@link #KICK_GUARD}): as the guard, the fists further from the chin. */
+        /**
+         * 4.1.7: the arms held in the kicking guard ({@link #KICK_GUARD}). 4.1.88: that is her stance's arms now, low and loose (it was the
+         * guard's fists up, a little further from the chin).
+         */
         Spec kickArms() {
             this.kickArms = true;
             return this;
@@ -633,13 +636,27 @@ public final class PalePoseDesign {
      * eyes on the target, and its corner would sweep through a fist held at the jaw; held as the arms' own angles (they turn with the
      * torso, its lean and twist), the guard never comes near the body whatever the kick does with it.
      */
-    static Spec kickGuard() {
-        return key(0, "SMOOTH").body(0.0, 0.0, 0.12, 0.0).legs(-0.36, 0.72, -0.36, 0.72)
-            .right(v(0.17, 1.16, 0.54), v(0.4, 1.0, 0.27)).left(v(-0.17, 1.16, 0.54), v(-0.4, 1.0, 0.27)).mirrored();
+    /** The kicking guard's solved arms (set in {@link #main} before the strikes are solved; 4.1.88: her stance's). */
+    static RigPose KICK_GUARD;
+
+    /**
+     * 4.1.88 (the owner: "Currently, both fighting styles have both fists up, like as if they want to square up. I don't think it's very
+     * nice. I think that the kick master should give you a different stance, especially on the arms."): Kick Master's own stance, a
+     * kicker's and not a boxer's. Side-on (the right shoulder drawn back, her left side to it), tall and light on her feet, the weight a
+     * little back; the hands low and loose: the lead (left) one out in front of her belt, the rear one easy by her right hip. Her eyes
+     * on it. Every blow of the string starts from it and comes back to it; the dash kick too.
+     */
+    static Spec kickStance() {
+        return key(0, "SMOOTH").body(0.0, KICK_STANCE_TWIST, 0.04, 0.0).looking(KICK_STANCE_LOOK).legs(-0.28, 0.5, 0.0, 0.42)
+            .right(v(0.36, 0.8, 0.07), v(0.39, 1.07, -0.1)).left(v(-0.2, 0.99, 0.48), v(-0.36, 1.09, 0.28));
     }
 
-    /** The kicking guard's solved arms (set in {@link #main} before the strikes are solved). */
-    static RigPose KICK_GUARD;
+    /** 4.1.88: how far side-on the stance turns her chest (+ the right shoulder back), and her head turned back against it. */
+    static final double KICK_STANCE_TWIST = 0.35;
+    static final double KICK_STANCE_LOOK = 0.3;
+
+    /** 4.1.88: Kick Master's stance, solved (set in {@link #main} before the strikes are solved). */
+    static RigPose KICK_STANCE;
 
     /** Where the target's front is in the move's frame: the server stands her this far off for a kick (PaleRules.comboKickStand). */
     static final double FRONT = 1.15;
@@ -1177,6 +1194,48 @@ public final class PalePoseDesign {
         return p;
     }
 
+    /** 4.1.88: {@code p} mirrored left for right, as {@code PaleMotions.mirror} does it (a left-hand strike's keys are its mirror). */
+    static RigPose mirror(RigPose p) {
+        RigPose m = new RigPose();
+        m.headX = p.headX;
+        m.headY = -p.headY;
+        m.headZ = -p.headZ;
+        m.lean = p.lean;
+        m.side = -p.side;
+        m.twist = -p.twist;
+        m.drop = p.drop;
+        m.lunge = p.lunge;
+        m.armHold = p.armHold;
+        m.legHold = p.legHold;
+        m.cut = p.cut;
+        m.flip = p.flip;
+        m.roll = -p.roll;
+        m.spin = -p.spin;
+        m.rightArmX = p.leftArmX;
+        m.leftArmX = p.rightArmX;
+        m.rightArmY = -p.leftArmY;
+        m.leftArmY = -p.rightArmY;
+        m.rightArmZ = -p.leftArmZ;
+        m.leftArmZ = -p.rightArmZ;
+        m.rightElbow = p.leftElbow;
+        m.leftElbow = p.rightElbow;
+        m.rightShoulderY = p.leftShoulderY;
+        m.leftShoulderY = p.rightShoulderY;
+        m.rightShoulderZ = p.leftShoulderZ;
+        m.leftShoulderZ = p.rightShoulderZ;
+        m.rightLegX = p.leftLegX;
+        m.leftLegX = p.rightLegX;
+        m.rightLegY = -p.leftLegY;
+        m.leftLegY = -p.rightLegY;
+        m.rightLegZ = -p.leftLegZ;
+        m.leftLegZ = -p.rightLegZ;
+        m.rightKnee = p.leftKnee;
+        m.leftKnee = p.rightKnee;
+        m.rightKneeTurn = -p.leftKneeTurn;
+        m.leftKneeTurn = -p.rightKneeTurn;
+        return m;
+    }
+
     // ------------------------------------------------------------------ output
 
     static final String[] CHANNELS = {"headX", "headY", "headZ", "lean", "side", "twist", "lunge", "spin", "flip", "roll", "rightArmX", "rightArmY", "rightArmZ",
@@ -1220,6 +1279,11 @@ public final class PalePoseDesign {
      * from {@code first}) and written out as a method named {@code base} and its number.
      */
     static String sequence(String base, List<Spec> specs, RigPose guard, RigPose first, StringBuilder methods, StringBuilder report) {
+        return sequence(base, specs, guard, "guard()", first, methods, report);
+    }
+
+    /** The same, its guard keys {@code guard} as the generated code calls it ({@code guardCall}: 4.1.88, Kick Master's stance). */
+    static String sequence(String base, List<Spec> specs, RigPose guard, String guardCall, RigPose first, StringBuilder methods, StringBuilder report) {
         StringBuilder out = new StringBuilder("new PaleMotions.Key[] {PaleMotions.Key.START");
         RigPose previous = first;
         for (int k = 0; k < specs.size(); k++) {
@@ -1229,8 +1293,8 @@ public final class PalePoseDesign {
             previous = spec.solved;
             String poseCall;
             if (spec.guard) {
-                poseCall = spec.body.flip != 0.0F ? String.format(Locale.ROOT, "flipped(guard(), %.6fF)", spec.body.flip)
-                    : spec.body.spin == 0.0F ? "guard()" : String.format(Locale.ROOT, "spun(guard(), %.6fF)", spec.body.spin);
+                poseCall = spec.body.flip != 0.0F ? String.format(Locale.ROOT, "flipped(%s, %.6fF)", guardCall, spec.body.flip)
+                    : spec.body.spin == 0.0F ? guardCall : String.format(Locale.ROOT, "spun(%s, %.6fF)", guardCall, spec.body.spin);
             } else {
                 methods.append('\n').append(method(name, spec.solved));
                 poseCall = name + "()";
@@ -1247,12 +1311,23 @@ public final class PalePoseDesign {
         Spec guardSpec = guard();
         RigPose guard = pose(guardSpec, null, null, report, "guard");
         StringBuilder methods = new StringBuilder(method("guard", guard));
-        KICK_GUARD = pose(kickGuard(), null, null, report, "kickGuard");
+        // 4.1.88: Kick Master's own stance, and its arms the kicks' (the hands low through them, not the guard's fists up); a left-hand
+        // strike is keyed right-handed and mirrored, so it comes back to the stance mirrored here.
+        KICK_STANCE = pose(kickStance(), null, guard, report, "kickStance");
+        KICK_GUARD = KICK_STANCE;
+        methods.append('\n').append(method("kickStance", KICK_STANCE));
+        RigPose stanceLeft = mirror(KICK_STANCE);
         StringBuilder table = new StringBuilder();
         for (PaleStrike strike : PaleStrike.values()) {
             table.append("            case ").append(strike.name()).append(" -> ");
-            table.append(sequence(strike.name().toLowerCase(Locale.ROOT).replace("_", ""), choreography(strike), guard, guard, methods, report))
-                .append(";\n");
+            String name = strike.name().toLowerCase(Locale.ROOT).replace("_", "");
+            if (strike.style == PaleStrike.Style.KICKS) {
+                RigPose rest = strike.right ? KICK_STANCE : stanceLeft;
+                table.append(sequence(name, choreography(strike), rest, strike.right ? "kickStance()" : "PaleMotions.mirror(kickStance())", rest, methods, report));
+            } else {
+                table.append(sequence(name, choreography(strike), guard, guard, methods, report));
+            }
+            table.append(";\n");
         }
         // Big Punch: its charge (the coil at no charge and at full) and the punch out of it.
         Spec coil0 = punchCoil(0.0);
@@ -1273,8 +1348,8 @@ public final class PalePoseDesign {
         String kickKeys = sequence("kick", kick(), guard, chamber.solved, methods, report);
         // 4.1.87: Kick Master's dash kick: the run, then the kick out of it.
         List<Spec> run = dashRun();
-        String runKeys = sequence("dashrun", run, guard, guard, methods, report);
-        String dashKeys = sequence("dashkick", dashKick(), guard, run.get(run.size() - 1).solved, methods, report);
+        String runKeys = sequence("dashrun", run, KICK_STANCE, "kickStance()", KICK_STANCE, methods, report);
+        String dashKeys = sequence("dashkick", dashKick(), KICK_STANCE, "kickStance()", run.get(run.size() - 1).solved, methods, report);
         String watchKeys = sequence("watch", watch(), guard, guard, methods, report);
         List<Spec> raise = hammerRaise();
         String raiseKeys = sequence("hammerraise", raise, guard, guard, methods, report);

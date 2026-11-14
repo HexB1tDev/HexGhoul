@@ -225,7 +225,7 @@ final class PaleAnimator {
             this.last = null;
             return;
         }
-        RigPose guard = guardKept(p);
+        RigPose guard = guardKept(p, PaleMotions.kickMasters(this.ended, this.detail));
         RigPose held;
         if (t < INTO_GUARD) {
             float u = smooth(t / INTO_GUARD);
@@ -240,10 +240,10 @@ final class PaleAnimator {
 
     /**
      * Her guard kept after a strike: the arms up as between strikes; the legs her own again (she can walk with it), the stance
-     * under it what she was doing anyway.
+     * under it what she was doing anyway. 4.1.88: after Kick Master's own moves ({@code kicker}), her stance instead: the hands low.
      */
-    private static RigPose guardKept(RigPose stance) {
-        RigPose guard = PaleMotions.guard();
+    private static RigPose guardKept(RigPose stance, boolean kicker) {
+        RigPose guard = kicker ? PaleMotions.kickStance() : PaleMotions.guard();
         guard.legHold = 0.0F;
         guard.rightLegX = stance.rightLegX;
         guard.rightLegY = stance.rightLegY;

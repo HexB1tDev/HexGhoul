@@ -9,6 +9,16 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.88 (HexGhoul): Kick Master's own stance: side-on, the hands low and loose (testing)
+
+See `.github/release-notes-4.1.88.md`. `tools/PalePoseDesign.java`: `kickStance()` (`KICK_STANCE_TWIST`, `KICK_STANCE_LOOK`), solved as
+`KICK_STANCE` and written as the generated `kickStance()`; Kick Master's strikes are sequenced from it and back to it (`sequence` takes the
+guard's call: `kickStance()`, `PaleMotions.mirror(kickStance())` for a left-hand blow), as are the dash run and kick; `KICK_GUARD =
+KICK_STANCE` (the kicks' arms); `kickGuard()` gone; `mirror` as `PaleMotions.mirror`. `PaleMotions.kickStance`, `kickMasters` (her string's
+blows, the dash kick, its charge), `strike` from it out of nothing, `twirlCharge` and `dashKick` from it. `PaleAnimator.guardKept(stance,
+kicker)`. `CompanionTests.kickStance488`, 20 rules sabotaged (`docs/handoff/sabotage-4.1.88.json`). Renders
+`docs/handoff/kick-stance-4.1.88.png`, `docs/handoff/kick-master-4.1.88.png` (`tools/PalePreview.java <dir> kick-stance` / `kicks`).
+
 ## 4.1.87 (HexGhoul): Kick Master's right click: a charged dash kick, what it hits flies to your left (testing)
 
 See `.github/release-notes-4.1.87.md`. `PaleMove.DASH_KICK` (appended; protocol 127). `PaleRules`' dash kick: `dashDetail` (run ticks and

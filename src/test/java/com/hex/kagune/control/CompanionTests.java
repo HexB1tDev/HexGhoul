@@ -592,6 +592,7 @@ public final class CompanionTests {
         banjou(); // 4.1.54
         kickMaster();
         dashKick487();
+        kickStance488();
     }
 
     /**
@@ -602,6 +603,97 @@ public final class CompanionTests {
      * the head is also proportional. It doesn't rotate out of place." Asked: "He faces where he kicked at. So basically, he ends up facing
      * to the left."; "A spot, and the dash's path too"): Kick Master's dash kick.
      */
+    /**
+     * 4.1.88 (the owner: "Currently, both fighting styles have both fists up, like as if they want to square up. I don't think it's very
+     * nice. I think that the kick master should give you a different stance, especially on the arms."): Kick Master's own stance.
+     */
+    static void kickStance488() {
+        RigPose stance = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+        RigPose guard = com.hex.kagune.control.client.animation.PaleMotions.guard();
+        stance.settle(1.0F);
+        guard.settle(1.0F);
+        double[] lead = handAt(stance, false);
+        double[] rear = handAt(stance, true);
+        double[] guardLead = handAt(guard, false);
+        double[] guardRear = handAt(guard, true);
+        double shoulder = com.hex.kagune.control.client.animation.BodyFrame.world(new RigPose(), com.hex.kagune.control.client.animation.BodyFrame.model(new RigPose(), "rightArm", new double[] {0, 0, 0}))[1];
+        check(lead[1] < guardLead[1] - 0.2 && rear[1] < guardRear[1] - 0.3 && lead[1] < shoulder - 0.25 && rear[1] < shoulder - 0.4,
+            "her hands low and loose, not the guard's fists up: lead " + java.util.Arrays.toString(lead) + ", rear " + java.util.Arrays.toString(rear)
+                + " (the guard's " + guardLead[1] + ", " + guardRear[1] + "; shoulders " + shoulder + ")");
+        check(lead[2] > rear[2] + 0.25 && lead[2] > 0.35 && rear[0] > 0.3,
+            "the lead (left) hand out in front, the rear one back by her right hip: " + java.util.Arrays.toString(lead) + ", " + java.util.Arrays.toString(rear));
+        check(stance.twist > 0.25 && Math.abs(stance.twist - stance.headY) < 0.1 && stance.spin == 0.0F,
+            "side-on (the right shoulder drawn back), her face turned back to what she faces: twist " + stance.twist + ", head " + stance.headY);
+        check(guardLead[1] > 1.15 && guardRear[1] > 1.15 && Math.abs(guard.twist) < 1.0E-6, "Speedster's guard is as it was: both fists up, square");
+        check(com.hex.kagune.control.client.animation.BodyFrame.clipping(stance, 0.25) == 0.0, "her arms clear of her body in it");
+        RigPose standing = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+        check(Math.abs(standing.drop - Math.min(RigPose.legDrop(standing.rightLegX, standing.rightLegZ, standing.rightKnee),
+            RigPose.legDrop(standing.leftLegX, standing.leftLegZ, standing.leftKnee))) < 1.0E-4, "standing on her lower foot");
+        // Every blow of her string starts from it (from nothing) and comes back to it, a left-hand one as much as a right-hand one;
+        // the Speed Blitz's still from and to the guard.
+        RigPose rest = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+        RigPose square = com.hex.kagune.control.client.animation.PaleMotions.guard();
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
+            boolean kicks = strike.style == com.hex.kagune.control.pale.PaleStrike.Style.KICKS;
+            RigPose want = kicks ? rest : square;
+            RigPose first = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, 0.0, null);
+            RigPose last = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.duration, null);
+            check(sameArms(first, want) && Math.abs(first.twist - want.twist) < 1.0E-4 && sameArms(last, want) && Math.abs(last.twist - want.twist) < 1.0E-4
+                && Math.abs(last.headY - want.headY) < 1.0E-4, (kicks ? "from her stance and back to it: " : "from the guard and back to it: ") + strike);
+            if (kicks && strike.kick()) {
+                // Through the kick her hands are her stance's (low), not the guard's fists up: at the blow, keyed (a left one mirrored).
+                RigPose hit = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.impact, null);
+                RigPose keyed = strike.right ? hit : com.hex.kagune.control.client.animation.PaleMotions.mirror(hit);
+                check(sameArms(keyed, rest), "her hands low through the " + strike + " (her stance's arms at the blow)");
+            }
+        }
+        // The dash kick: held, sunk into the coil with her stance's hands; let go, run and kicked with them; down in her stance.
+        int detail = com.hex.kagune.control.pale.PaleRules.dashDetail(4, 1.0F);
+        RigPose coil = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(40.0, null);
+        RigPose coiled = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(0.0, null);
+        RigPose blow = com.hex.kagune.control.client.animation.PaleMotions.dashKick(com.hex.kagune.control.pale.PaleRules.dashArrive(detail)
+            + com.hex.kagune.control.pale.PaleRules.DASH_CONTACT, detail, null);
+        RigPose down = com.hex.kagune.control.client.animation.PaleMotions.dashKick(com.hex.kagune.control.pale.PaleRules.dashEnd(detail), detail, null);
+        RigPose off = com.hex.kagune.control.client.animation.PaleMotions.dashKick(0.0, detail, null);
+        check(sameArms(off, rest) && Math.abs(off.twist - rest.twist) < 1.0E-4, "the dash kick out of nothing: from her stance");
+        check(sameArms(coil, rest) && sameArms(coiled, rest) && sameArms(blow, rest) && sameArms(down, rest)
+            && Math.abs(down.twist - rest.twist) < 1.0E-4, "the dash kick held, thrown and finished with her stance's hands");
+        // Kept after her own moves (the player's, the General's and Roma's: one animator), the guard after anyone else's.
+        check(com.hex.kagune.control.client.animation.PaleMotions.kickMasters(com.hex.kagune.control.pale.PaleMove.STRIKE,
+                com.hex.kagune.control.pale.PaleStrike.KICK_JAB.ordinal())
+            && com.hex.kagune.control.client.animation.PaleMotions.kickMasters(com.hex.kagune.control.pale.PaleMove.STRIKE,
+                com.hex.kagune.control.pale.PaleStrike.TORNADO_KICK.ordinal())
+            && com.hex.kagune.control.client.animation.PaleMotions.kickMasters(com.hex.kagune.control.pale.PaleMove.DASH_KICK, 0)
+            && com.hex.kagune.control.client.animation.PaleMotions.kickMasters(com.hex.kagune.control.pale.PaleMove.TWIRL_CHARGE, 0)
+            && !com.hex.kagune.control.client.animation.PaleMotions.kickMasters(com.hex.kagune.control.pale.PaleMove.STRIKE,
+                com.hex.kagune.control.pale.PaleStrike.JAB.ordinal())
+            && !com.hex.kagune.control.client.animation.PaleMotions.kickMasters(com.hex.kagune.control.pale.PaleMove.KICK, 0)
+            && !com.hex.kagune.control.client.animation.PaleMotions.kickMasters(com.hex.kagune.control.pale.PaleMove.PUNCH, 0),
+            "her own moves are her string's blows, the dash kick and its charge (not the Speed Blitz, the V kick or the Big Punch)");
+        String animator = read("src/main/java/com/hex/kagune/control/client/animation/PaleAnimator.java");
+        check(animator.contains("RigPose guard = guardKept(p, PaleMotions.kickMasters(this.ended, this.detail));")
+            && animator.contains("RigPose guard = kicker ? PaleMotions.kickStance() : PaleMotions.guard();"),
+            "after her own moves her stance is kept (a second, her legs her own), not the guard");
+        check(read("tools/PalePoseDesign.java").contains("KICK_GUARD = KICK_STANCE;"), "the kicks' arms are her stance's (the generator)");
+    }
+
+    /** 4.1.88: the middle of a hand (blocks, the pose's frame), settled. */
+    static double[] handAt(RigPose p, boolean right) {
+        return com.hex.kagune.control.client.animation.BodyFrame.world(p, com.hex.kagune.control.client.animation.BodyFrame.model(p, right ? "rightArm" : "leftArm", new double[] {right ? -1 : 1, 9, 0}));
+    }
+
+    /** 4.1.88: the same arm angles. */
+    static boolean sameArms(RigPose a, RigPose b) {
+        float[] x = {a.rightArmX, a.rightArmY, a.rightArmZ, a.rightElbow, a.leftArmX, a.leftArmY, a.leftArmZ, a.leftElbow};
+        float[] y = {b.rightArmX, b.rightArmY, b.rightArmZ, b.rightElbow, b.leftArmX, b.leftArmY, b.leftArmZ, b.leftElbow};
+        for (int i = 0; i < x.length; i++) {
+            if (Math.abs(x[i] - y[i]) > 1.0E-3F) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     static void dashKick487() {
         // Its detail: the run's ticks and the charge, read back.
         for (int ticks = 0; ticks <= com.hex.kagune.control.pale.PaleRules.DASH_MAX; ticks++) {
@@ -693,7 +785,7 @@ public final class CompanionTests {
             && com.hex.kagune.control.pale.PaleMove.values()[com.hex.kagune.control.pale.PaleMove.values().length - 2] == com.hex.kagune.control.pale.PaleMove.TWIRL_CHARGE
             && com.hex.kagune.control.network.C2SPaleAction.TWIRL == 13, "its move appended (protocol 127)");
         // Its poses: the leg cocked back behind her; swept through the height of a head in front of her at the blow; carried on to her
-        // left still high; turned a quarter to her left, down in her guard facing it; the head turned with her body and kept level.
+        // left still high; turned a quarter to her left, down in her stance (4.1.88) facing it; the head turned with her body and kept level.
         double[] cocked = sole(com.hex.kagune.control.client.animation.PaleMotions.dashKick(arrive + 1.4, detail, null));
         double[] blow = sole(com.hex.kagune.control.client.animation.PaleMotions.dashKick(contact, detail, null));
         double[] through = sole(com.hex.kagune.control.client.animation.PaleMotions.dashKick(contact + 0.8, detail, null));
@@ -703,8 +795,12 @@ public final class CompanionTests {
         check(through[0] < -0.35 && through[1] > 1.0, "through: carried on to her left, still high: " + java.util.Arrays.toString(through));
         RigPose done = com.hex.kagune.control.client.animation.PaleMotions.dashKick(com.hex.kagune.control.pale.PaleRules.dashEnd(detail), detail, null);
         RigPose turnedPose = com.hex.kagune.control.client.animation.PaleMotions.dashKick(arrive + com.hex.kagune.control.pale.PaleRules.DASH_TURNED, detail, null);
-        check(Math.abs(done.spin - Math.PI / 2.0) < 1.0E-3 && Math.abs(turnedPose.spin - Math.PI / 2.0) < 1.0E-3 && Math.abs(done.headY) < 1.0E-3,
-            "turned a quarter to her left (spin +), facing the way it flew, the head straight on her body");
+        // 4.1.88: down in Kick Master's stance: her chest side-on (twist) and her head turned back against it, so her face is the way
+        // her hips face (the way it flew).
+        RigPose stance = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+        check(Math.abs(done.spin - Math.PI / 2.0) < 1.0E-3 && Math.abs(turnedPose.spin - Math.PI / 2.0) < 1.0E-3
+            && Math.abs(done.headY - stance.headY) < 1.0E-3 && Math.abs(done.twist - stance.twist) < 1.0E-3 && Math.abs(done.twist - done.headY) < 0.1,
+            "turned a quarter to her left (spin +), facing the way it flew, in her stance, her face the way her hips face");
         double worstHead = 0.0;
         double worstLevel = 0.0;
         double worstClip = 0.0;

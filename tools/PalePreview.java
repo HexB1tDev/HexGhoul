@@ -41,6 +41,9 @@ public final class PalePreview {
         if (wanted.contains("dash-kick")) {
             dashKick(new File(out, "dash-kick.png")); // 4.1.87 (4.1.8's twirl-kick is gone)
         }
+        if (wanted.contains("kick-stance")) {
+            kickStance(new File(out, "kick-stance.png")); // 4.1.88
+        }
         if (wanted.contains("kicks-film")) {
             kicksFilm(new File(out, "kick-master-film.png"), new File(out, "kick-master.gif"));
         }
@@ -1260,6 +1263,72 @@ public final class PalePreview {
         }
         ArtPreview.sheet(file, "Kick Master: every kick from the side (winding, chambered, driving, the server's impact tick, through, folding), then 3/4",
             shots, 7, 300, 300);
+    }
+
+    /**
+     * 4.1.88: Kick Master's own stance (the owner: "the kick master should give you a different stance, especially on the arms") beside the
+     * guard both styles had (fists up), from her front, her front-left, her left side, behind and in first person; then the stance into
+     * the string's first blows and back out of its kicks, the stance kept after a blow (her own legs under it, as the game keeps it),
+     * and the dash kick's charge sunk into from it.
+     */
+    static void kickStance(File file) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        double[] look = {0.0, 1.0, 0.0};
+        double[][] eyes = {{0.0, 1.45, 3.4}, {-2.4, 1.5, 2.4}, {-3.4, 1.3, 0.0}, {3.4, 1.3, 0.0}, {1.4, 1.7, -3.0}};
+        String[] views = {"front", "front-left", "her left side", "her right side", "behind"};
+        RigPose[] poses = {com.hex.kagune.control.client.animation.PaleMotions.guard(), com.hex.kagune.control.client.animation.PaleMotions.kickStance()};
+        String[] names = {"BEFORE (both styles): the guard", "NOW, Kick Master: her stance"};
+        double stand = com.hex.kagune.control.pale.PaleRules.strikeStand(0.6);
+        for (int k = 0; k < poses.length; k++) {
+            for (int v = 0; v < eyes.length; v++) {
+                RigPose p = new RigPose().add(poses[k], 1.0F);
+                p.settle(1.0F);
+                shots.add(new ArtPreview.Shot(names[k] + ", " + views[v], p, ArtPreview.NO_WINGS, eyes[v], look, List.of()));
+            }
+            RigPose p = new RigPose().add(poses[k], 1.0F);
+            p.settle(1.0F);
+            shots.add(armsShot(names[k] + ", first person", p, stand));
+        }
+        // Into the string and back: the jab and the cross out of the stance, the kicks' last ticks back into it.
+        com.hex.kagune.control.pale.PaleStrike[] string = com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS);
+        double[] quarter = {-3.0, 1.6, 2.8};
+        double[] at = {0.0, 0.95, 0.7};
+        com.hex.kagune.control.pale.PaleStrike jab = string[0];
+        for (double age : new double[] {0.0, 1.0, jab.impact, jab.duration}) {
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(jab, age, null);
+            p.settle(1.0F);
+            shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "out of it: the jab, tick %.0f%s", age, age == jab.impact ? " HIT" : ""), p,
+                ArtPreview.NO_WINGS, quarter, at, dummy(KICK_DUMMY_Z)));
+        }
+        for (com.hex.kagune.control.pale.PaleStrike strike : string) {
+            if (!strike.kick()) {
+                continue;
+            }
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.duration, null);
+            p.settle(1.0F);
+            String name = strike.name().toLowerCase(java.util.Locale.ROOT).replace('_', ' ');
+            shots.add(new ArtPreview.Shot(name + ": its end, back in it", p, ArtPreview.NO_WINGS, quarter, at, dummy(KICK_DUMMY_Z)));
+        }
+        // Kept after a blow: her own legs under it (a step of her walk), as PaleAnimator keeps it.
+        for (double stride : new double[] {0.0, 0.5, -0.5}) {
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+            p.legHold = 0.0F;
+            p.rightLegX = (float)stride;
+            p.leftLegX = (float)-stride;
+            p.rightKnee = 0.0F;
+            p.leftKnee = 0.0F;
+            p.drop = 0.0F;
+            p.settle(1.0F);
+            shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "kept after a blow, walking (stride %.1f)", stride), p, ArtPreview.NO_WINGS,
+                eyes[1], look, List.of()));
+        }
+        for (double age : new double[] {0.0, 1.5, 3.0, 30.0}) {
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(age, null);
+            p.settle(1.0F);
+            shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "the dash kick held, tick %.1f", age), p, ArtPreview.NO_WINGS, eyes[1], look,
+                List.of()));
+        }
+        ArtPreview.sheet(file, "Kick Master's own stance (4.1.88): side-on, the hands low and loose; before, both styles' fists-up guard", shots, 6, 300, 300);
     }
 
     /**
