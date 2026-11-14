@@ -149,6 +149,16 @@ public final class PaleFleshRenderer {
                 leg(body, PaleOwnLeg.shift(body), frame, camera, level, player, matrix, normals, buffers);
                 continue;
             }
+            if (view.move() == PaleMove.DASH_KICK && firstPerson(minecraft, player) && player.m_6084_()) {
+                // 4.1.87: her own leg in first person through the dash kick: cocked back, swept up and across before her eyes.
+                float bodyYaw = player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
+                RigPose body = PaleMotions.dashKickBody(view.age(time), view.detail(), (float)Math.toRadians(wrap(view.yaw() - bodyYaw)));
+                double yaw = Math.toRadians(bodyYaw);
+                Frame frame = new Frame(player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial, player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial,
+                    player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
+                leg(body, PaleOwnLeg.shift(body), frame, camera, level, player, matrix, normals, buffers);
+                continue;
+            }
             if (!view.move().flesh() || !player.m_6084_() || player.m_20145_() || player.m_20280_(minecraft.f_91074_) > RANGE * RANGE) {
                 continue;
             }

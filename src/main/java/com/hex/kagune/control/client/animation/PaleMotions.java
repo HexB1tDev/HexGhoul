@@ -609,13 +609,6 @@ public final class PaleMotions {
             // Gone (nothing of her is drawn): the lunge giving way to the chamber she is in when she is there.
             float u = smooth01((float)((age - PaleRules.KICK_BURST) / Math.max(1, PaleRules.kickTicks(dash))));
             pose = new RigPose().add(sample(rush, PaleRules.KICK_BURST, start), 1.0F - u).add(PaleStrikePoses.kickChamber(), u);
-        } else if (age < arrive) {
-            // 4.1.8, Kick Master's twirling kick: there out of nowhere, already in the chamber and turning, a whole side twirl in the air
-            // into it (fastest as she appears), the head coming round last onto what she kicks.
-            double left = PaleRules.twirlLeft(age - there);
-            pose = PaleStrikePoses.kickChamber();
-            pose.spin -= (float)left;
-            pose.headY += (float)(0.35 * Math.sin(left));
         } else {
             // There: out of the chamber, the kick.
             pose = sample(PaleStrikePoses.kick(), (float)(age - arrive), PaleStrikePoses.kickChamber());
@@ -627,8 +620,88 @@ public final class PaleMotions {
     }
 
     /**
+     * 4.1.87, Kick Master's dash kick {@code age} ticks in ({@code detail} its own: PaleRules.dashDetail), out of {@code from} (null: her
+     * guard): off the mark into the run ({@link PaleStrikePoses#dashRun}), seen all the way (a real dash, never gone), striding; there,
+     * the kick out of the run ({@link PaleStrikePoses#dashKick}): the right leg cocked back, swept up and across to her left at the
+     * height of a head, the body turned a quarter to her left with it (the head with it), down in her guard facing left. Her lowest
+     * foot is the bottom of her, but in the hop ({@link PaleRules#dashRise}), where her body keeps its own height.
+     */
+    public static RigPose dashKick(double age, int detail, RigPose from) {
+        RigPose start = from == null ? PaleStrikePoses.guard() : copy(from);
+        start.spin = wrap(start.spin);
+        start.flip = wrap(start.flip);
+        start.roll = wrap(start.roll);
+        Key[] run = PaleStrikePoses.dashRun();
+        int arrive = PaleRules.dashArrive(detail);
+        RigPose pose;
+        if (age < arrive) {
+            pose = sample(run, (float)age, start);
+            // The run's stride: from the lean on, the legs (and the arms against them) swap over every DASH_STRIDE ticks.
+            stride(pose, (float)Math.cos(Math.PI * Math.max(0.0, age - STRIDE_FROM) / DASH_STRIDE));
+        } else {
+            RigPose ran = sample(run, (float)arrive, start);
+            stride(ran, (float)Math.cos(Math.PI * Math.max(0.0, arrive - STRIDE_FROM) / DASH_STRIDE));
+            pose = sample(PaleStrikePoses.dashKick(), (float)(age - arrive), ran);
+        }
+        standing(pose);
+        pose.drop *= (float)(1.0 - PaleRules.dashRise(detail, age));
+        return pose;
+    }
+
+    /** 4.1.87: ticks a stride of the dash takes (a leg forward to the other forward), and from when (ticks) her legs stride. */
+    static final double DASH_STRIDE = 2.0;
+    static final double STRIDE_FROM = PaleRules.DASH_BURST - 1.0;
+
+    /**
+     * 4.1.87: the run's legs at {@code s} (1: as the run's key, the left knee up; -1: the right one up, the left pushing off; between,
+     * passing), the arms swinging against them.
+     */
+    static void stride(RigPose p, float s) {
+        float leftX = p.leftLegX;
+        float rightX = p.rightLegX;
+        float leftKnee = p.leftKnee;
+        float rightKnee = p.rightKnee;
+        float u = (1.0F - s) * 0.5F;
+        p.leftLegX = leftX + (rightX - leftX) * u;
+        p.rightLegX = rightX + (leftX - rightX) * u;
+        p.leftKnee = leftKnee + (rightKnee - leftKnee) * u;
+        p.rightKnee = rightKnee + (leftKnee - rightKnee) * u;
+        float rightArmX = p.rightArmX;
+        float leftArmX = p.leftArmX;
+        p.rightArmX = rightArmX + (leftArmX - rightArmX) * u;
+        p.leftArmX = leftArmX + (rightArmX - leftArmX) * u;
+    }
+
+    /** 4.1.87: her lowest foot (either; through her tilt and lean) set on the ground. */
+    static void standing(RigPose p) {
+        p.drop = 0.0F;
+        double lowest = Double.MAX_VALUE;
+        for (String leg : new String[] {"leftLeg", "rightLeg"}) {
+            for (double x : new double[] {-2.0, 2.0}) {
+                for (double z : new double[] {-2.0, 2.0}) {
+                    lowest = Math.min(lowest, BodyFrame.world(p, BodyFrame.model(p, leg, new double[] {x, 12.0, z}))[1]);
+                }
+            }
+        }
+        p.drop = (float)(lowest * 16.0);
+    }
+
+    /**
+     * 4.1.87: her body in the dash kick ({@code age} ticks in, its {@code detail}), turned {@code turn} as {@link #fleshBody} is, and
+     * settled: what her own leg is drawn on in first person.
+     */
+    public static RigPose dashKickBody(double age, int detail, float turn) {
+        RigPose pose = dashKick(age, detail, null);
+        pose.spin -= turn;
+        pose.headY -= turn;
+        pose.settle(1.0F);
+        return pose;
+    }
+
+    /**
+     * 4.1.8, Kick Master's right click held ({@code age} ticks in, out of {@code from}, null: her guard): sunk side-on into the coil of the    /**
      * 4.1.8, Kick Master's right click held ({@code age} ticks in, out of {@code from}, null: her guard): sunk side-on into the coil of the
-     * twirling speed kick, the lead knee in, the weight low over the back foot, hands up (the guard's own lean: more tips the turned head
+     * dash kick (4.1.87; the twirling speed kick before), the lead knee in, the weight low over the back foot, hands up (the guard's own lean: more tips the turned head
      * onto a fist); fully wound ({@link PaleRules#TWIRL_CHARGE_TICKS}), a tremor runs through her (her turn and her crouch, never her lean).
      */
     public static RigPose twirlCharge(double age, RigPose from) {
@@ -669,6 +742,9 @@ public final class PaleMotions {
         }
         if (move == PaleMove.KICK) {
             return kickBody(age, detail, turn);
+        }
+        if (move == PaleMove.DASH_KICK) {
+            return dashKickBody(age, detail, turn); // 4.1.87
         }
         RigPose owl = OwlMotions.anyBody(move, age, detail, charge, turn);
         if (owl != null) {
@@ -1235,7 +1311,7 @@ public final class PaleMotions {
         return copy(previous);
     }
 
-    static RigPose copy(RigPose pose) {
+    public static RigPose copy(RigPose pose) {
         return new RigPose().add(pose, 1.0F);
     }
 

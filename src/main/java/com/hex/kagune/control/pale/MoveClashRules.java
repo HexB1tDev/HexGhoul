@@ -30,7 +30,7 @@ public final class MoveClashRules {
         }
         return switch (move) {
             case PUNCH_CHARGE, PUNCH, OWL_PUNCH_CHARGE, OWL_PUNCH -> Family.PUNCH;
-            case KICK, OWL_KICK -> Family.KICK;
+            case KICK, OWL_KICK, DASH_KICK -> Family.KICK; // 4.1.87: Kick Master's dash kick is a kick
             case HAMMER_CHARGE, HAMMER, OWL_FISSURE_CHARGE, OWL_FISSURE -> Family.SLAM;
             default -> null;
         };
@@ -39,14 +39,15 @@ public final class MoveClashRules {
     /** True for a big move let go (on its way at something), not one still winding up. */
     public static boolean released(PaleMove move) {
         return move == PaleMove.PUNCH || move == PaleMove.OWL_PUNCH || move == PaleMove.KICK || move == PaleMove.OWL_KICK || move == PaleMove.HAMMER
-            || move == PaleMove.OWL_FISSURE;
+            || move == PaleMove.OWL_FISSURE || move == PaleMove.DASH_KICK;
     }
 
     /** How long (ticks) a released {@code move} is on its way before it lands ({@code detail}: a speed kick's dash ticks). */
     public static int window(PaleMove move, int detail) {
         return switch (move) {
             case PUNCH, OWL_PUNCH -> PaleRules.PUNCH_IMPACT + 1;
-            case KICK -> PaleRules.kickArrive(detail) + PaleRules.KICK_CONTACT + 1; // 4.1.8: its detail read (a twirl's turn included)
+            case KICK -> PaleRules.kickArrive(detail) + PaleRules.KICK_CONTACT + 1;
+            case DASH_KICK -> PaleRules.dashArrive(detail) + PaleRules.DASH_CONTACT + 1; // 4.1.87
             case OWL_KICK -> Math.max(0, detail) + OwlRules.KICK_SKEWER + 1;
             case HAMMER -> PaleRules.HAMMER_IMPACT + 1;
             case OWL_FISSURE -> OwlRules.FISSURE_IMPACT + 1;

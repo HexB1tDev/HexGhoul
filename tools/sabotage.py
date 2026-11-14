@@ -8,6 +8,8 @@ it becomes, "suite": the test suite to run (AgentTests, NpcTests...)}. For each 
 the tests do not hold that rule), BAD (it did not compile: a sabotage that proves nothing), SKIP (its text not found exactly once); then
 ALL CAUGHT or SOME MISSED. A MISS is a hole in the tests: fix the test, then run that sabotage again.
 
+A suite whose check() throws an AssertionError (BikakuWormTests and others) counts as caught too (4.1.87: before, BAD).
+
 Holes it found before (4.1.74..4.1.78): a check of text.indexOf(x, from) - from < n passes when x is gone (-1); a size checked against the
 very constant sabotaged (OFFERED); a test that crashed printed no FAILED (BAD/MISS: read the run's output).
 """
@@ -35,8 +37,13 @@ def main():
             continue
         try:
             path.write_text(source.replace(rule["old"], rule["new"]))
-            out = subprocess.run([str(FAST), rule["suite"]], capture_output=True, text=True, cwd=ROOT).stdout
+            run = subprocess.run([str(FAST), rule["suite"]], capture_output=True, text=True, cwd=ROOT)
+            out = run.stdout + run.stderr
+            # 4.1.87: some suites' check() throws (BikakuWormTests, DialogueTests, KingTests...) instead of printing FAILED: a
+            # thrown AssertionError is a check failing, so caught; any other exception is still a crash (BAD).
             failed = [line for line in out.splitlines() if line.startswith("FAILED:")]
+            failed += ["FAILED: " + line.split("java.lang.AssertionError: ", 1)[1] for line in out.splitlines()
+                       if line.startswith("Exception in thread") and "java.lang.AssertionError: " in line]
             if "MAIN COMPILE FAILED" in out:
                 print(f"BAD  {rule['name']}: did not compile")
                 caught = False

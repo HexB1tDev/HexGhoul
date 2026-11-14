@@ -152,6 +152,8 @@ final class PaleAnimator {
             pose = PaleMotions.punch(since, this.from);
         } else if (now == PaleMove.KICK) {
             pose = PaleMotions.kick(since, view.detail(), this.from);
+        } else if (now == PaleMove.DASH_KICK) {
+            pose = PaleMotions.dashKick(since, view.detail(), this.from); // 4.1.87
         } else if (now == PaleMove.WITNESS) {
             pose = PaleMotions.witness(since, this.from);
         } else if (now == PaleMove.HAMMER_CHARGE) {

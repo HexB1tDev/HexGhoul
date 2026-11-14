@@ -98,7 +98,7 @@ public final class PaleClient {
             kickFrom = null;
             return;
         }
-        if (view.move() != PaleMove.KICK && view.move() != PaleMove.OWL_KICK) {
+        if (view.move() != PaleMove.KICK && view.move() != PaleMove.OWL_KICK && view.move() != PaleMove.DASH_KICK) {
             kickFrom = null;
             return;
         }
@@ -110,6 +110,8 @@ public final class PaleClient {
         // 6.2.0: the Owl's kick dashes all but unseen and plants her there through all of it (OwlRules.kickPlace).
         double[] next = view.move() == PaleMove.OWL_KICK
             ? com.hex.kagune.control.pale.OwlRules.kickPlace(to, view.detail(), Math.toRadians(view.yaw()), view.age(clock(0.0F)) + 1.0)
+            // 4.1.87: Kick Master's dash kick: the run (seen), the hop into the blow and down.
+            : view.move() == PaleMove.DASH_KICK ? PaleRules.dashPlace(to, view.detail(), view.charge(), view.age(clock(0.0F)) + 1.0)
             : PaleRules.kickPlace(to, view.detail(), view.charge(), view.age(clock(0.0F)) + 1.0);
         if (next == null) {
             return;
@@ -191,6 +193,9 @@ public final class PaleClient {
         }
         if (frozenIn(self) != null) {
             return true; // 6.2.0: frozen in someone's Witness This
+        }
+        if (view.move() == PaleMove.DASH_KICK) {
+            return view.age(clock(0.0F)) < PaleRules.dashArrive(view.detail()) + PaleRules.DASH_LAND; // 4.1.87: until her foot is down
         }
         return view.move() == PaleMove.KICK && view.age(clock(0.0F)) < PaleRules.kickArrive(view.detail()) + PaleRules.KICK_LAND;
     }

@@ -45,7 +45,7 @@ public final class PaleInput {
         }
         Minecraft minecraft = Minecraft.m_91087_();
         LocalPlayer player = minecraft.f_91074_;
-        // 4.1.8: Kick Master's right click: held, the twirling speed kick's charge (timed in keys()), let go, the kick. Only aimed at the
+        // 4.1.8: Kick Master's right click: held, the charge (timed in keys()), let go, the kick (4.1.87: the dash kick). Only aimed at the
         // air or something hostile: a door, a chest or someone to talk to keeps the game's own right click.
         if (player != null && minecraft.f_91080_ == null && !player.m_6144_() && twirls(player)) {
             if (twirlTaken || fights(minecraft.f_91077_)) {
@@ -152,7 +152,7 @@ public final class PaleInput {
     private static final PaleKey TWIRL = new PaleKey(true);
     private static boolean twirlTaken;
 
-    /** 4.1.8: this client's own player throws Kick Master's twirling kick on the right click: theirs, the hand empty, the eyes open or human. */
+    /** 4.1.8: this client's own player throws Kick Master's right-click kick (4.1.87: the dash kick): theirs, the hand empty, the eyes open or human. */
     static boolean twirls(LocalPlayer player) {
         return PaleClient.useStyle() == com.hex.kagune.control.FightStyle.KICK_MASTER && player.m_21205_().m_41619_()
             && (PaleClient.eyes(player) || PaleClient.bare(player));

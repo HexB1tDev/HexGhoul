@@ -133,6 +133,12 @@ public final class PalePoseDesign {
             return this;
         }
 
+        /** 4.1.87: the head's own roll (radians) against the body's side lean: kept level while the trunk is laid over. */
+        Spec headRoll(double z) {
+            this.body.headZ = (float)z;
+            return this;
+        }
+
         /** The head's own turn (radians, + to her right), whatever the body's pivot (she looks over her shoulder). */
         Spec looking(double y) {
             this.body.headY = (float)y;
@@ -507,6 +513,51 @@ public final class PalePoseDesign {
     }
 
     /**
+     * 4.1.87, Kick Master's dash kick (right click let go): off the mark into the run, seen all the way (a real dash: the owner, "not a
+     * teleport, none of that, just like a dash"): tipped forward, the left knee driven up, the right leg pushing off behind, the arms
+     * pumping against the legs (the right fist forward, the left back), her eyes ahead.
+     */
+    static List<Spec> dashRun() {
+        return List.of(key(1.5, "OUT").body(0.0, 0.0, 0.18, 0.0).tilt(-0.38).head(-0.32).leftLeg(-1.05, 0.04, 1.35).rightLeg(0.62, 0.02, 0.55)
+            .rightFrom(v(0.12, -0.14, 0.32), v(0.1, -0.26, 0.06)).leftFrom(v(-0.17, -0.34, -0.17), v(-0.12, -0.22, -0.1)));
+    }
+
+    /**
+     * 4.1.87, the dash kick itself, from the run (ticks from when she is there; the owner: "Get a location, ... the right leg cocks back,
+     * and then it just kicks, it goes upwards and leftwards, sort of, to the height of like the enemy's head"; "Make sure that the head
+     * is also proportional. It doesn't rotate out of place"; "He faces where he kicked at. So basically, he ends up facing to the left."):
+     * THE COCK, the weight onto the left leg, the right thigh swung back and the shin folded up behind it, the body wound a little to her
+     * right; THE SWEEP, the leg coming through low on her right and rising; THE BLOW (PaleRules.DASH_CONTACT), the leg straight, the sole
+     * at the height of a head in front of her, already going left, the upper body laid away to her left as its counterweight; THROUGH,
+     * the sole carried on round to her left at the same height, the whole body turning with it; TURNED (PaleRules.DASH_TURNED), a quarter
+     * round to her left, facing the way it flew, the knee folding; DOWN (PaleRules.DASH_LAND), the foot set down in her stance; her guard,
+     * still facing left. The head turns with the body: never more than a little apart from it (its eyes on what it kicks until the blow).
+     */
+    /** 4.1.87: how far (radians) the head rolls back against a whole radian of side lean, to stay level ("It doesn't rotate out of place"). */
+    static final double HEAD_LEVEL = -1.0;
+
+    static List<Spec> dashKick() {
+        double c = PaleRules.DASH_CONTACT;
+        double quarter = Math.PI / 2.0;
+        Spec cock = key(1.4, "SMOOTH").body(-0.25, 0.1, 0.22, 0.0).leftLeg(-0.22, 0.04, 0.45).rightLeg(0.78, 0.12, 1.65).kickArms();
+        Spec sweep = key(c - 0.7, "SMOOTH").body(-0.05, 0.0, 0.05, 1.0).side(0.25).headRoll(HEAD_LEVEL * 0.25).leftLeg(-0.08, 0.04, 0.3).rightLeg(0.0, 0.0, 0.55)
+            .sole(0.55, 0.78, 0.6).kickArms();
+        Spec hit = key(c, "IN").body(0.35, -0.18, -0.04, 2.0).side(0.5).headRoll(HEAD_LEVEL * 0.5).leftLeg(-0.04, 0.02, 0.18).rightLeg(0.0, 0.0, 0.05)
+            .sole(-0.12, PaleRules.DASH_SOLE_Y, 0.92).kickArms();
+        Spec through = key(c + 0.7, "OUT").body(1.05, -0.15, -0.02, 2.0).side(0.45).headRoll(HEAD_LEVEL * 0.45).looking(0.3).leftLeg(-0.04, 0.02, 0.2)
+            .rightLeg(0.0, 0.0, 0.08).sole(-0.46, PaleRules.DASH_SOLE_Y - 0.08, 0.55).kickArms();
+        Spec carry = key(c + 1.3, "SMOOTH").body(1.3, -0.05, 0.0, 1.5).side(0.35).headRoll(HEAD_LEVEL * 0.35).looking(0.15).leftLeg(-0.06, 0.03, 0.25)
+            .rightLeg(0.0, 0.0, 0.35).sole(-0.5, 1.02, 0.4).kickArms();
+        Spec turned = key(PaleRules.DASH_TURNED, "SMOOTH").body(quarter, 0.0, 0.08, 1.0).side(0.2).headRoll(HEAD_LEVEL * 0.2).looking(0.0).leftLeg(-0.12, 0.04, 0.4)
+            .rightLeg(-0.85, 0.22, 1.35).kickArms();
+        Spec down = key(PaleRules.DASH_LAND, "SMOOTH").body(quarter, 0.0, 0.14, 0.0).looking(0.0).legs(-0.4, 0.8, -0.3, 0.78).kickArms();
+        Spec end = guardKey(PaleRules.DASH_TICKS);
+        end.body.spin = (float)quarter;
+        return List.of(cock, sweep, hit, through, carry, turned, down, end);
+    }
+
+    /**
+     * Watch This (B, 6.2.0): she gathers for a beat    /**
      * Watch This (B, 6.2.0): she gathers for a beat (hunched, knees in, fists drawn in to her chest), then flings her arms out wide
      * into a cross as the two tentacles burst out of her back, her chest thrown out and her chin up, her feet planted wide; holds
      * it, savouring it; and settles back into her guard while they hunt.
@@ -1220,6 +1271,10 @@ public final class PalePoseDesign {
         chamber.solved = pose(chamber, guard, rush.get(rush.size() - 1).solved, report, "kickChamber");
         methods.append('\n').append(method("kickChamber", chamber.solved));
         String kickKeys = sequence("kick", kick(), guard, chamber.solved, methods, report);
+        // 4.1.87: Kick Master's dash kick: the run, then the kick out of it.
+        List<Spec> run = dashRun();
+        String runKeys = sequence("dashrun", run, guard, guard, methods, report);
+        String dashKeys = sequence("dashkick", dashKick(), guard, run.get(run.size() - 1).solved, methods, report);
         String watchKeys = sequence("watch", watch(), guard, guard, methods, report);
         List<Spec> raise = hammerRaise();
         String raiseKeys = sequence("hammerraise", raise, guard, guard, methods, report);
@@ -1250,6 +1305,10 @@ public final class PalePoseDesign {
             + "    static PaleMotions.Key[] kickRush() {\n        return " + rushKeys + ";\n    }\n\n"
             + "    /** The Speed Kick, after the chamber she is in when she is there. */\n"
             + "    static PaleMotions.Key[] kick() {\n        return " + kickKeys + ";\n    }\n\n"
+            + "    /** 4.1.87: Kick Master's dash kick: off the mark into the run (held through it). */\n"
+            + "    static PaleMotions.Key[] dashRun() {\n        return " + runKeys + ";\n    }\n\n"
+            + "    /** 4.1.87: the dash kick, out of the run: the leg cocked back, swept up and across to her left, turned to face it. */\n"
+            + "    static PaleMotions.Key[] dashKick() {\n        return " + dashKeys + ";\n    }\n\n"
             + "    /** Watch This: her cross as the tentacles burst out. */\n"
             + "    static PaleMotions.Key[] watch() {\n        return " + watchKeys + ";\n    }\n\n"
             + "    /** The Flesh Hammer held: the leg raised, the body tipped back under it. */\n"

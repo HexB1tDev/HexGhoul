@@ -287,7 +287,7 @@ final class PaleMoves {
         return kickPlan(player, PaleRules.KICK_RANGE);
     }
 
-    /** 4.1.8: the same within {@code range} blocks (Kick Master's twirling kick: as far as its charge carries it). */
+    /** The same within {@code range} blocks. */
     static KickPlan kickPlan(ServerPlayer player, double range) {
         ServerLevel level = player.m_284548_();
         Vec3 eye = player.m_146892_();
@@ -372,7 +372,6 @@ final class PaleMoves {
         long age = now - state.startedAt;
         int dash = PaleRules.kickTicks(state.detail);
         int arrive = PaleRules.kickArrive(state.detail);
-        boolean twirl = PaleRules.twirled(state.detail);
         player.f_19789_ = 0.0F;
         LivingEntity target = state.targetId == 0 ? null
             : player.m_9236_().m_6815_(state.targetId) instanceof LivingEntity living && PaleBlitz.valid(player, living) ? living : null;
@@ -388,13 +387,8 @@ final class PaleMoves {
             UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.illusioner.mirror_move", 1.0F, KaguneServerController.vary(player, 1.3F, 0.06F));
             UkakuFire.sound(player.m_284548_(), player.m_20182_(), "item.trident.riptide_1", 0.9F, KaguneServerController.vary(player, 1.4F, 0.06F));
         }
-        if (twirl && age == PaleRules.kickThere(state.detail)) {
-            // 4.1.8: there, out of nowhere, already turning: the twirl cuts the air.
-            UkakuFire.sound(player.m_284548_(), state.point, "entity.ender_dragon.flap", 0.8F, KaguneServerController.vary(player, 1.8F, 0.06F));
-            UkakuFire.sound(player.m_284548_(), state.point, "entity.player.attack.sweep", 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
-        }
         if (age == arrive) {
-            // There, out of nowhere: the air cracks where she is (4.1.8: the twirl done, into the chamber).
+            // There, out of nowhere: the air cracks where she is.
             UkakuFire.sound(player.m_284548_(), state.point, "entity.ender_dragon.flap", 0.8F, KaguneServerController.vary(player, 1.6F, 0.06F));
             UkakuFire.sound(player.m_284548_(), state.point, "entity.player.attack.sweep", 1.0F, KaguneServerController.vary(player, 0.55F, 0.05F));
         }
@@ -413,14 +407,13 @@ final class PaleMoves {
         }
     }
 
-    // ------------------------------------------------------------------ 4.1.8: Kick Master's twirling speed kick (right click held)
+    // ------------------------------------------------------------------ Kick Master's right click: held, the coil (4.1.8); let go, the dash kick (4.1.87)
 
     /**
-     * 4.1.8 (the owner: "Right click is a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side twirl"):
-     * the right click down sinks her side-on into the coil ({@link PaleMove#TWIRL_CHARGE}); let go (or held past
-     * {@link PaleRules#TWIRL_MAX_HOLD}) it is the Speed Kick at whatever is nearest her crosshair within the charge's reach, there out of
-     * nowhere in a whole side twirl into the chamber, its blow and launch as strong as the charge ({@link PaleRules#twirlPower}). A ghoul
-     * pays RC; a human, nothing.
+     * 4.1.8: the right click down sinks her side-on into the coil ({@link PaleMove#TWIRL_CHARGE}); let go (or held past
+     * {@link PaleRules#TWIRL_MAX_HOLD}) it is, 4.1.87 (the owner: "The right click should be a chargeable dash kick, not a teleport, none
+     * of that, just like a dash"), the dash kick ({@link PaleMove#DASH_KICK}) as far as the charge reaches ({@link PaleRules#twirlRange}),
+     * as hard as it was charged ({@link PaleRules#twirlPower}). A ghoul pays RC; a human, nothing.
      */
     static void twirlKey(ServerPlayer player, PaleServer.PaleState state, boolean held, long now) {
         if (!held) {
@@ -452,24 +445,228 @@ final class PaleMoves {
         }
     }
 
-    /** 4.1.8: let go: the Speed Kick, twirling, as charged as it got; with nothing in reach, only "No target found". */
+    /**
+     * 4.1.87: let go: the dash kick, as charged as it got. It always goes (the owner chose "A spot, and the dash's path too"): to the
+     * spot its charge reaches the way she looks, or in front of whatever is nearest her crosshair in that reach, short of any wall.
+     */
     private static void releaseTwirl(ServerPlayer player, PaleServer.PaleState state, long now) {
         float charge = PaleRules.twirlChargeAt(now - state.startedAt);
-        KickPlan plan = kickPlan(player, PaleRules.twirlRange(charge));
-        if (plan == null) {
-            PaleServer.end(player, state);
-            PaleServer.notice(player, state, Component.m_237115_("message.hexkagune.pale.kick_no_target"));
-            return;
-        }
         if (!PaleServer.bare(player) && !KaguneServerController.useEnergy(player, PaleRules.TWIRL_COST, true)) {
             PaleServer.end(player, state);
             return;
         }
-        PaleServer.begin(player, state, PaleMove.KICK, PaleRules.twirlDetail(plan.dash(), charge), plan.target().m_19879_(), (float)plan.lift(),
-            plan.spot(), now, plan.yaw());
+        DashPlan plan = dashPlan(player, PaleRules.twirlRange(charge));
+        PaleServer.begin(player, state, PaleMove.DASH_KICK, PaleRules.dashDetail(plan.ticks(), charge), plan.target() == null ? 0 : plan.target().m_19879_(),
+            (float)plan.lift(), plan.spot(), now, plan.yaw());
         state.twirlReadyAt = now + Cooldowns.of(player, PaleRules.TWIRL_COOLDOWN);
-        pin(player, plan.target());
+        if (plan.target() != null) {
+            pin(player, plan.target());
+        }
+        // Off the mark: the ground torn up under her.
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "block.gravel.break", 1.0F, KaguneServerController.vary(player, 0.75F, 0.08F));
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "item.trident.riptide_1", 0.7F, KaguneServerController.vary(player, 1.5F, 0.06F));
+    }
+
+    /** 4.1.87: where the dash kick goes: the spot she runs to, its run's ticks, her hop at the blow, the way she runs, and what she went for. */
+    record DashPlan(LivingEntity target, Vec3 spot, int ticks, double lift, float yaw) {
+    }
+
+    /**
+     * 4.1.87: the dash kick's plan within {@code range} blocks, the way she looks (level): in front of whatever is nearest her crosshair
+     * there (as the Speed Kick picks it), else as far as it reaches; on the ground there; short of anything she would run into (her body
+     * moved along the way, never through a wall); her hop to put the sweep through its head (or a head's height, with nothing to go by).
+     */
+    static DashPlan dashPlan(ServerPlayer player, double range) {
+        ServerLevel level = player.m_284548_();
+        Vec3 from = player.m_20182_();
+        double yaw = Math.toRadians(player.m_146908_());
+        Vec3 way = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
+        LivingEntity target = aimed(player, range);
+        double want = range;
+        double head = PaleRules.DASH_HEAD_ANY;
+        if (target != null) {
+            Vec3 to = UkakuFire.horizontal(target.m_20182_().m_82546_(from));
+            if (to.m_82556_() > 1.0E-6) {
+                way = to.m_82541_();
+            }
+            want = Math.max(0.0, Math.sqrt(to.m_82556_()) - target.m_20205_() * 0.5 - PaleRules.DASH_STAND);
+            head = target.m_20186_() + target.m_20206_() * PaleRules.DASH_HEAD - from.f_82480_;
+        } else {
+            // No body aimed at: the spot under her crosshair (the plan the owner chose: "Dash to the spot under the crosshair (as far
+            // as the charge reaches, or the nearest wall)"): where her look meets a block inside the charge's reach, else its end.
+            Vec3 eye = player.m_146892_();
+            BlockHitResult hit = level.m_45547_(new ClipContext(eye, eye.m_82549_(player.m_20154_().m_82490_(range)),
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+            if (hit.m_6662_() == HitResult.Type.BLOCK) {
+                want = Math.min(range, Math.sqrt(UkakuFire.horizontal(hit.m_82450_().m_82546_(from)).m_82556_()));
+            }
+        }
+        // Along the way in quarter blocks: her body moved there (a step up or down onto the ground there) and nothing in its way.
+        double reached = 0.0;
+        double y = from.f_82480_;
+        AABB box = player.m_20191_();
+        for (double d = 0.25; d <= want + 1.0E-6; d += 0.25) {
+            Vec3 at = from.m_82549_(way.m_82490_(d));
+            double ground = groundAt(level, player, box, at.f_82479_ - from.f_82479_, y - from.f_82480_, at.f_82481_ - from.f_82481_);
+            if (Double.isNaN(ground)) {
+                break;
+            }
+            y = from.f_82480_ + ground;
+            reached = d;
+        }
+        Vec3 spot = new Vec3(from.f_82479_ + way.f_82479_ * reached, y, from.f_82481_ + way.f_82481_ * reached);
+        float facing = (float)Math.toDegrees(Math.atan2(-way.f_82479_, way.f_82481_));
+        return new DashPlan(target, spot, PaleRules.dashTicksFor(reached), PaleRules.dashLift(head - (y - from.f_82480_)), facing);
+    }
+
+    /**
+     * 4.1.87: the height (blocks, from where she let go) of the ground under her box moved ({@code dx}, {@code dz}) at about {@code dy}:
+     * the same, a half step up (a slab, a stair: a whole block would stop her run) or down (at most two); NaN if there is no room for
+     * her there.
+     */
+    static double groundAt(ServerLevel level, ServerPlayer player, AABB box, double dx, double dy, double dz) {
+        for (double step : new double[] {0.0, 0.5, -0.5, -1.0, -1.5, -2.0}) {
+            AABB moved = box.m_82386_(dx, dy + step, dz);
+            if (level.m_45756_(player, moved) && !level.m_45756_(player, moved.m_82386_(0.0, -0.3, 0.0))) {
+                return dy + step;
+            }
+        }
+        AABB level0 = box.m_82386_(dx, dy, dz);
+        return level.m_45756_(player, level0) ? dy : Double.NaN; // over a drop: on along the level (she comes down after)
+    }
+
+    /** 4.1.87: what is nearest her crosshair within {@code range}, in front of her and in her sight, or null. */
+    static LivingEntity aimed(ServerPlayer player, double range) {
+        ServerLevel level = player.m_284548_();
+        Vec3 eye = player.m_146892_();
+        Vec3 look = player.m_20154_();
+        double cone = Math.cos(Math.toRadians(PaleRules.KICK_CONE));
+        LivingEntity best = null;
+        double bestScore = Double.MAX_VALUE;
+        for (LivingEntity candidate : level.m_6443_(LivingEntity.class, player.m_20191_().m_82400_(range), entity -> PaleBlitz.valid(player, entity))) {
+            Vec3 to = candidate.m_146892_().m_82546_(eye);
+            double distance = to.m_82553_();
+            if (distance > range || distance < 1.0E-3) {
+                continue;
+            }
+            double facing = to.m_82526_(look) / distance;
+            if (facing < cone || to.f_82479_ * look.f_82479_ + to.f_82481_ * look.f_82481_ <= 0.0) {
+                continue;
+            }
+            double score = Math.acos(Math.min(1.0, facing)) + distance * 0.004;
+            if (score < bestScore && seen(level, player, eye, candidate)) {
+                best = candidate;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * 4.1.87, the dash kick under way: the lean off the mark and the run (the client moves her: PaleRules.dashPlace), whatever she runs
+     * into kicked aside to her left; there, the blow on its tick, the sweep through everything in its reach to her left; done once she
+     * is back in her guard, facing the way she kicked. What she went for is held where it is until the blow (it never sees her coming).
+     */
+    private static void tickDashKick(ServerPlayer player, PaleServer.PaleState state, long now) {
+        long age = now - state.startedAt;
+        int arrive = PaleRules.dashArrive(state.detail);
+        long contact = arrive + PaleRules.DASH_CONTACT;
+        player.f_19789_ = 0.0F;
+        LivingEntity target = state.targetId == 0 ? null
+            : player.m_9236_().m_6815_(state.targetId) instanceof LivingEntity living && PaleBlitz.valid(player, living) ? living : null;
+        if (age < contact && target != null) {
+            pin(player, target);
+        }
+        ServerLevel level = player.m_284548_();
+        if (age >= PaleRules.DASH_BURST && age <= arrive) {
+            // On the run: whatever she runs into goes aside, hard, to her left.
+            for (LivingEntity body : level.m_6443_(LivingEntity.class, player.m_20191_().m_82400_(0.6),
+                entity -> entity != target && PaleBlitz.valid(player, entity) && !state.hit.contains(entity.m_19879_()))) {
+                state.hit.add(body.m_19879_());
+                kickedLeft(player, state, body, PaleRules.DASH_SHOVE, now);
+            }
+        }
+        if (age == PaleRules.DASH_BURST && PaleRules.dashTicks(state.detail) > 0) {
+            UkakuFire.sound(level, player.m_20182_(), "entity.player.attack.sweep", 0.9F, KaguneServerController.vary(player, 1.5F, 0.06F));
+        }
+        if (age == arrive + 1L) {
+            // The leg cocked back: the air drawn in.
+            UkakuFire.sound(level, player.m_20182_(), "entity.player.attack.nodamage", 0.8F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        }
+        if (age == contact) {
+            dashLands(player, state, now);
+        }
+        if (age == arrive + (long)Math.ceil(PaleRules.DASH_LAND)) {
+            UkakuFire.sound(level, player.m_20182_(), "entity.player.small_fall", 0.8F, KaguneServerController.vary(player, 0.9F, 0.06F));
+        }
+        if (age >= PaleRules.dashEnd(state.detail)) {
+            PaleServer.end(player, state);
+        }
+    }
+
+    /** 4.1.87: the blow: the sweep through everything in its reach (PaleRules.dashStruck, from where she is), each sent hard to her left. */
+    private static void dashLands(ServerPlayer player, PaleServer.PaleState state, long now) {
+        ServerLevel level = player.m_284548_();
+        Vec3 facing = facing(state);
+        Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
+        Vec3 feet = player.m_20182_();
+        boolean any = false;
+        for (LivingEntity body : level.m_6443_(LivingEntity.class, player.m_20191_().m_82400_(PaleRules.DASH_REACH_FRONT + 1.0),
+            entity -> PaleBlitz.valid(player, entity) && !state.hit.contains(entity.m_19879_()))) {
+            Vec3 rel = body.m_20182_().m_82546_(feet);
+            double x = rel.f_82479_ * right.f_82479_ + rel.f_82481_ * right.f_82481_;
+            double z = rel.f_82479_ * facing.f_82479_ + rel.f_82481_ * facing.f_82481_;
+            if (!PaleRules.dashStruck(x, rel.f_82480_, z, body.m_20205_() * 0.5, body.m_20206_())) {
+                continue;
+            }
+            state.hit.add(body.m_19879_());
+            any |= kickedLeft(player, state, body, 1.0, now);
+        }
+        Vec3 at = feet.m_82549_(facing.m_82490_(1.0)).m_82520_(0.0, PaleRules.DASH_SOLE_Y + state.charge, 0.0);
+        UkakuFire.sound(level, at, "entity.player.attack.sweep", 1.0F, KaguneServerController.vary(player, any ? 0.6F : 0.85F, 0.05F));
+        if (any) {
+            if (KaguneProfile.isUnlocked(player)) {
+                KaguneProfile.addMastery(player, "Swipe", 2);
+            }
+            KaguneNetwork.broadcast(player);
+            PaleServer.landed(player, 1);
+            QuestServer.signal(player, com.hex.kagune.control.quest.Signal.KICK, 1);
+        }
+    }
+
+    /**
+     * 4.1.87: {@code body} kicked hard to her left (the way she faced when she let go): hurt, launched as the Speed Kick launches (carried,
+     * smashing through what it can break, tumbling, down a moment where it lands), {@code share} of the kick's blow and speed and of the
+     * charge's power. True if it was hurt.
+     */
+    private static boolean kickedLeft(ServerPlayer player, PaleServer.PaleState state, LivingEntity body, double share, long now) {
+        ServerLevel level = player.m_284548_();
+        Vec3 facing = facing(state);
+        Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
+        double[] flight = PaleRules.dashFlight();
+        Vec3 along = right.m_82490_(flight[0]).m_82549_(facing.m_82490_(flight[1]));
+        double power = PaleRules.twirlPower(PaleRules.dashCharge(state.detail)) * share;
+        int mastery = KaguneProfile.isUnlocked(player) ? KaguneProfile.mastery(player) : com.hex.kagune.control.pale.EyeRules.HUMAN_MASTERY;
+        float damage = (float)(PaleRules.fist(mastery) * PaleRules.KICK_DAMAGE * PaleServer.power(player) * power);
+        AABB box = body.m_20191_();
+        Vec3 struck = new Vec3(body.m_20185_(), Math.min(box.f_82292_ - 0.1, player.m_20186_() + PaleRules.DASH_SOLE_Y), body.m_20189_())
+            .m_82546_(along.m_82490_(body.m_20205_() * 0.5));
+        body.f_19802_ = 0;
+        WoundHits.expect(body, com.hex.kagune.control.wound.WoundBook.Blow.BLUNT, struck, along, 0.0);
+        if (!body.m_6469_(player.m_269291_().m_269075_(player), damage)) {
+            return false;
+        }
+        double resist = Math.max(0.0, Math.min(1.0, body.m_21133_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_)));
+        double speed = PaleRules.KICK_SPEED * (1.0 - PaleRules.KICK_RESIST * resist) * power;
+        BlockSmash.kick(player, body, along, speed, PaleRules.DASH_UP, damage);
+        PaleKnockdown.launched(body, now);
+        Vec3 launch = along.m_82490_(speed).m_82520_(0.0, PaleRules.DASH_UP, 0.0);
+        PaleBlitz.fx(player, S2CPaleFx.KICKED, body.m_19879_(), struck, launch, 1.0F, 0);
+        UkakuFire.sound(level, struck, "entity.player.attack.strong", 1.3F, KaguneServerController.vary(player, 0.55F, 0.04F));
+        UkakuFire.sound(level, struck, "entity.player.attack.knockback", 1.1F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        UkakuFire.sound(level, struck, "entity.warden.sonic_boom", 0.6F * (float)share, KaguneServerController.vary(player, 1.4F, 0.05F));
+        KaguneServerController.playAt(player, body, HexKaguneSounds.BONE_CRACK, (float)share, KaguneServerController.vary(player, 0.75F, 0.05F));
+        return true;
     }
 
     /** Held where it is (no going anywhere but down), slowed to nothing. */
@@ -512,8 +709,7 @@ final class PaleMoves {
             .m_82549_(facing.m_82490_(0.05));
         target.f_19802_ = 0;
         WoundHits.expect(target, com.hex.kagune.control.wound.WoundBook.Blow.BLUNT, struck, along, 0.0);
-        // 4.1.8: Kick Master's twirling kick carries as much as its charge (a human's fists as EyeRules.HUMAN_MASTERY's).
-        double power = PaleRules.twirled(state.detail) ? PaleRules.twirlPower(PaleRules.twirlCharge(state.detail)) : 1.0;
+        double power = 1.0;
         int mastery = KaguneProfile.isUnlocked(player) ? KaguneProfile.mastery(player) : com.hex.kagune.control.pale.EyeRules.HUMAN_MASTERY;
         float damage = (float)(PaleRules.fist(mastery) * PaleRules.KICK_DAMAGE * PaleServer.power(player) * power);
         if (!target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
@@ -687,6 +883,7 @@ final class PaleMoves {
             case WITNESS -> PaleWitness.tick(player, state, now);
             case KICK -> tickKick(player, state, now);
             case TWIRL_CHARGE -> tickTwirlCharge(player, state, now);
+            case DASH_KICK -> tickDashKick(player, state, now); // 4.1.87
             case OWL_KICK -> PaleOwlMoves.tickKick(player, state, now);
             case OWL_SPIKES -> PaleOwlMoves.tickSpikes(player, state, now);
             case OWL_STRIKE -> PaleOwlMoves.tickRend(player, state, now);

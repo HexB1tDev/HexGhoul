@@ -59,7 +59,7 @@ public final class PaleServer {
         long swipeReadyAt = Long.MIN_VALUE;
         long grabReadyAt = Long.MIN_VALUE;
         long kickReadyAt = Long.MIN_VALUE;
-        /** 4.1.8: when Kick Master's twirling speed kick is back; when its hold was last heard. */
+        /** 4.1.8: when Kick Master's right click (4.1.87: the dash kick) is back; when its hold was last heard. */
         long twirlReadyAt = Long.MIN_VALUE;
         long twirlHeardAt = Long.MIN_VALUE;
         long hammerReadyAt = Long.MIN_VALUE;
@@ -213,6 +213,7 @@ public final class PaleServer {
         return switch (state.move) {
             case KICK -> PaleRules.kickUntouchable(state.detail, age) || age <= PaleRules.kickArrive(state.detail) + PaleRules.KICK_CONTACT;
             case OWL_KICK -> age <= Math.max(1, state.detail) + com.hex.kagune.control.pale.OwlRules.KICK_SKEWER;
+            case DASH_KICK -> PaleRules.dashUntouchable(state.detail, age); // 4.1.87: through the run, until the blow
             case PUNCH, OWL_PUNCH -> age <= PaleRules.PUNCH_IMPACT;
             case WITNESS -> age < com.hex.kagune.control.pale.WitnessRules.FREE;
             default -> false;
@@ -570,7 +571,7 @@ public final class PaleServer {
                 }
             }
             case C2SPaleAction.TWIRL -> {
-                // 4.1.8: Kick Master's own right click: the twirling speed kick, charged on the hold.
+                // 4.1.8: Kick Master's own right click, charged on the hold (4.1.87: the dash kick).
                 if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open) == com.hex.kagune.control.FightStyle.KICK_MASTER) {
                     PaleMoves.twirlKey(player, state, arg != 0, now);
                 }

@@ -17,8 +17,8 @@ public enum FightStyle {
     /**
      * 4.1.7 (the owner: "this combat style upon learned fully replaces the default M1 combos"): Kick Master's string on M1 (kicks and
      * punches: {@link com.hex.kagune.control.pale.PaleStrike.Style#KICKS}). The General teaches it, to a human or a ghoul behind a full mask;
-     * a human fights with it whenever the main hand is empty. 4.1.8: its own right click, held and let go, is the twirling speed kick (the
-     * owner: "a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side twirl").
+     * a human fights with it whenever the main hand is empty. 4.1.8: its own right click, held and let go; 4.1.87, the dash kick (the owner:
+     * "The right click should be a chargeable dash kick, not a teleport").
      */
     KICK_MASTER("kick_master", "Kick Master", Gate.STYLE_KICK_MASTER);
 
@@ -50,7 +50,7 @@ public enum FightStyle {
         return this != NONE;
     }
 
-    /** True if an empty right click is this style's own move (never the game's). 4.1.8: Kick Master's, its twirling speed kick. */
+    /** True if an empty right click is this style's own move (never the game's). 4.1.8: Kick Master's (4.1.87: its dash kick). */
     public boolean ownUse() {
         return this != NONE;
     }

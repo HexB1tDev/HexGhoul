@@ -591,111 +591,219 @@ public final class CompanionTests {
         roma();
         banjou(); // 4.1.54
         kickMaster();
-        twirlKick();
+        dashKick487();
     }
 
     /**
-     * 4.1.8 (the owner: "Right click is a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side
-     * twirl."): Kick Master's right click, the Speed Kick charged on the hold, there out of nowhere in a whole side twirl into the kick.
+     * 4.1.87 (the owner: "we need to redo the Kickmaster combat right click ability, which is basically we just copy pasted the V ability
+     * ... The right click should be a chargeable dash kick, not a teleport, none of that, just like a dash. And as soon as you reach the
+     * location, you kick. Whatever's in the way is kicked to the left of the player, like hard to the left of the player." "the right leg
+     * cocks back, and then it just kicks, it goes upwards and leftwards, sort of, to the height of like the enemy's head" "Make sure that
+     * the head is also proportional. It doesn't rotate out of place." Asked: "He faces where he kicked at. So basically, he ends up facing
+     * to the left."; "A spot, and the dash's path too"): Kick Master's dash kick.
      */
-    static void twirlKick() {
-        // Its detail: the dash's ticks, the twirl, the charge; every plain speed kick read as before.
-        for (int dash = 1; dash <= 4; dash++) {
-            check(com.hex.kagune.control.pale.PaleRules.kickTicks(dash) == dash && !com.hex.kagune.control.pale.PaleRules.twirled(dash)
-                && com.hex.kagune.control.pale.PaleRules.kickArrive(dash) == com.hex.kagune.control.pale.PaleRules.KICK_BURST + dash
-                && com.hex.kagune.control.pale.PaleRules.kickThere(dash) == com.hex.kagune.control.pale.PaleRules.kickArrive(dash),
-                "a plain speed kick of " + dash + " ticks: as it was");
+    static void dashKick487() {
+        // Its detail: the run's ticks and the charge, read back.
+        for (int ticks = 0; ticks <= com.hex.kagune.control.pale.PaleRules.DASH_MAX; ticks++) {
             for (float charge : new float[] {0.0F, 0.15F, 0.5F, 1.0F}) {
-                int detail = com.hex.kagune.control.pale.PaleRules.twirlDetail(dash, charge);
-                check(com.hex.kagune.control.pale.PaleRules.kickTicks(detail) == dash && com.hex.kagune.control.pale.PaleRules.twirled(detail)
-                    && Math.abs(com.hex.kagune.control.pale.PaleRules.twirlCharge(detail) - charge) <= 1.0F / 30.0F + 1.0E-6F,
-                    "twirl detail " + dash + "/" + charge + ": read back");
-                int there = com.hex.kagune.control.pale.PaleRules.kickThere(detail);
-                int arrive = com.hex.kagune.control.pale.PaleRules.kickArrive(detail);
-                check(there == com.hex.kagune.control.pale.PaleRules.KICK_BURST + dash && arrive == there + com.hex.kagune.control.pale.PaleRules.TWIRL_SPIN,
-                    "she is there after the dash, the kick starts after the twirl");
-                check(com.hex.kagune.control.pale.PaleRules.kickGone(detail, there - 0.01) && !com.hex.kagune.control.pale.PaleRules.kickGone(detail, there)
-                    && com.hex.kagune.control.pale.PaleRules.kickUntouchable(detail, arrive - 0.01)
-                    && !com.hex.kagune.control.pale.PaleRules.kickUntouchable(detail, arrive),
-                    "gone through the dash, seen through the twirl, nothing hurts her till the kick starts");
-                double[] to = {0.5, 0.0, 7.0};
-                double[] at = com.hex.kagune.control.pale.PaleRules.kickPlace(to, detail, 1.0, there + 1.0);
-                double[] kicked = com.hex.kagune.control.pale.PaleRules.kickPlace(to, detail, 1.0, arrive + 0.5);
-                check(at != null && Math.abs(at[0] - 0.5) < 1.0E-9 && Math.abs(at[2] - 7.0) < 1.0E-9 && Math.abs(at[1] - 1.0) < 1.0E-9
-                    && kicked != null && Math.abs(kicked[2] - 7.0) < 1.0E-9, "she twirls where she kicks from, up at the kick's height");
-                check(com.hex.kagune.control.pale.MoveClashRules.window(com.hex.kagune.control.pale.PaleMove.KICK, detail)
-                    == arrive + com.hex.kagune.control.pale.PaleRules.KICK_CONTACT + 1, "a clash waits for its blow");
+                int detail = com.hex.kagune.control.pale.PaleRules.dashDetail(ticks, charge);
+                check(com.hex.kagune.control.pale.PaleRules.dashTicks(detail) == ticks
+                    && Math.abs(com.hex.kagune.control.pale.PaleRules.dashCharge(detail) - charge) <= 1.0F / 30.0F + 1.0E-6F, "dash detail " + ticks + "/" + charge + ": read back");
+                check(com.hex.kagune.control.pale.PaleRules.dashArrive(detail) == com.hex.kagune.control.pale.PaleRules.DASH_BURST + ticks
+                    && com.hex.kagune.control.pale.PaleRules.dashEnd(detail) == com.hex.kagune.control.pale.PaleRules.dashArrive(detail) + com.hex.kagune.control.pale.PaleRules.DASH_TICKS,
+                    "there after the lean and the run; over in her guard after the kick");
+                check(com.hex.kagune.control.pale.MoveClashRules.window(com.hex.kagune.control.pale.PaleMove.DASH_KICK, detail)
+                    == com.hex.kagune.control.pale.PaleRules.dashArrive(detail) + com.hex.kagune.control.pale.PaleRules.DASH_CONTACT + 1, "a clash waits for its blow");
             }
         }
-        // The twirl: a whole turn, fastest as she appears, none left at the chamber.
-        double last = Double.MAX_VALUE;
+        check(com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.DASH_KICK) == com.hex.kagune.control.pale.MoveClashRules.Family.KICK
+            && com.hex.kagune.control.pale.MoveClashRules.released(com.hex.kagune.control.pale.PaleMove.DASH_KICK), "a kick: two meeting cancel");
+        // The run: a real dash (seen), as long as the spot is far, never faster than a server lets a player go.
+        check(com.hex.kagune.control.pale.PaleRules.dashTicksFor(0.3) == 0 && com.hex.kagune.control.pale.PaleRules.dashTicksFor(1.0) == com.hex.kagune.control.pale.PaleRules.DASH_MIN
+            && com.hex.kagune.control.pale.PaleRules.dashTicksFor(13.0) == 5 && com.hex.kagune.control.pale.PaleRules.dashTicksFor(100.0) == com.hex.kagune.control.pale.PaleRules.DASH_MAX
+            && com.hex.kagune.control.pale.PaleRules.DASH_MAX * com.hex.kagune.control.pale.PaleRules.DASH_SPEED >= com.hex.kagune.control.pale.PaleRules.TWIRL_RANGE_MAX,
+            "no run for a spot at her feet; a full charge's reach run at its pace");
+        double[] to = {0.0, 0.0, 13.0};
+        int detail = com.hex.kagune.control.pale.PaleRules.dashDetail(com.hex.kagune.control.pale.PaleRules.dashTicksFor(13.0), 1.0F);
+        int arrive = com.hex.kagune.control.pale.PaleRules.dashArrive(detail);
+        double contact = arrive + com.hex.kagune.control.pale.PaleRules.DASH_CONTACT;
+        double lift = 0.45;
+        double lastZ = 0.0;
         double lastStep = Double.MAX_VALUE;
-        for (double since = 0.0; since <= com.hex.kagune.control.pale.PaleRules.TWIRL_SPIN + 1.0E-9; since += 0.25) {
-            double left = com.hex.kagune.control.pale.PaleRules.twirlLeft(since);
-            if (last != Double.MAX_VALUE) {
-                check(left <= last && last - left <= lastStep + 1.0E-9, "the twirl turns on, slowing: " + since);
-                lastStep = last - left;
+        boolean slowing = true;
+        boolean underCap = true;
+        for (int age = 0; age <= arrive; age++) {
+            double[] at = com.hex.kagune.control.pale.PaleRules.dashPlace(to, detail, lift, age);
+            double step = at[2] - lastZ;
+            underCap &= step <= 10.0;
+            if (age > com.hex.kagune.control.pale.PaleRules.DASH_BURST + 1) {
+                slowing &= step <= lastStep + 1.0E-9;
             }
-            last = left;
+            if (age > com.hex.kagune.control.pale.PaleRules.DASH_BURST) {
+                lastStep = step;
+            }
+            lastZ = at[2];
         }
-        check(Math.abs(com.hex.kagune.control.pale.PaleRules.twirlLeft(0.0) - Math.PI * 2.0) < 1.0E-9
-            && com.hex.kagune.control.pale.PaleRules.twirlLeft(com.hex.kagune.control.pale.PaleRules.TWIRL_SPIN) == 0.0, "a whole turn, into the chamber");
-        // The charge: a floor for a tap, full after its ticks; its reach and its power with it.
+        double first = com.hex.kagune.control.pale.PaleRules.dashPlace(to, detail, lift, com.hex.kagune.control.pale.PaleRules.DASH_BURST + 1)[2];
+        double last = 13.0 - com.hex.kagune.control.pale.PaleRules.dashPlace(to, detail, lift, arrive - 1)[2];
+        check(first > last * 1.5, "fastest off the mark, slowest into the spot: " + first + " / " + last);
+        double[] start = com.hex.kagune.control.pale.PaleRules.dashPlace(to, detail, lift, com.hex.kagune.control.pale.PaleRules.DASH_BURST);
+        double[] there = com.hex.kagune.control.pale.PaleRules.dashPlace(to, detail, lift, arrive);
+        double[] up = com.hex.kagune.control.pale.PaleRules.dashPlace(to, detail, lift, contact);
+        check(start[2] == 0.0 && Math.abs(there[2] - 13.0) < 1.0E-9 && there[1] == 0.0 && slowing && underCap,
+            "off the mark after the lean, fastest at first and slowing into the spot, there on the ground");
+        check(Math.abs(up[1] - lift) < 1.0E-9 && Math.abs(up[2] - 13.0) < 1.0E-9
+            && com.hex.kagune.control.pale.PaleRules.dashPlace(to, detail, lift, arrive + com.hex.kagune.control.pale.PaleRules.DASH_LAND) == null,
+            "hopped up into the blow where she stopped; her own again once her foot is down");
+        check(com.hex.kagune.control.pale.PaleRules.dashRise(detail, arrive + 1.0) == 0.0 && com.hex.kagune.control.pale.PaleRules.dashRise(detail, contact) == 1.0
+            && com.hex.kagune.control.pale.PaleRules.dashRise(detail, arrive + com.hex.kagune.control.pale.PaleRules.DASH_LAND) == 0.0, "the hop: off the ground into the blow, down after");
+        check(com.hex.kagune.control.pale.PaleRules.dashUntouchable(detail, contact - 0.01) && !com.hex.kagune.control.pale.PaleRules.dashUntouchable(detail, contact),
+            "nothing hurts her from letting go to the blow");
+        check(Math.abs(com.hex.kagune.control.pale.PaleRules.dashLift(1.7) - (1.7 - com.hex.kagune.control.pale.PaleRules.DASH_SOLE_Y)) < 1.0E-9
+            && com.hex.kagune.control.pale.PaleRules.dashLift(0.8) == 0.0 && com.hex.kagune.control.pale.PaleRules.dashLift(9.0) == com.hex.kagune.control.pale.PaleRules.DASH_LIFT_MAX,
+            "she hops as high as puts the sweep through its head (never off a low one, never too high)");
+        // The turn: none till just before the blow, a quarter turn to her left with the kick, facing the way it flew from then on.
+        double lastTurn = 0.0;
+        boolean onward = true;
+        for (double age = 0.0; age <= com.hex.kagune.control.pale.PaleRules.dashEnd(detail); age += 0.25) {
+            double turn = com.hex.kagune.control.pale.PaleRules.dashTurn(detail, age);
+            onward &= turn >= lastTurn - 1.0E-12;
+            lastTurn = turn;
+        }
+        check(onward && com.hex.kagune.control.pale.PaleRules.dashTurn(detail, contact - 0.5) == 0.0
+            && Math.abs(com.hex.kagune.control.pale.PaleRules.dashTurn(detail, arrive + com.hex.kagune.control.pale.PaleRules.DASH_TURNED) - Math.PI / 2.0) < 1.0E-9
+            && Math.abs(com.hex.kagune.control.pale.PaleRules.dashTurn(detail, com.hex.kagune.control.pale.PaleRules.dashEnd(detail)) - Math.PI / 2.0) < 1.0E-9,
+            "a quarter turn to her left with the kick, never back");
+        // The launch: to her left; the sweep's reach: across her front and out to her left, from her knees to over a head.
+        double[] flight = com.hex.kagune.control.pale.PaleRules.dashFlight();
+        check(flight[0] == -1.0 && flight[1] == 0.0 && com.hex.kagune.control.pale.PaleRules.kickFlight()[1] == 1.0, "the dash kick sends it to her left (the V kick straight ahead)");
+        check(com.hex.kagune.control.pale.PaleRules.dashStruck(0.0, 0.0, 1.3, 0.3, 1.8) && com.hex.kagune.control.pale.PaleRules.dashStruck(-2.5, 0.0, 0.6, 0.3, 1.8)
+            && com.hex.kagune.control.pale.PaleRules.dashStruck(0.0, 1.0, 1.0, 0.3, 1.8) && !com.hex.kagune.control.pale.PaleRules.dashStruck(0.0, 0.0, -1.0, 0.3, 1.8)
+            && !com.hex.kagune.control.pale.PaleRules.dashStruck(1.6, 0.0, 1.0, 0.3, 1.8) && !com.hex.kagune.control.pale.PaleRules.dashStruck(0.0, 3.0, 1.0, 0.3, 1.8)
+            && !com.hex.kagune.control.pale.PaleRules.dashStruck(0.0, -3.0, 1.0, 0.3, 1.8) && !com.hex.kagune.control.pale.PaleRules.dashStruck(0.0, 0.0, 3.5, 0.3, 1.8),
+            "what is before her or out to her left is swept; not behind her, far to her right, over her or under her");
+        // The charge, as 4.1.8 had it: a floor for a tap, full after its ticks; its reach and its power with it.
         check(com.hex.kagune.control.pale.PaleRules.twirlChargeAt(0.0) == 0.15F
             && com.hex.kagune.control.pale.PaleRules.twirlChargeAt(com.hex.kagune.control.pale.PaleRules.TWIRL_CHARGE_TICKS) == 1.0F
-            && com.hex.kagune.control.pale.PaleRules.twirlChargeAt(1000.0) == 1.0F, "a tap kicks at the least charge; held, it fills");
-        check(com.hex.kagune.control.pale.PaleRules.twirlRange(0.0F) == com.hex.kagune.control.pale.PaleRules.TWIRL_RANGE_MIN
+            && com.hex.kagune.control.pale.PaleRules.twirlRange(0.0F) == com.hex.kagune.control.pale.PaleRules.TWIRL_RANGE_MIN
             && com.hex.kagune.control.pale.PaleRules.twirlRange(1.0F) == com.hex.kagune.control.pale.PaleRules.TWIRL_RANGE_MAX
-            && com.hex.kagune.control.pale.PaleRules.twirlRange(1.0F) <= com.hex.kagune.control.pale.PaleRules.KICK_RANGE
-            && com.hex.kagune.control.pale.PaleRules.twirlPower(1.0F) == 1.0 && com.hex.kagune.control.pale.PaleRules.twirlPower(0.0F) < 0.5
-            && com.hex.kagune.control.pale.PaleRules.twirlPower(0.5F) > com.hex.kagune.control.pale.PaleRules.twirlPower(0.2F),
-            "the longer the hold, the further it reaches and the harder it lands (full: the Speed Kick's own)");
-        check(com.hex.kagune.control.pale.PaleRules.TWIRL_MAX_HOLD > com.hex.kagune.control.pale.PaleRules.TWIRL_CHARGE_TICKS, "it waits a while full before it goes by itself");
-        check(com.hex.kagune.control.pale.PaleMove.values()[com.hex.kagune.control.pale.PaleMove.values().length - 1] == com.hex.kagune.control.pale.PaleMove.TWIRL_CHARGE
-            && com.hex.kagune.control.network.C2SPaleAction.TWIRL == 13, "its move and its action appended");
-        // Its poses: the coil sunk side-on, out of anything she was doing; the twirl into the chamber, seamless into the kick; nothing
-        // through her body.
-        int detail = com.hex.kagune.control.pale.PaleRules.twirlDetail(3, 1.0F);
-        int there = com.hex.kagune.control.pale.PaleRules.kickThere(detail);
-        int arrive = com.hex.kagune.control.pale.PaleRules.kickArrive(detail);
-        RigPose atChamber = com.hex.kagune.control.client.animation.PaleMotions.kick(arrive, detail, null);
-        RigPose before = com.hex.kagune.control.client.animation.PaleMotions.kick(arrive - 1.0E-4, detail, null);
-        check(Math.abs(atChamber.spin - before.spin) < 1.0E-3 && Math.abs(atChamber.rightLegX - before.rightLegX) < 1.0E-3,
-            "the twirl ends exactly where the kick starts");
-        RigPose appearing = com.hex.kagune.control.client.animation.PaleMotions.kick(there, detail, null);
-        check(Math.abs((atChamber.spin - appearing.spin) - Math.PI * 2.0) < 1.0E-3, "she appears a whole turn short of the chamber");
-        java.util.List<RigPose> starts = new java.util.ArrayList<>();
-        starts.add(null);
-        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS)) {
-            starts.add(com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.duration, null));
-        }
-        double worst = 0.0;
-        for (RigPose start : starts) {
-            for (double age = 0.0; age <= 40.0; age += 0.25) {
-                RigPose coil = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(age, start);
-                coil.settle(1.0F);
-                worst = Math.max(worst, com.hex.kagune.control.client.animation.BodyFrame.clipping(coil, 0.25));
+            && com.hex.kagune.control.pale.PaleRules.twirlPower(1.0F) == 1.0 && com.hex.kagune.control.pale.PaleRules.twirlPower(0.0F) < 0.5,
+            "the longer the hold, the further it runs and the harder it lands");
+        check(com.hex.kagune.control.pale.PaleMove.values()[com.hex.kagune.control.pale.PaleMove.values().length - 1] == com.hex.kagune.control.pale.PaleMove.DASH_KICK
+            && com.hex.kagune.control.pale.PaleMove.values()[com.hex.kagune.control.pale.PaleMove.values().length - 2] == com.hex.kagune.control.pale.PaleMove.TWIRL_CHARGE
+            && com.hex.kagune.control.network.C2SPaleAction.TWIRL == 13, "its move appended (protocol 127)");
+        // Its poses: the leg cocked back behind her; swept through the height of a head in front of her at the blow; carried on to her
+        // left still high; turned a quarter to her left, down in her guard facing it; the head turned with her body and kept level.
+        double[] cocked = sole(com.hex.kagune.control.client.animation.PaleMotions.dashKick(arrive + 1.4, detail, null));
+        double[] blow = sole(com.hex.kagune.control.client.animation.PaleMotions.dashKick(contact, detail, null));
+        double[] through = sole(com.hex.kagune.control.client.animation.PaleMotions.dashKick(contact + 0.8, detail, null));
+        check(cocked[2] < -0.3 && cocked[1] > 0.4, "the right leg cocked back behind her: " + java.util.Arrays.toString(cocked));
+        check(Math.abs(blow[1] - com.hex.kagune.control.pale.PaleRules.DASH_SOLE_Y) < 0.06 && blow[2] > 0.7 && blow[0] < 0.1 && blow[0] > -0.4,
+            "the blow: the sole at its height (DASH_SOLE_Y, a head's with the hop) in front of her, already going left: " + java.util.Arrays.toString(blow));
+        check(through[0] < -0.35 && through[1] > 1.0, "through: carried on to her left, still high: " + java.util.Arrays.toString(through));
+        RigPose done = com.hex.kagune.control.client.animation.PaleMotions.dashKick(com.hex.kagune.control.pale.PaleRules.dashEnd(detail), detail, null);
+        RigPose turnedPose = com.hex.kagune.control.client.animation.PaleMotions.dashKick(arrive + com.hex.kagune.control.pale.PaleRules.DASH_TURNED, detail, null);
+        check(Math.abs(done.spin - Math.PI / 2.0) < 1.0E-3 && Math.abs(turnedPose.spin - Math.PI / 2.0) < 1.0E-3 && Math.abs(done.headY) < 1.0E-3,
+            "turned a quarter to her left (spin +), facing the way it flew, the head straight on her body");
+        double worstHead = 0.0;
+        double worstLevel = 0.0;
+        double worstClip = 0.0;
+        double worstJump = 0.0;
+        double worstFloat = 0.0;
+        RigPose before = null;
+        for (double age = 0.0; age <= com.hex.kagune.control.pale.PaleRules.dashEnd(detail); age += 0.05) {
+            RigPose pose = com.hex.kagune.control.client.animation.PaleMotions.dashKick(age, detail, null);
+            if (com.hex.kagune.control.pale.PaleRules.dashRise(detail, age) == 0.0) {
+                double lowest = Double.MAX_VALUE;
+                for (String leg : new String[] {"leftLeg", "rightLeg"}) {
+                    for (double x : new double[] {-2.0, 2.0}) {
+                        for (double z : new double[] {-2.0, 2.0}) {
+                            lowest = Math.min(lowest, com.hex.kagune.control.client.animation.BodyFrame.world(pose,
+                                com.hex.kagune.control.client.animation.BodyFrame.model(pose, leg, new double[] {x, 12.0, z}))[1]);
+                        }
+                    }
+                }
+                worstFloat = Math.max(worstFloat, Math.abs(lowest));
             }
-        }
-        for (double age = there; age <= arrive + com.hex.kagune.control.pale.PaleRules.KICK_TICKS; age += 0.1) {
-            RigPose pose = com.hex.kagune.control.client.animation.PaleMotions.kick(age, detail, null);
+            worstHead = Math.max(worstHead, Math.abs(pose.headY));
+            worstLevel = Math.max(worstLevel, Math.abs(pose.side + pose.headZ));
+            if (before != null) {
+                worstJump = Math.max(worstJump, Math.max(Math.abs(pose.spin - before.spin), Math.abs(pose.rightLegX - before.rightLegX)));
+            }
+            before = com.hex.kagune.control.client.animation.PaleMotions.copy(pose);
             pose.settle(1.0F);
-            worst = Math.max(worst, com.hex.kagune.control.client.animation.BodyFrame.clipping(pose, 0.25));
+            worstClip = Math.max(worstClip, com.hex.kagune.control.client.animation.BodyFrame.clipping(pose, 0.25));
         }
-        check(worst == 0.0, "the coil and the twirl keep her arms out of her body: " + worst + " px");
-        RigPose coiled = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(10.0, null);
-        check(coiled.spin > 0.5F && coiled.leftKnee > 1.0F && coiled.drop > 0.0F, "the coil: side-on, the knees bent, sunk");
+        check(worstHead <= 0.5, "the head never turned more than a little off her body: " + worstHead);
+        check(worstFloat <= 0.03, "on the ground she stands on her lowest foot (never sunk in it or floating over it): " + worstFloat);
+        check(worstLevel <= 0.12, "the head kept level as her body leans: " + worstLevel);
+        check(worstJump <= 0.35, "no jump between frames (the run into the kick, the kick into her guard): " + worstJump);
+        check(worstClip == 0.0, "the arms clear of her body all through: " + worstClip + " px");
+        // Out of the coil, nothing through her either.
+        RigPose coil = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(30.0, null);
+        double fromCoil = 0.0;
+        for (double age = 0.0; age <= com.hex.kagune.control.pale.PaleRules.dashEnd(detail); age += 0.1) {
+            RigPose pose = com.hex.kagune.control.client.animation.PaleMotions.dashKick(age, detail, coil);
+            pose.settle(1.0F);
+            fromCoil = Math.max(fromCoil, com.hex.kagune.control.client.animation.BodyFrame.clipping(pose, 0.25));
+        }
+        check(fromCoil == 0.0, "let go out of the coil, the arms clear of her body: " + fromCoil + " px");
         // Where it is wired.
         String moves = read("src/main/java/com/hex/kagune/control/server/PaleMoves.java");
-        check(moves.contains("kickPlan(player, PaleRules.twirlRange(charge))") && moves.contains("PaleRules.twirlDetail(plan.dash(), charge)")
-            && moves.contains("if (!PaleServer.bare(player) && !KaguneServerController.useEnergy(player, PaleRules.TWIRL_COST, true)) {"),
-            "let go: the Speed Kick within the charge's reach, twirling; a human pays no RC");
+        check(near(moves, "private static void releaseTwirl(", "DashPlan plan = dashPlan(player, PaleRules.twirlRange(charge));", 500)
+            && near(moves, "DashPlan plan = dashPlan(player, PaleRules.twirlRange(charge));", "PaleServer.begin(player, state, PaleMove.DASH_KICK, PaleRules.dashDetail(plan.ticks(), charge),", 200)
+            && near(moves, "private static void releaseTwirl(", "if (!PaleServer.bare(player) && !KaguneServerController.useEnergy(player, PaleRules.TWIRL_COST, true)) {", 300),
+            "let go: the dash kick as far as the charge reaches (it always goes); a human pays no RC");
+        check(near(moves, "static DashPlan dashPlan(", "LivingEntity target = aimed(player, range);", 500)
+            && near(moves, "static DashPlan dashPlan(", "want = Math.max(0.0, Math.sqrt(to.m_82556_()) - target.m_20205_() * 0.5 - PaleRules.DASH_STAND);", 1100)
+            && near(moves, "static DashPlan dashPlan(", "} else {\n            // No body aimed at: the spot under her crosshair", 1200)
+            && near(moves, "// No body aimed at: the spot under her crosshair", "BlockHitResult hit = level.m_45547_(new ClipContext(eye, eye.m_82549_(player.m_20154_().m_82490_(range)),", 400)
+            && near(moves, "BlockHitResult hit = level.m_45547_(new ClipContext(eye,", "if (hit.m_6662_() == HitResult.Type.BLOCK) {\n                want = Math.min(range, Math.sqrt(UkakuFire.horizontal(hit.m_82450_().m_82546_(from)).m_82556_()));", 400)
+            && near(moves, "static DashPlan dashPlan(", "double ground = groundAt(level, player, box,", 2600)
+            && near(moves, "double ground = groundAt(level, player, box,", "if (Double.isNaN(ground)) {\n                break;", 200),
+            "to a spot: in front of what she aims at, else where her crosshair meets a block within reach, else as far as it reaches; on the ground along the way, short of a wall");
+        check(near(moves, "if (age >= PaleRules.DASH_BURST && age <= arrive) {", "kickedLeft(player, state, body, PaleRules.DASH_SHOVE, now);", 500)
+            && near(moves, "if (age >= PaleRules.DASH_BURST && age <= arrive) {", "!state.hit.contains(entity.m_19879_())", 400)
+            && near(moves, "if (age == contact) {\n            dashLands(player, state, now);", "if (age >= PaleRules.dashEnd(state.detail)) {\n            PaleServer.end(player, state);", 400),
+            "on the run, what she runs into is kicked to her left (once); the blow on its tick; done in her guard");
+        check(near(moves, "private static void dashLands(", "if (!PaleRules.dashStruck(x, rel.f_82480_, z, body.m_20205_() * 0.5, body.m_20206_())) {", 900)
+            && near(moves, "private static void dashLands(", "any |= kickedLeft(player, state, body, 1.0, now);", 1200), "the blow: everything in the sweep's reach, kicked to her left");
+        check(near(moves, "private static boolean kickedLeft(", "Vec3 along = right.m_82490_(flight[0]).m_82549_(facing.m_82490_(flight[1]));", 600)
+            && near(moves, "private static boolean kickedLeft(", "BlockSmash.kick(player, body, along, speed, PaleRules.DASH_UP, damage);", 2400)
+            && near(moves, "BlockSmash.kick(player, body, along, speed, PaleRules.DASH_UP, damage);", "PaleKnockdown.launched(body, now);", 80)
+            && near(moves, "private static boolean kickedLeft(", "PaleBlitz.fx(player, S2CPaleFx.KICKED,", 2800),
+            "kicked to her left as the V kick launches: carried, smashing through, tumbling, down a moment");
+        check(moves.contains("case DASH_KICK -> tickDashKick(player, state, now); // 4.1.87")
+            && read("src/main/java/com/hex/kagune/control/server/PaleServer.java").contains("case DASH_KICK -> PaleRules.dashUntouchable(state.detail, age);"),
+            "ticked; untouchable through the run");
+        String owl = read("src/main/java/com/hex/kagune/control/server/EtoOwl.java");
+        check(owl.contains("if (npc.persona().kickMaster()) {") && near(owl, "if (npc.persona().kickMaster()) {", "begin(npc, f, PaleMove.DASH_KICK, PaleRules.dashDetail(", 900)
+            && owl.contains("case DASH_KICK -> tickDashKick(npc, f, target, level, now, age, phase); // 4.1.87")
+            && near(owl, "private static void tickDashKick(", "float yaw = f.yaw - (float)Math.toDegrees(PaleRules.dashTurn(f.detail, age + 1.0));", 900)
+            && near(owl, "private static void dashLands(", "Vec3 along = right.m_82490_(flight[0]).m_82549_(facing.m_82490_(flight[1]));", 1600)
+            && Persona.GENERAL.kickMaster() && Persona.ROMA.kickMaster() && !Persona.TOUKA.kickMaster(),
+            "the General (and Roma) throw it too: run in, kicked to her left, turned to face it");
+        String client = read("src/main/java/com/hex/kagune/control/client/PaleClient.java");
+        check(client.contains(": view.move() == PaleMove.DASH_KICK ? PaleRules.dashPlace(to, view.detail(), view.charge(), view.age(clock(0.0F)) + 1.0)")
+            && client.contains("return view.age(clock(0.0F)) < PaleRules.dashArrive(view.detail()) + PaleRules.DASH_LAND; // 4.1.87"),
+            "the player at the keys is run along it (seen), her keys not hers until her foot is down");
+        String camera = read("src/main/java/com/hex/kagune/control/client/PaleCamera.java");
+        check(near(camera, "private static void dashTurn(", "double step = want - dashTurned;", 900) && near(camera, "double step = want - dashTurned;", "player.m_19884_(-step / 0.15, 0.0);", 200)
+            && camera.contains("            dashTurn(player);"), "her view turns a quarter to her left with the kick (as the mouse turns it), facing the way it flew");
+        check(read("src/main/java/com/hex/kagune/control/client/animation/PaleAnimator.java").contains("pose = PaleMotions.dashKick(since, view.detail(), this.from); // 4.1.87")
+            && read("src/main/java/com/hex/kagune/control/client/render/PaleFleshRenderer.java").contains("RigPose body = PaleMotions.dashKickBody(view.age(time), view.detail(),"),
+            "posed by every client; her own leg in first person");
         String input = read("src/main/java/com/hex/kagune/control/client/PaleInput.java");
-        check(input.contains("if (twirlTaken || fights(minecraft.f_91077_)) {") && input.contains("instanceof LivingEntity body && !talks(body)")
-            && input.contains("body instanceof com.hex.kagune.control.npc.GhoulNpc"), "the right click is the kick at the air or a body no one talks to");
-        // 4.1.49: by Persona.kickMaster (a human's, the General's; and Roma's).
-        check(read("src/main/java/com/hex/kagune/control/server/EtoOwl.java").contains("npc.persona().kickMaster() ? PaleRules.twirlDetail(dash, 1.0F) : dash")
-            && Persona.GENERAL.kickMaster() && Persona.ROMA.kickMaster() && !Persona.TOUKA.kickMaster(), "the General throws it too (and Roma)");
+        check(input.contains("if (twirlTaken || fights(minecraft.f_91077_)) {") && input.contains("instanceof LivingEntity body && !talks(body)"),
+            "the right click is the kick at the air or a body no one talks to");
+        check(!read("src/main/java/com/hex/kagune/control/pale/PaleRules.java").contains("twirlDetail") && !moves.contains("twirlDetail"), "4.1.8's twirl is gone from the V kick");
+    }
+
+    /** The middle of her right foot's sole (the move's frame, blocks) in {@code p}, settled. */
+    static double[] sole(RigPose p) {
+        RigPose q = com.hex.kagune.control.client.animation.PaleMotions.copy(p);
+        q.settle(1.0F);
+        return com.hex.kagune.control.client.animation.BodyFrame.world(q, com.hex.kagune.control.client.animation.BodyFrame.model(q, "rightLeg", new double[] {0, 12, 0}));
     }
 
     /**
@@ -813,7 +921,7 @@ public final class CompanionTests {
         }
         java.util.List<String> listed = guide(keys, new HashSet<>(java.util.List.of(Gate.STYLE_SPEEDSTER)));
         check(listed.contains("Kick Master") && listed.stream().anyMatch(n -> n.startsWith("Kicks and punches (8")) && !listed.contains("Speedster")
-            && listed.contains("Twirling Speed Kick (hold, let go)") && !listed.contains("Flips (W A S D)"), "the ability list with Kick Master " + listed);
+            && listed.contains("Dash Kick (hold, let go)") && !listed.contains("Flips (W A S D)"), "the ability list with Kick Master " + listed);
     }
 
     /** 4.1.7: what {@code script}'s lesson words say teaching {@code lesson}. */

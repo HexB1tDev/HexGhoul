@@ -9,6 +9,20 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.87 (HexGhoul): Kick Master's right click: a charged dash kick, what it hits flies to your left (testing)
+
+See `.github/release-notes-4.1.87.md`. `PaleMove.DASH_KICK` (appended; protocol 127). `PaleRules`' dash kick: `dashDetail` (run ticks and
+charge), `dashTicksFor`, `dashArrive`/`dashEnd`, `dashPlace` (the run: fastest off the mark, the hop into the blow), `dashRise`, `dashLift`,
+`dashTurn` (a quarter turn left after the blow), `dashFlight` (to her left), `dashStruck` (the sweep's reach), `dashUntouchable`; 4.1.8's
+twirl (`twirlDetail`, its out-of-nowhere dash) is gone. `PaleMoves.releaseTwirl` → `dashPlan` (a body aimed at, else the crosshair's
+block, else the charge's reach; `groundAt` along the way), `tickDashKick` (the path shoved left, the blow on its tick), `dashLands`,
+`kickedLeft` (as the V kick launches: `BlockSmash.kick`, `PaleKnockdown.launched`). `EtoOwl` (Kick Master NPCs: the General, Roma).
+`PaleClient.drive`, `PaleCamera.dashTurn` (the view turned with the kick), `PaleAnimator`, `PaleMotions.dashKick`/`dashKickBody`,
+`PaleFleshRenderer` (her leg in first person). Poses from `tools/PalePoseDesign.java` (`dashRun`, `dashKick`; `Spec.headRoll`,
+`HEAD_LEVEL`: the head kept level as the body leans). `tools/sabotage.py` now counts a suite's thrown `AssertionError` as caught.
+`CompanionTests.dashKick487`, 48 rules sabotaged (`docs/handoff/sabotage-4.1.87.json`; `HEAD_LEVEL` broken by hand, regenerated: caught).
+Renders `docs/handoff/dash-kick-4.1.87.png`, `docs/handoff/dash-kick-close-4.1.87.png` (`tools/PalePreview.java <dir> dash-kick`).
+
 ## 4.1.86 (HexGhoul): quests per player: another player's quest target says whose it is (testing)
 
 See `.github/release-notes-4.1.86.md` (every quest system checked for anything shared between players). `JoinTrial.notYours`,

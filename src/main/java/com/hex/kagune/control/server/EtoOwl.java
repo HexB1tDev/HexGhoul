@@ -158,14 +158,15 @@ final class EtoOwl {
         }
     }
 
-    /** True while nothing can hurt her: the Speed Kick's lunge and dash. */
+    /** True while nothing can hurt her: the Speed Kick's lunge and dash (4.1.87: the dash kick's run, until its blow). */
     static boolean untouchable(Fight f, long now) {
-        return f.move == PaleMove.KICK && PaleRules.kickUntouchable(f.detail, now - f.at);
+        return f.move == PaleMove.KICK && PaleRules.kickUntouchable(f.detail, now - f.at)
+            || f.move == PaleMove.DASH_KICK && PaleRules.dashUntouchable(f.detail, now - f.at);
     }
 
-    /** True while a move carries her about (the kick, Witness This): nothing else moves her. */
+    /** True while a move carries her about (the kick, Witness This; 4.1.87: the dash kick): nothing else moves her. */
     static boolean carried(Fight f) {
-        return f.move == PaleMove.KICK || f.move == PaleMove.WITNESS;
+        return f.move == PaleMove.KICK || f.move == PaleMove.WITNESS || f.move == PaleMove.DASH_KICK;
     }
 
     private static void carry(EtoNpc npc, EtoBrain.Mind mind, Fight f, ServerLevel level, long now, EtoRules.Phase phase) {
@@ -185,6 +186,7 @@ final class EtoOwl {
             }
             case PUNCH -> tickPunch(npc, mind, f, target, level, now, age, phase);
             case KICK -> tickKick(npc, f, target, level, now, age, phase);
+            case DASH_KICK -> tickDashKick(npc, f, target, level, now, age, phase); // 4.1.87
             case WITNESS -> tickWitness(npc, mind, f, target, level, now, age, phase);
             case SWIPE, GRAB_REACH, GRAB_HOLD, GRAB_THROW, GRAB_MISS, HAMMER_CHARGE, HAMMER -> EtoFlesh.tick(npc, mind, f, target, level, now, age, phase);
             case OWL_STRIKE, OWL_WHIRL, OWL_LEAP -> EtoOwlForm.tick(npc, mind, f, target, level, now, age, phase);
@@ -515,10 +517,17 @@ final class EtoOwl {
                 return false;
             }
         }
-        int dash = PaleRules.kickDash(offset.m_82553_());
         npc.m_21573_().m_26573_();
-        // 4.1.8: the General's is Kick Master's twirling kick, at its full charge.
-        begin(npc, f, PaleMove.KICK, npc.persona().kickMaster() ? PaleRules.twirlDetail(dash, 1.0F) : dash, target.m_19879_(), (float)lift, spot, now);
+        if (npc.persona().kickMaster()) {
+            // 4.1.87: the General's (and Roma's) is Kick Master's dash kick, at its full charge: run in, swept up and across to her left at
+            // its head, it flies to her left, and she ends facing it.
+            Vec3 stop = at.m_82546_(facing.m_82490_(target.m_20205_() * 0.5 + PaleRules.DASH_STAND * EtoRules.SIZE));
+            double head = PaleRules.dashLift((target.m_20186_() + target.m_20206_() * PaleRules.DASH_HEAD - stop.f_82480_) / EtoRules.SIZE) * EtoRules.SIZE;
+            begin(npc, f, PaleMove.DASH_KICK, PaleRules.dashDetail(PaleRules.dashTicksFor(stop.m_82546_(from).m_82553_()), 1.0F), target.m_19879_(),
+                (float)head, stop, now);
+        } else {
+            begin(npc, f, PaleMove.KICK, PaleRules.kickDash(offset.m_82553_()), target.m_19879_(), (float)lift, spot, now);
+        }
         f.from = from;
         f.yaw = (float)Math.toDegrees(Math.atan2(-facing.f_82479_, facing.f_82481_));
         f.kickReady = now + EtoRules.cooldown(EtoRules.KICK_EVERY, phase);
@@ -549,9 +558,6 @@ final class EtoOwl {
             npc.m_7292_(new MobEffectInstance(MobEffects.f_19609_, Math.max(1, dash), 0, false, false, false));
             UkakuFire.sound(level, npc.m_20182_(), "entity.illusioner.mirror_move", 1.0F, 1.3F);
         }
-        if (PaleRules.twirled(f.detail) && age == PaleRules.kickThere(f.detail)) {
-            UkakuFire.sound(level, f.point, "entity.player.attack.sweep", 1.0F, 1.3F); // 4.1.8: the twirl
-        }
         if (age == arrive) {
             UkakuFire.sound(level, f.point, "entity.ender_dragon.flap", 0.8F, 1.6F);
             UkakuFire.sound(level, f.point, "entity.player.attack.sweep", 1.0F, 0.55F);
@@ -565,6 +571,73 @@ final class EtoOwl {
         if (age >= arrive + PaleRules.KICK_TICKS) {
             end(f);
         }
+    }
+
+    /**
+     * 4.1.87: her dash kick under way: carried along the run (PaleRules.dashPlace, from where she began), turned a quarter to her left with
+     * the kick (PaleRules.dashTurn: she ends facing the way it flew), the blow on its tick; done in her guard.
+     */
+    private static void tickDashKick(EtoNpc npc, Fight f, LivingEntity target, ServerLevel level, long now, long age, EtoRules.Phase phase) {
+        int arrive = PaleRules.dashArrive(f.detail);
+        long contact = arrive + PaleRules.DASH_CONTACT;
+        if (age < contact && target != null) {
+            pin(target, now);
+        }
+        Vec3 to = f.point.m_82546_(f.from);
+        double[] place = PaleRules.dashPlace(new double[] {to.f_82479_, to.f_82480_, to.f_82481_}, f.detail, f.charge, age + 1.0);
+        if (place != null) {
+            npc.m_6021_(f.from.f_82479_ + place[0], f.from.f_82480_ + place[1], f.from.f_82481_ + place[2]);
+            npc.m_20256_(Vec3.f_82478_);
+        }
+        float yaw = f.yaw - (float)Math.toDegrees(PaleRules.dashTurn(f.detail, age + 1.0));
+        npc.m_146922_(yaw);
+        npc.f_20883_ = yaw;
+        npc.f_20885_ = yaw;
+        if (age == PaleRules.DASH_BURST) {
+            UkakuFire.sound(level, npc.m_20182_(), "entity.player.attack.sweep", 0.9F, 1.5F);
+        }
+        if (age == contact) {
+            dashLands(npc, f, target, level, now, phase);
+        }
+        if (age == arrive + (long)Math.ceil(PaleRules.DASH_LAND)) {
+            UkakuFire.sound(level, npc.m_20182_(), "entity.player.small_fall", 0.8F, 0.9F);
+        }
+        if (age >= PaleRules.dashEnd(f.detail)) {
+            end(f);
+        }
+    }
+
+    /** 4.1.87: the sweep: what she went for, if it is in its reach, hurt and launched to her left, tumbling; it lies there a moment. */
+    private static void dashLands(EtoNpc npc, Fight f, LivingEntity target, ServerLevel level, long now, EtoRules.Phase phase) {
+        double yaw = Math.toRadians(f.yaw);
+        Vec3 facing = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
+        Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
+        if (target == null) {
+            UkakuFire.sound(level, npc.m_20182_(), "entity.player.attack.sweep", 0.9F, 0.85F);
+            return;
+        }
+        Vec3 rel = target.m_20182_().m_82546_(npc.m_20182_());
+        double x = (rel.f_82479_ * right.f_82479_ + rel.f_82481_ * right.f_82481_) / EtoRules.SIZE;
+        double z = (rel.f_82479_ * facing.f_82479_ + rel.f_82481_ * facing.f_82481_) / EtoRules.SIZE;
+        if (!PaleRules.dashStruck(x, rel.f_82480_ / EtoRules.SIZE, z, target.m_20205_() * 0.5 / EtoRules.SIZE, target.m_20206_() / EtoRules.SIZE)) {
+            UkakuFire.sound(level, npc.m_20182_(), "entity.player.attack.sweep", 0.9F, 0.85F);
+            return;
+        }
+        double[] flight = PaleRules.dashFlight();
+        Vec3 along = right.m_82490_(flight[0]).m_82549_(facing.m_82490_(flight[1]));
+        Vec3 struck = target.m_20182_().m_82520_(0.0, target.m_20206_() * PaleRules.DASH_HEAD, 0.0).m_82546_(along.m_82490_(target.m_20205_() * 0.5));
+        float damage = PaleRules.fist(EtoRules.MASTERY) * PaleRules.KICK_DAMAGE * phase.power;
+        if (!hurt(npc, target, damage, struck, along)) {
+            return;
+        }
+        double speed = PaleRules.KICK_SPEED * 0.55 * (1.0 - PaleRules.KICK_RESIST * resist(target));
+        Vec3 launch = along.m_82490_(speed).m_82520_(0.0, PaleRules.DASH_UP, 0.0);
+        target.m_20256_(launch);
+        target.f_19864_ = true;
+        PaleKnockdown.launched(target, now);
+        fx(npc, S2CPaleFx.KICKED, target.m_19879_(), struck, launch, 1.0F, 0);
+        UkakuFire.sound(level, struck, "entity.player.attack.strong", 1.4F, 0.55F);
+        UkakuFire.sound(level, struck, "entity.warden.sonic_boom", 0.7F, 1.4F);
     }
 
     /** The blow, the sole driven through its middle: hurt, and launched far away from her, tumbling; it lies there a moment. */

@@ -82,6 +82,7 @@ public final class PaleCamera {
         if (player != null && dt > 0.0) {
             lockOn(player, dt);
             kingLock(player, dt);
+            dashTurn(player);
         }
         if (player == null || Math.abs(turnLeft) < 1.0E-3 || dt <= 0.0) {
             return;
@@ -89,6 +90,33 @@ public final class PaleCamera {
         double step = Math.signum(turnLeft) * Math.min(Math.abs(turnLeft), turnRate * dt);
         turnLeft -= step;
         player.m_19884_(step / 0.15, 0.0);
+    }
+
+    /** 4.1.87: the dash kick her view has been turned with so far (degrees, to her left), and which one that is (its start). */
+    private static double dashTurned;
+    private static long dashStarted = Long.MIN_VALUE;
+
+    /**
+     * 4.1.87 (the owner, of Kick Master's dash kick: "He faces where he kicked at. So basically, he ends up facing to the left."): her view
+     * turns with her body, a quarter turn to her left with the kick (PaleRules.dashTurn), each frame by what it has turned since the last,
+     * as the mouse turns it (so the mouse still works on top), and ends facing the way it flew.
+     */
+    private static void dashTurn(LocalPlayer player) {
+        PaleClient.PaleView view = PaleClient.get(player);
+        if (view.move() != com.hex.kagune.control.pale.PaleMove.DASH_KICK) {
+            dashStarted = Long.MIN_VALUE;
+            return;
+        }
+        if (dashStarted != view.startedAt()) {
+            dashStarted = view.startedAt();
+            dashTurned = 0.0;
+        }
+        double want = Math.toDegrees(com.hex.kagune.control.pale.PaleRules.dashTurn(view.detail(), view.age(PaleClient.clock(Minecraft.m_91087_().m_91296_()))));
+        double step = want - dashTurned;
+        dashTurned = want;
+        if (Math.abs(step) > 1.0E-4) {
+            player.m_19884_(-step / 0.15, 0.0);
+        }
     }
 
     /** 6.2.0: how quickly (a second) the view settles onto the head she kicks, and how long after the blow it is held there. */
@@ -106,10 +134,13 @@ public final class PaleCamera {
         // (6.2.0: the Speed Kick's blow comes a lunge and a dash in, and her view is on its middle, where her foot goes.)
         // (6.2.0: Witness This too, all the way down to the crater.)
         boolean witness = view.move() == com.hex.kagune.control.pale.PaleMove.WITNESS;
+        // (4.1.87: Kick Master's dash kick: onto its head through the run, never past where her view starts to turn with the kick.)
+        boolean dash = view.move() == com.hex.kagune.control.pale.PaleMove.DASH_KICK;
         double until = owl ? view.detail() + com.hex.kagune.control.pale.OwlRules.KICK_BLOW
             : witness ? com.hex.kagune.control.pale.WitnessRules.IMPACT - LOCK_AFTER
+            : dash ? com.hex.kagune.control.pale.PaleRules.dashArrive(view.detail()) + com.hex.kagune.control.pale.PaleRules.DASH_CONTACT - 0.5 - LOCK_AFTER
             : com.hex.kagune.control.pale.PaleRules.kickArrive(view.detail()) + com.hex.kagune.control.pale.PaleRules.KICK_CONTACT;
-        if (view.move() != com.hex.kagune.control.pale.PaleMove.KICK && !owl && !witness || view.targetId() == 0
+        if (view.move() != com.hex.kagune.control.pale.PaleMove.KICK && !owl && !witness && !dash || view.targetId() == 0
             || view.age(PaleClient.clock(0.0F)) > until + LOCK_AFTER) {
             return;
         }
@@ -119,7 +150,7 @@ public final class PaleCamera {
         }
         net.minecraft.world.phys.Vec3 eye = player.m_146892_();
         net.minecraft.world.phys.Vec3 head = owl ? target.m_146892_()
-            : target.m_20182_().m_82520_(0.0, target.m_20206_() * com.hex.kagune.control.pale.PaleRules.KICK_AIM, 0.0);
+            : target.m_20182_().m_82520_(0.0, target.m_20206_() * (dash ? com.hex.kagune.control.pale.PaleRules.DASH_HEAD : com.hex.kagune.control.pale.PaleRules.KICK_AIM), 0.0);
         double dx = head.f_82479_ - eye.f_82479_;
         double dy = head.f_82480_ - eye.f_82480_;
         double dz = head.f_82481_ - eye.f_82481_;
