@@ -9,6 +9,16 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.101 (HexGhoul): world generation works each answer out once (the lag patch, part 3) (testing)
+
+See `.github/release-notes-4.1.101.md`. `HotelPlan.Memo` (pure): one world's village offers, each village's hotel spots and each chunk's
+`near`, kept as worked out (bounded, `CAP` each, begun again when full; copies handed out; race-safe on the generation threads);
+`ControlStructures.villageOffers` keeps one per village placement and seed (`PLANS`), `inHotel` and `Site.hotel` ask it. `DryLand.Memo`
+(pure): a search's ground, heights by column and biomes by the game's 4 x 4 x 4 cells (`quarts`), the answers the wrapped ground's;
+`ControlStructures.ground` returns one. `LagTests.worldgen` (equivalence over four seeds, a timed 25-spot search);
+`docs/handoff/sabotage-4.1.101.json`. `TraceTests`: the rules of 4.1.96 to 4.1.98 their late sabotage lists found untested (quest news on
+the action bar, a mission's retry from nothing, /kagune places' officials, the officials' trace logs).
+
 ## 4.1.100 (HexGhoul): the mod's NPCs found from a list, not a search of the world; far-off NPCs look round less (the lag patch, part 2) (testing)
 
 See `.github/release-notes-4.1.100.md`. `server/NpcIndex`: each server world's weak set of the mod's NPCs (`EntityJoinLevelEvent`), `of(level,

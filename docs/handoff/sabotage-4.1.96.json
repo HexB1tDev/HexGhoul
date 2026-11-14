@@ -18,13 +18,13 @@
   "file": "src/main/java/com/hex/kagune/control/quest/QuestLog.java",
   "old": "            this.progress.remove(old.id()); // 4.1.96: a new try counts from nothing\n",
   "new": "",
-  "suite": "QuestTests"
+  "suite": "TraceTests"
  },
  {
   "name": "/kagune places without the officials",
   "file": "src/main/java/com/hex/kagune/control/server/ControlCommands.java",
   "old": "                lines.addAll(UniqueNpcs.whereabouts(player.m_284548_())); // 4.1.96: and where each official is now\n",
   "new": "",
-  "suite": "CompanionTests"
+  "suite": "TraceTests"
  }
 ]

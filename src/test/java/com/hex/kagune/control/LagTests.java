@@ -51,6 +51,7 @@ public final class LagTests {
         wiring();
         registry();
         pace();
+        worldgen();
         if (!FAILURES.isEmpty()) {
             FAILURES.forEach(failure -> System.out.println("FAILED: " + failure));
             System.exit(1);
@@ -312,6 +313,165 @@ public final class LagTests {
         String agent = read("src/main/java/com/hex/kagune/control/server/AgentBrain.java");
         check(ghoul.contains("mind.preySought == Long.MIN_VALUE || NpcPace.looks(npc, level, now - mind.preySought)"), "a ghoul's look paced");
         check(agent.contains("current == null && NpcPace.looks(agent, level, ago(now, mind.preySought))"), "an investigator's look paced");
+    }
+
+    /**
+     * 4.1.101: the world's hotel plan worked out once (HotelPlan.Memo: the same answers as worked out afresh, copies handed out, kept
+     * bounded) and a search's ground kept as told (DryLand.Memo: the same answers, each column and biome cell worked out once), timed.
+     */
+    private static void worldgen() throws Exception {
+        int[] asked = new int[1];
+        long[] seeds = {1234L, -99L, 8675309L, 42L};
+        int nearSame = 0;
+        int nearAll = 0;
+        boolean spotsSame = true;
+        long plainCalls = 0L;
+        long memoCalls = 0L;
+        for (long seed : seeds) {
+            com.hex.kagune.control.village.HotelPlan.Offers villages = (cx, cz) -> {
+                asked[0]++;
+                return com.hex.kagune.control.village.DryLand.spreadChunk(seed, Math.floorDiv(cx, 34), Math.floorDiv(cz, 34), 34, 8, 10387312);
+            };
+            com.hex.kagune.control.village.HotelPlan.Memo plan = new com.hex.kagune.control.village.HotelPlan.Memo(seed, villages);
+            for (int x = -60; x <= 60; x += 3) {
+                for (int z = -60; z <= 60; z += 3) {
+                    asked[0] = 0;
+                    boolean plain = com.hex.kagune.control.village.HotelPlan.near(seed, villages, x, z);
+                    plainCalls += asked[0];
+                    asked[0] = 0;
+                    boolean kept = plan.near(x, z);
+                    boolean again = plan.near(x, z);
+                    memoCalls += asked[0];
+                    nearAll++;
+                    if (plain == kept && kept == again) {
+                        nearSame++;
+                    }
+                    int[] offer = villages.at(x, z);
+                    int[][] spots = com.hex.kagune.control.village.HotelPlan.spots(seed, villages, offer[0], offer[1]);
+                    int[][] memoSpots = plan.spots(offer[0], offer[1]);
+                    spotsSame &= java.util.Arrays.deepEquals(spots, memoSpots);
+                    if (memoSpots.length > 0) {
+                        memoSpots[0][0] += 1000; // a caller changing what it was handed changes nothing kept
+                        spotsSame &= java.util.Arrays.deepEquals(spots, plan.spots(offer[0], offer[1]));
+                    }
+                    int[] at = plan.at(x, z);
+                    at[0] += 1000;
+                    spotsSame &= java.util.Arrays.equals(plan.at(x, z), villages.at(x, z));
+                }
+            }
+            check(plan.size() <= 3 * com.hex.kagune.control.village.HotelPlan.Memo.CAP, "a plan keeps a bounded number of answers");
+        }
+        com.hex.kagune.control.village.HotelPlan.Memo small = new com.hex.kagune.control.village.HotelPlan.Memo(7L,
+            (cx, cz) -> com.hex.kagune.control.village.DryLand.spreadChunk(7L, Math.floorDiv(cx, 34), Math.floorDiv(cz, 34), 34, 8, 10387312), 64);
+        boolean bounded = true;
+        for (int x = -40; x <= 40; x += 2) {
+            for (int z = -40; z <= 40; z += 2) {
+                bounded &= small.near(x, z) == com.hex.kagune.control.village.HotelPlan.near(7L, small, x, z) && small.size() <= 3 * 64;
+            }
+        }
+        check(bounded, "a plan full begins again (never more than its cap of each kind kept), its answers still right");
+        check(nearSame == nearAll, "the kept plan says near or not as worked out afresh, every time (" + nearSame + " of " + nearAll + ")");
+        check(spotsSame, "the kept plan's spots and offers are the ones worked out afresh, and never changed by an asker");
+        System.out.println("  4.1.101 the hotel plan, " + nearAll + " chunks asked twice: " + plainCalls + " village offers worked out afresh, "
+            + memoCalls + " kept");
+        check(memoCalls * 20 < plainCalls, "the kept plan asks the villages' offers a twentieth as often or less (" + memoCalls + " against "
+            + plainCalls + ")");
+        // A search's ground: every column and biome cell worked out once, the answers the ground's own.
+        int[] cost = new int[1];
+        com.hex.kagune.control.village.DryLand.Ground world = new com.hex.kagune.control.village.DryLand.Ground() {
+            @Override
+            public int surface(int x, int z) {
+                cost[0]++;
+                spin(0.02); // about what the terrain noise costs a column (its base height: the noise down the column)
+                return 64 + Math.floorMod(x * 7 + z * 3, 5);
+            }
+
+            @Override
+            public int floor(int x, int z) {
+                cost[0]++;
+                spin(0.02);
+                return 64 + Math.floorMod(x * 7 + z * 3, 5) - (Math.floorMod(x + z, 97) == 0 ? 1 : 0);
+            }
+
+            @Override
+            public boolean wet(int x, int y, int z) {
+                cost[0]++;
+                spin(0.002); // a biome's climate sampled
+                return Math.floorMod((x >> 2) * 31 + (z >> 2) * 17, 211) == 0;
+            }
+
+            @Override
+            public boolean sea(int x, int y, int z) {
+                cost[0]++;
+                return Math.floorMod((x >> 2) + (z >> 2), 401) == 0;
+            }
+
+            @Override
+            public boolean steep(int x, int y, int z) {
+                cost[0]++;
+                return (x >> 2) % 300 == 7;
+            }
+        };
+        com.hex.kagune.control.village.DryLand.Memo memo = new com.hex.kagune.control.village.DryLand.Memo(world, true);
+        boolean same = true;
+        for (int x = -20; x < 20; x++) {
+            for (int z = -20; z < 20; z++) {
+                int y = 60 + (x & 7);
+                same &= memo.surface(x, z) == world.surface(x, z) && memo.floor(x, z) == world.floor(x, z)
+                    && memo.wet(x, y, z) == world.wet(x, y, z) && memo.sea(x, y, z) == world.sea(x, y, z) && memo.steep(x, y, z) == world.steep(x, y, z);
+            }
+        }
+        check(same, "the kept ground answers as the ground itself");
+        memo = new com.hex.kagune.control.village.DryLand.Memo(world, true);
+        for (int i = 0; i < 3; i++) {
+            memo.surface(5, 9);
+            memo.floor(5, 9);
+        }
+        for (int dx = 0; dx < 4; dx++) {
+            memo.wet(8 + dx, 64 + dx, 12 + dx); // one 4 x 4 x 4 cell
+            memo.sea(8 + dx, 64, 12);
+        }
+        check(memo.worked == 4 && memo.asked == 14, "a column's height and a cell's biome worked out once each (" + memo.worked + " of " + memo.asked + ")");
+        com.hex.kagune.control.village.DryLand.Memo exact = new com.hex.kagune.control.village.DryLand.Memo(world, false);
+        exact.wet(8, 64, 12);
+        exact.wet(9, 64, 12);
+        exact.wet(8, 64, 12);
+        check(exact.worked == 2, "by block where not told of cells");
+        // Timed: a place's search, 25 spots a chunk apart, its rough ground and water looked at under each (ControlStructures.DryPlace).
+        int size = 64;
+        search(world, size); // both warmed first
+        search(new com.hex.kagune.control.village.DryLand.Memo(world, true), size);
+        long t0 = System.nanoTime();
+        cost[0] = 0;
+        search(world, size);
+        long plainNanos = System.nanoTime() - t0;
+        int plainCost = cost[0];
+        memo = new com.hex.kagune.control.village.DryLand.Memo(world, true);
+        cost[0] = 0;
+        t0 = System.nanoTime();
+        search(memo, size);
+        long memoNanos = System.nanoTime() - t0;
+        int memoCost = cost[0];
+        System.out.println("  4.1.101 a place's search over 25 spots: " + plainCost + " ground lookups, " + String.format(java.util.Locale.ROOT,
+            "%.1f", plainNanos / 1e6) + " ms; kept: " + memoCost + " lookups, " + String.format(java.util.Locale.ROOT, "%.1f", memoNanos / 1e6) + " ms");
+        check(memoCost * 2 < plainCost, "a place's search works out under half the ground it did (" + memoCost + " of " + plainCost + ")");
+        String structures = read("src/main/java/com/hex/kagune/control/ControlStructures.java");
+        check(structures.contains("return new DryLand.Memo(new DryLand.Ground() {") && structures.contains("        }, true);\n    }")
+            && structures.contains("return biomes.m_203407_(x >> 2, y >> 2, z >> 2, sampler).m_203656_(WET);"),
+            "the world's ground kept as told for each search, its biomes by the game's own cells");
+        check(structures.contains("return villageOffers(spread, seed).near(x, z);") && structures.contains("int[][] spots = offers.spots(at[0], at[1]);")
+            && structures.contains("if (plan == null || plan.seed != seed) {"), "each world's hotel plan kept (by its villages' placement and seed)");
+    }
+
+    /** A place's search as ControlStructures.DryPlace makes it: at each of 25 spots, its roughness, then its water. */
+    private static void search(com.hex.kagune.control.village.DryLand.Ground ground, int size) {
+        int[][] shifts = com.hex.kagune.control.village.DryLand.shifts(2);
+        for (int[] shift : shifts) {
+            int minX = shift[0] * 16 - size / 2 + 3;
+            int minZ = shift[1] * 16 - size / 2 + 5;
+            com.hex.kagune.control.village.DryLand.roughness(ground, minX, minZ, size, size, 6, 10);
+            com.hex.kagune.control.village.DryLand.dry(ground, 64, minX, minZ, size, size);
+        }
     }
 
     /** The build's guard and the game's side, as written. */

@@ -346,16 +346,29 @@ public final class ControlStructures {
             return false;
         }
         long seed = context.f_226627_();
-        return com.hex.kagune.control.village.HotelPlan.near(seed, villageOffers(spread, seed), x, z);
+        return villageOffers(spread, seed).near(x, z); // 4.1.101: worked out once a chunk (HotelPlan.Memo)
     }
 
-    /** 4.1.72: the world's village offers ({@link com.hex.kagune.control.village.HotelPlan.Offers}), as its placement makes them. */
-    static com.hex.kagune.control.village.HotelPlan.Offers villageOffers(
+    /** 4.1.101: each world's hotel plan (by its villages' placement, the registry's own object, and its seed), kept as worked out. */
+    private static final java.util.Map<Object, com.hex.kagune.control.village.HotelPlan.Memo> PLANS = new java.util.WeakHashMap<>();
+
+    /**
+     * 4.1.72: the world's village offers ({@link com.hex.kagune.control.village.HotelPlan.Offers}), as its placement makes them. 4.1.101: the
+     * world's {@link com.hex.kagune.control.village.HotelPlan.Memo}, so its offers, spots and nearness are each worked out once.
+     */
+    static com.hex.kagune.control.village.HotelPlan.Memo villageOffers(
             net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement spread, long seed) {
-        return (cx, cz) -> {
-            ChunkPos offer = spread.m_227008_(seed, cx, cz);
-            return new int[] {offer.f_45578_, offer.f_45579_};
-        };
+        synchronized (PLANS) {
+            com.hex.kagune.control.village.HotelPlan.Memo plan = PLANS.get(spread);
+            if (plan == null || plan.seed != seed) {
+                plan = new com.hex.kagune.control.village.HotelPlan.Memo(seed, (cx, cz) -> {
+                    ChunkPos offer = spread.m_227008_(seed, cx, cz);
+                    return new int[] {offer.f_45578_, offer.f_45579_};
+                });
+                PLANS.put(spread, plan);
+            }
+            return plan;
+        }
     }
 
     /** A vanilla jigsaw structure (its own fields, its own placing) started only where {@link VillageGround#suits} says. */
@@ -618,7 +631,7 @@ public final class ControlStructures {
                 return Optional.empty();
             }
             long seed = context.f_226627_();
-            com.hex.kagune.control.village.HotelPlan.Offers offers = villageOffers(spread, seed);
+            com.hex.kagune.control.village.HotelPlan.Memo offers = villageOffers(spread, seed);
             for (int side = 0; side < 4; side++) {
                 int[] at = com.hex.kagune.control.village.HotelPlan.village(chunk.f_45578_, chunk.f_45579_, side);
                 int[] offer = offers.at(at[0], at[1]);
@@ -627,7 +640,7 @@ public final class ControlStructures {
                 }
                 // 4.1.94 (the owner: "the hotel on the villages ... confirmed to not be spawning"): each of the village's spots in turn (every
                 // side clear of the other villages), the first whose land will hold it; before, only the first, and no hotel if it wouldn't.
-                int[][] spots = com.hex.kagune.control.village.HotelPlan.spots(seed, offers, at[0], at[1]);
+                int[][] spots = offers.spots(at[0], at[1]); // 4.1.101: once a village (HotelPlan.Memo)
                 int mine = -1;
                 for (int i = 0; i < spots.length; i++) {
                     if (spots[i][0] == chunk.f_45578_ && spots[i][1] == chunk.f_45579_ && spots[i][2] == side) {
@@ -1182,7 +1195,8 @@ public final class ControlStructures {
         net.minecraft.world.level.levelgen.RandomState random = context.f_226624_();
         net.minecraft.world.level.biome.BiomeSource biomes = context.f_226623_();
         net.minecraft.world.level.biome.Climate.Sampler sampler = random.m_224579_();
-        return new DryLand.Ground() {
+        // 4.1.101: kept as told for the search that asked (DryLand.Memo): its biomes by the world's own 4 x 4 x 4 cells (x >> 2, as below).
+        return new DryLand.Memo(new DryLand.Ground() {
             @Override
             public boolean wet(int x, int y, int z) {
                 return biomes.m_203407_(x >> 2, y >> 2, z >> 2, sampler).m_203656_(WET);
@@ -1207,7 +1221,7 @@ public final class ControlStructures {
             public int floor(int x, int z) {
                 return generator.m_214096_(x, z, Heightmap.Types.OCEAN_FLOOR_WG, heights, random);
             }
-        };
+        }, true);
     }
 
     /**

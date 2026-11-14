@@ -4145,7 +4145,7 @@ public final class NpcTests {
         String structures = read("src/main/java/com/hex/kagune/control/ControlStructures.java");
         check(structures.contains("if (HOTEL.equals(this.site.id())) {\n                return this.hotel(context, chunk); // 4.1.72")
             && structures.contains(".m_7745_(net.minecraft.resources.ResourceLocation.m_214293_(\"minecraft\", \"villages\"));")
-            && structures.contains("int[][] spots = com.hex.kagune.control.village.HotelPlan.spots(seed, offers, at[0], at[1]);")
+            && structures.contains("int[][] spots = offers.spots(at[0], at[1]); // 4.1.101: once a village (HotelPlan.Memo)")
             && structures.contains("if (!village(context, at[0], at[1])) {")
             && near(structures, "for (int i = 0; i < mine; i++) {", "return Optional.empty(); // an earlier spot holds this village's hotel", 400)
             && near(structures, "if (holdsPlace(chunk)) {", "return this.hotelAt(context, chunk, com.hex.kagune.control.village.HotelPlan.turns(side), false);", 120),
@@ -4154,7 +4154,7 @@ public final class NpcTests {
             && structures.contains("|| !asked && !biome(context, minX + sizeX / 2, middle, minZ + sizeZ / 2)) {"), "on land as the hideout judges its own: dry, fairly flat, no sea");
         check(structures.contains("if (inHotel(context, chunk.f_45578_, chunk.f_45579_)) {")
             && structures.contains("return inHotel(context, x, z) ? Optional.empty() : stub;")
-            && structures.contains("return com.hex.kagune.control.village.HotelPlan.near(seed, villageOffers(spread, seed), x, z);")
+            && structures.contains("return villageOffers(spread, seed).near(x, z); // 4.1.101: worked out once a chunk (HotelPlan.Memo)")
             && structures.contains("ChunkPos offer = spread.m_227008_(seed, cx, cz);"),
             "the hideout, the CCG building and every jigsaw place stay clear of the hotels (judged by HotelPlan.near on the world's own village offers)");
         String set = read("src/main/resources/data/hexkagune/worldgen/structure_set/hotel.json");

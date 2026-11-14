@@ -21,6 +21,15 @@ Do your work and only at the end do the checks. This is taking so long." So: wri
 status lines to the owner while you work; the house rules (EXIT 0, GitHub green, allowlist, sabotage) still hold at the end.
 
 **Progress of the lag patch (newest first):**
+- **4.1.101, world generation caches:** `HotelPlan.Memo` (offers, spots, near kept per world: 4,006,725 village offers worked out
+  afresh against 26,648 kept over the test's 6,724 chunks asked twice) and `DryLand.Memo` (a search's heights by column, biomes by quart:
+  ~55% fewer lookups, ~25% less time over a 25-spot search in the test's harness with 20 us a height, 2 us a biome). Not changed (it would
+  move where places stand): the roughness grid (every 6 blocks from each spot's own corner, so chunk-shifted spots rarely share columns);
+  `DryPlace`'s 25 jigsaw layouts (each layout is the jigsaw's own random, by its start chunk). `sabotage-4.1.101.json` (10, all caught).
+  **The owed lists, all caught now:** 4.1.96, 4.1.97 and 4.1.98 missed 9 rules (quest news on the action bar: none tested; a mission's
+  retry from nothing; /kagune places' officials; the officials' trace logs): closed by `TraceTests` (its `notices` reads every
+  `m_5661_` call of JoinServer, QuestServer and GangServer: `false` (the chat) only for NPC speech and the listed warnings), and those rules
+  rerun against it. Keep the chat rule: a new chat line in those three files must be speech or a warning, or TraceTests fails.
 - **4.1.100, the NPC registry and the look pace:** `server/NpcIndex` (each server world's weak set of the mod's NPCs, filled on
   `EntityJoinLevelEvent`; `of` answers as `getEntitiesOfClass` would; the gone dropped as walked; a client asks the game): every one of the
   55 server searches for GhoulNpc/CcgAgent/HumanNpc/EtoNpc/ChildNpc/FleshThrall goes through it (`LagTests.registry` fails on any new

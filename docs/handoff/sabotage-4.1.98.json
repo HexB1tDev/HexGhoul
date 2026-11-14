@@ -25,20 +25,20 @@
   "file": "src/main/java/com/hex/kagune/control/server/EtoBrain.java",
   "old": "            gone(npc, \"another body holds her slot\");\n",
   "new": "",
-  "suite": "CompanionTests"
+  "suite": "TraceTests"
  },
  {
   "name": "an official's death untold",
   "file": "src/main/java/com/hex/kagune/control/server/EtoBrain.java",
   "old": "+ \"); back at her spot a day after\");",
   "new": "+ \")\");",
-  "suite": "CompanionTests"
+  "suite": "TraceTests"
  },
  {
   "name": "a remake untold",
   "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
-  "old": "com.hex.kagune.KaguneMod.LOGGER.info(\"HexKagune: \" + key + \" made at her spot \"",
-  "new": "com.hex.kagune.KaguneMod.LOGGER.debug(\"HexKagune: \" + key + \" made at her spot \"",
-  "suite": "CompanionTests"
+  "old": "            com.hex.kagune.KaguneMod.LOGGER.info(\"HexKagune: \" + key + \" made at her spot \" + spot[0] + \" \" + spot[1] + \" \" + spot[2]\n                + \" (none of her in her place\" + (live != null ? \"; the one elsewhere sent away\" : \"\") + \")\");\n",
+  "new": "",
+  "suite": "TraceTests"
  }
 ]

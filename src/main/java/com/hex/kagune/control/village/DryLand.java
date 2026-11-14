@@ -55,6 +55,95 @@ public final class DryLand {
         }
     }
 
+    /**
+     * 4.1.101 (the lag patch, part 3): a {@link Ground} that keeps what it was told, for one search. A place's search lays its pieces at up
+     * to 25 nearby spots and looks at the ground under each (a height is the world's terrain noise worked out for that column; a biome its
+     * climate's); the spots overlap, so most columns and biomes were worked out over and over. Heights are kept by column, biomes by the
+     * world's own biome cell when {@code quarts} (every 4 x 4 x 4 blocks share one: what the game's biome lookup reads anyway), else by block.
+     * The answers are the wrapped ground's, exactly. One search's: begun afresh for the next (a world's ground never changes, but a search's
+     * columns are its own and few).
+     */
+    public static final class Memo implements Ground {
+        private final Ground ground;
+        private final boolean quarts;
+        private final java.util.HashMap<Long, Integer> surfaces = new java.util.HashMap<>();
+        private final java.util.HashMap<Long, Integer> floors = new java.util.HashMap<>();
+        /** Per biome cell: bit 0 wet known, 1 wet; 2 sea known, 3 sea; 4 steep known, 5 steep. */
+        private final java.util.HashMap<Long, Integer> biomes = new java.util.HashMap<>();
+        /** How many times it was asked, and how many it asked the wrapped ground (the tests'). */
+        public int asked;
+        public int worked;
+
+        public Memo(Ground ground, boolean quarts) {
+            this.ground = ground;
+            this.quarts = quarts;
+        }
+
+        static long column(int x, int z) {
+            return (long)x << 32 ^ z & 0xFFFFFFFFL;
+        }
+
+        long cell(int x, int y, int z) {
+            int cx = this.quarts ? x >> 2 : x;
+            int cy = this.quarts ? y >> 2 : y;
+            int cz = this.quarts ? z >> 2 : z;
+            return (long)(cx & 0x3FFFFFF) << 38 | (long)(cz & 0x3FFFFFF) << 12 | cy & 0xFFF;
+        }
+
+        @Override
+        public synchronized int surface(int x, int z) {
+            this.asked++;
+            Integer kept = this.surfaces.get(column(x, z));
+            if (kept == null) {
+                this.worked++;
+                kept = this.ground.surface(x, z);
+                this.surfaces.put(column(x, z), kept);
+            }
+            return kept;
+        }
+
+        @Override
+        public synchronized int floor(int x, int z) {
+            this.asked++;
+            Integer kept = this.floors.get(column(x, z));
+            if (kept == null) {
+                this.worked++;
+                kept = this.ground.floor(x, z);
+                this.floors.put(column(x, z), kept);
+            }
+            return kept;
+        }
+
+        private synchronized boolean biome(int x, int y, int z, int which) {
+            this.asked++;
+            long cell = this.cell(x, y, z);
+            int bits = this.biomes.getOrDefault(cell, 0);
+            int known = 1 << (2 * which);
+            if ((bits & known) == 0) {
+                this.worked++;
+                boolean is = which == 0 ? this.ground.wet(x, y, z) : which == 1 ? this.ground.sea(x, y, z) : this.ground.steep(x, y, z);
+                bits |= known | (is ? known << 1 : 0);
+                this.biomes.put(cell, bits);
+            }
+            return (bits & known << 1) != 0;
+        }
+
+        @Override
+        public boolean wet(int x, int y, int z) {
+            return this.biome(x, y, z, 0);
+        }
+
+        @Override
+        public boolean sea(int x, int y, int z) {
+            return this.biome(x, y, z, 1);
+        }
+
+        @Override
+        public boolean steep(int x, int y, int z) {
+            return this.biome(x, y, z, 2);
+        }
+    }
+
     private DryLand() {
     }
 

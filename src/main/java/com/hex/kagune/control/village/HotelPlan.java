@@ -239,14 +239,99 @@ public final class HotelPlan {
      * of them so).
      */
     public static boolean near(long seed, Offers offers, int x, int z) {
+        return near(offers, x, z, (vx, vz) -> spots(seed, offers, vx, vz));
+    }
+
+    /** A village's hotel spots ({@link #spots}), as {@link Memo} keeps them. */
+    @FunctionalInterface
+    public interface Spots {
+        int[][] of(int x, int z);
+    }
+
+    /** {@link #near}, each village's spots asked of {@code spots}. */
+    public static boolean near(Offers offers, int x, int z, Spots spots) {
         for (int[] v : offersNear(offers, x, z, DISTANCE + REACH + MARGIN)) {
-            for (int[] h : spots(seed, offers, v[0], v[1])) { // 4.1.94: any spot its hotel may take
+            for (int[] h : spots.of(v[0], v[1])) { // 4.1.94: any spot its hotel may take
                 if (covers(h[0], h[1], x, z, MARGIN)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * 4.1.101 (the lag patch, part 3): one world's hotel plan, kept as it is worked out (the villages' offers by chunk, each village's hotel
+     * spots, whether a chunk is near a hotel). Every place's every search asked {@link #near}: about a hundred offers, and each village round
+     * it its four sides' neighbours and the hotels before it, some thousands of offers each time, the same every time for the same chunk. The
+     * answers never change for a world (its seed and its villages' placement), so each is worked out once ({@link #CAP} of each kept, then
+     * begun again). Safe on the world generation threads (a race only works one out twice).
+     */
+    public static final class Memo implements Offers {
+        public static final int CAP = 1 << 16;
+        public final long seed;
+        private final Offers offers;
+        private final java.util.concurrent.ConcurrentHashMap<Long, int[]> at = new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.concurrent.ConcurrentHashMap<Long, int[][]> spots = new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.concurrent.ConcurrentHashMap<Long, Boolean> near = new java.util.concurrent.ConcurrentHashMap<>();
+
+        private final int cap;
+
+        public Memo(long seed, Offers offers) {
+            this(seed, offers, CAP);
+        }
+
+        /** With at most {@code cap} answers of each kind kept (the tests' small one). */
+        public Memo(long seed, Offers offers, int cap) {
+            this.seed = seed;
+            this.offers = offers;
+            this.cap = cap;
+        }
+
+        static long key(int x, int z) {
+            return (long)x << 32 ^ z & 0xFFFFFFFFL;
+        }
+
+        private <V> V kept(java.util.concurrent.ConcurrentHashMap<Long, V> map, long key, java.util.function.Supplier<V> make) {
+            V value = map.get(key);
+            if (value == null) {
+                value = make.get();
+                if (map.size() >= this.cap) {
+                    map.clear();
+                }
+                V raced = map.putIfAbsent(key, value);
+                if (raced != null) {
+                    value = raced;
+                }
+            }
+            return value;
+        }
+
+        /** The village offer for chunk ({@code x}, {@code z}) (a copy: the kept one is never handed out to be changed). */
+        @Override
+        public int[] at(int x, int z) {
+            return kept(this.at, key(x, z), () -> this.offers.at(x, z)).clone();
+        }
+
+        /** {@link HotelPlan#spots} of the village at chunk ({@code x}, {@code z}) (copies). */
+        public int[][] spots(int x, int z) {
+            int[][] kept = kept(this.spots, key(x, z), () -> HotelPlan.spots(this.seed, this, x, z));
+            int[][] out = new int[kept.length][];
+            for (int i = 0; i < kept.length; i++) {
+                out[i] = kept[i].clone();
+            }
+            return out;
+        }
+
+        /** {@link HotelPlan#near} for start chunk ({@code x}, {@code z}). */
+        public boolean near(int x, int z) {
+            return kept(this.near, key(x, z), () -> HotelPlan.near(this, x, z, this::spots));
+        }
+
+        /** How many answers it keeps (for the tests). */
+        public int size() {
+            return this.at.size() + this.spots.size() + this.near.size();
+        }
     }
 
     /**
