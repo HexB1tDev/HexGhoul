@@ -73,8 +73,8 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
         @Override
         public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, HumanNpc human, float limbSwing, float limbSwingAmount,
                             float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
-            if (human.m_20145_() || !HumanRules.female(human.look())) {
-                return;
+            if (human.m_20145_() || !HumanRules.female(human.look()) || FemaleFigure.covered(human)) {
+                return; // 4.1.89: under a coat or a chestplate her skin's bust is not drawn (the coat takes its shape: OutfitLayer)
             }
             try {
                 double y = human.f_19791_ + (human.m_20186_() - human.f_19791_) * partialTick;

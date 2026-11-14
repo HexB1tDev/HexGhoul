@@ -1,0 +1,247 @@
+[
+ {
+  "name": "the push not bounced with her",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        float tip = FemaleBody.BUST_TIP - bounce;\n        float bottom = FemaleBody.BUST_BOTTOM;",
+  "new": "        float tip = FemaleBody.BUST_TIP;\n        float bottom = FemaleBody.BUST_BOTTOM;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the push not by her curves",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        float full = (FemaleBody.BUST_FRONT - FemaleBody.BUST_OUT) * curves;",
+  "new": "        float full = (FemaleBody.BUST_FRONT - FemaleBody.BUST_OUT);",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the upper slope wrong",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "(y - top) / (tip - top)",
+  "new": "(y - top) / (bottom - top)",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "pushed below her bust",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "!(y < bottom)",
+  "new": "!(y < bottom + 1.0F)",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the coat's face not moved the whole way",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        if (z <= SURFACE) {\n            return 1.0F;",
+  "new": "        if (z <= SURFACE) {\n            return 0.9F;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the torso and behind moved",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        if (z >= TORSO) {\n            return 0.0F;",
+  "new": "        if (z >= TORSO + 9.0F) {\n            return 0.0F;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the panels' inner sides moved fully",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        return (TORSO - z) / (TORSO - SURFACE);",
+  "new": "        return 1.0F;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "strips a pixel tall",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "y += STEP)",
+  "new": "y += STEP * 2.0F)",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "no cut at her bust's top or bottom",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        for (float y = FemaleBody.BUST_TOP; y <= FemaleBody.BUST_BOTTOM + 1.0E-4F; y += STEP) {\n            pieces = split(pieces, 1, y);\n        }\n",
+  "new": "",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "no cut at the tip",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        pieces = split(pieces, 1, tip);\n",
+  "new": "",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "no cut at the coat's face depth",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        pieces = split(pieces, 2, SURFACE);\n",
+  "new": "",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "no cut at the torso",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        pieces = split(pieces, 2, TORSO);\n",
+  "new": "",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "pushed in, not out",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        return z - depth(y, curves, bounce) * weight(z);",
+  "new": "        return z + depth(y, curves, bounce) * weight(z);",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "normals not remade",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "new OutfitModels.Face(c, face.uvs(), normal(c, face.normal()))",
+  "new": "new OutfitModels.Face(c, face.uvs(), face.normal())",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "normals not turned outward",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        double sign = nx * was[0] + ny * was[1] + nz * was[2] < 0.0 ? -1.0 : 1.0;",
+  "new": "        double sign = 1.0;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "kept whatever the bounce",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        String id = key + '|' + Math.round(curves * 1000.0F) + '|' + step;",
+  "new": "        String id = key + '|' + Math.round(curves * 1000.0F);",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "kept cut at rest",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "k -> cutAll(cubes, quantized)",
+  "new": "k -> cutAll(cubes, 0.0F)",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "nothing cut",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "        return front && high > FemaleBody.BUST_TOP && low < FemaleBody.BUST_BOTTOM;",
+  "new": "        return false;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the texture not carried",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "                    for (int k = 0; k < 5; k++) {\n                        r[k] = p[k] + (q[k] - p[k]) * t;",
+  "new": "                    for (int k = 0; k < 3; k++) {\n                        r[k] = p[k] + (q[k] - p[k]) * t;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "a piece dropped in a split",
+  "file": "src/main/java/com/hex/kagune/control/outfit/OutfitFit.java",
+  "old": "            if (over.size() >= 3) {\n                out.add(over);\n            }",
+  "new": "",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the coat not given her fit",
+  "file": "src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java",
+  "old": "piece.slot() == OutfitModels.CHESTPLATE && !piece.mask() ? fit : null",
+  "new": "null",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "her sleeves fitted too",
+  "file": "src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java",
+  "old": "if (fit != null && bone == OutfitModels.BODY && !cubes.isEmpty()) {",
+  "new": "if (fit != null && !cubes.isEmpty()) {",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the fitted coat not drawn",
+  "file": "src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java",
+  "old": "                cubes = OutfitFit.fitted(key, cubes, fit[0], fit[1]);",
+  "new": "",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "a villager's bust through her coat",
+  "file": "src/main/java/com/hex/kagune/control/client/render/HumanRenderer.java",
+  "old": "|| FemaleFigure.covered(human)) {",
+  "new": ") {",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "an investigator's bust through her coat",
+  "file": "src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java",
+  "old": "|| FemaleFigure.covered(agent)) {",
+  "new": ") {",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "a companion's bust through her coat",
+  "file": "src/main/java/com/hex/kagune/control/client/render/EtoRenderer.java",
+  "old": "if (!FemaleFigure.covered(npc)) {",
+  "new": "if (true) {",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "a grown daughter's bust through her coat",
+  "file": "src/main/java/com/hex/kagune/control/client/render/ChildRenderer.java",
+  "old": "|| FemaleFigure.covered(child)) {",
+  "new": ") {",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "covered by her hat",
+  "file": "src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java",
+  "old": "return !wearer.m_6844_(net.minecraft.world.entity.EquipmentSlot.CHEST).m_41619_();",
+  "new": "return !wearer.m_6844_(net.minecraft.world.entity.EquipmentSlot.HEAD).m_41619_();",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "a woman player's coat flat",
+  "file": "src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java",
+  "old": "curves = com.hex.kagune.control.Genders.female(player) ? 1.0F : 0.0F;",
+  "new": "curves = com.hex.kagune.control.Genders.female(player) ? 0.0F : 0.0F;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "a villager's figure not hers",
+  "file": "src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java",
+  "old": "? com.hex.kagune.control.npc.HumanRules.WOMAN_CURVES : 0.0F;",
+  "new": "? 1.0F : 0.0F;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "an investigator's figure not hers",
+  "file": "src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java",
+  "old": "curves = agent.look().female() ? com.hex.kagune.control.npc.AgentRules.FEMALE_CURVES : 0.0F;",
+  "new": "curves = agent.look().female() ? 1.0F : 0.0F;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "a companion's figure not hers",
+  "file": "src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java",
+  "old": "curves = npc.persona().female() ? npc.persona().curves() : 0.0F;",
+  "new": "curves = npc.persona().female() ? 1.0F : 0.0F;",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "a grown daughter's coat flat",
+  "file": "src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java",
+  "old": "ChildRenderer.woman(com.hex.kagune.control.client.ChildClient.get(child.m_19879_())) ? com.hex.kagune.control.npc.Persona.TOUKA.curves()",
+  "new": "ChildRenderer.woman(com.hex.kagune.control.client.ChildClient.get(child.m_19879_())) ? 0.0F",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "an investigator's coat bouncing",
+  "file": "src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java",
+  "old": "if (!(wearer instanceof com.hex.kagune.control.npc.CcgAgent)) {",
+  "new": "if (true) {",
+  "suite": "OutfitTests"
+ },
+ {
+  "name": "the bounce never given",
+  "file": "src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java",
+  "old": "        return new float[] {curves, bounce};",
+  "new": "        return new float[] {curves, 0.0F};",
+  "suite": "OutfitTests"
+ }
+]

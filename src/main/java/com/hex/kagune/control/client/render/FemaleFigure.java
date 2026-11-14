@@ -191,6 +191,47 @@ public final class FemaleFigure {
         return FemaleBody.jigglePixels(state[0]);
     }
 
+    /**
+     * 4.1.89 (the owner: "when women are wearing our armor ... their breasts literally stick out from the armor"): true if something is
+     * worn on {@code wearer}'s chest. Then her skin's bust is not drawn: an outfit's coat takes its shape instead ({@link #fit},
+     * OutfitLayer), any other chestplate lies flat over her (as a player's always has).
+     */
+    public static boolean covered(net.minecraft.world.entity.LivingEntity wearer) {
+        return !wearer.m_6844_(net.minecraft.world.entity.EquipmentSlot.CHEST).m_41619_();
+    }
+
+    /**
+     * 4.1.89: how a coat on {@code wearer} takes her bust's shape ({@code OutfitFit}): her figure's curves (as her own bust layer draws
+     * it) and her bust's bounce this frame; null for anyone drawn with no bust (a man, a child, a ghoul of the gangs).
+     */
+    public static float[] fit(net.minecraft.world.entity.LivingEntity wearer, float partial) {
+        float curves;
+        if (wearer instanceof net.minecraft.client.player.AbstractClientPlayer player) {
+            curves = com.hex.kagune.control.Genders.female(player) ? 1.0F : 0.0F;
+        } else if (wearer instanceof com.hex.kagune.control.npc.HumanNpc human) {
+            curves = com.hex.kagune.control.npc.HumanRules.female(human.look()) ? com.hex.kagune.control.npc.HumanRules.WOMAN_CURVES : 0.0F;
+        } else if (wearer instanceof com.hex.kagune.control.npc.CcgAgent agent) {
+            curves = agent.look().female() ? com.hex.kagune.control.npc.AgentRules.FEMALE_CURVES : 0.0F;
+        } else if (wearer instanceof com.hex.kagune.control.npc.EtoNpc npc) {
+            curves = npc.persona().female() ? npc.persona().curves() : 0.0F;
+        } else if (wearer instanceof com.hex.kagune.control.npc.ChildNpc child) {
+            curves = ChildRenderer.woman(com.hex.kagune.control.client.ChildClient.get(child.m_19879_())) ? com.hex.kagune.control.npc.Persona.TOUKA.curves()
+                : 0.0F;
+        } else {
+            curves = 0.0F;
+        }
+        if (!(curves > 0.0F)) {
+            return null;
+        }
+        // An investigator's bust is drawn still (AgentRenderer); everyone else's bounces as she moves.
+        float bounce = 0.0F;
+        if (!(wearer instanceof com.hex.kagune.control.npc.CcgAgent)) {
+            double y = wearer.f_19791_ + (wearer.m_20186_() - wearer.f_19791_) * partial;
+            bounce = jiggle(wearer.m_19879_(), y, com.hex.kagune.control.client.PaleClient.clock(partial));
+        }
+        return new float[] {curves, bounce};
+    }
+
     /** Forgets every body no longer about. */
     public static void prune(java.util.function.IntPredicate gone) {
         JIGGLES.keySet().removeIf(gone::test);

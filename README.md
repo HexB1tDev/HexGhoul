@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.89 (HexGhoul): a woman's coat takes her chest's shape (the CCG and ghoul outfits) (testing)
+
+See `.github/release-notes-4.1.89.md`. `outfit/OutfitFit` (pure): a coat's body cubes cut (`cutAll`: every `STEP` 0.5 px across the bust's
+band, at its tip, at `SURFACE` and `TORSO` in depth) and pushed out by the bust's own depth (`fitZ = z - depth(y) * weight(z)`), normals
+remade, kept by figure and bounce (`fitted`). `FemaleFigure.covered(wearer)` and `fit(wearer, partial)` (curves and bounce as each bust layer
+draws them); `OutfitLayer` draws a coat's BODY cubes fitted; the NPC bust layers (`HumanRenderer`, `AgentRenderer`, `EtoRenderer`,
+`ChildRenderer`) skip the skin bust when `covered`. `OutfitTests.fitted489`, 35 rules sabotaged (`docs/handoff/sabotage-4.1.89.json`). Render
+`docs/handoff/armor-fit-4.1.89.png` (`tools/ArmorFitPreview.java <out.png>`); `ArtPreview.outfit` lights faces by their own normals.
+
 ## 4.1.88 (HexGhoul): Kick Master's own stance: side-on, the hands low and loose (testing)
 
 See `.github/release-notes-4.1.88.md`. `tools/PalePoseDesign.java`: `kickStance()` (`KICK_STANCE_TWIST`, `KICK_STANCE_LOOK`), solved as

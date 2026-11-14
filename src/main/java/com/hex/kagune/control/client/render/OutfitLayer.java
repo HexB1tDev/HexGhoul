@@ -1,6 +1,7 @@
 package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.KaguneMod;
+import com.hex.kagune.control.outfit.OutfitFit;
 import com.hex.kagune.control.outfit.OutfitItem;
 import com.hex.kagune.control.outfit.OutfitModels;
 import com.hex.kagune.control.outfit.Outfits;
@@ -101,16 +102,19 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             ModelPart[] bones = {model.f_102808_, model.f_102810_, model.f_102811_, model.f_102812_, model.f_102813_, model.f_102814_};
             AbstractClientPlayer player = wearer instanceof AbstractClientPlayer p ? p : null;
             boolean slim = slim(wearer, model);
+            // 4.1.89: on a woman, the coat takes her bust's shape (OutfitFit); her skin's bust is not drawn under it (FemaleFigure.covered).
+            float[] fit = FemaleFigure.fit(wearer, partialTick);
             for (EquipmentSlot slot : SLOTS) {
                 ItemStack stack = wearer.m_6844_(slot);
                 if (stack.m_41720_() instanceof OutfitItem item) {
                     Outfits.Piece piece = item.piece();
-                    draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot(), slim);
+                    draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot(), slim,
+                        piece.slot() == OutfitModels.CHESTPLATE && !piece.mask() ? fit : null);
                 }
             }
             String extra = EXTRA.apply(wearer);
             if (extra != null) {
-                draw(pose, buffers, light, bones, player, partialTick, extra, -1, slim);
+                draw(pose, buffers, light, bones, player, partialTick, extra, -1, slim, null);
             }
         } catch (RuntimeException failure) {
             PlayerLayers.failed("an outfit", failure);
@@ -119,10 +123,11 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
 
     /**
      * {@code model}'s cubes in {@code slot} (any: -1) on {@code bones}, as they are posed (the sleeves for slim arms on a slim wearer), a
-     * coat's tails on the legs.
+     * coat's tails on the legs; 4.1.89: its body fitted over a woman's bust ({@code fit}: her curves and bounce, {@link FemaleFigure#fit}; null:
+     * as made).
      */
     static void draw(PoseStack pose, MultiBufferSource buffers, int light, ModelPart[] bones, AbstractClientPlayer player, float partial, String modelId,
-                     int slot, boolean slim) {
+                     int slot, boolean slim, float[] fit) {
         OutfitModels.Model model = OutfitModels.get(modelId);
         if (model == null) {
             return;
@@ -133,6 +138,11 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
                 continue;
             }
             List<OutfitModels.Cube> cubes = model.on(arm(bone, slim), slot);
+            if (fit != null && bone == OutfitModels.BODY && !cubes.isEmpty()) {
+                // 4.1.89: the coat's body over a woman's bust: cut where it bends and pushed out to her shape (kept by her figure and bounce).
+                String key = modelId + '/' + slot;
+                cubes = OutfitFit.fitted(key, cubes, fit[0], fit[1]);
+            }
             // 4.0.6 (the owner: "when limbs are removed ... coats and armors go with the limbs as well. (same with masks)"): a part not drawn
             // (torn off by Potential Unlock, a body cut in two) takes what is worn on it: its sleeve, its trouser leg and boot, the mask and
             // cap with the head (drawn on the part itself where it lies: PotentialRenderer).

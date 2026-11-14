@@ -154,8 +154,8 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
         @Override
         public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, CcgAgent agent, float limbSwing, float limbSwingAmount, float partialTick,
                             float ageInTicks, float netHeadYaw, float headPitch) {
-            if (agent.m_20145_() || !agent.look().female()) {
-                return;
+            if (agent.m_20145_() || !agent.look().female() || FemaleFigure.covered(agent)) {
+                return; // 4.1.89: in the Formal Outfit her coat takes her bust's shape (OutfitLayer); the skin's is not drawn under it
             }
             try {
                 FemaleFigure.bust(this.m_117386_().f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(SKINS[agent.lookIndex()])), light, 0.0F, false,

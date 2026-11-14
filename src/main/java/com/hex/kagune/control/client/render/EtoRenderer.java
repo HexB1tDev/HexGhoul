@@ -438,7 +438,10 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 float bounce = EtoClient.jiggle(npc.m_19879_(), y, PaleClient.clock(partialTick));
                 EtoRenderer r = this.renderer;
                 if (r.persona.female()) {
-                    FemaleFigure.bust(model.f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(r.skin)), light, bounce, false, r.persona.curves());
+                    // 4.1.89: not under a coat or a chestplate (a coat takes her bust's shape: OutfitLayer).
+                    if (!FemaleFigure.covered(npc)) {
+                        FemaleFigure.bust(model.f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(r.skin)), light, bounce, false, r.persona.curves());
+                    }
                     // 1.3.10: carrying a child, her belly (the shared female body's).
                     FemaleFigure.belly(model.f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(r.skin)), light,
                         com.hex.kagune.control.client.PregnancyClient.belly(npc, partialTick), false);

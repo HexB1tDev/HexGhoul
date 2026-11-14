@@ -1,5 +1,6 @@
 package com.hex.kagune.control;
 
+import com.hex.kagune.control.outfit.OutfitFit;
 import com.hex.kagune.control.outfit.OutfitModels;
 import com.hex.kagune.control.outfit.Outfits;
 import java.io.InputStream;
@@ -36,6 +37,7 @@ public final class OutfitTests {
         geometry(models);
         draped(models);
         pools();
+        fitted489(models);
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -449,5 +451,311 @@ public final class OutfitTests {
         check(Outfits.DROP_CHANCE > 0.0F && Outfits.DROP_CHANCE <= 0.05F, "each piece's drop is a small chance");
         double full = Math.pow(Outfits.DROP_CHANCE, 4);
         check(full < 1.0E-4, "a whole outfit at once almost never: " + full);
+    }
+
+    /**
+     * 4.1.89 (the owner: "when women are wearing our armor, our CCG armor or the ghoul armor, their breasts literally stick out from the
+     * armor, which is very awkward and very awfully putting. So you got to fix that so the armor adapts to their chest."): on a woman, a
+     * coat's body takes her bust's shape (OutfitFit), and her skin's bust is not drawn under anything worn on her chest.
+     */
+    static void fitted489(Map<String, OutfitModels.Model> models) {
+        float span = FemaleBody.BUST_FRONT - FemaleBody.BUST_OUT;
+        check(OutfitFit.depth(FemaleBody.BUST_TOP, 1.0F, 0.0F) == 0.0F && OutfitFit.depth(FemaleBody.BUST_BOTTOM, 1.0F, 0.0F) == 0.0F
+            && Math.abs(OutfitFit.depth(FemaleBody.BUST_TIP, 1.0F, 0.0F) - span) < 1.0E-5F
+            && Math.abs(OutfitFit.depth(FemaleBody.BUST_TIP, 0.85F, 0.0F) - 0.85F * span) < 1.0E-5F
+            && Math.abs(OutfitFit.depth(FemaleBody.BUST_TIP - 1.0F, 1.0F, 1.0F) - span) < 1.0E-5F
+            && OutfitFit.depth(0.5F, 1.0F, 0.0F) == 0.0F && OutfitFit.depth(9.0F, 1.0F, 0.0F) == 0.0F && OutfitFit.depth(FemaleBody.BUST_TIP, 0.0F, 0.0F) == 0.0F,
+            "the push is her bust's own wedge: none above its top or below its bottom, its full depth at its tip (bounced with it), by her curves");
+        check(OutfitFit.weight(-2.5F) == 1.0F && OutfitFit.weight(OutfitFit.SURFACE) == 1.0F && OutfitFit.weight(OutfitFit.TORSO) == 0.0F
+            && OutfitFit.weight(1.0F) == 0.0F && Math.abs(OutfitFit.weight((OutfitFit.SURFACE + OutfitFit.TORSO) / 2.0F) - 0.5F) < 1.0E-5F,
+            "the coat's face and all on it move the whole way, nothing on the torso or behind it, between them by how far in front");
+        for (String id : new String[] {"formal", "crimson"}) {
+            OutfitModels.Model model = models.get(id);
+            List<OutfitModels.Cube> body = model.on(OutfitModels.BODY, OutfitModels.CHESTPLATE);
+            List<OutfitModels.Cube> cut = OutfitFit.cutAll(body, 0.0F);
+            check(faces(cut) > faces(body) + 100 && Math.abs(area(cut) - area(body)) < 1.0E-3 * area(body),
+                id + ": cut into strips across the bust, nothing lost or added: " + faces(body) + " faces, " + faces(cut) + " pieces");
+            boolean textured = true;
+            for (int c = 0; c < body.size(); c++) {
+                float[] box = uvBox(body.get(c).faces());
+                for (OutfitModels.Face piece : cut.get(c).faces()) {
+                    for (int k = 0; k < 4; k++) {
+                        float u = piece.uvs()[k * 2];
+                        float v = piece.uvs()[k * 2 + 1];
+                        textured &= u >= box[0] - 1.0E-5F && u <= box[2] + 1.0E-5F && v >= box[1] - 1.0E-5F && v <= box[3] + 1.0E-5F;
+                    }
+                }
+            }
+            check(textured, id + ": each piece keeps its face's own texture");
+            float most = FemaleBody.jigglePixels(FemaleBody.JIGGLE_MOST);
+            for (float curves : new float[] {1.0F, com.hex.kagune.control.npc.AgentRules.FEMALE_CURVES}) {
+                for (float bounce : new float[] {0.0F, most, -most, 0.37F}) {
+                    List<OutfitModels.Cube> cutThere = OutfitFit.cutAll(body, bounce);
+                    List<OutfitModels.Cube> on = OutfitFit.fit(cutThere, curves, bounce);
+                    // Over the whole of her bust (but the Crimson coat's own open seam down its middle), the coat stands in front of it.
+                    double worst = Double.MAX_VALUE;
+                    String where = "";
+                    for (double x = -3.9; x <= 3.9; x += 0.1) {
+                        if (Math.abs(x) < 0.15) {
+                            continue;
+                        }
+                        for (double y = FemaleBody.BUST_TOP + 0.1; y < FemaleBody.BUST_BOTTOM - 0.05; y += 0.1) {
+                            double gap = (FemaleBody.BUST_FRONT - OutfitFit.depth((float)y, curves, bounce)) - frontAt(on, x, y);
+                            if (gap < worst) {
+                                worst = gap;
+                                where = String.format(java.util.Locale.ROOT, " at (%.1f, %.1f)", x, y);
+                            }
+                        }
+                    }
+                    check(worst > 0.3, id + String.format(java.util.Locale.ROOT, ", curves %.2f, bounce %.1f", curves, bounce)
+                        + ": her bust under the coat everywhere, never through it: " + worst + " px" + where);
+                    // 4.1.89: and the coat's front takes exactly her bust's shape: pushed out by its depth there, nowhere else (above its
+                    // top, below its bottom, a corner between cut lines would bulge it where she has none).
+                    double off = 0.0;
+                    String offAt = "";
+                    for (double x = -3.9; x <= 3.9; x += 0.1) {
+                        if (Math.abs(x) < 0.15) {
+                            continue;
+                        }
+                        for (double y = 0.05; y < 8.0; y += 0.1) {
+                            double made = frontAt(body, x, y);
+                            if (made > 50.0) {
+                                continue;
+                            }
+                            double miss = Math.abs(frontAt(on, x, y) - (made - OutfitFit.depth((float)y, curves, bounce)));
+                            if (miss > off) {
+                                off = miss;
+                                offAt = String.format(java.util.Locale.ROOT, " at (%.1f, %.1f)", x, y);
+                            }
+                        }
+                    }
+                    check(off < 0.02, id + String.format(java.util.Locale.ROOT, ", curves %.2f, bounce %.1f", curves, bounce)
+                        + ": the coat's front out by her bust's depth there and nowhere else: off by " + off + " px" + offAt);
+                    // Cut every STEP across her bust: no piece in front of the torso spans more of its band than a strip.
+                    double tallest = 0.0;
+                    for (OutfitModels.Cube cube : cutThere) {
+                        for (OutfitModels.Face piece : cube.faces()) {
+                            float low = Float.MAX_VALUE;
+                            float high = -Float.MAX_VALUE;
+                            boolean front = false;
+                            for (int k = 0; k < 4; k++) {
+                                low = Math.min(low, piece.corners()[k * 3 + 1]);
+                                high = Math.max(high, piece.corners()[k * 3 + 1]);
+                                front |= piece.corners()[k * 3 + 2] < OutfitFit.TORSO - 1.0E-3F;
+                            }
+                            if (front) {
+                                tallest = Math.max(tallest, Math.min(high, FemaleBody.BUST_BOTTOM) - Math.max(low, FemaleBody.BUST_TOP));
+                            }
+                        }
+                    }
+                    check(tallest <= OutfitFit.STEP + 1.0E-3 && OutfitFit.STEP == 0.5F,
+                        id + ": cut in half-pixel strips across her bust, so it bends where she does: tallest " + tallest);
+                    // Each corner: only pushed out, by the bust under it as far as it is in front of the torso; its place across and its texture kept.
+                    boolean kept = true;
+                    boolean normals = true;
+                    for (int c = 0; c < cutThere.size(); c++) {
+                        OutfitModels.Face[] was = cutThere.get(c).faces();
+                        OutfitModels.Face[] now = on.get(c).faces();
+                        kept &= was.length == now.length;
+                        for (int f = 0; f < Math.min(was.length, now.length); f++) {
+                            for (int k = 0; k < 4; k++) {
+                                float y = was[f].corners()[k * 3 + 1];
+                                float z = was[f].corners()[k * 3 + 2];
+                                float want = z - OutfitFit.depth(y, curves, bounce) * OutfitFit.weight(z);
+                                kept &= now[f].corners()[k * 3] == was[f].corners()[k * 3] && now[f].corners()[k * 3 + 1] == y
+                                    && Math.abs(now[f].corners()[k * 3 + 2] - want) < 1.0E-5F && now[f].corners()[k * 3 + 2] <= z
+                                    && (z < OutfitFit.TORSO || now[f].corners()[k * 3 + 2] == z)
+                                    && now[f].uvs()[k * 2] == was[f].uvs()[k * 2] && now[f].uvs()[k * 2 + 1] == was[f].uvs()[k * 2 + 1];
+                            }
+                            float[] n = now[f].normal();
+                            float[] o = was[f].normal();
+                            normals &= Math.abs(n[0] * n[0] + n[1] * n[1] + n[2] * n[2] - 1.0F) < 1.0E-3F && n[0] * o[0] + n[1] * o[1] + n[2] * o[2] > 0.0F;
+                            // and square to the face as it now lies (not the flat face's it was cut from)
+                            double[] g = across(now[f].corners());
+                            double gl = Math.sqrt(g[0] * g[0] + g[1] * g[1] + g[2] * g[2]);
+                            if (gl > 1.0E-4) {
+                                normals &= Math.abs(n[0] * g[0] + n[1] * g[1] + n[2] * g[2]) / gl > 0.999;
+                            }
+                        }
+                    }
+                    check(kept, id + ": every corner only pushed out by the bust under it (its back and the torso never), across and textured as it was");
+                    check(normals, id + ": each piece lit as it now faces (its normal remade, still outward)");
+                }
+            }
+            check(OutfitFit.fit(cut, 0.0F, 0.0F).equals(cut) || same(OutfitFit.fit(cut, 0.0F, 0.0F), cut), id + ": on no bust, the coat as made");
+        }
+        // A face tilted from the coat's face back toward her torso (no cube of these two coats has one, a future model might): cut where the
+        // push starts to ease (SURFACE) and ends (TORSO), so each of its points goes where fitZ says (the cut lines off the strips' on purpose).
+        OutfitModels.Face tilted = new OutfitModels.Face(new float[] {-1.0F, 3.1F, -2.7F, 1.0F, 3.1F, -2.7F, 1.0F, 4.1F, -1.5F, -1.0F, 4.1F, -1.5F},
+            new float[] {0.0F, 0.0F, 0.1F, 0.0F, 0.1F, 0.1F, 0.0F, 0.1F}, new float[] {0.0F, 0.768F, -0.640F});
+        List<OutfitModels.Cube> slope = List.of(new OutfitModels.Cube(OutfitModels.BODY, OutfitModels.CHESTPLATE, new OutfitModels.Face[] {tilted}));
+        List<OutfitModels.Cube> slopeOn = OutfitFit.fit(OutfitFit.cutAll(slope, 0.0F), 1.0F, 0.0F);
+        double slopeOff = 0.0;
+        for (double y = 3.15; y < 4.05; y += 0.01) {
+            double z = -2.7 + 1.2 * (y - 3.1);
+            slopeOff = Math.max(slopeOff, Math.abs(frontAt(slopeOn, 0.0, y) - OutfitFit.fitZ((float)y, (float)z, 1.0F, 0.0F)));
+        }
+        check(slopeOff < 0.05, "a face tilted toward her torso goes where fitZ says all along it (cut where the push eases and ends): off by " + slopeOff);
+        // Its corners listed the other way round (a model's face may wind either way): its pieces still lit from the side it faced.
+        float[] rc = tilted.corners();
+        float[] ru = tilted.uvs();
+        OutfitModels.Face reversed = new OutfitModels.Face(new float[] {rc[9], rc[10], rc[11], rc[6], rc[7], rc[8], rc[3], rc[4], rc[5], rc[0], rc[1], rc[2]},
+            new float[] {ru[6], ru[7], ru[4], ru[5], ru[2], ru[3], ru[0], ru[1]}, tilted.normal());
+        boolean outward = true;
+        for (OutfitModels.Cube cube : OutfitFit.fit(OutfitFit.cutAll(List.of(new OutfitModels.Cube(OutfitModels.BODY, OutfitModels.CHESTPLATE,
+            new OutfitModels.Face[] {reversed})), 0.0F), 1.0F, 0.0F)) {
+            for (OutfitModels.Face piece : cube.faces()) {
+                float[] n = piece.normal();
+                outward &= n[0] * tilted.normal()[0] + n[1] * tilted.normal()[1] + n[2] * tilted.normal()[2] > 0.5F;
+            }
+        }
+        check(outward, "a face wound the other way round: its fitted pieces still face the way it did");
+        // Kept by her figure and its bounce (a fiftieth of a pixel): a woman standing still has her coat made once.
+        List<OutfitModels.Cube> body = models.get("formal").on(OutfitModels.BODY, OutfitModels.CHESTPLATE);
+        check(OutfitFit.fitted("test/formal", body, 1.0F, 0.0F) == OutfitFit.fitted("test/formal", body, 1.0F, 0.001F)
+            && OutfitFit.fitted("test/formal", body, 1.0F, 0.0F) != OutfitFit.fitted("test/formal", body, 1.0F, 0.5F)
+            && OutfitFit.fitted("test/formal", body, 1.0F, 0.0F) != OutfitFit.fitted("test/formal", body, 0.85F, 0.0F)
+            && same(OutfitFit.fitted("test/formal", body, 1.0F, 0.5F), OutfitFit.fit(OutfitFit.cutAll(body, 0.5F), 1.0F, 0.5F))
+            // a bounce whose tip is off every strip line: cut there, not at rest
+            && same(OutfitFit.fitted("test/formal", body, 1.0F, 0.38F), OutfitFit.fit(OutfitFit.cutAll(body, 0.38F), 1.0F, 0.38F)),
+            "fitted kept by her figure and bounce, as cut and fitted there");
+        // Where it is wired.
+        String layer = read("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java");
+        check(layer.contains("float[] fit = FemaleFigure.fit(wearer, partialTick);")
+            && layer.contains("piece.slot() == OutfitModels.CHESTPLATE && !piece.mask() ? fit : null")
+            && layer.contains("if (fit != null && bone == OutfitModels.BODY && !cubes.isEmpty()) {")
+            && layer.contains("cubes = OutfitFit.fitted(key, cubes, fit[0], fit[1]);"),
+            "OutfitLayer draws a woman's coat body fitted to her bust");
+        String figure = read("src/main/java/com/hex/kagune/control/client/render/FemaleFigure.java");
+        check(figure.contains("return !wearer.m_6844_(net.minecraft.world.entity.EquipmentSlot.CHEST).m_41619_();")
+            && figure.contains("curves = com.hex.kagune.control.Genders.female(player) ? 1.0F : 0.0F;")
+            && figure.contains("curves = com.hex.kagune.control.npc.HumanRules.female(human.look()) ? com.hex.kagune.control.npc.HumanRules.WOMAN_CURVES : 0.0F;")
+            && figure.contains("curves = agent.look().female() ? com.hex.kagune.control.npc.AgentRules.FEMALE_CURVES : 0.0F;")
+            && figure.contains("curves = npc.persona().female() ? npc.persona().curves() : 0.0F;")
+            && figure.contains("ChildRenderer.woman(com.hex.kagune.control.client.ChildClient.get(child.m_19879_())) ? com.hex.kagune.control.npc.Persona.TOUKA.curves()")
+            && figure.contains("if (!(wearer instanceof com.hex.kagune.control.npc.CcgAgent)) {")
+            && figure.contains("bounce = jiggle(wearer.m_19879_(), y, com.hex.kagune.control.client.PaleClient.clock(partial));")
+            && figure.contains("return new float[] {curves, bounce};"),
+            "every woman's figure as her own bust layer draws it: a player, a villager, an investigator, a companion, a grown daughter");
+        check(read("src/main/java/com/hex/kagune/control/client/render/HumanRenderer.java").contains("|| FemaleFigure.covered(human)) {")
+            && read("src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java").contains("|| FemaleFigure.covered(agent)) {")
+            && read("src/main/java/com/hex/kagune/control/client/render/EtoRenderer.java").contains("if (!FemaleFigure.covered(npc)) {")
+            && read("src/main/java/com/hex/kagune/control/client/render/ChildRenderer.java").contains("|| FemaleFigure.covered(child)) {")
+            && read("src/main/java/com/hex/kagune/control/client/render/FigureLayer.java").contains("|| !player.m_6844_(net.minecraft.world.entity.EquipmentSlot.CHEST).m_41619_()) {"),
+            "no woman's skin bust drawn under anything worn on her chest (a player's never was)");
+    }
+
+    /** A face's diagonals' cross (its corners' own facing, unnormalised). */
+    static double[] across(float[] c) {
+        double ax = c[6] - c[0];
+        double ay = c[7] - c[1];
+        double az = c[8] - c[2];
+        double bx = c[9] - c[3];
+        double by = c[10] - c[4];
+        double bz = c[11] - c[5];
+        return new double[] {ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx};
+    }
+
+    static int faces(List<OutfitModels.Cube> cubes) {
+        int n = 0;
+        for (OutfitModels.Cube c : cubes) {
+            n += c.faces().length;
+        }
+        return n;
+    }
+
+    static double area(List<OutfitModels.Cube> cubes) {
+        double a = 0.0;
+        for (OutfitModels.Cube cube : cubes) {
+            for (OutfitModels.Face f : cube.faces()) {
+                float[] c = f.corners();
+                double ax = c[6] - c[0];
+                double ay = c[7] - c[1];
+                double az = c[8] - c[2];
+                double bx = c[9] - c[3];
+                double by = c[10] - c[4];
+                double bz = c[11] - c[5];
+                double nx = ay * bz - az * by;
+                double ny = az * bx - ax * bz;
+                double nz = ax * by - ay * bx;
+                a += 0.5 * Math.sqrt(nx * nx + ny * ny + nz * nz);
+            }
+        }
+        return a;
+    }
+
+    /** A cube's faces' texture box (u0, v0, u1, v1). */
+    static float[] uvBox(OutfitModels.Face[] faces) {
+        float[] box = {Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
+        for (OutfitModels.Face f : faces) {
+            for (int k = 0; k < 4; k++) {
+                box[0] = Math.min(box[0], f.uvs()[k * 2]);
+                box[1] = Math.min(box[1], f.uvs()[k * 2 + 1]);
+                box[2] = Math.max(box[2], f.uvs()[k * 2]);
+                box[3] = Math.max(box[3], f.uvs()[k * 2 + 1]);
+            }
+        }
+        return box;
+    }
+
+    /** The frontmost (least z) of the faces facing forward over ({@code x}, {@code y}); a large number if none. */
+    static double frontAt(List<OutfitModels.Cube> cubes, double x, double y) {
+        double best = 99.0;
+        for (OutfitModels.Cube cube : cubes) {
+            for (OutfitModels.Face f : cube.faces()) {
+                if (f.normal()[2] > -0.02F) {
+                    continue; // facing forward at all (4.1.89 WIP: was -0.2, which missed the steep underside of a bust bounced down)
+                }
+                float[] c = f.corners();
+                for (int[] t : new int[][] {{0, 1, 2}, {0, 2, 3}}) {
+                    double x0 = c[t[0] * 3];
+                    double y0 = c[t[0] * 3 + 1];
+                    double x1 = c[t[1] * 3];
+                    double y1 = c[t[1] * 3 + 1];
+                    double x2 = c[t[2] * 3];
+                    double y2 = c[t[2] * 3 + 1];
+                    double d = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2);
+                    if (Math.abs(d) < 1.0E-9) {
+                        continue;
+                    }
+                    double l0 = ((y1 - y2) * (x - x2) + (x2 - x1) * (y - y2)) / d;
+                    double l1 = ((y2 - y0) * (x - x2) + (x0 - x2) * (y - y2)) / d;
+                    double l2 = 1.0 - l0 - l1;
+                    if (l0 < -1.0E-6 || l1 < -1.0E-6 || l2 < -1.0E-6) {
+                        continue;
+                    }
+                    best = Math.min(best, l0 * c[t[0] * 3 + 2] + l1 * c[t[1] * 3 + 2] + l2 * c[t[2] * 3 + 2]);
+                }
+            }
+        }
+        return best;
+    }
+
+    /** The same corners everywhere. */
+    static boolean same(List<OutfitModels.Cube> a, List<OutfitModels.Cube> b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+        for (int c = 0; c < a.size(); c++) {
+            OutfitModels.Face[] fa = a.get(c).faces();
+            OutfitModels.Face[] fb = b.get(c).faces();
+            if (fa.length != fb.length) {
+                return false;
+            }
+            for (int f = 0; f < fa.length; f++) {
+                if (!java.util.Arrays.equals(fa[f].corners(), fb[f].corners())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    static String read(String path) {
+        try {
+            return Files.readString(Path.of(path));
+        } catch (java.io.IOException failure) {
+            throw new IllegalStateException(failure);
+        }
     }
 }

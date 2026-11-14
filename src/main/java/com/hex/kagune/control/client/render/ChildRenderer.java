@@ -518,8 +518,8 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, ChildNpc child, float limbSwing, float limbSwingAmount, float partialTick,
                             float ageInTicks, float netHeadYaw, float headPitch) {
             ChildClient.View view = ChildClient.get(child.m_19879_());
-            if (child.m_20145_() || !woman(view)) {
-                return;
+            if (child.m_20145_() || !woman(view) || FemaleFigure.covered(child)) {
+                return; // 4.1.89: under a chestplate her skin's bust is not drawn
             }
             double y = child.f_19791_ + (child.m_20186_() - child.f_19791_) * partialTick;
             float bounce = FemaleFigure.jiggle(child.m_19879_(), y, com.hex.kagune.control.client.PaleClient.clock(partialTick));

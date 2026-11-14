@@ -2506,9 +2506,15 @@ public final class ArtPreview {
             PoseRender.Part part = (PoseRender.Part)b[1];
             for (com.hex.kagune.control.outfit.OutfitModels.Cube cube : model.on((Integer)b[0], -1)) {
                 for (com.hex.kagune.control.outfit.OutfitModels.Face face : cube.faces()) {
-                    double[][] w = new double[4][];
-                    for (int k = 0; k < 4; k++) {
-                        double[] q = {face.corners()[k * 3], face.corners()[k * 3 + 1], face.corners()[k * 3 + 2]};
+                    // The four corners, then (4.1.89) a point a quarter pixel out along the face's own normal from its middle: the world
+                    // flips handedness, so the corners' winding alone gave every face an inward normal (slopes and tops lit as if facing away).
+                    double[][] w = new double[5][];
+                    float[] fc = face.corners();
+                    float[] fn = face.normal();
+                    for (int k = 0; k < 5; k++) {
+                        double[] q = k < 4 ? new double[] {fc[k * 3], fc[k * 3 + 1], fc[k * 3 + 2]}
+                            : new double[] {(fc[0] + fc[3] + fc[6] + fc[9]) / 4 + fn[0] * 0.25, (fc[1] + fc[4] + fc[7] + fc[10]) / 4 + fn[1] * 0.25,
+                                (fc[2] + fc[5] + fc[8] + fc[11]) / 4 + fn[2] * 0.25};
                         q = PoseRender.partPoint(PoseRender.bendPoint(q, (PoseRender.Cube)b[2], part.bendAxis, part.bend), part);
                         if ((Boolean)b[3]) {
                             q = upper.apply(q);
@@ -2538,6 +2544,13 @@ public final class ArtPreview {
         }
         int colour = argb | 0xFF000000;
         double[] n = PoseRender.norm(PoseRender.cross(PoseRender.sub(c[1], c[0]), PoseRender.sub(c[2], c[0])));
+        if (c.length > 4) {
+            // 4.1.89: turned to the side the face's own normal points (c[4]: a point out along it from the face's middle), as the game lights it.
+            double[] mid = {(c[0][0] + c[1][0] + c[2][0] + c[3][0]) / 4, (c[0][1] + c[1][1] + c[2][1] + c[3][1]) / 4, (c[0][2] + c[1][2] + c[2][2] + c[3][2]) / 4};
+            if (PoseRender.dot(n, PoseRender.sub(c[4], mid)) < 0.0) {
+                n = new double[] {-n[0], -n[1], -n[2]};
+            }
+        }
         out.add(new WingPreview.Tri(new double[][] {c[0], c[1], c[2]}, new int[] {colour, colour, colour}, n, true));
         out.add(new WingPreview.Tri(new double[][] {c[0], c[2], c[3]}, new int[] {colour, colour, colour}, n, true));
     }
