@@ -1,0 +1,65 @@
+[
+ {
+  "name": "whose, never said",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "return \"That one is \" + (owner == null || owner.isBlank() ? \"another player\" : owner) + \"'s quest, not yours.\";",
+  "new": "return \"That one is another player's quest, not yours.\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a blank name said",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "(owner == null || owner.isBlank() ? \"another player\" : owner)",
+  "new": "(owner == null ? \"another player\" : owner)",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "told every blow",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "public static final long NOT_YOURS_EVERY = 40L;",
+  "new": "public static final long NOT_YOURS_EVERY = 0L;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a blow on another's unexplained",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "            if (event.getSource().m_7639_() instanceof ServerPlayer other) {\n                notYours(other, event.getEntity());",
+  "new": "            if (event.getSource().m_7639_() instanceof ServerPlayer other) {\n                other.m_6084_();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "their own told it's another's",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        if (owner == null || owner.equals(other.m_20148_())) {\n            return false;",
+  "new": "        if (owner == null) {\n            return false;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "told without pause",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        if (last == null || now - last >= JoinTrial.NOT_YOURS_EVERY || now < last) {",
+  "new": "        if (true) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the pause never kept",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "            TOLD.put(other.m_20148_(), now);\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "told in the chat",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "other.m_5661_(Component.m_237113_(\"\\u00a77\" + JoinTrial.notYours(name)), true);",
+  "new": "other.m_5661_(Component.m_237113_(\"\\u00a77\" + JoinTrial.notYours(name)), false);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "another's talked to",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java",
+  "old": "            if (JoinServer.notYours(player, npc)) {\n                return; // 4.1.86",
+  "new": "            if (JoinServer.notYours(player, npc) && false) {\n                return; // 4.1.86",
+  "suite": "CompanionTests"
+ }
+]

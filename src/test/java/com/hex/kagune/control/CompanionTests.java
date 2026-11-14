@@ -155,6 +155,7 @@ public final class CompanionTests {
         officials483();
         gifts484();
         wish485();
+        notYours486();
         proofs();
         oneSpouse();
         jealous();
@@ -2545,6 +2546,27 @@ public final class CompanionTests {
             && near(eto, "new EtoTalk.Reply(wished ? com.hex.kagune.control.npc.Tastes.granted(key, item, c.seed())", "Tastes.said(key, taste, item, c.seed(), c.dating())", 200),
             "brought, today's asked-for wish: their words for it, and more regard");
         check(com.hex.kagune.control.npc.NpcMemory.WISH_DAY.equals("wishday"), "the day asked, kept with them");
+    }
+
+    /** 4.1.86 (the owner: "quests per player. thats the main thing"): another player's quest target says whose it is. */
+    static void notYours486() {
+        check(com.hex.kagune.control.npc.JoinTrial.notYours("Steve").equals("That one is Steve's quest, not yours.")
+            && com.hex.kagune.control.npc.JoinTrial.notYours(null).equals("That one is another player's quest, not yours.")
+            && com.hex.kagune.control.npc.JoinTrial.notYours(" ").equals("That one is another player's quest, not yours."), "whose quest, by name if they're about");
+        check(com.hex.kagune.control.npc.JoinTrial.NOT_YOURS_EVERY == 40L, "told every two seconds at most, however many blows");
+        String join = read("src/main/java/com/hex/kagune/control/server/JoinServer.java");
+        check(near(join, "if (othersTrial(event.getEntity(), event.getSource().m_7639_())) {\n            event.setCanceled(true);",
+            "if (event.getSource().m_7639_() instanceof ServerPlayer other) {\n                notYours(other, event.getEntity());", 200), "a blow on another's: cancelled, and told");
+        check(near(join, "public static boolean notYours(ServerPlayer other, Entity body) {", "if (owner == null || owner.equals(other.m_20148_())) {\n            return false;", 200)
+            && near(join, "public static boolean notYours(ServerPlayer other, Entity body) {", "if (last == null || now - last >= JoinTrial.NOT_YOURS_EVERY || now < last) {", 500)
+            && near(join, "if (last == null || now - last >= JoinTrial.NOT_YOURS_EVERY || now < last) {", "TOLD.put(other.m_20148_(), now);", 120)
+            && near(join, "TOLD.put(other.m_20148_(), now);", "other.m_5661_(Component.m_237113_(\"\\u00a77\" + JoinTrial.notYours(name)), true);", 300)
+            && near(join, "public static boolean notYours(ServerPlayer other, Entity body) {", "        return true;\n    }", 1000),
+            "only another's trial body; told on the action bar, now and then; true for one of another's");
+        String talk = read("src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java");
+        check(near(talk, "if (JoinServer.notYours(player, npc)) {", "return; // 4.1.86", 60)
+            && talk.indexOf("if (JoinServer.notYours(player, npc)) {") < talk.indexOf("if (JoinServer.serve(player, npc)) {")
+            && talk.indexOf("if (JoinServer.notYours(player, npc)) {") < talk.indexOf("open(player, npc);\n        }"), "talking to another's: told whose, no talk");
     }
 
     /** The yaw (a Rotation list's first float) of the NBT list named Rotation at {@code at} in {@code nbt}. */

@@ -257,6 +257,17 @@ public final class JoinTrial {
     public static final double SHIFT_ZONE = 24.0;
     /** What is served: the cookbook's Anteiku Blend, brewed (crafted) by the player. */
     public static final String CUP = "hexkagune:anteiku_blend";
+    /**
+     * 4.1.86 (the owner: "quests per player. thats the main thing"): what another player is told on their action bar when they hit or
+     * talk to one of a trial's bodies that isn't theirs ({@code owner}: whose it is, or null if they aren't about).
+     */
+    public static String notYours(String owner) {
+        return "That one is " + (owner == null || owner.isBlank() ? "another player" : owner) + "'s quest, not yours.";
+    }
+
+    /** 4.1.86: how often (ticks) one player is told so, however many blows. */
+    public static final long NOT_YOURS_EVERY = 40L;
+
     /** 4.1.82: how near (blocks) the waiting regular a right click with the cup serves them, aimed at them or not. */
     public static final double SERVE_NEAR = 4.0;
     /** 4.1.82: the seats in front of the counter: this far out from Touka's spot, the way she faces, and this far to either side. */

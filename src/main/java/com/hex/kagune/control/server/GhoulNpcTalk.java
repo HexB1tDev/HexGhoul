@@ -64,6 +64,9 @@ public final class GhoulNpcTalk {
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.SUCCESS);
         if (event.getHand() == InteractionHand.MAIN_HAND && event.getEntity() instanceof ServerPlayer player && npc.m_20280_(player) <= REACH * REACH) {
+            if (JoinServer.notYours(player, npc)) {
+                return; // 4.1.86: another player's quest: whose it is, and no talk
+            }
             if (JoinServer.serve(player, npc)) {
                 return; // 4.1.79: a regular of Anteiku's shift served their cup (or asked for it)
             }

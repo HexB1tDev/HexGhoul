@@ -1121,10 +1121,36 @@ public final class JoinServer {
             return;
         }
         // 4.1.82 (the owner: "Quests are PER player, currently i'm 90% sure Im taking another player's quest"): a trial's bodies are its
-        // player's alone: no other player's blow lands on them (nor kills them for that player).
+        // player's alone: no other player's blow lands on them (nor kills them for that player). 4.1.86 (the owner: "quests per player.
+        // thats the main thing"): and they are told whose it is.
         if (othersTrial(event.getEntity(), event.getSource().m_7639_())) {
             event.setCanceled(true);
+            if (event.getSource().m_7639_() instanceof ServerPlayer other) {
+                notYours(other, event.getEntity());
+            }
         }
+    }
+
+    /** 4.1.86: when each player was last told a body was another's (the world's game time). */
+    private static final Map<UUID, Long> TOLD = WorldTimes.map();
+
+    /**
+     * 4.1.86: {@code other} told, on their action bar, that {@code body} is another player's quest (and whose), at most once each
+     * JoinTrial.NOT_YOURS_EVERY. True if {@code body} is one of another's trial (whatever was told).
+     */
+    public static boolean notYours(ServerPlayer other, Entity body) {
+        UUID owner = OWNER.get(body.m_20148_());
+        if (owner == null || owner.equals(other.m_20148_())) {
+            return false;
+        }
+        long now = other.m_9236_().m_46467_();
+        Long last = TOLD.get(other.m_20148_());
+        if (last == null || now - last >= JoinTrial.NOT_YOURS_EVERY || now < last) {
+            TOLD.put(other.m_20148_(), now);
+            String name = other.m_284548_().m_8791_(owner) instanceof ServerPlayer them ? them.m_36316_().getName() : null;
+            other.m_5661_(Component.m_237113_("\u00a77" + JoinTrial.notYours(name)), true);
+        }
+        return true;
     }
 
     /** 4.1.79: a trial's body dead (counted, or the trial lost), or a player in a trial dead (lost). */

@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.86 (HexGhoul): quests per player: another player's quest target says whose it is (testing)
+
+See `.github/release-notes-4.1.86.md` (every quest system checked for anything shared between players). `JoinTrial.notYours`,
+`NOT_YOURS_EVERY`; `JoinServer.notYours` (from `attacked` when another's blow is cancelled, and from `GhoulNpcTalk.interact` before any talk).
+`CompanionTests.notYours486`, 9 rules sabotaged (`docs/handoff/sabotage-4.1.86.json`).
+
 ## 4.1.85 (HexGhoul): romance: the daily, "What do you want today?" (testing)
 
 See `.github/release-notes-4.1.85.md`. `Tastes.WISHES` (per companion they can be together with: loved things that can be had), `wish(key,
