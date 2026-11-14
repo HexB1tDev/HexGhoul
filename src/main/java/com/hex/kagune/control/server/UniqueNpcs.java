@@ -78,10 +78,17 @@ public final class UniqueNpcs {
     }
 
     /** 4.1.82: true if ({@code x}, {@code z}) is at official {@code key}'s own place (npc.HomePlace) as this world built it. */
-    public static boolean atOwnPlace(String key, double x, double z) {
+    public static boolean atOwnPlace(ServerLevel level, String key, double x, double y, double z) {
         String place = com.hex.kagune.control.npc.HomePlace.of(key);
         int[] chunk = place == null ? null : com.hex.kagune.control.PlaceClaims.claimed(place);
-        return chunk != null && com.hex.kagune.control.npc.HomePlace.within(place, x - ((chunk[0] << 4) + 8), z - ((chunk[1] << 4) + 8));
+        if (chunk != null && com.hex.kagune.control.npc.HomePlace.within(place, x - ((chunk[0] << 4) + 8), z - ((chunk[1] << 4) + 8))) {
+            return true;
+        }
+        // 4.1.94 (the owner: "the main guys from gangs, circus, gas mask gang, ccg, none of them spawn the main dude/girl"): or inside any of
+        // her place this world built (its box), whatever its claim says. A body of hers in her tent whose claim named another spot (or none)
+        // was taken for a stray, and once anyone had met her it was sent away on its first tick.
+        return place != null && com.hex.kagune.control.ControlStructures.startAt(level, place,
+            new BlockPos((int)Math.floor(x), (int)Math.floor(y), (int)Math.floor(z))) != null;
     }
 
     /**
@@ -91,8 +98,8 @@ public final class UniqueNpcs {
     public static boolean takesOver(ServerLevel level, String key, Mob body) {
         UniqueNpc slot = get(level, key);
         int[] home = slot.spawn();
-        boolean slotHome = (slot.origined || slot.homed) && atOwnPlace(key, home[0] + 0.5, home[2] + 0.5);
-        return com.hex.kagune.control.npc.HomePlace.takesOver(atOwnPlace(key, body.m_20185_(), body.m_20189_()), slotHome,
+        boolean slotHome = (slot.origined || slot.homed) && atOwnPlace(level, key, home[0] + 0.5, home[1], home[2] + 0.5);
+        return com.hex.kagune.control.npc.HomePlace.takesOver(atOwnPlace(level, key, body.m_20185_(), body.m_20186_(), body.m_20189_()), slotHome,
             slot.stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED);
     }
 
@@ -415,6 +422,24 @@ public final class UniqueNpcs {
     }
 
     /**
+     * 4.1.94 (the owner: "the main guys from gangs, circus, gas mask gang, ccg, none of them spawn the main dude/girl"): official {@code key}'s
+     * own spot in the place of hers a player (not a spectator) stands in, as this world built it, or null if no player is in one.
+     */
+    static int[] spotByPlayers(ServerLevel level, String key) {
+        for (ServerPlayer player : level.m_6907_()) {
+            if (player.m_5833_()) {
+                continue;
+            }
+            int[] spot = com.hex.kagune.control.ControlStructures.spotAt(level, key, new BlockPos((int)Math.floor(player.m_20185_()),
+                (int)Math.floor(player.m_20186_()), (int)Math.floor(player.m_20189_())));
+            if (spot != null) {
+                return spot;
+            }
+        }
+        return null;
+    }
+
+    /**
      * 4.1.82 (the owner: "the clown girl is not in the circus tent"), 4.1.83 for every official (the owner: "Gas mask guy is ALSO not
      * spawning in his room, or anywhere"; "and I'm 99% sure the general of the CCg isnt spawning either"): each official NPC (Eto, Touka,
      * Ken, Ayato, Noro, the General, Roma, Banjou) belongs at her own spot in her place (npc.HomePlace#spot, as this world built it:
@@ -429,7 +454,11 @@ public final class UniqueNpcs {
             if (com.hex.kagune.control.npc.HomePlace.of(key) == null) {
                 continue;
             }
-            int[] spot = spotOf(level, key);
+            // 4.1.94: her spot in the place a player stands in (any of hers this world built), else in the one her claim names.
+            int[] spot = spotByPlayers(level, key);
+            if (spot == null) {
+                spot = spotOf(level, key);
+            }
             if (spot == null || !someoneNear(level, new BlockPos(spot[0], spot[1], spot[2]), com.hex.kagune.control.npc.HomePlace.KEEP_NEAR)) {
                 PLACE_WATCHED.remove(key);
                 continue;
@@ -439,7 +468,7 @@ public final class UniqueNpcs {
             com.hex.kagune.control.npc.EtoNpc live = null;
             for (com.hex.kagune.control.npc.EtoNpc one : EtoBrain.live()) {
                 if (one.persona().key().equals(key) && one.m_6084_() && one.m_9236_() == level
-                    && (live == null || atOwnPlace(key, one.m_20185_(), one.m_20189_()))) {
+                    && (live == null || atOwnPlace(level, key, one.m_20185_(), one.m_20186_(), one.m_20189_()))) {
                     live = one; // the one in her place, if one is
                 }
             }
@@ -458,7 +487,7 @@ public final class UniqueNpcs {
                 PLACE_WATCHED.remove(key);
                 continue;
             }
-            boolean inPlace = live != null && atOwnPlace(key, live.m_20185_(), live.m_20189_());
+            boolean inPlace = live != null && atOwnPlace(level, key, live.m_20185_(), live.m_20186_(), live.m_20189_());
             boolean along = live != null && (live.following() != null || live.mind != null && live.mind.holding != null) || slot != null && slot.away;
             BlockPos was = live == null ? null : live.origin();
             if (inPlace && !along && !married && was != null

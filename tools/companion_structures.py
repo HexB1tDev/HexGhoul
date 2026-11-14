@@ -72,12 +72,16 @@ PLACES = {
         "source": "reaper/arima_mansion.schem",
         # 4.1.24 (the owner: "outside in the garden, like in this place"): Kishou Arima, the White Reaper, on the striped lawn north of the
         # house, facing it (south). A Rank 10 investigator with Dawn and the Reaper's look, alone, at home here (AgentBrain.wake).
-        "who": "hexkagune:ccg_investigator", "at": (42, 7, 22), "yaw": 0.0,
+        # 4.1.95 (the owner: "trim the building of the mansion so that it's smaller and dynamic. Like it's too big as it stands ... It just
+        # keeps the main house itself. Be careful with the floor though."): the walled garden north of the house (its tennis court, pool,
+        # striped lawn and helipad, rows 0 to 53) is cut off; the house and its small back yard stay (rows 54 to 120: 79 x 67). Arima
+        # stands on the back yard's striped lawn instead, facing the house (north).
+        "who": "hexkagune:ccg_investigator", "at": (40, 7, 108), "yaw": 180.0,
         "who_data": {"HexCcgAgent": ("long", 9 | 5 << 8 | 1 << 16), "HexCcgAgentRankLevel": ("int", 10), "HexCcgAgentMansion": ("byte", 1)},
         # Its bottom layer is empty (cropped); its ground is one block thick at y 6 over nothing but its two pools' basins: what is under
         # the lawn is filled (dirt, then stone), or the ground would be left hollow under it. The anchor (on the lawn's layer, at the
         # middle) puts that layer on the ground and centres it on its chunk (121 blocks long).
-        "keep_air": False, "crop": (1, 28), "fill_below": 6, "anchor": (39, 6, 60), "anchor_name": "hexkagune:mansion_anchor",
+        "keep_air": False, "crop": (1, 28), "crop_z": (54, 120), "fill_below": 6, "anchor": (39, 6, 87), "anchor_name": "hexkagune:mansion_anchor",
     },
     "circus": {
         "source": "exploration/circus.schematic",
@@ -297,6 +301,8 @@ def build(key, place, registry):
                 entities[(x, y, z)] = block_entity(raw)
     assert len(cells) == width * height * length, f"{key}: the block data does not fill the schematic"
     y0, y1 = place["crop"] or (0, height - 1)
+    # 4.1.95: the rows kept (north to south), each written that many rows further north; what is cut off left out.
+    z0, z1 = place.get("crop_z") or (0, length - 1)
     # 4.0.9: the layers kept, bottom up (what is cropped and dropped left out), each written where it now stands.
     layers = [y for y in range(y0, y1 + 1) if not any(a <= y < b for a, b in place.get("drop", ()))]
     converted = {i: convert(state) for i, state in by_index.items()}
@@ -337,7 +343,7 @@ def build(key, place, registry):
         assert anchor is None or (anchor[0], anchor[2]) in under, f"{key}: the anchor is off the floor"
         lift = 1
     for out_y, y in enumerate(layers, start=lift):
-        for z in range(length):
+        for z in range(z0, z1 + 1):
             row = (y * length + z) * width
             for x in range(width):
                 c = converted[cells[row + x]]
@@ -359,7 +365,7 @@ def build(key, place, registry):
                     i = state_index(*c)
                     if nbt is None and (x, y, z) in entities:
                         nbt = entities[(x, y, z)]
-                write_block(blocks, i, (x, out_y, z), nbt)
+                write_block(blocks, i, (x, out_y, z - z0), nbt)
                 count += 1
     figures = []
     for person in place.get("people", [place]):
@@ -370,7 +376,7 @@ def build(key, place, registry):
             assert (wx, wz) in under, f"{key}: {person['who']} at {person['at']} would stand off the floor"  # 4.1.48
         else:
             assert by_index[cells[((wy - 1) * length + wz) * width + wx]] not in AIR, f"{key}: {person['who']} would stand on nothing"
-        assert wy in layers, f"{key}: {person['who']} is cut off"
+        assert wy in layers and z0 <= wz <= z1, f"{key}: {person['who']} is cut off"
         wy_out = layers.index(wy) + lift
         # 4.1.73 (the owner: "Make sure NPCS dont spawn in the ground at any point, especially official NPCS."): on what is under them,
         # at its collision's top: down onto a carpet, a snow layer or a bottom slab (they stood a block over it, and dropped onto it).
@@ -391,9 +397,9 @@ def build(key, place, registry):
             # 4.1.24: who they are, in Forge's saved data (Entity.getPersistentData: "ForgeData").
             kinds = {"long": LONG, "int": INT, "byte": BYTE}
             who["ForgeData"] = Tag(COMPOUND, {k: Tag(kinds[kind], v) for k, (kind, v) in person["who_data"].items()})
-        figures.append({"blockPos": Tag(LIST, (INT, [wx, wy_out, wz])), "pos": Tag(LIST, (DOUBLE, [wx + 0.5, feet, wz + 0.5])),
+        figures.append({"blockPos": Tag(LIST, (INT, [wx, wy_out, wz - z0])), "pos": Tag(LIST, (DOUBLE, [wx + 0.5, feet, wz - z0 + 0.5])),
                         "nbt": Tag(COMPOUND, who)})
-    size = (width, len(layers) + lift, length)
+    size = (width, len(layers) + lift, z1 - z0 + 1)
     path = OUT / (key + ".nbt")
     write_template(path, size, palette, blocks.getvalue(), count, figures)
     print(f"{path.relative_to(ROOT)}: {size[0]}x{size[1]}x{size[2]}, {len(palette)} states, {count} blocks, "

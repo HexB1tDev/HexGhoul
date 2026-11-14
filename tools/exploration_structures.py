@@ -92,8 +92,12 @@ SITES = [
 # kept down to layer 3 (keep 8) and the basement's air written in (hollow_below), so the world's ground fills neither. Homes in its rooms
 # off the street (two humans each), six investigators on the patrol round it (the roads either side and the forecourt; the tower's back
 # stands at the file's edge), every stop of it under the open sky (patrol_sky: not in its great hall, whose ceiling is 12 up).
-SITES.append({"id": "hotel", "source": "humanhotel.schem", "map": 12, "crop_x": None, "kind": "human", "houses": 10, "agents": 6,
-              "ring": (55, 125), "loot_every": 7, "ground": 11, "top": 194, "keep": 8, "hollow_below": True, "patrol_sky": True})
+# 4.1.95 (the owner: "Same for the hospital. I mean, for the hotel, I'm pretty sure. Just trim them up so that they're not as big. It just
+# keeps the main house itself. Be careful with the floor though."): the tower (x 44 to 146, z 6 to 131 of the owner's file) with its
+# forecourt and its trees south of it and a road's width round the rest (x 38 to 152, z 0 to 151: 115 x 152, from 191 x 196); the roads and
+# yards past it are cut off. Its patrol walks that margin and the forecourt (the ring from the new middle: 50 to 90).
+SITES.append({"id": "hotel", "source": "humanhotel.schem", "map": 12, "crop_x": (38, 153), "crop_z": (0, 152), "kind": "human", "houses": 10,
+              "agents": 6, "ring": (50, 90), "loot_every": 7, "ground": 11, "top": 194, "keep": 8, "hollow_below": True, "patrol_sky": True})
 
 # 1.20.1 has none of these (1.20.3 to 1.21.9): each one's nearest, and the properties it keeps.
 SWAPS = {
@@ -314,15 +318,19 @@ def build(site, registry):
     at_x = {x: i for i, x in enumerate(kept)}
     width = len(kept)
     converted = {i: convert(s, registry) for i, s in by_index.items()}
+    # 4.1.95: the rows kept (north to south, the end left out), each written that many rows further north.
+    z0, z1 = site.get("crop_z") or (0, d)
     cells = {}
     for y in range(h):
-        for z in range(d):
+        for z in range(z0, z1):
             row = (y * d + z) * w
             for x in kept:
                 c = converted[ids[row + x]]
                 if c is not None:
-                    cells[(at_x[x], y, z)] = c
-    entities = {(at_x[p[0]], p[1], p[2]): e for p, e in raw_entities.items() if p[0] in at_x and (at_x[p[0]], p[1], p[2]) in cells}
+                    cells[(at_x[x], y, z - z0)] = c
+    entities = {(at_x[p[0]], p[1], p[2] - z0): e for p, e in raw_entities.items()
+                if p[0] in at_x and z0 <= p[2] < z1 and (at_x[p[0]], p[1], p[2] - z0) in cells}
+    d = z1 - z0
 
     def placed(x):
         """An x of the owner's schematic where it lands (a cut column: the nearest kept one)."""

@@ -12,8 +12,17 @@ package com.hex.kagune.control.village;
  * south side) faces its village ({@link #turns}).
  */
 public final class HotelPlan {
-    /** One village in this many has a hotel beside it. */
-    public static final int ONE_IN = 4;
+    /**
+     * One village in this many has a hotel beside it. 4.1.94 (the owner: "the hotel on the villages, the hotel ... they are confirmed to not
+     * be spawning"): one in two (it was one in four, and of those only one whose first clear side was all plains, flat and dry had one).
+     */
+    public static final int ONE_IN = 2;
+    /**
+     * 4.1.94: the share (in hundredths) of the columns looked at over a hotel's footprint and round it that are plains ({@link #onPlains});
+     * none may be a sea or steep (ControlStructures: DryLand.land). Before, every one of them: a patch of forest at one corner of its 200
+     * blocks and there was no hotel.
+     */
+    public static final int PLAINS_SHARE = 75;
     /**
      * How far (chunks) a hotel's start chunk is from its village's, on its side. Its near edge is then 16 x 14 - 105 = 119 blocks out of the
      * village's start corner at the least (the north and west sides: the footprint centres on its chunk's middle); its clearing reaches 8
@@ -43,8 +52,15 @@ public final class HotelPlan {
      * plains and Biomes O' Plenty's open grasslands): never half on a mountain, a forest or anything else.
      */
     public static boolean onPlains(int minX, int minZ, int sizeX, int sizeZ, java.util.function.BiPredicate<Integer, Integer> plains) {
-        for (int[] column : DryLand.columns(minX, minZ, sizeX, sizeZ, PLAINS_STEP)) {
-            if (!plains.test(column[0], column[1])) {
+        // 4.1.94: its middle on plains and at least PLAINS_SHARE of the rest (never a sea or a steep biome: DryLand.land, every column).
+        if (!plains.test(minX + sizeX / 2, minZ + sizeZ / 2)) {
+            return false;
+        }
+        int[][] columns = DryLand.columns(minX, minZ, sizeX, sizeZ, PLAINS_STEP);
+        int most = columns.length * (100 - PLAINS_SHARE) / 100; // how many may be another biome
+        int other = 0;
+        for (int[] column : columns) {
+            if (!plains.test(column[0], column[1]) && ++other > most) {
                 return false;
             }
         }
@@ -142,6 +158,48 @@ public final class HotelPlan {
         return new int[] {h[0], h[1], side};
     }
 
+    /**
+     * 4.1.94: every spot the hotel beside the village at chunk ({@code x}, {@code z}) may take, in the order they are tried: {start chunk x,
+     * z, side} for each side clear of the other villages, from {@link #first} round clockwise, less any within {@link #APART} of a spot of a
+     * village before it in (x, then z) order that has a hotel (whichever of its spots that hotel takes, the two never overlap). Empty if it
+     * has no hotel ({@link #chosen}). The first whose land the world judges good holds it (ControlStructures.Site.hotel); before, only the
+     * first clear side was ever looked at, and its land refused, there was no hotel.
+     */
+    public static int[][] spots(long seed, Offers offers, int x, int z) {
+        if (!chosen(seed, x, z)) {
+            return new int[0][];
+        }
+        java.util.List<int[]> out = new java.util.ArrayList<>(4);
+        int start = first(seed, x, z);
+        for (int k = 0; k < 4; k++) {
+            int side = (start + k) % 4;
+            int[] h = hotel(x, z, side);
+            if (neighbours(offers, h[0], h[1], x, z).length > 0 || overlapsEarlier(seed, offers, x, z, h)) {
+                continue;
+            }
+            out.add(new int[] {h[0], h[1], side});
+        }
+        return out.toArray(new int[0][]);
+    }
+
+    /** 4.1.94: true if a hotel spot {@code h} of the village at ({@code x}, {@code z}) comes within {@link #APART} of a spot of an earlier one's. */
+    static boolean overlapsEarlier(long seed, Offers offers, int x, int z, int[] h) {
+        for (int[] other : offersNear(offers, h[0], h[1], APART - 1 + DISTANCE)) {
+            boolean before = other[0] < x || other[0] == x && other[1] < z;
+            if (!before || !chosen(seed, other[0], other[1])) {
+                continue;
+            }
+            for (int side = 0; side < 4; side++) {
+                int[] g = hotel(other[0], other[1], side);
+                if (Math.abs(g[0] - h[0]) < APART && Math.abs(g[1] - h[1]) < APART
+                    && neighbours(offers, g[0], g[1], other[0], other[1]).length == 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** The offsets -{@code reach} to {@code reach}, both ends in, evenly spread no more than {@link #SCAN_GAP} apart. */
     public static int[] scan(int reach) {
         int steps = Math.max(1, (2 * reach + SCAN_GAP - 1) / SCAN_GAP);
@@ -182,9 +240,10 @@ public final class HotelPlan {
      */
     public static boolean near(long seed, Offers offers, int x, int z) {
         for (int[] v : offersNear(offers, x, z, DISTANCE + REACH + MARGIN)) {
-            int[] h = hotelOf(seed, offers, v[0], v[1]);
-            if (h != null && covers(h[0], h[1], x, z, MARGIN)) {
-                return true;
+            for (int[] h : spots(seed, offers, v[0], v[1])) { // 4.1.94: any spot its hotel may take
+                if (covers(h[0], h[1], x, z, MARGIN)) {
+                    return true;
+                }
             }
         }
         return false;

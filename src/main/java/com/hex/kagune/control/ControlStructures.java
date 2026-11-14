@@ -531,8 +531,12 @@ public final class ControlStructures {
                 // 4.1.44 (the owner: "Im 99% sure the Aogiri place IS not spawning at all, same with the CCG building"): no longer only if the
                 // game's spot is the one our own numbers expect (a mod that moves the spots made it never), and no longer only on the one
                 // spot: the flattest dry spot within two chunks of it (the claim keeps it to one: onlyIfClaimed).
+                // 4.1.94 (the owner: "the CCG in the mansion, they are confirmed to not be spawning"): no longer kept 12 chunks off every
+                // spot the hideout's set offers. Both sets offer theirs in the same 20 x 20 chunks of each region, so more than four in ten of
+                // the building's spots were turned away for a hideout that is built at one of them in the whole world; the claims keep the
+                // two 512 blocks apart where they really stand (PlaceClaims.APART).
                 return claimed(CCG, context, () -> {
-                    if (DryLand.near(hideoutSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART) || inHotel(context, chunk.f_45578_, chunk.f_45579_)) {
+                    if (inHotel(context, chunk.f_45578_, chunk.f_45579_)) {
                         return Optional.empty();
                     }
                     int span = Math.max(sizeX, sizeZ) + 2 * CCG_ROUND;
@@ -621,14 +625,32 @@ public final class ControlStructures {
                 if (offer[0] != at[0] || offer[1] != at[1]) {
                     continue;
                 }
-                int[] hotel = com.hex.kagune.control.village.HotelPlan.hotelOf(seed, offers, at[0], at[1]);
-                if (hotel == null || hotel[0] != chunk.f_45578_ || hotel[1] != chunk.f_45579_) {
+                // 4.1.94 (the owner: "the hotel on the villages ... confirmed to not be spawning"): each of the village's spots in turn (every
+                // side clear of the other villages), the first whose land will hold it; before, only the first, and no hotel if it wouldn't.
+                int[][] spots = com.hex.kagune.control.village.HotelPlan.spots(seed, offers, at[0], at[1]);
+                int mine = -1;
+                for (int i = 0; i < spots.length; i++) {
+                    if (spots[i][0] == chunk.f_45578_ && spots[i][1] == chunk.f_45579_ && spots[i][2] == side) {
+                        mine = i;
+                    }
+                }
+                if (mine < 0) {
                     continue;
                 }
-                if (!village(context, at[0], at[1]) || holdsPlace(chunk)) {
+                if (!village(context, at[0], at[1])) {
                     return Optional.empty();
                 }
-                return this.hotelAt(context, chunk, com.hex.kagune.control.village.HotelPlan.turns(hotel[2]), false);
+                for (int i = 0; i < mine; i++) {
+                    ChunkPos earlier = new ChunkPos(spots[i][0], spots[i][1]);
+                    if (!holdsPlace(earlier) && this.hotelAt(moved(context, earlier), earlier,
+                        com.hex.kagune.control.village.HotelPlan.turns(spots[i][2]), false).isPresent()) {
+                        return Optional.empty(); // an earlier spot holds this village's hotel
+                    }
+                }
+                if (holdsPlace(chunk)) {
+                    return Optional.empty();
+                }
+                return this.hotelAt(context, chunk, com.hex.kagune.control.village.HotelPlan.turns(side), false);
             }
             return Optional.empty();
         }
@@ -724,8 +746,9 @@ public final class ControlStructures {
         static int dryGround(Structure.GenerationContext context, DryLand.Ground ground, int minX, int minZ, int size) {
             int[] floor = grid(ground, minX, minZ, size, size);
             // 4.1.42: no more than its own flatness over its whole footprint, sampled every few blocks (a 5 x 5 grid let 24 blocks of
-            // hillside through, and it hung over the low side).
-            if (floor == null || DryLand.spread(floor) > STEEPEST || roughness(ground, minX, minZ, size, size) > flatFor(size)) {
+            // hillside through, and it hung over the low side). 4.1.94: the sampling stops once it is too rough (/locate froze on hills).
+            int flat = flatFor(size);
+            if (floor == null || DryLand.spread(floor) > STEEPEST || DryLand.roughness(ground, minX, minZ, size, size, ROUGH_STEP, flat) > flat) {
                 return NO_GROUND;
             }
             int middle = DryLand.median(floor);
@@ -736,9 +759,12 @@ public final class ControlStructures {
         /** 4.1.14: the steepest ground (blocks between its lowest and highest of a 5 x 5 grid) a one-of-a-kind place is built on. */
         static final int STEEPEST = BIG_PLACE_FLAT;
 
-        /** 4.1.42: the most a place {@code size} across may rise and fall: a small place's {@link #PLACE_FLAT}, a big one's (the hideout) more. */
+        /**
+         * 4.1.42: the most a place {@code size} across may rise and fall: a small place's {@link #PLACE_FLAT}, a big one's (the hideout) more.
+         * 4.1.94: {@link DryLand#flatFor} (a middling one, the CCG tower with its round, 8).
+         */
         static int flatFor(int size) {
-            return size <= 80 ? PLACE_FLAT : BIG_PLACE_FLAT;
+            return DryLand.flatFor(size);
         }
 
         /**
@@ -993,7 +1019,35 @@ public final class ControlStructures {
      */
     public static int[] spot(net.minecraft.server.level.ServerLevel level, String key) {
         int[] local = com.hex.kagune.control.npc.HomePlace.spot(key);
-        net.minecraft.world.level.levelgen.structure.StructureStart found = local == null ? null : start(level, com.hex.kagune.control.npc.HomePlace.of(key));
+        return local == null ? null : spotIn(start(level, com.hex.kagune.control.npc.HomePlace.of(key)), local);
+    }
+
+    /**
+     * 4.1.94 (the owner: "the main guys from gangs, circus, gas mask gang, ccg, none of them spawn the main dude/girl"): official {@code key}'s
+     * own spot in the place of hers that {@code at} stands in (its box: any of it this world built, the one its claim names or not), or null
+     * if {@code at} is in none or its chunk isn't loaded. Her spot was only ever read from the claimed one: a place standing where the claim
+     * didn't say (built before its claim, its claim given up and taken again elsewhere) never had her made in it.
+     */
+    public static int[] spotAt(net.minecraft.server.level.ServerLevel level, String key, BlockPos at) {
+        int[] local = com.hex.kagune.control.npc.HomePlace.spot(key);
+        return local == null ? null : spotIn(startAt(level, com.hex.kagune.control.npc.HomePlace.of(key), at), local);
+    }
+
+    /** 4.1.94: the start of one-of-a-kind place {@code id} whose box holds {@code at} in {@code level}, or null (none, or not loaded there). */
+    public static net.minecraft.world.level.levelgen.structure.StructureStart startAt(net.minecraft.server.level.ServerLevel level, String id, BlockPos at) {
+        if (id == null || !level.m_46805_(at)) {
+            return null;
+        }
+        Structure structure = level.m_9598_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
+        if (structure == null) {
+            return null;
+        }
+        net.minecraft.world.level.levelgen.structure.StructureStart found = level.m_215010_().m_220494_(at, structure);
+        return found == null || !found.m_73603_() ? null : found;
+    }
+
+    /** 4.1.83: an official's template spot {@code local} where {@code found} built her place (its first piece past its clearing's), or null. */
+    static int[] spotIn(net.minecraft.world.level.levelgen.structure.StructureStart found, int[] local) {
         if (found == null) {
             return null;
         }
@@ -1013,10 +1067,23 @@ public final class ControlStructures {
      * /locate only asks), the spot taken: the first the world makes holds it, and no other ever does.
      */
     static Optional<Structure.GenerationStub> claimed(String id, Structure.GenerationContext context, java.util.function.Supplier<Optional<Structure.GenerationStub>> here) {
+        if (!PlaceClaims.overworld(context.f_226622_())) {
+            // 4.1.94: the world's one stands in the overworld. Its sets run wherever overworld biomes are made (#minecraft:is_overworld: a
+            // mod's mining world or another made like the overworld), and one built there first took the overworld's only spot: the
+            // overworld then never had it, and /locate there found nothing.
+            return Optional.empty();
+        }
         ChunkPos chunk = context.f_226628_();
         int[] taken = PlaceClaims.claimed(id);
         if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {
-            return Optional.empty();
+            if (!PlaceClaims.stale(id, taken, context.f_226629_())) {
+                return Optional.empty();
+            }
+            // 4.1.94: its spot given up (nothing of it stands there): this one may hold it, unless another took it meanwhile.
+            taken = PlaceClaims.claimed(id);
+            if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {
+                return Optional.empty();
+            }
         }
         if (taken == null && PlaceClaims.crowded(id, chunk.f_45578_, chunk.f_45579_)) {
             return Optional.empty(); // 4.1.42: another place is too near: not here (nor does /locate point here)
@@ -1046,6 +1113,12 @@ public final class ControlStructures {
         });
     }
 
+    /** 4.1.94: {@code context} asked at start chunk {@code chunk} instead (the same world, its ground and biomes). */
+    static Structure.GenerationContext moved(Structure.GenerationContext context, ChunkPos chunk) {
+        return new Structure.GenerationContext(context.f_226621_(), context.f_226622_(), context.f_226623_(), context.f_226624_(),
+            context.f_226625_(), context.f_226626_(), context.f_226627_(), chunk, context.f_226629_(), context.f_226630_());
+    }
+
     /** 4.1.14: true if this start chunk is one of {@code spread}'s spots (the game asks only there; a stray ask is turned away). */
     static boolean offered(Structure.GenerationContext context, DryLand.Spread spread) {
         ChunkPos chunk = context.f_226628_();
@@ -1063,8 +1136,8 @@ public final class ControlStructures {
 
     /** 4.1.42: the ground's samples (blocks apart); the most a place's ground may rise and fall, a big place's; as flat as land comes. */
     static final int ROUGH_STEP = 6;
-    static final int PLACE_FLAT = 6;
-    static final int BIG_PLACE_FLAT = 10;
+    static final int PLACE_FLAT = DryLand.PLACE_FLAT;
+    static final int BIG_PLACE_FLAT = DryLand.BIG_PLACE_FLAT;
     static final int FLAT_ENOUGH = 2;
     /** 4.1.44: the most the hideout's ground (272 x 263) may rise and fall: as the Small City's, and its foundation and terrain fit meet the rest. */
     static final int HIDEOUT_FLAT = 14;
@@ -1238,6 +1311,11 @@ public final class ControlStructures {
             return claimed(id, context, () -> {
                 // 4.1.44: wherever the game asks (no longer only if its spot is the one our own numbers expect: a mod that moves the spots made
                 // it never); the claim keeps it to one (onlyIfClaimed).
+                // 4.1.94: a spot by a hotel is turned away first, before any ground is looked at (it costs no ground).
+                ChunkPos home = context.f_226628_();
+                if (inHotel(context, home.f_45578_, home.f_45579_)) {
+                    return Optional.empty();
+                }
                 Optional<Structure.GenerationStub> stub = this.flattest(context);
                 if (stub.isEmpty()) {
                     return stub;
@@ -1245,17 +1323,12 @@ public final class ControlStructures {
                 BoundingBox box = stub.get().m_226677_().m_192798_();
                 int x = Math.floorDiv((box.m_162395_() + box.m_162399_()) >> 1, 16);
                 int z = Math.floorDiv((box.m_162398_() + box.m_162401_()) >> 1, 16);
-                if (inHotel(context, x, z) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)
-                    || DryLand.near(spread(context, Site.CCG, DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.CCG_SALT)),
-                        x, z, DryLand.PLACE_APART)) {
-                    return Optional.empty();
-                }
-                for (String other : DryLand.PLACES) {
-                    if (!other.equals(id) && DryLand.near(placeSpread(context, other), x, z, DryLand.PLACE_APART)) {
-                        return Optional.empty();
-                    }
-                }
-                return stub;
+                // 4.1.94 (the owner: "the hotel, the CCG in the mansion, they are confirmed to not be spawning"): no longer kept 12 chunks off
+                // every spot the hideout's, the CCG building's and the other places' sets offer. All seven offer theirs in the same 20 x 20
+                // chunks of each 40 x 40 region, so one or two of a place's spots in a hundred were clear of the six others (the mansion, flat
+                // enough nowhere besides, at none), and /locate laid every other one out before turning it away: the freezes. The places are
+                // kept 512 blocks apart where they really stand (PlaceClaims.APART).
+                return inHotel(context, x, z) ? Optional.empty() : stub;
             });
         }
 
@@ -1332,9 +1405,17 @@ public final class ControlStructures {
                     continue;
                 }
                 BlockPos at = stub.get().f_226669_();
-                if (biome(context, at.m_123341_(), at.m_123342_(), at.m_123343_())
-                    && DryLand.dry(ground, at.m_123342_(), minX, minZ, maxX - minX + 1, maxZ - minZ + 1)) {
-                    int rough = strict ? roughness(ground, minX, minZ, maxX - minX + 1, maxZ - minZ + 1) : 0;
+                if (!biome(context, at.m_123341_(), at.m_123342_(), at.m_123343_())) {
+                    continue;
+                }
+                // 4.1.94: its flatness by its size (DryLand.flatFor: the mansion's 121 blocks were held to a small place's 6), looked at
+                // first and given up as soon as the ground is too rough; only then the water under it and round it (hundreds of biomes).
+                int flat = DryLand.flatFor(Math.max(maxX - minX + 1, maxZ - minZ + 1));
+                int rough = strict ? DryLand.roughness(ground, minX, minZ, maxX - minX + 1, maxZ - minZ + 1, ROUGH_STEP, flat) : 0;
+                if (rough > flat) {
+                    continue;
+                }
+                if (DryLand.dry(ground, at.m_123342_(), minX, minZ, maxX - minX + 1, maxZ - minZ + 1)) {
                     if (rough < bestRough) {
                         bestRough = rough;
                         best = stub.get();
@@ -1345,8 +1426,8 @@ public final class ControlStructures {
                     }
                 }
             }
-            if (best == null || bestRough > PLACE_FLAT) {
-                return Optional.empty();
+            if (best == null) {
+                return Optional.empty(); // 4.1.94: every spot kept was within its own flatness (DryLand.flatFor)
             }
             // 4.1.57 (the owner: "PLACE IT DIRECTLY ON THE FLOOR, NOT FLYING, NOT HOVERING OVER THE FLOOR"): on its footprint's own floor (the
             // middle of its ground), no longer lifted onto its highest ground (4.1.17), which left it on a plinth over its low side; its site

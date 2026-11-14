@@ -9,6 +9,17 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.94 (HexGhoul): the CCG building, the mansion and the hotels spawn; the mansion and the hotel trimmed; /locate no longer freezes; the gang leaders are made in their places (testing)
+
+See `.github/release-notes-4.1.94.md`. `DryPlace.place` and the CCG building's `Site.place` no longer refuse a spot within `PLACE_APART`/
+`CCG_APART` of the other sets' offers (all seven sets offer in the same 20 x 20 chunks of each region: 1-2% passed); `inHotel` first.
+`DryLand.flatFor` (6 / 8 / 10 by the footprint's widest side), `DryLand.roughness(..., limit)` stops early. `PlaceClaims.overworld` (the
+overworld's generator only), `PlaceClaims.stale` (a claimed spot with nothing of it, checked once a run when the live world asks, given up).
+`HotelPlan.ONE_IN` 2, `HotelPlan.spots` (every clear side, the first whose land holds it), `onPlains` (its middle and `PLAINS_SHARE` 75%).
+`ControlStructures.startAt`/`spotAt` (`StructureManager.getStructureAt`), `UniqueNpcs.spotByPlayers`, `atOwnPlace` inside any of her place.
+Trimmed: `reaper_mansion.nbt` 79 x 28 x 67 (`companion_structures.py` `crop_z` (54, 120), anchor (39, 6, 87), Arima (40, 7, 108) yaw 180);
+the hotel 115 x 194 x 152, tiles 2 x 3 (`exploration_structures.py` `crop_x` (38, 153), `crop_z` (0, 152), ring (50, 90); `join_panes.py`).
+
 ## 4.1.93 (HexGhoul): every Rinkaku and Bikaku sound is Minecraft's own (none the Ukaku's) (testing)
 
 See `.github/release-notes-4.1.93.md`. `RinkakuSounds`, `BikakuSounds` (pure; vanilla 1.20.1's, none the Ukaku's but the Wither's spawn).

@@ -1291,3 +1291,10 @@ M net/minecraft/world/level/levelgen/structure/BoundingBox m_162396_ ()I        
 M net/minecraft/world/level/levelgen/structure/StructurePiece m_73547_ ()Lnet/minecraft/world/level/levelgen/structure/BoundingBox;  # [srg] getBoundingBox: joined.tsrg dse f ()Ldrs; m_73547_ (intermediary method_14935, yarn getBoundingBox)
 M net/minecraft/world/level/levelgen/structure/PoolElementStructurePiece m_72647_ ()I  # [srg] getGroundLevelDelta: joined.tsrg drw d ()I m_72647_ (intermediary method_16646, yarn getGroundLevelDelta)
 M net/minecraft/world/level/WorldGenLevel m_8055_ (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;  # [srg] getBlockState, declared on BlockGetter: joined.tsrg cls a_ (Lgu;)Ldcb; m_8055_ (intermediary method_8320, yarn getBlockState); WorldGenLevel extends it
+
+# --- 4.1.94: the one-of-a-kind places in the overworld only; their officials made in the place a player stands in ----------------------
+M net/minecraft/server/level/ServerLevel m_7726_ ()Lnet/minecraft/server/level/ServerChunkCache;  # [srg] getChunkSource: joined.tsrg aif k ()Laid; m_7726_ 8866 (aif = ServerLevel, aid = ServerChunkCache; yarn ServerWorld.getChunkManager)
+C net/minecraft/server/level/ServerChunkCache                                        # [srg] aid (class_3215, yarn ServerChunkManager; obfuscated aid per find_srg)
+M net/minecraft/server/level/ServerChunkCache m_8481_ ()Lnet/minecraft/world/level/chunk/ChunkGenerator;  # [srg] getGenerator: joined.tsrg aid g ()Lddy; m_8481_ 8481 (yarn ServerChunkManager.getChunkGenerator, intermediary class_3215)
+M net/minecraft/server/level/ServerLevel m_215010_ ()Lnet/minecraft/world/level/StructureManager;  # [srg] structureManager: joined.tsrg aif a ()Lcne; m_215010_ 215010 (yarn ServerWorld.getStructureAccessor; cne = StructureManager)
+M net/minecraft/world/level/StructureManager m_220494_ (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/levelgen/structure/Structure;)Lnet/minecraft/world/level/levelgen/structure/StructureStart;  # [srg] getStructureAt: joined.tsrg cne a (Lgu;Ldsa;)Ldsi; m_220494_ 220494 (yarn StructureAccessor.getStructureAt, class_5138)

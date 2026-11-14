@@ -67,6 +67,7 @@ public final class PlaceClaims {
     @SubscribeEvent
     public static void stopped(ServerStoppedEvent event) {
         current = null;
+        CHECKED.clear();
     }
 
     /**
@@ -172,6 +173,56 @@ public final class PlaceClaims {
     public static boolean crowded(String id, int x, int z) {
         Data data = data();
         return data != null && data.taken.crowded(id, x, z, APART);
+    }
+
+    /**
+     * 4.1.94: true if {@code generator} makes the overworld (the world's one-of-a-kind places stand there only), or if there is no running
+     * server's overworld to tell by (as before).
+     */
+    public static boolean overworld(net.minecraft.world.level.chunk.ChunkGenerator generator) {
+        try {
+            net.minecraft.server.MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+            if (server == null) {
+                return true;
+            }
+            for (ServerLevel level : server.m_129785_()) {
+                if (level.m_46472_() == Level.f_46428_) {
+                    return level.m_7726_().m_8481_() == generator;
+                }
+            }
+        } catch (RuntimeException | LinkageError failure) {
+            Safety.caught(failure, "PlaceClaims.overworld");
+        }
+        return true;
+    }
+
+    /** 4.1.94: the claims already looked at (id@x,z) this server's run: each is made and looked in once. */
+    private static final java.util.Set<String> CHECKED = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /**
+     * 4.1.94 (the owner: "I try to locate them. They never show up ... it just returns that it cannot find the structure type hex Kagune
+     * CCG building"): true if {@code id}'s spot {@code taken} holds nothing of it, so it was given up ({@link #release}). Asked only when the
+     * live world asks (/locate, a map: {@code asker} is the level; never as a chunk is being made): its chunk is made in full and looked in,
+     * once a run for each spot. A spot taken where something then stopped the place (another mod's structure rules, a world made like the
+     * overworld before 4.1.94) held the world's one forever unless a player walked there: /locate turned every other spot away.
+     */
+    public static boolean stale(String id, int[] taken, net.minecraft.world.level.LevelHeightAccessor asker) {
+        if (!(asker instanceof ServerLevel level) || level.m_46472_() != Level.f_46428_ || !CHECKED.add(id + "@" + taken[0] + "," + taken[1])) {
+            return false;
+        }
+        try {
+            if (ControlStructures.standsIn(level, level.m_6325_(taken[0], taken[1]), id)) {
+                return false;
+            }
+            release(id, taken[0], taken[1]);
+            com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + id + " was not built at chunk " + taken[0] + ", " + taken[1]
+                + " after all: given up, the next spot holds it.");
+            int[] now = claimed(id);
+            return now == null || now[0] != taken[0] || now[1] != taken[1];
+        } catch (RuntimeException | LinkageError failure) {
+            Safety.caught(failure, "PlaceClaims.stale");
+            return false;
+        }
     }
 
     /** {@code id}'s spot ({@code x}, {@code z}) given up (nothing of it was built there). */

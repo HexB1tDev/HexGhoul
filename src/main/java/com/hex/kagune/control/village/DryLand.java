@@ -130,6 +130,16 @@ public final class DryLand {
      * and along its far edges (the water's surface counted as ground).
      */
     public static int roughness(Ground ground, int minX, int minZ, int sizeX, int sizeZ, int step) {
+        return roughness(ground, minX, minZ, sizeX, sizeZ, step, Integer.MAX_VALUE);
+    }
+
+    /**
+     * 4.1.94 (the owner: "I try to locate them. They never show up. The server usually freezes trying to look for it"): as
+     * {@link #roughness(Ground, int, int, int, int, int)}, but it stops as soon as the ground has risen and fallen more than {@code limit}
+     * (and says so by returning more than it): each sample is the world's ground worked out afresh, and hilly land was sampled in full at
+     * every spot /locate looked at before it was turned away.
+     */
+    public static int roughness(Ground ground, int minX, int minZ, int sizeX, int sizeZ, int step, int limit) {
         int lo = Integer.MAX_VALUE;
         int hi = Integer.MIN_VALUE;
         int maxX = minX + Math.max(1, sizeX) - 1;
@@ -139,6 +149,9 @@ public final class DryLand {
                 int h = ground.surface(x, z);
                 lo = Math.min(lo, h);
                 hi = Math.max(hi, h);
+                if (hi - lo > limit) {
+                    return hi - lo;
+                }
                 if (z >= maxZ) {
                     break;
                 }
@@ -149,6 +162,26 @@ public final class DryLand {
         }
         return hi - lo;
     }
+
+    /**
+     * 4.1.94 (the owner: "the hotel, the CCG in the mansion, they are confirmed to not be spawning ... I think it's just because they're
+     * bigger"): the most a place's ground may rise and fall (blocks, highest less lowest) for a footprint {@code side} blocks across at its
+     * widest: a small place's {@link #PLACE_FLAT}, a middling one's (the CCG tower with its round, the circus, the mansion's house)
+     * {@link #MID_PLACE_FLAT}, a big one's {@link #BIG_PLACE_FLAT}. The same slope (a block in ten) is a few blocks under a small place and
+     * many under a long one: 6 over the mansion's 121 blocks was land as flat as a superflat's, and it stood nowhere. Its site is cleared
+     * down to its floor and graded round it, and its foundation fills under it, whatever the rise.
+     */
+    public static int flatFor(int side) {
+        return side <= SMALL_SIDE ? PLACE_FLAT : side <= MID_SIDE ? MID_PLACE_FLAT : BIG_PLACE_FLAT;
+    }
+
+    /** 4.1.94: the widest a small place is, and a middling one ({@link #flatFor}). */
+    public static final int SMALL_SIDE = 48;
+    public static final int MID_SIDE = 80;
+    /** 4.1.42: the most a small place's ground may rise and fall; 4.1.94: a middling one's; a big one's. */
+    public static final int PLACE_FLAT = 6;
+    public static final int MID_PLACE_FLAT = 8;
+    public static final int BIG_PLACE_FLAT = 10;
 
     /** 4.1.17: how far apart (blocks) the ground is sampled under a place's footprint for {@link #lift}. */
     public static final int LIFT_STEP = 4;
@@ -412,7 +445,13 @@ public final class DryLand {
     public static final int CIRCUS_SALT = 1324066193;
     /** 4.1.54 (the owner's GasMask_hideout.schem): the Gas Masks' hideout, Banjou's cottage in it. */
     public static final int GAS_HIDEOUT_SALT = 1324066194;
-    /** 4.1.9: how far (chunks) a one-of-a-kind place's middle keeps from a village's offer and from the places chosen before it. */
+    /**
+     * 4.1.9: how far (chunks) a one-of-a-kind place's middle kept from a village's offer and from the places chosen before it. 4.1.94: no
+     * longer used by the world (only by the older offer lists here, for the tests): every one-of-a-kind set offers its spot in the same
+     * 20 x 20 chunks of each 40 x 40 region (its spacing less its separation), so a place kept 12 chunks from every spot six other sets
+     * might use stood at one or two in a hundred of its own (and the mansion, flat enough nowhere, at none). The places are kept apart by
+     * where they really stand instead (PlaceClaims.APART, 512 blocks).
+     */
     public static final int PLACE_APART = 12;
     /** 4.1.9: how many offers that look like land are laid out in full before a world goes without the place (none on land). */
     public static final int PLACE_TRIES = 24;

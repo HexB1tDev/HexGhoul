@@ -14,4 +14,6 @@ public class ServerLevel extends net.minecraft.world.level.Level {
     /** sendParticles */ public <T extends net.minecraft.core.particles.ParticleOptions> int m_8767_(T type, double x, double y, double z,
         int count, double dx, double dy, double dz, double speed) { throw new UnsupportedOperationException(); }
     /** sendParticles to one player (4.1.82: a trial's bodies marked for their own player only) */ public <T extends net.minecraft.core.particles.ParticleOptions> boolean m_8624_(ServerPlayer player, T particle, boolean force, double x, double y, double z, int count, double dx, double dy, double dz, double speed) { throw new UnsupportedOperationException(); }
+    /** getChunkSource (4.1.94: the overworld's generator, PlaceClaims.overworld) */ public ServerChunkCache m_7726_() { throw new UnsupportedOperationException(); }
+    /** structureManager (4.1.94: the place a position stands in, ControlStructures.startAt) */ public net.minecraft.world.level.StructureManager m_215010_() { throw new UnsupportedOperationException(); }
 }
