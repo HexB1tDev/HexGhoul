@@ -715,6 +715,20 @@ public class UiPreview {
         hunting.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.KILL, 1,
             com.hex.kagune.control.quest.Tags.mob("minecraft:witch")), KagunePath.RINKAKU, 520);
         journal(new File(dir, "quests-hunt.png"), KagunePath.RINKAKU, 520, hunting, com.hex.kagune.control.client.QuestJournalView.Tab.HUNTS, null, 1800L);
+        // 4.1.95: the missions as timed quests: Ken's shift on its clock, Banjou's gate failed (struck through until it may be asked again),
+        // Ayato's spar done (in the DONE tab).
+        com.hex.kagune.control.quest.QuestLog timed = com.hex.kagune.control.quest.QuestLog.load(chose.save());
+        timed.startMission("GATE", 0L, com.hex.kagune.control.quest.Missions.limit("GATE"));
+        timed.endMission("GATE", false, 3000L);
+        timed.startMission("SPAR", 0L, com.hex.kagune.control.quest.Missions.limit("SPAR"));
+        timed.endMission("SPAR", true, 2000L);
+        timed.startMission("SHIFT", 4000L, com.hex.kagune.control.quest.Missions.limit("SHIFT"));
+        journal(new File(dir, "quests-timed.png"), KagunePath.RINKAKU, 520, timed, com.hex.kagune.control.client.QuestJournalView.Tab.TIMED,
+            "mission.shift", 6400L);
+        journal(new File(dir, "quests-timed-failed.png"), KagunePath.RINKAKU, 520, timed, com.hex.kagune.control.client.QuestJournalView.Tab.TIMED,
+            "mission.gate", 6400L);
+        journal(new File(dir, "quests-timed-done.png"), KagunePath.RINKAKU, 520, timed, com.hex.kagune.control.client.QuestJournalView.Tab.DONE,
+            "mission.spar", 6400L);
         com.hex.kagune.control.quest.QuestLog ghoul = new com.hex.kagune.control.quest.QuestLog();
         // 1.3.29: the ghoul's way holds only what was given: Eto's first lesson (asked of her) and the ghouls' first (one talked to).
         ghoul.bond(com.hex.kagune.control.npc.EtoRules.KEY, com.hex.kagune.control.quest.QuestLog.Bond.NONE.with(com.hex.kagune.control.npc.EtoRules.TAUGHT_KICK, true));

@@ -20,7 +20,9 @@ public record Quest(String id, Line line, KagunePath path, String title, String 
         /** 7.0.1: a hunt drawn at dusk, gone at dawn ({@link Hunts}). */
         HUNT,
         /** 7.0.1 (NPCs): asked by a ghoul, taken in conversation. */
-        FAVOUR
+        FAVOUR,
+        /** 4.1.95: a timed quest: one of the game's missions (a gang's trial), on its clock ({@link Missions}). */
+        TIMED
     }
 
     public Quest {

@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.95 (HexGhoul): every gang mission is a timed quest; the coffee explained; failing waits a day; the mission's things taken back (testing)
+
+See `.github/release-notes-4.1.95.md`. `quest/Missions` (pure): each `JoinTrial.Kind` (and `COURT_SPAR`) as a quest of `Quest.Line.TIMED`
+(`JoinTrial.title`, `how`, `limit`), `COOLDOWN` 24000. `QuestLog.Mission` ("m.KIND=state,endsAt,until" in the save): `startMission`,
+`endMission`, `forgetMission`, `barred`, failed ones forgotten by `expire` once their day is over. `JoinServer`: barred at `start`, timed
+(`endsAt`), `missionOver` at `end`; Ken's makings `lent` (`HexMission` tag), `crafted` (`PlayerEvent.ItemCraftedEvent`) marks what is made
+from them and counts it (`Live.made`, less the cups served), `takeBack`. `QuestJournalView.Tab.TIMED`, the failed struck through and stamped,
+`QuestStyle.glyph` an hourglass. `QuestTests.missions495`. Render: `docs/handoff/quests-timed-4.1.95.png`.
+
 ## 4.1.94 (HexGhoul): the CCG building, the mansion and the hotels spawn; the mansion and the hotel trimmed; /locate no longer freezes; the gang leaders are made in their places (testing)
 
 See `.github/release-notes-4.1.94.md`. `DryPlace.place` and the CCG building's `Site.place` no longer refuse a spot within `PLACE_APART`/

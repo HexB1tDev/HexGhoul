@@ -23,6 +23,12 @@ public class PlayerEvent extends net.minecraftforge.event.entity.living.LivingEv
         public void setDisplayname(net.minecraft.network.chat.Component displayname) { throw new UnsupportedOperationException(); }
     }
 
+    /** 4.1.95: a crafting result taken (ForgeEventFactory.firePlayerCraftingEvent): what was made, and the grid it was made in. */
+    public static class ItemCraftedEvent extends PlayerEvent {
+        public net.minecraft.world.item.ItemStack getCrafting() { throw new UnsupportedOperationException(); }
+        public net.minecraft.world.Container getInventory() { throw new UnsupportedOperationException(); }
+    }
+
     public static class StartTracking extends PlayerEvent {
         public net.minecraft.world.entity.Entity getTarget() { throw new UnsupportedOperationException(); }
     }

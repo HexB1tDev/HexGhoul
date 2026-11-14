@@ -270,7 +270,7 @@ public final class QuestBook {
         if (quest == null) {
             return Giver.PATH;
         }
-        if (quest.line() == Quest.Line.HUNT || quest.line() == Quest.Line.FAVOUR) {
+        if (quest.line() == Quest.Line.HUNT || quest.line() == Quest.Line.FAVOUR || quest.line() == Quest.Line.TIMED) {
             return Giver.ASKED;
         }
         String id = quest.id();
@@ -305,7 +305,8 @@ public final class QuestBook {
                 yield teacher == null ? "A teacher's practice" : "Practice from " + teacher.name() + " (after " + lesson.name() + ")";
             }
             case GHOULS -> "The ghouls of the night";
-            case ASKED -> quest.line() == Quest.Line.HUNT ? "Tonight's hunt (asked of a ghoul)" : "A ghoul's favour";
+            case ASKED -> quest.line() == Quest.Line.HUNT ? "Tonight's hunt (asked of a ghoul)"
+                : quest.line() == Quest.Line.TIMED ? Missions.from(quest) : "A ghoul's favour"; // 4.1.95: a mission: who gave it
             case RETIRED -> "Eto teaches this now";
             default -> "";
         };

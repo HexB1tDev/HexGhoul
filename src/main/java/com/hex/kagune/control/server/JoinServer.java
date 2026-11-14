@@ -90,6 +90,11 @@ public final class JoinServer {
         int seed;
         /** 4.1.80: the companion whose courtship this is (Ayato's spar, asked for as a chapter: no gang's step), or null. */
         String courting;
+        /** 4.1.95: its timed quest's kind (Missions) and when its clock runs out. */
+        String mission;
+        long endsAt = Long.MAX_VALUE;
+        /** 4.1.95: how many of each item were made from its things (taken back with them, marked or not: a shift-click's aren't). */
+        final Map<net.minecraft.world.item.Item, Integer> made = new java.util.HashMap<>();
 
         Live(JoinTrial.Kind kind, UUID player, long began, BlockPos anchor) {
             this.kind = kind;
@@ -146,10 +151,26 @@ public final class JoinServer {
         }
         ServerLevel level = player.m_284548_();
         long now = level.m_46467_();
+        // 4.1.95 (the owner: "when you fail a quest, you should wait at least 1 Minecraft day before going there again"; "If they're
+        // completed ... they cannot redo this mission ever again"): a mission failed less than a day ago, or done, isn't begun.
+        String mission = com.hex.kagune.control.quest.Missions.kind(kind, courting != null);
+        com.hex.kagune.control.quest.QuestLog log = QuestServer.log(player);
+        log.expire(now);
+        int barred = log.barred(mission, now);
+        if (barred == com.hex.kagune.control.quest.Missions.DONE) {
+            return "*They shake their head.* You've already done this one. It's behind you.";
+        }
+        if (barred == com.hex.kagune.control.quest.Missions.FAILED) {
+            com.hex.kagune.control.quest.QuestLog.Mission failed = log.mission(mission);
+            return "*They don't even look up.* Not today. You failed this, and I don't give second chances the same day. Come back tomorrow. "
+                + "§7(again in " + com.hex.kagune.control.quest.Missions.clock(failed.until() - now) + ")";
+        }
         BlockPos anchor = anchor(level, leader, kind);
         Live live = new Live(kind, id, now, anchor);
         live.seed = seed;
         live.courting = courting;
+        live.mission = mission;
+        live.endsAt = now + com.hex.kagune.control.quest.Missions.limit(mission);
         switch (kind) {
             case SPAR -> {
                 if (leader == null || leader.mind == null) {
@@ -193,6 +214,12 @@ public final class JoinServer {
             }
         }
         LIVE.put(id, live);
+        // 4.1.95: a timed quest from now on, in the quest menu's TIMED tab (its steps, its clock).
+        log.startMission(mission, now, com.hex.kagune.control.quest.Missions.limit(mission));
+        QuestServer.changed(player);
+        player.m_5661_(Component.m_237113_("§6Timed quest: §f" + log.mission(mission).quest().title() + " §7("
+            + com.hex.kagune.control.quest.Missions.minutes(com.hex.kagune.control.quest.Missions.limit(mission)) + "; the steps are in your quest menu, "
+            + "TIMED tab)"), false);
         UkakuFire.sound(level, player.m_20182_(), "block.note_block.bell", 0.7F, kind == JoinTrial.Kind.SPAR ? 0.6F : 1.0F);
         bar(player, live, now);
         return courting != null ? com.hex.kagune.control.npc.CourtVoice.spar("start", seed) : JoinVoice.say(kind, "start", seed);
@@ -230,12 +257,16 @@ public final class JoinServer {
                 continue;
             }
             net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, Integer.parseInt(making[1]));
+            lent(stack, JoinTrial.Kind.SHIFT.name()); // 4.1.95: taken back when the shift ends (and what is made from it)
             if (!player.m_36356_(stack)) {
                 player.m_36176_(stack, false);
             }
         }
-        player.m_5661_(Component.m_237113_("§6Anteiku: §fKen hands you the makings §7(3 glass bottles, 6 cocoa beans, 3 blood sugar: a bottle, two "
-            + "beans and the sugar make an Anteiku Blend)"), false);
+        // 4.1.95 (the owner: "the player has no idea how to craft the coffee ... You can just like tell the player how it's done").
+        player.m_5661_(Component.m_237113_("§6Anteiku: §fKen hands you the makings §7(3 glass bottles, 6 cocoa beans, 3 blood sugar)"), false);
+        player.m_5661_(Component.m_237113_("§6How to brew: §fopen a crafting table (or your own 2 x 2 grid) and put in §e1 glass bottle§f, "
+            + "§e2 cocoa beans §fand §e1 blood sugar§f, any slots: §e1 Anteiku Blend§f. Make 3, then right click each regular at the counter "
+            + "with a cup in your hand."), false);
     }
 
     // ---------------------------------------------------------------- the bodies
@@ -513,6 +544,12 @@ public final class JoinServer {
             long now = level.m_46467_();
             if (!player.m_6084_()) {
                 end(player, live, false, "died");
+                return;
+            }
+            if (now >= live.endsAt) {
+                // 4.1.95: a timed quest: out of time, failed.
+                player.m_5661_(Component.m_237113_("§cOut of time: §f" + JoinTrial.title(live.kind) + " §7failed (again tomorrow)"), false);
+                end(player, live, false, timeUp(live.kind));
                 return;
             }
             if (live.courting != null ? !CourtshipServer.on(player, live.courting, com.hex.kagune.control.npc.Courtship.Task.SPAR) : stepGone(player, live)) {
@@ -866,6 +903,7 @@ public final class JoinServer {
         if (!player.m_7500_()) {
             held.m_41774_(1);
         }
+        live.made.computeIfPresent(cup, (item, n) -> n - 1); // 4.1.95: one made from the makings served: not taken back
         ServerLevel level = player.m_284548_();
         long now = level.m_46467_();
         live.done++;
@@ -1259,6 +1297,7 @@ public final class JoinServer {
         ServerLevel level = player.m_284548_();
         long now = level.m_46467_();
         clear(level, live, now);
+        missionOver(player, live, won, moment, now);
         if (live.kind == JoinTrial.Kind.SPAR && level.m_6815_(live.leader) instanceof EtoNpc ayato && ayato.mind != null) {
             if (ayato.mind.target == player.m_19879_()) {
                 ayato.mind.target = 0;
@@ -1438,5 +1477,111 @@ public final class JoinServer {
             }
         }
         return true;
+    }
+
+    // ---------------------------------------------------------------- 4.1.95: the trials as timed quests
+
+    /** 4.1.95: the moment a leader speaks to when {@code kind}'s clock ran out (one each trial already says for a loss). */
+    static String timeUp(JoinTrial.Kind kind) {
+        return switch (kind) {
+            case SPAR -> "draw";
+            case RING -> "booed";
+            case SHIFT -> "walked";
+            default -> "slow";
+        };
+    }
+
+    /**
+     * 4.1.95 (the owner: "after the quest is completed, or failed, depending on what happened, all the items that the player got should be
+     * removed, even items they used to craft items with. So anything that those items were used to craft items with, they should all be
+     * gone as well. And that is a must."): {@code live}'s timed quest over: done for good (won), failed (lost: not again for a Minecraft
+     * day), or forgotten (over quietly, its step moved on some other way: {@code moment} null and not won); everything it gave taken back.
+     */
+    static void missionOver(ServerPlayer player, Live live, boolean won, String moment, long now) {
+        if (live.mission == null) {
+            return;
+        }
+        com.hex.kagune.control.quest.QuestLog log = QuestServer.log(player);
+        if (won || moment != null) {
+            log.endMission(live.mission, won, now);
+        } else {
+            log.forgetMission(live.mission);
+        }
+        int taken = takeBack(player, live.mission, live.made);
+        QuestServer.changed(player);
+        if (taken > 0) {
+            player.m_5661_(Component.m_237113_("§7The mission's things were taken back (" + taken + ")."), false);
+        }
+    }
+
+    /** 4.1.95: {@code stack} lent for mission {@code mission}: marked, so it (and whatever it makes) is taken back when the mission ends. */
+    static void lent(net.minecraft.world.item.ItemStack stack, String mission) {
+        CompoundTag tag = stack.m_41783_();
+        CompoundTag next = tag == null ? new CompoundTag() : tag.m_6426_();
+        next.m_128359_(com.hex.kagune.control.quest.Missions.ITEM_TAG, mission);
+        stack.m_41751_(next);
+    }
+
+    /** 4.1.95: the mission {@code stack} was lent for, or "" (none). */
+    static String lentFor(net.minecraft.world.item.ItemStack stack) {
+        CompoundTag tag = stack == null || stack.m_41619_() ? null : stack.m_41783_();
+        return tag == null ? "" : tag.m_128461_(com.hex.kagune.control.quest.Missions.ITEM_TAG);
+    }
+
+    /**
+     * 4.1.95: everything lent for {@code mission} taken out of {@code player}'s inventory, and as many of each thing made from it
+     * ({@code made}) as are left unmarked (a shift-click's result is made as a copy the game doesn't mark); how many items.
+     */
+    static int takeBack(ServerPlayer player, String mission, Map<net.minecraft.world.item.Item, Integer> made) {
+        net.minecraft.world.entity.player.Inventory pack = player.m_150109_();
+        int taken = 0;
+        Map<net.minecraft.world.item.Item, Integer> left = new java.util.HashMap<>(made);
+        for (int i = 0; i < pack.m_6643_(); i++) {
+            net.minecraft.world.item.ItemStack stack = pack.m_8020_(i);
+            if (mission.equals(lentFor(stack))) {
+                taken += stack.m_41613_();
+                left.computeIfPresent(stack.m_41720_(), (item, n) -> n - stack.m_41613_());
+                pack.m_6836_(i, net.minecraft.world.item.ItemStack.f_41583_);
+            }
+        }
+        for (int i = 0; i < pack.m_6643_(); i++) {
+            net.minecraft.world.item.ItemStack stack = pack.m_8020_(i);
+            Integer more = stack.m_41619_() ? null : left.get(stack.m_41720_());
+            if (more != null && more > 0 && lentFor(stack).isEmpty()) {
+                int n = Math.min(more, stack.m_41613_());
+                stack.m_41774_(n);
+                taken += n;
+                left.put(stack.m_41720_(), more - n);
+            }
+        }
+        return taken;
+    }
+
+    /**
+     * 4.1.95: what is made from a mission's things is the mission's too (the Anteiku Blends brewed from Ken's makings): taken back with them
+     * when it ends.
+     */
+    @SubscribeEvent
+    public static void crafted(PlayerEvent.ItemCraftedEvent event) {
+        try {
+            net.minecraft.world.Container grid = event.getInventory();
+            net.minecraft.world.item.ItemStack made = event.getCrafting();
+            if (grid == null || made == null || made.m_41619_()) {
+                return;
+            }
+            for (int i = 0; i < grid.m_6643_(); i++) {
+                String mission = lentFor(grid.m_8020_(i));
+                if (!mission.isEmpty()) {
+                    lent(made, mission);
+                    Live live = event.getEntity() == null ? null : LIVE.get(event.getEntity().m_20148_());
+                    if (live != null && mission.equals(live.mission)) {
+                        live.made.merge(made.m_41720_(), made.m_41613_(), Integer::sum);
+                    }
+                    return;
+                }
+            }
+        } catch (RuntimeException | LinkageError failure) {
+            Safety.caught(failure, "JoinServer.crafted");
+        }
     }
 }

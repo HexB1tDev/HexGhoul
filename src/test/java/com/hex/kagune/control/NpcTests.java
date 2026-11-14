@@ -1170,7 +1170,7 @@ public final class NpcTests {
                 "the first blow starts the clock; both down, won; too slow, they call it in");
             // The ring.
             int start = join.indexOf("static String start(ServerPlayer player, EtoNpc leader, JoinTrial.Kind kind, int seed) {");
-            check(within(join, start, "if (!JoinTrial.showtime(level.m_46468_())) {\n                    return JoinVoice.say(kind, \"night\", seed);", 2400),
+            check(within(join, start, "if (!JoinTrial.showtime(level.m_46468_())) {\n                    return JoinVoice.say(kind, \"night\", seed);", 4400), // 4.1.95: the start grew (its mission barred, timed)
                 "no show by day");
             int ring = join.indexOf("static void ring(ServerPlayer player, Live live, ServerLevel level, long now) {");
             check(within(join, ring, "distance(player, live.anchor) > JoinTrial.RING_REACH, JoinTrial.RING_OUT)", 300)

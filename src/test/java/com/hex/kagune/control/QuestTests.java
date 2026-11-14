@@ -20,6 +20,71 @@ public final class QuestTests {
     static int passed;
     static final List<String> FAILURES = new ArrayList<>();
 
+    /**
+     * 4.1.95 (the owner: "every mission now gets into a temporary category of the quests ... It's a timed quest ... If it's failed ... wait at
+     * least 1 Minecraft day ... If they're completed, you move them to the done tab, and they cannot redo this mission ever again"): the
+     * missions as timed quests.
+     */
+    static void missions495() {
+        QuestLog log = new QuestLog();
+        check(log.barred("SHIFT", 0L) == -1 && log.missions().isEmpty(), "a mission never given may begin");
+        log.startMission("SHIFT", 1000L, com.hex.kagune.control.quest.Missions.limit("SHIFT"));
+        QuestLog.Mission on = log.mission("SHIFT");
+        check(on != null && on.state() == com.hex.kagune.control.quest.Missions.ON && on.endsAt() == 1000L + 14400L
+            && on.quest().line() == Quest.Line.TIMED && on.quest().id().equals("mission.shift"), "begun: on its clock (the shift: 12 minutes)");
+        check(on.quest().story().contains("1 glass bottle, 2 cocoa beans and 1 blood sugar") && on.quest().story().contains("Anteiku Blend"),
+            "the shift says how the coffee is made");
+        check(log.state(on.quest(), com.hex.kagune.control.KagunePath.RINKAKU, 0) == QuestLog.State.OPEN && log.quests().contains(on.quest()),
+            "on: an open quest of the log");
+        log.endMission("SHIFT", false, 5000L);
+        check(log.barred("SHIFT", 5000L + 23999L) == com.hex.kagune.control.quest.Missions.FAILED && log.barred("SHIFT", 5000L + 24000L) == -1,
+            "failed: not again for a Minecraft day (24000 ticks), then again");
+        check(log.state(log.mission("SHIFT").quest(), com.hex.kagune.control.KagunePath.RINKAKU, 0) == QuestLog.State.CLOSED, "failed: closed");
+        QuestLog back = QuestLog.load(log.save());
+        check(back.mission("SHIFT") != null && back.mission("SHIFT").until() == 5000L + 24000L
+            && back.mission("SHIFT").state() == com.hex.kagune.control.quest.Missions.FAILED, "kept with the save");
+        com.hex.kagune.control.client.QuestJournalView.Model during = new com.hex.kagune.control.client.QuestJournalView.Model(
+            com.hex.kagune.control.KagunePath.RINKAKU, 0, back, 6000L, com.hex.kagune.control.client.QuestJournalView.Tab.TIMED, null);
+        com.hex.kagune.control.client.QuestJournalView.Model after = new com.hex.kagune.control.client.QuestJournalView.Model(
+            com.hex.kagune.control.KagunePath.RINKAKU, 0, back, 5000L + 24000L, com.hex.kagune.control.client.QuestJournalView.Tab.TIMED, null);
+        check(com.hex.kagune.control.client.QuestJournalView.listed(during, com.hex.kagune.control.client.QuestJournalView.Tab.TIMED).size() == 1
+            && com.hex.kagune.control.client.QuestJournalView.listed(after, com.hex.kagune.control.client.QuestJournalView.Tab.TIMED).isEmpty()
+            && com.hex.kagune.control.client.QuestJournalView.listed(during, com.hex.kagune.control.client.QuestJournalView.Tab.DONE).isEmpty(),
+            "failed: shown in the TIMED tab (struck through) while the day of waiting runs, never in DONE");
+        back.expire(5000L + 24000L);
+        check(back.mission("SHIFT") == null, "its day over: forgotten");
+        back.startMission("SPAR", 0L, 6000L);
+        back.endMission("SPAR", true, 100L);
+        com.hex.kagune.control.client.QuestJournalView.Model done = new com.hex.kagune.control.client.QuestJournalView.Model(
+            com.hex.kagune.control.KagunePath.RINKAKU, 0, back, 200L, com.hex.kagune.control.client.QuestJournalView.Tab.DONE, null);
+        check(back.barred("SPAR", 1_000_000L) == com.hex.kagune.control.quest.Missions.DONE
+            && com.hex.kagune.control.client.QuestJournalView.listed(done, com.hex.kagune.control.client.QuestJournalView.Tab.DONE).contains(back.mission("SPAR").quest())
+            && com.hex.kagune.control.client.QuestJournalView.listed(done, com.hex.kagune.control.client.QuestJournalView.Tab.TIMED).isEmpty(),
+            "done: in the DONE tab, never again");
+        for (com.hex.kagune.control.npc.JoinTrial.Kind kind : com.hex.kagune.control.npc.JoinTrial.Kind.values()) {
+            Quest quest = com.hex.kagune.control.quest.Missions.quest(kind.name());
+            check(quest != null && !quest.title().isEmpty() && quest.story().length() > 40 && com.hex.kagune.control.npc.JoinTrial.limit(kind) >= 6000L
+                && com.hex.kagune.control.quest.Missions.from(quest).startsWith("A mission from"), kind + ": a timed quest, its steps and who gives it");
+        }
+        check(com.hex.kagune.control.quest.Missions.kind(com.hex.kagune.control.npc.JoinTrial.Kind.SPAR, true).equals("COURT_SPAR")
+            && com.hex.kagune.control.quest.Missions.quest("COURT_SPAR") != null, "Ayato's courtship spar is a mission of its own");
+        check(com.hex.kagune.control.quest.Missions.clock(1200L) .equals("1:00") && com.hex.kagune.control.quest.Missions.clock(-5L).equals("0:00"),
+            "the clock as m:ss");
+        String join = read("src/main/java/com/hex/kagune/control/server/JoinServer.java");
+        check(join.contains("int barred = log.barred(mission, now);") && join.contains("if (now >= live.endsAt) {")
+            && join.contains("missionOver(player, live, won, moment, now);") && join.contains("lent(stack, JoinTrial.Kind.SHIFT.name());")
+            && join.contains("public static void crafted(PlayerEvent.ItemCraftedEvent event) {") && join.contains("int taken = takeBack(player, live.mission, live.made);"),
+            "the trials: barred, timed, over, their things lent, what is made from them marked, all taken back");
+    }
+
+    private static String read(String path) {
+        try {
+            return java.nio.file.Files.readString(java.nio.file.Path.of(path));
+        } catch (java.io.IOException failure) {
+            return "";
+        }
+    }
+
     private static void check(boolean condition, String description) {
         if (condition) {
             passed++;
@@ -29,6 +94,7 @@ public final class QuestTests {
     }
 
     public static void main(String[] args) {
+        missions495();
         book();
         states();
         exclusive();

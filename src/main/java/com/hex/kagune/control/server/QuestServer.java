@@ -669,6 +669,12 @@ public final class QuestServer {
         }
     }
 
+    /** 4.1.95: {@code player}'s log changed outside a quest (a mission begun or over): saved and sent. */
+    static void changed(ServerPlayer player) {
+        write(player, cached(player));
+        sync(player);
+    }
+
     static void sync(ServerPlayer player) {
         ControlNetwork.sendTo(player, new S2CQuests(log(player).save(), com.hex.kagune.control.npc.RomanceCard.save(RomanceServer.cards(player))));
     }

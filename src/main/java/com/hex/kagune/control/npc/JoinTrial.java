@@ -101,6 +101,58 @@ public final class JoinTrial {
         };
     }
 
+    // ---------------------------------------------------------------- 4.1.95: each trial a timed quest
+
+    /**
+     * 4.1.95 (the owner: "every mission now gets into a temporary category of the quests ... It's a timed quest"): how long {@code kind} may
+     * take before it is failed (ticks: a minute is 1200), from the leader's word to its end.
+     */
+    public static long limit(Kind kind) {
+        return switch (kind) {
+            case SPAR, GAS -> 6000L; // 5 minutes
+            case AMBUSH, CAFE -> 9600L; // 8 minutes
+            case RING, GATE -> 12000L; // 10 minutes
+            case SHIFT -> 14400L; // 12 minutes
+            case HUNT -> 18000L; // 15 minutes
+        };
+    }
+
+    /** 4.1.95: {@code kind}'s name as the quest menu's timed tab lists it. */
+    public static String title(Kind kind) {
+        return switch (kind) {
+            case SPAR -> "Aogiri: spar with Ayato";
+            case AMBUSH -> "Aogiri: ambush the doves";
+            case RING -> "The Clowns: Roma's ring";
+            case GAS -> "The Gas Masks: through the gas";
+            case GATE -> "The Gas Masks: hold the gate";
+            case SHIFT -> "Anteiku: a shift at the café";
+            case CAFE -> "Anteiku: the CCG at the door";
+            case HUNT -> "The CCG: the reported ghoul";
+        };
+    }
+
+    /**
+     * 4.1.95 (the owner: "the player has no idea how to craft the coffee, and you can't expect them to have a cookbook because it's not a
+     * demand for them to make. You can just like tell the player how it's done"): how {@code kind} is done, step by step, as its timed quest
+     * says it.
+     */
+    public static String how(Kind kind) {
+        return switch (kind) {
+            case SPAR -> "Fight Ayato until he is down to half his health. You lose if you fall under a quarter of yours.";
+            case AMBUSH -> "A CCG pair walks a beat near you. Put both down within 30 seconds of your first blow.";
+            case RING -> "At night, in the middle of Roma's tent: three volunteers step up one at a time. Put each down within 30 seconds, "
+                + "and stay on the stage.";
+            case GAS -> "Walk out past Banjou's gate, then come back to him through the gas. No mask.";
+            case GATE -> "Stand at Banjou's gate. The Clowns come in waves: hold them off until the last one falls.";
+            case SHIFT -> "Ken gives you the makings: 3 glass bottles, 6 cocoa beans, 3 blood sugar. Open a crafting table (or your own "
+                + "2 x 2 grid) and put in 1 glass bottle, 2 cocoa beans and 1 blood sugar, in any slots: that makes 1 Anteiku Blend. Make 3. "
+                + "Regulars come to the counter one at a time: right click one with a cup in your hand to serve it. Serve three before "
+                + "they lose patience.";
+            case CAFE -> "Investigators come for the café. Drive them off without killing anyone: knock them down, never finish them.";
+            case HUNT -> "Your partner meets you at the sighting. Hunt the ghoul down together, and bring your partner back alive.";
+        };
+    }
+
     /** What {@code gang}'s way in asks at {@code step}, as the action bar and the reminders say it (empty for none). */
     public static String goal(int gang, int step) {
         return switch (gang) {

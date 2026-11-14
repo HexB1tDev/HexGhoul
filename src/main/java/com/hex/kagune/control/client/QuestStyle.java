@@ -169,6 +169,21 @@ final class QuestStyle {
                 circle(c, Math.round(cx), Math.round(cy), Math.round(size * 0.38F), dim);
                 circle(c, Math.round(cx + size * 0.17F), Math.round(cy - size * 0.1F), Math.round(size * 0.32F), back);
             }
+            case TIMED -> {
+                // 4.1.95: a timed quest: an hourglass, its sand running while it is on.
+                float w = size * 0.32F;
+                float top = y + size * 0.14F;
+                float bottom = y + size * 0.86F;
+                c.polygon(new float[] {cx - w, cx + w, cx}, new float[] {top, top, cy}, mix(dim, 0xFF000000, 0.35F));
+                c.polygon(new float[] {cx, cx + w, cx - w}, new float[] {cy, bottom, bottom}, mix(dim, 0xFF000000, 0.35F));
+                line(c, cx - w - 1, top, cx + w + 1, top, Math.max(1.2F, size * 0.08F), dim);
+                line(c, cx - w - 1, bottom, cx + w + 1, bottom, Math.max(1.2F, size * 0.08F), dim);
+                float run = state == QuestLog.State.OPEN ? (float)((time * 0.25) % 1.0) : 0.5F;
+                float sand = w * (1.0F - run);
+                c.polygon(new float[] {cx - sand, cx + sand, cx}, new float[] {cy - (cy - top) * (1.0F - run), cy - (cy - top) * (1.0F - run), cy}, dim);
+                c.polygon(new float[] {cx, cx + w * run, cx - w * run}, new float[] {bottom - (bottom - cy) * run, bottom, bottom}, dim);
+                line(c, cx, cy, cx, bottom, 1.0F, dim);
+            }
             default -> {
                 // A favour: two hands meeting (two slanted palms).
                 line(c, x + size * 0.18F, y + size * 0.78F, x + size * 0.46F, y + size * 0.3F, size * 0.22F, dim);

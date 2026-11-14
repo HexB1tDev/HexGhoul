@@ -50,6 +50,14 @@ public final class QuestLog {
      * 7.0.2: how the ghoul stands with one ghoul NPC: its {@code regard} ({@link NpcBonds}), the day they last chatted (game days),
      * flags ({@link NpcBonds#MET}, {@link NpcBonds#BEFRIENDED}, {@link NpcBonds#ASKED}, {@link NpcBonds#ALLY}) and the favours done for it.
      */
+    /**
+     * 4.1.95 (the owner: "every mission now gets into a temporary category of the quests ... It's a timed quest"): one of the game's missions
+     * as a timed quest: its kind ({@link Missions}), how it stands ({@link Missions#ON}, {@link Missions#FAILED}, {@link Missions#DONE}),
+     * when its clock runs out (on), when it may be asked for again (failed: a Minecraft day after), and the quest it shows as.
+     */
+    public record Mission(String kind, int state, long endsAt, long until, Quest quest) {
+    }
+
     public record Bond(int regard, long chatted, int flags, int favours) {
         public static final Bond NONE = new Bond(0, Long.MIN_VALUE, 0, 0);
 
@@ -92,12 +100,21 @@ public final class QuestLog {
     /** The game time the next hunt may be offered (0: as soon as it is dusk). */
     private long nextHuntAt;
 
+    /** 4.1.95: the missions given, by kind (timed quests). */
+    private final Map<String, Mission> missions = new LinkedHashMap<>();
+
     public QuestLog() {
     }
 
     // ------------------------------------------------------------------ reading
 
     public State state(Quest quest, KagunePath path, int mastery) {
+        if (quest.line() == Quest.Line.TIMED) {
+            // 4.1.95: a mission's: on (open), failed (closed: struck through while it can't be asked for again), done for good.
+            Mission mission = this.missionOf(quest);
+            return mission == null ? State.LOCKED : mission.state() == Missions.DONE ? State.DONE
+                : mission.state() == Missions.FAILED ? State.CLOSED : State.OPEN;
+        }
         State stored = this.ended.get(quest.id());
         if (stored != null) {
             return stored;
@@ -283,7 +300,66 @@ public final class QuestLog {
         for (Favour favour : this.favours) {
             all.add(favour.quest());
         }
+        for (Mission mission : this.missions.values()) {
+            all.add(mission.quest()); // 4.1.95: the missions, as timed quests
+        }
         return all;
+    }
+
+    // ------------------------------------------------------------------ 4.1.95: the missions, as timed quests
+
+    /** 4.1.95: every mission known (on, failed, done), in the order they were first given. */
+    public List<Mission> missions() {
+        return List.copyOf(this.missions.values());
+    }
+
+    /** 4.1.95: the mission of kind {@code kind}, or null if it was never given (or its failure is forgotten: {@link #expire}). */
+    public Mission mission(String kind) {
+        return this.missions.get(kind);
+    }
+
+    /** 4.1.95: the mission {@code quest} shows, or null. */
+    public Mission missionOf(Quest quest) {
+        for (Mission mission : this.missions.values()) {
+            if (mission.quest().id().equals(quest.id())) {
+                return mission;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 4.1.95: why mission {@code kind} can't begin at {@code now}: {@link Missions#DONE} (done: never again), {@link Missions#FAILED} (failed
+     * less than a Minecraft day ago), or -1 if it may.
+     */
+    public int barred(String kind, long now) {
+        Mission mission = this.missions.get(kind);
+        if (mission == null) {
+            return -1;
+        }
+        if (mission.state() == Missions.DONE) {
+            return Missions.DONE;
+        }
+        return mission.state() == Missions.FAILED && now < mission.until() ? Missions.FAILED : -1;
+    }
+
+    /** 4.1.95: mission {@code kind} begun at {@code now}, its clock running {@code limit} ticks. */
+    public void startMission(String kind, long now, long limit) {
+        this.missions.remove(kind);
+        this.missions.put(kind, new Mission(kind, Missions.ON, now + limit, 0L, Missions.quest(kind)));
+    }
+
+    /** 4.1.95: mission {@code kind} forgotten (over quietly: its step moved on some other way, neither won nor failed). */
+    public void forgetMission(String kind) {
+        this.missions.remove(kind);
+    }
+
+    /** 4.1.95: mission {@code kind} over at {@code now}: done for good, or failed (not to be asked for again for {@link Missions#COOLDOWN}). */
+    public void endMission(String kind, boolean won, long now) {
+        Mission mission = this.missions.get(kind);
+        long endsAt = mission == null ? now : mission.endsAt();
+        this.missions.put(kind, new Mission(kind, won ? Missions.DONE : Missions.FAILED, endsAt, won ? 0L : now + Missions.COOLDOWN,
+            Missions.quest(kind)));
     }
 
     // ------------------------------------------------------------------ changing
@@ -430,6 +506,8 @@ public final class QuestLog {
     /** The hunts whose time ran out at {@code now}, taken off (their progress forgotten). */
     public List<Quest> expire(long now) {
         List<Quest> gone = new ArrayList<>();
+        // 4.1.95: a failed mission is shown struck through only while it can't be asked for again; then it is forgotten.
+        this.missions.values().removeIf(mission -> mission.state() == Missions.FAILED && now >= mission.until());
         this.hunts.removeIf(hunt -> {
             if (now < hunt.endsAt()) {
                 return false;
@@ -492,6 +570,7 @@ public final class QuestLog {
         this.hunts.clear();
         this.favours.clear();
         this.bonds.clear();
+        this.missions.clear();
         this.points = 0;
         this.nextHuntAt = 0L;
         this.migrated = VERSION;
@@ -554,6 +633,10 @@ public final class QuestLog {
             out.append(";f.").append(i).append('=').append(favour.spec().save()).append(':').append(favour.number()).append(':')
                 .append(favour.identity()).append(':').append(favour.giver());
         }
+        for (Mission mission : this.missions.values()) {
+            out.append(";m.").append(mission.kind()).append('=').append(mission.state()).append(',').append(mission.endsAt()).append(',')
+                .append(mission.until());
+        }
         for (Map.Entry<String, Bond> entry : this.bonds.entrySet()) {
             Bond bond = entry.getValue();
             out.append(";b.").append(entry.getKey()).append('=').append(bond.regard()).append(',').append(bond.chatted()).append(',')
@@ -609,7 +692,16 @@ public final class QuestLog {
         for (Map.Entry<String, String> field : fields.entrySet()) {
             String key = field.getKey();
             String value = field.getValue();
-            if (key.startsWith("b.")) {
+            if (key.startsWith("m.")) {
+                // 4.1.95: a mission: "m.KIND=state,endsAt,until".
+                List<String> values = split(value);
+                String kind = key.substring(2);
+                Quest quest = Missions.quest(kind);
+                int state = values.size() == 3 ? parse(values.get(0), -1) : -1;
+                if (quest != null && state >= Missions.ON && state <= Missions.DONE) {
+                    log.missions.put(kind, new Mission(kind, state, parseLong(values.get(1), 0L), parseLong(values.get(2), 0L), quest));
+                }
+            } else if (key.startsWith("b.")) {
                 List<String> values = split(value);
                 if (values.size() == 4) {
                     log.bonds.put(key.substring(2), new Bond(NpcBonds.clamp(parse(values.get(0), 0)), parseLong(values.get(1), Long.MIN_VALUE),

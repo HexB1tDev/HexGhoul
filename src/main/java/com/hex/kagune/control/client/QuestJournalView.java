@@ -54,7 +54,7 @@ public final class QuestJournalView {
 
     /** The tabs: the path's quests, any ghoul's, the hunts on, 1.3.29: the companions (romance), what is over. */
     public enum Tab {
-        PATH("PATH"), GHOUL("GHOUL'S WAY"), HUNTS("HUNTS"), ROMANCE("ROMANCE"), DONE("DONE");
+        PATH("PATH"), GHOUL("GHOUL'S WAY"), HUNTS("HUNTS"), TIMED("TIMED"), ROMANCE("ROMANCE"), DONE("DONE"); // 4.1.95: TIMED, the missions
 
         final String label;
 
@@ -94,8 +94,10 @@ public final class QuestJournalView {
                 case PATH -> !over && quest.line() == Quest.Line.PATH;
                 case GHOUL -> !over && (quest.line() == Quest.Line.GHOUL || quest.line() == Quest.Line.FAVOUR);
                 case HUNTS -> !over && quest.line() == Quest.Line.HUNT;
+                // 4.1.95: the missions on their clocks, and those failed (struck through) while they can't be asked for again.
+                case TIMED -> quest.line() == Quest.Line.TIMED && (state == QuestLog.State.OPEN || failing(model, quest));
                 case ROMANCE -> false;
-                case DONE -> over;
+                case DONE -> over && !(quest.line() == Quest.Line.TIMED && state == QuestLog.State.CLOSED);
             };
             if (fits) {
                 (state == QuestLog.State.OPEN || over ? open : locked).add(quest);
@@ -103,6 +105,24 @@ public final class QuestJournalView {
         }
         open.addAll(locked);
         return open;
+    }
+
+    /** 4.1.95: true if {@code quest} is a mission failed whose day of waiting isn't over yet (shown struck through in the TIMED tab). */
+    static boolean failing(Model model, Quest quest) {
+        QuestLog.Mission mission = model.log().missionOf(quest);
+        return mission != null && mission.state() == com.hex.kagune.control.quest.Missions.FAILED && model.time() < mission.until();
+    }
+
+    /** 4.1.95: a mission's clock as its chip says it: "m:ss left", or "failed: again in m:ss"; "" for none. */
+    static String missionClock(Model model, Quest quest) {
+        QuestLog.Mission mission = model.log().missionOf(quest);
+        if (mission == null) {
+            return "";
+        }
+        return mission.state() == com.hex.kagune.control.quest.Missions.FAILED
+            ? "failed: again in " + com.hex.kagune.control.quest.Missions.clock(mission.until() - model.time())
+            : mission.state() == com.hex.kagune.control.quest.Missions.DONE ? "done"
+            : com.hex.kagune.control.quest.Missions.clock(mission.endsAt() - model.time()) + " left";
     }
 
     /** The quest shown on the right: the one picked if it is in the tab, else the tab's first. */
@@ -146,6 +166,8 @@ public final class QuestJournalView {
         list(c, model, hits, mouseX, mouseY, picked, LIST_X, CONTENT_Y, time);
         if (picked == null) {
             String empty = model.tab() == Tab.HUNTS ? "No hunt on. Ask a ghoul at night if there's prey out; a hunt ends at dawn."
+                : model.tab() == Tab.TIMED ? "No timed quest on. A gang's mission (Ken's shift, Ayato's spar, Banjou's gate...) runs here on its "
+                + "clock once its leader gives it to you."
                 : model.tab() == Tab.GHOUL ? "Nothing given yet. Teachers give their lessons when asked; the ghouls of the night, when talked to."
                 : model.log().finished() ? "Every quest is finished, on every kagune." : "Nothing here yet.";
             int rowY = CONTENT_Y + 4;
@@ -236,7 +258,7 @@ public final class QuestJournalView {
                 picked ? QuestStyle.RED : hover ? QuestStyle.RED_DARK : QuestStyle.TILE_EDGE);
             c.text(tab.label, tabX + 7, y + 4 + lift, picked ? VALUE : hover ? 0xFFD8A8AC : MUTED, false);
             if (badge > 0) {
-                boolean urgent = tab == Tab.HUNTS || tab == Tab.PATH;
+                boolean urgent = tab == Tab.HUNTS || tab == Tab.PATH || tab == Tab.TIMED;
                 int bx = tabX + 10 + labelWidth;
                 QuestStyle.box(c, bx, y + 2 + lift, badge, 12, urgent ? QuestStyle.RED_DARK : QuestStyle.GREY_DARK, urgent ? QuestStyle.RED : QuestStyle.GREY);
                 c.text(String.valueOf(count), bx + 4, y + 4 + lift, VALUE, false);
@@ -289,7 +311,16 @@ public final class QuestJournalView {
                 QuestStyle.box(c, rx + 5, ry + 5, 22, 22, QuestStyle.TILE, QuestStyle.dark(state));
                 QuestStyle.glyph(c, quest.line(), state, rx + 7, ry + 7, 18, QuestStyle.TILE, time);
             });
-            c.text(c.fit(quest.title(), width - 40), cx + 33, rowY + 4, state == QuestLog.State.LOCKED ? MUTED : VALUE, false);
+            String title = c.fit(quest.title(), width - 40);
+            boolean struck = quest.line() == Quest.Line.TIMED && state == QuestLog.State.CLOSED;
+            c.text(title, cx + 33, rowY + 4, state == QuestLog.State.LOCKED || struck ? MUTED : VALUE, false);
+            if (struck) {
+                // 4.1.95 (the owner: "temporary quests with a little stripe over them if they're failed"): a line through its title.
+                int tx = cx + 33;
+                int tw = c.width(title);
+                int ty = rowY + 7;
+                c.batch(() -> c.fill(tx - 1, ty, tx + tw + 1, ty + 1, 0xFFE8323E));
+            }
             String chip = stateText(model, quest, state);
             int chipFill = QuestStyle.mix(QuestStyle.dark(state), 0xFF000000, 0.35F);
             QuestStyle.chip(c, cx + 33, rowY + 15, c.fit(chip, width - 90), chipFill, QuestStyle.dark(state), QuestStyle.colour(state));
@@ -329,6 +360,7 @@ public final class QuestJournalView {
             case GHOUL -> "Any ghoul";
             case FAVOUR -> "A favour";
             case HUNT -> "Hunt" + huntClock(model, quest);
+            case TIMED -> "Timed: " + missionClock(model, quest);
         };
         int lineWidth = c.width(c.fit(line, 110)) + 12;
         QuestStyle.chip(c, x + width - lineWidth, y, c.fit(line, 110), 0xFF1E0A0E, QuestStyle.RED_DARK, MUTED);
@@ -440,6 +472,10 @@ public final class QuestJournalView {
             int ly = rowY;
             c.batch(() -> QuestStyle.lock(c, x, ly, 12, QuestStyle.GOLD, INNER));
             c.text("Waits for " + (needs.length() == 0 ? "someone to give it" : needs.toString()), x + 17, rowY + 3, FAINT, false);
+        } else if (state == QuestLog.State.CLOSED && quest.line() == Quest.Line.TIMED) {
+            // 4.1.95: a mission failed: when it may be asked for again (a Minecraft day after).
+            stamp(c, x + width - c.width("FAILED") * 2 - 22, rowY - 4, "FAILED", QuestStyle.RED, QuestStyle.RED_DARK);
+            c.text("Failed. Ask for it again in " + missionClock(model, quest).replace("failed: again in ", "") + ".", x, rowY + 3, CLOSED, false);
         } else if (state == QuestLog.State.CLOSED) {
             stamp(c, x + width - c.width("CLOSED") * 2 - 22, rowY - 4, "CLOSED", QuestStyle.GREY, QuestStyle.GREY_DARK);
             c.text("You took the other way.", x, rowY + 3, CLOSED, false);
@@ -499,6 +535,10 @@ public final class QuestJournalView {
                     out.add(new String[] {"d", Hunts.payText(hunt.spec())});
                 }
             }
+        }
+        if (quest.line() == Quest.Line.TIMED) {
+            out.clear();
+            out.add(new String[] {"k", com.hex.kagune.control.quest.Missions.pays(quest)}); // 4.1.95: a mission moves its way in on
         }
         if (out.isEmpty()) {
             out.add(new String[] {"k", "Its unlock"});
@@ -701,10 +741,11 @@ public final class QuestJournalView {
                 for (int i = 0; i < quest.objectives().size(); i++) {
                     met += model.log().progress(quest, i) >= quest.objectives().get(i).count() ? 1 : 0;
                 }
-                yield quest.line() == Quest.Line.HUNT ? "on" + huntClock(model, quest) : met + " of " + quest.objectives().size() + " done";
+                yield quest.line() == Quest.Line.HUNT ? "on" + huntClock(model, quest) : quest.line() == Quest.Line.TIMED ? missionClock(model, quest)
+                    : met + " of " + quest.objectives().size() + " done";
             }
             case DONE -> "done";
-            case CLOSED -> "closed: you took the other way";
+            case CLOSED -> quest.line() == Quest.Line.TIMED ? missionClock(model, quest) : "closed: you took the other way";
             default -> com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id()) != 0
                 && !model.log().bond(com.hex.kagune.control.npc.EtoRules.KEY).has(com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id()))
                 ? "Eto teaches it at the Library" : model.mastery() < quest.mastery() ? "at mastery " + quest.mastery() : "after another quest";
@@ -752,6 +793,9 @@ public final class QuestJournalView {
                     return Hunts.payText(hunt.spec());
                 }
             }
+        }
+        if (quest.line() == Quest.Line.TIMED) {
+            return com.hex.kagune.control.quest.Missions.pays(quest); // 4.1.95
         }
         return parts.isEmpty() ? "its unlock" : String.join(", ", parts);
     }
