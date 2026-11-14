@@ -357,6 +357,14 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             this.m_7649_(npc, Component.m_237113_(this.persona.colour() + npc.displayName()), pose, buffers, light);
             pose.m_85849_();
         }
+        // 4.1.96 (the owner: "where is the general? I truly cant find him"; "he did not appear"): her name over her head while the crosshair
+        // is on her, as the investigators' ranks are. Untaken, a companion had no name at all: the General in his formal outfit was one more
+        // suit among the CCG tower's forty-eight.
+        boolean named = !tagged && !npc.m_20145_() && net.minecraft.client.Minecraft.m_91087_().f_91076_ == npc;
+        if (named) {
+            this.m_7649_(npc, Component.m_237113_(this.persona.colour() + npc.displayName()), pose, buffers, light);
+            tagged = true; // the bubble sits over the name
+        }
         // 1.3.30: what she says, in a bubble over all of that (never the chat).
         if (!npc.m_20145_()) {
             bubble(npc, com.hex.kagune.control.client.NpcSpeech.lines(npc), tagged ? 0.56 : 0.3, pose, buffers, light);

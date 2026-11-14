@@ -67,8 +67,11 @@ final class ControlCommands {
             } catch (CommandSyntaxException console) {
                 player = null;
             }
-            java.util.List<String> lines = player != null ? com.hex.kagune.control.ControlStructures.report(player.m_284548_())
-                : com.hex.kagune.control.ControlStructures.report();
+            java.util.List<String> lines = new java.util.ArrayList<>(player != null ? com.hex.kagune.control.ControlStructures.report(player.m_284548_())
+                : com.hex.kagune.control.ControlStructures.report());
+            if (player != null) {
+                lines.addAll(UniqueNpcs.whereabouts(player.m_284548_())); // 4.1.96: and where each official is now
+            }
             for (String line : lines) {
                 context.getSource().m_288197_(() -> Component.m_237113_(line), false);
             }

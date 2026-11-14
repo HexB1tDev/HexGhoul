@@ -422,6 +422,44 @@ public final class UniqueNpcs {
     }
 
     /**
+     * 4.1.96 (the owner: "where is the general? I truly cant find him and idk if he spawned"): a line for each official, as /kagune places
+     * adds them: where her body is now (loaded), or that it lies in ground nobody has loaded, or that she was never made yet; and her own spot
+     * where her place stands, if a player is in it.
+     */
+    public static java.util.List<String> whereabouts(ServerLevel level) {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+            String key = persona.key();
+            if (com.hex.kagune.control.npc.HomePlace.of(key) == null) {
+                continue;
+            }
+            UniqueNpc slot = known(level, key);
+            net.minecraft.world.entity.Entity body = slot == null || slot.body == null ? null : level.m_8791_(slot.body);
+            String line = persona.colour() + persona.name() + "\u00a7f: ";
+            if (body != null && body.m_6084_()) {
+                line += "here now at x " + (int)Math.floor(body.m_20185_()) + ", y " + (int)Math.floor(body.m_20186_()) + ", z "
+                    + (int)Math.floor(body.m_20189_());
+            } else if (slot != null && slot.diedAt != Long.MIN_VALUE && !slot.alive) {
+                line += "dead; back at home a day after";
+            } else if (slot != null && slot.body != null) {
+                int[] home = slot.spawn();
+                line += "in ground nobody has loaded (home x " + home[0] + ", y " + home[1] + ", z " + home[2] + ")";
+            } else {
+                line += "not made yet (made with her place, or at her spot once a player is there half a minute)";
+            }
+            int[] spot = spotByPlayers(level, key);
+            if (spot == null) {
+                spot = spotOf(level, key);
+            }
+            if (spot != null) {
+                line += "\u00a77; her spot: x " + spot[0] + ", y " + spot[1] + ", z " + spot[2];
+            }
+            lines.add(persona.female() ? line : line.replace("her spot", "his spot").replace("her place", "his place"));
+        }
+        return lines;
+    }
+
+    /**
      * 4.1.94 (the owner: "the main guys from gangs, circus, gas mask gang, ccg, none of them spawn the main dude/girl"): official {@code key}'s
      * own spot in the place of hers a player (not a spectator) stands in, as this world built it, or null if no player is in one.
      */

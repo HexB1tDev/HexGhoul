@@ -66,8 +66,9 @@ public final class Missions {
         String story = JoinTrial.how(trial) + " Timed: " + minutes(limit(kind)) + ". If it fails, it can't be asked for again for a "
             + "Minecraft day. Whatever you were given for it is taken back when it ends, and anything made from it.";
         // Its one objective is the trial itself: no event counts on it (the trial's own server says when it is won or lost).
+        // 4.1.96: counted as its action bar counts it (the regulars served, the acts, the waves: QuestLog.missionProgress).
         return new Quest("mission." + kind.toLowerCase(java.util.Locale.ROOT), Quest.Line.TIMED, null, title, story, 0, List.of(), null,
-            List.of(Objective.of(goal, Signal.TIME, 1, "hexkagune.mission")), Reward.NONE);
+            List.of(Objective.of(goal, Signal.TIME, court ? 1 : JoinTrial.count(trial), "hexkagune.mission")), Reward.NONE);
     }
 
     /** Who gave mission {@code quest} ("A mission from Ken, to join Anteiku"), as its quest says where it comes from. */

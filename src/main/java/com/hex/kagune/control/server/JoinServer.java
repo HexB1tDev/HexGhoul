@@ -93,6 +93,9 @@ public final class JoinServer {
         /** 4.1.95: its timed quest's kind (Missions) and when its clock runs out. */
         String mission;
         long endsAt = Long.MAX_VALUE;
+        /** 4.1.96: the waiting regular's name (the action bar says whom to serve); the progress its quest last showed. */
+        String currentName = "";
+        int shown = -1;
         /** 4.1.95: how many of each item were made from its things (taken back with them, marked or not: a shift-click's aren't). */
         final Map<net.minecraft.world.item.Item, Integer> made = new java.util.HashMap<>();
 
@@ -218,8 +221,7 @@ public final class JoinServer {
         log.startMission(mission, now, com.hex.kagune.control.quest.Missions.limit(mission));
         QuestServer.changed(player);
         player.m_5661_(Component.m_237113_("§6Timed quest: §f" + log.mission(mission).quest().title() + " §7("
-            + com.hex.kagune.control.quest.Missions.minutes(com.hex.kagune.control.quest.Missions.limit(mission)) + "; the steps are in your quest menu, "
-            + "TIMED tab)"), false);
+            + com.hex.kagune.control.quest.Missions.minutes(com.hex.kagune.control.quest.Missions.limit(mission)) + ", quest menu: TIMED)"), false);
         UkakuFire.sound(level, player.m_20182_(), "block.note_block.bell", 0.7F, kind == JoinTrial.Kind.SPAR ? 0.6F : 1.0F);
         bar(player, live, now);
         return courting != null ? com.hex.kagune.control.npc.CourtVoice.spar("start", seed) : JoinVoice.say(kind, "start", seed);
@@ -262,11 +264,10 @@ public final class JoinServer {
                 player.m_36176_(stack, false);
             }
         }
-        // 4.1.95 (the owner: "the player has no idea how to craft the coffee ... You can just like tell the player how it's done").
-        player.m_5661_(Component.m_237113_("§6Anteiku: §fKen hands you the makings §7(3 glass bottles, 6 cocoa beans, 3 blood sugar)"), false);
-        player.m_5661_(Component.m_237113_("§6How to brew: §fopen a crafting table (or your own 2 x 2 grid) and put in §e1 glass bottle§f, "
-            + "§e2 cocoa beans §fand §e1 blood sugar§f, any slots: §e1 Anteiku Blend§f. Make 3, then right click each regular at the counter "
-            + "with a cup in your hand."), false);
+        // 4.1.95 (the owner: "the player has no idea how to craft the coffee ... You can just like tell the player how it's done"). 4.1.96
+        // (the owner: "the quests are super spammy"; "I can't craft the coffee"): one line, and a way to brew that needs no crafting grid.
+        player.m_5661_(Component.m_237113_("§6Anteiku: §fKen hands you the makings §7(3 glass bottles, 6 cocoa beans, 3 blood sugar)§f. "
+            + "To brew a cup, hold a §eglass bottle §fand §eright click §fin the café §7(or craft 1 bottle + 2 cocoa beans + 1 blood sugar)§f."), false);
     }
 
     // ---------------------------------------------------------------- the bodies
@@ -494,10 +495,17 @@ public final class JoinServer {
                 return;
             }
             Live live = LIVE.get(player.m_20148_());
-            if (live == null || live.kind != JoinTrial.Kind.SHIFT || live.current == null) {
+            if (live == null || live.kind != JoinTrial.Kind.SHIFT) {
                 return;
             }
             net.minecraft.world.item.ItemStack held = event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND ? player.m_21205_() : player.m_21206_();
+            if (brew(player, live, held)) {
+                event.setCanceled(true); // 4.1.96: brewed in the café (no crafting grid needed)
+                return;
+            }
+            if (live.current == null) {
+                return;
+            }
             net.minecraft.world.item.Item cup = com.hex.kagune.control.ControlItems.vanilla(JoinTrial.CUP);
             if (cup == null || held.m_41720_() != cup || !(player.m_284548_().m_8791_(live.current) instanceof GhoulNpc regular)
                 || regular.m_20280_(player) > JoinTrial.SERVE_NEAR * JoinTrial.SERVE_NEAR) {
@@ -837,8 +845,8 @@ public final class JoinServer {
                 live.current = null;
                 live.nextAt = now + JoinTrial.SHIFT_GAP;
                 UkakuFire.sound(level, npc.m_20182_(), "block.candle.extinguish", 0.9F, 0.7F);
-                player.m_5661_(Component.m_237113_("§6Anteiku: §fa regular gave up waiting and left. §7(" + live.strikes + "/" + JoinTrial.SHIFT_STRIKES
-                    + " walked out)"), false);
+                player.m_5661_(Component.m_237113_("§6Anteiku: §f" + live.currentName + " gave up waiting and left §7(" + live.strikes + " of "
+                    + JoinTrial.SHIFT_STRIKES + " and the shift is lost)"), false);
                 return;
             }
             if (player.f_19797_ % 10 == 0) {
@@ -847,6 +855,12 @@ public final class JoinServer {
             return;
         }
         if (now < live.nextAt) {
+            return;
+        }
+        if (!holdsCup(player)) {
+            // 4.1.96 (the owner: "unrealistic ... the action bar messages and quest don't match what's actually happen"): nobody comes in
+            // and waits on a cup that isn't brewed yet; the first regular comes once there is one (the action bar says to brew).
+            live.nextAt = now + 20L;
             return;
         }
         // 4.1.82 (the owner: "clients are spawning in areas that are not infront of the reception"): in front of the counter, the way
@@ -872,9 +886,9 @@ public final class JoinServer {
         saved.m_128405_(SEAT + "Z", seat.m_123343_());
         live.current = regular.m_20148_();
         live.currentAt = now;
+        live.currentName = who.displayName();
         UkakuFire.sound(level, regular.m_20182_(), "block.note_block.chime", 0.8F, 1.2F);
-        player.m_5661_(Component.m_237113_("§6Anteiku: §f" + who.displayName() + " sits down. §7(a cup of Anteiku Blend, in your hand, to them: "
-            + (live.done + 1) + "/" + JoinTrial.SHIFT_CUSTOMERS + ")"), false);
+        bar(player, live, now); // 4.1.96: who sat down, on the action bar (no chat line each time)
     }
 
     static void leaves(GhoulNpc npc, long now) {
@@ -1394,6 +1408,7 @@ public final class JoinServer {
 
     /** Each second: where they are in it, in the action bar (time left, what is next, which way). */
     static void bar(ServerPlayer player, Live live, long now) {
+        progress(player, live);
         int gang = JoinTrial.gang(live.kind);
         String head = live.courting != null ? com.hex.kagune.control.npc.Persona.of(live.courting).colour() + "❤ " // 4.1.80: his courtship's
             : GangServer.colour(gang) + GangPlayer.title(gang) + ": §f";
@@ -1408,8 +1423,10 @@ public final class JoinServer {
                 + " blocks more)" : "to Banjou, " + way(player, live.anchor) + " §c" + JoinTrial.clock(live.first + JoinTrial.GAS_TICKS - now);
             case GATE -> "hold the gate §7(wave " + live.wave + "/" + JoinTrial.GATE_WAVES + ", " + standing(level, live) + " up) §c"
                 + JoinTrial.clock(live.began + JoinTrial.GATE_TICKS - now);
-            case SHIFT -> live.current == null ? "the next regular... §7(" + live.done + "/" + JoinTrial.SHIFT_CUSTOMERS + " served)"
-                : "a regular is waiting §c" + JoinTrial.clock(live.currentAt + JoinTrial.SHIFT_PATIENCE - now);
+            case SHIFT -> live.current != null ? "serve §e" + live.currentName + "§f: right click them with a cup §c"
+                + JoinTrial.clock(live.currentAt + JoinTrial.SHIFT_PATIENCE - now) + " §7(" + live.done + "/" + JoinTrial.SHIFT_CUSTOMERS + " served)"
+                : !holdsCup(player) ? "brew a cup: hold a glass bottle, right click §7(" + live.done + "/" + JoinTrial.SHIFT_CUSTOMERS + " served)"
+                : "a regular is coming in... §7(" + live.done + "/" + JoinTrial.SHIFT_CUSTOMERS + " served)";
             case CAFE -> "drive them off, kill nobody §7(" + live.done + "/" + JoinTrial.CAFE_RAIDERS + ") §c" + JoinTrial.clock(live.began + JoinTrial.CAFE_TICKS - now);
             case HUNT -> "the reported ghoul, " + toward(player, level, live.target == null ? List.of() : List.of(live.target)) + " §7(partner "
                 + partnerHealth(level, live) + ")";
@@ -1583,5 +1600,105 @@ public final class JoinServer {
         } catch (RuntimeException | LinkageError failure) {
             Safety.caught(failure, "JoinServer.crafted");
         }
+    }
+
+    // ---------------------------------------------------------------- 4.1.96: the shift as it really goes
+
+    /**
+     * 4.1.96 (the owner: "the action bar messages and quest don't match what's actually happen"): {@code live}'s timed quest counts what its
+     * action bar counts (the regulars served, the acts won, the waves held, the raiders driven off), saved and sent when it changes.
+     */
+    static void progress(ServerPlayer player, Live live) {
+        if (live.mission == null || live.courting != null) {
+            return;
+        }
+        int done = switch (live.kind) {
+            case SHIFT, RING, CAFE -> live.done;
+            case GATE -> Math.max(0, live.wave - 1);
+            default -> 0;
+        };
+        if (done != live.shown) {
+            live.shown = done;
+            if (QuestServer.log(player).missionProgress(live.mission, done)) {
+                QuestServer.changed(player);
+            }
+        }
+    }
+
+    /** 4.1.96: true if {@code player} has a cup of Anteiku Blend about them (in any slot). */
+    static boolean holdsCup(ServerPlayer player) {
+        net.minecraft.world.item.Item cup = com.hex.kagune.control.ControlItems.vanilla(JoinTrial.CUP);
+        return cup != null && count(player, cup) > 0;
+    }
+
+    /** 4.1.96: how many of {@code item} {@code player} has. */
+    static int count(ServerPlayer player, net.minecraft.world.item.Item item) {
+        net.minecraft.world.entity.player.Inventory pack = player.m_150109_();
+        int n = 0;
+        for (int i = 0; i < pack.m_6643_(); i++) {
+            net.minecraft.world.item.ItemStack stack = pack.m_8020_(i);
+            if (!stack.m_41619_() && stack.m_41720_() == item) {
+                n += stack.m_41613_();
+            }
+        }
+        return n;
+    }
+
+    /** 4.1.96: {@code n} of {@code item} taken from {@code player} (the mission's own first); the mission they were lent for, if any. */
+    static String take(ServerPlayer player, net.minecraft.world.item.Item item, int n) {
+        net.minecraft.world.entity.player.Inventory pack = player.m_150109_();
+        String lent = "";
+        for (int pass = 0; pass < 2 && n > 0; pass++) {
+            for (int i = 0; i < pack.m_6643_() && n > 0; i++) {
+                net.minecraft.world.item.ItemStack stack = pack.m_8020_(i);
+                if (stack.m_41619_() || stack.m_41720_() != item || lentFor(stack).isEmpty() == (pass == 0)) {
+                    continue;
+                }
+                if (lent.isEmpty()) {
+                    lent = lentFor(stack);
+                }
+                int k = Math.min(n, stack.m_41613_());
+                stack.m_41774_(k);
+                n -= k;
+            }
+        }
+        return lent;
+    }
+
+    /**
+     * 4.1.96 (the owner: "for some reason I can't craft the coffee"): during the shift, a right click in the café with a glass bottle in hand
+     * brews a cup there and then (the bottle, 2 cocoa beans and 1 blood sugar taken): no crafting grid needed. True if it brewed.
+     */
+    static boolean brew(ServerPlayer player, Live live, net.minecraft.world.item.ItemStack held) {
+        net.minecraft.world.item.Item bottle = com.hex.kagune.control.ControlItems.vanilla("minecraft:glass_bottle");
+        net.minecraft.world.item.Item beans = com.hex.kagune.control.ControlItems.vanilla("minecraft:cocoa_beans");
+        net.minecraft.world.item.Item sugar = com.hex.kagune.control.ControlItems.vanilla("hexkagune:blood_sugar");
+        net.minecraft.world.item.Item cup = com.hex.kagune.control.ControlItems.vanilla(JoinTrial.CUP);
+        if (bottle == null || beans == null || sugar == null || cup == null || held.m_41720_() != bottle || live.anchor == null
+            || distance(player, live.anchor) > JoinTrial.SHIFT_ZONE) {
+            return false;
+        }
+        if (count(player, beans) < 2 || count(player, sugar) < 1) {
+            player.m_5661_(Component.m_237113_("§6Anteiku: §fa cup takes §e2 cocoa beans §fand §e1 blood sugar §fwith the bottle §7(you have "
+                + count(player, beans) + " and " + count(player, sugar) + ")"), true);
+            return true;
+        }
+        String lent = lentFor(held);
+        held.m_41774_(1);
+        String beansLent = take(player, beans, 2);
+        String sugarLent = take(player, sugar, 1);
+        net.minecraft.world.item.ItemStack brewed = new net.minecraft.world.item.ItemStack(cup, 1);
+        String mission = !lent.isEmpty() ? lent : !beansLent.isEmpty() ? beansLent : sugarLent;
+        if (!mission.isEmpty()) {
+            lent(brewed, mission); // made from the mission's things: taken back with them
+        }
+        if (!player.m_36356_(brewed)) {
+            player.m_36176_(brewed, false);
+        }
+        ServerLevel level = player.m_284548_();
+        UkakuFire.sound(level, player.m_20182_(), "block.note_block.chime", 0.6F, 0.8F);
+        level.m_8767_(ParticleTypes.f_123769_, player.m_20185_(), player.m_20186_() + 1.2, player.m_20189_(), 6, 0.2, 0.2, 0.2, 0.01);
+        player.m_5661_(Component.m_237113_("§6Anteiku: §fyou brew an Anteiku Blend §7(" + count(player, cup) + " ready)"), true);
+        return true;
     }
 }

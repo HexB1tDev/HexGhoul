@@ -346,7 +346,25 @@ public final class QuestLog {
     /** 4.1.95: mission {@code kind} begun at {@code now}, its clock running {@code limit} ticks. */
     public void startMission(String kind, long now, long limit) {
         this.missions.remove(kind);
+        Quest old = Missions.quest(kind);
+        if (old != null) {
+            this.progress.remove(old.id()); // 4.1.96: a new try counts from nothing
+        }
         this.missions.put(kind, new Mission(kind, Missions.ON, now + limit, 0L, Missions.quest(kind)));
+    }
+
+    /** 4.1.96: how far mission {@code kind} is ({@code done} of its count, as its action bar says): true if that changed it. */
+    public boolean missionProgress(String kind, int done) {
+        Mission mission = this.missions.get(kind);
+        if (mission == null || mission.quest().objectives().isEmpty()) {
+            return false;
+        }
+        int value = Math.max(0, Math.min(done, mission.quest().objectives().get(0).count()));
+        if (this.progress(mission.quest(), 0) == value) {
+            return false;
+        }
+        this.set(mission.quest(), 0, value);
+        return true;
     }
 
     /** 4.1.95: mission {@code kind} forgotten (over quietly: its step moved on some other way, neither won nor failed). */

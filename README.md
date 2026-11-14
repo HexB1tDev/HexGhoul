@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.96 (HexGhoul): officials named when you look at them; /kagune places says where each is; the café shift reworked (testing)
+
+See `.github/release-notes-4.1.96.md`. `EtoRenderer`: an untaken companion's name while `Minecraft.f_91076_` (crosshairPickEntity) is her
+(allowlisted). `UniqueNpcs.whereabouts` (her body loaded, unloaded, dead, never made; her spot), added to `/kagune places` from a player.
+The shift: `JoinServer.brew` (a glass bottle right clicked in the café brews a cup, marked as the mission's), `holdsCup` (no regular before a cup), `SHIFT_PATIENCE` 1800, the sit-down line on the action bar only, `progress` (`QuestLog.missionProgress`, `JoinTrial.count`).
+
 ## 4.1.95 (HexGhoul): every gang mission is a timed quest; the coffee explained; failing waits a day; the mission's things taken back (testing)
 
 See `.github/release-notes-4.1.95.md`. `quest/Missions` (pure): each `JoinTrial.Kind` (and `COURT_SPAR`) as a quest of `Quest.Line.TIMED`

@@ -1045,8 +1045,8 @@ public final class NpcTests {
         check(JoinTrial.GATE_WAVES == 2 && JoinTrial.GATE_WAVE == 3 && JoinTrial.GATE_NEAR > Math.hypot(28.0, 19.0) / 2.0
             && JoinTrial.GATE_ZONE >= JoinTrial.GATE_FAR, "two waves of three, coming from outside the walls; the gate's ground takes them in");
         // The shift.
-        check(!JoinTrial.shiftLost(1) && JoinTrial.shiftLost(2) && JoinTrial.SHIFT_CUSTOMERS == 3 && JoinTrial.SHIFT_PATIENCE == 1200,
-            "three regulars served; two walking out loses the shift; a minute each");
+        check(!JoinTrial.shiftLost(1) && JoinTrial.shiftLost(2) && JoinTrial.SHIFT_CUSTOMERS == 3 && JoinTrial.SHIFT_PATIENCE == 1800,
+            "three regulars served; two walking out loses the shift; a minute and a half each (4.1.96)");
         com.hex.kagune.control.kitchen.Dish blend = null;
         for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
             if (("hexkagune:" + dish.id()).equals(JoinTrial.CUP)) {

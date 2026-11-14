@@ -10,6 +10,7 @@ public class Minecraft {
     /** screen */ public net.minecraft.client.gui.screens.Screen f_91080_;
     /** font */ public net.minecraft.client.gui.Font f_91062_;
     /** gui */ public net.minecraft.client.gui.Gui f_91065_;
+    /** crosshairPickEntity (4.1.96: a companion's name while the crosshair is on her) */ public net.minecraft.world.entity.Entity f_91076_;
     /** gameRenderer */ public net.minecraft.client.renderer.GameRenderer f_91063_;
     /** hitResult (crosshair target) */ public net.minecraft.world.phys.HitResult f_91077_;
     /** gameMode (4.1.32): joined.tsrg enn.r f_91072_, intermediary field_1761 (yarn interactionManager) */ public net.minecraft.client.multiplayer.MultiPlayerGameMode f_91072_;

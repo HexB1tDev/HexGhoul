@@ -117,6 +117,20 @@ public final class JoinTrial {
         };
     }
 
+    /**
+     * 4.1.96 (the owner: "the action bar messages and quest don't match what's actually happen"): how many of {@code kind}'s steps its timed
+     * quest counts (the regulars served, the acts, the waves, the raiders driven off; one for the rest), as its action bar counts them.
+     */
+    public static int count(Kind kind) {
+        return switch (kind) {
+            case SHIFT -> SHIFT_CUSTOMERS;
+            case RING -> RING_ACTS;
+            case GATE -> GATE_WAVES;
+            case CAFE -> CAFE_RAIDERS;
+            default -> 1;
+        };
+    }
+
     /** 4.1.95: {@code kind}'s name as the quest menu's timed tab lists it. */
     public static String title(Kind kind) {
         return switch (kind) {
@@ -144,10 +158,10 @@ public final class JoinTrial {
                 + "and stay on the stage.";
             case GAS -> "Walk out past Banjou's gate, then come back to him through the gas. No mask.";
             case GATE -> "Stand at Banjou's gate. The Clowns come in waves: hold them off until the last one falls.";
-            case SHIFT -> "Ken gives you the makings: 3 glass bottles, 6 cocoa beans, 3 blood sugar. Open a crafting table (or your own "
-                + "2 x 2 grid) and put in 1 glass bottle, 2 cocoa beans and 1 blood sugar, in any slots: that makes 1 Anteiku Blend. Make 3. "
-                + "Regulars come to the counter one at a time: right click one with a cup in your hand to serve it. Serve three before "
-                + "they lose patience.";
+            case SHIFT -> "Ken gives you the makings: 3 glass bottles, 6 cocoa beans, 3 blood sugar. Brew a cup: hold a glass bottle and right "
+                + "click anywhere in the café (it takes 2 cocoa beans and 1 blood sugar too), or craft it: 1 glass bottle, 2 cocoa beans and 1 "
+                + "blood sugar in any slots of a crafting grid make 1 Anteiku Blend. The first regular comes in once you have a cup. Each one "
+                + "sits at the counter: right click them with a cup in your hand before they lose patience (a minute and a half). Serve three.";
             case CAFE -> "Investigators come for the café. Drive them off without killing anyone: knock them down, never finish them.";
             case HUNT -> "Your partner meets you at the sighting. Hunt the ghoul down together, and bring your partner back alive.";
         };
@@ -299,7 +313,7 @@ public final class JoinTrial {
 
     public static final int SHIFT_CUSTOMERS = 3;
     /** How long a regular waits for a cup (ticks), and how many walk out before the shift is lost. */
-    public static final int SHIFT_PATIENCE = 1200;
+    public static final int SHIFT_PATIENCE = 1800; // 4.1.96: a minute and a half (a minute left no time to brew)
     public static final int SHIFT_STRIKES = 2;
     /** Between regulars (ticks). */
     public static final int SHIFT_GAP = 100;

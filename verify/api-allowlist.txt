@@ -1303,3 +1303,6 @@ M net/minecraft/world/level/StructureManager m_220494_ (Lnet/minecraft/core/Bloc
 C net/minecraftforge/event/entity/player/PlayerEvent$ItemCraftedEvent                 # [forge] 1.20.1 event/entity/player/PlayerEvent.java (class ItemCraftedEvent: fired by ForgeEventFactory.firePlayerCraftingEvent from ResultSlot.checkTakeAchievements)
 M net/minecraftforge/event/entity/player/PlayerEvent$ItemCraftedEvent getCrafting ()Lnet/minecraft/world/item/ItemStack;  # [forge] same (field crafting)
 M net/minecraftforge/event/entity/player/PlayerEvent$ItemCraftedEvent getInventory ()Lnet/minecraft/world/Container;  # [forge] same (field craftMatrix)
+
+# --- 4.1.96: an official's name over her head while the crosshair is on her ------------------------------------------------------------
+F net/minecraft/client/Minecraft f_91076_ Lnet/minecraft/world/entity/Entity;  # [srg] crosshairPickEntity: joined.tsrg enn (field f_91076_; yarn MinecraftClient.targetedEntity, intermediary class_310)
