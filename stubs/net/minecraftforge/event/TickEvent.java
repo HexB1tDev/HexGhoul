@@ -11,6 +11,10 @@ public class TickEvent extends net.minecraftforge.eventbus.api.Event {
     public static class ClientTickEvent extends TickEvent {
     }
 
+    /** 4.1.99: the server's tick, START and END (LagServer times it). */
+    public static class ServerTickEvent extends TickEvent {
+    }
+
     public static class PlayerTickEvent extends TickEvent {
         public final net.minecraft.world.entity.player.Player player = null;
     }

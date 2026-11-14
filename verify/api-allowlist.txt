@@ -760,7 +760,6 @@ F net/minecraft/client/Options f_92103_ Lnet/minecraft/client/KeyMapping;       
 F net/minecraft/world/entity/Entity f_19854_ D                                                                                                  # [srg] xo (yarn prevX; awakening/mappings.srg, tools/check_mappings.py)
 F net/minecraft/world/entity/Entity f_19855_ D                                                                                                  # [srg] yo (yarn prevY; awakening/mappings.srg, tools/check_mappings.py)
 F net/minecraft/world/entity/Entity f_19856_ D                                                                                                  # [srg] zo (yarn prevZ; awakening/mappings.srg, tools/check_mappings.py)
-F net/minecraftforge/event/TickEvent$ServerTickEvent phase Lnet/minecraftforge/event/TickEvent$Phase;                                           # [forge] TickEvent.phase (public final Phase)
 M com/mojang/brigadier/builder/RequiredArgumentBuilder requires (Ljava/util/function/Predicate;)Lcom/mojang/brigadier/builder/ArgumentBuilder;  # [lib] Brigadier 1.1.8 ArgumentBuilder.requires (inherited by RequiredArgumentBuilder)
 M net/minecraft/client/KeyMapping m_7249_ (Z)V                                                                                                  # [srg] setDown (yarn setPressed; awakening/mappings.srg, tools/check_mappings.py)
 M net/minecraft/client/Minecraft m_91118_ (Lnet/minecraft/world/entity/Entity;)V                                                                # [srg] setCameraEntity (yarn setCameraEntity; awakening/mappings.srg, tools/check_mappings.py)
@@ -1071,6 +1070,7 @@ M net/minecraftforge/event/entity/living/LivingAttackEvent getAmount ()F        
 # --- 3.0.6: a player's kagune-made weapon folds back into its case when it is put away -------------------------------------------------
 C net/minecraft/world/entity/player/Inventory                                       # [srg] joined.tsrg byn net/minecraft/src/C_1140_ (Player.fN ()Lbyn; is getInventory)
 M net/minecraft/world/entity/player/Player m_150109_ ()Lnet/minecraft/world/entity/player/Inventory;  # [srg] getInventory: joined.tsrg byo.fN ()Lbyn; m_150109_
+M net/minecraft/world/entity/player/Player m_5661_ (Lnet/minecraft/network/chat/Component;Z)V  # [srg] displayClientMessage: joined.tsrg byo.a (Lsw;Z)V m_5661_ (byo = Player, sw = Component), intermediary method_7353, yarn PlayerEntity.sendMessage(Text, boolean); 4.1.99 LagClient prints /kagune lag in the client's chat
 M net/minecraft/world/entity/player/Inventory m_6643_ ()I                           # [srg] getContainerSize: joined.tsrg byn.b ()I m_6643_
 M net/minecraft/world/entity/player/Inventory m_8020_ (I)Lnet/minecraft/world/item/ItemStack;  # [srg] getItem: joined.tsrg byn.a (I)Lcfz; m_8020_
 M net/minecraft/world/entity/player/Inventory m_6836_ (ILnet/minecraft/world/item/ItemStack;)V  # [srg] setItem: joined.tsrg byn.a (ILcfz;)V m_6836_

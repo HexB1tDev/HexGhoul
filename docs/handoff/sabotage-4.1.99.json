@@ -1,0 +1,149 @@
+[
+ {
+  "name": "a call's own time not less what it called",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "long self = total - frames.inner[at];",
+  "new": "long self = total;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "an inner call's own time taken off its parent, not its whole",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "frames.inner[at - 1] += total;",
+  "new": "frames.inner[at - 1] += self;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a timed call reads the clock while closed",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "    public static void enter(String site) {\n        if (on) {",
+  "new": "    public static void enter(String site) {\n        if (true) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "frames of an older window kept",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "            if (generation == now) {\n                return true;",
+  "new": "            if (true) {\n                return true;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a lost inner frame blocks its parent",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "            at--;\n        }\n        if (at < 0) {",
+  "new": "            return;\n        }\n        if (at < 0) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the client's calls among the server's workers",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "        if (thread == clientThread) {\n            return null;",
+  "new": "        if (false) {\n            return null;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "deeper than DEEP overruns the frames",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "if (frames.depth >= DEEP) {",
+  "new": "if (frames.depth > DEEP) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the cheapest place first",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "entries.sort(Comparator.comparingDouble(Entry::msPerSecond).reversed().thenComparing(Entry::site));",
+  "new": "entries.sort(Comparator.comparingDouble(Entry::msPerSecond).thenComparing(Entry::site));",
+  "suite": "LagTests"
+ },
+ {
+  "name": "eleven places named",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "            if (n == TOP) {",
+  "new": "            if (n == TOP + 1) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "packets not counted",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "                if (entry.site.endsWith(\".encode\")) {\n                    sum += entry.callsPerSecond;",
+  "new": "                if (entry.site.endsWith(\".encoder\")) {\n                    sum += entry.callsPerSecond;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the meter may throw",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "            } catch (RuntimeException ignored) {\n                // The meter may never be what fails",
+  "new": "            } catch (IllegalStateException ignored) {\n                // The meter may never be what fails",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the worst call not the whole time",
+  "file": "src/main/java/com/hex/kagune/control/LagMeter.java",
+  "old": "            if (total > this.worst) {\n                this.worst = total;",
+  "new": "            if (self > this.worst) {\n                this.worst = self;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a measurement 20 s",
+  "file": "src/main/java/com/hex/kagune/control/server/LagServer.java",
+  "old": "SECONDS = 30;",
+  "new": "SECONDS = 20;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the asker's game not measured",
+  "file": "src/main/java/com/hex/kagune/control/server/LagServer.java",
+  "old": "            ControlNetwork.sendTo(asker, new S2CLag(SECONDS, false));\n",
+  "new": "",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a stopped world's measurement kept",
+  "file": "src/main/java/com/hex/kagune/control/server/LagServer.java",
+  "old": "        LagMeter.close(LagMeter.Side.SERVER);\n        ASKERS.clear();",
+  "new": "        ASKERS.clear();",
+  "suite": "LagTests"
+ },
+ {
+  "name": "/kagune lag for operators only",
+  "file": "src/main/java/com/hex/kagune/control/server/ControlCommands.java",
+  "old": "Commands.m_82127_(\"lag\")\n",
+  "new": "Commands.m_82127_(\"lag\").requires(source -> source.m_6761_(2))\n",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the client never tells its thread",
+  "file": "src/main/java/com/hex/kagune/control/client/LagClient.java",
+  "old": "        LagMeter.knowClient(Thread.currentThread());\n",
+  "new": "",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a flesh creature's brain untimed",
+  "file": "patch/KaguneGuard.java",
+  "old": "        \"com/hex/kagune/control/npc/FleshThrall\", Set.of(\"m_8024_\"),\n",
+  "new": "",
+  "suite": "LagTests"
+ },
+ {
+  "name": "layers untimed",
+  "file": "patch/KaguneGuard.java",
+  "old": "TIMED_NAMES = Set.of(\"m_7392_\", \"m_6494_\");",
+  "new": "TIMED_NAMES = Set.of(\"m_7392_\");",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a guarded method's returns untimed",
+  "file": "patch/KaguneGuard.java",
+  "old": "        exits(method, meterSite);\n",
+  "new": "",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the lag packet unregistered",
+  "file": "src/main/java/com/hex/kagune/control/network/ControlNetwork.java",
+  "old": "        CHANNEL.registerMessage(58, S2CLag.class, S2CLag::encode, S2CLag::decode, S2CLag::handle); // 4.1.99: /kagune lag on the client\n",
+  "new": "",
+  "suite": "BikakuWormTests"
+ }
+]

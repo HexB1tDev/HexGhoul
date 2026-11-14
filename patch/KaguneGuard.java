@@ -19,6 +19,7 @@ import jdk.internal.org.objectweb.asm.tree.AbstractInsnNode;
 import jdk.internal.org.objectweb.asm.tree.AnnotationNode;
 import jdk.internal.org.objectweb.asm.tree.ClassNode;
 import jdk.internal.org.objectweb.asm.tree.FrameNode;
+import jdk.internal.org.objectweb.asm.tree.InsnList;
 import jdk.internal.org.objectweb.asm.tree.InsnNode;
 import jdk.internal.org.objectweb.asm.tree.LabelNode;
 import jdk.internal.org.objectweb.asm.tree.LdcInsnNode;
@@ -67,6 +68,36 @@ public final class KaguneGuard {
         GHOUL, Set.of("m_8099_", "m_7472_"));
     /** At least this many listeners exist (a sanity floor: the annotation not being found would guard nothing). */
     static final int LISTENER_FLOOR = 100;
+    /**
+     * 4.1.99: the mod's profiler ({@code com.hex.kagune.control.LagMeter}, read by {@code /kagune lag}). Every guarded method is timed too:
+     * {@code LagMeter.enter(site)} right after the guard's first label, {@code LagMeter.exit(site)} before each of its returns and first in
+     * its catch. And these, timed only (a catch of their own that tells the meter and throws on): our NPCs' brains (GhoulNpc's is guarded,
+     * so timed with its guard) and the structures' searches and placing (on the world generation workers, and the server's thread for
+     * /locate).
+     */
+    static final String METER = "com/hex/kagune/control/LagMeter";
+    static final String STRUCTURES = "com/hex/kagune/control/ControlStructures$";
+    static final Map<String, Set<String>> TIMED = Map.of(
+        "com/hex/kagune/control/npc/CcgAgent", Set.of("m_8024_"),
+        "com/hex/kagune/control/npc/HumanNpc", Set.of("m_8024_"),
+        "com/hex/kagune/control/npc/EtoNpc", Set.of("m_8024_"),
+        "com/hex/kagune/control/npc/ChildNpc", Set.of("m_8024_"),
+        "com/hex/kagune/control/npc/FleshThrall", Set.of("m_8024_"),
+        STRUCTURES + "DryJigsaw", Set.of("m_214086_", "m_262864_", "m_214110_"),
+        STRUCTURES + "Site", Set.of("m_214086_", "m_262864_", "m_214110_"),
+        STRUCTURES + "DryPlace", Set.of("m_214086_", "m_262864_", "m_214110_"));
+    /** And by name in every class of the mod: renderers (EntityRenderer.render) and their layers (RenderLayer.render). */
+    static final Set<String> TIMED_NAMES = Set.of("m_7392_", "m_6494_");
+    /** And in the network package: each packet's encoder (one call a packet sent) and the work its handler gives the game's thread. */
+    static final String NETWORK = "com/hex/kagune/control/network/";
+    /** At least this many timed-only methods (a floor: a rule matching nothing would time nothing). */
+    static final int TIMED_FLOOR = 100;
+    /** The meter's names for the game's methods (SRG names read as Mojang's). */
+    static final Map<String, String> NAMES = Map.ofEntries(Map.entry("m_8024_", "serverAiStep"), Map.entry("m_7392_", "render"),
+        Map.entry("m_6494_", "renderLayer"), Map.entry("m_214086_", "findGenerationPoint"), Map.entry("m_262864_", "findValidGenerationPoint"),
+        Map.entry("m_214110_", "afterPlace"), Map.entry("m_8119_", "tick"), Map.entry("m_5790_", "onHitEntity"), Map.entry("m_8060_", "onHitBlock"),
+        Map.entry("m_7380_", "save"), Map.entry("m_7378_", "load"), Map.entry("m_6742_", "effectTick"), Map.entry("m_8099_", "registerGoals"),
+        Map.entry("m_7472_", "dropLoot"));
 
     private KaguneGuard() {
     }
@@ -82,12 +113,18 @@ public final class KaguneGuard {
                 }
             }
         }
+        if (!entries.containsKey(METER + ".class")) {
+            throw new IllegalStateException(METER + " is not in the JAR: nothing to time with");
+        }
         List<String> changed = new ArrayList<>();
         int listeners = 0;
         int callbacks = 0;
+        int timedOnly = 0;
         Map<String, Set<String>> expected = new LinkedHashMap<>();
         DISCARD.forEach((owner, names) -> expected.computeIfAbsent(owner, k -> new java.util.HashSet<>()).addAll(names));
         CALLBACKS.forEach((owner, names) -> expected.computeIfAbsent(owner, k -> new java.util.HashSet<>()).addAll(names));
+        Map<String, Set<String>> timedLeft = new LinkedHashMap<>();
+        TIMED.forEach((owner, names) -> timedLeft.put(owner, new java.util.HashSet<>(names)));
         for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
             String name = entry.getKey();
             if (!name.startsWith("com/hex/kagune/") || !name.endsWith(".class")) {
@@ -100,7 +137,25 @@ public final class KaguneGuard {
                 boolean discard = DISCARD.getOrDefault(node.name, Set.of()).contains(method.name);
                 boolean callback = CALLBACKS.getOrDefault(node.name, Set.of()).contains(method.name);
                 if (!listener && !discard && !callback) {
+                    if (timesOnly(node, method)) {
+                        if ((method.access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE)) != 0 || method.instructions.size() == 0) {
+                            throw new IllegalStateException(node.name + "." + method.name + " has no body to time");
+                        }
+                        if (method.name.startsWith("<")) {
+                            throw new IllegalStateException(node.name + "." + method.name + " is a constructor");
+                        }
+                        time(node, method, meterSite(node.name, method.name));
+                        wrapped.add(method.name + method.desc);
+                        timedOnly++;
+                        Set<String> left = timedLeft.get(node.name);
+                        if (left != null) {
+                            left.remove(method.name);
+                        }
+                    }
                     continue;
+                }
+                if (TIMED.getOrDefault(node.name, Set.of()).contains(method.name)) {
+                    throw new IllegalStateException(node.name + "." + method.name + " is guarded: timed with its guard, not in TIMED");
                 }
                 if ((method.access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE)) != 0 || method.instructions.size() == 0) {
                     throw new IllegalStateException(node.name + "." + method.name + " has no body to guard");
@@ -111,7 +166,7 @@ public final class KaguneGuard {
                 if (guarded(method)) {
                     throw new IllegalStateException(node.name + "." + method.name + " is already guarded");
                 }
-                guard(node, method, discard, site(node.name, method.name));
+                guard(node, method, discard, site(node.name, method.name), meterSite(node.name, method.name));
                 wrapped.add(method.name + method.desc);
                 if (listener) {
                     listeners++;
@@ -133,8 +188,13 @@ public final class KaguneGuard {
             ClassNode check = read(bytes);
             for (MethodNode method : check.methods) {
                 if (wrapped.contains(method.name + method.desc)) {
-                    if (!guarded(method)) {
+                    boolean guardable = subscribes(method) || DISCARD.getOrDefault(check.name, Set.of()).contains(method.name)
+                        || CALLBACKS.getOrDefault(check.name, Set.of()).contains(method.name);
+                    if (guardable && !guarded(method)) {
                         throw new IllegalStateException(check.name + "." + method.name + " lost its guard");
+                    }
+                    if (!timed(method, meterSite(check.name, method.name))) {
+                        throw new IllegalStateException(check.name + "." + method.name + " is not timed at its start and every way out");
                     }
                     new Analyzer<BasicValue>(new BasicVerifier()).analyze(check.name, method);
                 }
@@ -147,6 +207,14 @@ public final class KaguneGuard {
                 throw new IllegalStateException("Callbacks not found to guard in " + left.getKey() + ": " + left.getValue());
             }
         }
+        for (Map.Entry<String, Set<String>> left : timedLeft.entrySet()) {
+            if (!left.getValue().isEmpty()) {
+                throw new IllegalStateException("Methods not found to time in " + left.getKey() + ": " + left.getValue());
+            }
+        }
+        if (timedOnly < TIMED_FLOOR) {
+            throw new IllegalStateException("Only " + timedOnly + " methods found to time (expected at least " + TIMED_FLOOR + ")");
+        }
         if (listeners < LISTENER_FLOOR) {
             throw new IllegalStateException("Only " + listeners + " event listeners found to guard (expected at least " + LISTENER_FLOOR + ")");
         }
@@ -157,6 +225,9 @@ public final class KaguneGuard {
                 for (MethodNode method : node.methods) {
                     if (subscribes(method) && !guarded(method)) {
                         throw new IllegalStateException(node.name + "." + method.name + " is an unguarded listener");
+                    }
+                    if ((subscribes(method) || timesOnly(node, method)) && !timed(method, meterSite(node.name, method.name))) {
+                        throw new IllegalStateException(node.name + "." + method.name + " is an untimed listener or timed place");
                     }
                 }
             }
@@ -173,7 +244,8 @@ public final class KaguneGuard {
         java.util.Collections.sort(changed);
         Files.writeString(report, String.join("\n", changed) + "\n", StandardCharsets.UTF_8);
         System.out.println("Guarded " + listeners + " event listeners and " + callbacks + " callbacks in " + changed.size()
-            + " classes: an error inside any of them is logged and the game carries on.");
+            + " classes: an error inside any of them is logged and the game carries on. Timed them and " + timedOnly
+            + " more (NPC brains, renderers, structures, packets) for /kagune lag.");
     }
 
     static ClassNode read(byte[] bytes) {
@@ -197,6 +269,113 @@ public final class KaguneGuard {
     /** "Class.method", the class's simple name (nested classes with their outer one). */
     static String site(String owner, String method) {
         return owner.substring(owner.lastIndexOf('/') + 1) + "." + method;
+    }
+
+    /** The meter's name for a place: "Class.method", the game's methods by their Mojang names, a packet's handler work as "handle". */
+    static String meterSite(String owner, String method) {
+        String name = method.startsWith("lambda$handle$") ? "handle" : NAMES.getOrDefault(method, method);
+        return site(owner, name);
+    }
+
+    /** 4.1.99: a method timed but not guarded (the {@link #TIMED} ones, renderers and layers, packets' encoders and handlers' work). */
+    static boolean timesOnly(ClassNode owner, MethodNode method) {
+        if (!owner.name.startsWith("com/hex/kagune/") || (method.access & (Opcodes.ACC_BRIDGE | Opcodes.ACC_ABSTRACT)) != 0) {
+            return false;
+        }
+        if (TIMED.getOrDefault(owner.name, Set.of()).contains(method.name)) {
+            return true;
+        }
+        if (TIMED_NAMES.contains(method.name) && (method.access & Opcodes.ACC_SYNTHETIC) == 0) {
+            return true;
+        }
+        if (!owner.name.startsWith(NETWORK) || Type.getReturnType(method.desc) != Type.VOID_TYPE) {
+            return false;
+        }
+        if (method.name.equals("encode") && (method.access & Opcodes.ACC_STATIC) != 0) {
+            return true;
+        }
+        // The innermost work a handler gives the game's thread: a void lambda that makes no lambda of its own (the one inside the
+        // DistExecutor's supplier, or the enqueued work itself), so no packet is counted twice.
+        if (method.name.startsWith("lambda$handle$")) {
+            for (AbstractInsnNode at = method.instructions.getFirst(); at != null; at = at.getNext()) {
+                if (at.getOpcode() == Opcodes.INVOKEDYNAMIC) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /** True if the method tells the meter at its start (after its first label) and before every return. */
+    static boolean timed(MethodNode method, String site) {
+        LabelNode first = firstLabel(method);
+        if (first == null || !meterCall(first.getNext(), "enter", site)) {
+            return false;
+        }
+        for (AbstractInsnNode at = method.instructions.getFirst(); at != null; at = at.getNext()) {
+            if (at.getOpcode() >= Opcodes.IRETURN && at.getOpcode() <= Opcodes.RETURN) {
+                AbstractInsnNode before = at.getPrevious();
+                // A guard's own return comes after Safety.caught (and Safety.discard): its exit is first in its catch.
+                boolean guardReturn = before instanceof MethodInsnNode call && call.owner.equals(SAFETY);
+                if (!guardReturn && !(before != null && meterCall(before.getPrevious(), "exit", site))) {
+                    return false;
+                }
+            }
+        }
+        if (method.tryCatchBlocks == null || method.tryCatchBlocks.isEmpty()) {
+            return false;
+        }
+        TryCatchBlockNode last = method.tryCatchBlocks.get(method.tryCatchBlocks.size() - 1);
+        AbstractInsnNode handler = last.handler.getNext();
+        while (handler instanceof FrameNode) {
+            handler = handler.getNext();
+        }
+        return last.start == first && meterCall(handler, "exit", site);
+    }
+
+    /** True if {@code at} is {@code ldc site} followed by {@code LagMeter.<name>(String)}. */
+    private static boolean meterCall(AbstractInsnNode at, String name, String site) {
+        return at instanceof LdcInsnNode ldc && site.equals(ldc.cst) && at.getNext() instanceof MethodInsnNode call
+            && call.owner.equals(METER) && call.name.equals(name) && call.desc.equals("(Ljava/lang/String;)V");
+    }
+
+    private static InsnList meter(String name, String site) {
+        InsnList out = new InsnList();
+        out.add(new LdcInsnNode(site));
+        out.add(new MethodInsnNode(Opcodes.INVOKESTATIC, METER, name, "(Ljava/lang/String;)V", false));
+        return out;
+    }
+
+    /** {@code LagMeter.exit(site)} before every return of the method's own code. */
+    private static void exits(MethodNode method, String site) {
+        List<AbstractInsnNode> returns = new ArrayList<>();
+        for (AbstractInsnNode at = method.instructions.getFirst(); at != null; at = at.getNext()) {
+            if (at.getOpcode() >= Opcodes.IRETURN && at.getOpcode() <= Opcodes.RETURN) {
+                returns.add(at);
+            }
+        }
+        for (AbstractInsnNode at : returns) {
+            method.instructions.insertBefore(at, meter("exit", site));
+        }
+    }
+
+    /** Times {@code method} without guarding it: enter at its start, exit at each return, and a catch that exits and throws on. */
+    static void time(ClassNode owner, MethodNode method, String site) {
+        LabelNode start = new LabelNode();
+        LabelNode end = new LabelNode();
+        LabelNode handler = new LabelNode();
+        exits(method, site);
+        method.instructions.insert(start);
+        method.instructions.insert(start, meter("enter", site));
+        method.instructions.add(end);
+        method.instructions.add(handler);
+        boolean instance = (method.access & Opcodes.ACC_STATIC) == 0;
+        Object[] locals = instance ? new Object[] {owner.name} : new Object[0];
+        method.instructions.add(new FrameNode(Opcodes.F_FULL, locals.length, locals, 1, new Object[] {"java/lang/Throwable"}));
+        method.instructions.add(meter("exit", site));
+        method.instructions.add(new InsnNode(Opcodes.ATHROW));
+        method.tryCatchBlocks.add(new TryCatchBlockNode(start, end, handler, "java/lang/Throwable"));
     }
 
     /** True if the method's last catch is a guard: a Throwable handler whose code calls {@code Safety.caught}. */
@@ -224,17 +403,23 @@ public final class KaguneGuard {
         return first instanceof LabelNode label ? label : null;
     }
 
-    /** Wraps {@code method} whole: on any throwable, {@code Safety.caught(it, site)} (and {@code Safety.discard(this)}), then return. */
-    static void guard(ClassNode owner, MethodNode method, boolean discard, String site) {
+    /**
+     * Wraps {@code method} whole: on any throwable, {@code Safety.caught(it, site)} (and {@code Safety.discard(this)}), then return. 4.1.99:
+     * and times it ({@code meterSite}): enter after the first label, exit before each of its own returns and first in the catch.
+     */
+    static void guard(ClassNode owner, MethodNode method, boolean discard, String site, String meterSite) {
         LabelNode start = new LabelNode();
         LabelNode end = new LabelNode();
         LabelNode handler = new LabelNode();
+        exits(method, meterSite);
         method.instructions.insert(start);
+        method.instructions.insert(start, meter("enter", meterSite));
         method.instructions.add(end);
         method.instructions.add(handler);
         boolean instance = (method.access & Opcodes.ACC_STATIC) == 0;
         Object[] locals = instance ? new Object[] {owner.name} : new Object[0];
         method.instructions.add(new FrameNode(Opcodes.F_FULL, locals.length, locals, 1, new Object[] {"java/lang/Throwable"}));
+        method.instructions.add(meter("exit", meterSite));
         method.instructions.add(new LdcInsnNode(site));
         method.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, SAFETY, "caught", "(Ljava/lang/Throwable;Ljava/lang/String;)V", false));
         if (discard) {

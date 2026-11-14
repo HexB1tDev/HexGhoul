@@ -48,6 +48,19 @@ final class ControlCommands {
         return 1;
     }
 
+    /** 4.1.99: {@code /kagune lag [log]}, from a player (their game measured too) or the console (the server only). */
+    private static int lag(CommandContext<CommandSourceStack> context, boolean log) {
+        ServerPlayer player;
+        try {
+            player = context.getSource().m_81375_();
+        } catch (CommandSyntaxException console) {
+            player = null;
+        }
+        String said = log ? LagServer.log(player) : LagServer.measure(player);
+        context.getSource().m_288197_(() -> Component.m_237113_(said), false);
+        return 1;
+    }
+
     static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("control")
             .executes(ControlCommands::report)
@@ -77,6 +90,10 @@ final class ControlCommands {
             }
             return 1;
         })));
+        // 4.1.99: the mod's profiler, for anyone (no operator needed): the ten costliest parts of the mod, server and client (LagServer).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("lag")
+            .executes(context -> lag(context, false))
+            .then(Commands.m_82127_("log").executes(context -> lag(context, true)))));
         // 6.2.0: cooldowns off (everything ready again the moment it is over) and back on, for yourself or a player.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("cooldowns").requires(source -> source.m_6761_(2))
             .executes(ControlCommands::reportCooldowns)

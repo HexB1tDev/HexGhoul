@@ -20,7 +20,20 @@ looked: check it). Nothing is half done. The owner asked earlier (quoted exactly
 Do your work and only at the end do the checks. This is taking so long." So: write first, one full build at the end of each version, short
 status lines to the owner while you work; the house rules (EXIT 0, GitHub green, allowlist, sabotage) still hold at the end.
 
-**Open before the lag patch (ask the owner, one short message):**
+**Progress of the lag patch (newest first):**
+- **4.1.99, the profiler (`/kagune lag`, `/kagune lag log`):** `LagMeter` (pure), `server/LagServer`, `client/LagClient`, `S2CLag` (message 58,
+  protocol 128); `patch/KaguneGuard` times every guarded method and, timed only, `TIMED` (CcgAgent, HumanNpc, EtoNpc, ChildNpc,
+  FleshThrall brains; GhoulNpc's is guarded so timed with it; DryJigsaw/Site/DryPlace `m_214086_`/`m_262864_`/`m_214110_`), every
+  `m_7392_`/`m_6494_` (renderers, layers), every packet `encode` and the innermost void `lambda$handle$` (490 listeners, 10 callbacks, 160
+  more). The guard proves each timed (`timed`), `TIMED_FLOOR` 100. HotSpot's own verifier was run over every changed class (scratch
+  `VerifyLoad`: `Class.forName(name, true, loader)` on the guarded jar with the stubs behind it, `-Xverify:all`): 0 VerifyErrors; 6 classes
+  can't be linked there (Photon and LogUtils not stubbed), as before the change. `LagTests`, `sabotage-4.1.99.json` (21 rules, all
+  caught; one hole found and closed: "the meter never throws" was a source check the other catch satisfied). The allowlist gained
+  `Player.m_5661_` (evidence: joined.tsrg `byo.a (Lsw;Z)V m_5661_`, intermediary `method_7353`); `ServerTickEvent.phase` left it (the
+  stub's `ServerTickEvent extends TickEvent` resolves it to `TickEvent.phase`). The mappings download fine from raw.githubusercontent.com
+  (`tools/check_mappings.py`'s URLs). **Ask the owner for `/kagune lag` output** where they feel lag.
+
+**Open before the lag patch (asked after 4.1.98; the owner's answers: the leaders "Not tested yet"; the coffee: "Bottle brew works now"):**
 - 4.1.98 (the officials: Roma, Banjou, the General): do they appear now? If not, ask for `/kagune places` (said in their place) and the
   `HexKagune:` lines of `logs/latest.log` (4.1.98 logs every official made at her spot, every body of hers sent away and why, every death
   with where and of what). Do not guess a sixth time: read those lines.

@@ -9,6 +9,16 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.99 (HexGhoul): /kagune lag, the mod's own lag profiler (the lag patch, part 1) (testing)
+
+See `.github/release-notes-4.1.99.md`. `LagMeter` (pure): `enter`/`exit` read one volatile flag unless a window is open; then each call's
+own time (less the timed calls inside it), calls and worst whole call, per thread (the server's, the client's render thread, or the server's
+workers); `lines` the report. `patch/KaguneGuard` times every guarded method (enter after the guard's first label, exit before each return
+and first in its catch) and times only (a catch that exits and throws on) the `TIMED` NPC brains and structure searches, every renderer and
+layer (`m_7392_`, `m_6494_`), every packet's `encode` and the innermost void `lambda$handle$` of each; it proves each one timed and every
+listener in the jar too. `LagServer` (`/kagune lag [log]`, ticks timed HIGHEST to LOWEST), `LagClient` (frames, chat), `S2CLag` (message 58,
+protocol 128). `LagTests`; `docs/handoff/sabotage-4.1.99.json`.
+
 ## 4.1.98 (HexGhoul): the gang leaders are made in their places even when the world remembers a lost body of theirs (testing)
 
 See `.github/release-notes-4.1.98.md`. `UniqueNpcs.takesOver`: the slot's body holds her place only if it is `about` (loaded, alive);
