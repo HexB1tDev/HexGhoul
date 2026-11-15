@@ -1,0 +1,16 @@
+[
+ {"name": "Banjou left out of the mend again", "file": "src/main/java/com/hex/kagune/control/client/render/ThrallRenderGuard.java",
+  "old": "        event.registerEntityRenderer(ControlEntities.BANJOU.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.BANJOU));\n", "new": "", "suite": "NpcTests"},
+ {"name": "the General left out of the mend again", "file": "src/main/java/com/hex/kagune/control/client/render/ThrallRenderGuard.java",
+  "old": "        event.registerEntityRenderer(ControlEntities.GENERAL.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.GENERAL));\n", "new": "", "suite": "NpcTests"},
+ {"name": "Roma left out of the mend again", "file": "src/main/java/com/hex/kagune/control/client/render/ThrallRenderGuard.java",
+  "old": "        event.registerEntityRenderer(ControlEntities.ROMA.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.ROMA));\n", "new": "", "suite": "NpcTests"},
+ {"name": "the humans left out of the mend", "file": "src/main/java/com/hex/kagune/control/client/render/ThrallRenderGuard.java",
+  "old": "        event.registerEntityRenderer(ControlEntities.HUMAN.get(), HumanRenderer::new);\n", "new": "", "suite": "NpcTests"},
+ {"name": "Banjou made again in Roma's looks", "file": "src/main/java/com/hex/kagune/control/client/render/ThrallRenderGuard.java",
+  "old": "ControlEntities.BANJOU.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.BANJOU));", "new": "ControlEntities.BANJOU.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.ROMA));", "suite": "NpcTests"},
+ {"name": "the officials out of the join check", "file": "src/main/java/com/hex/kagune/control/client/render/ThrallRenderGuard.java",
+  "old": "return entity instanceof FleshThrall || entity instanceof EtoNpc || entity instanceof", "new": "return entity instanceof FleshThrall || entity instanceof", "suite": "NpcTests"},
+ {"name": "the humans out of the join check", "file": "src/main/java/com/hex/kagune/control/client/render/ThrallRenderGuard.java",
+  "old": "\n            || entity instanceof com.hex.kagune.control.npc.HumanNpc; // 4.2.3: the humans too", "new": ";", "suite": "NpcTests"}
+]

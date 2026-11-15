@@ -48,6 +48,7 @@ public final class NpcTests {
     }
 
     public static void main(String[] args) {
+        renderGuardKinds();
         village();
         lives();
         romance214();
@@ -3538,6 +3539,50 @@ public final class NpcTests {
         }
         int found = text.indexOf(what, at);
         return found >= 0 && found - at <= n;
+    }
+
+    /**
+     * 4.2.3 (the owner, the seventh time: "Bro, I'm at the exact location says Banjo is at. He's not here."): every kind of body the mod
+     * registers (ControlEntities) is in ThrallRenderGuard's mend (its renderer registered again when the game has none) and in its join check
+     * ({@code ours}, by its class or the class it extends). The General, Roma and Banjou were left out of the mend from 4.1.5, 4.1.49 and
+     * 4.1.54 on, so a game without the mod's renderers kept them out of its world: alive on the server at their spot, never seen.
+     */
+    private static void renderGuardKinds() {
+        String entities = read("src/main/java/com/hex/kagune/control/ControlEntities.java");
+        String guard = read("src/main/java/com/hex/kagune/control/client/render/ThrallRenderGuard.java");
+        int from = guard.indexOf("static void registerAll(");
+        int to = guard.indexOf("public static void join(");
+        int oursAt = guard.indexOf("static boolean ours(");
+        check(from > 0 && to > from && oursAt > 0 && oursAt < from, "the guard's mend and join check found");
+        if (!(from > 0 && to > from && oursAt > 0 && oursAt < from)) {
+            return;
+        }
+        String mend = guard.substring(from, to);
+        java.util.Set<String> ours = new java.util.HashSet<>();
+        java.util.regex.Matcher named = java.util.regex.Pattern.compile("instanceof ([\\w.]+)").matcher(guard.substring(oursAt, from));
+        while (named.find()) {
+            String name = named.group(1);
+            ours.add(name.substring(name.lastIndexOf('.') + 1));
+        }
+        java.util.regex.Matcher kind = java.util.regex.Pattern.compile("RegistryObject<EntityType<([\\w.]+)>> (\\w+) = ENTITIES\\.register\\(\"(\\w+)\"")
+            .matcher(entities);
+        int kinds = 0;
+        for (; kind.find(); kinds++) {
+            String type = kind.group(1);
+            String simple = type.substring(type.lastIndexOf('.') + 1);
+            String constant = kind.group(2);
+            String id = "hexkagune:" + kind.group(3);
+            check(mend.contains("event.registerEntityRenderer(ControlEntities." + constant + ".get(),"),
+                id + ": its renderer made again by the guard's mend (or a game without the mod's renderers never shows it)");
+            int line = mend.indexOf("event.registerEntityRenderer(ControlEntities." + constant + ".get(),");
+            String made = line < 0 ? "" : mend.substring(line, mend.indexOf('\n', line));
+            check(!made.contains("new EtoRenderer(context,") || made.contains("Persona." + constant + "))"), id + ": made again in its own looks");
+            String source = read("src/main/java/com/hex/kagune/control/npc/" + simple + ".java");
+            java.util.regex.Matcher parent = java.util.regex.Pattern.compile("class " + simple + " extends ([\\w.]+)").matcher(source);
+            String extended = parent.find() ? parent.group(1).substring(parent.group(1).lastIndexOf('.') + 1) : "";
+            check(ours.contains(simple) || ours.contains(extended), id + ": the guard's join check covers it (" + simple + ")");
+        }
+        check(kinds >= 13, "every kind the mod registers looked at (" + kinds + ")");
     }
 
     private static String read(String path) {

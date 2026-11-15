@@ -9,6 +9,13 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.3 (HexGhoul): the General, Roma and Banjou were there all along, hidden from your game; now they're drawn (testing)
+
+See `.github/release-notes-4.2.3.md`. `client/render/ThrallRenderGuard.registerAll` (the mend that registers every renderer again when the
+game has none for a kind, before it would keep the body out of the client's world) lacked GENERAL, ROMA and BANJOU since they came (and
+HUMAN; `ours` lacked HumanNpc): in the owner's game they were alive on the server and never drawn. `NpcTests.renderGuardKinds` reads
+`ControlEntities` and fails for any kind left out (and for an official made again in another's looks); `docs/handoff/sabotage-4.2.3.json`.
+
 ## 4.2.2 (HexGhoul): regeneration only while you hold its key (X), slower, at a fifth of the price (testing)
 
 See `.github/release-notes-4.2.2.md`. Protocol 129: `C2SRegen` (message 59) from `client/RegenClient` (key down/up, every 10 ticks held, none

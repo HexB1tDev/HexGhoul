@@ -25,6 +25,12 @@ import net.minecraftforge.fml.common.Mod;
  * 1.3.1: Eto too (the owner's crash report: the same null renderer as the Library came into view). 1.3.14: every body the mod adds
  * (the owner's crash report on 1.3.12: a newborn child, the same null renderer): wild ghouls, the flesh creatures, Eto, Touka, Ken and
  * children; every one of them registered again together, once for each kind found without one. 1.3.27: the CCG's investigators.
+ *
+ * <p>4.2.3 (the owner, the seventh time: "Bro, I'm at the exact location says Banjo is at. He's not here."; "the CCG, Banjo, and the circus
+ * girl, they're not spawning"): the General (4.1.5), Roma (4.1.49) and Banjou (4.1.54) were never added to {@link #registerAll}, so in a
+ * game left without the mod's renderers (the owner's: their crash reports since 1.0.37) the mend made none for them and each was kept out
+ * of the player's world: on the server, alive at their spot, and never seen. Every kind the mod registers is in it now (and the humans,
+ * {@link #ours}); NpcTests fails the build if a kind is ever left out again.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class ThrallRenderGuard {
@@ -37,7 +43,8 @@ public final class ThrallRenderGuard {
     /** True for a body the mod adds (and draws). */
     static boolean ours(Entity entity) {
         return entity instanceof FleshThrall || entity instanceof EtoNpc || entity instanceof com.hex.kagune.control.npc.ChildNpc
-            || entity instanceof com.hex.kagune.control.npc.GhoulNpc || entity instanceof com.hex.kagune.control.npc.CcgAgent;
+            || entity instanceof com.hex.kagune.control.npc.GhoulNpc || entity instanceof com.hex.kagune.control.npc.CcgAgent
+            || entity instanceof com.hex.kagune.control.npc.HumanNpc; // 4.2.3: the humans too
     }
 
     /** Every renderer the mod has, registered (again). */
@@ -47,10 +54,15 @@ public final class ThrallRenderGuard {
         event.registerEntityRenderer(ControlEntities.ETO.get(), EtoRenderer::new);
         event.registerEntityRenderer(ControlEntities.TOUKA.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.TOUKA));
         event.registerEntityRenderer(ControlEntities.KEN.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.KEN));
-            event.registerEntityRenderer(ControlEntities.AYATO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.AYATO));
-            event.registerEntityRenderer(ControlEntities.NORO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.NORO));
+        event.registerEntityRenderer(ControlEntities.AYATO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.AYATO));
+        event.registerEntityRenderer(ControlEntities.NORO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.NORO));
+        // 4.2.3: the General, Roma and Banjou, missing here since they came (so kept out of the owner's game), and the humans.
+        event.registerEntityRenderer(ControlEntities.GENERAL.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.GENERAL));
+        event.registerEntityRenderer(ControlEntities.ROMA.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.ROMA));
+        event.registerEntityRenderer(ControlEntities.BANJOU.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.BANJOU));
         event.registerEntityRenderer(ControlEntities.CHILD.get(), ChildRenderer::new);
         event.registerEntityRenderer(ControlEntities.AGENT.get(), AgentRenderer::new);
+        event.registerEntityRenderer(ControlEntities.HUMAN.get(), HumanRenderer::new);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
