@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.8 (HexGhoul): wild ghouls, gang members and villagers: more to say, and more to talk about (testing)
+
+See `.github/release-notes-4.2.8.md`. `NpcTalk.chat` (9 lines a temper, a Gourmet's 7), `GangTalk` (every band 5 or more),
+`data/hexkagune/talk/ally.txt` (+12 topics, 20), `village/HumanVoice.Topic` `STRANGE` and `ME` (appended; not personal; flags 128 << 11
+and << 12, clear of `MARRIED`). `TalkRulesTests.generic`. `docs/handoff/sabotage-4.2.8.json`.
+
 ## 4.2.7 (HexGhoul): Eto, Touka and Ken: more to talk about, and more ways to win or lose them (testing)
 
 See `.github/release-notes-4.2.7.md`. `npc/EtoMoreTopics.MORE` (11; `EtoTopics.ALL` is now `FIRST` + it), `npc/ToukaTopics.MORE` (11),

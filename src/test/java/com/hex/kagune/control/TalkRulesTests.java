@@ -59,6 +59,7 @@ public final class TalkRulesTests {
         developed(Persona.ETO, 25, 12, 7);
         developed(Persona.TOUKA, 21, 12, 6);
         developed(Persona.KEN, 19, 10, 6);
+        generic(); // 4.2.8: the wild ghouls, gang members and village humans
         System.out.println("Talk rules tests: " + checks + " checks " + (failures == 0 ? "passed" : "run, " + failures + " FAILED"));
         if (failures > 0) {
             throw new AssertionError(failures + " talk rules checks failed");
@@ -255,6 +256,74 @@ public final class TalkRulesTests {
         check(lower >= lowers, p.key() + ": " + lower + " replies that cost regard (at least " + lowers + ")");
         check(raise > lower, p.key() + ": " + raise + " replies that win it, more than the " + lower + " that cost it");
         check(once >= onces, p.key() + ": " + once + " one-time replies (at least " + onces + ")");
+    }
+
+    /**
+     * 4.2.8: the others developed: a wild ghoul (each temper that talks) has nine things to say (a Gourmet seven); a gang member at least five for
+     * every standing; the ghouls who walk with you twenty topics, twelve answers that cost; and a village human two more topics, answered in
+     * every temper, their flags clear of every other flag a human's bond keeps.
+     */
+    static void generic() throws Exception {
+        com.hex.kagune.control.npc.NpcTemper[] talkers = {com.hex.kagune.control.npc.NpcTemper.ANTEIKU, com.hex.kagune.control.npc.NpcTemper.PACK,
+            com.hex.kagune.control.npc.NpcTemper.SCAVENGER, com.hex.kagune.control.npc.NpcTemper.GOURMET, com.hex.kagune.control.npc.NpcTemper.DRIFTER};
+        for (com.hex.kagune.control.npc.NpcTemper temper : talkers) {
+            Set<String> said = new HashSet<>();
+            for (int regard = 0; regard < 40; regard++) {
+                com.hex.kagune.control.npc.NpcIdentity who = new com.hex.kagune.control.npc.NpcIdentity(com.hex.kagune.control.npc.NpcIdentity.Kind.UKAKU,
+                    temper, 2, 0, 3, 1000);
+                NpcTalk.Reply reply = NpcTalk.answer(new NpcTalk.Context(who, regard, true, null, false, false, false, true, false, false, true, null, true),
+                    NpcTalk.Choice.CHAT);
+                said.add(reply.line());
+            }
+            int least = temper == com.hex.kagune.control.npc.NpcTemper.GOURMET ? 7 : 9;
+            check(said.size() >= least, temper + ": " + said.size() + " things to say to a stranger (at least " + least + ")");
+        }
+        for (int reputation = -100; reputation <= 100; reputation += 5) {
+            check(com.hex.kagune.control.npc.GangTalk.lines(reputation).length >= 5, "a gang member at standing " + reputation + " has five things to say");
+        }
+        String ally = read("src/main/resources/data/hexkagune/talk/ally.txt");
+        com.hex.kagune.control.npc.scene.SceneBook.Parsed parsed = com.hex.kagune.control.npc.scene.SceneBook.parse("ally", ally);
+        check(parsed.errors().isEmpty(), "the walking ghouls' script reads cleanly: " + parsed.errors());
+        int topics = 0;
+        int costly = 0;
+        for (com.hex.kagune.control.npc.scene.Scene scene : parsed.scenes()) {
+            if (scene.kind() != com.hex.kagune.control.npc.scene.Scene.Kind.TOPIC) {
+                continue;
+            }
+            topics++;
+            Set<com.hex.kagune.control.npc.scene.Scene.Page> pages = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+            pages.addAll(scene.pages().values());
+            pages.add(scene.first());
+            for (com.hex.kagune.control.npc.scene.Scene.Page page : pages) {
+                for (com.hex.kagune.control.npc.scene.Scene.Option option : page.options()) {
+                    costly += option.regard() < 0 ? 1 : 0;
+                }
+            }
+        }
+        check(topics >= 20, "a ghoul who walks with you: " + topics + " topics (at least 20)");
+        check(costly >= 12, "a ghoul who walks with you: " + costly + " answers that cost regard (at least 12)");
+        com.hex.kagune.control.village.HumanVoice.Topic strange = com.hex.kagune.control.village.HumanVoice.Topic.STRANGE;
+        com.hex.kagune.control.village.HumanVoice.Topic me = com.hex.kagune.control.village.HumanVoice.Topic.ME;
+        check(!strange.personal() && !me.personal() && me.warmth == com.hex.kagune.control.village.HumanPersona.WARM && strange.warmth == 0,
+            "a human's two new topics are talk (never paid), what they think of you asked once they're warm");
+        int others = com.hex.kagune.control.village.HumanPersona.CONFESSED | com.hex.kagune.control.village.HumanPersona.PARTNER
+            | com.hex.kagune.control.village.HumanPersona.NOT_TYPE | com.hex.kagune.control.village.HumanPersona.MARRIED;
+        int seen = 0;
+        for (com.hex.kagune.control.village.HumanVoice.Topic topic : com.hex.kagune.control.village.HumanVoice.Topic.values()) {
+            check(topic.flag() > 0 && (topic.flag() & others) == 0 && (topic.flag() & seen) == 0, "a human topic's flag is its own: " + topic);
+            seen |= topic.flag();
+        }
+        com.hex.kagune.control.village.HumanLife.Life life = com.hex.kagune.control.village.HumanLife.of(12345L,
+            com.hex.kagune.control.village.HumanLife.Job.values()[0]);
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            for (int seed = 0; seed < 6; seed++) {
+                for (com.hex.kagune.control.village.HumanVoice.Topic topic : new com.hex.kagune.control.village.HumanVoice.Topic[] {strange, me}) {
+                    String said = com.hex.kagune.control.village.HumanVoice.answer(temper, life, topic, seed, null);
+                    check(said != null && !said.isBlank() && !said.contains("null") && !CompanionTests.FORBIDDEN.matcher(said).find(),
+                        temper + " answers " + topic);
+                }
+            }
+        }
     }
 
     /** Every one's topics: ids that fit the memory, none twice, at most a page of replies each. */

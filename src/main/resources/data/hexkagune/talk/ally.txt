@@ -395,3 +395,135 @@ say: Night's when we're free. Nobody looks too closely. You can just... be what 
   - Yeah. You get it.
 > It's dangerous. | +1
   - Everything's dangerous. Night's honest about it.
+
+# =====================================================================================================================================
+# 4.2.8 (the owner: "So develop every single NPC even further, add more dialogue, more options, all of them"): more to talk about, and
+# answers that cost you too.
+# =====================================================================================================================================
+
+topic ally_food
+prompt: What's the best thing you ever ate?
+say: A man who'd already jumped. Still warm. I sat with him a while first. ...That's the honest answer. You asked.
+say: Bread. Before I turned. I still remember the crust. Everything since has been just food.
+> Thanks for being honest. | +2
+  - ...You're strange. I like strange.
+> That's horrible. | -2
+  - Then don't ask a ghoul what it eats.
+> I remember bread too. | +1
+  - The crust. Right? The crust.
+
+topic ally_humans
+prompt: Do you hate humans?
+say: Hate them? No. I envy them. They get to eat breakfast with their families.
+say: Some of them. The ones with briefcases. The rest are just... weather. They happen around you.
+> Me neither. | +2
+  - Good. Hate's heavy. I've got enough to carry.
+> I hate them. | -1
+  - Careful. Hate makes you sloppy. Sloppy gets you caught.
+> They're scared of us. Fair enough. | +1
+  - Yeah. I'd be scared of me too.
+
+topic ally_scar
+prompt: Where'd you get that scar?
+say: Quinque. A Bikaku blade. He laughed while he did it. He doesn't laugh anymore.
+say: Fell off a roof running from a dove. Ghouls heal. Pride doesn't.
+> It suits you. | +2
+  - ...Huh. Nobody's ever said that.
+> You should've been faster. | -2
+  - Thanks. Very helpful. I'll go back in time and tell myself.
+> Does it still hurt? | +1
+  - Only when it rains. And when I remember.
+
+topic ally_fear
+prompt: What scares you?
+say: The white coats. The quiet before they kick a door in. ...You hear that quiet once, you hear it forever.
+say: Being alone again. ...Forget I said that.
+> I'll keep the doves off you. | +2
+  - You'd do that? ...Okay. Okay.
+> You're not alone. | +3
+  - ...No. I'm not. Not now.
+> Fear's for the weak. | -2
+  - Then I'm weak. And alive. Funny how that works.
+
+topic ally_family
+prompt: Do you have family?
+say: Had. Doves came for my mother when I was small. I don't know where my father went. ...You?
+say: A sister, somewhere. We don't talk. It's safer for her.
+> I'm sorry. | +2
+  - It was a long time ago. ...Thanks.
+> We're family now. | +3
+  - ...Don't say things like that unless you mean them. ...You mean it. Okay.
+> Better off without them. | -3
+  - You don't know anything about them. Drop it.
+
+topic ally_mask
+prompt: Do you wear a mask?
+say: When I hunt. A cheap one. A mask-maker in the fourth ward does good ones. I couldn't afford good.
+say: No. If they see my face, they see my face. I'd rather be remembered than hidden.
+> I'll get you a better one. | +2
+  - ...Would you? I'd wear it every night.
+> Masks are for cowards. | -2
+  - Masks are for people who want to see tomorrow.
+> What does yours look like? | +1
+  - A fox. Badly painted. It's grown on me.
+
+topic ally_close_call
+prompt: What's the closest you've come to dying?
+say: A dove with a quinque like a saw. I lost an arm. It grew back. I still feel the old one some nights.
+say: I starved for three weeks once. Couldn't make myself hunt. Someone left food. I never found out who.
+> I'm glad you made it. | +2
+  - ...Me too. I didn't used to be.
+> Sounds like you got lucky. | 0
+  - Lucky. Sure. Luck and running.
+> Next time I'll be there. | +2
+  - Yeah. That changes things.
+
+topic ally_kagune
+prompt: What's your kagune like?
+say: Not much to look at. It does the job. ...You want to see? Not here. Somewhere nobody's watching.
+say: Ugly. Strong. Like me.
+> I'd like to see it someday. | +2
+  - Someday. When it's just us.
+> Mine's better. | -1
+  - Sure it is. Sure.
+> Strong's what counts. | +1
+  - That's what I tell myself.
+
+topic ally_anteiku
+prompt: Ever been to Anteiku?
+say: The cafe? I stood outside once. Smelled the coffee. Didn't go in. Places like that aren't for ghouls like me.
+say: They helped me once. Gave me meat and asked nothing. I still don't understand it.
+> You'd be welcome there. | +2
+  - ...Maybe. One day. With you.
+> Anteiku's soft. | -1
+  - Soft kept me alive. Hard almost got me killed.
+
+topic ally_army
+prompt: Ever thought about joining the masked army?
+say: They asked. They ask everyone. I said I'd think about it. I've been thinking about it for a year.
+say: They want soldiers. I'm not a soldier. I'm just someone who doesn't want to die.
+> Good. Stay with me. | +2
+  - That's the plan.
+> You should join. Be stronger. | -1
+  - Stronger, maybe. Not freer.
+
+topic ally_me
+prompt: What do you think of me?
+say: Honestly? I didn't trust you. Now I'd walk into a dove nest behind you. That's... a lot, for me.
+say: You're the first one who stayed. That's what I think.
+> I feel the same about you. | +3
+  - ...Good. Okay. Good.
+> I'm just using you. | -4
+  - *goes very still* ...Right. Right. I'll remember that.
+> You talk too much. | -1
+  - *shrugs* You asked.
+
+topic ally_stars
+prompt: Look at the stars.
+when: night
+say: ...Huh. I never look up. Always looking at doors, corners, alleys. ...They're nice.
+say: My mother used to name them. I forgot all the names. I remember her voice, though.
+> Let's name them again. | +3
+  - That one's yours. ...That one's mine.
+> They're just stars. | -1
+  - Yeah. ...Yeah. Just stars.

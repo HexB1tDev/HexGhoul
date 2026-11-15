@@ -27,7 +27,11 @@ public final class HumanVoice {
         TYPE("What's your type?", HumanPersona.WARM),
         FEAR("What scares you?", HumanPersona.WARM),
         DREAM("What do you dream of?", HumanPersona.CLOSE),
-        SECRET("Tell me a secret.", 80);
+        SECRET("Tell me a secret.", 80),
+        // 4.2.8 (the owner: "So develop every single NPC even further, add more dialogue, more options, all of them"): appended (sent and kept
+        // by ordinal; their flags 128 << 11 and 128 << 12 stay clear of MARRIED, 1 << 20). Talk, not learning someone: never paid.
+        STRANGE("Seen anything strange lately?", 0),
+        ME("What do you think of me?", HumanPersona.WARM);
 
         public final String label;
         public final int warmth;
@@ -44,7 +48,7 @@ public final class HumanVoice {
 
         /** True if learning it is getting to know them (paid once: {@link #LEARNED}). */
         public boolean personal() {
-            return this != GOSSIP && this != TYPE;
+            return this != GOSSIP && this != TYPE && this != STRANGE && this != ME;
         }
     }
 
@@ -150,6 +154,8 @@ public final class HumanVoice {
             case DREAM -> life.dream();
             case SECRET -> life.secret();
             case TYPE -> "";
+            case STRANGE -> strange(temper, seed);
+            case ME -> me(temper, seed);
         };
         return before(temper, topic, seed) + said + after(temper, topic, seed >> 1);
     }
@@ -329,6 +335,59 @@ public final class HumanVoice {
                 case SARCASTIC -> pick(seed, "Oh wow. You shouldn't have. Really. You shouldn't have.", "Truly the gift of the year.");
                 case ROMANTIC -> pick(seed, "*gasps* That's not romantic at all!", "My heart just broke a little. Why this?");
             };
+        };
+    }
+
+    /** 4.2.8: something odd it saw lately, in its temper's voice (the land's ghouls, doves, lights in the woods). */
+    static String strange(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "Ooh, yes! Lights in the woods last night, moving way too fast for a lantern! Probably nothing! Probably!",
+                "A man in a white coat asked me if I'd seen anyone who doesn't eat. I said my uncle on a diet. He didn't laugh.");
+            case SHY -> pick(seed, "...Someone was standing at the edge of the field last night. Just standing. I closed the curtains.",
+                "I heard something on the roof. It wasn't a cat. Cats don't breathe like that.");
+            case BOLD -> pick(seed, "Found a coat by the river. Torn to ribbons, no body. I'm not scared. I just took the long way home.",
+                "Two people in masks ran past my door at midnight. I went after them. They were gone. Nobody's that fast.");
+            case KIND -> pick(seed, "A boy came to my door asking for water. He wouldn't drink it. He just held the cup and thanked me. Poor thing.",
+                "Someone left flowers on the old well. Every week, the same blue ones. I hope they're alright, whoever it is.");
+            case GRUMPY -> pick(seed, "Investigators. Again. Stomping through my vegetables asking stupid questions. That's strange enough for me.",
+                "My neighbour's dog stopped barking at night. Started whimpering instead. I don't like it.");
+            case FLIRTY -> pick(seed, "A very tall stranger smiled at me in the dark. Lovely teeth. A few too many of them.",
+                "Someone's been watching me from the trees. I'd be flattered if I weren't terrified.");
+            case DREAMY -> pick(seed, "The moon was red last week. Did you see? I think it was trying to tell us something.",
+                "I saw a girl with wings of fire, just for a second, over the hill. Nobody believes me. I believe me.");
+            case NERVOUS -> pick(seed, "S-something's been eating the sheep. Not wolves. Wolves leave the wool. This left nothing.",
+                "There were footprints on the roof this morning. On the ROOF. How do you get footprints on a roof?");
+            case PLAYFUL -> pick(seed, "A crow stole my spoon. A different crow brought it back. I think they're running a business.",
+                "Someone carved a smiling clown face into the big tree. Creepy! Also very well done. Respect.");
+            case STOIC -> pick(seed, "Blood on the road at dawn. No body. Rain took it by noon.", "Men with cases came through. Didn't stay. Don't usually.");
+            case SARCASTIC -> pick(seed, "Oh, nothing. Just people vanishing and men with briefcases full of teeth. Normal Tuesday.",
+                "A guy in a gas mask bought every lump of charcoal in the village. Totally normal behaviour. Nothing to see.");
+            case ROMANTIC -> pick(seed, "Two figures on the hill at sunset, one with wings. They held hands. I hope whatever they are, they're happy.",
+                "Someone's been leaving notes in the hollow tree. Love letters, I think. I haven't read them. Much.");
+        };
+    }
+
+    /** 4.2.8: what it thinks of them (asked once it is warm to them), in its temper's voice. */
+    static String me(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "You? You're one of my favourite people! Top five. Top three, if I'm honest!", "I think you're lovely. There, said it!");
+            case SHY -> pick(seed, "...I think you're nice. Really nice. ...That's all. *goes red*", "You're easy to talk to. Not many people are.");
+            case BOLD -> pick(seed, "I think you're all right. Better than all right. Don't let it go to your head.",
+                "You've got nerve. I like nerve. Stick around.");
+            case KIND -> pick(seed, "I think you carry more than you let on. I hope you let someone help, sometimes.",
+                "You're a good person. I can tell. Don't let anyone talk you out of it.");
+            case GRUMPY -> pick(seed, "...You're less annoying than most. That's the best you'll get.", "I suppose you're tolerable. Don't push it.");
+            case FLIRTY -> pick(seed, "What do I think? I think you should ask me that somewhere more private.",
+                "I think you're trouble. The good kind. The best kind.");
+            case DREAMY -> pick(seed, "You remind me of someone from a dream I had. I can't remember the dream. Just the feeling.",
+                "I think you're on your way somewhere important. I hope you'll tell me about it.");
+            case NERVOUS -> pick(seed, "I-I think you're great! Is that weird? That's weird. Sorry.", "You don't make me nervous. That's... rare.");
+            case PLAYFUL -> pick(seed, "Seven out of ten. Eight on a good day. Nine if you bring snacks.", "I think you'd make a great partner in crime.");
+            case STOIC -> pick(seed, "Reliable.", "You keep your word. That's enough.");
+            case SARCASTIC -> pick(seed, "I think you're the only person here who gets my jokes. Tragic, for you.",
+                "Honestly? You're fine. Don't tell anyone I said something nice.");
+            case ROMANTIC -> pick(seed, "I think meeting you was one of those things that was meant to happen.",
+                "I think you have very kind eyes. I notice eyes.");
         };
     }
 
