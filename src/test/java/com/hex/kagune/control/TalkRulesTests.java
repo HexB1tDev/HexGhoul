@@ -48,6 +48,9 @@ public final class TalkRulesTests {
         gifts();
         server();
         topics();
+        // 4.2.5 (the owner: "add as much text as you can to every single NPC, just some that can increase relationship, um, some that reduce it"):
+        developed(Persona.BANJOU, 22, 13, 8);
+        developed(Persona.ROMA, 20, 13, 9);
         System.out.println("Talk rules tests: " + checks + " checks " + (failures == 0 ? "passed" : "run, " + failures + " FAILED"));
         if (failures > 0) {
             throw new AssertionError(failures + " talk rules checks failed");
@@ -132,6 +135,13 @@ public final class TalkRulesTests {
         check(!scar.offered(context(0, 0, Romance.Stage.NONE, false, false, opened)), "a one-time topic opened: gone from the list");
         EtoTopics.Topic plain = new EtoTopics.Topic("weather", c -> true, c -> "Weather?", c -> "Rain.", List.of(always));
         check(!plain.once() && plain.offered(context(0, 0, Romance.Stage.NONE, false, false, opened)), "a topic not marked once stays");
+        // 4.2.5: a topic of one-time replies only, each said: nothing left to bring it up for.
+        EtoTopics.Follow vow = EtoTopics.Follow.once("Promise?", c -> new EtoTalk.Reply("Promise.", 4, EtoTalk.Effect.NONE));
+        EtoTopics.Topic promise = new EtoTopics.Topic("promise", c -> true, c -> "Promise me.", c -> "Anything.", List.of(vow));
+        check(promise.offered(fresh), "a topic of promises offered while one is left");
+        check(!promise.offered(context(0, 0, Romance.Stage.NONE, false, false, new Spoken(Map.of(Spoken.onceKey("promise"), Spoken.mark(0L, 0))))),
+            "every promise made: the topic is gone");
+        check(scar.offered(after), "a topic with a reply that can be said again stays");
     }
 
     /** Dinner (Ghoul Meat) given: taken, and warm once a day, for every one of them who takes it (before 4.2.4 Roma's and Banjou's: +3 a click, kept). */
@@ -171,6 +181,46 @@ public final class TalkRulesTests {
         check(ghouls.contains("if (Long.valueOf(today).equals(GIFTED.get(both))) {\n                reply = new NpcTalk.Reply(reply.line(), 0, reply.effect());")
             && ghouls.contains("GIFTED.put(both, today);") && ghouls.contains("private static final Map<String, Long> GIFTED = WorldTimes.map();"),
             "a wild ghoul warmed by meat once a day");
+    }
+
+    /**
+     * 4.2.5 on: {@code p} developed: at least {@code topics} topics, {@code lowers} replies that cost them regard, {@code onces} one-time replies;
+     * every reply's worth between -8 and +4 (what a reply may do; a gift or a lesson is worth more, never a word), and every line said.
+     */
+    static void developed(Persona p, int topics, int lowers, int onces) {
+        List<EtoTopics.Topic> all = p.script().allTopics();
+        check(all.size() >= topics, p.key() + ": " + all.size() + " topics (at least " + topics + ")");
+        int lower = 0;
+        int raise = 0;
+        int once = 0;
+        EtoTalk.Context[] cs = {context(NpcBonds.MOST, NpcBonds.ASKED, Romance.Stage.MARRIED, false, false, Spoken.NONE),
+            context(NpcBonds.FRIEND, NpcBonds.ASKED, Romance.Stage.NONE, false, false, Spoken.NONE),
+            context(NpcBonds.FRIENDLY, 0, Romance.Stage.NONE, false, false, Spoken.NONE)};
+        for (EtoTopics.Topic topic : all) {
+            if (topic.id().equals("baby") || topic.id().equals("family")) {
+                continue; // a family's own (a baby carried, a child wanted), looked at by FamilyTests
+            }
+            for (EtoTopics.Follow follow : topic.follows()) {
+                once += follow.once() ? 1 : 0;
+                int least = Integer.MAX_VALUE;
+                int most = Integer.MIN_VALUE;
+                for (EtoTalk.Context c : cs) {
+                    if (!follow.when().test(c)) {
+                        continue;
+                    }
+                    EtoTalk.Reply reply = follow.reply().apply(c);
+                    check(reply.line() != null && !reply.line().isBlank(), p.key() + ": " + topic.id() + ": \"" + follow.prompt() + "\" is answered");
+                    check(reply.regard() >= -8 && reply.regard() <= 4, p.key() + ": " + topic.id() + ": \"" + follow.prompt() + "\" is worth " + reply.regard());
+                    least = Math.min(least, reply.regard());
+                    most = Math.max(most, reply.regard());
+                }
+                lower += least < 0 && least != Integer.MAX_VALUE ? 1 : 0;
+                raise += most > 0 && most != Integer.MIN_VALUE ? 1 : 0;
+            }
+        }
+        check(lower >= lowers, p.key() + ": " + lower + " replies that cost regard (at least " + lowers + ")");
+        check(raise >= lowers * 2, p.key() + ": " + raise + " replies that win it");
+        check(once >= onces, p.key() + ": " + once + " one-time replies (at least " + onces + ")");
     }
 
     /** Every one's topics: ids that fit the memory, none twice, at most a page of replies each. */

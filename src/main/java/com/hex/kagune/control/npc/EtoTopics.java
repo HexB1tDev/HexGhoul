@@ -47,9 +47,25 @@ public final class EtoTopics {
             this(id, when, prompt, answer, follows, false);
         }
 
-        /** 4.2.4: whether it is offered to {@code c}: its time, and (a one-time topic) not opened yet. */
+        /**
+         * 4.2.4: whether it is offered to {@code c}: its time, and (a one-time topic) not opened yet. 4.2.5: nor a topic whose replies are all
+         * one-time ones with none left to say (each promise made: nothing more to bring it up for).
+         */
         public boolean offered(EtoTalk.Context c) {
-            return this.when.test(c) && !(this.once && c.spoken().opened(this.id));
+            return this.when.test(c) && !(this.once && c.spoken().opened(this.id)) && !this.spent(c);
+        }
+
+        /** 4.2.5: true if every reply it has is a one-time one and none of them is open to {@code c} any more. */
+        public boolean spent(EtoTalk.Context c) {
+            if (this.follows.isEmpty()) {
+                return false;
+            }
+            for (Follow follow : this.follows) {
+                if (!follow.once()) {
+                    return false;
+                }
+            }
+            return this.open(c).isEmpty();
         }
 
         /** The replies open to {@code c}: their time, and (4.2.4) a one-time reply not said yet. */

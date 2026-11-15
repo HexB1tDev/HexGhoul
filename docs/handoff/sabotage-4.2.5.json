@@ -1,0 +1,51 @@
+[
+ {
+  "name": "Banjou's new topics never offered",
+  "file": "src/main/java/com/hex/kagune/control/npc/BanjouScript.java",
+  "old": "        return ALL;\n    }",
+  "new": "        return TOPICS;\n    }",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "Roma's new topics never offered",
+  "file": "src/main/java/com/hex/kagune/control/npc/RomaScript.java",
+  "old": "        return ALL;\n    }",
+  "new": "        return TOPICS;\n    }",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "telling Banjou to eat ghouls costs nothing",
+  "file": "src/main/java/com/hex/kagune/control/npc/BanjouTopics.java",
+  "old": "Don't ask me that again.\", -6, EtoGesture.ANGRY",
+  "new": "Don't ask me that again.\", 0, EtoGesture.ANGRY",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "a reply worth far too much",
+  "file": "src/main/java/com/hex/kagune/control/npc/RomaTopics.java",
+  "old": "Say it again, slower.\", 3, EtoGesture.POSE",
+  "new": "Say it again, slower.\", 30, EtoGesture.POSE",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "Banjou's wing shown again and again",
+  "file": "src/main/java/com/hex/kagune/control/npc/BanjouTopics.java",
+  "old": "                EtoTopics.Follow.once(\"It's beautiful.\"",
+  "new": "                new EtoTopics.Follow(\"It's beautiful.\"",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "a spent topic still offered",
+  "file": "src/main/java/com/hex/kagune/control/npc/EtoTopics.java",
+  "old": "            return this.when.test(c) && !(this.once && c.spoken().opened(this.id)) && !this.spent(c);",
+  "new": "            return this.when.test(c) && !(this.once && c.spoken().opened(this.id));",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "a reply with nothing to say",
+  "file": "src/main/java/com/hex/kagune/control/npc/RomaTopics.java",
+  "old": "c -> r(\"Doesn't it? It does. *twirls* Say more things like that.\", 2",
+  "new": "c -> r(\" \", 2",
+  "suite": "TalkRulesTests"
+ }
+]

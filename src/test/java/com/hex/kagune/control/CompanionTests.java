@@ -2932,7 +2932,8 @@ public final class CompanionTests {
                             for (EtoTalk.Option option : topics.options()) {
                                 if (option.key().startsWith("topic:")) {
                                     EtoTopics.Topic topic = script.topicOf(option.key().substring(6));
-                                    check(topic != null && script.topicIndex(topic) >= 0 && script.topicIndex(topic) < 14,
+                                    // 4.2.4: no more 14-topic limit (a reply's day kept by its topic's id: Spoken)
+                                    check(topic != null && script.topicIndex(topic) >= 0,
                                         p.key() + ": a topic offered is found (" + option.key() + ")");
                                     EtoTalk.Page page = script.topic(c, topic);
                                     check(!page.line().isBlank() && !FORBIDDEN.matcher(page.line()).find(), p.key() + ": a topic's answer");

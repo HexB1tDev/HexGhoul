@@ -601,6 +601,9 @@ final class BanjouScript extends CompanionScript {
 
     @Override
     protected List<EtoTopics.Topic> topics() {
-        return TOPICS;
+        return ALL;
     }
+
+    /** 4.2.5: his first topics, then the further ones ({@link BanjouTopics}). */
+    private static final List<EtoTopics.Topic> ALL = java.util.stream.Stream.concat(TOPICS.stream(), BanjouTopics.MORE.stream()).toList();
 }

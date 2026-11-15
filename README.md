@@ -9,6 +9,13 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.5 (HexGhoul): Banjou and Roma: twice the talk, with things that win them and things that hurt (testing)
+
+See `.github/release-notes-4.2.5.md`. `npc/BanjouTopics.MORE` (14 topics) and `npc/RomaTopics.MORE` (13) after their scripts' `TOPICS`
+(`ALL`). `EtoTopics.Topic.spent`: a topic of one-time replies only, none left open, isn't offered. `TalkRulesTests.developed` (topics,
+replies that cost regard, one-time replies, every reply worth -8..+4); `CompanionTests` no longer caps topics at 14.
+`docs/handoff/sabotage-4.2.5.json`.
+
 ## 4.2.4 (HexGhoul): the talk's rules: no more spamming one option, "who are you" asked once, one-time options (testing)
 
 See `.github/release-notes-4.2.4.md`. `npc/Spoken` (pure): a player's one-time marks per topic id (`o_<topic>`: reply bits, `TOPIC_BIT` 8),
