@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.6 (HexGhoul): the General, Ayato and Noro: much more to talk about, and ways to get on their bad side (testing)
+
+See `.github/release-notes-4.2.6.md`. `npc/GeneralTopics.MORE` (13), `npc/AyatoTopics.MORE` (12), `npc/NoroTopics.MORE` (8) after their
+scripts' `TOPICS` (`ALL`). `TalkRulesTests.developed` for all three (and every topic's answer rendered, no banned name in any line; more
+replies that win than cost). `docs/handoff/sabotage-4.2.6.json`.
+
 ## 4.2.5 (HexGhoul): Banjou and Roma: twice the talk, with things that win them and things that hurt (testing)
 
 See `.github/release-notes-4.2.5.md`. `npc/BanjouTopics.MORE` (14 topics) and `npc/RomaTopics.MORE` (13) after their scripts' `TOPICS`

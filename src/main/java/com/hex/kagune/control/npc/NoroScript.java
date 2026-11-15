@@ -308,6 +308,9 @@ final class NoroScript extends CompanionScript {
 
     @Override
     protected List<EtoTopics.Topic> topics() {
-        return TOPICS;
+        return ALL;
     }
+
+    /** 4.2.6: the first topics, then the further ones ({@link NoroTopics}). */
+    private static final List<EtoTopics.Topic> ALL = java.util.stream.Stream.concat(TOPICS.stream(), NoroTopics.MORE.stream()).toList();
 }

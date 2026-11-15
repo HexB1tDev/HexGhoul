@@ -617,6 +617,9 @@ final class GeneralScript extends CompanionScript {
 
     @Override
     protected List<EtoTopics.Topic> topics() {
-        return TOPICS;
+        return ALL;
     }
+
+    /** 4.2.6: the first topics, then the further ones ({@link GeneralTopics}). */
+    private static final List<EtoTopics.Topic> ALL = java.util.stream.Stream.concat(TOPICS.stream(), GeneralTopics.MORE.stream()).toList();
 }

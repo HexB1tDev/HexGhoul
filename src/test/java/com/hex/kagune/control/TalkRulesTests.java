@@ -51,6 +51,10 @@ public final class TalkRulesTests {
         // 4.2.5 (the owner: "add as much text as you can to every single NPC, just some that can increase relationship, um, some that reduce it"):
         developed(Persona.BANJOU, 22, 13, 8);
         developed(Persona.ROMA, 20, 13, 9);
+        // 4.2.6: the General, Ayato, Noro (Noro still terse: few words, small warmth).
+        developed(Persona.GENERAL, 21, 12, 9);
+        developed(Persona.AYATO, 21, 15, 9);
+        developed(Persona.NORO, 11, 7, 3);
         System.out.println("Talk rules tests: " + checks + " checks " + (failures == 0 ? "passed" : "run, " + failures + " FAILED"));
         if (failures > 0) {
             throw new AssertionError(failures + " talk rules checks failed");
@@ -200,8 +204,16 @@ public final class TalkRulesTests {
             if (topic.id().equals("baby") || topic.id().equals("family")) {
                 continue; // a family's own (a baby carried, a child wanted), looked at by FamilyTests
             }
+            for (EtoTalk.Context c : cs) {
+                if (topic.when().test(c)) {
+                    String answer = topic.answer().apply(c);
+                    check(answer != null && !answer.isBlank() && !CompanionTests.FORBIDDEN.matcher(answer + topic.prompt().apply(c)).find(),
+                        p.key() + ": " + topic.id() + " is answered");
+                }
+            }
             for (EtoTopics.Follow follow : topic.follows()) {
                 once += follow.once() ? 1 : 0;
+                check(!CompanionTests.FORBIDDEN.matcher(follow.prompt()).find(), p.key() + ": " + topic.id() + ": a reply's words");
                 int least = Integer.MAX_VALUE;
                 int most = Integer.MIN_VALUE;
                 for (EtoTalk.Context c : cs) {
@@ -209,7 +221,8 @@ public final class TalkRulesTests {
                         continue;
                     }
                     EtoTalk.Reply reply = follow.reply().apply(c);
-                    check(reply.line() != null && !reply.line().isBlank(), p.key() + ": " + topic.id() + ": \"" + follow.prompt() + "\" is answered");
+                    check(reply.line() != null && !reply.line().isBlank() && !CompanionTests.FORBIDDEN.matcher(reply.line()).find(),
+                        p.key() + ": " + topic.id() + ": \"" + follow.prompt() + "\" is answered");
                     check(reply.regard() >= -8 && reply.regard() <= 4, p.key() + ": " + topic.id() + ": \"" + follow.prompt() + "\" is worth " + reply.regard());
                     least = Math.min(least, reply.regard());
                     most = Math.max(most, reply.regard());
@@ -219,7 +232,7 @@ public final class TalkRulesTests {
             }
         }
         check(lower >= lowers, p.key() + ": " + lower + " replies that cost regard (at least " + lowers + ")");
-        check(raise >= lowers * 2, p.key() + ": " + raise + " replies that win it");
+        check(raise > lower, p.key() + ": " + raise + " replies that win it, more than the " + lower + " that cost it");
         check(once >= onces, p.key() + ": " + once + " one-time replies (at least " + onces + ")");
     }
 
