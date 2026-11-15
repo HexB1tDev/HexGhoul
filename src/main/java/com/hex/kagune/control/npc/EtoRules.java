@@ -52,6 +52,19 @@ public final class EtoRules {
 
     /** How far from home she wanders (blocks), how far she chases before she goes back, how far off she is put back home. */
     public static final int HOME_RADIUS = 4;
+
+    /**
+     * 4.2.0 (the owner: Touka "leaves the front desk of the cafe sometimes to go to a fucking room at the top of her little thing, and she just
+     * stays in the corner"): how far above or below her home's floor an idle stroll may end (a step, a slab). The game's stroll picks any
+     * point within her home's radius as a ball, so the floor above the counter was in reach: she climbed the stairs and stood where it
+     * ended, in a corner. At a home shared with a spouse she roams all of it, every floor (her chores and her bed are there).
+     */
+    public static final double FLOOR_STEP = 1.5;
+
+    /** 4.2.0: true if an idle stroll may end at height {@code toY} for one whose home's feet are at {@code homeFeetY} ({@link #FLOOR_STEP}). */
+    public static boolean strollsTo(double homeFeetY, double toY, boolean sharedHome) {
+        return sharedHome || Math.abs(toY - homeFeetY) <= FLOOR_STEP;
+    }
     public static final int LEASH = HOME_RADIUS + 3;
     public static final double LOST = 16.0;
 

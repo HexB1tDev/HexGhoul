@@ -34,6 +34,8 @@ public final class TraceTests {
         retries();
         whereabouts();
         traces();
+        floors();
+        version();
         if (!FAILURES.isEmpty()) {
             FAILURES.forEach(failure -> System.out.println("FAILED: " + failure));
             System.exit(1);
@@ -121,6 +123,51 @@ public final class TraceTests {
             "each official with a place: here now (where), dead (back a day after), or what else");
     }
 
+    /**
+     * 4.2.0 (the owner: Touka "leaves the front desk of the cafe sometimes to go to a fucking room at the top of her little thing, and she just
+     * stays in the corner"): an idle stroll ends on her own floor (the game's picks any point within her home's radius as a ball: the room above
+     * the counter was in reach); off it at a home of her own, she walks back, and an official stranded on the wrong floor counts as out of
+     * place for the stuck rescue (put back only with no headway for minutes and nobody near to see).
+     */
+    private static void floors() throws Exception {
+        check(com.hex.kagune.control.npc.EtoRules.strollsTo(64.0, 64.0, false) && com.hex.kagune.control.npc.EtoRules.strollsTo(64.0, 65.0, false)
+            && com.hex.kagune.control.npc.EtoRules.strollsTo(64.0, 62.5, false), "a stroll on her floor, a step or a slab up or down");
+        check(!com.hex.kagune.control.npc.EtoRules.strollsTo(64.0, 68.0, false) && !com.hex.kagune.control.npc.EtoRules.strollsTo(64.0, 66.0, false)
+            && !com.hex.kagune.control.npc.EtoRules.strollsTo(64.0, 59.0, false), "never up or down the stairs to another floor");
+        check(com.hex.kagune.control.npc.EtoRules.strollsTo(64.0, 70.0, true), "at a home shared with a spouse, every floor is hers");
+        String npc = read("src/main/java/com/hex/kagune/control/npc/EtoNpc.java");
+        check(npc.contains("protected net.minecraft.world.phys.Vec3 m_7037_() {\n                net.minecraft.world.phys.Vec3 to = super.m_7037_();\n"
+            + "                return to == null || EtoBrain.strollsTo(EtoNpc.this, to.f_82480_) ? to : null;"), "her stroll's end judged by her floor");
+        String brain = read("src/main/java/com/hex/kagune/control/server/EtoBrain.java");
+        check(brain.contains("return EtoRules.strollsTo(npc.homeFeet()[1], toY, Households.forCompanion(level, npc) != null);")
+            && brain.contains("if (npc.home() == null || npc.following() != null || !(npc.m_9236_() instanceof ServerLevel level)) {\n            return true;"),
+            "a stroll judged against her home's feet, a shared home's every floor hers, one following free");
+        check(brain.contains("boolean offFloor = house == null && npc.following() == null && !EtoRules.strollsTo(feet[1], npc.m_20186_(), false);")
+            && brain.contains("&& (offFloor || npc.m_20238_(homeAt) >"), "off her floor counts as out of place for the stuck rescue");
+        int back = brain.indexOf("&& mind.kiss == null && mind.with == 0 && !npc.m_5803_() && offFloor");
+        int walk = brain.indexOf("npc.m_21573_().m_26519_(feet[0], feet[1], feet[2], 0.6);", back);
+        check(back > 0 && walk > back && walk - back < 200, // (walk > back: indexOf's -1 when gone passed a bare "- back < 200")
+            "idle off her floor, she walks back to her spot");
+        String unique = read("src/main/java/com/hex/kagune/control/server/UniqueNpcs.java");
+        check(unique.contains("String why = diagnosis(level, key, slot, spot, level.m_46467_());")
+            && unique.contains("\" (in her place)\" : \" (outside her place)\"") && unique.contains("she is made at her spot in \"")
+            && unique.contains("no body of her loaded"), "/kagune places says why an official is or isn't at her spot");
+    }
+
+    /**
+     * 4.2.0 (the owner, quoted exactly: "I keep saying that whenever the version of the mod reaches 9, so like 4.1.9, it passes to 4.2.0"):
+     * a version's last number is 0 to 9; after x.y.9 comes x.(y + 1).0. The build's and the patcher's agree.
+     */
+    private static void version() throws Exception {
+        java.util.regex.Matcher build = java.util.regex.Pattern.compile("VERSION = \"(\\d+)\\.(\\d+)\\.(\\d+)\"").matcher(read("build.py"));
+        java.util.regex.Matcher patch = java.util.regex.Pattern.compile("VERSION = \"([0-9.]+)\";").matcher(read("patch/KagunePatch.java"));
+        check(build.find() && patch.find(), "both versions found");
+        String version = build.group(1) + "." + build.group(2) + "." + build.group(3);
+        check(Integer.parseInt(build.group(3)) <= 9, "the version's last number is 9 at most (" + version + "): after x.y.9 comes x.(y+1).0");
+        check(version.equals(patch.group(1)), "build.py and KagunePatch say the same version (" + version + ", " + patch.group(1) + ")");
+        check(Files.exists(Path.of(".github/release-notes-" + version + ".md")), "its release notes written (" + version + ")");
+    }
+
     /** 4.1.98: what the owner is asked to send if a leader is still missing: each remake, each body sent away (why), each death. */
     private static void traces() throws Exception {
         String unique = read("src/main/java/com/hex/kagune/control/server/UniqueNpcs.java");
@@ -128,8 +175,9 @@ public final class TraceTests {
             "an official made at her spot: told in the log, where");
         String eto = read("src/main/java/com/hex/kagune/control/server/EtoBrain.java");
         int gone = eto.indexOf("    static void gone(EtoNpc npc, String why) {");
-        check(gone > 0 && eto.indexOf("if (com.hex.kagune.control.npc.HomePlace.of(npc.persona().key()) != null) {", gone) - gone < 120
-            && eto.indexOf("+ (int)Math.floor(npc.m_20186_()) + \" \" + (int)Math.floor(npc.m_20189_()) + \" sent away: \" + why);", gone) - gone < 500,
+        int named = eto.indexOf("if (com.hex.kagune.control.npc.HomePlace.of(npc.persona().key()) != null) {", gone);
+        int told = eto.indexOf("+ (int)Math.floor(npc.m_20186_()) + \" \" + (int)Math.floor(npc.m_20189_()) + \" sent away: \" + why);", gone);
+        check(gone > 0 && named > gone && named - gone < 120 && told > gone && told - gone < 500,
             "a body of an official sent away: told in the log, where and why");
         for (String why : new String[] {"gone(npc, \"the world's own is elsewhere (\" + slot.body + \")\");", "gone(npc, \"her body is about elsewhere\");",
             "gone(npc, \"another body holds her slot\");"}) {

@@ -5,6 +5,10 @@ never altering the owner's files) and what to do next. Answer the owner in Engli
 
 (The old RULE 1, stopping at 97% usage, was removed by the owner after 1.3.78: "Yes take that shit out.")
 
+RULE: versions. The owner (after 4.1.103, quoted exactly): "I keep saying that whenever the version of the mod reaches 9, so like 4.1.9, it
+passes to 4.2.0. But no, instead look at the version we're already on." A version's last number is 0 to 9: after x.y.9 comes x.(y+1).0
+(4.2.0 followed 4.1.103; then 4.2.1 ... 4.2.9, 4.3.0). `TraceTests.version` fails the build otherwise.
+
 RULE: judge your own renders. The owner (after 4.1.16, quoted exactly): "we should make this a rule for every AI. So on the AI, on the next
 handoff, always specify that the AI is to evaluate the renders that it generates, and it does not give up until it's a perfect match and
 it's a perfect combat system. Like, the animations always have to be top tier, no excuses whatsoever." So: every pose, animation, model

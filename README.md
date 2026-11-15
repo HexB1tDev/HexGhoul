@@ -9,6 +9,13 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.0 (HexGhoul): Touka keeps to the café floor; officials stranded on the wrong floor go back; /kagune places says why one is missing (testing)
+
+See `.github/release-notes-4.2.0.md`. Versions: x.y.0 to x.y.9, then x.(y+1).0 (the owner's rule; `TraceTests.version`). `EtoRules.strollsTo`
+(`FLOOR_STEP` 1.5): `EtoNpc`'s `RandomStrollGoal.m_7037_` (getPosition) returns null for an end off her home's floor at a home of her own;
+`EtoBrain`: `offFloor` counts as `away` for `Homeward.bugged` and an idle one off her floor walks back to her spot. `UniqueNpcs.diagnosis`
+in `/kagune places`. `TraceTests.floors`; `docs/handoff/sabotage-4.2.0.json`.
+
 ## 4.1.103 (HexGhoul): the no-fail audit: the ways a bug could still crash the game or the server, closed (the lag patch, part 5) (testing)
 
 See `.github/release-notes-4.1.103.md`. `patch/KaguneGuard`: CALLBACKS += CcgAgent and HumanNpc `m_8024_`/`m_7472_`, EtoNpc `m_8024_`,

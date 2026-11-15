@@ -199,6 +199,17 @@ public final class EtoBrain {
         return false;
     }
 
+    /**
+     * 4.2.0: true if her idle stroll may end at height {@code toY}: on her own floor (EtoRules.strollsTo), unless she has no home of her own,
+     * follows someone, or shares a home with a spouse (all of it is hers).
+     */
+    public static boolean strollsTo(EtoNpc npc, double toY) {
+        if (npc.home() == null || npc.following() != null || !(npc.m_9236_() instanceof ServerLevel level)) {
+            return true;
+        }
+        return EtoRules.strollsTo(npc.homeFeet()[1], toY, Households.forCompanion(level, npc) != null);
+    }
+
     /** 1.3.29: true while a chore at home has her (vanilla's strolling waits: it would walk her off it). */
     public static boolean busy(EtoNpc npc) {
         // 1.3.39: nor wandering off while someone talks to her. 1.3.53: nor in a talk with her children.
@@ -384,8 +395,12 @@ public final class EtoBrain {
         boolean night = HomeLife.night(level.m_46468_(), false);
         int leash = house != null ? com.hex.kagune.control.family.HomeRules.leash(house.radius(), night, com.hex.kagune.control.family.HomeRules.roam(null))
             : mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS;
+        // 4.2.0: or, at a home of her own (none shared), off its floor: an official stranded on the wrong one (Banjou left downstairs by an
+        // older version, his bedroom upstairs since 4.1.83; Touka up the café's stairs) walks back, and is put back only as the rule above
+        // says: no headway for minutes and nobody near to see.
+        boolean offFloor = house == null && npc.following() == null && !EtoRules.strollsTo(feet[1], npc.m_20186_(), false);
         boolean away = mind.target == 0 && mind.talking == null && mind.holding == null && npc.following() == null
-            && npc.m_20238_(homeAt) > (house != null ? (leash + 4.0) * (leash + 4.0) : EtoRules.LOST * EtoRules.LOST);
+            && (offFloor || npc.m_20238_(homeAt) > (house != null ? (leash + 4.0) * (leash + 4.0) : EtoRules.LOST * EtoRules.LOST));
         boolean recoveryBusy = mind.target != 0 || mind.owl.busy() || EtoOwl.carried(mind.owl) || mind.holding != null
             || npc.following() != null || mind.talking != null || mind.with != 0;
         if (Homeward.bugged(npc, level, homeAt, away, recoveryBusy, now)) {
@@ -404,6 +419,13 @@ public final class EtoBrain {
         // 1.3.24: fighting, as far as the chase goes (it keeps after what it fights till it is dead or gone).
         int chase = (int)com.hex.kagune.control.npc.FightRules.CHASE;
         npc.m_21446_(home, house != null ? Math.max(leash, target != null ? chase : 0) : target != null ? chase : leash);
+        // 4.2.0 (the owner: Touka "goes to a fucking room at the top ... and she just stays in the corner"): idle off her own floor at her own
+        // place (a stroll took her up the stairs before strolls kept to her floor), she walks back to her spot, every two seconds till there.
+        if (house == null && target == null && npc.following() == null && mind.talking == null && mind.holding == null && mind.toward == null
+            && mind.kiss == null && mind.with == 0 && !npc.m_5803_() && offFloor
+            && now % 40L == Math.floorMod(npc.m_19879_(), 40) && npc.m_21573_().m_26571_()) {
+            npc.m_21573_().m_26519_(feet[0], feet[1], feet[2], 0.6);
+        }
         // 1.3.29: her chores at home stop for anything else (a fight, a talk, a kiss, a hand, a child, the night, home no more); walking
         // about at home, she never stays stuck.
         if (mind.chore != null && (house == null || target != null || HomeLife.night(level.m_46468_(), false) || mind.toward != null || mind.kiss != null

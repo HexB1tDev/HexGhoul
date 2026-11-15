@@ -460,8 +460,55 @@ public final class UniqueNpcs {
                 line += "\u00a77; her spot: x " + spot[0] + ", y " + spot[1] + ", z " + spot[2];
             }
             lines.add(persona.female() ? line : line.replace("her spot", "his spot").replace("her place", "his place"));
+            // 4.2.0 (the owner, a sixth time: "The NPC of the gas mask is still not fucking there"): why, in the line itself (what the log tells
+            // too): each body of hers loaded and whether it is in her place, the world's record of her, and the clock that makes her at her spot.
+            String why = diagnosis(level, key, slot, spot, level.m_46467_());
+            if (!why.isEmpty()) {
+                lines.add(persona.female() ? why : why.replace("her ", "his ").replace(" her", " him").replace("she ", "he "));
+            }
         }
         return lines;
+    }
+
+    /**
+     * 4.2.0: why official {@code key} is or isn't at her spot, in a line for /kagune places (empty when there's nothing to tell): every body of
+     * hers loaded (up to three: where, in her place or not), what the world's record of her holds (away, married), and, while a player keeps her
+     * place with none of her in it, how soon she is made at her spot ({@link UniqueNpc#MISSING} after).
+     */
+    static String diagnosis(ServerLevel level, String key, UniqueNpc slot, int[] spot, long now) {
+        StringBuilder out = new StringBuilder("\u00a78  ");
+        int bodies = 0;
+        boolean placed = false;
+        for (com.hex.kagune.control.npc.EtoNpc one : EtoBrain.live()) {
+            if (!one.persona().key().equals(key) || !one.m_6084_() || one.m_9236_() != level) {
+                continue;
+            }
+            boolean in = atOwnPlace(level, key, one.m_20185_(), one.m_20186_(), one.m_20189_());
+            placed |= in;
+            if (bodies < 3) {
+                out.append(bodies == 0 ? "loaded: " : "; ").append("x ").append((int)Math.floor(one.m_20185_())).append(" y ")
+                    .append((int)Math.floor(one.m_20186_())).append(" z ").append((int)Math.floor(one.m_20189_())).append(in ? " (in her place)" : " (outside her place)");
+            }
+            bodies++;
+        }
+        if (bodies == 0) {
+            out.append("no body of her loaded");
+        } else if (bodies > 3) {
+            out.append(" and ").append(bodies - 3).append(" more");
+        }
+        if (slot != null) {
+            out.append(slot.away ? "; left waiting somewhere" : "").append(slot.stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED ? "; married" : "");
+        }
+        Long since = PLACE_WATCHED.get(key);
+        if (since != null && !placed) {
+            long left = Math.max(0L, UniqueNpc.MISSING - (now - since));
+            out.append("; you keep her place: she is made at her spot in ").append(left / 20L).append(" s");
+        } else if (spot == null) {
+            out.append("; her place isn't loaded here (stand in it)");
+        } else if (!placed) {
+            out.append("; stand within ").append((int)com.hex.kagune.control.npc.HomePlace.KEEP_NEAR).append(" blocks of her spot half a minute and she is made there");
+        }
+        return out.toString();
     }
 
     /**

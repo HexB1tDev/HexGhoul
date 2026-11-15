@@ -232,6 +232,13 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
             public boolean m_8045_() {
                 return !EtoBrain.busy(EtoNpc.this) && super.m_8045_();
             }
+
+            /** 4.2.0: getPosition: a stroll ends on her own floor (EtoRules.strollsTo), never up or down the stairs to stand in a corner. */
+            @Override
+            protected net.minecraft.world.phys.Vec3 m_7037_() {
+                net.minecraft.world.phys.Vec3 to = super.m_7037_();
+                return to == null || EtoBrain.strollsTo(EtoNpc.this, to.f_82480_) ? to : null;
+            }
         });
         // 2.0.8 (the owner: "dont allow them to rotate while cooking"): no glancing at players or about while a chore has her.
         this.f_21345_.m_25352_(7, new LookAtPlayerGoal(this, Player.class, 8.0F) {

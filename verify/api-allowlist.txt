@@ -879,6 +879,7 @@ F net/minecraft/world/entity/MobCategory CREATURE Lnet/minecraft/world/entity/Mo
 M net/minecraft/world/entity/Mob m_21446_ (Lnet/minecraft/core/BlockPos;I)V  # [srg] restrictTo: bgb.a (Lgu;I)V m_21446_ (intermediary method_18408, yarn setPositionTarget)
 C net/minecraft/world/entity/ai/goal/RandomStrollGoal                                # [srg] bns C_715_ (class_1379, yarn WanderAroundGoal)
 M net/minecraft/world/entity/ai/goal/RandomStrollGoal <init> (Lnet/minecraft/world/entity/PathfinderMob;D)V  # [srg] bns.<init>(Lbgi;D)V 25733 (yarn WanderAroundGoal(PathAwareEntity, double))
+M net/minecraft/world/entity/ai/goal/RandomStrollGoal m_7037_ ()Lnet/minecraft/world/phys/Vec3;  # [srg] getPosition: joined.tsrg bns h ()Leei; m_7037_ (bns = RandomStrollGoal, eei = Vec3), intermediary method_6302, yarn WanderAroundGoal.getWanderTarget; 4.2.0 EtoNpc keeps a stroll on her own floor
 C net/minecraft/world/entity/ai/goal/MoveTowardsRestrictionGoal                      # [srg] bnj C_707_ (class_1370, yarn GoToWalkTargetGoal)
 M net/minecraft/world/entity/ai/goal/MoveTowardsRestrictionGoal <init> (Lnet/minecraft/world/entity/PathfinderMob;D)V  # [srg] bnj.<init>(Lbgi;D)V 25632 (yarn GoToWalkTargetGoal(PathAwareEntity, double))
 F net/minecraft/client/model/geom/ModelPart f_104200_ F                                  # [srg] x: joined.tsrg fee.b f_104200_, intermediary field_3657 (yarn pivotX)
