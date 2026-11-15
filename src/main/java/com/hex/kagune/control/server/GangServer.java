@@ -134,6 +134,23 @@ public final class GangServer {
         return com.hex.kagune.control.ControlItems.quinqueCase(player.m_21205_()) != null;
     }
 
+    /** 4.2.1: the mark on an investigator whose case is the dove's (AgentBrain.drop leaves it, whatever the odds). */
+    public static final String DOVE_CASE = "HexDoveCase";
+
+    /**
+     * 4.2.1 (the owner: "check all the other quests"): the Clowns' job done, "the dove's quinque case" falls with the dove. Before, only the
+     * case's usual odds (7 to 10 in a hundred, a ranked one's 2 to 5; none from the CCG's ghoul division): the next step, "Bring Roma the dove's
+     * quinque case", meant killing a dozen more investigators with nothing saying so. An investigator leaves its own (AgentBrain.drop, marked);
+     * one of the ghoul division, who carries none, a standard Blade's.
+     */
+    static void doveCase(LivingEntity dead) {
+        if (dead instanceof com.hex.kagune.control.npc.CcgAgent agent) {
+            agent.getPersistentData().m_128379_(DOVE_CASE, true);
+        } else {
+            dead.m_19983_(new net.minecraft.world.item.ItemStack(com.hex.kagune.control.ControlItems.caseOf(com.hex.kagune.control.quinque.Quinque.BLADE), 1));
+        }
+    }
+
     /** The quinque case in {@code player}'s hand given over (kept in creative): true if there was one. */
     static boolean takeCase(ServerPlayer player) {
         if (!holdsCase(player)) {
@@ -195,6 +212,9 @@ public final class GangServer {
             if (investigator && clownMaskOn(player)) {
                 // 4.1.79: the Clowns' job, in a Clown's face: an investigator (of either kind) killed wearing one of their masks.
                 now = now.advance(GangPlayer.CLOWNS, GangPlayer.CLOWN_JOB, GangPlayer.CLOWN_CASE);
+                if (was.clownStep() == GangPlayer.CLOWN_JOB && now.clownStep() == GangPlayer.CLOWN_CASE) {
+                    doveCase(dead);
+                }
             } else if (investigator && was.clownStep() == GangPlayer.CLOWN_JOB && !was.member(GangPlayer.CLOWNS)) {
                 player.m_5661_(Component.m_237113_("§9Roma: §f\"No face, no show!\" §7(a Clown's mask on your head, for the job)"), true);
             }
@@ -584,7 +604,12 @@ public final class GangServer {
                     GangDaily taken = GangDaily.take(job, today, mine);
                     daily(player, taken);
                     progress(player, taken);
-                    return new Said(voice(gang, "took", seed, job.asked(taken.goal()), taken), null);
+                    // 4.2.1: where it comes from or how it is made, told with it (GangDaily.Job.hint); Ken's blends' makings handed over.
+                    if (job == GangDaily.Job.ANTEIKU_BLEND) {
+                        JoinServer.blendMakings(player, taken.goal());
+                    }
+                    String hint = job.hint();
+                    return new Said(voice(gang, "took", seed, job.asked(taken.goal()), taken) + (hint.isEmpty() ? "" : " (" + hint + ")"), null);
                 }
             }
             if (offered.isEmpty()) {

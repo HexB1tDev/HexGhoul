@@ -247,6 +247,24 @@ public final class JoinServer {
         return home != null ? home : BlockPos.m_274561_(leader.m_20185_(), leader.m_20186_() + 0.01, leader.m_20189_());
     }
 
+    /**
+     * 4.2.1: the makings for {@code cups} Anteiku Blends (a glass bottle, two cocoa beans and a blood sugar each), Ken's for the daily that asks
+     * for them: his own, not a mission's (kept). Blood sugar is otherwise human meat and a bottle, then sugar: nothing told a player so.
+     */
+    static void blendMakings(ServerPlayer player, int cups) {
+        String[][] each = {{"minecraft:glass_bottle", "1"}, {"minecraft:cocoa_beans", "2"}, {"hexkagune:blood_sugar", "1"}};
+        for (String[] making : each) {
+            net.minecraft.world.item.Item item = com.hex.kagune.control.ControlItems.vanilla(making[0]);
+            if (item == null) {
+                continue;
+            }
+            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, Integer.parseInt(making[1]) * Math.max(1, cups));
+            if (!player.m_36356_(stack)) {
+                player.m_36176_(stack, false);
+            }
+        }
+    }
+
     /** 4.1.79: Ken's makings for the shift (the blend's, three cups), once a day. */
     static void makings(ServerPlayer player) {
         CompoundTag kept = GangServer.keptOf(player);
@@ -495,10 +513,14 @@ public final class JoinServer {
                 return;
             }
             Live live = LIVE.get(player.m_20148_());
+            net.minecraft.world.item.ItemStack held = event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND ? player.m_21205_() : player.m_21206_();
             if (live == null || live.kind != JoinTrial.Kind.SHIFT) {
+                // 4.2.1: no shift on: a glass bottle in the café still brews (Ken's daily blends), the makings in hand.
+                if (live == null && hasMakings(player) && brew(player, GangServer.home(player.m_284548_(), "touka"), held)) {
+                    event.setCanceled(true);
+                }
                 return;
             }
-            net.minecraft.world.item.ItemStack held = event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND ? player.m_21205_() : player.m_21206_();
             if (brew(player, live, held)) {
                 event.setCanceled(true); // 4.1.96: brewed in the café (no crafting grid needed)
                 return;
@@ -1628,6 +1650,13 @@ public final class JoinServer {
         }
     }
 
+    /** 4.2.1: true if {@code player} carries a cup's makings past the bottle (2 cocoa beans, 1 blood sugar): only then a bottle brews off-shift. */
+    static boolean hasMakings(ServerPlayer player) {
+        net.minecraft.world.item.Item beans = com.hex.kagune.control.ControlItems.vanilla("minecraft:cocoa_beans");
+        net.minecraft.world.item.Item sugar = com.hex.kagune.control.ControlItems.vanilla("hexkagune:blood_sugar");
+        return beans != null && sugar != null && count(player, beans) >= 2 && count(player, sugar) >= 1;
+    }
+
     /** 4.1.96: true if {@code player} has a cup of Anteiku Blend about them (in any slot). */
     static boolean holdsCup(ServerPlayer player) {
         net.minecraft.world.item.Item cup = com.hex.kagune.control.ControlItems.vanilla(JoinTrial.CUP);
@@ -1673,12 +1702,21 @@ public final class JoinServer {
      * brews a cup there and then (the bottle, 2 cocoa beans and 1 blood sugar taken): no crafting grid needed. True if it brewed.
      */
     static boolean brew(ServerPlayer player, Live live, net.minecraft.world.item.ItemStack held) {
+        return brew(player, live.anchor, held);
+    }
+
+    /**
+     * 4.2.1 (the owner: "check all the other quests"): the same brew in the café ({@code anchor}: Touka's place behind the bar) with no shift
+     * on: Ken's daily "Brew Anteiku Blend for the regulars" asked for cups only the shift could brew, and a crafting grid the owner couldn't get
+     * a cup out of.
+     */
+    static boolean brew(ServerPlayer player, BlockPos anchor, net.minecraft.world.item.ItemStack held) {
         net.minecraft.world.item.Item bottle = com.hex.kagune.control.ControlItems.vanilla("minecraft:glass_bottle");
         net.minecraft.world.item.Item beans = com.hex.kagune.control.ControlItems.vanilla("minecraft:cocoa_beans");
         net.minecraft.world.item.Item sugar = com.hex.kagune.control.ControlItems.vanilla("hexkagune:blood_sugar");
         net.minecraft.world.item.Item cup = com.hex.kagune.control.ControlItems.vanilla(JoinTrial.CUP);
-        if (bottle == null || beans == null || sugar == null || cup == null || held.m_41720_() != bottle || live.anchor == null
-            || distance(player, live.anchor) > JoinTrial.SHIFT_ZONE) {
+        if (bottle == null || beans == null || sugar == null || cup == null || held.m_41720_() != bottle || anchor == null
+            || distance(player, anchor) > JoinTrial.SHIFT_ZONE) {
             return false;
         }
         if (count(player, beans) < 2 || count(player, sugar) < 1) {

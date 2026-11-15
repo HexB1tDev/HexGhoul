@@ -566,11 +566,23 @@ public final class QuestServer {
     static void offerHunt(ServerPlayer player, Cached cached, Random random, long now) {
         long day = Math.floorMod(player.m_9236_().m_46468_(), 24000L);
         long untilDawn = day < DAWN ? DAWN - day : 24000L - day + DAWN;
-        Hunts.Spec spec = Hunts.draw(random, GhoulKinds.roaming());
+        // 4.2.1: its prey one that lives where they stand tonight (Hunts.here: never husks in plains, strays off the snow, a mansion's).
+        Hunts.Spec spec = Hunts.draw(random, GhoulKinds.roaming(), biomeAt(player));
         cached.log.startHunt(spec, now + untilDawn);
         Quest quest = Hunts.quest(spec);
         player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt", quest.title()), true); // 4.1.97: its details in the quest menu
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.wolf.howl", 0.5F, 0.6F);
+    }
+
+    /** 4.2.1: the id of the biome {@code player} stands in ("minecraft:desert"), or "" if it can't be read. */
+    static String biomeAt(ServerPlayer player) {
+        try {
+            net.minecraft.core.BlockPos at = new net.minecraft.core.BlockPos((int)Math.floor(player.m_20185_()), (int)Math.floor(player.m_20186_()),
+                (int)Math.floor(player.m_20189_()));
+            return player.m_9236_().m_204166_(at).m_203543_().map(key -> key.m_135782_().toString()).orElse("");
+        } catch (RuntimeException | LinkageError unknown) {
+            return "";
+        }
     }
 
     // ------------------------------------------------------------------ telling and paying
@@ -649,6 +661,11 @@ public final class QuestServer {
         player.m_5661_(Component.m_237113_(told.toString()), true);
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "ui.toast.challenge_complete", 0.6F, 1.0F);
         cached.dirty = true;
+        // 4.2.1 (the owner: "check all the other quests"): a ghoul's favour done counts as one ("Do a favour for a ghoul", "Do favours for
+        // ghouls"). Nothing ever sent it: A Friend in the Dark could never be finished, nor Errands of the Night and Side by Side after it.
+        if (quest.line() == com.hex.kagune.control.quest.Quest.Line.FAVOUR) {
+            signal(player, Signal.FAVOUR, 1);
+        }
     }
 
     private static void notice(ServerPlayer player, Component message) {

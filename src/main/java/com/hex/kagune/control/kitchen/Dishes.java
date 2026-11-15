@@ -52,6 +52,62 @@ public final class Dishes {
         return id == null ? "" : NAMES.getOrDefault(id, id);
     }
 
+    /**
+     * 4.2.1 (the owner: "check all the other quests"; of Anteiku's first: "the player has no idea how to craft the coffee ... You can just
+     * like tell the player how it's done"): how the dish an item id names is made, in words, from its recipe here ("craft 1 glass bottle, 2
+     * cocoa beans and 1 blood sugar together"), with each of the kitchen's own ingredients' recipes after it, all the way down ("Blood Sugar Cubes:
+     * craft 1 sugar and 1 Bottled Blood together"); empty for anything that is no dish. What a companion wishes for, or a chapter asks, says it.
+     */
+    public static String how(String itemId) {
+        Dish dish = byItem(itemId);
+        if (dish == null || dish.recipe() == null) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder(made(dish));
+        java.util.Set<String> told = new java.util.LinkedHashSet<>();
+        told.add(dish.id());
+        java.util.ArrayDeque<String> next = new java.util.ArrayDeque<>(java.util.List.of(dish.recipe().ingredients()));
+        // The kitchen's own ingredients all the way down (the blend's blood sugar, the blood sugar's bottled blood), each told once.
+        for (int guard = 0; !next.isEmpty() && guard < 32; guard++) {
+            String ingredient = next.poll();
+            Dish inner = byItem(ingredient);
+            if (inner != null && inner.recipe() != null && told.add(inner.id())) {
+                out.append("; ").append(words(ingredient)).append(": ").append(made(inner));
+                next.addAll(java.util.List.of(inner.recipe().ingredients()));
+            }
+        }
+        return out.toString();
+    }
+
+    /** 4.2.1: one dish's own recipe in words: crafted ("craft 1 x, 2 y and 1 z together") or cooked ("cook x"). */
+    static String made(Dish dish) {
+        String[] ingredients = dish.recipe().ingredients();
+        if (dish.recipe().cooking()) {
+            return "cook " + words(ingredients[0]) + " (a furnace, a smoker or a campfire)";
+        }
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        for (String ingredient : ingredients) {
+            counts.merge(ingredient, 1, Integer::sum);
+        }
+        StringBuilder out = new StringBuilder("craft ");
+        int i = 0;
+        for (java.util.Map.Entry<String, Integer> entry : counts.entrySet()) {
+            out.append(i == 0 ? "" : i == counts.size() - 1 ? " and " : ", ").append(entry.getValue()).append(' ').append(words(entry.getKey()));
+            i++;
+        }
+        return out.append(" together").toString();
+    }
+
+    /** 4.2.1: an item id as words ("minecraft:cocoa_beans" "cocoa beans"; a dish its own name, lower case). */
+    static String words(String itemId) {
+        Dish dish = byItem(itemId);
+        if (dish != null) {
+            return name(dish.id()); // the kitchen's own as the game names it ("Blood Sugar Cubes")
+        }
+        String path = itemId.indexOf(':') >= 0 ? itemId.substring(itemId.indexOf(':') + 1) : itemId;
+        return path.replace('_', ' ');
+    }
+
     /** Every dish in {@code chapter}, in the book's order. */
     public static List<Dish> chapter(String chapter) {
         List<Dish> out = new ArrayList<>();

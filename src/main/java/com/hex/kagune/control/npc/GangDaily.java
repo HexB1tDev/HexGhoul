@@ -125,6 +125,28 @@ public record GangDaily(int kind, int goal, int count, long day, boolean claimed
             return String.format(java.util.Locale.ROOT, asks, goal, goal == 1 ? "" : "s");
         }
 
+        /**
+         * 4.2.1 (the owner: "check all the other quests"; of Anteiku's first: "the player has no idea how to craft the coffee ... You can just
+         * like tell the player how it's done"): where what a BRING job asks for comes from, or how it is made; empty for the plain ones
+         * (bread, wool, a cake). Told as the job is taken.
+         */
+        public String hint() {
+            return switch (this) {
+                case ANTEIKU_BLEND -> "Ken hands you the makings. Brew a cup: hold a glass bottle and right click in the café (it takes 2 cocoa beans "
+                    + "and 1 blood sugar too), or craft 1 glass bottle, 2 cocoa beans and 1 blood sugar together";
+                case AOGIRI_CASE -> "investigators leave their quinque case behind now and then when they fall";
+                case AOGIRI_MEAT -> "human meat comes from humans";
+                case ANTEIKU_FEED, CCG_LAB -> "Ghoul Meat comes from ghouls";
+                case CLOWNS_FLOWERS -> "alliums grow in flower forests and meadows";
+                case ANTEIKU_BEANS -> "cocoa beans grow on jungle trees";
+                case CLOWNS_FIREWORKS -> "craft paper and gunpowder together";
+                case GAS_CHARCOAL -> "burn logs in a furnace";
+                case CCG_PAPER -> "craft three sugar cane in a row";
+                case AOGIRI_PEARLS -> "endermen drop them";
+                default -> "";
+            };
+        }
+
         /** 4.1.54: the job as its giver asks it in his own words, mid-sentence (Banjou: "kill 4 Clowns", "bring me 8 charcoal, for the filters"). */
         public String asked(int goal) {
             if (this == GAS_CHARCOAL) {

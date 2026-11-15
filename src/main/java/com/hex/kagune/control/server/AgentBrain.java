@@ -2671,8 +2671,14 @@ public final class AgentBrain {
             }
             return;
         }
-        // 3.0.2: the commoner what it fought with, the likelier its case is left (AgentRules.caseChance).
-        if (!byPlayer || mind == null || agent.m_217043_().m_188500_() >= AgentRules.caseChance(mind.kind, mind.arm, mind.master, looting)) {
+        // 3.0.2: the commoner what it fought with, the likelier its case is left (AgentRules.caseChance). 4.2.1: the Clowns' dove always leaves
+        // its own (GangServer.doveCase: "Bring Roma the dove's quinque case").
+        boolean dove = agent.getPersistentData().m_128471_(GangServer.DOVE_CASE);
+        if (!dove && (!byPlayer || mind == null || agent.m_217043_().m_188500_() >= AgentRules.caseChance(mind.kind, mind.arm, mind.master, looting))) {
+            return;
+        }
+        if (mind == null) {
+            agent.m_19983_(new ItemStack(ControlItems.caseOf(Quinque.BLADE), 1)); // a dove whose mind never woke: a standard case
             return;
         }
         // 3.0.6: a kagune-made weapon's own case (the owner: "it had the new spear ... but it dropped the old spear"), a masterwork's as one.

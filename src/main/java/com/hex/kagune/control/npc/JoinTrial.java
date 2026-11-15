@@ -179,7 +179,7 @@ public final class JoinTrial {
             case GangPlayer.CLOWNS -> switch (step) {
                 case GangPlayer.CLOWN_RING -> "Put on a show in Roma's ring (three volunteers, 30 s each, at night)";
                 case GangPlayer.CLOWN_JOB -> "Kill an investigator in a Clown's mask";
-                case GangPlayer.CLOWN_CASE -> "Bring Roma the dove's quinque case";
+                case GangPlayer.CLOWN_CASE -> "Bring Roma the dove's quinque case (it fell where the dove did; any quinque case will do)";
                 default -> "";
             };
             case GangPlayer.GAS_MASKS -> switch (step) {

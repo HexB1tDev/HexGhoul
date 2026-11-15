@@ -14,26 +14,63 @@ public final class Hunts {
         KILL_MOB, EYES, FEED, BRINK, RAMPAGE, KAGUNE, AIRBORNE, GHOUL
     }
 
-    /** The night's prey: the mob, its name, and how many a hunt asks for at least and at most. */
-    record Prey(String id, String name, int min, int max) {
+    /**
+     * 4.2.1 (the owner: "check all the other quests, bro"): where a prey is found. A night's hunt (gone at dawn) asked for husks in plains,
+     * strays away from the snow, vindicators, phantoms: nothing a player could do before dawn. It now asks only for what lives where they
+     * are ({@link #here}); a favour (no deadline) may still ask for any, and every one says where to look ({@link Prey#where}).
+     */
+    public enum Where {
+        /** At night anywhere on the surface. */
+        ANY,
+        /** In swamps (a slime at night; a witch's hut). */
+        SWAMP,
+        /** In deserts (husks for zombies). */
+        DESERT,
+        /** In snowy lands (strays for skeletons). */
+        SNOW,
+        /** In oceans and rivers. */
+        WATER,
+        /** Somewhere to travel to, never in a night's hunt (a mansion, a raid, a mineshaft, a village, a sleepless night). */
+        FAR
     }
 
+    /** The night's prey: the mob, its name, how many a hunt asks for at least and at most; 4.2.1: where it lives, in words. */
+    record Prey(String id, String name, int min, int max, Where at, String where) {
+    }
+
+    // Kept by its place here (a saved hunt or favour names its prey by its index): new ones only ever appended.
     static final List<Prey> PREY = List.of(
-        new Prey("minecraft:zombie", "zombies", 5, 9),
-        new Prey("minecraft:skeleton", "skeletons", 4, 8),
-        new Prey("minecraft:spider", "spiders", 4, 8),
-        new Prey("minecraft:creeper", "creepers", 3, 6),
-        new Prey("minecraft:witch", "witches", 1, 3),
-        new Prey("minecraft:enderman", "endermen", 2, 4),
-        new Prey("minecraft:pillager", "pillagers", 2, 5),
-        new Prey("minecraft:vindicator", "vindicators", 1, 3),
-        new Prey("minecraft:iron_golem", "iron golems", 1, 2),
-        new Prey("minecraft:phantom", "phantoms", 2, 4),
-        new Prey("minecraft:slime", "slimes", 3, 6),
-        new Prey("minecraft:drowned", "drowned", 3, 6),
-        new Prey("minecraft:husk", "husks", 3, 6),
-        new Prey("minecraft:stray", "strays", 2, 5),
-        new Prey("minecraft:cave_spider", "cave spiders", 3, 6));
+        new Prey("minecraft:zombie", "zombies", 5, 9, Where.ANY, "anywhere at night"),
+        new Prey("minecraft:skeleton", "skeletons", 4, 8, Where.ANY, "anywhere at night"),
+        new Prey("minecraft:spider", "spiders", 4, 8, Where.ANY, "anywhere at night"),
+        new Prey("minecraft:creeper", "creepers", 3, 6, Where.ANY, "anywhere at night"),
+        new Prey("minecraft:witch", "witches", 1, 3, Where.SWAMP, "in swamps, by their huts"),
+        new Prey("minecraft:enderman", "endermen", 2, 4, Where.ANY, "anywhere at night"),
+        new Prey("minecraft:pillager", "pillagers", 2, 5, Where.FAR, "at pillager outposts and in raids"),
+        new Prey("minecraft:vindicator", "vindicators", 1, 3, Where.FAR, "in woodland mansions and raids"),
+        new Prey("minecraft:iron_golem", "iron golems", 1, 2, Where.FAR, "in villages"),
+        new Prey("minecraft:phantom", "phantoms", 2, 4, Where.FAR, "over anyone who hasn't slept for three nights"),
+        new Prey("minecraft:slime", "slimes", 3, 6, Where.SWAMP, "in swamps at night"),
+        new Prey("minecraft:drowned", "drowned", 3, 6, Where.WATER, "in oceans and rivers"),
+        new Prey("minecraft:husk", "husks", 3, 6, Where.DESERT, "in deserts"),
+        new Prey("minecraft:stray", "strays", 2, 5, Where.SNOW, "in snowy lands"),
+        new Prey("minecraft:cave_spider", "cave spiders", 3, 6, Where.FAR, "in abandoned mineshafts"));
+
+    /**
+     * 4.2.1: true if {@code prey} lives where the player stands tonight: anywhere's always; a swamp's, a desert's, the snow's and the water's
+     * only in such a biome ({@code biome}: its id, e.g. "minecraft:snowy_taiga"; a mod's named alike); never what lives far off.
+     */
+    public static boolean here(Where where, String biome) {
+        String b = biome == null ? "" : biome.toLowerCase(java.util.Locale.ROOT);
+        return switch (where) {
+            case ANY -> true;
+            case SWAMP -> b.contains("swamp") || b.contains("bayou") || b.contains("marsh") || b.contains("bog") || b.contains("fen");
+            case DESERT -> b.contains("desert") || b.contains("dune");
+            case SNOW -> b.contains("snow") || b.contains("frozen") || b.contains("ice") || b.contains("tundra") || b.contains("glacier");
+            case WATER -> b.contains("ocean") || b.contains("river") || b.contains("sea") || b.contains("lake");
+            case FAR -> false;
+        };
+    }
 
     /** What a hunt pays: mastery, Ghoul Meat or (rarely) a mutation point. */
     public static final int PAY_MASTERY = 0;
@@ -71,8 +108,13 @@ public final class Hunts {
     private Hunts() {
     }
 
-    /** A random hunt; {@code ghouls}: ghoul NPCs roam, so a hunt may ask for one. */
+    /** A random hunt; {@code ghouls}: ghoul NPCs roam, so a hunt may ask for one. 4.2.1: its prey only what lives anywhere (no biome told). */
     public static Spec draw(Random random, boolean ghouls) {
+        return draw(random, ghouls, "");
+    }
+
+    /** 4.2.1: a random hunt for a player in {@code biome}: a kill hunt's prey only one that lives there tonight ({@link #here}). */
+    public static Spec draw(Random random, boolean ghouls, String biome) {
         Template[] all = Template.values();
         Template template;
         do {
@@ -81,7 +123,13 @@ public final class Hunts {
         int param = 0;
         int count = switch (template) {
             case KILL_MOB -> {
-                param = random.nextInt(PREY.size());
+                List<Integer> living = new java.util.ArrayList<>();
+                for (int i = 0; i < PREY.size(); i++) {
+                    if (here(PREY.get(i).at(), biome)) {
+                        living.add(i);
+                    }
+                }
+                param = living.get(random.nextInt(living.size()));
                 Prey prey = PREY.get(param);
                 yield prey.min() + random.nextInt(prey.max() - prey.min() + 1);
             }
@@ -113,8 +161,8 @@ public final class Hunts {
             case KILL_MOB -> {
                 Prey prey = PREY.get(Math.max(0, Math.min(PREY.size() - 1, spec.param())));
                 title = "Hunt: " + prey.name();
-                story = "Something in you wants " + prey.name() + " tonight. Don't make it wait.";
-                objective = Objective.of("Kill " + prey.name(), Signal.KILL, count, Tags.mob(prey.id()));
+                story = "Something in you wants " + prey.name() + " tonight. Don't make it wait. (They are found " + prey.where() + ".)";
+                objective = Objective.of("Kill " + prey.name() + " (" + prey.where() + ")", Signal.KILL, count, Tags.mob(prey.id()));
             }
             case EYES -> {
                 title = "Hunt: bare-handed";

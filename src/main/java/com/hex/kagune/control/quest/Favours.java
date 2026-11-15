@@ -98,8 +98,8 @@ public final class Favours {
         switch (template) {
             case KILL_MOB -> {
                 Hunts.Prey prey = Hunts.PREY.get(Math.max(0, Math.min(Hunts.PREY.size() - 1, spec.param())));
-                story = name + " wants the " + prey.name() + " round their spot thinned out.";
-                objective = Objective.of("Kill " + prey.name(), Signal.KILL, count, Tags.mob(prey.id()));
+                story = name + " wants the " + prey.name() + " round their spot thinned out. (They are found " + prey.where() + ".)";
+                objective = Objective.of("Kill " + prey.name() + " (" + prey.where() + ")", Signal.KILL, count, Tags.mob(prey.id()));
             }
             case NIGHT_GUARD -> {
                 story = name + ": people still walk about after dark. Keep what hunts at night off them.";

@@ -2545,11 +2545,14 @@ public final class CompanionTests {
             && near(join, "for (int[] at : JoinTrial.counter(yaw)) {", "if (standable(level, x, y, z) && roofed(level, x, y, z)) {", 400)
             && near(join, "for (int[] at : JoinTrial.counter(yaw)) {", "if (seats.size() >= 6) {\n                break; // the nearest rows", 900),
             "the way Touka faces, on her floor, under the roof");
-        check(near(join, "public static void cup(", "regular.m_20280_(player) > JoinTrial.SERVE_NEAR * JoinTrial.SERVE_NEAR) {", 1200)
-            && near(join, "public static void cup(", "if (live == null || live.kind != JoinTrial.Kind.SHIFT) {\n                return;", 400)
-            && near(join, "public static void cup(", "if (brew(player, live, held)) {", 700) // 4.1.96: a glass bottle in the café brews a cup
-            && near(join, "public static void cup(", "if (live.current == null) {\n                return;", 1000)
-            && near(join, "public static void cup(", "event.setCanceled(true);\n            serve(player, regular);", 1800)
+        check(near(join, "public static void cup(", "regular.m_20280_(player) > JoinTrial.SERVE_NEAR * JoinTrial.SERVE_NEAR) {", 1700)
+            && near(join, "public static void cup(", "if (live == null || live.kind != JoinTrial.Kind.SHIFT) {", 600)
+            // 4.2.1: no shift on, a bottle brews in the café only with the makings in hand (Ken's daily blends), and nothing else happens
+            && near(join, "if (live == null || live.kind != JoinTrial.Kind.SHIFT) {", "if (live == null && hasMakings(player) && brew(player, GangServer.home(", 200)
+            && near(join, "if (live == null && hasMakings(player) && brew(player, GangServer.home(", "event.setCanceled(true);\n                }\n                return;", 200)
+            && near(join, "public static void cup(", "if (brew(player, live, held)) {", 1200) // 4.1.96: a glass bottle in the café brews a cup
+            && near(join, "public static void cup(", "if (live.current == null) {\n                return;", 1500)
+            && near(join, "public static void cup(", "event.setCanceled(true);\n            serve(player, regular);", 2300)
             && com.hex.kagune.control.npc.JoinTrial.SERVE_NEAR == 4.0, "a right click with the cup near them serves them, never drunk");
         check(near(join, "player.m_21206_().m_41720_() == cup && player.m_21205_().m_41720_() != cup", "? player.m_21206_() : player.m_21205_();", 120),
             "the cup in either hand");

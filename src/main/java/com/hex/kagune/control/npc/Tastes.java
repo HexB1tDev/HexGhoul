@@ -296,6 +296,12 @@ public final class Tastes {
 
     /** 4.1.85: what {@code key} says, asked what they want today: {@code item}, in their words. */
     public static String wishSaid(String key, String item, int seed) {
+        // 4.2.1: a dish of the kitchen's, wished for: how it is made, said with it (Dishes.how).
+        String how = com.hex.kagune.control.kitchen.Dishes.how(item);
+        return said(key, item, seed) + (how.isEmpty() ? "" : " (" + how + ")");
+    }
+
+    private static String said(String key, String item, int seed) {
         String it = name(item);
         return switch (key == null ? "" : key) {
             case "eto" -> one(seed, "What do I want? Mm... " + an(it, false) + ". Bring me one and I'll put you in a chapter. A nice one.",

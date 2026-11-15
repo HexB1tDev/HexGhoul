@@ -295,7 +295,8 @@ public final class Courtship {
      */
     static final List<Chapter> AYATO = List.of(
         new Chapter("ayato_meal", "Something that isn't garbage", Task.GIVE, 3, Set.of("hexkagune:ghouls_pie"), "the pies",
-            "You want something to do? Feed me. Three ghoul's pies. Made right, not that slop they sell. ...Don't ask why. And don't tell my sister.",
+            "You want something to do? Feed me. Three ghoul's pies. Made right, not that slop they sell. ...Don't ask why. And don't tell my sister."
+                + " (" + com.hex.kagune.control.kitchen.Dishes.how("hexkagune:ghouls_pie") + ")",
             "{n} of three. You're slow.",
             "Bring Ayato ghoul's pies: {n} of {need}"),
         // 4.1.80: was three wild ghouls killed: a spar with him (the plan: "Ayato's a spar at the hideout"); then not just anywhere high

@@ -1,0 +1,107 @@
+[
+ {
+  "name": "a favour done never counted (the bug)",
+  "file": "src/main/java/com/hex/kagune/control/server/QuestServer.java",
+  "old": "            signal(player, Signal.FAVOUR, 1);\n",
+  "new": "",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "a night's hunt for prey from anywhere",
+  "file": "src/main/java/com/hex/kagune/control/quest/Hunts.java",
+  "old": "                    if (here(PREY.get(i).at(), biome)) {",
+  "new": "                    if (true) {",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "husks hunted in the plains",
+  "file": "src/main/java/com/hex/kagune/control/quest/Hunts.java",
+  "old": "new Prey(\"minecraft:husk\", \"husks\", 3, 6, Where.DESERT, \"in deserts\")",
+  "new": "new Prey(\"minecraft:husk\", \"husks\", 3, 6, Where.ANY, \"in deserts\")",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "a mansion's prey in a night's hunt",
+  "file": "src/main/java/com/hex/kagune/control/quest/Hunts.java",
+  "old": "            case FAR -> false;",
+  "new": "            case FAR -> true;",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "a hunt's prey says nowhere",
+  "file": "src/main/java/com/hex/kagune/control/quest/Hunts.java",
+  "old": "objective = Objective.of(\"Kill \" + prey.name() + \" (\" + prey.where() + \")\", Signal.KILL, count, Tags.mob(prey.id()));",
+  "new": "objective = Objective.of(\"Kill \" + prey.name(), Signal.KILL, count, Tags.mob(prey.id()));",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "a favour's prey says nowhere",
+  "file": "src/main/java/com/hex/kagune/control/quest/Favours.java",
+  "old": "objective = Objective.of(\"Kill \" + prey.name() + \" (\" + prey.where() + \")\", Signal.KILL, count, Tags.mob(prey.id()));",
+  "new": "objective = Objective.of(\"Kill \" + prey.name(), Signal.KILL, count, Tags.mob(prey.id()));",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "a wished dish says not how",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "return said(key, item, seed) + (how.isEmpty() ? \"\" : \" (\" + how + \")\");",
+  "new": "return said(key, item, seed);",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "Ayato's pies say not how",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "\n                + \" (\" + com.hex.kagune.control.kitchen.Dishes.how(\"hexkagune:ghouls_pie\") + \")\",",
+  "new": ",",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "a recipe told one deep only",
+  "file": "src/main/java/com/hex/kagune/control/kitchen/Dishes.java",
+  "old": "                next.addAll(java.util.List.of(inner.recipe().ingredients()));\n",
+  "new": "",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "Ken's blend daily says not how",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangDaily.java",
+  "old": "case ANTEIKU_BLEND -> \"Ken hands you the makings. Brew a cup",
+  "new": "case ANTEIKU_BLEND -> \"Brew a cup",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "Ken's makings never handed over",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "                        JoinServer.blendMakings(player, taken.goal());\n",
+  "new": "",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "no brew off the shift",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "if (live == null && hasMakings(player) && brew(player, GangServer.home(player.m_284548_(), \"touka\"), held)) {",
+  "new": "if (false) {",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "the dove's case left to chance",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "                    doveCase(dead);\n",
+  "new": "",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "a marked dove's case still by the odds",
+  "file": "src/main/java/com/hex/kagune/control/server/AgentBrain.java",
+  "old": "        if (!dove && (!byPlayer ||",
+  "new": "        if ((!byPlayer ||",
+  "suite": "QuestAuditTests"
+ },
+ {
+  "name": "the case step says not where",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": " (it fell where the dove did; any quinque case will do)\";",
+  "new": "\";",
+  "suite": "QuestAuditTests"
+ }
+]

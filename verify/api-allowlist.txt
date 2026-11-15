@@ -1307,3 +1307,8 @@ M net/minecraftforge/event/entity/player/PlayerEvent$ItemCraftedEvent getInvento
 
 # --- 4.1.96: an official's name over her head while the crosshair is on her ------------------------------------------------------------
 F net/minecraft/client/Minecraft f_91076_ Lnet/minecraft/world/entity/Entity;  # [srg] crosshairPickEntity: joined.tsrg enn (field f_91076_; yarn MinecraftClient.targetedEntity, intermediary class_310)
+
+# --- 4.2.1: the biome a night's hunt is drawn for (Hunts.here: its prey only what lives there tonight) ---
+M net/minecraft/world/level/LevelReader m_204166_ (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/core/Holder;  # [srg] getBiome: joined.tsrg cmp s (Lgu;)Lhe; m_204166_ (cmp = LevelReader, gu = BlockPos, he = Holder), intermediary method_23753, yarn WorldView.getBiome
+M net/minecraft/core/Holder m_203543_ ()Ljava/util/Optional;  # [srg] unwrapKey: joined.tsrg he e ()Ljava/util/Optional; m_203543_, intermediary method_40230, yarn RegistryEntry.getKey
+M net/minecraft/resources/ResourceKey m_135782_ ()Lnet/minecraft/resources/ResourceLocation;  # [srg] location: joined.tsrg acp a ()Lacq; m_135782_ (acp = ResourceKey, acq = ResourceLocation), intermediary method_29177, yarn RegistryKey.getValue

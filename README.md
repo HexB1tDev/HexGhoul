@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.1 (HexGhoul): every quest checked: three that could never be finished, and every "no idea how" fixed (testing)
+
+See `.github/release-notes-4.2.1.md`. `QuestServer.complete` signals FAVOUR for a favour done. `Hunts.Prey` has `Where` and `where` (appended
+fields, indices kept); `Hunts.draw(random, ghouls, biome)` draws a kill hunt's prey only where `Hunts.here(where, biome)` (the biome's id:
+`QuestServer.biomeAt`, `LevelReader.m_204166_`, `Holder.m_203543_`, `ResourceKey.m_135782_`, allowlisted). `GangServer.doveCase` (the Clowns'
+job's kill; `AgentBrain.drop` honours `DOVE_CASE`). `GangDaily.Job.hint`, `JoinServer.blendMakings`, off-shift café brew (`hasMakings`).
+`Dishes.how` (the recipe chain, all the way down) in `Tastes.wishSaid` and Ayato's pies chapter. `QuestAuditTests`;
+`docs/handoff/sabotage-4.2.1.json`.
+
 ## 4.2.0 (HexGhoul): Touka keeps to the café floor; officials stranded on the wrong floor go back; /kagune places says why one is missing (testing)
 
 See `.github/release-notes-4.2.0.md`. Versions: x.y.0 to x.y.9, then x.(y+1).0 (the owner's rule; `TraceTests.version`). `EtoRules.strollsTo`
