@@ -48,6 +48,19 @@ public final class GhoulReserve {
     }
 
     /** How much of {@code wanted} health the reserve can pay for. */
+    /** 4.2.2: the reserve a point of health regenerated (the key held) costs: a fifth of {@link #PER_HEALTH} (wound.Regeneration.PRICE_SHARE). */
+    public static final float REGEN_PER_HEALTH = PER_HEALTH * com.hex.kagune.control.wound.Regeneration.PRICE_SHARE;
+
+    /** 4.2.2: how much of {@code wanted} the reserve pays for at {@code perHealth} a point. */
+    public static float healable(float reserve, float wanted, float perHealth) {
+        return Math.max(0.0F, Math.min(wanted, clamp(reserve) / perHealth));
+    }
+
+    /** 4.2.2: the reserve after {@code healed}, paid at {@code perHealth} a point. */
+    public static float afterHeal(float reserve, float healed, float perHealth) {
+        return clamp(reserve - Math.max(0.0F, healed) * perHealth);
+    }
+
     public static float healable(float reserve, float wanted) {
         return Math.max(0.0F, Math.min(wanted, clamp(reserve) / PER_HEALTH));
     }

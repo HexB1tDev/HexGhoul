@@ -118,11 +118,10 @@ public final class BikakuRules {
     public static final float REGEN_HEAL = 1.0F;
     public static final int REGEN_EVERY = 5;
     /**
-     * 3.5.3, the passives while the worm is out: Abnormal Regeneration (a ghoul's regeneration starts after this share of its usual wait,
-     * and heals in this share of its usual time), Pain Suppression (knockback resistance added, the share of a stun he still takes).
+     * 3.5.3, the passive while the worm is out: Pain Suppression (knockback resistance added, the share of a stun he still takes). 4.2.2:
+     * Abnormal Regeneration (a ghoul's own regeneration sooner and faster while it was out) is gone with that regeneration: a Bikaku's only
+     * regeneration is Monstrous Regeneration (the owner: "That guy already has a regeneration ability. That from now on is that.").
      */
-    public static final double REGEN_WAIT_SHARE = 0.4;
-    public static final double REGEN_HEAL_SHARE = 0.5;
     public static final double KNOCKBACK_RESIST = 0.6;
     public static final double STUN_SHARE = 0.5;
 
@@ -256,6 +255,15 @@ public final class BikakuRules {
     public static final int PURSUIT = 300;
     public static final int ERUPTION = 450;
     public static final int REGENERATION = 600;
+
+    /**
+     * 4.2.2: true once Monstrous Regeneration is a Bikaku ghoul's ({@link #REGENERATION} mastery, and Noro has taught the Worms): from then
+     * it is his only regeneration (the owner: "except for the Bikaku. That guy already has a regeneration ability. That from now on is
+     * that."). Until then he holds the regeneration key as any ghoul, for nothing (a Bikaku's healing never cost him), or he could not heal.
+     */
+    public static boolean ownRegeneration(int mastery, boolean wormsTaught) {
+        return mastery >= REGENERATION && wormsTaught;
+    }
     public static final int KAKUJA = 1000;
 
     // ---------------------------------------------------------------- where the bite goes

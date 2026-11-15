@@ -1267,7 +1267,7 @@ public final class ControlTests {
      */
     static void briefBoard() {
         java.util.Map<AbilityGuide.Key, String> keys = new java.util.EnumMap<>(AbilityGuide.Key.class);
-        String[] names = {"LMB", "RMB", "R", "P", "G", "N", "Z", "J", "K", "H", "V", "B", "C", "LCtrl", "U"};
+        String[] names = {"LMB", "RMB", "R", "P", "G", "N", "Z", "J", "K", "H", "V", "B", "C", "LCtrl", "U", "X"}; // 4.2.2: X, the regeneration key
         for (AbilityGuide.Key key : AbilityGuide.Key.values()) {
             keys.put(key, names[key.ordinal()]);
         }

@@ -327,8 +327,9 @@ public final class BikakuMenuView {
         QuestFrame.row(c, "Mouth", "Six fangs, three rings", rx, ry + 24, 58, rw, ink);
         ry += 42;
         ry = QuestFrame.section(c, "WHILE THE WORM IS OUT", rx, ry, rw);
-        for (String line : UkakuMenuView.wrap(c, "Abnormal Regeneration: you heal far sooner and faster. Pain Suppression: hard to knock back, stuns"
-            + " last half as long.", rw)) {
+        // 4.2.2: the worm-out regeneration boost gone with a ghoul's own regeneration; a Bikaku heals by Monstrous Regeneration alone.
+        for (String line : UkakuMenuView.wrap(c, "Pain Suppression: hard to knock back, stuns last half as long. Hold Regenerate to heal,"
+            + " free, until Monstrous Regeneration (C) is yours; then it alone heals you.", rw)) {
             c.text(line, rx, ry, QuestFrame.STORY, false);
             ry += 12;
         }

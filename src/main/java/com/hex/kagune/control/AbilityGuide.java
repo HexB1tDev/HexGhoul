@@ -19,7 +19,27 @@ import java.util.Map;
 public final class AbilityGuide {
     /** The keys a row can name (the panel's owner turns each into the player's bound key). */
     public enum Key {
-        ATTACK, USE, TOGGLE, MENU, GRAB, THROW, RAPID, SLINGSHOT, CYCLE, CRUSH, LIFT, SLAM, GUARD, UNLEASH, QUESTS
+        ATTACK, USE, TOGGLE, MENU, GRAB, THROW, RAPID, SLINGSHOT, CYCLE, CRUSH, LIFT, SLAM, GUARD, UNLEASH, QUESTS,
+        /** 4.2.2: held, the wounds close (every path but Bikaku's: its Monstrous Regeneration is its own). */
+        REGEN
+    }
+
+    /** 4.2.2: the regeneration row's colour (a living green). */
+    static final int REGEN_GREEN = 0xFF6BD68A;
+
+    /**
+     * 4.2.2 (the owner: "We're gonna bind a new key for all Kagunes that is called regeneration, except for the Bikaku ... You need to hold the
+     * key down"; "Every single form has this key there."): the panel with the regeneration key's row last, in every state and form (eyes shut,
+     * the kakugan, the kagune out, each kakuja, War, Peace); not a Bikaku's once Monstrous Regeneration is his, nor an undecided ghoul's.
+     */
+    static Panel withRegen(Input in, Panel panel) {
+        if (in.path() == KagunePath.NONE || in.path() == KagunePath.BIKAKU && com.hex.kagune.control.bikaku.BikakuRules.ownRegeneration(in.mastery(),
+            !in.shut().contains(com.hex.kagune.control.quest.Gate.BIKAKU_WORMS))) {
+            return panel; // a Bikaku's once Monstrous Regeneration is his: that, on C
+        }
+        List<Row> rows = new ArrayList<>(panel.rows());
+        rows.add(new Row(key(in, Key.REGEN) + " hold", "Regenerate", REGEN_GREEN, 0));
+        return new Panel(panel.title(), panel.subtitle(), panel.accent(), rows);
     }
 
     /** Where the ghoul is: kagune in, the kakugan open (ghoul eyes), or the kagune out. */
@@ -157,15 +177,15 @@ public final class AbilityGuide {
                 case BIKAKU -> "BIKAKU";
                 default -> "RINKAKU";
             };
-            return new Panel(title, eyes ? "Ghoul eyes open" : "Kagune sheathed", eyes ? EYES : CLOSED, rows);
+            return withRegen(in, new Panel(title, eyes ? "Ghoul eyes open" : "Kagune sheathed", eyes ? EYES : CLOSED, rows));
         }
-        return switch (in.path()) {
+        return withRegen(in, switch (in.path()) {
             case UKAKU -> ukaku(in, rows);
             case PALE -> pale(in, rows);
             case GRAFT -> graft(in, rows);
             case BIKAKU -> bikaku(in, rows);
             default -> rinkaku(in, rows);
-        };
+        });
     }
 
     // ---------------------------------------------------------------- 3.4.6: the board in brief
@@ -458,8 +478,8 @@ public final class AbilityGuide {
         }
         rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
         away(in, rows);
-        return new Panel(peace ? "PEACE" : "WAR", peace ? "Rinkaku · final kakuja · white wings" : "Rinkaku · final kakuja · One-Eyed King",
-            accent, rows);
+        return withRegen(in, new Panel(peace ? "PEACE" : "WAR", peace ? "Rinkaku · final kakuja · white wings" : "Rinkaku · final kakuja · One-Eyed King",
+            accent, rows)); // 4.2.2: the regeneration key in War and Peace too
     }
 
     /** The original's keys each of Graft's move slots is on. */
@@ -529,7 +549,9 @@ public final class AbilityGuide {
         }
         rows.add(new Row("hold", "Hold one to throw it further", TEXT, 0)); // 3.5.8: up to 30 blocks
         rows.add(new Row("auto", "Bites heal you", TEXT, 0));
-        rows.add(new Row("auto", "Fast regeneration · hard to knock back", TEXT, 0)); // 3.5.3: its passives
+        // 3.5.3: its passives. 4.2.2: Pain Suppression alone; the faster regeneration went with a ghoul's own (a Bikaku's is Monstrous
+        // Regeneration, on C).
+        rows.add(new Row("auto", "Hard to knock back · stuns halved", TEXT, 0));
         // 3.7.1 (the owner: "the walker is the first tap K half kakuja, the full kakuja is the hold K").
         rows.add(new Row(key(in, Key.CYCLE) + " tap", "The Walker (in · out)", accent,
             locked(in.mastery(), com.hex.kagune.control.bikaku.BikakuForm.WALKER.mastery())));

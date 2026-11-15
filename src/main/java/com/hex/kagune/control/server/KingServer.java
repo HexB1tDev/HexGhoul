@@ -51,7 +51,11 @@ public final class KingServer {
     /** 1.0.26: the sprint's own speed, on while he sprints in a final kakuja. */
     private static final UUID SPRINT = UUID.fromString("5e2b8b0c-7d55-4f1e-9a0b-1c0de5a10006");
     private static final SoundEvent EYE_OPEN = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "eye_open"));
-    /** Ticks between War's mends, and what each mends. */
+    /**
+     * Ticks between War's mends, and what each mends. 4.2.2 (the owner: "You don't automatically regenerate anymore. You need to hold the key
+     * down"): only while the regeneration key is held ({@link GhoulRegen#holding}). A mend of 1.5 or less is taken for food's natural
+     * regeneration and cancelled on a ghoul ({@link GhoulRegen#heal}), so it does not land in any case: the key is a second lock on it.
+     */
     private static final long MEND_TICKS = 20L;
     private static final float MEND = 1.0F;
 
@@ -800,7 +804,7 @@ public final class KingServer {
             kit.tick(player, now);
             player.f_19789_ = 0.0F; // 1.0.7: no fall hurts War (1.0.15: nor Peace, on its wings)
         }
-        if (now % MEND_TICKS == 0L && player.m_21223_() < player.m_21233_() && player.m_6084_()) {
+        if (now % MEND_TICKS == 0L && player.m_21223_() < player.m_21233_() && player.m_6084_() && GhoulRegen.holding(player)) {
             player.m_5634_(MEND);
         }
     }

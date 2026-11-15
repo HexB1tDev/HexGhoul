@@ -213,6 +213,12 @@ public final class BikakuServer {
         return KaguneProfile.isUnlocked(player) && PathServer.path(player) == KagunePath.BIKAKU;
     }
 
+    /** 4.2.2: true for a Bikaku ghoul whose Monstrous Regeneration is his ({@link com.hex.kagune.control.bikaku.BikakuRules#ownRegeneration}): it alone heals him. */
+    public static boolean ownRegeneration(ServerPlayer player) {
+        return isBikaku(player) && com.hex.kagune.control.bikaku.BikakuRules.ownRegeneration(KaguneProfile.mastery(player),
+            QuestServer.open(player, com.hex.kagune.control.quest.Gate.BIKAKU_WORMS));
+    }
+
     /** True while his kagune is out and he is alive: the only time the worm moves for him. */
     static boolean ready(ServerPlayer player) {
         return isBikaku(player) && KaguneProfile.isActive(player) && player.m_6084_();
@@ -235,11 +241,6 @@ public final class BikakuServer {
     /** 3.5.3: true while Monstrous Regeneration lasts. */
     static boolean regenerating(State state, long now) {
         return now >= state.regenAt && now - state.regenAt < BikakuMove.REGENERATION.ticks();
-    }
-
-    /** 3.5.3, Abnormal Regeneration: true while {@code player}'s worm is out (their ghoul's regeneration is far faster). */
-    public static boolean abnormal(ServerPlayer player) {
-        return ready(player);
     }
 
     /** 3.5.3, Pain Suppression: the share of a stun {@code body} still takes (a Bikaku player with the worm out shrugs half of it off). */

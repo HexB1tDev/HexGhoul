@@ -1765,7 +1765,8 @@ public class UiPreview {
         WingForm twin = WingForm.TWIN;
         java.util.Map<com.hex.kagune.control.AbilityGuide.Key, String> keys = new java.util.EnumMap<>(com.hex.kagune.control.AbilityGuide.Key.class);
         String[][] names = {{"ATTACK", "LMB"}, {"USE", "RMB"}, {"TOGGLE", "R"}, {"MENU", "P"}, {"GRAB", "G"}, {"THROW", "N"}, {"RAPID", "Z"},
-            {"SLINGSHOT", "J"}, {"CYCLE", "K"}, {"CRUSH", "H"}, {"LIFT", "V"}, {"SLAM", "B"}, {"GUARD", "C"}, {"UNLEASH", "LCtrl"}, {"QUESTS", "U"}};
+            {"SLINGSHOT", "J"}, {"CYCLE", "K"}, {"CRUSH", "H"}, {"LIFT", "V"}, {"SLAM", "B"}, {"GUARD", "C"}, {"UNLEASH", "LCtrl"}, {"QUESTS", "U"},
+            {"REGEN", "X"}}; // 4.2.2: X, the regeneration key
         for (String[] name : names) {
             keys.put(com.hex.kagune.control.AbilityGuide.Key.valueOf(name[0]), name[1]);
         }
@@ -1787,6 +1788,7 @@ public class UiPreview {
             {"Ukaku, final kakuja (1000)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.UKAKU, unleashed, 1000, seed, WingForm.FINAL_KAKUJA, false, keys)},
             {"Graft, two tails (200)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.GRAFT, unleashed, 200, seed, twin, false, keys, false,
                 com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false)},
+            {"Owl DNA, kagune out (300)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.PALE, unleashed, 300, seed, twin, false, keys)},
             {"Bikaku, the worm out (120)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.BIKAKU, unleashed, 120, seed, twin, false, keys)},
             {"Bikaku, kagune in", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.BIKAKU, com.hex.kagune.control.AbilityGuide.State.CLOSED, 120, seed, twin, false, keys)},
             {"Rebound keys follow Controls (Ctrl+F, M4, LAlt)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, unleashed, 300, seed, twin, false, rebound)},

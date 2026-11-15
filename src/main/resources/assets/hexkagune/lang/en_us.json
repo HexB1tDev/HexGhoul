@@ -450,5 +450,6 @@
   "item.hexkagune.mask_cloth": "Cloth Mask",
   "item.hexkagune.mask_porcelain": "Porcelain Mask",
   "item.hexkagune.mask_bandage": "Bandage Mask",
-  "item.hexkagune.mask_kabuki": "Kabuki Mask"
+  "item.hexkagune.mask_kabuki": "Kabuki Mask",
+  "key.hexkagune.regenerate": "Regenerate (hold)"
 }

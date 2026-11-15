@@ -13,6 +13,15 @@ import java.util.Map;
 public final class BikakuTests {
     private static int passed;
 
+    /** 4.2.2: a source file's text (the menu's line on regeneration). */
+    private static String read(String path) {
+        try {
+            return java.nio.file.Files.readString(java.nio.file.Path.of(path));
+        } catch (java.io.IOException failure) {
+            throw new java.io.UncheckedIOException(failure);
+        }
+    }
+
     private static void check(boolean good, String message) {
         if (!good) {
             throw new AssertionError(message);
@@ -322,8 +331,12 @@ public final class BikakuTests {
         check(!regen.occupies() && com.hex.kagune.control.bikaku.BikakuMove.MAW.occupies(), "it runs alongside the worm (the worm keeps biting)");
         float total = BikakuRules.REGEN_HEAL * regen.ticks() / BikakuRules.REGEN_EVERY;
         check(total >= 20.0F && total <= 40.0F && regen.cooldown() >= regen.ticks() * 4, "strong for a while (" + total + " health), then a long cooldown");
-        check(BikakuRules.REGEN_WAIT_SHARE > 0.0 && BikakuRules.REGEN_WAIT_SHARE < 1.0 && BikakuRules.REGEN_HEAL_SHARE > 0.0 && BikakuRules.REGEN_HEAL_SHARE < 1.0,
-            "Abnormal Regeneration: a ghoul's regeneration sooner and faster");
+        // 4.2.2: a Bikaku's only regeneration is Monstrous Regeneration; the menu no longer offers Abnormal Regeneration.
+        String menu = read("src/main/java/com/hex/kagune/control/client/BikakuMenuView.java");
+        check(!menu.contains("Abnormal Regeneration") && menu.contains("Hold Regenerate to heal,\"\n            + \" free, until Monstrous Regeneration (C) is yours; then it alone heals you."),
+            "the menu says a Bikaku holds Regenerate until Monstrous Regeneration is his, then heals by it alone");
+        check(!BikakuRules.ownRegeneration(BikakuRules.REGENERATION - 1, true) && BikakuRules.ownRegeneration(BikakuRules.REGENERATION, true)
+            && !BikakuRules.ownRegeneration(1000, false), "Monstrous Regeneration his at its mastery, once Noro has taught the Worms");
         check(BikakuRules.KNOCKBACK_RESIST > 0.0 && BikakuRules.KNOCKBACK_RESIST <= 1.0 && BikakuRules.STUN_SHARE > 0.0 && BikakuRules.STUN_SHARE < 1.0,
             "Pain Suppression: harder to throw, stuns shorter (never none)");
         check(com.hex.kagune.control.bikaku.MawTissue.shown(-1) == 0.0 && com.hex.kagune.control.bikaku.MawTissue.shown(regen.ticks()) == 0.0

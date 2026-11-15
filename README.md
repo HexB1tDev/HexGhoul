@@ -9,6 +9,15 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.2 (HexGhoul): regeneration only while you hold its key (X), slower, at a fifth of the price (testing)
+
+See `.github/release-notes-4.2.2.md`. Protocol 129: `C2SRegen` (message 59) from `client/RegenClient` (key down/up, every 10 ticks held, none
+with a screen open); `GhoulRegen.held`/`holding` (`HELD_FOR` 30 ticks, a `WorldTimes` map). `GhoulRegen.playerTick` heals only while held, at
+`Regeneration.heldPerTick` (`HELD_SPAN` 2.5 over the old `healTicks`, Reservoir x1.3), paid at `GhoulReserve.REGEN_PER_HEALTH` (a fifth;
+Graft's RC x `PRICE_SHARE`). `ControlKeys.REGENERATE` (X); `AbilityGuide.Key.REGEN` and `withRegen` (last row of every board, War and Peace
+too). Bikaku: `BikakuRules.ownRegeneration` (mastery 600 and `Gate.BIKAKU_WORMS`) ends the key; Abnormal Regeneration removed. War's mend
+needs the key. `RegenTests`; `docs/handoff/sabotage-4.2.2.json`; render `docs/handoff/regen-key-4.2.2.png`.
+
 ## 4.2.1 (HexGhoul): every quest checked: three that could never be finished, and every "no idea how" fixed (testing)
 
 See `.github/release-notes-4.2.1.md`. `QuestServer.complete` signals FAVOUR for a favour done. `Hunts.Prey` has `Where` and `where` (appended

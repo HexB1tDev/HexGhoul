@@ -26,6 +26,12 @@ public final class ControlKeys {
     public static final KeyMapping ANSWER = new KeyMapping("key.hexkagune.answer", InputConstants.Type.KEYSYM, KEY_O, "key.categories.hexkagune");
     /** 3.1.2: GLFW_KEY_Y; fold the quinque in the main hand, rebindable in Controls. */
     public static final KeyMapping FOLD_QUINQUE = new KeyMapping("key.hexkagune.fold_quinque", InputConstants.Type.KEYSYM, 89, "key.categories.hexkagune");
+    /**
+     * 4.2.2 (the owner: "bind a new key for all Kagunes that is called regeneration, except for the Bikaku ... You need to hold the key down"):
+     * GLFW_KEY_X (free: the original's are R P G N Z J K H V B C, ours U O Y and Ctrl); held, the wounds close (RegenClient tells the server).
+     */
+    private static final int KEY_X = 88;
+    public static final KeyMapping REGENERATE = new KeyMapping("key.hexkagune.regenerate", InputConstants.Type.KEYSYM, KEY_X, "key.categories.hexkagune");
 
     private ControlKeys() {
     }
@@ -57,6 +63,7 @@ public final class ControlKeys {
             event.register(QUESTS);
             event.register(ANSWER);
             event.register(FOLD_QUINQUE);
+            event.register(REGENERATE); // 4.2.2
         }
     }
 }

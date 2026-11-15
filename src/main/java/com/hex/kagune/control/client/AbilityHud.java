@@ -95,6 +95,7 @@ public final class AbilityHud {
         Map<AbilityGuide.Key, String> out = new EnumMap<>(AbilityGuide.Key.class);
         out.put(AbilityGuide.Key.ATTACK, name(minecraft.f_91066_.f_92096_));
         out.put(AbilityGuide.Key.QUESTS, name(ControlKeys.QUESTS));
+        out.put(AbilityGuide.Key.REGEN, name(ControlKeys.REGENERATE)); // 4.2.2
         out.put(AbilityGuide.Key.USE, name(minecraft.f_91066_.f_92095_));
         out.put(AbilityGuide.Key.TOGGLE, name(KaguneKeys.TOGGLE));
         out.put(AbilityGuide.Key.MENU, name(KaguneKeys.MENU));

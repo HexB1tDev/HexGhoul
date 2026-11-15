@@ -1839,12 +1839,17 @@ public final class BikakuWormTests {
             check(!server.contains("PULL_DRAIN") && !server.contains("t.paused = !paid") && server.contains("t.age += 1.0;")
                 && server.contains("GhoulRegen.healOwn(player, PotentialRules.HEAL)"), "the pull costs nothing, never waits on the bar, heals once whole");
             String regen = read("src/main/java/com/hex/kagune/control/server/GhoulRegen.java");
-            check(regen.contains("boolean diet = !BikakuServer.isBikaku(player) && GhoulReserveServer.applies(player);"),
-                "a Bikaku ghoul's wounds close after the wait for nothing");
+            // 4.2.2 (the owner: "except for the Bikaku. That guy already has a regeneration ability. That from now on is that."): a Bikaku
+            // ghoul's regeneration is Monstrous Regeneration alone (free, its cooldown its price); no wait-and-heal of the others' (before
+            // 4.2.2: free after the wait), nor their held key.
+            check(regen.contains("if (health >= max || !holding(player) || BikakuServer.ownRegeneration(player)) {")
+                && regen.contains("boolean diet = !BikakuServer.isBikaku(player) && GhoulReserveServer.applies(player);")
+                && read("src/main/java/com/hex/kagune/control/server/BikakuServer.java").contains("GhoulRegen.healOwn(player, BikakuRules.REGEN_HEAL);"),
+                "a Bikaku ghoul's wounds close by its Monstrous Regeneration (until it is his, the key held), for nothing");
             String moves = read("src/main/java/com/hex/kagune/control/server/BikakuMoves.java");
             check(moves.contains("move.cost() > 0.0F && !KaguneServerController.useEnergy(player, move.cost(), true)"), "a free regeneration is never refused for an empty bar");
             String network = read("src/main/java/com/hex/kagune/control/network/ControlNetwork.java");
-            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("registerMessage(57, S2CGangName.class") && network.contains("registerMessage(58, S2CLag.class") && network.contains("PROTOCOL = \"128\""), "every client is told (message 57; 4.1.99: message 58, /kagune lag, protocol 128; 4.1.52: the talk page's reputation; 4.1.54: protocol 125, Banjou's slaps; 4.1.72: 126, the hotel's structure type for the Small City's; 4.1.87: 127, the dash kick)");
+            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("registerMessage(57, S2CGangName.class") && network.contains("registerMessage(58, S2CLag.class") && network.contains("registerMessage(59, C2SRegen.class") && network.contains("PROTOCOL = \"129\""), "every client is told (message 57; 4.1.99: message 58, /kagune lag, protocol 128; 4.2.2: message 59, the regeneration key, 129; 4.1.52: the talk page's reputation; 4.1.54: protocol 125, Banjou's slaps; 4.1.72: 126, the hotel's structure type for the Small City's; 4.1.87: 127, the dash kick)");
             String client = read("src/main/java/com/hex/kagune/control/client/PotentialClient.java");
             check(client.contains("model.f_102811_, model.f_103375_") && client.contains("model.f_102808_, model.f_102809_") && client.contains("event.setCanceled(true)"),
                 "a part off isn't drawn on him, nor its hand in first person");
