@@ -119,8 +119,10 @@ final class BanjouScript extends CompanionScript {
                 "One flower a day. The cottage is already full of them. I'm running out of pots.", "A blue orchid. *carefully, like it might break* "
                     + "I'll put it by the window. Where I can see it. ...You remembered I liked those.", "Oh. A blue orchid. For me? ...Nobody "
                     + "gives flowers to a man like me. *goes red* Thank you.", EtoGesture.SHY);
-            case GIFT -> c.meat() ? r(c.ghoul() ? "Dinner? For me? ...I'll share it with the boys. They eat first. They always eat first. Thank you."
-                : "Where did a human get THAT? ...I'm not going to ask. Thank you. Really.", 3)
+            // 4.2.4: the meat taken, and its warmth once a day, as every companion's (before: +3 a click, the meat kept).
+            case GIFT -> c.meat() ? new EtoTalk.Reply(c.ghoul() ? "Dinner? For me? ...I'll share it with the boys. They eat first. They always eat first. "
+                + "Thank you." : "Where did a human get THAT? ...I'm not going to ask. Thank you. Really.",
+                c.giftedToday() ? 0 : EtoRules.GIFT, EtoTalk.Effect.MEAT, EtoGesture.SHY)
                 : r("Your hands are empty. That's okay. I didn't expect anything.", 0);
             case PUPPY -> c.puppy() == null ? r("A puppy? Where? ...Oh. There isn't one. That's fine. I wasn't excited.", 0)
                 : new EtoTalk.Reply(this.puppy(c, c.puppy(), false), 8, EtoTalk.Effect.PUPPY, EtoGesture.PET);

@@ -30,6 +30,9 @@ public interface Script {
     /** Where {@code topic} stands among its topics (its bits in the day's said-already mask). */
     int topicIndex(EtoTopics.Topic topic);
 
+    /** 4.2.4: every topic it has, in its order (its words checked whole: the tests). */
+    java.util.List<EtoTopics.Topic> allTopics();
+
     /** Its partner's sweet page. */
     EtoTalk.Page sweet(EtoTalk.Context c, String line);
 

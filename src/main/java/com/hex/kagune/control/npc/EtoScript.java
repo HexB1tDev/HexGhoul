@@ -31,6 +31,11 @@ final class EtoScript implements Script {
     }
 
     @Override
+    public java.util.List<EtoTopics.Topic> allTopics() {
+        return EtoTopics.ALL;
+    }
+
+    @Override
     public EtoTopics.Topic topicOf(String id) {
         return EtoTopics.get(id);
     }

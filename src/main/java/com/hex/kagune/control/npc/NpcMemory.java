@@ -79,6 +79,20 @@ public final class NpcMemory {
         return this;
     }
 
+    /** 4.2.4: everything kept of {@code npc} whose name starts with {@code prefix} (a copy). */
+    public Map<String, Long> starting(String npc, String prefix) {
+        Map<String, Long> out = new LinkedHashMap<>();
+        Map<String, Long> of = this.values.get(npc);
+        if (of != null) {
+            for (Map.Entry<String, Long> value : of.entrySet()) {
+                if (value.getKey().startsWith(prefix)) {
+                    out.put(value.getKey(), value.getValue());
+                }
+            }
+        }
+        return out;
+    }
+
     public boolean knows(String npc, String name) {
         Map<String, Long> of = this.values.get(npc);
         return of != null && of.containsKey(name);

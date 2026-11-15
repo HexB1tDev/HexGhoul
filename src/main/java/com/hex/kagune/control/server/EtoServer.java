@@ -632,6 +632,9 @@ public final class EtoServer {
         if (key.startsWith("topic:")) {
             EtoTopics.Topic topic = script.topicOf(key.substring(6));
             if (topic != null) {
+                if (topic.once()) {
+                    spoken(player, npc, topic.id(), com.hex.kagune.control.npc.Spoken.TOPIC_BIT); // 4.2.4: brought up once and for all
+                }
                 show(player, npc, c, script.topic(c, topic), Kind.TOPIC);
             }
             return;
@@ -643,9 +646,17 @@ public final class EtoServer {
             if (topic == null) {
                 return;
             }
+            // 4.2.4: each reply's warmth paid once a day, kept by its topic's id (before: 14 topics' worth of bits, the rest shared); a
+            // one-time reply marked said, never offered again.
+            List<EtoTopics.Follow> open = topic.open(c);
+            EtoTopics.Follow said = index >= 0 && index < open.size() ? open.get(index) : null;
+            int place = said == null ? -1 : topic.place(said);
             EtoTalk.Reply reply = script.follow(c, topic, index);
-            int bit = Math.min(13, script.topicIndex(topic)) * 4 + Math.min(3, index);
-            carry(player, npc, c, choice, firstToday(player, npc, level, bit) ? reply : unpaid(reply), Kind.TALK);
+            boolean first = paysToday(player, npc, level, topic.id(), place);
+            if (said != null && said.once()) {
+                spoken(player, npc, topic.id(), place);
+            }
+            carry(player, npc, c, choice, first ? reply : unpaid(reply), Kind.TALK);
             return;
         }
         if (key.startsWith("sweet:")) {
@@ -663,7 +674,8 @@ public final class EtoServer {
                 npc.mind.makeUp.remove(player.m_20148_());
             }
             QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
-            QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + 2));
+            QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + com.hex.kagune.control.npc.Spoken.warmth(2,
+                choiceFirst(player, npc, level, "reassure")))); // 4.2.4: once a day
             EtoBrain.giddy(npc, player, level.m_46467_());
             EtoTalk.Context after = context(player, npc);
             show(player, npc, after, npc.persona().script().main(after, com.hex.kagune.control.npc.MoodActs.reassured(npc.persona().key(), c.seed())), Kind.MAIN);
@@ -676,7 +688,8 @@ public final class EtoServer {
             EtoTalk.Context after = context(player, npc);
             if (now2) {
                 QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
-                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + 1));
+                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + com.hex.kagune.control.npc.Spoken.warmth(1,
+                    choiceFirst(player, npc, level, "sorry")))); // 4.2.4: once a day
                 EtoBrain.giddy(npc, player, level.m_46467_());
                 show(player, npc, after, npc.persona().script().main(after, line), Kind.MAIN);
             } else {
@@ -770,7 +783,8 @@ public final class EtoServer {
                 npc.mind.drowsyUntil = Long.MIN_VALUE;
                 show(player, npc, c, script.main(c, com.hex.kagune.control.family.Drowsy.roused(persona, seed)), Kind.MAIN);
             } else if (key.equals("sleep:kiss")) {
-                carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.family.Drowsy.kissed(persona, seed), 1, EtoTalk.Effect.CLOSE), Kind.MAIN);
+                carry(player, npc, c, choice, once(player, npc, level, "sleep_kiss", new EtoTalk.Reply(com.hex.kagune.control.family.Drowsy.kissed(persona, seed), 1,
+                    EtoTalk.Effect.CLOSE)), Kind.MAIN); // 4.2.4: its warmth once a day
             } else {
                 carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.family.Drowsy.settle(persona, seed), 0, EtoTalk.Effect.CLOSE), Kind.MAIN);
             }
@@ -793,8 +807,8 @@ public final class EtoServer {
             if (!player.m_36356_(book)) {
                 player.m_36176_(book, false);
             }
-            carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.kitchen.Cookbook.given(seed), 2, EtoTalk.Effect.NONE, EtoGesture.NONE),
-                Kind.MAIN);
+            carry(player, npc, c, choice, once(player, npc, level, "cookbook", new EtoTalk.Reply(com.hex.kagune.control.kitchen.Cookbook.given(seed), 2,
+                EtoTalk.Effect.NONE, EtoGesture.NONE)), Kind.MAIN); // 4.2.4: its warmth once a day
             return;
         }
         if (key.equals("gohome")) {
@@ -845,7 +859,8 @@ public final class EtoServer {
             if (known != null) {
                 EtoTalk.Context fresh = context(player, npc);
                 EtoTalk.Reply reply = script.answer(fresh, choice);
-                carry(player, npc, fresh, choice, new EtoTalk.Reply(known + " " + reply.line(), reply.regard(), reply.effect(), reply.gesture()), after);
+                carry(player, npc, fresh, choice, once(player, npc, level, choice.name(), new EtoTalk.Reply(known + " " + reply.line(), reply.regard(),
+                    reply.effect(), reply.gesture())), after);
                 return;
             }
         }
@@ -853,7 +868,58 @@ public final class EtoServer {
             // 3.3.6: asked out while they have a partner: a partner who sees it is jealous.
             RomanceServer.tempted(player, npc.persona().key(), npc.displayName());
         }
-        carry(player, npc, c, choice, script.answer(c, choice), after);
+        // 4.2.4 (the owner: "Currently, you can just spam one option and it'll give you relationship."): whatever an answer of the first page
+        // is worth, its warmth is paid once a day (a tease, a dinner, a home); what hurts always hurts.
+        carry(player, npc, c, choice, once(player, npc, level, choice.name(), script.answer(c, choice)), after);
+    }
+
+    /** 4.2.4: {@code reply} with its warmth paid only if {@code what} (a choice, a keyed act) hasn't paid {@code npc}'s today. */
+    private static EtoTalk.Reply once(ServerPlayer player, EtoNpc npc, ServerLevel level, String what, EtoTalk.Reply reply) {
+        if (reply.regard() <= 0) {
+            return reply;
+        }
+        return choiceFirst(player, npc, level, what) ? reply : unpaid(reply);
+    }
+
+    /** 4.2.4: true the first time today {@code what} pays {@code npc}'s warmth; marks it paid. */
+    private static boolean choiceFirst(ServerPlayer player, EtoNpc npc, ServerLevel level, String what) {
+        NpcMemory memory = NpcMemoryServer.of(player);
+        String name = com.hex.kagune.control.npc.Spoken.choiceKey(what);
+        long today = day(level);
+        boolean first = com.hex.kagune.control.npc.Spoken.choicePays(memory.get(npc.persona().key(), name, -1L), today);
+        if (first) {
+            memory.set(npc.persona().key(), name, today);
+            NpcMemoryServer.save(player);
+        }
+        return first;
+    }
+
+    /** 4.2.4: true the first time today reply {@code place} of topic {@code topic} pays; marks it paid. */
+    private static boolean paysToday(ServerPlayer player, EtoNpc npc, ServerLevel level, String topic, int place) {
+        if (place < 0) {
+            return false;
+        }
+        NpcMemory memory = NpcMemoryServer.of(player);
+        String name = com.hex.kagune.control.npc.Spoken.paidKey(topic);
+        long today = day(level);
+        long stored = memory.get(npc.persona().key(), name, 0L);
+        boolean first = com.hex.kagune.control.npc.Spoken.pays(stored, today, place);
+        if (first) {
+            memory.set(npc.persona().key(), name, com.hex.kagune.control.npc.Spoken.pay(stored, today, place));
+            NpcMemoryServer.save(player);
+        }
+        return first;
+    }
+
+    /** 4.2.4: {@code bit} of topic {@code topic} (a one-time reply, or {@link com.hex.kagune.control.npc.Spoken#TOPIC_BIT}) marked said for good. */
+    private static void spoken(ServerPlayer player, EtoNpc npc, String topic, int bit) {
+        if (bit < 0) {
+            return;
+        }
+        NpcMemory memory = NpcMemoryServer.of(player);
+        String name = com.hex.kagune.control.npc.Spoken.onceKey(topic);
+        memory.set(npc.persona().key(), name, com.hex.kagune.control.npc.Spoken.mark(memory.get(npc.persona().key(), name, 0L), bit));
+        NpcMemoryServer.save(player);
     }
 
     private static EtoTalk.Reply unpaid(EtoTalk.Reply reply) {
@@ -1333,7 +1399,8 @@ public final class EtoServer {
             holds(player, EtoRules::letter), pact, (int)memory.get(npc.persona().key(), NpcMemory.TRIAL_COUNT, 0L), trialDone,
             memory.get(npc.persona().key(), NpcMemory.NIGHT_DAY, -1L) == day, player.m_36316_().getName(),
             Vows.partnerElsewhere(level, player, npc.persona().key()) != null, family(level, player, memory, persona), teaching, // 3.3.4
-            persona.female() != com.hex.kagune.control.Genders.female(player), held(player, persona.key(), bond));
+            persona.female() != com.hex.kagune.control.Genders.female(player), held(player, persona.key(), bond),
+            new com.hex.kagune.control.npc.Spoken(memory.starting(persona.key(), "o_"))); // 4.2.4: what was said once and for all
     }
 
     /**

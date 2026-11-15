@@ -45,7 +45,23 @@ public final class EtoTalk {
                           Romance.Stage stage, String claimedBy, boolean following, long dayTime, EtoMood mood, long daysTogether, long daysAway,
                           String puppy, boolean ring, boolean meat, boolean letter, EtoRules.Pact pact, int pactCount, boolean trialDone,
                           boolean nightUsed, String name, boolean spouseElsewhere, com.hex.kagune.control.family.FamilyView family,
-                          Teaching.View teaching, boolean mixed, int held) {
+                          Teaching.View teaching, boolean mixed, int held, Spoken spoken) {
+        public Context {
+            spoken = spoken == null ? Spoken.NONE : spoken;
+        }
+
+        /** 4.2.4: as 2.1.2 made one: nothing said to her once and for all yet ({@code spoken}: {@link Spoken}). */
+        public Context(int regard, int flags, int count, boolean ghoul, boolean chattedToday, boolean giftedToday, boolean book, boolean flower,
+                       EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed,
+                       Romance.Stage stage, String claimedBy, boolean following, long dayTime, EtoMood mood, long daysTogether, long daysAway,
+                       String puppy, boolean ring, boolean meat, boolean letter, EtoRules.Pact pact, int pactCount, boolean trialDone,
+                       boolean nightUsed, String name, boolean spouseElsewhere, com.hex.kagune.control.family.FamilyView family,
+                       Teaching.View teaching, boolean mixed, int held) {
+            this(regard, flags, count, ghoul, chattedToday, giftedToday, book, flower, next, beforeDone, granted, seed, stage, claimedBy, following, dayTime,
+                mood, daysTogether, daysAway, puppy, ring, meat, letter, pact, pactCount, trialDone, nightUsed, name, spouseElsewhere, family, teaching,
+                mixed, held, Spoken.NONE);
+        }
+
         /** 2.1.2: as 1.3.14 made one: none of what her courtship's chapter asks for in hand ({@code held}: how many). */
         public Context(int regard, int flags, int count, boolean ghoul, boolean chattedToday, boolean giftedToday, boolean book, boolean flower,
                        EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed,
@@ -194,8 +210,8 @@ public final class EtoTalk {
     public static Page main(Context c, String line) {
         List<Option> out = new ArrayList<>();
         EtoVoice voice = EtoVoice.of(c);
-        if (!c.has(NpcBonds.ASKED)) {
-            out.add(Option.of(NpcTalk.Choice.WHO));
+        if (!c.has(NpcBonds.ASKED) && !voice.together()) {
+            out.add(Option.of(NpcTalk.Choice.WHO)); // 4.2.4: asked once, and never of one they are with
         }
         out.add(new Option(NpcTalk.Choice.CHAT, voice.together() ? "Talk to me." : "", ""));
         if (voice == EtoVoice.CLAIMED) {

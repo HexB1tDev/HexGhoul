@@ -9,6 +9,16 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.4 (HexGhoul): the talk's rules: no more spamming one option, "who are you" asked once, one-time options (testing)
+
+See `.github/release-notes-4.2.4.md`. `npc/Spoken` (pure): a player's one-time marks per topic id (`o_<topic>`: reply bits, `TOPIC_BIT` 8),
+topic replies paid per day (`p_<topic>`: `day << 9 | mask`), a choice's last paid day (`c_<choice>`); in `NpcMemory` (`starting`).
+`EtoTopics.Follow.once`, `Topic.once`, `Topic.offered`/`open` filter by `EtoTalk.Context.spoken` (new last component; old constructors kept).
+`EtoServer`: `once`/`choiceFirst` (every first-page answer, sleep kiss, cookbook, reassure, sorry), `paysToday` (topic replies by id, no
+14-topic cap), `spoken` (marks). `WHO` not offered when together (`CompanionScript`, `EtoTalk`) and once for wild ghouls (`NpcTalk.choices`).
+Roma's and Banjou's `GIFT`: `Effect.MEAT`, `giftedToday`. `GhoulNpcTalk.GIFTED`: meat warms once a day. `Script.allTopics`.
+`TalkRulesTests`; `docs/handoff/sabotage-4.2.4.json`.
+
 ## 4.2.3 (HexGhoul): the General, Roma and Banjou were there all along, hidden from your game; now they're drawn (testing)
 
 See `.github/release-notes-4.2.3.md`. `client/render/ThrallRenderGuard.registerAll` (the mend that registers every renderer again when the

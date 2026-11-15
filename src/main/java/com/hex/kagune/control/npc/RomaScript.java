@@ -110,8 +110,10 @@ final class RomaScript extends CompanionScript {
                 "One flower a day. I'm a ringmaster, not a garden.", "An allium. It's PURPLE. Like my... oh, you noticed. You notice things. "
                     + "...I'm putting it on my mask.", "A purple flower. For the clown. ...That's very sweet. Nobody does sweet in here. "
                     + "I'll keep it.", EtoGesture.SHY);
-            case GIFT -> c.meat() ? r(c.ghoul() ? "Dinner! Ooh, who was it? Don't tell me. I like a mystery meat. ...Thank you. Really."
-                : "Where did a human get THAT? I have so many questions and I want none of the answers. I'll take it.", 3)
+            // 4.2.4: the meat taken, and its warmth once a day, as every companion's (before: +3 a click, the meat kept).
+            case GIFT -> c.meat() ? new EtoTalk.Reply(c.ghoul() ? "Dinner! Ooh, who was it? Don't tell me. I like a mystery meat. ...Thank you. Really."
+                : "Where did a human get THAT? I have so many questions and I want none of the answers. I'll take it.",
+                c.giftedToday() ? 0 : EtoRules.GIFT, EtoTalk.Effect.MEAT, EtoGesture.GIGGLE)
                 : r("You're holding nothing. Nothing's my second favourite gift.", 0);
             case PUPPY -> c.puppy() == null ? r("A what? There's nothing there. ...Is it a ghost puppy? I want it.", 0)
                 : new EtoTalk.Reply(this.puppy(c, c.puppy(), false), 8, EtoTalk.Effect.PUPPY, EtoGesture.PET);

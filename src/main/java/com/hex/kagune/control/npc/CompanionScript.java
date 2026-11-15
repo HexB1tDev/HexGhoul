@@ -44,7 +44,9 @@ abstract class CompanionScript implements Script {
     public EtoTalk.Page main(EtoTalk.Context c, String line) {
         List<EtoTalk.Option> out = new ArrayList<>();
         EtoVoice voice = EtoVoice.of(c);
-        if (!c.has(NpcBonds.ASKED)) {
+        if (!c.has(NpcBonds.ASKED) && !voice.together()) {
+            // 4.2.4 (the owner: "if you're married to someone, you can still ask them who the fuck they are"): asked once, and never of one
+            // they are with.
             out.add(EtoTalk.Option.of(NpcTalk.Choice.WHO));
         }
         out.add(new EtoTalk.Option(NpcTalk.Choice.CHAT, voice.together() ? "Talk to me." : "", ""));
@@ -116,7 +118,7 @@ abstract class CompanionScript implements Script {
         List<EtoTopics.Topic> open = new ArrayList<>();
         List<EtoTopics.Topic> pinned = new ArrayList<>();
         for (EtoTopics.Topic topic : this.topics()) {
-            if (topic.when().test(c)) {
+            if (topic.offered(c)) { // 4.2.4: a one-time topic opened is gone
                 (EtoTopics.pinned(topic) ? pinned : open).add(topic);
             }
         }
@@ -156,6 +158,11 @@ abstract class CompanionScript implements Script {
         }
         EtoTalk.Reply reply = follows.get(index).reply().apply(c);
         return new EtoTalk.Reply(EtoLines.fill(c, reply.line()), reply.regard(), reply.effect(), reply.gesture());
+    }
+
+    @Override
+    public List<EtoTopics.Topic> allTopics() {
+        return this.topics();
     }
 
     @Override

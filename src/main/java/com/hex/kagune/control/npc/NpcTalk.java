@@ -118,7 +118,9 @@ public final class NpcTalk {
     public static List<Choice> choices(Context c) {
         List<Choice> out = new ArrayList<>();
         NpcTemper temper = c.who().temper();
-        out.add(Choice.WHO);
+        if (!c.asked()) {
+            out.add(Choice.WHO); // 4.2.4: asked once (before: every time)
+        }
         out.add(Choice.CHAT);
         if (c.meatInHand() && temper != NpcTemper.ANTEIKU) {
             out.add(Choice.GIFT);

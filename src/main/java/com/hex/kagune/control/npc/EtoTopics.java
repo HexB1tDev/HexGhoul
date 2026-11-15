@@ -12,25 +12,66 @@ import java.util.function.Predicate;
  * human, or a ghoul.
  */
 public final class EtoTopics {
-    /** Something said back on a topic: its words and her reply. */
-    public record Follow(String prompt, Predicate<EtoTalk.Context> when, Function<EtoTalk.Context, EtoTalk.Reply> reply) {
+    /**
+     * Something said back on a topic: its words and her reply. 4.2.4: {@code once}, a thing said once and for all (a question answered, a
+     * confession, a promise): never offered again after it is said ({@link Spoken}).
+     */
+    public record Follow(String prompt, Predicate<EtoTalk.Context> when, Function<EtoTalk.Context, EtoTalk.Reply> reply, boolean once) {
+        public Follow(String prompt, Predicate<EtoTalk.Context> when, Function<EtoTalk.Context, EtoTalk.Reply> reply) {
+            this(prompt, when, reply, false);
+        }
+
         Follow(String prompt, Function<EtoTalk.Context, EtoTalk.Reply> reply) {
-            this(prompt, c -> true, reply);
+            this(prompt, c -> true, reply, false);
+        }
+
+        /** 4.2.4: a reply said once and for all. */
+        public static Follow once(String prompt, Function<EtoTalk.Context, EtoTalk.Reply> reply) {
+            return new Follow(prompt, c -> true, reply, true);
+        }
+
+        /** 4.2.4: a reply said once and for all, offered only {@code when}. */
+        public static Follow once(String prompt, Predicate<EtoTalk.Context> when, Function<EtoTalk.Context, EtoTalk.Reply> reply) {
+            return new Follow(prompt, when, reply, true);
         }
     }
 
-    /** A topic: when it can come up, how the player brings it up, her answer, what can be said back. */
+    /**
+     * A topic: when it can come up, how the player brings it up, her answer, what can be said back. 4.2.4: {@code once}, a topic brought up
+     * once and for all (how they met, the story of a scar): gone from the list once opened ({@link Spoken}).
+     */
     public record Topic(String id, Predicate<EtoTalk.Context> when, Function<EtoTalk.Context, String> prompt, Function<EtoTalk.Context, String> answer,
-                        List<Follow> follows) {
-        /** The replies open to {@code c}. */
+                        List<Follow> follows, boolean once) {
+        public Topic(String id, Predicate<EtoTalk.Context> when, Function<EtoTalk.Context, String> prompt, Function<EtoTalk.Context, String> answer,
+                     List<Follow> follows) {
+            this(id, when, prompt, answer, follows, false);
+        }
+
+        /** 4.2.4: whether it is offered to {@code c}: its time, and (a one-time topic) not opened yet. */
+        public boolean offered(EtoTalk.Context c) {
+            return this.when.test(c) && !(this.once && c.spoken().opened(this.id));
+        }
+
+        /** The replies open to {@code c}: their time, and (4.2.4) a one-time reply not said yet. */
         public List<Follow> open(EtoTalk.Context c) {
             List<Follow> out = new ArrayList<>();
-            for (Follow follow : this.follows) {
-                if (follow.when().test(c)) {
+            for (int i = 0; i < this.follows.size() && i < Spoken.MOST_FOLLOWS; i++) {
+                Follow follow = this.follows.get(i);
+                if (follow.when().test(c) && !(follow.once() && c.spoken().said(this.id, i))) {
                     out.add(follow);
                 }
             }
             return out;
+        }
+
+        /** 4.2.4: where {@code follow} stands among all its replies (its mark in {@link Spoken}), or -1. */
+        public int place(Follow follow) {
+            for (int i = 0; i < this.follows.size(); i++) {
+                if (this.follows.get(i) == follow) {
+                    return i;
+                }
+            }
+            return -1;
         }
     }
 
@@ -304,7 +345,7 @@ public final class EtoTopics {
     public static List<Topic> open(EtoTalk.Context c) {
         List<Topic> out = new ArrayList<>();
         for (Topic topic : ALL) {
-            if (topic.when().test(c)) {
+            if (topic.offered(c)) {
                 out.add(topic);
             }
         }

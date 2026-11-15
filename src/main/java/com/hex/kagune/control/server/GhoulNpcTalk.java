@@ -45,6 +45,8 @@ public final class GhoulNpcTalk {
     }
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
+    /** 4.2.4: the game day each player last warmed each ghoul with meat ("player/ghoul"), forgotten with its world. */
+    private static final Map<String, Long> GIFTED = WorldTimes.map();
 
     /** 1.3.39: true while {@code player} has a talk with {@code npc} open on their screen. */
     static boolean talkingWith(ServerPlayer player, GhoulNpc npc) {
@@ -377,6 +379,17 @@ public final class GhoulNpcTalk {
         }
         NpcTalk.Context context = context(player, npc, who);
         NpcTalk.Reply reply = NpcTalk.answer(context, choice);
+        if (choice == NpcTalk.Choice.GIFT && reply.regard() > 0) {
+            // 4.2.4 (the owner: "you can just spam one option and it'll give you relationship"): meat warms a ghoul once a day; more is eaten,
+            // and thanked for, but buys nothing.
+            String both = player.m_20148_() + "/" + npc.m_20148_();
+            long today = day(level);
+            if (Long.valueOf(today).equals(GIFTED.get(both))) {
+                reply = new NpcTalk.Reply(reply.line(), 0, reply.effect());
+            } else {
+                GIFTED.put(both, today);
+            }
+        }
         String key = npc.m_20148_().toString();
         String temper = Tags.temper(who.temper().name().toLowerCase(Locale.ROOT));
         QuestLog.Bond bond = QuestServer.bond(player, key);
