@@ -55,6 +55,10 @@ public final class TalkRulesTests {
         developed(Persona.GENERAL, 21, 12, 9);
         developed(Persona.AYATO, 21, 15, 9);
         developed(Persona.NORO, 11, 7, 3);
+        // 4.2.7: Eto, Touka, Ken.
+        developed(Persona.ETO, 25, 12, 7);
+        developed(Persona.TOUKA, 21, 12, 6);
+        developed(Persona.KEN, 19, 10, 6);
         System.out.println("Talk rules tests: " + checks + " checks " + (failures == 0 ? "passed" : "run, " + failures + " FAILED"));
         if (failures > 0) {
             throw new AssertionError(failures + " talk rules checks failed");
@@ -67,7 +71,12 @@ public final class TalkRulesTests {
 
     /** A talk with one of them: {@code regard}, the bond's {@code flags}, how far along, meat in hand, a gift given today, what was said once. */
     static EtoTalk.Context context(int regard, int flags, Romance.Stage stage, boolean meat, boolean gifted, Spoken spoken) {
-        return new EtoTalk.Context(regard, flags | (stage.together() ? EtoRules.DATING : 0), 0, true, false, gifted, false, false, null, true, false, 7,
+        return context(regard, flags, stage, meat, gifted, spoken, 7);
+    }
+
+    /** As above, with its {@code seed} (which of a line's variants is said). */
+    static EtoTalk.Context context(int regard, int flags, Romance.Stage stage, boolean meat, boolean gifted, Spoken spoken, int seed) {
+        return new EtoTalk.Context(regard, flags | (stage.together() ? EtoRules.DATING : 0), 0, true, false, gifted, false, false, null, true, false, seed,
             stage, null, false, 6000L, EtoMood.HAPPY, 3L, 0L, null, false, meat, false, EtoRules.Pact.NONE, 0, false, false, "Sam", false,
             FamilyView.NONE, Teaching.View.NONE, true, 0, spoken);
     }
@@ -189,17 +198,26 @@ public final class TalkRulesTests {
 
     /**
      * 4.2.5 on: {@code p} developed: at least {@code topics} topics, {@code lowers} replies that cost them regard, {@code onces} one-time replies;
-     * every reply's worth between -8 and +4 (what a reply may do; a gift or a lesson is worth more, never a word), and every line said.
+     * every reply's worth between -8 and +5 (+5 the most any reply had before: "I love you."; a gift or a lesson is worth more, never a word), and every line said.
      */
     static void developed(Persona p, int topics, int lowers, int onces) {
         List<EtoTopics.Topic> all = p.script().allTopics();
+        // The house rule on names in visible text (3.3.5 on): never Takatsuki or Yoshimura; Aogiri only from its own (Ayato, Noro).
+        java.util.regex.Pattern names = p == Persona.AYATO || p == Persona.NORO ? java.util.regex.Pattern.compile("Takatsuki|Yoshimura")
+            : java.util.regex.Pattern.compile("Takatsuki|Yoshimura|Aogiri");
         check(all.size() >= topics, p.key() + ": " + all.size() + " topics (at least " + topics + ")");
         int lower = 0;
         int raise = 0;
         int once = 0;
-        EtoTalk.Context[] cs = {context(NpcBonds.MOST, NpcBonds.ASKED, Romance.Stage.MARRIED, false, false, Spoken.NONE),
-            context(NpcBonds.FRIEND, NpcBonds.ASKED, Romance.Stage.NONE, false, false, Spoken.NONE),
-            context(NpcBonds.FRIENDLY, 0, Romance.Stage.NONE, false, false, Spoken.NONE)};
+        // Every variant of every line (a line picked by the seed has up to six): before 4.2.7's amend one seed was looked at, and a name in a
+        // line's other variant went unseen (the sabotage list caught it).
+        List<EtoTalk.Context> seeded = new java.util.ArrayList<>();
+        for (int seed = 0; seed < 12; seed++) {
+            seeded.add(context(NpcBonds.MOST, NpcBonds.ASKED, Romance.Stage.MARRIED, false, false, Spoken.NONE, seed));
+            seeded.add(context(NpcBonds.FRIEND, NpcBonds.ASKED, Romance.Stage.NONE, false, false, Spoken.NONE, seed));
+            seeded.add(context(NpcBonds.FRIENDLY, 0, Romance.Stage.NONE, false, false, Spoken.NONE, seed));
+        }
+        EtoTalk.Context[] cs = seeded.toArray(new EtoTalk.Context[0]);
         for (EtoTopics.Topic topic : all) {
             if (topic.id().equals("baby") || topic.id().equals("family")) {
                 continue; // a family's own (a baby carried, a child wanted), looked at by FamilyTests
@@ -207,13 +225,15 @@ public final class TalkRulesTests {
             for (EtoTalk.Context c : cs) {
                 if (topic.when().test(c)) {
                     String answer = topic.answer().apply(c);
-                    check(answer != null && !answer.isBlank() && !CompanionTests.FORBIDDEN.matcher(answer + topic.prompt().apply(c)).find(),
+                    check(answer != null && !answer.isBlank() && !CompanionTests.FORBIDDEN.matcher(answer + topic.prompt().apply(c)).find()
+                        && !names.matcher(answer + topic.prompt().apply(c)).find(),
                         p.key() + ": " + topic.id() + " is answered");
                 }
             }
             for (EtoTopics.Follow follow : topic.follows()) {
                 once += follow.once() ? 1 : 0;
-                check(!CompanionTests.FORBIDDEN.matcher(follow.prompt()).find(), p.key() + ": " + topic.id() + ": a reply's words");
+                check(!CompanionTests.FORBIDDEN.matcher(follow.prompt()).find() && !names.matcher(follow.prompt()).find(),
+                    p.key() + ": " + topic.id() + ": a reply's words");
                 int least = Integer.MAX_VALUE;
                 int most = Integer.MIN_VALUE;
                 for (EtoTalk.Context c : cs) {
@@ -221,9 +241,10 @@ public final class TalkRulesTests {
                         continue;
                     }
                     EtoTalk.Reply reply = follow.reply().apply(c);
-                    check(reply.line() != null && !reply.line().isBlank() && !CompanionTests.FORBIDDEN.matcher(reply.line()).find(),
+                    check(reply.line() != null && !reply.line().isBlank() && !CompanionTests.FORBIDDEN.matcher(reply.line()).find()
+                        && !names.matcher(reply.line()).find(),
                         p.key() + ": " + topic.id() + ": \"" + follow.prompt() + "\" is answered");
-                    check(reply.regard() >= -8 && reply.regard() <= 4, p.key() + ": " + topic.id() + ": \"" + follow.prompt() + "\" is worth " + reply.regard());
+                    check(reply.regard() >= -8 && reply.regard() <= 5, p.key() + ": " + topic.id() + ": \"" + follow.prompt() + "\" is worth " + reply.regard());
                     least = Math.min(least, reply.regard());
                     most = Math.max(most, reply.regard());
                 }

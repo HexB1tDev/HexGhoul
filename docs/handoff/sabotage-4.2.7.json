@@ -1,0 +1,58 @@
+[
+ {
+  "name": "Eto's new topics never offered",
+  "file": "src/main/java/com/hex/kagune/control/npc/EtoTopics.java",
+  "old": "java.util.stream.Stream.concat(FIRST.stream(), EtoMoreTopics.MORE.stream()).toList();",
+  "new": "FIRST;",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "Touka's new topics never offered",
+  "file": "src/main/java/com/hex/kagune/control/npc/ToukaScript.java",
+  "old": "        return ALL;\n    }",
+  "new": "        return TOPICS;\n    }",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "Ken's new topics never offered",
+  "file": "src/main/java/com/hex/kagune/control/npc/KenScript.java",
+  "old": "        return ALL;\n    }",
+  "new": "        return TOPICS;\n    }",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "threatening Eto with the doves costs nothing",
+  "file": "src/main/java/com/hex/kagune/control/npc/EtoMoreTopics.java",
+  "old": "*it isn't a question*\", -6, EtoGesture.ANGRY",
+  "new": "*it isn't a question*\", 0, EtoGesture.ANGRY",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "Touka's loneliness asked again and again",
+  "file": "src/main/java/com/hex/kagune/control/npc/ToukaTopics.java",
+  "old": "                EtoTopics.Follow.once(\"I'm not going anywhere.\"",
+  "new": "                new EtoTopics.Follow(\"I'm not going anywhere.\"",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "a kind word to Ken worth too much",
+  "file": "src/main/java/com/hex/kagune/control/npc/KenTopics.java",
+  "old": "On the house.\",\n                    3, EtoGesture.SERVE",
+  "new": "On the house.\",\n                    12, EtoGesture.SERVE",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "a canon name kept out of visible text, said again",
+  "file": "src/main/java/com/hex/kagune/control/npc/KenTopics.java",
+  "old": "\"Very much. The manager taught me to brew.",
+  "new": "\"Very much. Mr Yoshimura taught me to brew.",
+  "suite": "TalkRulesTests"
+ },
+ {
+  "name": "Eto names the masked army",
+  "file": "src/main/java/com/hex/kagune/control/npc/EtoMoreTopics.java",
+  "old": "c -> \"What are the masked ones to you?\",",
+  "new": "c -> \"What's Aogiri to you?\",",
+  "suite": "TalkRulesTests"
+ }
+]

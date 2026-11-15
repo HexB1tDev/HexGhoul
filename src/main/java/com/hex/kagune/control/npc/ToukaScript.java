@@ -608,6 +608,9 @@ final class ToukaScript extends CompanionScript {
 
     @Override
     protected List<EtoTopics.Topic> topics() {
-        return TOPICS;
+        return ALL;
     }
+
+    /** 4.2.7: the first topics, then the further ones ({@link ToukaTopics}). */
+    private static final List<EtoTopics.Topic> ALL = java.util.stream.Stream.concat(TOPICS.stream(), ToukaTopics.MORE.stream()).toList();
 }

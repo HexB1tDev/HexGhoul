@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.7 (HexGhoul): Eto, Touka and Ken: more to talk about, and more ways to win or lose them (testing)
+
+See `.github/release-notes-4.2.7.md`. `npc/EtoMoreTopics.MORE` (11; `EtoTopics.ALL` is now `FIRST` + it), `npc/ToukaTopics.MORE` (11),
+`npc/KenTopics.MORE` (10). `TalkRulesTests.developed` for all three (a reply's cap +5, the most any reply had before).
+`docs/handoff/sabotage-4.2.7.json`.
+
 ## 4.2.6 (HexGhoul): the General, Ayato and Noro: much more to talk about, and ways to get on their bad side (testing)
 
 See `.github/release-notes-4.2.6.md`. `npc/GeneralTopics.MORE` (13), `npc/AyatoTopics.MORE` (12), `npc/NoroTopics.MORE` (8) after their

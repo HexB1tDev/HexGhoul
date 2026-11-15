@@ -114,8 +114,8 @@ public final class EtoTopics {
         return EtoVoice.of(c).together();
     }
 
-    /** Every topic, in the order they are offered. */
-    public static final List<Topic> ALL = List.of(
+    /** Her first topics (1.3.2 on). */
+    static final List<Topic> FIRST = List.of(
         new Topic("reading", c -> true, c -> "What are you reading?",
             c -> EtoVoice.of(c).pick(c.seed(),
                 s("Something you wouldn't like. It has no pictures and a lot of teeth."),
@@ -356,6 +356,9 @@ public final class EtoTopics {
                     + "The people were better than me. I didn't go back.", 1)),
                 new Follow("Who's the owl?", c -> r("Nobody you'd want to meet. ...Except you already have. Ahaha.", 0, EtoGesture.GIGGLE)),
                 new Follow("Doves?", c -> r("Investigators. They hunt us with weapons made of us. Poetic. I'd write about it if it weren't so rude.", 0)))));
+
+    /** Every topic, in the order they are offered: her first ones, then (4.2.7) the further ones ({@link EtoMoreTopics}). */
+    public static final List<Topic> ALL = java.util.stream.Stream.concat(FIRST.stream(), EtoMoreTopics.MORE.stream()).toList();
 
     /** The topics open to {@code c}. */
     public static List<Topic> open(EtoTalk.Context c) {
