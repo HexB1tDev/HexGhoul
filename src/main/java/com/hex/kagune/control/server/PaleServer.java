@@ -59,6 +59,9 @@ public final class PaleServer {
         long swipeReadyAt = Long.MIN_VALUE;
         long grabReadyAt = Long.MIN_VALUE;
         long kickReadyAt = Long.MIN_VALUE;
+        /** 4.1.8: when Kick Master's right click (4.1.87: the dash kick) is back; when its hold was last heard. */
+        long twirlReadyAt = Long.MIN_VALUE;
+        long twirlHeardAt = Long.MIN_VALUE;
         long hammerReadyAt = Long.MIN_VALUE;
         /** 6.2.0: Watch This may next be called (after its tentacles are back in and its cooldown). */
         long watchReadyAt = Long.MIN_VALUE;
@@ -150,9 +153,32 @@ public final class PaleServer {
             && KingServer.wearing(player) == com.hex.kagune.control.king.KingForm.NONE; // 1.2.6: a final kakuja's keys are its own
     }
 
-    /** 7.0.1: how hard her body hits: all of it in her base form; the eyes alone, more the more mastered ({@link EyeRules#power}). */
+    /**
+     * 4.1.3: the fighting style {@code player} has with only the eyes open ({@link com.hex.kagune.control.FightStyle}): the one Ayato taught,
+     * or none (the game's own punch and right click).
+     */
+    public static com.hex.kagune.control.FightStyle style(ServerPlayer player) {
+        return com.hex.kagune.control.FightStyle.of(QuestServer.log(player)::open);
+    }
+
+    /**
+     * 4.1.7 (the owner: Kick Master "fully replaces the default M1 combos"; the General teaches it to a human): a human (no kagune) who
+     * learned Kick Master fights with the body whenever the main hand is empty: M1 is its string. Nothing else of the eye-mode fight (no
+     * Big Punch, no Speed Kick, no flips: those are a ghoul's).
+     */
+    public static boolean bare(ServerPlayer player) {
+        return !KaguneProfile.isUnlocked(player) && player.m_21205_().m_41619_() && style(player) == com.hex.kagune.control.FightStyle.KICK_MASTER;
+    }
+
+    /**
+     * 7.0.1: how hard her body hits: all of it in her base form; the eyes alone, more the more mastered ({@link EyeRules#power}). 4.1.7: a
+     * human's Kick Master, {@link EyeRules#HUMAN_POWER} (no kagune's strength behind it, thirty years of the General's in it).
+     */
     static float power(ServerPlayer player) {
-        return isPale(player) ? 1.0F : EyeRules.power(KaguneProfile.mastery(player));
+        if (isPale(player)) {
+            return 1.0F;
+        }
+        return KaguneProfile.isUnlocked(player) ? EyeRules.power(KaguneProfile.mastery(player)) : EyeRules.HUMAN_POWER;
     }
 
     /** 7.0.1: a blow of hers landed on {@code targets} bodies: the kagune's frenzy hears of it only with the kagune out. */
@@ -187,6 +213,7 @@ public final class PaleServer {
         return switch (state.move) {
             case KICK -> PaleRules.kickUntouchable(state.detail, age) || age <= PaleRules.kickArrive(state.detail) + PaleRules.KICK_CONTACT;
             case OWL_KICK -> age <= Math.max(1, state.detail) + com.hex.kagune.control.pale.OwlRules.KICK_SKEWER;
+            case DASH_KICK -> PaleRules.dashUntouchable(state.detail, age); // 4.1.87: through the run, until the blow
             case PUNCH, OWL_PUNCH -> age <= PaleRules.PUNCH_IMPACT;
             case WITNESS -> age < com.hex.kagune.control.pale.WitnessRules.FREE;
             default -> false;
@@ -214,7 +241,7 @@ public final class PaleServer {
 
     /** True while her base form is out (7.0.1: or another ghoul's eyes alone are open) and she is alive: the only time her moves are heard. */
     static boolean ready(ServerPlayer player) {
-        return (isPale(player) && KaguneProfile.isActive(player) || eyes(player)) && player.m_6084_();
+        return (isPale(player) && KaguneProfile.isActive(player) || eyes(player) || bare(player)) && player.m_6084_();
     }
 
     /** Starts {@code move} now and tells every client. */
@@ -233,6 +260,10 @@ public final class PaleServer {
         state.point = point == null ? Vec3.f_82478_ : point;
         state.hit.clear();
         broadcast(player, state);
+        // 1.3.63: a big move let go: met by the same coming back, both are cancelled with a big impact (MoveClash).
+        double hit = move == PaleMove.PUNCH || move == PaleMove.OWL_PUNCH
+            ? com.hex.kagune.control.pale.PaleRules.punchDamage(KaguneProfile.mastery(player), charge) * power(player) : MoveClash.HIT;
+        MoveClash.begun(player, move, detail, targetId, now, hit, () -> state.move == move && state.startedAt == now, () -> end(player, state));
     }
 
     /** Back to nothing (her stance), and every client told. */
@@ -285,6 +316,7 @@ public final class PaleServer {
         state.swipeReadyAt = Long.MIN_VALUE;
         state.grabReadyAt = Long.MIN_VALUE;
         state.kickReadyAt = Long.MIN_VALUE;
+        state.twirlReadyAt = Long.MIN_VALUE;
         state.hammerReadyAt = Long.MIN_VALUE;
         state.watchReadyAt = Long.MIN_VALUE;
         state.armReadyAt = Long.MIN_VALUE;
@@ -417,7 +449,8 @@ public final class PaleServer {
      */
     private static void eyesTick(ServerPlayer player) {
         PaleState state = peek(player);
-        if (!eyes(player) || !player.m_6084_()) {
+        // 4.1.7: and a human's Kick Master (an empty hand: anything taken up ends the blow under way).
+        if (!eyes(player) && !bare(player) || !player.m_6084_()) {
             if (state != null) {
                 if (state.move != PaleMove.NONE) {
                     state.fallSafe |= !player.m_20096_();
@@ -514,14 +547,35 @@ public final class PaleServer {
      * the flips, the Big Punch and the Speed Kick.
      */
     private static void eyesAction(ServerPlayer player, int action, int arg, int targetId) {
-        if (!eyes(player) || !ready(player) || PaleWitness.frozen(player)) {
+        boolean eyes = eyes(player);
+        if (!eyes && !bare(player) || !ready(player) || PaleWitness.frozen(player)) {
             return;
+        }
+        if (!eyes && action != C2SPaleAction.STRIKE && action != C2SPaleAction.TWIRL) {
+            return; // 4.1.7: a human's Kick Master is M1 alone (4.1.8: and its right click)
         }
         PaleState state = state(player);
         long now = player.m_9236_().m_46467_();
+        // 4.1.3: the blitz and the flips are Speedster's (a fighting style, learned from Ayato); the keys' moves are not a style's. 4.1.7: M1
+        // is Kick Master's once it is learned; the right click stays Speedster's flips until Kick Master's own comes.
+        com.hex.kagune.control.FightStyle style = style(player);
         switch (action) {
-            case C2SPaleAction.STRIKE -> PaleBlitz.click(player, targetId == 0 ? null : player.m_9236_().m_6815_(targetId));
-            case C2SPaleAction.FLIP -> PaleMoves.flip(player, state, arg, now);
+            case C2SPaleAction.STRIKE -> {
+                if (style.ownAttack()) {
+                    PaleBlitz.click(player, targetId == 0 ? null : player.m_9236_().m_6815_(targetId));
+                }
+            }
+            case C2SPaleAction.FLIP -> {
+                if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open) == com.hex.kagune.control.FightStyle.SPEEDSTER) {
+                    PaleMoves.flip(player, state, arg, now);
+                }
+            }
+            case C2SPaleAction.TWIRL -> {
+                // 4.1.8: Kick Master's own right click, charged on the hold (4.1.87: the dash kick).
+                if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open) == com.hex.kagune.control.FightStyle.KICK_MASTER) {
+                    PaleMoves.twirlKey(player, state, arg != 0, now);
+                }
+            }
             case C2SPaleAction.PUNCH -> PaleMoves.punchKey(player, state, arg != 0, targetId, now);
             case C2SPaleAction.KICK -> PaleMoves.kick(player, state, now);
             default -> {
@@ -529,10 +583,14 @@ public final class PaleServer {
         }
     }
 
-    /** 7.0.1: with only the eyes open a vanilla punch is the Speed Blitz instead (the client sends it so; this catches the rest). */
+    /**
+     * 7.0.1: with only the eyes open a vanilla punch is the Speed Blitz instead (the client sends it so; this catches the rest). 4.1.3: once
+     * Speedster is learned.
+     */
     @SubscribeEvent
     public static void punched(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player && eyes(player)) {
+        // 4.1.3: with no fighting style it stays the game's own punch.
+        if (event.getEntity() instanceof ServerPlayer player && (eyes(player) || bare(player)) && style(player).ownAttack()) {
             event.setCanceled(true);
             PaleBlitz.click(player, event.getTarget());
         }

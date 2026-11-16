@@ -9,8 +9,11 @@ package com.hex.kagune.control.ukaku;
 public enum UkakuMutation {
     /** In ghoul form (the kagune out): a big jump and speed boost. */
     AGILITY_BOOST("agility_boost", "Agility Boost", "Kagune out: twice as fast on your feet and a far higher jump."),
-    /** The right-click hop throws him back further; W held with it, he dashes forward through everything instead. */
-    FIRE_DASH("fire_dash", "Fire Dash", "Rabbit Hop throws you back further; hold W and right click to dash forward instead."),
+    /**
+     * The right-click hop throws him back further; W held with it, he dashes forward through everything instead. 4.1.2: in the crystal
+     * mode only (the fire's right click is the wing guard).
+     */
+    FIRE_DASH("fire_dash", "Fire Dash", "Crystal mode: Rabbit Hop throws you back further; hold W and right click to dash forward instead."),
     /** The Wing Vortex's fire cyclone is far bigger and hits harder. */
     FIRE_DANCE("fire_dance", "Fire Dance", "The Wing Vortex's fire cyclone is far bigger and hits much harder."),
     /** Stuck spikes and needles explode when they burst, and fire shards explode where they hit. */

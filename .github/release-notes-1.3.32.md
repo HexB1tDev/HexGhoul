@@ -1,0 +1,9 @@
+## 1.3.32 (HexGhoul): the airplane spins the right way on NPC parents; kids never hover after a moment; a Shift tap lets go of your kid's hand; the spouse never teleports around the house (testing)
+HexKagune 1.3.32 for Forge 1.20.1. Install on client and server (**protocol 66**, unchanged from 1.3.30). Testing build: compiled, tests pass, not tried in game.
+
+- **The airplane, the right way round (NPC parents).** A companion parent spun one way while the child they were swinging went round the other. The cause: the renderer for companions (and the CCG investigators) turned a pose's spin opposite to how the player animation does. Now both turn the same way, so the parent and child go round together. A test pins it.
+- **No more hovering kids.** After the airplane (and any moment that ends by setting the child down), the child stayed floating in midair. The cause: the moment put the child down, then the same tick carried it again from a stale lookup, which switched its gravity back off, and nothing ever put it down after that. Now a child that isn't being held always has gravity, which also fixes one saved to disk while carried.
+- **Let go of your kid's hand with Shift.** Walking hand in hand with your child, a tap of Shift lets go, like with companions ("Mei lets go of your hand."). It reacts only to a fresh press, so sneaking as you take their hand doesn't drop it. Carrying in arms or on the shoulders still ignores Shift (sneaking along a ledge never drops a baby).
+- **The spouse never teleports around the house.** No more jumping from the top floor to the basement. Stuck on the way to a chore, they give that one up and pick another; stuck anywhere at home, they just set off again. They're never moved anywhere. The only jump left is the "lost" one from very far (64+ blocks off home), and that happens only when no player is within 32 blocks to see it.
+
+Untested in game: all of it is compiled and unit tested only.

@@ -70,21 +70,24 @@ public final class OwlClient {
         OWLS.put(message.playerId(), new Owl(message.on(), began));
     }
 
-    /** {@code player}'s Owl, or null when she has none (nor is turning back from it). */
-    public static Owl get(Player player, double clock) {
+    /**
+     * {@code player}'s Owl, or null when she has none (nor is turning back from it). 1.3.8: anyone's, by their UUID (a player's is
+     * their profile's; Eto's is hers).
+     */
+    public static Owl get(net.minecraft.world.entity.Entity player, double clock) {
         if (player == null) {
             return null;
         }
-        Owl owl = OWLS.get(player.m_36316_().getId());
+        Owl owl = OWLS.get(player.m_20148_());
         if (owl != null && !owl.shown(clock)) {
-            OWLS.remove(player.m_36316_().getId());
+            OWLS.remove(player.m_20148_());
             return null;
         }
         return owl;
     }
 
     /** 6.2.4: whether {@code player} is the Owl's creature at {@code clock} (burst out of her, not yet shrunk back into her). */
-    public static boolean creature(Player player, double clock) {
+    public static boolean creature(net.minecraft.world.entity.Entity player, double clock) {
         Owl owl = get(player, clock);
         return owl != null && owl.grown(clock) > SHOWN;
     }
@@ -120,8 +123,15 @@ public final class OwlClient {
             return;
         }
         double clock = PaleClient.clock(0.0F);
-        for (net.minecraft.client.player.AbstractClientPlayer player : minecraft.f_91073_.m_6907_()) {
-            Owl owl = OWLS.get(player.m_36316_().getId());
+        // 1.3.8: every player's, and every Eto's.
+        java.util.List<net.minecraft.world.entity.LivingEntity> bodies = new java.util.ArrayList<>(minecraft.f_91073_.m_6907_());
+        for (int id : EtoClient.ids()) {
+            if (minecraft.f_91073_.m_6815_(id) instanceof net.minecraft.world.entity.LivingEntity her) {
+                bodies.add(her);
+            }
+        }
+        for (net.minecraft.world.entity.LivingEntity player : bodies) {
+            Owl owl = OWLS.get(player.m_20148_());
             if (owl == null || !owl.on || owl.burst || owl.age(clock) < OwlRules.BURST) {
                 continue;
             }

@@ -29,6 +29,38 @@ final class ControlCommands {
     private ControlCommands() {
     }
 
+    /** 3.6.3: {@code /kagune bikaku mutation <id> on|off [player]}. */
+    private static int bikakuMutation(CommandContext<CommandSourceStack> context, ServerPlayer player, boolean on) {
+        String id = StringArgumentType.getString(context, "mutation");
+        com.hex.kagune.control.bikaku.BikakuMutation mutation = com.hex.kagune.control.bikaku.BikakuMutation.byId(id);
+        if (mutation == null) {
+            context.getSource().m_81352_(Component.m_237113_("No such Bikaku mutation: " + id));
+            return 0;
+        }
+        if (!mutation.built()) {
+            context.getSource().m_81352_(Component.m_237113_(mutation.displayName() + " is still to come."));
+            return 0;
+        }
+        boolean changed = BikakuDevour.grant(player, mutation, on);
+        String who = player.m_36316_().getName();
+        context.getSource().m_288197_(() -> Component.m_237113_(mutation.displayName() + (changed ? (on ? " unlocked for " : " taken from ") : (on
+            ? " was already unlocked for " : " was already locked for ")) + who), true);
+        return 1;
+    }
+
+    /** 4.1.99: {@code /kagune lag [log]}, from a player (their game measured too) or the console (the server only). */
+    private static int lag(CommandContext<CommandSourceStack> context, boolean log) {
+        ServerPlayer player;
+        try {
+            player = context.getSource().m_81375_();
+        } catch (CommandSyntaxException console) {
+            player = null;
+        }
+        String said = log ? LagServer.log(player) : LagServer.measure(player);
+        context.getSource().m_288197_(() -> Component.m_237113_(said), false);
+        return 1;
+    }
+
     static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("control")
             .executes(ControlCommands::report)
@@ -38,6 +70,30 @@ final class ControlCommands {
                 .then(Commands.m_82129_("type", StringArgumentType.word())
                     .suggests((context, builder) -> SharedSuggestionProvider.m_82970_(List.of("glance", "step", "lunge", "strike"), builder))
                     .executes(ControlCommands::forceUrge)))));
+        // 4.1.12 (the owner: "And I still can't. Mind you, I still fucking can't."): where this world's hideout, CCG building, Ken's tower,
+        // Anteiku and library stand, as worked out (after /locate or the world's making asked for them), with the /tp to each.
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("places").executes(context -> {
+            // 4.1.13: from a player, each place's chunk is made and looked in (built there, or what stopped it); from the console, the spots.
+            ServerPlayer player;
+            try {
+                player = context.getSource().m_81375_();
+            } catch (CommandSyntaxException console) {
+                player = null;
+            }
+            java.util.List<String> lines = new java.util.ArrayList<>(player != null ? com.hex.kagune.control.ControlStructures.report(player.m_284548_())
+                : com.hex.kagune.control.ControlStructures.report());
+            if (player != null) {
+                lines.addAll(UniqueNpcs.whereabouts(player.m_284548_())); // 4.1.96: and where each official is now
+            }
+            for (String line : lines) {
+                context.getSource().m_288197_(() -> Component.m_237113_(line), false);
+            }
+            return 1;
+        })));
+        // 4.1.99: the mod's profiler, for anyone (no operator needed): the ten costliest parts of the mod, server and client (LagServer).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("lag")
+            .executes(context -> lag(context, false))
+            .then(Commands.m_82127_("log").executes(context -> lag(context, true)))));
         // 6.2.0: cooldowns off (everything ready again the moment it is over) and back on, for yourself or a player.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("cooldowns").requires(source -> source.m_6761_(2))
             .executes(ControlCommands::reportCooldowns)
@@ -47,6 +103,17 @@ final class ControlCommands {
             .then(Commands.m_82127_("on").executes(context -> cooldowns(context, false, context.getSource().m_81375_()))
                 .then(Commands.m_82129_("player", EntityArgument.m_91466_())
                     .executes(context -> cooldowns(context, false, EntityArgument.m_91474_(context, "player")))))));
+        // 3.6.3: a Bikaku mutation on or off (a testing shortcut for operators until the quest that unlocks them is in).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("bikaku").requires(source -> source.m_6761_(2))
+            .then(Commands.m_82127_("mutation").then(Commands.m_82129_("mutation", StringArgumentType.word())
+                .suggests((context, builder) -> SharedSuggestionProvider.m_82970_(java.util.Arrays.stream(
+                    com.hex.kagune.control.bikaku.BikakuMutation.values()).map(com.hex.kagune.control.bikaku.BikakuMutation::id).toList(), builder))
+                .then(Commands.m_82127_("on").executes(context -> bikakuMutation(context, context.getSource().m_81375_(), true))
+                    .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                        .executes(context -> bikakuMutation(context, EntityArgument.m_91474_(context, "player"), true))))
+                .then(Commands.m_82127_("off").executes(context -> bikakuMutation(context, context.getSource().m_81375_(), false))
+                    .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                        .executes(context -> bikakuMutation(context, EntityArgument.m_91474_(context, "player"), false))))))));
         // 3.1.0: the abilities board above the chat, on and off (each player's own, kept in their client config).
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("hud").then(Commands.m_82127_("toggle")
             .executes(ControlCommands::toggleHud))));
@@ -83,23 +150,97 @@ final class ControlCommands {
                 QuestServer.hunt(context.getSource().m_81375_());
                 return 1;
             }))));
+        // 1.3.1: Eto's regard for a player set to the most (a testing shortcut for operators). 1.3.14: Touka's and Ken's too.
+        for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+            dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_(persona.key()).requires(source -> source.m_6761_(2))
+                .then(Commands.m_82127_("here").executes(context -> companionHere(context, persona)))
+                .then(Commands.m_82127_("max").executes(context -> maxEto(context, context.getSource().m_81375_(), persona))
+                    .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                        .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player"), persona))))
+                // 2.2.7: married at once, everything about it full.
+                .then(Commands.m_82127_("marry").executes(context -> marry(context, context.getSource().m_81375_(), persona))
+                    .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                        .executes(context -> marry(context, EntityArgument.m_91474_(context, "player"), persona))))));
+        }
+        // 1.3.31: what your spouse makes of your home (anyone's command): what it found, what it can do, what it's doing, the meal it keeps.
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("home").executes(context -> {
+            ServerPlayer player = context.getSource().m_81375_();
+            boolean any = false;
+            for (com.hex.kagune.control.npc.EtoNpc npc : EtoBrain.live()) {
+                if (npc.m_9236_() == player.m_9236_() && player.m_20148_().equals(EtoBrain.spouse(npc))) {
+                    any = true;
+                    for (String line : HomeChores.status(npc, player.m_284548_())) {
+                        context.getSource().m_288197_(() -> Component.m_237113_(line), false);
+                    }
+                }
+            }
+            if (!any) {
+                context.getSource().m_81352_(Component.m_237113_("No spouse of yours in this world right now (married, and loaded nearby)."));
+            }
+            return any ? 1 : 0;
+        })));
+        // 1.3.15: where each of your children is (anyone's command): which way, how far, and they glow a while so you can spot them.
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("children").executes(context -> children(context,
+            context.getSource().m_81375_()))));
+        // 1.3.10: a testing shortcut for operators: every pregnancy the player is part of brought to ten seconds before the birth.
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("family").requires(source -> source.m_6761_(2))
+            .then(Commands.m_82127_("soon").executes(context -> familySoon(context, context.getSource().m_81375_())))
+            // 1.3.14: any point of it (percent), to see the belly at each stage; time goes on from there as it always does.
+            .then(Commands.m_82127_("at").then(Commands.m_82129_("percent", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 99))
+                .executes(context -> familyAt(context, context.getSource().m_81375_(),
+                    com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "percent")))))
+            .then(Commands.m_82127_("grow").executes(context -> familyGrow(context, context.getSource().m_81375_())))));
         // 7.0.1: Ghoul Meat devoured: what it gives now; an operator can set the count.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("ghoulmeat")
             .executes(ControlCommands::reportGhoulMeat)
             .then(Commands.m_82127_("set").requires(source -> source.m_6761_(2))
                 .then(Commands.m_82129_("count", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 100000))
                     .executes(ControlCommands::setGhoulMeat)))));
+        // 2.0.29: the White Reaper five blocks ahead (an operator's, for testing him; never two: one already about is sent away first).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("reaper").requires(source -> source.m_6761_(2))
+            .executes(context -> {
+                String said = AgentBrain.summonReaper(context.getSource().m_81375_());
+                context.getSource().m_288197_(() -> Component.m_237113_(said), true);
+                return said.startsWith("No room") || said.contains("held") ? 0 : 1;
+            })));
+        // 3.0.0: an investigator with one of the higher ranks' kagune-made weapons five blocks ahead (an operator's, to see them):
+        // whip, spear, hammer or sword, its rank 4 to 9 (6 if not given; 8 and 9 a masterwork).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("investigator").requires(source -> source.m_6761_(2))
+            .then(Commands.m_82129_("weapon", StringArgumentType.word())
+                .executes(context -> summonArmed(context, StringArgumentType.getString(context, "weapon"), 6))
+                .then(Commands.m_82129_("rank", com.mojang.brigadier.arguments.IntegerArgumentType.integer(4, 9))
+                    .executes(context -> summonArmed(context, StringArgumentType.getString(context, "weapon"),
+                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "rank")))))));
         // 7.0.2: a ghoul NPC five blocks ahead (an operator's: to meet one without waiting for the night), its kagune, temper and tier
-        // as asked (rinkaku/ukaku; feral, gourmet, pack, drifter, scavenger, anteiku; 0 to 2), else rolled.
+        // as asked (rinkaku/ukaku; feral, gourmet, pack, drifter, scavenger, anteiku; 4.0.0: its rank 0 to 5, D to SS), else rolled.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("npc").requires(source -> source.m_6761_(2))
             .executes(context -> spawnNpc(context, null, null, -1))
             .then(Commands.m_82129_("kind", StringArgumentType.word())
                 .executes(context -> spawnNpc(context, StringArgumentType.getString(context, "kind"), null, -1))
                 .then(Commands.m_82129_("temper", StringArgumentType.word())
                     .executes(context -> spawnNpc(context, StringArgumentType.getString(context, "kind"), StringArgumentType.getString(context, "temper"), -1))
-                    .then(Commands.m_82129_("tier", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 2))
+                    .then(Commands.m_82129_("tier", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 5))
                         .executes(context -> spawnNpc(context, StringArgumentType.getString(context, "kind"), StringArgumentType.getString(context, "temper"),
                             com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "tier"))))))));
+    }
+
+    /** 3.0.0: {@code /kagune investigator <weapon> [rank]}. */
+    private static int summonArmed(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> context, String weapon, int rank)
+        throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        com.hex.kagune.control.quinque.Arm arm = switch (weapon.toLowerCase(java.util.Locale.ROOT)) {
+            case "whip", "tendril", "rinkaku" -> com.hex.kagune.control.quinque.Arm.WHIP;
+            case "spear", "crystal", "ukaku" -> com.hex.kagune.control.quinque.Arm.CRYSTAL_SPEAR;
+            case "hammer", "koukaku" -> com.hex.kagune.control.quinque.Arm.FLESH_HAMMER;
+            case "sword", "greatsword", "bikaku" -> com.hex.kagune.control.quinque.Arm.BONE_SWORD;
+            default -> null;
+        };
+        if (arm == null) {
+            context.getSource().m_81352_(Component.m_237113_("Which weapon? whip, spear, hammer or sword."));
+            return 0;
+        }
+        String said = AgentBrain.summonArmed(context.getSource().m_81375_(), arm, rank);
+        context.getSource().m_288197_(() -> Component.m_237113_(said), true);
+        return said.startsWith("No room") ? 0 : 1;
     }
 
     private static int spawnNpc(CommandContext<CommandSourceStack> context, String kind, String temper, int tier) throws CommandSyntaxException {
@@ -108,7 +249,9 @@ final class ControlCommands {
             () -> player.m_217043_().m_188500_());
         com.hex.kagune.control.npc.NpcIdentity.Kind k = rolled.kind();
         if (kind != null) {
-            k = kind.equalsIgnoreCase("ukaku") ? com.hex.kagune.control.npc.NpcIdentity.Kind.UKAKU : com.hex.kagune.control.npc.NpcIdentity.Kind.RINKAKU;
+            k = kind.equalsIgnoreCase("ukaku") ? com.hex.kagune.control.npc.NpcIdentity.Kind.UKAKU
+                : kind.equalsIgnoreCase("koukaku") || kind.equalsIgnoreCase("blade") ? com.hex.kagune.control.npc.NpcIdentity.Kind.KOUKAKU
+                : com.hex.kagune.control.npc.NpcIdentity.Kind.RINKAKU;
         }
         com.hex.kagune.control.npc.NpcTemper t = rolled.temper();
         if (temper != null) {
@@ -119,12 +262,12 @@ final class ControlCommands {
             }
         }
         com.hex.kagune.control.npc.NpcIdentity who = new com.hex.kagune.control.npc.NpcIdentity(k, t, tier < 0 ? rolled.tier() : tier, rolled.skin(),
-            rolled.name(), rolled.seed());
+            rolled.name(), rolled.seed(), rolled.mask(), false);
         net.minecraft.world.phys.Vec3 ahead = UkakuFire.horizontal(player.m_20154_()).m_82490_(5.0);
         com.hex.kagune.control.npc.GhoulNpc npc = GhoulNpcSpawner.place(player.m_284548_(), player.m_20185_() + ahead.f_82479_,
             player.m_20189_() + ahead.f_82481_, who);
         String said = npc == null ? "No room for a ghoul there." : "A ghoul: " + who.displayName() + " (" + who.kind().name().toLowerCase(java.util.Locale.ROOT)
-            + ", tier " + who.tier() + ").";
+            + ", " + who.rank() + "-rank" + (who.maskItem() == null ? "" : ", masked") + ").";
         context.getSource().m_288197_(() -> Component.m_237113_(said), false);
         return npc == null ? 0 : 1;
     }
@@ -135,10 +278,24 @@ final class ControlCommands {
         ServerPlayer player = context.getSource().m_81375_();
         if (id.equalsIgnoreCase("all")) {
             List<String> done = QuestServer.completeOpen(player);
-            String said = done.isEmpty() ? "No quests on right now." : "Completed " + done.size() + (done.size() == 1 ? " quest: " : " quests: ")
-                + String.join(", ", done) + ".";
+            String said = (done.isEmpty() ? "" : "Completed " + done.size() + (done.size() == 1 ? " quest: " : " quests: ") + String.join(", ", done)
+                + ". ") + "Every quest is finished for good, on every kagune: nothing to complete again.";
             context.getSource().m_288197_(() -> Component.m_237113_(said), false);
-            return done.size();
+            // 2.2.8: and everything they open, those taught by a companion too (the Dragon, the kakujas): nobody to go and ask.
+            List<String> opened = QuestServer.grantAll(player);
+            String gates = opened.isEmpty() ? "Every unlock was already open." : "Unlocked: " + String.join(", ", opened) + ".";
+            context.getSource().m_288197_(() -> Component.m_237113_(gates), false);
+            // Rinkaku: the crown (War or Peace) to choose now, as after the Dragon (its gate open, the Dragon still wakes at the next death).
+            if (PathServer.path(player) == com.hex.kagune.control.KagunePath.RINKAKU && !KingServer.awake(player)) {
+                KingServer.awaken(player);
+                context.getSource().m_288197_(() -> Component.m_237113_("The final kakuja (War or Peace) is yours to choose."), false);
+            }
+            int mastery = KaguneProfile.mastery(player);
+            if (mastery < 1000) {
+                context.getSource().m_288197_(() -> Component.m_237113_("\u00a77Your mastery is " + mastery
+                    + "; a form still needs its own mastery too (the kakujas 750 to 1000). /kagune mastery set 1000 for all of it."), false);
+            }
+            return done.size() + opened.size();
         }
         boolean done = QuestServer.force(player, id);
         if (!done) {
@@ -267,6 +424,213 @@ final class ControlCommands {
         }
         String name = type.name().toLowerCase(Locale.ROOT);
         context.getSource().m_288197_(() -> Component.m_237113_("Forced a " + name + " instinct urge toward the nearest prey"), false);
+        return 1;
+    }
+
+    /** Eto's regard for the player at the most, met (any grudge from killing her forgotten): only with her within 10 blocks of them. */
+    /** 1.3.10, for testing: the nearest of the player's children (within 16 blocks) grown into its next stage. */
+    private static int familyGrow(CommandContext<CommandSourceStack> context, ServerPlayer player) {
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        String me = Pregnancies.player(player.m_20148_());
+        for (com.hex.kagune.control.npc.ChildNpc npc : NpcIndex.of(level, com.hex.kagune.control.npc.ChildNpc.class, player.m_20191_().m_82400_(16.0),
+            child -> child.m_6084_())) {
+            Children.Child child = Children.get(level, npc.childId());
+            if (child != null && child.parent(me)) {
+                com.hex.kagune.control.family.ChildStage stage = child.stage(level.m_46467_());
+                if (stage == com.hex.kagune.control.family.ChildStage.ADULT) {
+                    context.getSource().m_81352_(Component.m_237113_(child.name + " is as grown as a child gets."));
+                    return 0;
+                }
+                long into = (long)(stage.next().fromDays * com.hex.kagune.control.family.ChildStage.DAY) - (level.m_46467_() - child.born) + 1L;
+                Children.age(level, child, into);
+                context.getSource().m_288197_(() -> Component.m_237113_(child.name + " is a " + stage.next().name().toLowerCase() + " now."), false);
+                return 1;
+            }
+        }
+        context.getSource().m_81352_(Component.m_237113_("None of your children within 16 blocks."));
+        return 0;
+    }
+
+    /** 1.3.15: each of {@code player}'s children: where it is, how far and which way, glowing 15 seconds; or home, or coming back. */
+    private static int children(CommandContext<CommandSourceStack> context, ServerPlayer player) {
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        java.util.List<Children.Child> kids = Children.of(level, Pregnancies.player(player.m_20148_()));
+        if (kids.isEmpty()) {
+            context.getSource().m_81352_(Component.m_237113_("You don't have any children."));
+            return 0;
+        }
+        for (Children.Child kid : kids) {
+            com.hex.kagune.control.npc.UniqueNpc known = UniqueNpcs.get(level, "child:" + kid.id);
+            net.minecraft.world.entity.Entity body = null;
+            if (known.body != null && level.m_7654_() != null) {
+                for (net.minecraft.server.level.ServerLevel each : level.m_7654_().m_129785_()) {
+                    net.minecraft.world.entity.Entity found = each.m_8791_(known.body);
+                    if (found != null && found.m_6084_()) {
+                        body = found;
+                    }
+                }
+            }
+            String stage = kid.stage(level.m_46467_()).name().toLowerCase(java.util.Locale.ROOT);
+            String line;
+            if (body instanceof net.minecraft.world.entity.LivingEntity living && body.m_9236_() == player.m_9236_()) {
+                double dx = body.m_20185_() - player.m_20185_();
+                double dz = body.m_20189_() - player.m_20189_();
+                int far = (int)Math.round(Math.sqrt(dx * dx + dz * dz));
+                String[] ways = {"south", "south-west", "west", "north-west", "north", "north-east", "east", "south-east"};
+                String way = ways[Math.floorMod((int)Math.round(Math.toDegrees(Math.atan2(-dx, dz)) / 45.0), 8)];
+                living.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19619_, 300, 0, false, false, false));
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): " + (far < 2 ? "right here" : far + " blocks " + way) + ", at "
+                    + (int)Math.floor(body.m_20185_()) + " " + (int)Math.floor(body.m_20186_()) + " " + (int)Math.floor(body.m_20189_())
+                    + " \u00a77(glowing for 15 seconds)";
+            } else if (body != null) {
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): in another dimension.";
+            } else if (!known.alive && known.body != null) {
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): hurt badly; comes back home a day after.";
+            } else if (known.homed) {
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): not loaded; home is at " + known.homeX + " " + (known.homeY - 1) + " " + known.homeZ + ".";
+            } else {
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): nowhere loaded.";
+            }
+            // 1.3.47: its health, and what it grows into.
+            if (body instanceof net.minecraft.world.entity.LivingEntity hp) {
+                float grown = Children.vitality(level, kid);
+                line += "\n  \u00a77health: " + (int)Math.ceil(hp.m_21223_()) + " / " + (int)Math.ceil(hp.m_21233_())
+                    + (grown > 0.0F ? " (grows into " + (int)Math.ceil(grown) + ")" : "");
+            }
+            // 1.3.43: what kagune it inherited (worked out now for a child from before, once its parents are about), and its colour.
+            com.hex.kagune.control.family.Genome genome = Children.genome(level, kid);
+            if (genome.ghoul()) {
+                line += "\n  \u00a77kagune: " + com.hex.kagune.control.family.ChildKaguneRules.describe(genome.kagune(), genome.seed())
+                    + (genome.colour() >= 0 ? ", " + com.hex.kagune.control.KaguneColours.name(genome.colour()) + " (" + com.hex.kagune.control.KaguneColours.hex(genome.colour()) + ")" : "")
+                    + (com.hex.kagune.control.family.KaguneGenes.owl(genome.kagune()) ? " \u00a78(her rake, grab and club; her Mutated Arm when badly hurt)" : "");
+            }
+            String said = line;
+            context.getSource().m_288197_(() -> Component.m_237113_(said), false);
+        }
+        return kids.size();
+    }
+
+    private static int familyAt(CommandContext<CommandSourceStack> context, ServerPlayer player, int percent) {
+        long left = Math.round(com.hex.kagune.control.family.Pregnancy.TERM * (1.0 - percent / 100.0));
+        int moved = Pregnancies.hurry(player.m_284548_(), Pregnancies.player(player.m_20148_()), left);
+        if (moved == 0) {
+            context.getSource().m_81352_(Component.m_237113_("No one is carrying your child, and you aren't carrying one."));
+            return 0;
+        }
+        context.getSource().m_288197_(() -> Component.m_237113_("The pregnancy is " + percent + "% along (the belly shows from "
+            + Math.round(com.hex.kagune.control.family.Pregnancy.SHOWS * 100) + "%)."), false);
+        return 1;
+    }
+
+    private static int familySoon(CommandContext<CommandSourceStack> context, ServerPlayer player) {
+        int hurried = Pregnancies.hurry(player.m_284548_(), Pregnancies.player(player.m_20148_()), 200L);
+        if (hurried == 0) {
+            context.getSource().m_81352_(Component.m_237113_("No one is carrying your child, and you aren't carrying one."));
+            return 0;
+        }
+        context.getSource().m_288197_(() -> Component.m_237113_("The birth is ten seconds away."), false);
+        return 1;
+    }
+
+    /**
+     * 1.3.14: {@code /kagune <companion> here}: the one of them there is comes to where the player stands and makes it home (made here if
+     * none can be found loaded): until their own places are built, this is where they live. Whoever they are with stays.
+     */
+    private static int companionHere(CommandContext<CommandSourceStack> context, com.hex.kagune.control.npc.Persona persona) throws CommandSyntaxException {
+        ServerPlayer player = context.getSource().m_81375_();
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        com.hex.kagune.control.npc.UniqueNpc known = UniqueNpcs.get(level, persona.key());
+        com.hex.kagune.control.npc.EtoNpc body = known.body != null && level.m_8791_(known.body) instanceof com.hex.kagune.control.npc.EtoNpc there
+            && there.m_6084_() ? there : null;
+        if (body == null) {
+            net.minecraft.world.entity.EntityType<? extends com.hex.kagune.control.npc.EtoNpc> type = persona == com.hex.kagune.control.npc.Persona.TOUKA
+                ? com.hex.kagune.control.ControlEntities.TOUKA.get() : persona == com.hex.kagune.control.npc.Persona.KEN
+                ? com.hex.kagune.control.ControlEntities.KEN.get() : persona == com.hex.kagune.control.npc.Persona.AYATO
+                ? com.hex.kagune.control.ControlEntities.AYATO.get() : persona == com.hex.kagune.control.npc.Persona.NORO
+                ? com.hex.kagune.control.ControlEntities.NORO.get() : persona == com.hex.kagune.control.npc.Persona.GENERAL
+                ? com.hex.kagune.control.ControlEntities.GENERAL.get() : persona == com.hex.kagune.control.npc.Persona.ROMA
+                ? com.hex.kagune.control.ControlEntities.ROMA.get() : persona == com.hex.kagune.control.npc.Persona.BANJOU
+                ? com.hex.kagune.control.ControlEntities.BANJOU.get() : com.hex.kagune.control.ControlEntities.ETO.get();
+            body = type.m_20615_(level);
+            if (body == null) {
+                context.getSource().m_81352_(Component.m_237113_("Couldn't make " + persona.name() + " here."));
+                return 0;
+            }
+            body.m_7678_(player.m_20185_(), player.m_20186_(), player.m_20189_(), player.m_146908_(), 0.0F);
+            body.rehome();
+            UniqueNpcs.adopt(level, persona.key(), body, body.home());
+            level.m_7967_(body);
+        } else {
+            body.m_6021_(player.m_20185_(), player.m_20186_(), player.m_20189_());
+            body.m_21573_().m_26573_();
+            body.rehome();
+            UniqueNpcs.adopt(level, persona.key(), body, body.home());
+        }
+        String name = body.displayName();
+        // 4.1.83: an official belongs at her own place (UniqueNpcs.keepPlaces): unless married (the spouse's home is hers), this is a visit.
+        boolean married = UniqueNpcs.get(level, persona.key()).stage == com.hex.kagune.control.npc.Romance.Stage.MARRIED;
+        String her = persona.female() ? "Her" : "His";
+        String she = persona.female() ? "she" : "he";
+        String said = married || com.hex.kagune.control.npc.HomePlace.of(persona.key()) == null ? name + " lives here now."
+            : name + " is here now. " + her + " own place is still " + her.toLowerCase(java.util.Locale.ROOT) + " home: once someone is there half a minute without "
+                + (persona.female() ? "her" : "him") + ", " + she + " is made there again and this one leaves.";
+        context.getSource().m_288197_(() -> Component.m_237113_(said), false);
+        return 1;
+    }
+
+    private static int maxEto(CommandContext<CommandSourceStack> context, ServerPlayer player, com.hex.kagune.control.npc.Persona persona) {
+        if (NpcIndex.of(player.m_9236_(), com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(10.0),
+            npc -> npc.m_6084_() && npc.persona() == persona).isEmpty()) {
+            context.getSource().m_81352_(Component.m_237113_("No " + persona.name() + " within 10 blocks."));
+            return 0;
+        }
+        com.hex.kagune.control.quest.QuestLog.Bond bond = QuestServer.bond(player, persona.key());
+        QuestServer.bond(player, persona.key(), bond.regard(com.hex.kagune.control.npc.NpcBonds.MOST).with(com.hex.kagune.control.npc.NpcBonds.MET, true));
+        context.getSource().m_288197_(() -> Component.m_237113_(persona.name() + "'s regard is at the most (100)."), false);
+        return 1;
+    }
+
+    /**
+     * 2.2.7 (the owner: "a command to fully marry [Touka, Eto and Ken] ... everything about that person's relationship is instantly maxed,
+     * categorized as married, and everything's full"): {@code player} married to {@code persona} at once, as a ring taken would leave it
+     * and more: regard at the most, every chapter of the courtship closed, dating since and wed today (earlier days kept), nothing held
+     * against them (no sulk, grudge, offence, jealousy or make-up owed), and giddy with them. Existing spouses remain married and feel
+     * jealous through RomanceServer. Operators only; the companion needn't be near.
+     */
+    private static int marry(CommandContext<CommandSourceStack> context, ServerPlayer player, com.hex.kagune.control.npc.Persona persona) {
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        long day = Math.floorDiv(level.m_46468_(), 24000L);
+        String key = persona.key();
+        List<String> notes = new java.util.ArrayList<>();
+        // 3.0.8: another wedding must not clear the previous spouse's world slot or dating flag.
+        com.hex.kagune.control.npc.UniqueNpc unique = UniqueNpcs.get(level, key);
+        if (unique.claimedFrom(player.m_20148_())) {
+            notes.add(persona.name() + " left " + (unique.partnerName.isEmpty() ? "their partner" : unique.partnerName) + " for you.");
+        }
+        UniqueNpcs.pair(level, key, player, com.hex.kagune.control.npc.Romance.Stage.MARRIED);
+        GangServer.married(player, persona); // 4.1.67: a wedding by command keeps the same rule
+        com.hex.kagune.control.npc.NpcMemory memory = NpcMemoryServer.of(player);
+        long since = memory.get(key, com.hex.kagune.control.npc.NpcMemory.SINCE, -1L);
+        long wed = memory.get(key, com.hex.kagune.control.npc.NpcMemory.WED, -1L);
+        memory.set(key, com.hex.kagune.control.npc.NpcMemory.SINCE, since >= 0L && since <= day ? since : day);
+        memory.set(key, com.hex.kagune.control.npc.NpcMemory.WED, wed >= 0L && wed <= day ? wed : day);
+        memory.forget(key, com.hex.kagune.control.npc.NpcMemory.JEALOUS);
+        NpcMemoryServer.save(player);
+        QuestServer.bond(player, key, com.hex.kagune.control.npc.Courtship.wed(QuestServer.bond(player, key)));
+        RomanceServer.romanced(player, key);
+        // The one in the world (if loaded): nothing held against them, giddy, the ring's gesture and hearts.
+        for (com.hex.kagune.control.npc.EtoNpc npc : EtoBrain.live()) {
+            if (npc.persona() == persona && npc.m_6084_() && npc.m_9236_() == level) {
+                EtoBrain.married(npc, player, now);
+            }
+        }
+        String name = persona.name();
+        context.getSource().m_288197_(() -> Component.m_237113_(persona.colour() + "\u2764 " + player.m_36316_().getName() + " and " + name
+            + " are married. Regard 100, the courtship done, nothing held against you."), true);
+        for (String note : notes) {
+            context.getSource().m_288197_(() -> Component.m_237113_("\u00a77" + note), false);
+        }
         return 1;
     }
 }

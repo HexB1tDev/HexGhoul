@@ -2,6 +2,7 @@
 package net.minecraft.world.entity;
 
 public abstract class LivingEntity extends Entity {
+    /** getMainArm (3.7.3) */ public net.minecraft.world.entity.HumanoidArm m_5737_() { throw new UnsupportedOperationException(); }
     /** dropCustomDeathLoot(source, looting, recentlyHit) (7.0.2) */ protected void m_7472_(net.minecraft.world.damagesource.DamageSource source, int looting, boolean recentlyHit) { throw new UnsupportedOperationException(); }
     /** getAttribute (7.0.2) */ public net.minecraft.world.entity.ai.attributes.AttributeInstance m_21051_(net.minecraft.world.entity.ai.attributes.Attribute attribute) { throw new UnsupportedOperationException(); }
     /** getRandom (declared here, not on Entity) */ public net.minecraft.util.RandomSource m_217043_() { throw new UnsupportedOperationException(); }
@@ -17,18 +18,26 @@ public abstract class LivingEntity extends Entity {
     /** hasLineOfSight */ public boolean m_142582_(Entity entity) { throw new UnsupportedOperationException(); }
     /** onClimbable */ public boolean m_6147_() { throw new UnsupportedOperationException(); }
     /** isSleeping */ public boolean m_5803_() { throw new UnsupportedOperationException(); }
+    /** startSleeping(bedPos) (1.3.21: companions and children lie down in their beds at home) */ public void m_5802_(net.minecraft.core.BlockPos pos) { throw new UnsupportedOperationException(); }
+    /** stopSleeping (yarn wakeUp) (1.3.21) */ public void m_5796_() { throw new UnsupportedOperationException(); }
+    /** isImmobile (1.3.21: overridden, asleep in bed) */ protected boolean m_6107_() { throw new UnsupportedOperationException(); }
     /** isBlocking (7.0.2) */ public boolean m_21254_() { throw new UnsupportedOperationException(); }
     /** isUsingItem */ public boolean m_6117_() { throw new UnsupportedOperationException(); }
     /** heal */ public void m_5634_(float amount) { throw new UnsupportedOperationException(); }
     /** getHealth */ public float m_21223_() { throw new UnsupportedOperationException(); }
     /** getMaxHealth */ public float m_21233_() { throw new UnsupportedOperationException(); }
+    /** pushEntities (yarn tickCramming; 1.3.15) */ protected void m_6138_() { throw new UnsupportedOperationException(); }
     /** setHealth */ public void m_21153_(float health) { throw new UnsupportedOperationException(); }
     /** hasEffect */ public boolean m_21023_(net.minecraft.world.effect.MobEffect effect) { throw new UnsupportedOperationException(); }
     /** removeEffect */ public boolean m_21195_(net.minecraft.world.effect.MobEffect effect) { throw new UnsupportedOperationException(); }
+    /** removeAllEffects (4.1.74: the White Reaper's end) */ public boolean m_21219_() { throw new UnsupportedOperationException(); }
+    /** clearFire (Entity's; allowlisted on LivingEntity: 4.1.74 the White Reaper's end) */ public void m_20095_() { throw new UnsupportedOperationException(); }
     /** getEffect */ public net.minecraft.world.effect.MobEffectInstance m_21124_(net.minecraft.world.effect.MobEffect effect) { throw new UnsupportedOperationException(); }
     /** addEffect */ public boolean m_7292_(net.minecraft.world.effect.MobEffectInstance effect) { throw new UnsupportedOperationException(); }
     /** addEffect(effect, source) */ public boolean m_147207_(net.minecraft.world.effect.MobEffectInstance effect, Entity source) { throw new UnsupportedOperationException(); }
     /** getMainHandItem */ public net.minecraft.world.item.ItemStack m_21205_() { throw new UnsupportedOperationException(); }
+    /** getItemBySlot */ public net.minecraft.world.item.ItemStack m_6844_(EquipmentSlot slot) { throw new UnsupportedOperationException(); }
+    /** setItemSlot (4.0.0: an NPC's outfit and mask) */ public void m_8061_(EquipmentSlot slot, net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }
     /** getOffhandItem */ public net.minecraft.world.item.ItemStack m_21206_() { throw new UnsupportedOperationException(); }
     /** knockback */ public void m_147240_(double strength, double x, double z) { throw new UnsupportedOperationException(); }
     /** getAttributeValue */ public double m_21133_(net.minecraft.world.entity.ai.attributes.Attribute attribute) { throw new UnsupportedOperationException(); }
@@ -36,4 +45,6 @@ public abstract class LivingEntity extends Entity {
     /** getLastHurtByMob (6.2.0) */ public LivingEntity m_21188_() { throw new UnsupportedOperationException(); }
     /** swing(hand, sendToSwingingEntity) (7.0.0) */ public void m_21011_(net.minecraft.world.InteractionHand hand, boolean send) { throw new UnsupportedOperationException(); }
     /** setLastHurtByMob (6.2.0) */ public void m_6703_(LivingEntity entity) { throw new UnsupportedOperationException(); }
+    /** isBaby (1.3.2) */ public boolean m_6162_() { throw new UnsupportedOperationException(); }
+    /** setItemInHand (1.3.2) */ public void m_21008_(net.minecraft.world.InteractionHand hand, net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }
 }

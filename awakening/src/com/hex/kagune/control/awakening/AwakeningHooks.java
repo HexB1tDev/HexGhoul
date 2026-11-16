@@ -21,5 +21,6 @@ public final class AwakeningHooks {
         // 1.0.6: War's abilities, for the final kakuja (KingServer can't name the awakening's classes).
         com.hex.kagune.control.server.KingServer.installKit(WarKit.INSTANCE);
         com.hex.kagune.control.server.KingServer.installKit(com.hex.kagune.control.king.KingForm.PEACE, PeaceKit.INSTANCE); // 1.0.16
+        com.hex.kagune.control.server.KingServer.installBodyKit(com.hex.kagune.control.king.KingForm.PEACE, PeaceKit.INSTANCE); // 1.3.19: Ken's
     }
 }

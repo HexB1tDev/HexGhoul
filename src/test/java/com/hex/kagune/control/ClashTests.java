@@ -16,7 +16,130 @@ public final class ClashTests {
         }
     }
 
+    /**
+     * 3.2.4 (the owner: a maxed ghoul thrown back by low-rank investigators): both sides on one scale; a fresh ghoul even with a Rank 0, a
+     * maxed one the Reaper's equal, and everything below the dangerous ranks the one sent flying by a maxed ghoul.
+     */
+    static void power() {
+        double max = com.hex.kagune.control.ClashPower.progress(1000, 1.0, 1000);
+        double fresh = com.hex.kagune.control.ClashPower.progress(0, 0.0, 0);
+        check(Math.abs(max - 1.0) < 1.0E-9 && fresh == 0.0, "progress runs 0 (fresh) to 1 (mastery, every gate, the ghoul meat)");
+        check(com.hex.kagune.control.ClashPower.progress(1000, 0.0, 0) < 0.6 && com.hex.kagune.control.ClashPower.progress(1000, 1.0, 0) < 0.9,
+            "mastery alone isn't all of it: the quests and the ghoul meat count too");
+        check(com.hex.kagune.control.ClashPower.power(1.0) == com.hex.kagune.control.npc.AgentRules.Rank.RANK_10.power
+            && com.hex.kagune.control.ClashPower.power(0.0) == com.hex.kagune.control.npc.AgentRules.Rank.RANK_0.power, "from a Rank 0's power to the Reaper's");
+        com.hex.kagune.control.quinque.Quinque dawn = com.hex.kagune.control.quinque.Quinque.DAWN;
+        double reaper = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(com.hex.kagune.control.npc.AgentRules.Rank.RANK_10, false),
+            com.hex.kagune.control.npc.AgentRules.damage(dawn, 0));
+        double maxed = com.hex.kagune.control.ClashPower.player(max, 1.0, 1.0);
+        double ratio = ClashRules.ratio(maxed, reaper);
+        check(ratio > 0.95 && ratio < 1.05, "a maxed ghoul's ordinary blow meets the Reaper's as an equal: " + ratio);
+        boolean outhits = true;
+        boolean flung = true;
+        for (com.hex.kagune.control.npc.AgentRules.Rank rank : com.hex.kagune.control.npc.AgentRules.Rank.values()) {
+            for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
+                for (int step = 0; step < 3; step++) {
+                    double agent = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(rank, false),
+                        com.hex.kagune.control.npc.AgentRules.damage(q, step));
+                    if (rank.ordinal() <= com.hex.kagune.control.npc.AgentRules.Rank.RANK_7.ordinal()) {
+                        // Pushed less than the agent, whatever it swings.
+                        outhits &= ClashRules.thrown(1.5F, ClashRules.ratio(maxed, agent)) < ClashRules.thrown(1.5F, ClashRules.ratio(agent, maxed));
+                    }
+                    if (rank.ordinal() <= com.hex.kagune.control.npc.AgentRules.Rank.RANK_1.ordinal() && step == 0) {
+                        flung &= ClashRules.overwhelmed(ClashRules.ratio(agent, maxed));
+                    }
+                    flung &= !ClashRules.overwhelmed(ClashRules.ratio(maxed, agent)); // 3.4.3: the Reaper neither
+                }
+            }
+        }
+        check(outhits, "a maxed ghoul is thrown back less than any investigator up to Rank 7, whatever weapon, whatever blow");
+        check(flung, "a Rank 0 or 1 is sent flying by a maxed ghoul's blow; no investigator, not even the Reaper, ever sends a maxed ghoul flying");
+        double freshBlow = com.hex.kagune.control.ClashPower.player(fresh, 1.0, 1.0);
+        double rookie = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(com.hex.kagune.control.npc.AgentRules.Rank.RANK_0, false),
+            com.hex.kagune.control.npc.AgentRules.damage(com.hex.kagune.control.quinque.Quinque.BLADE, 0));
+        double freshRatio = ClashRules.ratio(freshBlow, rookie);
+        check(freshRatio > 0.8 && freshRatio < 1.25, "a fresh ghoul and a Rank 0 meet about even: " + freshRatio);
+        check(com.hex.kagune.control.ClashPower.player(0.5, 1.0, 1.0) > freshBlow && com.hex.kagune.control.ClashPower.player(0.5, 1.0, 1.0) < maxed,
+            "halfway, in between");
+        check(com.hex.kagune.control.ClashPower.build(0.5) == 1.0 && com.hex.kagune.control.ClashPower.build(1.69) > 1.29
+            && com.hex.kagune.control.ClashPower.build(10.0) == com.hex.kagune.control.ClashPower.BUILD_MOST, "form and mutations add, up to a ceiling");
+        check(com.hex.kagune.control.ClashPower.player(1.0, 1.0, 2.0) > maxed && com.hex.kagune.control.ClashPower.player(1.0, 1.0, 2.0) < maxed * 2.0,
+            "a heavier blow counts more, by its root");
+    }
+
+    /**
+     * 3.4.3 (the owner: "no matter how strong you are, what CCG investigators are just gonna send you flying during clashes ... If you're
+     * stronger than investigators, then you should send them flying in the same for players. If you're max mastery, I don't think that the
+     * Reaper should be able to even send you flying ... Even at max mastery, one-eyed, and with max ghoul meat eaten, he still ignores that"):
+     * how far each is thrown follows the gap between them, never their own strength; the stronger stands its ground, the weaker flies.
+     */
+    static void gap() {
+        double max = com.hex.kagune.control.ClashPower.progress(1000, 1.0, 1000);
+        com.hex.kagune.control.npc.AgentRules.Rank reaper = com.hex.kagune.control.npc.AgentRules.Rank.RANK_10;
+        double maxed = com.hex.kagune.control.ClashPower.player(max, 1.0, 1.0);
+        double oneEye = com.hex.kagune.control.ClashPower.player(max, 1.0, 1.0, true);
+        check(oneEye > maxed && com.hex.kagune.control.ClashPower.player(max, 1.0, 1.0, false) == maxed, "one eye counts");
+        // Before: an even clash between two strong ones threw both a block a tick; the winner never less than a third of it.
+        float big = ClashRules.impact(maxed, maxed);
+        check(ClashRules.thrown(big, 1.0) <= 0.55 && ClashRules.lifted(1.0) <= 0.16, "an even clash, even a huge one, throws both a short way apart: "
+            + ClashRules.thrown(big, 1.0));
+        check(ClashRules.thrown(1.5F, 0.5) == 0.0 && ClashRules.lifted(0.5) == 0.0 && ClashRules.thrown(1.5F, 0.7) < ClashRules.thrown(1.5F, 1.0) * 0.5,
+            "the stronger is thrown far less, and twice as strong stands its ground");
+        boolean flat = true;
+        for (com.hex.kagune.control.npc.AgentRules.Rank rank : com.hex.kagune.control.npc.AgentRules.Rank.values()) {
+            double agent = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(rank, false),
+                com.hex.kagune.control.npc.AgentRules.damage(com.hex.kagune.control.quinque.Quinque.DAWN, 0));
+            double last = Double.MAX_VALUE;
+            for (int mastery = 0; mastery <= 1000; mastery += 50) {
+                double me = com.hex.kagune.control.ClashPower.player(com.hex.kagune.control.ClashPower.progress(mastery, mastery / 1000.0, mastery / 5), 1.0, 1.0);
+                double ratio = ClashRules.ratio(me, agent);
+                double thrown = ClashRules.overwhelmed(ratio) ? 99.0 : ClashRules.thrown(ClashRules.impact(me, agent), ratio); // flung: furthest of all
+                flat &= thrown <= last + 1.0E-9;
+                last = thrown;
+            }
+        }
+        check(flat, "the stronger a player grows, the less any investigator throws them (never the more for their own strength)");
+        boolean reaperFlings = false;
+        boolean reaperOutThrows = false;
+        for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
+            for (int step = 0; step < 3; step++) {
+                double him = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(reaper, false),
+                    com.hex.kagune.control.npc.AgentRules.damage(q, step));
+                reaperFlings |= ClashRules.overwhelmed(ClashRules.ratio(maxed, him)) || ClashRules.overwhelmed(ClashRules.ratio(oneEye, him));
+                if (q == com.hex.kagune.control.quinque.Quinque.DAWN) {
+                    float power = ClashRules.impact(oneEye, him);
+                    reaperOutThrows |= ClashRules.thrown(power, ClashRules.ratio(oneEye, him)) > ClashRules.thrown(power, 1.0) * 1.05
+                        || ClashRules.lifted(ClashRules.ratio(oneEye, him)) > ClashRules.EVEN_LIFT * 1.05;
+                }
+            }
+        }
+        check(!reaperFlings, "the Reaper never sends a maxed ghoul flying, whatever he swings");
+        check(!reaperOutThrows, "a maxed one-eyed ghoul is thrown no further than an even clash throws, by any of the Reaper's Dawn blows");
+        boolean rookiesFly = true;
+        for (com.hex.kagune.control.npc.AgentRules.Rank rank : com.hex.kagune.control.npc.AgentRules.Rank.values()) {
+            if (rank.ordinal() > com.hex.kagune.control.npc.AgentRules.Rank.RANK_3.ordinal()) {
+                continue;
+            }
+            for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
+                double agent = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(rank, false),
+                    com.hex.kagune.control.npc.AgentRules.damage(q, 0));
+                rookiesFly &= ClashRules.overwhelmed(ClashRules.ratio(agent, maxed)) && ClashRules.thrown(ClashRules.impact(maxed, agent),
+                    ClashRules.ratio(maxed, agent)) == 0.0;
+            }
+        }
+        check(rookiesFly, "a maxed ghoul sends every Rank 0 to 3 flying, whatever it swings, and stands its ground");
+        double dawn5 = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(com.hex.kagune.control.npc.AgentRules.Rank.RANK_5, false),
+            com.hex.kagune.control.npc.AgentRules.damage(com.hex.kagune.control.quinque.Quinque.DAWN, 0));
+        check(ClashRules.overwhelmed(ClashRules.ratio(dawn5, maxed)), "and a Rank 5 with a blade like Dawn's");
+        // The same for players: the weaker of two flies, the stronger stands.
+        double fresh = com.hex.kagune.control.ClashPower.player(0.0, 1.0, 1.0);
+        check(ClashRules.overwhelmed(ClashRules.ratio(fresh, maxed)) && !ClashRules.overwhelmed(ClashRules.ratio(maxed, fresh))
+            && ClashRules.thrown(ClashRules.impact(fresh, maxed), ClashRules.ratio(maxed, fresh)) == 0.0, "between players too: a fresh ghoul flies off a maxed one");
+    }
+
     public static void main(String[] args) {
+        power();
+        gap();
         // The other blow on its way: from the tick it set out to the tick it lands, and no later.
         check(ClashRules.onItsWay(100, 106, 100) && ClashRules.onItsWay(100, 106, 103) && ClashRules.onItsWay(100, 106, 106),
             "a blow is on its way from its start to its landing");
@@ -38,12 +161,98 @@ public final class ClashTests {
         check(ClashRules.PUSH > 0.0 && ClashRules.LIFT > 0.0 && ClashRules.STAGGER > 0, "both are thrown apart and kept a moment from striking again");
         shards();
         grabs();
+        impacts();
+        sameMoves();
         if (!FAILURES.isEmpty()) {
             FAILURES.forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Clash tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 1.3.62: a clash as big as both blows were hard: two ordinary blows as it always looked, two jabs a small one, two heavy blows a big
+     * one that shakes the ground (harder and longer the bigger, felt further), thrown apart harder, a deeper, louder sound; never past its
+     * bounds.
+     */
+    static void impacts() {
+        check(Math.abs(ClashRules.impact(ClashRules.REFERENCE / 2.0, ClashRules.REFERENCE / 2.0) - ClashRules.ORDINARY) < 1.0E-4,
+            "two ordinary blows: the clash as it always was");
+        check(ClashRules.impact(1.4, 1.4) < ClashRules.ORDINARY && ClashRules.impact(12.0, 15.0) > ClashRules.ORDINARY, "two jabs smaller, two heavy blows bigger");
+        boolean rising = true;
+        float last = 0.0F;
+        for (double h = 0.0; h < 200.0; h += 0.5) {
+            float p = ClashRules.impact(h, h);
+            rising &= p >= last && p >= ClashRules.LEAST && p <= ClashRules.MOST;
+            last = p;
+        }
+        check(rising && ClashRules.impact(500.0, 500.0) == ClashRules.MOST && ClashRules.impact(0.0, 0.0) == ClashRules.LEAST
+            && ClashRules.impact(-5.0, 1.0) == ClashRules.LEAST, "the harder, the bigger, within its bounds");
+        check(!ClashRules.quakes(ClashRules.ORDINARY) && ClashRules.quakes(ClashRules.impact(12.0, 12.0)) && ClashRules.rumble(ClashRules.ORDINARY) == 0.0F
+            && ClashRules.rumble(ClashRules.MOST) == 1.0F && ClashRules.rumble(2.0F) > ClashRules.rumble(1.7F), "only a hard clash shakes the ground, harder the bigger");
+        check(ClashRules.rumbleTicks(ClashRules.MOST) > ClashRules.rumbleTicks(ClashRules.QUAKES) && ClashRules.felt(ClashRules.MOST) > ClashRules.felt(ClashRules.QUAKES),
+            "longer, and felt further, the bigger");
+        check(Math.abs(ClashRules.push(ClashRules.ORDINARY) - ClashRules.PUSH) < 1.0E-6 && ClashRules.push(ClashRules.MOST) > ClashRules.PUSH,
+            "thrown apart as before by an ordinary clash, harder by a big one");
+        check(Math.abs(ClashRules.pitch(ClashRules.ORDINARY) - 1.0F) < 1.0E-6 && ClashRules.pitch(ClashRules.MOST) < 1.0F
+            && ClashRules.volume(ClashRules.MOST) > ClashRules.volume(ClashRules.ORDINARY), "a big clash sounds deeper and carries further");
+        // 2.0.11: louder and bigger, the weaker thrown further, a big gap overwhelming (the Speed Kick's flight).
+        check(ClashRules.volume(ClashRules.ORDINARY) > 0.95F + 0.3F * ClashRules.ORDINARY && ClashRules.layers(ClashRules.ORDINARY) == 1
+            && ClashRules.layers(1.6F) == 2 && ClashRules.layers(ClashRules.MOST) == 3 && ClashRules.shown(ClashRules.MOST) > ClashRules.MOST
+            && ClashRules.shown(2.0F) > ClashRules.shown(1.0F), "the clash louder (laid over itself when hard) and drawn bigger, the harder the bigger");
+        check(Math.abs(ClashRules.ratio(7.0, 7.0) - 1.0) < 1.0E-9 && ClashRules.ratio(4.0, 12.0) > 1.0 && ClashRules.ratio(12.0, 4.0) < 1.0,
+            "the gap between two blows");
+        check(ClashRules.thrown(1.5F, ClashRules.ratio(4.0, 12.0)) > ClashRules.thrown(1.5F, 1.0)
+            && ClashRules.thrown(1.5F, ClashRules.ratio(12.0, 4.0)) < ClashRules.thrown(1.5F, 1.0), "the weaker thrown further, the stronger less");
+        check(!ClashRules.overwhelmed(ClashRules.ratio(7.0, 12.0)) && ClashRules.overwhelmed(ClashRules.ratio(4.0, 10.0))
+            && !ClashRules.overwhelmed(ClashRules.ratio(10.0, 4.0)), "only a big enough gap overwhelms, and only the weaker");
+        // 2.0.12: every clash shakes the view, harder, longer and further the harder it is (an ordinary one about 6 degrees).
+        float ordinary = ClashRules.shown(ClashRules.ORDINARY);
+        check(ClashRules.shake(ordinary) >= 1.5F && ClashRules.shake(ClashRules.shown(ClashRules.MOST)) == ClashRules.SHAKE_MOST
+            && ClashRules.shake(ClashRules.shown(ClashRules.LEAST)) > 0.5F && ClashRules.shakeTicks(ClashRules.shown(ClashRules.MOST)) > ClashRules.shakeTicks(ordinary)
+            && ClashRules.shakeReach(ordinary) >= 20.0, "every clash shakes the view: an ordinary one hard, a huge one hardest, longest and furthest");
+    }
+
+    /**
+     * 1.3.63: the same big move meeting itself: a Big Punch meets a Big Punch (the Owl's too, or one still winding up), a Speed Kick a
+     * Speed Kick, a club slam a slam; never two different moves; let-go moves are on their way until they'd land; the impact is always
+     * big, bigger for harder blows, within bounds.
+     */
+    static void sameMoves() {
+        com.hex.kagune.control.pale.MoveClashRules.Family punch = com.hex.kagune.control.pale.MoveClashRules.Family.PUNCH;
+        check(com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.PUNCH) == punch
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.OWL_PUNCH) == punch
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.PUNCH_CHARGE) == punch
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.OWL_PUNCH_CHARGE) == punch,
+            "a Big Punch is a Big Punch: the Owl's, or one winding up");
+        check(com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.KICK)
+            == com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.OWL_KICK)
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.KICK) != punch
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.HAMMER)
+            == com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.OWL_FISSURE)
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.HAMMER)
+            != com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.KICK),
+            "a kick meets a kick, a slam a slam; never different moves");
+        check(com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.STRIKE) == null
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.NONE) == null
+            && com.hex.kagune.control.pale.MoveClashRules.family(null) == null, "an M1 or nothing isn't a big move (M1s have their own clash)");
+        boolean windows = true;
+        for (com.hex.kagune.control.pale.PaleMove move : com.hex.kagune.control.pale.PaleMove.values()) {
+            boolean released = com.hex.kagune.control.pale.MoveClashRules.released(move);
+            int window = com.hex.kagune.control.pale.MoveClashRules.window(move, 5);
+            windows &= released ? window > 0 && window < 20 && com.hex.kagune.control.pale.MoveClashRules.family(move) != null : window == 0;
+        }
+        check(windows && !com.hex.kagune.control.pale.MoveClashRules.released(com.hex.kagune.control.pale.PaleMove.PUNCH_CHARGE),
+            "a let-go big move is on its way until it lands (a moment); one winding up isn't let go yet");
+        check(com.hex.kagune.control.pale.MoveClashRules.window(com.hex.kagune.control.pale.PaleMove.KICK, 7)
+            > com.hex.kagune.control.pale.MoveClashRules.window(com.hex.kagune.control.pale.PaleMove.KICK, 2), "a longer dash is on its way longer");
+        check(com.hex.kagune.control.pale.MoveClashRules.power(1.0, 1.0) == com.hex.kagune.control.pale.MoveClashRules.BIG
+            && com.hex.kagune.control.pale.MoveClashRules.power(80.0, 80.0) == ClashRules.MOST && ClashRules.quakes(com.hex.kagune.control.pale.MoveClashRules.BIG)
+            && com.hex.kagune.control.pale.MoveClashRules.STAGGER > ClashRules.STAGGER, "always a big impact that shakes the ground, both staggered longer");
+        for (com.hex.kagune.control.pale.MoveClashRules.Family family : com.hex.kagune.control.pale.MoveClashRules.Family.values()) {
+            check(com.hex.kagune.control.pale.MoveClashRules.reach(family) >= 3.5, family + " meets within reach");
+        }
     }
 
     /** 1.0.42: an M1 on its way meets a shard flying at the one swinging it, in front of him and within reach; nothing else. */

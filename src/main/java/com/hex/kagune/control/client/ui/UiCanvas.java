@@ -45,6 +45,27 @@ public interface UiCanvas {
     /** Many small fills flushed together. */
     void batch(Runnable draw);
 
+    /**
+     * 4.1.66: an item by its id ("minecraft:beef", "hexkagune:ramen", or a dish's bare id, the mod's), {@code size} pixels square (16 its
+     * own size), its count over it when more than one. Where no item can be drawn: a plain square.
+     */
+    default void item(String id, int count, int x, int y, int size) {
+        this.fill(x + 1, y + 1, x + size - 1, y + size - 1, 0x60FFFFFF);
+    }
+
+    /** 4.1.66: a texture ("namespace:path/to.png") drawn into ({@code x}, {@code y}, {@code w}, {@code h}) from its own (u, v, uw, vh) of a texW x texH sheet. */
+    default void texture(String id, int x, int y, int w, int h, int u, int v, int uw, int vh, int texW, int texH) {
+    }
+
+    /** 4.1.66: words by their translation key, with its arguments; the key itself where there is no language. */
+    default String tr(String key, Object... args) {
+        return key;
+    }
+
+    /** 4.1.66: an item's tooltip at ({@code x}, {@code y}), as the game shows it over a slot. */
+    default void itemTooltip(String id, int x, int y) {
+    }
+
     /** Fills a convex polygon one pixel row at a time (GUI fills are axis-aligned rectangles). */
     default void polygon(float[] xs, float[] ys, int argb) {
         float top = Float.MAX_VALUE;

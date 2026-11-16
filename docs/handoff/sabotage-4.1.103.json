@@ -1,0 +1,86 @@
+[
+ {
+  "name": "an investigator's brain unguarded",
+  "file": "patch/KaguneGuard.java",
+  "old": "        \"com/hex/kagune/control/npc/CcgAgent\", Set.of(\"m_8024_\", \"m_7472_\"),\n",
+  "new": "",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "a townsperson's drops unguarded",
+  "file": "patch/KaguneGuard.java",
+  "old": "\"com/hex/kagune/control/npc/HumanNpc\", Set.of(\"m_8024_\", \"m_7472_\"),",
+  "new": "\"com/hex/kagune/control/npc/HumanNpc\", Set.of(\"m_8024_\"),",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "a companion's brain unguarded",
+  "file": "patch/KaguneGuard.java",
+  "old": "        \"com/hex/kagune/control/npc/EtoNpc\", Set.of(\"m_8024_\"),\n",
+  "new": "",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "a child's push unguarded",
+  "file": "patch/KaguneGuard.java",
+  "old": "\"com/hex/kagune/control/npc/ChildNpc\", Set.of(\"m_8024_\", \"m_6138_\"));",
+  "new": "\"com/hex/kagune/control/npc/ChildNpc\", Set.of(\"m_8024_\"));",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "a flesh creature's brain unguarded",
+  "file": "patch/KaguneGuard.java",
+  "old": ",\n        // 4.1.103: a flesh creature's too (as its own catch did, for RuntimeExceptions only).\n        \"com/hex/kagune/control/npc/FleshThrall\", Set.of(\"m_8024_\"));",
+  "new": ");",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "no screen guarded",
+  "file": "patch/KaguneGuard.java",
+  "old": "GUARDED_NAMES = Set.of(\"m_88315_\");",
+  "new": "GUARDED_NAMES = Set.of();",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "a failed draw leaves the stack pushed",
+  "file": "src/main/java/com/hex/kagune/control/client/render/RenderGuard.java",
+  "old": "            for (int i = 0; i < MOST_POPS && pose.m_85850_() != mark; i++) {\n                pose.m_85849_();\n            }\n",
+  "new": "",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "an investigator's draw throws on",
+  "file": "src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java",
+  "old": "RenderGuard.failed(pose, mark, \"an investigator\", failure);",
+  "new": "throw failure;",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "the JVM's verifier not run by the build",
+  "file": "build.py",
+  "old": "    run(\"java\", \"-cp\", TOOLS, \"KaguneLinkCheck\", OUTPUT, STUBS, report)\n",
+  "new": "",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "a VerifyError let through",
+  "file": "patch/KaguneLinkCheck.java",
+  "old": "                } catch (VerifyError | ClassFormatError bad) {\n                    broken.add(name + \": \" + bad);",
+  "new": "                } catch (VerifyError | ClassFormatError bad) {\n                    verified++;",
+  "suite": "NoFailTests"
+ },
+ {
+  "name": "a cancelled join's body found",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": " && level.m_6815_(body.m_19879_()) == body) {",
+  "new": ") {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the list kept before another mod may cancel",
+  "file": "src/main/java/com/hex/kagune/control/server/NpcIndex.java",
+  "old": "    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)\n    public static void join(",
+  "new": "    @SubscribeEvent\n    public static void join(",
+  "suite": "LagTests"
+ }
+]

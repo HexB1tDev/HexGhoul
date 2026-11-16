@@ -19,7 +19,27 @@ import java.util.Map;
 public final class AbilityGuide {
     /** The keys a row can name (the panel's owner turns each into the player's bound key). */
     public enum Key {
-        ATTACK, USE, TOGGLE, MENU, GRAB, THROW, RAPID, SLINGSHOT, CYCLE, CRUSH, LIFT, SLAM, GUARD, UNLEASH, QUESTS
+        ATTACK, USE, TOGGLE, MENU, GRAB, THROW, RAPID, SLINGSHOT, CYCLE, CRUSH, LIFT, SLAM, GUARD, UNLEASH, QUESTS,
+        /** 4.2.2: held, the wounds close (every path but Bikaku's: its Monstrous Regeneration is its own). */
+        REGEN
+    }
+
+    /** 4.2.2: the regeneration row's colour (a living green). */
+    static final int REGEN_GREEN = 0xFF6BD68A;
+
+    /**
+     * 4.2.2 (the owner: "We're gonna bind a new key for all Kagunes that is called regeneration, except for the Bikaku ... You need to hold the
+     * key down"; "Every single form has this key there."): the panel with the regeneration key's row last, in every state and form (eyes shut,
+     * the kakugan, the kagune out, each kakuja, War, Peace); not a Bikaku's once Monstrous Regeneration is his, nor an undecided ghoul's.
+     */
+    static Panel withRegen(Input in, Panel panel) {
+        if (in.path() == KagunePath.NONE || in.path() == KagunePath.BIKAKU && com.hex.kagune.control.bikaku.BikakuRules.ownRegeneration(in.mastery(),
+            !in.shut().contains(com.hex.kagune.control.quest.Gate.BIKAKU_WORMS))) {
+            return panel; // a Bikaku's once Monstrous Regeneration is his: that, on C
+        }
+        List<Row> rows = new ArrayList<>(panel.rows());
+        rows.add(new Row(key(in, Key.REGEN) + " hold", "Regenerate", REGEN_GREEN, 0));
+        return new Panel(panel.title(), panel.subtitle(), panel.accent(), rows);
     }
 
     /** Where the ghoul is: kagune in, the kakugan open (ghoul eyes), or the kagune out. */
@@ -48,11 +68,18 @@ public final class AbilityGuide {
      * @param ukaku      Ukaku's kagune form: his wings, or a kakuja (ignored on Rinkaku's path)
      * @param crystal    Ukaku's wings crystallized
      * @param keys       the player's name for each key ("R", "LMB", "Ctrl+G")
+     * @param holding    3.3.0: a Rinkaku tail holds someone (the keys G, N, H, V and B do other things then)
      */
     public record Input(KagunePath path, State state, int mastery, KaguneForm rinkaku, WingForm ukaku, boolean crystal, Map<Key, String> keys,
-                        boolean blade, GraftStage graft, boolean graftKakuja, java.util.Set<com.hex.kagune.control.quest.Gate> shut) {
+                        boolean blade, GraftStage graft, boolean graftKakuja, java.util.Set<com.hex.kagune.control.quest.Gate> shut, boolean holding) {
         public Input {
             shut = shut == null ? java.util.Set.of() : java.util.Set.copyOf(shut);
+        }
+
+        /** 3.3.0: as below, no tail holding anyone. */
+        public Input(KagunePath path, State state, int mastery, KaguneForm rinkaku, WingForm ukaku, boolean crystal, Map<Key, String> keys,
+                     boolean blade, GraftStage graft, boolean graftKakuja, java.util.Set<com.hex.kagune.control.quest.Gate> shut) {
+            this(path, state, mastery, rinkaku, ukaku, crystal, keys, blade, graft, graftKakuja, shut, false);
         }
 
         /** 7.0.1: as below, every gate open (a preview, a test). */
@@ -91,6 +118,10 @@ public final class AbilityGuide {
     /** 7.0.0: Graft DNA's crimson, and the kakuja's burning slashes. */
     static final int GRAFT_RED = 0xFFD8283A;
     static final int GRAFT_BURN = 0xFFFF5A3C;
+    /** 3.4.9: Bikaku's worm. */
+    static final int BIKAKU_RED = 0xFFE0386A;
+    /** 3.5.4: the Bikaku kakuja. */
+    static final int BIKAKU_KAKUJA = 0xFFFF4A6E;
 
     /** The kakuja need these. */
     public static final int FIRST_KAKUJA = 750;
@@ -113,8 +144,23 @@ public final class AbilityGuide {
                 rows.add(new Row("eyes", "Resistance I · Strength I · drains RC", EYES, 0));
                 // 7.0.1: the shared eye-mode fight (EyeRules): Owl DNA's body, whatever the path.
                 int m = in.mastery();
-                rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.pale.PaleStrike.count(m) + " strikes)", EYES, 0, Key.ATTACK));
-                rows.add(row(in, "Flips (W A S D)", TEXT, 0, Key.USE));
+                // 4.1.3: the blitz and the flips are a fighting style's (Speedster, from Ayato); with none, the game's own punch.
+                com.hex.kagune.control.FightStyle style = com.hex.kagune.control.FightStyle.of(gate -> !in.shut().contains(gate));
+                if (style == com.hex.kagune.control.FightStyle.KICK_MASTER) {
+                    // 4.1.7: Kick Master, the General's: its whole string on M1. 4.1.87: its dash kick on the right click (4.1.8's twirl gone).
+                    rows.add(new Row("style", "Kick Master", EYES, 0));
+                    rows.add(row(in, "Kicks and punches (" + com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS).length
+                        + " blows)", EYES, 0, Key.ATTACK));
+                    // 4.1.8: its own right click: held, then let go.
+                    rows.add(row(in, "Dash Kick (hold, let go)", EYES, 0, Key.USE));
+                } else if (style.ownAttack()) {
+                    rows.add(new Row("style", "Speedster", EYES, 0));
+                    rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.pale.PaleStrike.count(m) + " strikes)", EYES, 0, Key.ATTACK));
+                    rows.add(row(in, "Flips (W A S D)", TEXT, 0, Key.USE));
+                } else {
+                    rows.add(new Row("style", "None: ask Ayato", DIM, 0));
+                    rows.add(row(in, "Punch", TEXT, 0, Key.ATTACK));
+                }
                 rows.add(new Row(key(in, Key.RAPID) + " hold", "Big Punch!", EYES, 0));
                 // 7.0.1: past its mastery it may still wait for its quest.
                 boolean quest = in.shut().contains(com.hex.kagune.control.quest.Gate.EYES_KICK) && m >= com.hex.kagune.control.pale.PaleRules.KICK_MASTERY;
@@ -128,16 +174,107 @@ public final class AbilityGuide {
                 case UKAKU -> "UKAKU";
                 case PALE -> "ONE-EYED OWL";
                 case GRAFT -> "GRAFT DNA";
+                case BIKAKU -> "BIKAKU";
                 default -> "RINKAKU";
             };
-            return new Panel(title, eyes ? "Ghoul eyes open" : "Kagune sheathed", eyes ? EYES : CLOSED, rows);
+            return withRegen(in, new Panel(title, eyes ? "Ghoul eyes open" : "Kagune sheathed", eyes ? EYES : CLOSED, rows));
         }
-        return switch (in.path()) {
+        return withRegen(in, switch (in.path()) {
             case UKAKU -> ukaku(in, rows);
             case PALE -> pale(in, rows);
             case GRAFT -> graft(in, rows);
+            case BIKAKU -> bikaku(in, rows);
             default -> rinkaku(in, rows);
-        };
+        });
+    }
+
+    // ---------------------------------------------------------------- 3.4.6: the board in brief
+
+    /**
+     * 3.4.6 (the owner: "it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to summarize
+     * things a bit more."): the panel as the board draws it: the same moves on the same keys, in the same order and colours, each named in
+     * a word or two ({@link #brief(String, String)}), and the subtitle cut to what the form is ({@link #briefSubtitle}).
+     */
+    public static Panel brief(Panel panel) {
+        List<Row> rows = new ArrayList<>();
+        for (Row row : panel.rows()) {
+            rows.add(new Row(row.keys(), brief(row.name(), row.keys()), row.colour(), row.needs()));
+        }
+        return new Panel(panel.title(), briefSubtitle(panel.subtitle()), panel.accent(), rows);
+    }
+
+    /** 3.4.6: the long names and what each is in brief. */
+    private static final String[][] BRIEF = {
+        {"Kakugan mode (eyes stay open)", "Eyes only"},
+        {"Put it all away", "Put away"},
+        {"Ghoul eyes (kakugan)", "Ghoul eyes"},
+        {"Close the kakugan", "Close eyes"},
+        {"Unleash the kagune", "Unleash"},
+        {"Kagune menu", "Menu"},
+        {"Resistance I · Strength I · drains RC", "Buffs (drains RC)"},
+        {"Juggle, ends in a spike", "Air juggle"},
+        {"Centipede legs hunt and grab", "Legs hunt"},
+        {"Centipede legs fight on their own", "Legs fight"},
+        {"You can only walk", "Walk only"},
+        {"Choose your kagune path", "Choose a path"},
+        {"Lift · Slam (once a tail holds someone)", "Lift · Slam"},
+        {"Reaper's dash: 3 charges, 1 back each 5 s", "Reaper's dash"},
+        {"Monstrous Regeneration", "Regeneration"},
+        {"Its tentacles bite on their own", "Bites on its own"},
+        {"Hold one to throw it further", "Hold: further"},
+    };
+
+    /**
+     * 3.4.6: {@code name} (on {@code keys}) in a word or two: a known long one its short form ({@link #BRIEF}); "(Ken teaches it)" and
+     * "(needs its quest)" as "(Ken)" and "(quest)"; any other aside in brackets dropped; a string's name before its colon ("Fists: chain ·
+     * Space held: launch" is "Fists"); on one key, only the first of the things it does ("Heavy · hold: charge" is "Heavy"), on two keys
+     * ("V·B", "N tap · hold") both.
+     */
+    public static String brief(String name, String keys) {
+        if (name == null) {
+            return "";
+        }
+        for (String[] known : BRIEF) {
+            if (known[0].equals(name)) {
+                return known[1];
+            }
+        }
+        String out = name.replace(" (Ken teaches it)", " (Ken)").replace(" (needs its quest)", " (quest)");
+        String kept = out.endsWith(" (Ken)") ? " (Ken)" : out.endsWith(" (quest)") ? " (quest)" : "";
+        if (!kept.isEmpty()) {
+            out = out.substring(0, out.length() - kept.length());
+        }
+        int bracket = out.indexOf(" (");
+        if (bracket > 0) {
+            out = out.substring(0, bracket);
+        }
+        int colon = out.indexOf(": "); // (a colon with a space after it: "Aegis of :Re" is a name)
+        if (colon > 0) {
+            out = out.substring(0, colon);
+        }
+        int dot = out.indexOf(" · ");
+        if (dot > 0 && (keys == null || keys.indexOf('·') < 0)) {
+            out = out.substring(0, dot);
+        }
+        return out.trim() + kept;
+    }
+
+    /** 3.4.6: a subtitle cut to what the form is ("Rinkaku · final kakuja · One-Eyed King" is "final kakuja"; a tail holding someone kept). */
+    public static String briefSubtitle(String subtitle) {
+        if (subtitle == null) {
+            return "";
+        }
+        String[] parts = subtitle.split(" · ");
+        if (parts.length < 2) {
+            return subtitle;
+        }
+        String out = parts[1];
+        for (int i = 2; i < parts.length; i++) {
+            if (parts[i].equals("a tail holds someone")) {
+                out += " · holding";
+            }
+        }
+        return out;
     }
 
     /** The accent of the form the ghoul would be in. */
@@ -147,6 +284,9 @@ public final class AbilityGuide {
         }
         if (in.path() == KagunePath.GRAFT) {
             return in.graftKakuja() ? GRAFT_BURN : GRAFT_RED;
+        }
+        if (in.path() == KagunePath.BIKAKU) {
+            return BIKAKU_RED;
         }
         if (in.path() == KagunePath.UKAKU) {
             WingForm form = in.ukaku();
@@ -168,20 +308,38 @@ public final class AbilityGuide {
             rows.add(row(in, combo(form), full ? KAKUJA_RED : accent, 0, Key.ATTACK));
             // 6.0.4: each move unlocks with mastery (RinkakuUnlocks); a locked one shows dim with the mastery it needs.
             int m = in.mastery();
-            rows.add(row(in, kakuja ? "Rapid Strike (legs and tails)" : "Rapid Strike", TEXT, locked(m, RinkakuUnlocks.RAPID_STRIKE), Key.RAPID));
+            rows.add(row(in, kakuja ? "Thy Death (hold: legs and tails hunt on their own)" : "Thy Death (hold: every tail hunts on its own)", TEXT, locked(m, RinkakuUnlocks.RAPID_STRIKE), Key.RAPID));
             rows.add(row(in, "Grapple leap", TEXT, locked(m, RinkakuUnlocks.GRAPPLE), Key.SLINGSHOT));
-            rows.add(row(in, "Grab · Throw", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB, Key.THROW));
-            rows.add(row(in, "Crush", TEXT, locked(m, RinkakuUnlocks.CRUSH), Key.CRUSH));
-            rows.add(row(in, "Lift", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));
-            rows.add(row(in, "Slam", TEXT, locked(m, RinkakuUnlocks.SLAM), Key.SLAM));
-            rows.add(row(in, "Guard", TEXT, 0, Key.GUARD));
+            // 3.3.0 (the owner: the left guide's moves): G, N, H, V and B do different things whether a tail holds someone or not
+            // (the Rubble Hurl and the Impale with nothing held, 3.1.5 and 3.1.6; the throw, crush, lift and slam on who is held, the
+            // last two nothing at all without), so the board shows what they do now instead of both crammed on one line.
+            if (in.holding()) {
+                rows.add(row(in, "Throw them", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.THROW));
+                rows.add(row(in, "Crush them", TEXT, locked(m, RinkakuUnlocks.CRUSH), Key.CRUSH));
+                rows.add(row(in, "Lift them", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));
+                rows.add(row(in, "Slam them", TEXT, locked(m, RinkakuUnlocks.SLAM), Key.SLAM));
+                rows.add(row(in, "Grab another", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB));
+            } else {
+                rows.add(row(in, "Grab", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB));
+                // 3.3.1: Ken teaches these two; until he has, past their mastery they say so.
+                boolean hurlTaught = !in.shut().contains(com.hex.kagune.control.quest.Gate.RINKAKU_HURL);
+                boolean impaleTaught = !in.shut().contains(com.hex.kagune.control.quest.Gate.RINKAKU_IMPALE);
+                rows.add(new Row(key(in, Key.THROW) + " hold", hurlTaught || m < RinkakuUnlocks.HURL ? "Rubble Hurl" : "Rubble Hurl (Ken teaches it)",
+                    hurlTaught ? TEXT : DIM, locked(m, RinkakuUnlocks.HURL)));
+                rows.add(new Row(key(in, Key.CRUSH) + " hold", impaleTaught || m < RinkakuUnlocks.IMPALE ? "Impale" : "Impale (Ken teaches it)",
+                    impaleTaught ? TEXT : DIM, locked(m, RinkakuUnlocks.IMPALE)));
+                rows.add(row(in, "Lift · Slam (once a tail holds someone)", DIM, locked(m, RinkakuUnlocks.LIFT), Key.LIFT, Key.SLAM));
+            }
+            // 2.0.37: the tendril guard (C) is gone. 2.0.42: right click held blocks (RinkakuBlock); the final kakuja's dashes instead.
+            if (!full) {
+                rows.add(row(in, "Block (hold) · on time: stagger", TEXT, 0, Key.USE));
+            }
             if (form.hasCentipedeLegs()) {
                 rows.add(new Row("auto", "Centipede legs hunt and grab", KAKUJA_PLUM, 0));
             }
             if (full) {
                 // 6.0.0: the kakuja's passive and dash.
                 rows.add(new Row(key(in, Key.USE), "Dash (S held: back)", KAKUJA_RED, 0));
-                rows.add(new Row("sprint", "Vanish 5 s (30 s cooldown)", KAKUJA_PLUM, 0));
             }
         }
         transform(in, rows, kakuja, full, accent);
@@ -193,7 +351,11 @@ public final class AbilityGuide {
             case FULL_KAKUJA -> "FULL KAKUJA";
             default -> form.displayName().toUpperCase(java.util.Locale.ROOT);
         };
-        return new Panel(title, kakuja ? (full ? "Rinkaku · final kakuja" : "Rinkaku · first kakuja") : "Rinkaku · kagune out", accent, rows);
+        String subtitle = kakuja ? (full ? "Rinkaku · final kakuja" : "Rinkaku · first kakuja") : "Rinkaku · kagune out";
+        if (in.holding() && !RinkakuForms.autonomous(form)) {
+            subtitle += " · a tail holds someone";
+        }
+        return new Panel(title, subtitle, accent, rows);
     }
 
     /** Rinkaku's M1 for his form (ComboStyle's stages). */
@@ -218,7 +380,7 @@ public final class AbilityGuide {
             // 6.0.0: the Steel Blade out.
             rows.add(row(in, "Steel Blade: Sweep · Return · Execution", EMBER, 0, Key.ATTACK));
             rows.add(new Row(key(in, Key.USE), "Dash (S held: back)", EMBER, 0));
-            rows.add(new Row("sprint", "Vanish 5 s (30 s cooldown)", TEXT, 0));
+            rows.add(new Row("sprint x2", "Reaper's dash: 3 charges, 1 back each 5 s", EMBER, 0)); // 2.1.7
             rows.add(new Row(key(in, Key.SLINGSHOT), "Fireballs", TEXT, 0));
             rows.add(row(in, "Open the wings", TEXT, 0, Key.GUARD));
             title = "STEEL BLADE";
@@ -229,6 +391,7 @@ public final class AbilityGuide {
             rows.add(row(in, "Fire cyclone", TEXT, 0, Key.RAPID));
             rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Pyre Gatling", TEXT, 0));
             rows.add(row(in, "Steel Blade", TEXT, 0, Key.GUARD));
+            rows.add(new Row("sprint x2", "Reaper's dash: 3 charges, 1 back each 5 s", EMBER, 0)); // 2.1.7
             title = "FINAL KAKUJA";
             subtitle = "Ukaku · needles and fire";
         } else if (form.kakuja()) {
@@ -315,8 +478,8 @@ public final class AbilityGuide {
         }
         rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
         away(in, rows);
-        return new Panel(peace ? "PEACE" : "WAR", peace ? "Rinkaku · final kakuja · white wings" : "Rinkaku · final kakuja · One-Eyed King",
-            accent, rows);
+        return withRegen(in, new Panel(peace ? "PEACE" : "WAR", peace ? "Rinkaku · final kakuja · white wings" : "Rinkaku · final kakuja · One-Eyed King",
+            accent, rows)); // 4.2.2: the regeneration key in War and Peace too
     }
 
     /** The original's keys each of Graft's move slots is on. */
@@ -352,6 +515,64 @@ public final class AbilityGuide {
         }
         away(in, rows);
         return new Panel(kakuja ? "KAKUJA" : stage.displayName().toUpperCase(java.util.Locale.ROOT), "Graft DNA · right kakugan", accent, rows);
+    }
+
+    /**
+     * 3.4.9, Bikaku: the worm's string of bites on M1 (the owner's: "with its M1 bites"), and that they heal (Predatory Feeding). Its
+     * other moves and its kakuja come in the next versions: until then the board shows only what it has.
+     */
+    static Panel bikaku(Input in, List<Row> rows) {
+        int accent = accent(in);
+        if (in.graftKakuja()) {
+            // 3.5.4: in the kakuja (the Input's kakuja flag is the Bikaku kakuja on this path).
+            rows.add(row(in, "Tentacle bite (far reach)", BIKAKU_KAKUJA, 0, Key.ATTACK));
+            // 3.5.7: its own four moves on the worm's keys (mastery alone opens them, with it), and its tentacles biting on their own.
+            for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+                Key key = move.kakuja() ? bikakuKey(move.slot()) : null;
+                if (key != null) {
+                    rows.add(row(in, move.displayName(), TEXT, locked(in.mastery(), move.mastery()), key));
+                }
+            }
+            rows.add(new Row("auto", "Its tentacles bite on their own", TEXT, 0));
+            rows.add(new Row("auto", "Rooted · tough · regenerating", TEXT, 0));
+            rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
+            away(in, rows);
+            return new Panel("KAKUJA", "Bikaku · kakuja", BIKAKU_KAKUJA, rows);
+        }
+        rows.add(row(in, "Bites: Snap · Lunge · Maul", accent, 0, Key.ATTACK));
+        // 3.5.0: its moves on the original's kagune keys, each dim with the mastery it needs until then (mastery alone opens them).
+        for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+            Key key = move.kakuja() ? null : bikakuKey(move.slot());
+            if (key != null) {
+                rows.add(row(in, move.displayName(), TEXT, locked(in.mastery(), move.mastery()), key));
+            }
+        }
+        rows.add(new Row("hold", "Hold one to throw it further", TEXT, 0)); // 3.5.8: up to 30 blocks
+        rows.add(new Row("auto", "Bites heal you", TEXT, 0));
+        // 3.5.3: its passives. 4.2.2: Pain Suppression alone; the faster regeneration went with a ghoul's own (a Bikaku's is Monstrous
+        // Regeneration, on C).
+        rows.add(new Row("auto", "Hard to knock back · stuns halved", TEXT, 0));
+        // 3.7.1 (the owner: "the walker is the first tap K half kakuja, the full kakuja is the hold K").
+        rows.add(new Row(key(in, Key.CYCLE) + " tap", "The Walker (in · out)", accent,
+            locked(in.mastery(), com.hex.kagune.control.bikaku.BikakuForm.WALKER.mastery())));
+        rows.add(new Row(key(in, Key.CYCLE) + " hold", "Kakuja", BIKAKU_KAKUJA, locked(in.mastery(), com.hex.kagune.control.bikaku.BikakuRules.KAKUJA)));
+        away(in, rows);
+        return new Panel("BIKAKU", "Bikaku · the worm", accent, rows);
+    }
+
+    /** 3.5.0: the board's key for a Bikaku move's slot (null: none). */
+    static Key bikakuKey(com.hex.kagune.control.bikaku.BikakuMove.Slot slot) {
+        return switch (slot) {
+            case Z -> Key.RAPID;
+            case J -> Key.SLINGSHOT;
+            case V -> Key.LIFT;
+            case B -> Key.SLAM;
+            case N -> Key.THROW;
+            case H -> Key.CRUSH;
+            case G -> Key.GRAB;
+            case C -> Key.GUARD;
+            default -> null;
+        };
     }
 
     /** K into and out of the kakuja (tap: the first, hold: the final, from the first too), R to kakugan mode, Ctrl + R all away. */

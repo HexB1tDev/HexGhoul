@@ -1,0 +1,397 @@
+package com.hex.kagune.control.village;
+
+import com.hex.kagune.control.village.HumanPersona.Temper;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 2.1.3 (pure, tested): how a village human says its life ({@link HumanLife}) in its temper's voice: the "Talk a while." page's topics
+ * (what it does, its family, what it does for fun, what scares it, what it dreams of, its odd habit, its secret, its favourite thing, what
+ * it thinks of ghouls, the village's gossip, who it falls for), how its day is going, and how it takes a gift. What it says is its life's;
+ * the temper puts the words around it, so two shy bakers still say different things, and a shy baker and a bold one say the same thing
+ * differently.
+ */
+public final class HumanVoice {
+    private HumanVoice() {
+    }
+
+    /** What can be talked about, the label it has on the page, and how warm it must be first (regard). */
+    public enum Topic {
+        WORK("What do you do here?", 0),
+        FAMILY("Tell me about your family.", 0),
+        HOBBY("What do you do for fun?", 0),
+        QUIRK("What's that you're doing?", 0),
+        GHOULS("What do you think of ghouls?", 0),
+        GOSSIP("Heard any gossip?", 0),
+        FAVOURITE("What's your favourite thing?", HumanPersona.WARM),
+        TYPE("What's your type?", HumanPersona.WARM),
+        FEAR("What scares you?", HumanPersona.WARM),
+        DREAM("What do you dream of?", HumanPersona.CLOSE),
+        SECRET("Tell me a secret.", 80),
+        // 4.2.8 (the owner: "So develop every single NPC even further, add more dialogue, more options, all of them"): appended (sent and kept
+        // by ordinal; their flags 128 << 11 and 128 << 12 stay clear of MARRIED, 1 << 20). Talk, not learning someone: never paid.
+        STRANGE("Seen anything strange lately?", 0),
+        ME("What do you think of me?", HumanPersona.WARM);
+
+        public final String label;
+        public final int warmth;
+
+        Topic(String label, int warmth) {
+            this.label = label;
+            this.warmth = warmth;
+        }
+
+        /** The bond flag that marks it learned (2.1.3: a human's flags past CONFESSED, PARTNER and NOT_TYPE). */
+        public int flag() {
+            return 128 << this.ordinal();
+        }
+
+        /** True if learning it is getting to know them (paid once: {@link #LEARNED}). */
+        public boolean personal() {
+            return this != GOSSIP && this != TYPE && this != STRANGE && this != ME;
+        }
+    }
+
+    /** What it says as the "Talk a while." page opens. */
+    public static final String[] TOPICS_ASKED = {"Sure. What do you want to know?", "Talk? Alright. Ask away.", "Oh? What about?",
+        "I've got time. What's on your mind?", "Go on, then. Ask me anything."};
+
+    /** Regard the first time each personal thing is learned about them. */
+    public static final int LEARNED = 2;
+    /** At most this many topics on the page. */
+    public static final int ROOM = 7;
+
+    /**
+     * The topics on the page for someone at {@code regard} ({@code partner}: together; {@code learned}: the bond's flags), at most
+     * {@link #ROOM}: what they haven't learned yet first, then the rest by turns ({@code seed}).
+     */
+    public static List<Topic> topics(int regard, boolean partner, int learned, int seed) {
+        List<Topic> fresh = new ArrayList<>();
+        List<Topic> known = new ArrayList<>();
+        for (Topic topic : Topic.values()) {
+            if (regard < topic.warmth && !partner) {
+                continue;
+            }
+            (topic.personal() && (learned & topic.flag()) == 0 ? fresh : known).add(topic);
+        }
+        List<Topic> out = new ArrayList<>(fresh);
+        int start = known.isEmpty() ? 0 : Math.floorMod(seed, known.size());
+        for (int i = 0; i < known.size() && out.size() < ROOM; i++) {
+            out.add(known.get((start + i) % known.size()));
+        }
+        return out.size() > ROOM ? out.subList(0, ROOM) : out;
+    }
+
+    // ---------------------------------------------------------------- its voice around its words
+
+    /** What it says before its words on {@code topic}. */
+    static String before(Temper temper, Topic topic, int seed) {
+        boolean deep = topic == Topic.FEAR || topic == Topic.DREAM || topic == Topic.SECRET;
+        if (deep) {
+            return switch (temper) {
+                case CHEERFUL -> pick(seed, "*the smile slips, just for a second* ...", "Oh. A real question. Okay. ", "*quietly, for once* ");
+                case SHY -> pick(seed, "*looks around first, then very quietly* ...", "*fiddles with a sleeve for a long time* ...", "*whispers* ");
+                case BOLD -> pick(seed, "Straight answer, since it's you. ", "*crosses their arms, then uncrosses them* Fine. ", "I don't tell people this. ");
+                case KIND -> pick(seed, "*takes your hand for a moment* ", "Since you asked so gently... ", "*smiles, a little sadly* ");
+                case GRUMPY -> pick(seed, "...Why do you want to know? *sighs* Fine. ", "If you laugh, we're done. ", "*grumbles, then goes quiet* ...");
+                case FLIRTY -> pick(seed, "Ooh, going deep? *the grin fades* ...Okay. Real answer. ", "*for once, doesn't joke* ", "You'd have to be special to hear this. You are. ");
+                case DREAMY -> pick(seed, "*looks up at the sky for a long time* ...", "Hmm... ", "I've never said this out loud. ");
+                case NERVOUS -> pick(seed, "*takes a big breath* Okay. Okay. ", "P-promise you won't tell? ...Okay. ", "*voice wobbling* ");
+                case PLAYFUL -> pick(seed, "Ha, okay, serious mode. *clears throat* ", "*stops bouncing* ...Real answer? ", "Pinky swear first. *hooks your finger* Okay. ");
+                case STOIC -> pick(seed, "*a long silence* ", "...I'll tell you. Once. ", "*looks you in the eye* ");
+                case SARCASTIC -> pick(seed, "Oh, the deep stuff. Great. *drops the act* ...", "No jokes for this one. ", "*sighs* You would ask that. ");
+                case ROMANTIC -> pick(seed, "*hand on heart* Only for you. ", "Come closer. This is for your ears only. ", "*softly* ");
+            };
+        }
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "Oh, I love this question! ", "Ha! Okay, so... ", "", "Ooh! ");
+            case SHY -> pick(seed, "Um... ", "*quietly* ", "Oh. Well... ", "");
+            case BOLD -> pick(seed, "", "Simple. ", "Here's the thing. ", "Ha. ");
+            case KIND -> pick(seed, "", "Oh, that's sweet of you to ask. ", "Well, dear... ", "Mm. ");
+            case GRUMPY -> pick(seed, "Ugh. ", "*sighs* ", "", "If you must know... ");
+            case FLIRTY -> pick(seed, "Getting to know me? I like that. ", "Mm, curious. ", "", "For you? Anything. ");
+            case DREAMY -> pick(seed, "Hm? Oh... ", "", "*drifts back from somewhere* ", "Let me think... ");
+            case NERVOUS -> pick(seed, "Oh! Um. ", "W-well... ", "", "Okay, so, um... ");
+            case PLAYFUL -> pick(seed, "Ooh, a quiz! ", "", "Guess! No? Fine. ", "Ha, okay! ");
+            case STOIC -> pick(seed, "", "Hm. ", "*nods* ", "");
+            case SARCASTIC -> pick(seed, "Oh, riveting question. ", "", "You really want to know? Wow. ", "Brace yourself. ");
+            case ROMANTIC -> pick(seed, "Oh, a question about me! ", "", "How lovely of you to ask. ", "Mm... ");
+        };
+    }
+
+    /** What it says after its words (often nothing). */
+    static String after(Temper temper, Topic topic, int seed) {
+        if (Math.floorMod(seed >> 3, 3) != 0) {
+            return "";
+        }
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, " Anyway! Your turn!", " Isn't life funny?");
+            case SHY -> pick(seed, " ...Sorry. I talked too much.", " ...Thank you for listening.");
+            case BOLD -> pick(seed, " That's me.", " Any questions?");
+            case KIND -> pick(seed, " But enough about me. How are you, really?", " Thank you for asking. People don't.");
+            case GRUMPY -> pick(seed, " Happy now?", " Don't spread it around.");
+            case FLIRTY -> pick(seed, " Your turn. Tell me something about you.", " Now you know me a little better. Want more?");
+            case DREAMY -> pick(seed, " ...Where was I?", " Funny, the things that stay with you.");
+            case NERVOUS -> pick(seed, " Was that too much? That was too much.", " Sorry. Sorry. I'm done.");
+            case PLAYFUL -> pick(seed, " Bet you didn't see that coming!", " Your turn! Tell me something weird.");
+            case STOIC -> pick(seed, " That's all.", " Enough said.");
+            case SARCASTIC -> pick(seed, " Thrilling, I know.", " Try not to faint.");
+            case ROMANTIC -> pick(seed, " Now you know a little more of my story.", " I feel like I could tell you anything.");
+        };
+    }
+
+    /** Its answer on {@code topic}: its life's words in its temper's voice ({@code gossip}: a word about a neighbour, if there is one). */
+    public static String answer(Temper temper, HumanLife.Life life, Topic topic, int seed, String gossip) {
+        String said = switch (topic) {
+            case WORK -> life.job().work(seed);
+            case FAMILY -> life.family();
+            case HOBBY -> life.hobby();
+            case QUIRK -> life.quirkSays();
+            case GHOULS -> life.view().say(seed);
+            case GOSSIP -> gossip != null ? gossip : news(seed);
+            case FAVOURITE -> life.favouriteSays();
+            case FEAR -> life.fear();
+            case DREAM -> life.dream();
+            case SECRET -> life.secret();
+            case TYPE -> "";
+            case STRANGE -> strange(temper, seed);
+            case ME -> me(temper, seed);
+        };
+        return before(temper, topic, seed) + said + after(temper, topic, seed >> 1);
+    }
+
+    // ---------------------------------------------------------------- how it is, the news, the neighbours
+
+    /** "How are you?": its temper's small talk, or how its day at work went. */
+    public static String chat(Temper temper, HumanLife.Life life, int seed) {
+        if (Math.floorMod(seed >> 2, 5) < 2) {
+            return before(temper, Topic.WORK, seed) + life.job().day(seed >> 4);
+        }
+        return pick(seed, CHAT[temper.ordinal()]);
+    }
+
+    /** Each temper's small talk (2.1.3: five each; in temper order). */
+    static final String[][] CHAT = {
+        {"I'm great! The bakery had fresh bread this morning.", "Wonderful! I've been humming all day.", "Fantastic! The sun's out and nobody's been eaten. Best kind of day!",
+            "So good! I helped a kid find their dog. The dog was very grateful. So was the kid.", "Amazing! I tried a new recipe. It exploded. Still amazing!"},
+        {"I'm... fine. Thank you for asking. People don't, usually.", "Okay, I think. Better now.", "*nods* Good. Quiet. I like quiet days.",
+            "I'm alright. I found a nice spot by the wall to sit. Nobody bothers me there.", "Fine. Um. You? ...Sorry. I'm bad at this part."},
+        {"Bored. Something should happen around here.", "Strong as ever. Want to arm wrestle?", "Restless. If I don't do something exciting soon I'll fight the rooster.",
+            "Good. Won an argument with the elder. He'll be sulking for days.", "Fine. Hungry. Bored. Mostly bored."},
+        {"I'm well. The neighbour's child was sick, but she's better now.", "Busy, but good. How are YOU?", "Tired, but the good kind. I spent the day helping people.",
+            "I'm alright, dear. Have you eaten? You look thin.", "Better for seeing you. That's not flattery, it's true."},
+        {"My back hurts and the rooster won't shut up. Next.", "Same as yesterday. Worse, probably.", "Terrible. Someone whistled near my window at dawn. Whistled.",
+            "Fine. Don't make me say it twice.", "The weather's wrong, the bread's stale, and people keep asking me how I am."},
+        {"Better now that you asked.", "Lonely. Not that you'd do anything about it. ...Would you?", "Oh, I'm wonderful. Especially from this angle.",
+            "Bored, until about ten seconds ago. Funny, that.", "Mm, I'll be better if you stay a while."},
+        {"I counted the stars last night. I lost count at the pretty ones.", "Floating. In a good way.", "I had a dream about a whale in the sky. I'm still thinking about it.",
+            "The clouds this morning looked like a ship. I watched it sail all the way over the hills.", "Oh, I'm alright. The wind's in a good mood today."},
+        {"Fine! Fine. I heard a noise last night. It was probably a cat.", "Okay as long as the CCG walks by.", "I'm good! I think. Is something wrong? Is it me?",
+            "I checked my lock four times today. That's down from six. Progress!", "I'm okay! Mostly. There was a spider. It's gone now. I think."},
+        {"I put a frog in the baker's flour sack. Best morning ever.", "Bored! Play a game with me. Any game.", "I'm great! I've been hiding from my chores since breakfast.",
+            "I taught the goat a trick. It's not a good trick. It's a trick.", "Fantastic! I beat the kids at tag. They're seven. Still counts."},
+        {"Well enough. The wind is from the east.", "Steady. As always.", "Well. The day's work is done.", "*shrugs* Alive. That's enough.",
+            "Good. Nothing happened. That's how I like it."},
+        {"Living the dream. The dream is mostly chores.", "Fantastic. The rooster and I are best friends now.", "Oh, I'm thriving. Can't you tell from my face?",
+            "Great. Someone asked me to smile more. I'm still recovering.", "Never better. Which isn't saying much, but there it is."},
+        {"I'm reading a love story. The heroine's an idiot. I adore her.", "Wonderful! Someone left a rose on my step. Probably the wind. Probably.",
+            "Dreamy. I saw two old people holding hands at the well. I nearly cried.", "Oh, I'm well! The evening light's so golden today. Perfect for a walk with someone.",
+            "Lovestruck. With the sunset. It's a one-sided relationship."}};
+
+    /** The village's news (2.1.3: twenty-four). */
+    static final String[] NEWS = {"The CCG doubled the patrols. Something must have happened.", "Old Taka swears he saw red eyes in the field last night.",
+        "There's going to be a market day soon. Bring coin!", "Someone left flowers on every doorstep. Nobody knows who.",
+        "A family moved out. Said the nights got too long.", "The bell rang at midnight. Nobody admits ringing it.",
+        "They say a ghoul can look just like us. Just like us.", "The baker's daughter is getting married!",
+        "An investigator came through with a case as big as a coffin. Didn't say a word to anyone.", "The well water tasted of iron this week. Nobody's saying why.",
+        "Someone's been stealing eggs. The elder's furious. Suspiciously furious.", "There'll be a festival when the harvest's in. Masks and lanterns and dancing.",
+        "A traveller said the next village emptied in one night. Everyone just... gone.", "The children found a mask in the woods. The CCG took it away.",
+        "Two of the night watch quit. Nobody blames them.", "The old mill wheel stopped for an hour yesterday. Something was caught in it.",
+        "Someone saw a girl with a book walking the wall at three in the morning. Smiling.", "The CCG put up new posters. The faces on them look like anybody.",
+        "A dog's been following the gravedigger everywhere. He pretends to hate it. He feeds it.", "Fog's coming in from the river every night now. Thick as milk.",
+        "There's a new coffee shop rumour: a cafe in the city where the waitress kicks like a horse.", "The elder's nephew proposed at the well. She said maybe.",
+        "Lanterns went missing from the gate. The watch blames the wind. The wind doesn't carry lanterns.",
+        "A merchant's selling 'ghoul-proof' charms. They're just rocks. People are buying them.",
+        // 2.4.7 (the owner: "Add even more lines"): more of the village's talk.
+        "The baker's oven caught fire again. Third time this month. The bread was still good.", "Someone painted a mask on the well. The elder scrubbed it off. It came back.",
+        "A Dove asked about you. I said I'd never seen you. ...You're welcome.", "The river froze over at the bend, in summer. Nobody can explain it.",
+        "Two strangers in long coats bought every lantern in the village. Then left. At night.", "The church bell rang by itself at midnight. Nobody was in the tower.",
+        "The fisherman pulled up a quinque case from the river. Empty. He threw it back.", "There's a cat that sits outside the CCG post every day. Just watching.",
+        "Somebody left flowers on the grave of a ghoul the Doves killed. Nobody admits to it.", "The tailor's apprentice ran off to the city. Left a note: 'Don't look for me.'",
+        "They say a ghoul in a white mask saved a child from the river last week. Then vanished.", "The harvest festival's moved up. The elder wants it done before the fog comes."};
+
+    public static String news(int seed) {
+        return pick(seed, NEWS);
+    }
+
+    /** A word about a neighbour, {@code other} the {@code job} (twenty templates; "{other}" and "{job}" put in). */
+    static final String[] GOSSIP = {"Have you met {other}? The {job}. Sweetest person in the village. Don't tell them I said so.",
+        "{other} the {job} has been humming all week. Someone's in love.", "Between you and me, {other} the {job} hasn't slept properly in days.",
+        "{other}? The {job}? We grew up together. They still owe me a sweet from when we were nine.",
+        "I saw {other} the {job} crying by the well yesterday. I didn't ask. Maybe you could.",
+        "{other} the {job} says they've seen something in the woods. Nobody believes them. I half do.",
+        "Don't buy anything from {other} the {job} on a rainy day. Grumpiest person alive when it rains.",
+        "{other} the {job} is saving up for something. Won't say what. I think a ring.", "If you need anything mended, ask {other}. The {job}. Best hands in the valley.",
+        "{other} the {job} and I had a fight. Over nothing. Over a fence. It's not about the fence.",
+        "{other} the {job} makes the best tea in the village. Not their job. Just a gift.", "Watch out for {other} the {job}. They talk. I mean they TALK.",
+        "{other} the {job} has a crush on someone. Everyone knows but them.", "I've never once seen {other} the {job} eat. Not once. Isn't that funny? ...Isn't it?",
+        "{other} the {job} lost someone last winter. Be gentle with them.", "{other} the {job} once fought off a wolf with a broom. True story. Ask them.",
+        "My mother wants me to marry {other} the {job}. I'd rather marry the well.", "{other} the {job} keeps a light on all night. Every night. Afraid of something.",
+        "{other}, the {job}? Kindest soul here. They'd give you the shirt off their back and apologise it wasn't warmer.",
+        "I think {other} the {job} is lonely. Go and say hello sometime.",
+        // 2.4.7: more of them.
+        "{other} the {job} lends money to everyone and never asks for it back. Saint or fool, I can't decide.",
+        "{other} the {job} sings in the mornings. Badly. Loudly. I've grown to love it.", "Never play cards with {other} the {job}. Trust me.",
+        "{other} the {job} keeps a diary. Writes in it every night. I'd give a lot to read it.",
+        "{other} the {job} came back from the city with a scar and won't say how. Don't ask.",
+        "{other} the {job} feeds the stray dogs. All of them. There are a lot of dogs now.",
+        "{other} the {job} once stared down a Dove inspector until he left. Absolute legend.",
+        "{other} the {job} is braver than they look. And they look terrified most of the time.",
+        "{other} the {job} talks to the moon. I've seen it. I think the moon talks back.",
+        "If {other} the {job} offers you tea, say yes. If they offer you soup, run."};
+
+    /** Gossip about {@code other} the {@code job}. */
+    public static String gossip(String other, String job, int seed) {
+        return pick(seed, GOSSIP).replace("{other}", other).replace("{job}", job);
+    }
+
+    /** 2.1.3: what it's caught doing as the talk opens, now and then (its odd habit), before its hello; else "". */
+    public static String caught(HumanLife.Life life, int seed) {
+        return Math.floorMod(seed >> 5, 4) == 0 ? life.quirkDoing() + " ...Oh! " : "";
+    }
+
+    // ---------------------------------------------------------------- gifts
+
+    /** How it takes a gift ({@code thing}: what it's called; {@code again}: it had one from them today already). */
+    public static String gift(Temper temper, HumanLife.Gift how, String thing, boolean again, int seed) {
+        String line = giftLine(temper, how, again, seed).replace("{thing}", thing);
+        return line.isEmpty() ? line : Character.toUpperCase(line.charAt(0)) + line.substring(1);
+    }
+
+    private static String giftLine(Temper temper, HumanLife.Gift how, boolean again, int seed) {
+        if (again && how != HumanLife.Gift.DISLIKED) {
+            return switch (temper) {
+                case CHEERFUL, PLAYFUL -> "Another one? You're spoiling me! Save some for tomorrow!";
+                case SHY, NERVOUS -> "*holds it, bright red* ...You already gave me something today...";
+                case GRUMPY, SARCASTIC -> "Twice in a day? People will talk. ...Fine. Thanks.";
+                case STOIC, BOLD -> "Another? ...Thank you. Once a day is plenty.";
+                default -> "You're too kind. One a day is more than enough, really.";
+            };
+        }
+        return switch (how) {
+            case LOVED -> switch (temper) {
+                case CHEERFUL -> pick(seed, "{thing}! How did you know?! I love you! I mean— I LOVE it!", "*squeals* {thing}! My favourite! You're the best!");
+                case SHY -> pick(seed, "*stares at it* ...{thing}. You remembered. *hugs it to their chest*", "*eyes go wide* ...How did you know? Thank you. Really.");
+                case BOLD -> pick(seed, "{thing}? Now you're just showing off. ...I love it.", "You know me too well. That's dangerous. Thank you.");
+                case KIND -> pick(seed, "Oh, {thing}... you listened. Nobody listens. Thank you, dear.", "*eyes shine* You remembered. That's the real gift.");
+                case GRUMPY -> pick(seed, "...{thing}. You remembered. *clears throat* I'm not crying. It's dusty.", "Hmph. {thing}. ...Fine. You're my favourite. Don't tell anyone.");
+                case FLIRTY -> pick(seed, "{thing}? Oh, you're trying to win me over. ...It's working.", "Mm, you know exactly what I like. What else do you know?");
+                case DREAMY -> pick(seed, "{thing}... it's like you reached into my head. Thank you.", "*holds it up to the light* ...I'll keep it forever.");
+                case NERVOUS -> pick(seed, "F-for me? {thing}?! I- thank you! Sorry! Thank you!", "Oh no, I'm going to cry. {thing}! Thank you!");
+                case PLAYFUL -> pick(seed, "{thing}! You win! You win the whole game! What game? All of them!", "*does a little spin* {thing}! Best day ever!");
+                case STOIC -> pick(seed, "*a long pause* ...{thing}. You remembered. Thank you.", "*actually smiles* ...This means a great deal.");
+                case SARCASTIC -> pick(seed, "Oh, great, {thing}, my favourite— ...wait, it IS my favourite. Huh. Thanks. Really.", "Okay, you got me. That's... really nice.");
+                case ROMANTIC -> pick(seed, "{thing}! *clutches it to heart* Nobody's ever... oh, you!", "This is the most romantic thing anyone's done for me this year.");
+            };
+            case LIKED -> switch (temper) {
+                case CHEERFUL -> pick(seed, "Ooh, for me? Thank you!", "Aww, how nice! Thank you!");
+                case SHY -> pick(seed, "*takes it carefully* ...Thank you.", "Oh! For me? ...Thank you.");
+                case BOLD -> pick(seed, "Nice. Thanks.", "Good taste. I'll take it.");
+                case KIND -> pick(seed, "Oh, that's lovely. Thank you, dear.", "You didn't have to. Thank you.");
+                case GRUMPY -> pick(seed, "...Hm. It's fine. Thanks.", "What's this for? ...Fine. Thanks.");
+                case FLIRTY -> pick(seed, "A gift? You're sweet on me.", "Mm, thank you. I'll think of you when I use it.");
+                case DREAMY -> pick(seed, "Oh, how pretty. Thank you.", "It's lovely. Like a little present from the sky.");
+                case NERVOUS -> pick(seed, "Oh! For me? Thank you! Sorry. Thank you!", "Is this— for me? Oh. Thank you!");
+                case PLAYFUL -> pick(seed, "A present! Is it a trick? It's not? Yay!", "Ooh, gimme! Thanks!");
+                case STOIC -> pick(seed, "Thank you.", "*nods* Kind of you.");
+                case SARCASTIC -> pick(seed, "A gift. For me. How unexpected. ...Thanks.", "Oh, nice. Not bad at all.");
+                case ROMANTIC -> pick(seed, "A gift! *holds it close* Thank you!", "How thoughtful. I'll treasure it.");
+            };
+            case FINE -> switch (temper) {
+                case CHEERFUL -> pick(seed, "Oh! Um. Thanks! I'll find a use for it!", "Haha, okay! Thank you!");
+                case SHY -> pick(seed, "*looks at it, puzzled* ...Thank you?", "Oh... okay. Thank you.");
+                case BOLD -> pick(seed, "...What am I supposed to do with this?", "Odd gift. Thanks, I guess.");
+                case KIND -> pick(seed, "Oh, how... practical. Thank you, dear.", "That's very kind. I'm sure it'll come in handy.");
+                case GRUMPY -> pick(seed, "Why would I want this?", "...Is this a joke? Fine.");
+                case FLIRTY -> pick(seed, "Hm. Not flowers, but I'll take it.", "Interesting choice. You're a mystery.");
+                case DREAMY -> pick(seed, "Oh... I'll find something it's good for. Everything's good for something.", "How curious. Thank you.");
+                case NERVOUS -> pick(seed, "Oh! Thank you! What is it for? Sorry! Thank you!", "Um. Thanks! I'll put it somewhere safe.");
+                case PLAYFUL -> pick(seed, "Ha, what IS this? I love random stuff!", "Weird gift! Ten points!");
+                case STOIC -> pick(seed, "...Thank you.", "*turns it over* Useful. Thanks.");
+                case SARCASTIC -> pick(seed, "Wow. Just what I always wanted. Truly.", "Oh, a... thing. Thanks.");
+                case ROMANTIC -> pick(seed, "Every gift means something. I'll work out what this one means!", "Thank you! It's the thought that counts.");
+            };
+            case DISLIKED -> switch (temper) {
+                case CHEERFUL -> pick(seed, "Oh! Ew. Is this a prank? Haha... please take it back.", "Um. That's... thank you? No. No, I can't.");
+                case SHY -> pick(seed, "*goes pale and holds it at arm's length*", "...Why would you give me this?");
+                case BOLD -> pick(seed, "What is this? Is this an insult?", "Try that again and I'll throw it at you.");
+                case KIND -> pick(seed, "Oh, dear. I don't think I want this. But thank you for thinking of me.", "That's... not very nice. Are you alright?");
+                case GRUMPY -> pick(seed, "Get that away from me.", "Is this what you think of me? Charming.");
+                case FLIRTY -> pick(seed, "Wow. That's a mood-killer.", "Is this how you court people? Rough.");
+                case DREAMY -> pick(seed, "Oh. That's... a sad thing to give someone.", "*holds it gingerly* ...Why?");
+                case NERVOUS -> pick(seed, "*shrieks* Why?! Why would you?!", "I- I don't- please take it back!");
+                case PLAYFUL -> pick(seed, "Gross! You lose ten points!", "Is this a dare? I'm not eating it.");
+                case STOIC -> pick(seed, "No.", "*hands it straight back*");
+                case SARCASTIC -> pick(seed, "Oh wow. You shouldn't have. Really. You shouldn't have.", "Truly the gift of the year.");
+                case ROMANTIC -> pick(seed, "*gasps* That's not romantic at all!", "My heart just broke a little. Why this?");
+            };
+        };
+    }
+
+    /** 4.2.8: something odd it saw lately, in its temper's voice (the land's ghouls, doves, lights in the woods). */
+    static String strange(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "Ooh, yes! Lights in the woods last night, moving way too fast for a lantern! Probably nothing! Probably!",
+                "A man in a white coat asked me if I'd seen anyone who doesn't eat. I said my uncle on a diet. He didn't laugh.");
+            case SHY -> pick(seed, "...Someone was standing at the edge of the field last night. Just standing. I closed the curtains.",
+                "I heard something on the roof. It wasn't a cat. Cats don't breathe like that.");
+            case BOLD -> pick(seed, "Found a coat by the river. Torn to ribbons, no body. I'm not scared. I just took the long way home.",
+                "Two people in masks ran past my door at midnight. I went after them. They were gone. Nobody's that fast.");
+            case KIND -> pick(seed, "A boy came to my door asking for water. He wouldn't drink it. He just held the cup and thanked me. Poor thing.",
+                "Someone left flowers on the old well. Every week, the same blue ones. I hope they're alright, whoever it is.");
+            case GRUMPY -> pick(seed, "Investigators. Again. Stomping through my vegetables asking stupid questions. That's strange enough for me.",
+                "My neighbour's dog stopped barking at night. Started whimpering instead. I don't like it.");
+            case FLIRTY -> pick(seed, "A very tall stranger smiled at me in the dark. Lovely teeth. A few too many of them.",
+                "Someone's been watching me from the trees. I'd be flattered if I weren't terrified.");
+            case DREAMY -> pick(seed, "The moon was red last week. Did you see? I think it was trying to tell us something.",
+                "I saw a girl with wings of fire, just for a second, over the hill. Nobody believes me. I believe me.");
+            case NERVOUS -> pick(seed, "S-something's been eating the sheep. Not wolves. Wolves leave the wool. This left nothing.",
+                "There were footprints on the roof this morning. On the ROOF. How do you get footprints on a roof?");
+            case PLAYFUL -> pick(seed, "A crow stole my spoon. A different crow brought it back. I think they're running a business.",
+                "Someone carved a smiling clown face into the big tree. Creepy! Also very well done. Respect.");
+            case STOIC -> pick(seed, "Blood on the road at dawn. No body. Rain took it by noon.", "Men with cases came through. Didn't stay. Don't usually.");
+            case SARCASTIC -> pick(seed, "Oh, nothing. Just people vanishing and men with briefcases full of teeth. Normal Tuesday.",
+                "A guy in a gas mask bought every lump of charcoal in the village. Totally normal behaviour. Nothing to see.");
+            case ROMANTIC -> pick(seed, "Two figures on the hill at sunset, one with wings. They held hands. I hope whatever they are, they're happy.",
+                "Someone's been leaving notes in the hollow tree. Love letters, I think. I haven't read them. Much.");
+        };
+    }
+
+    /** 4.2.8: what it thinks of them (asked once it is warm to them), in its temper's voice. */
+    static String me(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "You? You're one of my favourite people! Top five. Top three, if I'm honest!", "I think you're lovely. There, said it!");
+            case SHY -> pick(seed, "...I think you're nice. Really nice. ...That's all. *goes red*", "You're easy to talk to. Not many people are.");
+            case BOLD -> pick(seed, "I think you're all right. Better than all right. Don't let it go to your head.",
+                "You've got nerve. I like nerve. Stick around.");
+            case KIND -> pick(seed, "I think you carry more than you let on. I hope you let someone help, sometimes.",
+                "You're a good person. I can tell. Don't let anyone talk you out of it.");
+            case GRUMPY -> pick(seed, "...You're less annoying than most. That's the best you'll get.", "I suppose you're tolerable. Don't push it.");
+            case FLIRTY -> pick(seed, "What do I think? I think you should ask me that somewhere more private.",
+                "I think you're trouble. The good kind. The best kind.");
+            case DREAMY -> pick(seed, "You remind me of someone from a dream I had. I can't remember the dream. Just the feeling.",
+                "I think you're on your way somewhere important. I hope you'll tell me about it.");
+            case NERVOUS -> pick(seed, "I-I think you're great! Is that weird? That's weird. Sorry.", "You don't make me nervous. That's... rare.");
+            case PLAYFUL -> pick(seed, "Seven out of ten. Eight on a good day. Nine if you bring snacks.", "I think you'd make a great partner in crime.");
+            case STOIC -> pick(seed, "Reliable.", "You keep your word. That's enough.");
+            case SARCASTIC -> pick(seed, "I think you're the only person here who gets my jokes. Tragic, for you.",
+                "Honestly? You're fine. Don't tell anyone I said something nice.");
+            case ROMANTIC -> pick(seed, "I think meeting you was one of those things that was meant to happen.",
+                "I think you have very kind eyes. I notice eyes.");
+        };
+    }
+
+    static String pick(int seed, String... lines) {
+        return lines[Math.floorMod(seed, lines.length)];
+    }
+}

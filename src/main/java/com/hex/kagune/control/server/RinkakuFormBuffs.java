@@ -23,6 +23,9 @@ public final class RinkakuFormBuffs {
 
     /** Trampoline target of the original's {@code KaguneServerController.refreshFormEffect}. */
     public static void refreshFormEffect(ServerPlayer player, MobEffect effect, int amplifier) {
+        if (effect == MobEffects.f_19616_) {
+            return; // 2.0 (the owner): forms give no health (the centipede forms' Health Boost); they make a ghoul a tank instead (GhoulTank)
+        }
         if (effect == MobEffects.f_19596_ && KaguneProfile.isActive(player) && !UkakuServer.isUkaku(player)) {
             amplifier = Math.max(amplifier, RinkakuForms.speed(KaguneProfile.form(player)));
         }

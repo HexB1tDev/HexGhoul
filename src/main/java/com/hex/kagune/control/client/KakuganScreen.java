@@ -219,9 +219,10 @@ public final class KakuganScreen extends Screen {
         return true;
     }
 
+    /** 1.3.9: Next: the eyes as placed are sent, and on to the gender screen. */
     private void done() {
         ControlNetwork.CHANNEL.sendToServer(new C2SPlaceKakugan(this.eyes));
-        Minecraft.m_91087_().m_91152_(null);
+        Minecraft.m_91087_().m_91152_(new GenderScreen());
     }
 
     @Override

@@ -14,6 +14,7 @@ public final class PathMenus {
             case UKAKU -> new UkakuMenuScreen();
             case RINKAKU -> new RinkakuMenuScreen();
             case PALE, GRAFT -> new GraftMenuScreen(); // 7.0.0: Owl DNA is dormant (its old players are Graft DNA)
+            case BIKAKU -> new BikakuMenuScreen(); // 3.4.9
             case NONE -> null;
         };
     }

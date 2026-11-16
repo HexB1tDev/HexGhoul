@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:adventure/root",
+  "display": {
+    "icon": {"item": "hexkagune:quinque_case_dawn"},
+    "title": {"text": "Slain Reaper"},
+    "description": {"text": "Bring down Kishou Arima, the White Reaper (everyone who struck him in the last five minutes shares it)"},
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "slain": {"trigger": "minecraft:impossible"}
+  }
+}

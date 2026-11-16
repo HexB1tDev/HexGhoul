@@ -9,6 +9,1686 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.8 (HexGhoul): wild ghouls, gang members and villagers: more to say, and more to talk about (testing)
+
+See `.github/release-notes-4.2.8.md`. `NpcTalk.chat` (9 lines a temper, a Gourmet's 7), `GangTalk` (every band 5 or more),
+`data/hexkagune/talk/ally.txt` (+12 topics, 20), `village/HumanVoice.Topic` `STRANGE` and `ME` (appended; not personal; flags 128 << 11
+and << 12, clear of `MARRIED`). `TalkRulesTests.generic`. `docs/handoff/sabotage-4.2.8.json`.
+
+## 4.2.7 (HexGhoul): Eto, Touka and Ken: more to talk about, and more ways to win or lose them (testing)
+
+See `.github/release-notes-4.2.7.md`. `npc/EtoMoreTopics.MORE` (11; `EtoTopics.ALL` is now `FIRST` + it), `npc/ToukaTopics.MORE` (11),
+`npc/KenTopics.MORE` (10). `TalkRulesTests.developed` for all three (a reply's cap +5, the most any reply had before).
+`docs/handoff/sabotage-4.2.7.json`.
+
+## 4.2.6 (HexGhoul): the General, Ayato and Noro: much more to talk about, and ways to get on their bad side (testing)
+
+See `.github/release-notes-4.2.6.md`. `npc/GeneralTopics.MORE` (13), `npc/AyatoTopics.MORE` (12), `npc/NoroTopics.MORE` (8) after their
+scripts' `TOPICS` (`ALL`). `TalkRulesTests.developed` for all three (and every topic's answer rendered, no banned name in any line; more
+replies that win than cost). `docs/handoff/sabotage-4.2.6.json`.
+
+## 4.2.5 (HexGhoul): Banjou and Roma: twice the talk, with things that win them and things that hurt (testing)
+
+See `.github/release-notes-4.2.5.md`. `npc/BanjouTopics.MORE` (14 topics) and `npc/RomaTopics.MORE` (13) after their scripts' `TOPICS`
+(`ALL`). `EtoTopics.Topic.spent`: a topic of one-time replies only, none left open, isn't offered. `TalkRulesTests.developed` (topics,
+replies that cost regard, one-time replies, every reply worth -8..+4); `CompanionTests` no longer caps topics at 14.
+`docs/handoff/sabotage-4.2.5.json`.
+
+## 4.2.4 (HexGhoul): the talk's rules: no more spamming one option, "who are you" asked once, one-time options (testing)
+
+See `.github/release-notes-4.2.4.md`. `npc/Spoken` (pure): a player's one-time marks per topic id (`o_<topic>`: reply bits, `TOPIC_BIT` 8),
+topic replies paid per day (`p_<topic>`: `day << 9 | mask`), a choice's last paid day (`c_<choice>`); in `NpcMemory` (`starting`).
+`EtoTopics.Follow.once`, `Topic.once`, `Topic.offered`/`open` filter by `EtoTalk.Context.spoken` (new last component; old constructors kept).
+`EtoServer`: `once`/`choiceFirst` (every first-page answer, sleep kiss, cookbook, reassure, sorry), `paysToday` (topic replies by id, no
+14-topic cap), `spoken` (marks). `WHO` not offered when together (`CompanionScript`, `EtoTalk`) and once for wild ghouls (`NpcTalk.choices`).
+Roma's and Banjou's `GIFT`: `Effect.MEAT`, `giftedToday`. `GhoulNpcTalk.GIFTED`: meat warms once a day. `Script.allTopics`.
+`TalkRulesTests`; `docs/handoff/sabotage-4.2.4.json`.
+
+## 4.2.3 (HexGhoul): the General, Roma and Banjou were there all along, hidden from your game; now they're drawn (testing)
+
+See `.github/release-notes-4.2.3.md`. `client/render/ThrallRenderGuard.registerAll` (the mend that registers every renderer again when the
+game has none for a kind, before it would keep the body out of the client's world) lacked GENERAL, ROMA and BANJOU since they came (and
+HUMAN; `ours` lacked HumanNpc): in the owner's game they were alive on the server and never drawn. `NpcTests.renderGuardKinds` reads
+`ControlEntities` and fails for any kind left out (and for an official made again in another's looks); `docs/handoff/sabotage-4.2.3.json`.
+
+## 4.2.2 (HexGhoul): regeneration only while you hold its key (X), slower, at a fifth of the price (testing)
+
+See `.github/release-notes-4.2.2.md`. Protocol 129: `C2SRegen` (message 59) from `client/RegenClient` (key down/up, every 10 ticks held, none
+with a screen open); `GhoulRegen.held`/`holding` (`HELD_FOR` 30 ticks, a `WorldTimes` map). `GhoulRegen.playerTick` heals only while held, at
+`Regeneration.heldPerTick` (`HELD_SPAN` 2.5 over the old `healTicks`, Reservoir x1.3), paid at `GhoulReserve.REGEN_PER_HEALTH` (a fifth;
+Graft's RC x `PRICE_SHARE`). `ControlKeys.REGENERATE` (X); `AbilityGuide.Key.REGEN` and `withRegen` (last row of every board, War and Peace
+too). Bikaku: `BikakuRules.ownRegeneration` (mastery 600 and `Gate.BIKAKU_WORMS`) ends the key; Abnormal Regeneration removed. War's mend
+needs the key. `RegenTests`; `docs/handoff/sabotage-4.2.2.json`; render `docs/handoff/regen-key-4.2.2.png`.
+
+## 4.2.1 (HexGhoul): every quest checked: three that could never be finished, and every "no idea how" fixed (testing)
+
+See `.github/release-notes-4.2.1.md`. `QuestServer.complete` signals FAVOUR for a favour done. `Hunts.Prey` has `Where` and `where` (appended
+fields, indices kept); `Hunts.draw(random, ghouls, biome)` draws a kill hunt's prey only where `Hunts.here(where, biome)` (the biome's id:
+`QuestServer.biomeAt`, `LevelReader.m_204166_`, `Holder.m_203543_`, `ResourceKey.m_135782_`, allowlisted). `GangServer.doveCase` (the Clowns'
+job's kill; `AgentBrain.drop` honours `DOVE_CASE`). `GangDaily.Job.hint`, `JoinServer.blendMakings`, off-shift café brew (`hasMakings`).
+`Dishes.how` (the recipe chain, all the way down) in `Tastes.wishSaid` and Ayato's pies chapter. `QuestAuditTests`;
+`docs/handoff/sabotage-4.2.1.json`.
+
+## 4.2.0 (HexGhoul): Touka keeps to the café floor; officials stranded on the wrong floor go back; /kagune places says why one is missing (testing)
+
+See `.github/release-notes-4.2.0.md`. Versions: x.y.0 to x.y.9, then x.(y+1).0 (the owner's rule; `TraceTests.version`). `EtoRules.strollsTo`
+(`FLOOR_STEP` 1.5): `EtoNpc`'s `RandomStrollGoal.m_7037_` (getPosition) returns null for an end off her home's floor at a home of her own;
+`EtoBrain`: `offFloor` counts as `away` for `Homeward.bugged` and an idle one off her floor walks back to her spot. `UniqueNpcs.diagnosis`
+in `/kagune places`. `TraceTests.floors`; `docs/handoff/sabotage-4.2.0.json`.
+
+## 4.1.103 (HexGhoul): the no-fail audit: the ways a bug could still crash the game or the server, closed (the lag patch, part 5) (testing)
+
+See `.github/release-notes-4.1.103.md`. `patch/KaguneGuard`: CALLBACKS += CcgAgent and HumanNpc `m_8024_`/`m_7472_`, EtoNpc `m_8024_`,
+ChildNpc `m_8024_`/`m_6138_`; DISCARD += FleshThrall `m_8024_` (the brains left `TIMED`: timed with their guard); `GUARDED_NAMES`
+(`m_88315_`, every screen's render, `SCREEN_FLOOR` 10; 13 found). `client/render/RenderGuard` round each NPC renderer's `m_7392_` (the pose
+stack popped back to its mark, `PlayerLayers.failed`). `patch/KaguneLinkCheck` (build step after the guard): every class in the guard's
+report loaded and initialized by the JVM (its verifier: ASM's `BasicVerifier` reads no stack map frames); a VerifyError fails the build.
+`NoFailTests`; `docs/handoff/sabotage-4.1.103.json`.
+
+## 4.1.102 (HexGhoul): your game finds the mod's NPCs from a list too (the lag patch, part 4: the client) (testing)
+
+See `.github/release-notes-4.1.102.md`. `NpcIndex` keeps every world's list, a client's too (`join` on any level; `of` walks the list
+everywhere); `GhoulNpcRenderer`, `ChildRenderer`, `GraftRenderer` (Roma's tendrils) and `PeaceFx` (the flesh creatures) ask it.
+`OutfitLayer.texture` kept by model. `LagTests.registry` (no world search for the mod's NPCs anywhere); `docs/handoff/sabotage-4.1.102.json`.
+
+## 4.1.101 (HexGhoul): world generation works each answer out once (the lag patch, part 3) (testing)
+
+See `.github/release-notes-4.1.101.md`. `HotelPlan.Memo` (pure): one world's village offers, each village's hotel spots and each chunk's
+`near`, kept as worked out (bounded, `CAP` each, begun again when full; copies handed out; race-safe on the generation threads);
+`ControlStructures.villageOffers` keeps one per village placement and seed (`PLANS`), `inHotel` and `Site.hotel` ask it. `DryLand.Memo`
+(pure): a search's ground, heights by column and biomes by the game's 4 x 4 x 4 cells (`quarts`), the answers the wrapped ground's;
+`ControlStructures.ground` returns one. `LagTests.worldgen` (equivalence over four seeds, a timed 25-spot search);
+`docs/handoff/sabotage-4.1.101.json`. `TraceTests`: the rules of 4.1.96 to 4.1.98 their late sabotage lists found untested (quest news on
+the action bar, a mission's retry from nothing, /kagune places' officials, the officials' trace logs).
+
+## 4.1.100 (HexGhoul): the mod's NPCs found from a list, not a search of the world; far-off NPCs look round less (the lag patch, part 2) (testing)
+
+See `.github/release-notes-4.1.100.md`. `server/NpcIndex`: each server world's weak set of the mod's NPCs (`EntityJoinLevelEvent`), `of(level,
+type, box, filter)` answering what `getEntitiesOfClass` would (box met, filter passed; removed or moved bodies dropped as walked; a client
+asks the game); the 55 server searches for GhoulNpc, CcgAgent, HumanNpc, EtoNpc, ChildNpc, FleshThrall go through it. `server/NpcPace`: a
+ghoul's and an investigator's look for prey every 10 ticks near a player, every 40 with none within 64 blocks. `LagServer` reports the NPCs
+and players loaded. `LagTests` (`registry`, `pace`); `docs/handoff/sabotage-4.1.100.json`.
+
+## 4.1.99 (HexGhoul): /kagune lag, the mod's own lag profiler (the lag patch, part 1) (testing)
+
+See `.github/release-notes-4.1.99.md`. `LagMeter` (pure): `enter`/`exit` read one volatile flag unless a window is open; then each call's
+own time (less the timed calls inside it), calls and worst whole call, per thread (the server's, the client's render thread, or the server's
+workers); `lines` the report. `patch/KaguneGuard` times every guarded method (enter after the guard's first label, exit before each return
+and first in its catch) and times only (a catch that exits and throws on) the `TIMED` NPC brains and structure searches, every renderer and
+layer (`m_7392_`, `m_6494_`), every packet's `encode` and the innermost void `lambda$handle$` of each; it proves each one timed and every
+listener in the jar too. `LagServer` (`/kagune lag [log]`, ticks timed HIGHEST to LOWEST), `LagClient` (frames, chat), `S2CLag` (message 58,
+protocol 128). `LagTests`; `docs/handoff/sabotage-4.1.99.json`.
+
+## 4.1.98 (HexGhoul): the gang leaders are made in their places even when the world remembers a lost body of theirs (testing)
+
+See `.github/release-notes-4.1.98.md`. `UniqueNpcs.takesOver`: the slot's body holds her place only if it is `about` (loaded, alive);
+`keepPlaces`: `slot.away` counts only while her body is live; the log says each remake (`keepPlaces`), each body sent away
+(`EtoBrain.gone`) and each official's death (`EtoBrain.died`).
+
+## 4.1.97 (HexGhoul): quest info out of the chat: the details in the quest menu, short notices on the action bar (testing)
+
+See `.github/release-notes-4.1.97.md`. `JoinServer.flash` (the action bar, `Live.quietUntil` holds it 3 s over `bar`); the makings and
+how-to lines gone; `QuestServer`: new, favour, hunt, done (one line with its pay and gates) on the action bar; `GangServer`: the next
+step, a daily done, the quinque, the Clowns' job on the action bar. NPC speech and warnings stay in the chat.
+
+## 4.1.96 (HexGhoul): officials named when you look at them; /kagune places says where each is; the café shift reworked (testing)
+
+See `.github/release-notes-4.1.96.md`. `EtoRenderer`: an untaken companion's name while `Minecraft.f_91076_` (crosshairPickEntity) is her
+(allowlisted). `UniqueNpcs.whereabouts` (her body loaded, unloaded, dead, never made; her spot), added to `/kagune places` from a player.
+The shift: `JoinServer.brew` (a glass bottle right clicked in the café brews a cup, marked as the mission's), `holdsCup` (no regular before a cup), `SHIFT_PATIENCE` 1800, the sit-down line on the action bar only, `progress` (`QuestLog.missionProgress`, `JoinTrial.count`).
+
+## 4.1.95 (HexGhoul): every gang mission is a timed quest; the coffee explained; failing waits a day; the mission's things taken back (testing)
+
+See `.github/release-notes-4.1.95.md`. `quest/Missions` (pure): each `JoinTrial.Kind` (and `COURT_SPAR`) as a quest of `Quest.Line.TIMED`
+(`JoinTrial.title`, `how`, `limit`), `COOLDOWN` 24000. `QuestLog.Mission` ("m.KIND=state,endsAt,until" in the save): `startMission`,
+`endMission`, `forgetMission`, `barred`, failed ones forgotten by `expire` once their day is over. `JoinServer`: barred at `start`, timed
+(`endsAt`), `missionOver` at `end`; Ken's makings `lent` (`HexMission` tag), `crafted` (`PlayerEvent.ItemCraftedEvent`) marks what is made
+from them and counts it (`Live.made`, less the cups served), `takeBack`. `QuestJournalView.Tab.TIMED`, the failed struck through and stamped,
+`QuestStyle.glyph` an hourglass. `QuestTests.missions495`. Render: `docs/handoff/quests-timed-4.1.95.png`.
+
+## 4.1.94 (HexGhoul): the CCG building, the mansion and the hotels spawn; the mansion and the hotel trimmed; /locate no longer freezes; the gang leaders are made in their places (testing)
+
+See `.github/release-notes-4.1.94.md`. `DryPlace.place` and the CCG building's `Site.place` no longer refuse a spot within `PLACE_APART`/
+`CCG_APART` of the other sets' offers (all seven sets offer in the same 20 x 20 chunks of each region: 1-2% passed); `inHotel` first.
+`DryLand.flatFor` (6 / 8 / 10 by the footprint's widest side), `DryLand.roughness(..., limit)` stops early. `PlaceClaims.overworld` (the
+overworld's generator only), `PlaceClaims.stale` (a claimed spot with nothing of it, checked once a run when the live world asks, given up).
+`HotelPlan.ONE_IN` 2, `HotelPlan.spots` (every clear side, the first whose land holds it), `onPlains` (its middle and `PLAINS_SHARE` 75%).
+`ControlStructures.startAt`/`spotAt` (`StructureManager.getStructureAt`), `UniqueNpcs.spotByPlayers`, `atOwnPlace` inside any of her place.
+Trimmed: `reaper_mansion.nbt` 79 x 28 x 67 (`companion_structures.py` `crop_z` (54, 120), anchor (39, 6, 87), Arima (40, 7, 108) yaw 180);
+the hotel 115 x 194 x 152, tiles 2 x 3 (`exploration_structures.py` `crop_x` (38, 153), `crop_z` (0, 152), ring (50, 90); `join_panes.py`).
+
+## 4.1.93 (HexGhoul): every Rinkaku and Bikaku sound is Minecraft's own (none the Ukaku's) (testing)
+
+See `.github/release-notes-4.1.93.md`. `RinkakuSounds`, `BikakuSounds` (pure; vanilla 1.20.1's, none the Ukaku's but the Wither's spawn).
+`KaguneVoices` (pure): the original's sixteen `HexKaguneSounds` events by path. `KagunePatch.trampolineExact` sends the controller's
+`playAt(ServerPlayer, Vec3, RegistryObject, F, F)` to `server/KaguneVoice` (other paths: `playAtLegacy`); `patchWritheSound` sends the
+writhing loop's sound to `client/KaguneVoiceClient.writhe` (`build.py` `CHANGED` lists `KaguneAmbientSounds$WritheSound`). The Rinkaku's and
+Bikaku's own files, `NpcTendrils`, `GhoulNpcCombat` (its Rinkaku and Ukaku), `UkakuForms`' Rinkaku kakuja, `ManifestSounds`, `KakujaFx`.
+`SfxTests.kaguneVanilla493`, 24 rules sabotaged (`docs/handoff/sabotage-4.1.93.json`).
+
+## 4.1.92 (HexGhoul): Kick Master's right click animates again (testing)
+
+See `.github/release-notes-4.1.92.md`. `PaleMotions.animates` lets `TWIRL_CHARGE` and `DASH_KICK` through (they never were: `PaleAnimator.apply`
+returned before their poses); `facesLook(TWIRL_CHARGE)`. `CompanionTests.dashKickDrawn492` drives the real `PaleAnimator`; 4 rules sabotaged
+(`docs/handoff/sabotage-4.1.92.json`). Render `docs/handoff/dash-kick-drawn-4.1.92.png` (`tools/DashDrawnPreview.java`, through the animator).
+
+## 4.1.91 (HexGhoul): every Ukaku sound is Minecraft's own (the clash untouched) (testing)
+
+See `.github/release-notes-4.1.91.md`. `ukaku/UkakuSounds` (pure): every Ukaku sound, one of the game's own named with its namespace (so
+`Sfx` never draws it from the recorded pack), `ALL` checked against vanilla 1.20.1's `tools/vanilla_sounds_1.20.1.txt`. The Ukaku's files
+(`UkakuFire`, `UkakuServer`, `UkakuRush`, `UkakuCombat`, `UkakuGatling`, `CrystalShots`, `UkakuVortex`, `UkakuThorns`, `UkakuCrystalCombat`,
+`UkakuPyre`, `NpcWings`) play only those; `UkakuCombat.swing`/`hit`/`slam` (its M1, from `KaguneCombat`), `UkakuForms`' kakuja sounds,
+`ManifestSounds.UKAKU`, `AyatoPullOut`, `KakujaPassive`'s Steel Blade branch. `KaguneClash` untouched. `SfxTests.ukakuVanilla491`, 20 rules
+sabotaged (`docs/handoff/sabotage-4.1.91.json`).
+
+## 4.1.90 (HexGhoul): the structures at home in TerraBlender's biomes (testing)
+
+See `.github/release-notes-4.1.90.md`. `data/hexkagune/tags/worldgen/biome/plains.json` (the hotel's land) takes Regions Unexplored's and Oh
+The Biomes We've Gone's open fields; `data/minecraft/tags/worldgen/biome/has_structure/village_plains.json` (new, `replace: false`) lets
+vanilla's plains villages stand there too (a hotel stands only beside a village); `wet.json` and `steep.json` know those mods' swamps,
+rivers, beaches, peaks and slopes. Every modded entry `required: false`. `NpcTests`; 11 rules sabotaged (`docs/handoff/sabotage-4.1.90.json`).
+
+## 4.1.89 (HexGhoul): a woman's coat takes her chest's shape (the CCG and ghoul outfits) (testing)
+
+See `.github/release-notes-4.1.89.md`. `outfit/OutfitFit` (pure): a coat's body cubes cut (`cutAll`: every `STEP` 0.5 px across the bust's
+band, at its tip, at `SURFACE` and `TORSO` in depth) and pushed out by the bust's own depth (`fitZ = z - depth(y) * weight(z)`), normals
+remade, kept by figure and bounce (`fitted`). `FemaleFigure.covered(wearer)` and `fit(wearer, partial)` (curves and bounce as each bust layer
+draws them); `OutfitLayer` draws a coat's BODY cubes fitted; the NPC bust layers (`HumanRenderer`, `AgentRenderer`, `EtoRenderer`,
+`ChildRenderer`) skip the skin bust when `covered`. `OutfitTests.fitted489`, 35 rules sabotaged (`docs/handoff/sabotage-4.1.89.json`). Render
+`docs/handoff/armor-fit-4.1.89.png` (`tools/ArmorFitPreview.java <out.png>`); `ArtPreview.outfit` lights faces by their own normals.
+
+## 4.1.88 (HexGhoul): Kick Master's own stance: side-on, the hands low and loose (testing)
+
+See `.github/release-notes-4.1.88.md`. `tools/PalePoseDesign.java`: `kickStance()` (`KICK_STANCE_TWIST`, `KICK_STANCE_LOOK`), solved as
+`KICK_STANCE` and written as the generated `kickStance()`; Kick Master's strikes are sequenced from it and back to it (`sequence` takes the
+guard's call: `kickStance()`, `PaleMotions.mirror(kickStance())` for a left-hand blow), as are the dash run and kick; `KICK_GUARD =
+KICK_STANCE` (the kicks' arms); `kickGuard()` gone; `mirror` as `PaleMotions.mirror`. `PaleMotions.kickStance`, `kickMasters` (her string's
+blows, the dash kick, its charge), `strike` from it out of nothing, `twirlCharge` and `dashKick` from it. `PaleAnimator.guardKept(stance,
+kicker)`. `CompanionTests.kickStance488`, 20 rules sabotaged (`docs/handoff/sabotage-4.1.88.json`). Renders
+`docs/handoff/kick-stance-4.1.88.png`, `docs/handoff/kick-master-4.1.88.png` (`tools/PalePreview.java <dir> kick-stance` / `kicks`).
+
+## 4.1.87 (HexGhoul): Kick Master's right click: a charged dash kick, what it hits flies to your left (testing)
+
+See `.github/release-notes-4.1.87.md`. `PaleMove.DASH_KICK` (appended; protocol 127). `PaleRules`' dash kick: `dashDetail` (run ticks and
+charge), `dashTicksFor`, `dashArrive`/`dashEnd`, `dashPlace` (the run: fastest off the mark, the hop into the blow), `dashRise`, `dashLift`,
+`dashTurn` (a quarter turn left after the blow), `dashFlight` (to her left), `dashStruck` (the sweep's reach), `dashUntouchable`; 4.1.8's
+twirl (`twirlDetail`, its out-of-nowhere dash) is gone. `PaleMoves.releaseTwirl` → `dashPlan` (a body aimed at, else the crosshair's
+block, else the charge's reach; `groundAt` along the way), `tickDashKick` (the path shoved left, the blow on its tick), `dashLands`,
+`kickedLeft` (as the V kick launches: `BlockSmash.kick`, `PaleKnockdown.launched`). `EtoOwl` (Kick Master NPCs: the General, Roma).
+`PaleClient.drive`, `PaleCamera.dashTurn` (the view turned with the kick), `PaleAnimator`, `PaleMotions.dashKick`/`dashKickBody`,
+`PaleFleshRenderer` (her leg in first person). Poses from `tools/PalePoseDesign.java` (`dashRun`, `dashKick`; `Spec.headRoll`,
+`HEAD_LEVEL`: the head kept level as the body leans). `tools/sabotage.py` now counts a suite's thrown `AssertionError` as caught.
+`CompanionTests.dashKick487`, 48 rules sabotaged (`docs/handoff/sabotage-4.1.87.json`; `HEAD_LEVEL` broken by hand, regenerated: caught).
+Renders `docs/handoff/dash-kick-4.1.87.png`, `docs/handoff/dash-kick-close-4.1.87.png` (`tools/PalePreview.java <dir> dash-kick`).
+
+## 4.1.86 (HexGhoul): quests per player: another player's quest target says whose it is (testing)
+
+See `.github/release-notes-4.1.86.md` (every quest system checked for anything shared between players). `JoinTrial.notYours`,
+`NOT_YOURS_EVERY`; `JoinServer.notYours` (from `attacked` when another's blow is cancelled, and from `GhoulNpcTalk.interact` before any talk).
+`CompanionTests.notYours486`, 9 rules sabotaged (`docs/handoff/sabotage-4.1.86.json`).
+
+## 4.1.85 (HexGhoul): romance: the daily, "What do you want today?" (testing)
+
+See `.github/release-notes-4.1.85.md`. `Tastes.WISHES` (per companion they can be together with: loved things that can be had), `wish(key,
+day)`, `wishSaid`, `granted`, `WISH_REGARD`, `WISH_ASK`; `Tastes.an` takes "an" for an initialism said with a vowel and "some" for what isn't
+counted. `NpcMemory.WISH_DAY`. `EtoServer.withWish` (a main page, together, before today's gift, a free slot, last of the add-ons), the
+"wish" handler, the wish granted in `present`. `CompanionTests.wish485`, 20 rules sabotaged (`docs/handoff/sabotage-4.1.85.json`). Render
+`docs/handoff/wish-4.1.85.png` (`tools/UiPreview.java <dir> wish`).
+
+## 4.1.84 (HexGhoul): romance: presents each companion loves or hates (testing)
+
+See `.github/release-notes-4.1.84.md`. `npc/Tastes` (pure: `Taste` LOVED/LIKED/HATED, `HUMAN_FOOD` every ghoul hates, `LOVES`/`HATES`
+by companion (ids, or kinds by prefix), `of`, `regard`, `name`/`an`/`offer`, `said`/`again` in their words, `gesture`).
+`EtoServer.present` (a main-hand item with no gift of its own), `withPresent` (the gifts page's "present" option, `SAY_1`; the main page's
+gifts link, `SAY_8`, while there is room), the "present" handler (once a day, taken unless hated, through `carry`).
+`CompanionTests.gifts484`, 33 rules sabotaged (`docs/handoff/sabotage-4.1.84.json`). Render `docs/handoff/gifts-4.1.84.png`
+(`tools/UiPreview.java <dir> gifts`).
+
+## 4.1.83 (HexGhoul): every official back at her own spot; Banjou in his bedroom (testing)
+
+See `.github/release-notes-4.1.83.md`. `HomePlace.spot` (each official's spot in her place's template: x, feet y, z, yaw), `placed` (turned as
+the game turns a template about its corner, and her facing), `astray`, `KEEP_NEAR`; `ControlStructures.start`/`spot` (her place's first
+piece past its clearing: its position and quarter turns; `StructureStart.m_73602_` allowlisted with joined.tsrg evidence);
+`UniqueNpcs.spotOf`/`keepPlaces` for every official (made at her spot facing its way, one in her place re-homed there, one left waiting
+left alone, dead back at her spot). Banjou's template spot in his bedroom upstairs (`tools/companion_structures.py`, its `under` name
+clash fixed). `/kagune <name> here` says she visits unless married. `CompanionTests.officials483`, 34 rules sabotaged
+(`docs/handoff/sabotage-4.1.83.json`). Renders `docs/handoff/banjou-room-4.1.83.png`, `docs/handoff/officials-4.1.83.png` (`tools/floor_plan.py`).
+
+## 4.1.82 (HexGhoul): the owner's bug list: the control bar gone, Roma kept in her tent, the ghoul division at its tower, a trial's bodies its player's alone, Anteiku's regulars at the counter (testing)
+
+See `.github/release-notes-4.1.82.md`. `client/ControlHud` and the `controlIndicator` setting deleted (the 1.0.43 notes below are history).
+`npc/HomePlace` (each official's place, `reach`, `within`, `takesOver`, `middle`, `remade`); `UniqueNpcs.atOwnPlace`/`takesOver`/`keepPlaces`
+(Roma remade in her tent's middle: `ControlStructures.middle`, the start's box); `EtoBrain`'s first tick adopts a body at its own place.
+`AgentSpawner.station` and `GhoulNpcBrain.posted` (a squad of the CCG's ghoul division posted at its tower). `JoinServer.mark` (sparks sent
+to the trial's player only), `othersTrial` (no other player's blows, no other player hunted), `counterSeat` and `JoinTrial.counter` (the
+regulars in front of the counter), `cup` (a right click with the cup near the regular serves). `CompanionTests.bugs482`, 71 rules sabotaged
+(`docs/handoff/sabotage-4.1.82.json`). Render `docs/handoff/cafe-4.1.82.png` (`tools/cafe_seats.py`).
+
+## 4.1.81 (HexGhoul): dates at real places: they follow you there, and the date happens when you arrive together (testing)
+
+See `.github/release-notes-4.1.81.md`. `DateSpot` (every date's `Place` and `When`: the companions' own places by their homes, and kinds of
+place: somewhere high, the water, a field, the rain, a village; `high`, `field`, `WAITS`, `ALONG`); `CourtVoice.lead`/`stood`;
+`CourtTrials` (`dateOn`, `exists`, `at`, `place`, `water`, `dating`: each second, there together, the scene brought to them);
+`EtoServer.date`/`dated` (a date somewhere else led there; the dates page only offers places the world has). `CompanionTests.dates481`,
+29 rules sabotaged (`docs/handoff/sabotage-4.1.81.json`). Render `docs/handoff/dates-4.1.81.png` (`tools/UiPreview.java <dir> dates`).
+
+## 4.1.80 (HexGhoul): romance, each companion's courtship their own: ten chapters asking for something new (testing)
+
+See `.github/release-notes-4.1.80.md`. `Courtship.Task` (ten new: `SPAR`, `READING`, `ROOF`, `QUINQUE`, `VILLAGE_DAY`, `SHOW`, `ERRAND`, `QUIZ`,
+`GARDEN`, `SERVE`; `timed`, `once`, `begun`), the ten chapters changed, `SUPPER`, `plant`/`planted`, `onRoof`, `daylight`, Touka's `HOMEWORK`
+(`homework`, `mayStudy`), `migrate(key, ...)`/`FROM_480` (a changed chapter on from before starts again, or stays done); `CourtVoice` (the
+spar's, the homework's, the show's, the garden's, the supper's words); `CourtTrials` (fireworks and planting by right click, the supper
+handed to Banjou's boys); `CourtshipServer` (the reading, the roof, the day's walk; `count`, `on`, `nearby`); `JoinServer` (Ayato's spar as
+a courtship's: `court`, `courted`); `EtoServer` (`courtTrial`, `court`, the homework; the Pack with a quinque); `HumanErrandServer` (a
+villager's favour). The 35 moments kept, their lines changed only where they named the old task. `CompanionTests.courtship480`, 68 rules
+sabotaged (`docs/handoff/sabotage-4.1.80.json`). Render `docs/handoff/romance-4.1.80.png` (`tools/UiPreview.java <dir> romance`).
+
+## 4.1.79 (HexGhoul): the gangs' ways in: each step a trial of its own, a scene with the leader at the end (testing)
+
+See `.github/release-notes-4.1.79.md`. `JoinTrial` (the trials' kinds, which step each is, `after`, their rules: `clamp`/`reached`, `calledIn`,
+`showtime`, `gasStarts`, `nextWave`, `shiftLost`, `breaks`, the academy's `QUESTIONS`/`draw`/`maySit`, `way`, `clock`); `JoinVoice` (the
+leaders' words); `JoinServer` (each trial live: `start`, `tick`, the spar's blows held in `hurt`, `died`, `serve`, `held`, `partnerWalk`,
+`partnered`, `march`, `orphan`, `end`); `GangPlayer` one step per way in (`advance`, `step`, `aogiriFrom`); `GangServer.talk` (`trial`,
+`offer`, `exam`, `welcome`). Hooks in `EtoBrain` (the spar), `AgentBrain` and `GhoulNpcBrain` (the partner, the bodies), `GhoulNpcTalk`
+(serving). `NpcTests.trials`. Render `docs/handoff/joining-4.1.79.png` (`tools/UiPreview.java <dir> joining`).
+
+## 4.1.78 (HexGhoul): the daily board: three jobs a day to choose from, eight per gang, Ken's dailies for Anteiku, better pay (testing)
+
+See `.github/release-notes-4.1.78.md`. `GangDaily.Kind` (KILL by tags, BRING, WATCH, STREAK), its `Job`s (40; the old 13 at their ordinals),
+`offers`, `take`, `best`, `streak`, `bonus`, `mastery`, `point`; `DailyVoice` (the givers' words); `GangServer.daily` (the board, as a `Said` of
+three choices), `dailyTags`, `dailyKill`, `run`, `watch`, `payDaily`, `can`, `home` (`UniqueNpcs.known`); `QuestServer.payGhoul`, `bare`;
+`QuestLog.grant`; `EtoServer` "daily:take:". `NpcTests.board`. Render `docs/handoff/daily-board-4.1.78.png` (`tools/UiPreview.java <dir> board`).
+
+## 4.1.77 (HexGhoul): Arima looks at his broken blade, two seconds, then falls (testing)
+
+See `.github/release-notes-4.1.77.md`. `ReaperBladePose.look` (`RAISE`, `LOOK_ARM_*`, `LOOK_WRIST`, `LOOK_SAG`), `snapped` and `gaze` (his head
+aimed at where it snapped from `EYES`), `DROPS`; `AgentRules.REAPER_END_FALLS` 52 (his end 128 ticks). `AgentTests.reaperFallen`. Renders
+`docs/handoff/arima-end-4.1.77.*`, `arima-look-4.1.77.png`.
+
+## 4.1.76 (HexGhoul): Arima's blade shatters at once in his one hand, and he falls straight on his face (testing)
+
+See `.github/release-notes-4.1.76.md`. `AgentRules.REAPER_END_SHATTER`/`FALLS`/`FALLING`/`TICKS` (2/6/16/82); `ReaperBladePose.end` (his one-handed
+guard, `SLACK` as it shatters, then `fall`: stiff, `t` squared, over `TOES`, kept where they stand: `toes`); `ReaperBladeLayer` (whole, then the
+stub and every shard at once); one crash in `AgentBrain.ending`. 4.1.74's `ReaperBladeRules.level`/`breaksAt`/`breaking`, `ReaperBladeMesh.brokenAt`,
+the kneel (`KNEEL`, `END_LOW`) removed. `AgentTests.reaperFallen`, `reaperEnd`. Renders `docs/handoff/arima-end-4.1.76.*`.
+
+## 4.1.75 (HexGhoul): Arima falls on his face and lies there before he dies (testing)
+
+See `.github/release-notes-4.1.75.md`. `AgentRules.REAPER_END_FALLS`/`FALLING`/`TICKS` (132/12/200); `ReaperBladePose.fall` (turned forward
+`t` squared about his knees: `knee`, `kneeModel`, `turned`; `FACE_DOWN`, `LYING`, `LIE_ARM_*`, `LIE_WRIST`), `carried`/`place`/`local` (a point
+kept in the world between his body's frames: `ReaperBladeLayer.shards` from `shatterPose`); `AgentRenderer.m_6441_` (getFlipDegrees, 0 in his
+end); the thud in `AgentBrain.ending`. `AgentTests.reaperFallen`. Renders `docs/handoff/arima-*-4.1.75.*`.
+
+## 4.1.74 (HexGhoul): Arima's change and death slowed; Dawn out of his hand; nothing touches him as he dies (testing)
+
+See `.github/release-notes-4.1.74.md`. `AgentRules.REAPER_CHANGE_SLOW` (1.75), `REAPER_CHANGE_REAL`, `changeAge` (the change's keys played
+slower: `AgentClient`, `ReaperBladeLayer`, `ReaperCoatLayer`, `AgentBrain.shed`); `REAPER_END_SHATTER`/`SHATTERED`/`KNEELS`/`KNEELING`/`TICKS`
+(20/80/86/24/170); `ReaperBladeRules.shattered`, `remaining`, `breaksAt`, `breaking`, `level`; `ReaperBladeMesh.brokenAt`; `ReaperBladePose.end`
+(held still through the shatter); `AgentBrain.letGo` (Dawn put by through the change), `cleanse` (every effect, fire, bleeding and spikes,
+stun, knockdown off him each tick of his end); `untouchable` asked by `EtoOwl.fair`, `ChildKagune.fair`, `KenPullOut`, `EtoBrain.foe`.
+`AgentTests.reaperSlowed`. Renders `docs/handoff/arima-*-4.1.74.*` (`tools/ReaperBladePreview.java end|shedgif|endgif`, `tools/frames_gif.py`).
+
+## 4.1.73 (HexGhoul): NPCs never in the ground; lag, structures and official NPCs checked (testing)
+
+See `.github/release-notes-4.1.73.md`. `Footing` (pure: `stand`, `UP` 3, `DOWN` 2, `INSIDE`, `stuck`); `server/NpcFooting` (`feet`, `put`, the guard on every NPC of the mod's every `EVERY` ticks); used by `UniqueNpcs.levelTick` (coming back), `EtoNpc.goHome`, `ChildNpc.goHome`, `Homeward.put`, `GhoulNpcBrain.accompany`; `tools/npc_spots.py` (every template's NPCs checked; the makers `exploration_structures.rest`, `companion_structures` set feet on a carpet's or slab's top); `AgentRules.look` (a lost partner looked for each 30 s). `NpcTests.footing`, `NpcTests.lag173`. Renders `docs/handoff/npc-spot-4.1.73.png`, `ccg-banner-4.1.73.png`.
+
+## 4.1.72 (HexGhoul): the hotel replaces the Small City (testing)
+
+See `.github/release-notes-4.1.72.md`. The Small City's structure (`hexkagune:small_city`), placement (`hexkagune:city`), tiles and `CityPlan` gone (its maps kept in `RetiredSites` for an older world's people); the owner's `art/exploration/humanhotel.schem` as `hexkagune:hotel` (`tools/exploration_structures.py` site "hotel", `patrol_sky`; `structures/hotel/t_*.nbt`, `worldgen/structure/hotel.json`, `worldgen/structure_set/hotel.json`); `village/HotelPlan` (pure: `chosen`, `first`/`side` the first side clear of other villages, `hotelOf`, `DISTANCE` 14, `CLEAR_OF`, `APART`, `offersNear`/`scan`, `near`, `onPlains`); `ControlStructures` (`Site.hotel`/`hotelAt`, `villages`, `villageOffers`, `village`, `inHotel`, `PLAINS`, `plains`); `tags/worldgen/biome/plains.json`; `DryLand.DEEP`, `HOTEL_SALT`. `NpcTests.hotel`. Renders `tools/city_render.py` (any tiled site), `tools/hotel_render.py village|street`; `docs/handoff/hotel-*-4.1.72.png`. Protocol 126.
+
+## 4.1.71 (HexGhoul): the CCG, joined through the General (testing)
+
+See `.github/release-notes-4.1.71.md`. `GangPlayer.CCG` (5; `generalStep`, `ghoulKills`; `sworn`, `killedGhoul`, `ccgDone`; `BRIEFCASE` U+E004, `CCG_CYAN`, `CCG_DAMAGE`; `of`: the division is the CCG's); `GangServer` (`general()` the chain, `generalDaily`, `leads`/`gangOf`/`memberOf`/`gives` the General, `hunted`, `ccgStance`, `ghoul`, the damage in `fought`, `nameTag`, `inHideout` the tower, `giveMask` the issued case, `died` kills and reputation); `GangDaily` (`CCG_GHOULS`, `CCG_GANGS`, `CCG_PAPER`, the CCG's pay, `PAPER`, `ISSUED_CASE`); `GangWords` (the General's words, `GENERAL_WHY`); `AgentBrain.wanted`/`reveal`/`hurt`; `GhoulNpcBrain.wanted`; `NpcTalkView.GANG_COLOURS`; emblem `tools/gang_emblems.py`. `NpcTests.ccg`. `tools/UiPreview.java ccg`. Renders `docs/handoff/ccg-*-4.1.71.png`. Protocol 125.
+
+## 4.1.70 (HexGhoul): Anteiku, joined through Ken (testing)
+
+See `.github/release-notes-4.1.70.md`. `GangPlayer.ANTEIKU` (4; `anteikuStep`, `doveKills`; `answered`, `beansBrought`, `droveDove`, `anteikuDone`; `COFFEE` U+E003, `ANTEIKU_BROWN`, `ANTEIKU_CAPACITY`); `GangServer` (`leads`/`gangOf`/`memberOf` Ken and Touka, `ken()` the chain, `holdsBeans`/`takeBeans`, `nameTag` with `Style.withColor`, `neutral`, `capacity`); `GangWords` (Ken's words, `KEN_WHY`); `GhoulNpcBrain.wanted`/`fair` (neutral to all but the CCG); `SharedBar.capacity`, `BikakuClient.capacity`/`potential`, `GangClient.anteiku`; `ReserveBarView` (tail length; `drawFine`, `FINE` 2, `ANTEIKU_TAIL` 153: on half pixels in the usual spot), `ReserveHud`; emblem `tools/gang_emblems.py`; new API `Style`, `MutableComponent.m_6270_`/`m_7220_`. `NpcTests.anteiku`. `tools/UiPreview.java anteiku`. Renders `docs/handoff/anteiku-*-4.1.70.png`. Protocol 125.
+
+## 4.1.69 (HexGhoul): Ken's sitting fixed, no leg in the air (testing)
+
+See `.github/release-notes-4.1.69.md`. `EtoPose` SIT rebuilt for a companion's stiff body (EtoModel turns limbs whole, no knee or elbow): both legs level on the floor (`SIT_DROP` 10, `SIT_LEVEL` a quarter turn), leaning back 0.4 and over 0.15 onto the right hand, the left on the thigh, the head brought forward to look out; `sitDrop` lowers the hips only as the legs swing up (the heels on the floor all the way down); `PoseFade.blend` does the same getting up (`EtoPose.seated`). `CompanionTests` (legs level, no knee or elbow, the lean, the feet on the floor through the sit-down). `tools/CompanionPreview.java sit`. Renders `docs/handoff/ken-sit-4.1.69.png`, `docs/handoff/ken-sit-before-after-4.1.69.png`. Protocol 125.
+
+## 4.1.68 (HexGhoul): Ken's tower gone, Ken on Anteiku's roof (testing)
+
+See `.github/release-notes-4.1.68.md`. The cyber tower's structure, structure set, template pool and template deleted, and out of `PlaceClaims`, `ControlStructures` and `DryLand`; `tools/companion_structures.py` puts Ken in Anteiku's template on its roof (the deck at y 29 inside the south parapet, yaw 0) beside Touka at her counter; `Persona` KEN's home "Anteiku's roof". `CompanionTests`, `NpcTests`, `KitchenTests`. `tools/CompanionPreview.java sit`. Render `docs/handoff/ken-anteiku-roof-4.1.68.png`. Protocol 125.
+
+## 4.1.67 (HexGhoul): quitting a gang, the marriage rules, a spouse who wants you out (testing)
+
+See `.github/release-notes-4.1.67.md`. `GangPlayer.quit()` (out, not banned, the way in from the start); `GangWords` (pure: `wantOut`, `asked`, `stay`, `gone`, `demand`, `demands`); `GangServer`: the member talk offers "gang:quit" (asked, "gang:quit:yes" / "gang:stay"), `married(player, spouse)` (called from `EtoServer.propose` and the marry command), `spouseDemand` (the spouse's greeting), `nag` (near, every `NAG_EVERY`); talk scenes: the General's `rabbit_wedding` and `rabbit_child`, Eto's `bunny_child`. `NpcTests.joining`. `tools/UiPreview.java gang-talk`. Render `docs/handoff/gang-leaving-4.1.67.png`. Protocol 125.
+
+## 4.1.66 (HexGhoul): the cookbook in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.66.md`. New `CookbookView` (pure: `Model(tab, picked)`, `tabs()`; chapter tab: picture, words, dish slots "pick:d:ID", the dish page with its picture, recipe slots and tooltips, fills, meat, effects; effects tab: cards "pick:e:KEY", the dishes that give it "goto:ID"). `CookbookScreen` draws through it (box, no overlay; remembers tab and pick; arrows and wheel step dish to dish). `UiCanvas` gains `item`, `texture`, `tr`, `itemTooltip` (`GuiCanvas`: the real item, blit, translation, tooltip; `tools/UiPreview.java`'s canvas: the mod's own PNGs and `en_us.json`). `verify/api-allowlist.txt`: `Screen.m_280273_` (renderBackground) removed, no screen uses it now. `QuestTests.cookbook`; `KitchenTests` reads the view's words. `tools/UiPreview.java cookbook`. Render `docs/handoff/cookbook-4.1.66.png`. Protocol 125.
+
+## 4.1.65 (HexGhoul): the king's choice in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.65.md`. `KingChoiceView.draw` in the quest menu's box (`BOX_WIDTH` x `BOX_HEIGHT`: `QuestStyle.backdrop`, title, rule; `CARD_Y` 66; the cards side by side in the box; "choose" a quest button filling as held; "later"); `KingChoiceScreen` scales the box, no overlay. `QuestTests.kingChoice`. `tools/UiPreview.java king` (the cards over a scene). Render `docs/handoff/king-choice-4.1.65.png`. Protocol 125.
+
+## 4.1.64 (HexGhoul): the path choice in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.64.md`. New `PathChoiceView` (pure: `board`, `ruleY`, `draw` with `State(selected, mouse, time, hold)`): the board (`QuestStyle.backdrop`, the honeycomb right of the title only), title, rule, cards as quest cards in each path's accent, the stage strip, the Awaken button filling as held. `PathChoiceScreen` keeps picking and holding, draws through the view (its own drawing code removed). `PathChoiceLayout` unchanged. `PathScreenTests` (board holds everything, the rule never on a card; the screen draws through the view). `tools/UiPreview.java path-choice`. Render `docs/handoff/path-choice-4.1.64.png`. Protocol 125.
+
+## 4.1.63 (HexGhoul): the gender screen in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.63.md`. `GenderView.Layout` inside `box` (440 x 300 at most, `OUTSIDE` 8), `ruleY`; `GenderView.draw` the box (`QuestStyle.backdrop`, title, rule), the cards and buttons as the quest menu's. `FamilyTests.screen` checks the box on screen, everything in it. `tools/UiPreview.java gender` (now over a scene, and at 960 x 540). Render `docs/handoff/gender-screen-4.1.63.png`. Protocol 125.
+
+## 4.1.62 (HexGhoul): the kakugan screen in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.62.md`. `KakuganScreenLayout` lays everything inside `box` (the quest menu's size at most, `OUTSIDE` 8 round it on small screens), with `ruleY` (under the header) and `tile` (the face's frame); `MAX_CELL` 36. `KakuganView` draws the box (`QuestStyle.backdrop`, the menus' title and rule), the face's tile, quest-style buttons, the which-eye box as a quest card dimming only the box. `KakuganTests.screen` checks the box on screen, everything in it and under the rule. `tools/UiPreview.java kakugan-menu`. Render `docs/handoff/kakugan-screen-4.1.62.png`. Protocol 125.
+
+## 4.1.61 (HexGhoul): the Pale menu in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.61.md`. `PaleMenuView` redone on `QuestFrame` (box; `Tab` FORM/MOVES/OWL/MUTATIONS; `Model` + `tab`, `picked` ("pick:s:N", "pick:m:ID", "pick:o:ID", "pick:u:ID", "step:N", "milestone:N"), old constructors kept; `STAGES` (0, 250, 500 as `PaleUnlock.stageName`); `steps()` from `PaleUnlock`; `Move` records `MOVES`/`OWL` (keys, mastery, cooldowns and RC as the server spends them: `PaleRules`, `OwlRules`, `WatchRules`, `ArmRules`); `stageCard`/`stageDetail`, `moveCard`/`moveDetail` (the blitz's strikes, the Owl's tile), `mutationCard`/`mutationDetail` (UNLOCK "mutation:N" only while `PaleMutation.canUnlock`; "instant" only once Witness This is hers), `milestones`, glyphs); `PaleMenuScreen` (no overlay, the box, tab and pick; `Rect` is `UkakuMenuView.Rect`); `PathSilhouette.owl` (the Owl from the front, after `OwlModel`); `QuestTests.paleMenu`. `tools/UiPreview.java pale-menu`. Renders `docs/handoff/pale-menu-4.1.61.png`, `docs/handoff/pale-owl-4.1.61.png`. Protocol 125.
+
+## 4.1.60 (HexGhoul): the Graft menu in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.60.md`. `GraftMenuView` redone on `QuestFrame` (box; `Tab` STAGES/MOVES/MUTATIONS; `Model` + `quests`, `tab`, `picked` ("pick:s:ID", "pick:m:NAME", "pick:u:ID", "step:N"), old constructors kept; `steps()`; `stageCard`/`stageDetail` (GROW INTO IT "stage:ID" only while `growable`, as `GraftServer.pickStage` takes it: not the stage he is in, never the kakuja), a shut stage's moves never ticked, `caption`; `moveCard`/`moveDetail` (stage pills, the M1 string as `string(stage)`, the stage's tile); `mutationCard`/`mutationDetail` (UNLOCK "mutation:ID" only while READY); `road`, glyphs); `GraftMenuScreen` (no overlay, the box, tab and pick); `PathSilhouette.graftForm` (every limb on `GraftRig.pose`'s own rest line, seen from behind at `GRAFT_YAW`, to scale, depth-sorted round him, lit disc-chain tubes; each stage's look from `GraftModel`); `QuestFrame.opener` quotes a quest's or lesson's name; `UkakuMenuView.draw` public; `QuestTests.graftMenu` (+ `reach`). `tools/UiPreview.java graft-menu` (`-Dgraft.yaws=` for angles). Renders `docs/handoff/graft-menu-4.1.60.png`, `docs/handoff/graft-kagune-4.1.60.png`. Protocol 125.
+
+## 4.1.59 (HexGhoul): the Bikaku menu in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.59.md`. `BikakuMenuView` redone on `QuestFrame` (box; `Tab` FORMS/MOVES/KAKUJA/MUTATIONS; `Model` + `quests`, `tab`, `picked` ("pick:f:NAME", "pick:m:NAME"/"pick:m:M1", "pick:k:NAME"/"pick:k:KAKUJA", "pick:u:NAME", "step:N"), old constructors kept; the gates as `BikakuServer` asks them (`passes`, `gate`); `steps()`, `formCard`/`formDetail` (USE THIS FORM "formN" only while `takeable`), `moveCard`/`moveDetail` (`story(move)`), `mutationCard`/`mutationDetail`, `road`, glyphs); `BikakuMenuScreen` (no overlay, the box, tab and pick, quests); `PathSilhouette.bikakuForm` (1-3 worms in their lanes, The Walker's legs); `QuestFrame.opener` (a gate's quests, else the teacher's lesson or trial: used by the Ukaku, Rinkaku and Bikaku menus); `QuestTests.bikakuMenu`. `tools/UiPreview.java bikaku-menu`. Render `docs/handoff/bikaku-menu-4.1.59.png`. Protocol 125.
+
+## 4.1.58 (HexGhoul): the Rinkaku menu in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.58.md`. `RinkakuMenuView` redone on `QuestFrame` (`BOX_WIDTH`/`BOX_HEIGHT` the Ukaku menu's; `Tab` FORMS/KING; `Model` + `tab`, `picked` ("pick:ID", "pick:passive", "step:N", "pick:war", "pick:peace"), old constructors kept; `steps()` (forms and moves by mastery), `formCard`, `passiveCard`, `formDetail` (WEAR THIS FORM "form:ID" only while wearable), `passiveDetail`, `road`, `kingCard`, `kingDetail` (CHOOSE ON ITS CARDS "king:ID" only while choosable), `kingRoad`, `formGlyph`, `kingGlyph`, the chosen king's emblem in the header); `RinkakuMenuScreen` (no overlay, the box, tab and pick kept); `PathSilhouette.rinkakuForm` (1, 2, 4 tails; centipede legs; legs and tentacles); `KingChoiceView.warEye`/`peaceCross`/`WAR_ROWS`/`PEACE_ROWS` (shared, the cards unchanged); `QuestTests.rinkakuMenu` (`Recorder`, `boxed`). `tools/UiPreview.java rinkaku`. Render `docs/handoff/rinkaku-menu-4.1.58.png`. Protocol 125.
+
+## 4.1.57 (HexGhoul): every place cleared and set on the ground; the glass joined (testing)
+
+See `.github/release-notes-4.1.57.md`. `village/SitePrep` (new, pure: `CLEAR` 16, `MARGIN` 8, `FLAT` 2, `ABOVE` 32, `REACH_BACK`/`REACH_ON`, `tiles`, `starts`, `reach`, `samples` (`ACROSS` 24), `floor` (the footprint's median), `highest`, `top`, `clearing` (the footprint from over its floor, the whole site from over its `bank`), `rise`/`cut`/`fill`/`distance`, `apron`); `ControlStructures`: `CLEARING` ("hexkagune:clearing", `data/hexkagune/structures/clearing.nbt` from `tools/clearing_structure.py`: 16 x 16 x 16 of air), `clearing(piece)` (a pool piece with its ground delta 0 or less, 16 across; `SitePrep.groundDelta`: every tile's ground at the floor, for the beard), `clearing(templates, add, ...)` (the tiles, laid before a place's own pieces in `Site.stub` and `DryPlace.settled`), `DryPlace` on `SitePrep.floor` (no longer `DryLand.lift`), `apron` (the bank cut and built, skinned with the ground's own top; yards over lower ground filled; `ground`, `gap`, `tree` by the block tags logs, leaves, snow, replaceable), `foundation` skips the clearing and fills over trees; places' structure JSONs `"step": "top_layer_modification"` (all but the Small City). Templates: `tools/join_panes.py` (every pane and bar joined to what it touches, the game's rule; `--check`), run over every template (CCG 3134, hideout 2490, the rest a few). `NpcTests.sitePrep` (and the panes' check). Renders `docs/handoff/ground-*-4.1.57.png` (`tools/SitePrepPreview.java`), `ccg-glass-4.1.57.png` (`tools/glass_render.py`). Protocol 125.
+
+## 4.1.56 (HexGhoul): the Ukaku menu in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.56.md`. `client/QuestFrame` (new: the quest menu's pieces for every menu: `plate`, `header`, `chipLeft`, `tabs`/`Tab`, `card`/`Card`/`Icon`, `section`, `story`, `checkRow`, `row`, `button` (gold or red, disabled: no hit), `road`/`Node`/`Tip` (`maxStep`), `tooltip`, `stamp`, `badge`); `UkakuMenuView` redone on it (`BOX_WIDTH` 740 x `BOX_HEIGHT` 440; `Tab` ORGAN/MUTATIONS; `Model` + `tab`, `picked` ("stage:", "unlock:", "pick:"), old constructors kept; `stageCard`, `stageDetail`, `preview`, `unlockRoad`, `mutationCard`, `mutationDetail` with `effects` and the UNLOCK button "mutation:N" only while it can be spent, `milestoneRoad`, `stageGlyph`/`wing`/`tentacle`, `mutationGlyph`; `comboName` for every Ukaku style, `roman` to VIII); `UkakuMenuScreen` (no overlay, sized from the box, keeps tab and pick); `PathSilhouette.ukakuKakuja` (six armoured tentacles; the final's needles and fire). `QuestTests.ukakuMenu`. `tools/UiPreview.java ukaku`. Render `docs/handoff/ukaku-menu-4.1.56.png`. Protocol 125.
+
+## 4.1.55 (HexGhoul): the talk screen in the quest menu's style (testing)
+
+See `.github/release-notes-4.1.55.md`. `client/NpcTalkView.draw` redone on the quest menu's pieces: `QuestStyle.backdrop` (a new overload placing its honeycomb), the header (face tile, title, mood chip, bond and reputation meters), the words as a quest's story, `section` ("ANSWERS" and its rule and hint), `card` (key-cap number, words, `mark` by `Kind`), sized from the whole page and anchored low; `Model.label` falls back to the answer's own words. `tools/UiPreview.java` draws a skin of any size's face and hat. `EtoTests.talkBox`. Render `docs/handoff/talk-screen-4.1.55.png`. Protocol 125.
+
+## 4.1.54 (HexGhoul): the Gas Masks and Banjou (testing)
+
+See `.github/release-notes-4.1.54.md`. `Persona.BANJOU` (slim, no muscle, women only, `maskAtNight` "mask_gas", `slapsOnly`, blue `BANJOU_KAGUNE`), `BanjouNpc`, `ControlEntities.BANJOU`, `BanjouScript`, `talk/banjou.txt`, `Courtship.BANJOU`, his lines in MoodKiss/MoodActs/Drowsy/NightWords/Tolerance/SceneServer/EtoBrain; `OutfitLayer.faction` (his mask at night); his wing: `WingRules` (`SLAPS`: slap, wide swing, rising wing; `SLAP_SCALE` 0.7, `shrunk` about the root, `slapTip`), `NpcWings.slaps/land`, `S2CNpcWings` slap + slapAt, `NpcWingsClient.slap`, `UkakuWingRenderer` (shrunk, the persona's colour), `EtoFight.slap` (the body into each blow); the hideout: `tools/companion_structures.py` "gas_hideout" (the owner's `GasMask_hideout.schem`, Banjou in the cottage, four Gas Masks: `GhoulNpcBrain.GAS_HIDEOUT`), worldgen set/pool/structure, `DryLand.PLACES`, `PlaceClaims`/`ControlStructures.ONE_OF_A_KIND`; the gang: `GangPlayer.GAS_MASKS` (chain: `takenSeriously`, `killedClown`, a clown's mask; `TOXIC` U+E002, green name), `tools/gang_emblems.py` (the toxic trefoil), `GangDaily` (Banjou's three jobs, appended; `Job.asked`), `GangServer` (`banjou`, `banjouDaily`, `gasTraits`: Night Vision with a gas mask on, Speed II at 30%; `inHideout` gas_hideout 40 blocks; the gas mask on joining); NIGHT_VISION allowlisted. Renders `docs/handoff/*-4.1.54.png`; `tools/ArtPreview.java banjou`, `tools/BanjouPreview.java`, `tools/UiPreview.java banjou`. Protocol 125.
+
+## 4.1.53 (HexGhoul): the gangs' traits and daily quests (testing)
+
+See `.github/release-notes-4.1.53.md`. `npc/GangDaily` (pure: one job a game day, Noro's three and Roma's three, goals, kills counted or things brought in hand, two rewards each, +10 reputation), `GangServer` (dailies kept in `PlayerPersisted`: HexDaily*; `gives`/`dailyAsk`/`daily`/`dailyKill`; `fought`: Strength I for Aogiri against the CCG and other gangs, Jump Boost II for the Clowns against the CCG; `vanish`: a Clown at 30% health invisible 5 s every 5 minutes; `giveMask`: the Laughing Mask or a clown mask on joining, HexGangMask), `EtoServer.withDaily` and its "daily" answer, `GhoulNpcBrain.wanted` (wild ghouls leave Aogiri alone unless provoked), `PlayerLayers.clownVanished` (nothing of a vanished Clown drawn); `UiPreview dailies`; `NpcTests.dailies`. Protocol 124.
+
+## 4.1.52 (HexGhoul): the reputation bar (testing)
+
+See `.github/release-notes-4.1.52.md`. `npc/GangStanding` (pure: 0 .. 100 from 50, +3 CCG, +4 rival, -2 a blow on your own, -20 one killed, +10 a daily, 5 a day back toward 50, feared from 80, `yields` six in ten, at 0 warned then `turned` after 600 ticks in the hideout), `npc/GangTalk` (greetings by band), `GangServer` (kept in `PlayerPersisted`: HexGangRep/RepDay/Warned; `died`, `struckOwn`, `tick` once a second: the warning and TURNED; `inHideout` by the claimed mansion and tent; `shown`/`memberOf` for the talk page), `GhoulNpcBrain` (`wanted`: its own only when turned; `hurt`: blows cost reputation; `yields`: some step back from a feared member), `S2CNpcTalk.standing` and `NpcTalkView.reputation` (the meter under BOND, the gang's colour, a diamond), `UiPreview reputation`; `NpcTests.reputation`. Protocol 124.
+
+## 4.1.51 (HexGhoul): the new CCG tower (testing)
+
+See `.github/release-notes-4.1.51.md`. The owner's furnished tower (`art/exploration/CCG.schematic`, MCEdit Alpha, 31 x 65 x 46) is the CCG building: `tools/ccg_tower.py` (their ids, signs renamed to the CCG's, banners, pots, paintings and item frames as 1.20.1 has them, `build/ccg/ccg_tower.schem`), `tools/exploration_structures.py` (site `ccg_building`, map 11, its hanging things written into the tile; `headquarters`: door and lift guards, receptionists, three at desks and one by the lift a floor, a patrol of six, the restaurant's staff humans, the General in the boss's office); the old building's map 6 in `village/RetiredSites`; `server/CcgLift` + `village/LiftRules` (a cabin's button: one floor up, from the top to the lobby; only in the world's CCG building); `HumanBrain`/`VillagePlace.indoors` (the staff keep indoors); `tools/interior_render.py` (shapes, light levels, cutaways, eye views); `NpcTests.ccgBuilding`. Protocol 123.
+
+## 4.1.50 (HexGhoul): joining gangs (testing)
+
+See `.github/release-notes-4.1.50.md`. `GangPlayer` (pure: member, banned, Aogiri's 5 CCG, the Clowns' joke, 3 Gas Masks and a quinque case, banned past 10 own kills; `named`: emblem, space, coloured name), `GangServer` (`PlayerPersisted`, `LivingDeathEvent` counts, `PlayerEvent.NameFormat`, `S2CGangName` message 57 to every client, the "gang" option on Ayato's and Roma's first page via `EtoServer.withGang`), `GhoulNpcBrain.wanted`/`hurt` (its own never, the banned on sight, its own's foes); emblems `tools/gang_emblems.py` into `assets/minecraft/font/default.json` (U+E000, U+E001); Forge's NameFormat and `Player.refreshDisplayName` allowlisted; `NpcTests.joining`. Protocol 123.
+
+## 4.1.49 (HexGhoul): Roma, the Clowns' leader (testing)
+
+See `.github/release-notes-4.1.49.md`. `Persona.ROMA` (Touka's size, skinny, slim, dates anyone, `kickMaster()`, `tendrils()` 4, purple), `RomaNpc`, `RomaScript`, `talk/roma.txt`, `Courtship.ROMA`, her lines in the shared tables; in the circus tent's middle. Her fight: Kick Master (`EtoOwl` by `Persona.kickMaster`) and `NpcTendrils` (four transplant tails on `GraftRig`: the string, `THORN_4`, `GraftMove.ROMA_IMPALE`, `ROMA_HURL`/`ROMA_THROW`), drawn by `GraftRenderer`'s companion pass. Her textures by `tools/companion_textures.py` (the owner's second skin; her eyes under her lashes by hand in `EYES`; `CHEEKS`, `"veins"` for hand-placed faces). Protocol 122.
+
+## 4.1.48 (HexGhoul): the circus tent and its Clowns; Ayato and Noro on slim arms, builds evened out (testing)
+
+See `.github/release-notes-4.1.48.md`. The owner's `circus.schematic` (old MCEdit Alpha format) as `hexkagune:circus` ("One per world + clowns"): `tools/companion_structures.py` reads Alpha files (`alpha`, `ALPHA`), lays a dirt-path floor under the tent's ring (`floor`, grass under its plants), anchors it at the floor's middle (`hexkagune:circus_anchor`) and puts several people in one place (`people`: four `hexkagune:ghoul` with `HexCircus`, `HexCircusMask` 1-4, `HexGang` -1); a one-of-a-kind dry place (`DryLand.PLACES`, `CIRCUS_SALT`, `PlaceClaims`, `ControlStructures.ONE_OF_A_KIND`); `GhoulNpcBrain.circus`/`atCircus`/`clearWay` (a Clown in its mask, keeping to its spot); `Gang.rival` ("Yes, rivals": Clowns and Gas Masks fight on sight). Ayato and Noro `slim()` (Noro's texture `narrow_arms`), `AYATO_SHARE` 0.42, `NORO_SHARE` 0.52, `PLAYER_SHARE` 0.52 ("the same as Noro"). `tools/structure_render.py` renders any template.
+
+## 4.1.47 (HexGhoul): the ghouls' arm blade rebuilt, its moveset and stance (testing)
+
+See `.github/release-notes-4.1.47.md`. "Improve severely the kagune arm blade of the ghouls" (and the owner's picture, choice "B: blade turned over", "a proper moveset, slash attacks and a proper ambient stand"): `BladeArmModel` rebuilt (two ribbons wound round the arm with veins, one great single-edged blade with a glowing gleam, turned over: edge on z +), `BladeArm` four slashes (`SWEEP` cuts all before it, `FINISHER` the cleave; `BLADE_LENGTH` 26, reach 3.2), `BladeArmPose` new keys (each edge-first) and `stand` (alive, feet set while still), `GhoulNpcCombat.bladeCut`; `NpcTests.bladeLow` keeps every frame out of the ground. Protocol 121.
+
+## 4.1.46 (HexGhoul): the CCG's ghoul division (testing)
+
+See `.github/release-notes-4.1.46.md`. "New Re CCG Ghoul division ... they spawn in trios": `Gang.CCG_DIVISION` (ordinal 3, `ccg()`, `TRIO`), `NpcIdentity.ccg()`/`kakugan()`, `AgentBrain.ccg(Entity)` (the CCG's on both sides: `wanted`, `attacked`, `hurt`, sweeps, `AgentArms.foes`, Eto), `GhoulNpcBrain.division` (as `AgentBrain.wanted`), `called` both ways, Formal Outfit, human meat, no dawn slip, `AgentSpawner.division` (`DIVISION_CHANCE` 0.35, three or none), no kakugan (`GhoulNpcRenderer.Eyes`), a CCG word for a right click. Protocol 120.
+
+## 4.1.45 (HexGhoul): roaming gangs, the Clowns and the Gas Masks (testing)
+
+See `.github/release-notes-4.1.45.md`. "roaming gangs, such as the clowns, 3-5 roaming ghouls walking together": `npc.Gang` (CLOWNS, GAS_MASKS; 3 to 5, each a different mask: `faces`), `NpcIdentity.gang` (bits 44-45, `ganged`), `GhoulNpcSpawner.gang` (`GANG_CHANCE` 0.3 of the night's ghouls), `GhoulNpcBrain` (`roam`: one leads, the rest keep up; `wanted`: only what goes for one of them; `hurt`: every mate within `GANG_CALL` 24 takes the grudge), masks drawn on the face (`OutfitLayer.faction`, variants on their base's model: `Outfits.geometryOf`), eight new paints (`tools/gang_masks.py`). Protocol 119.
+
+## 4.1.44 (HexGhoul): the Aogiri hideout and the CCG building spawn again (testing)
+
+See `.github/release-notes-4.1.44.md`. "Im 99% sure the Aogiri place IS not spawning at all, same with the CCG building": the hideout judged by `DryLand.land` (`HIDEOUT_FLAT` 14, shallow water allowed), the CCG building the flattest of 25 spots, `offered` no longer required (a mod moving the spots made every place never). Protocol 118.
+
+## 4.1.43 (HexGhoul): one of each, really: the claim taken as a place is built; never two Etos (testing)
+
+See `.github/release-notes-4.1.43.md`. "Structures are still spawning doubles"; "eto spawned 2 of them": `ControlStructures.onlyIfClaimed` (the claim in the pieces' making; `making` gone), `/place` through `claimed`; `EtoBrain`: a second body leaves while hers answered in the last 400 ticks. Protocol 118.
+
+## 4.1.42 (HexGhoul): structures once per world, on flat ground, never floating, spread out (testing)
+
+See `.github/release-notes-4.1.42.md`. "The structures are spawning multiple times ... And they're all fucking flying": `Site.onPurpose` only on the live world (a mod's biome test made every region build its own); `foundation` in `afterPlace` for the city, sites and places (`DryLand.footing`); the flattest of 25 spots (`DryPlace.flattest`, `DryLand.roughness`, `PLACE_FLAT` 6, `BIG_PLACE_FLAT` 10); `CityPlan.land` (17 x 17, `FLAT` 10); `hexkagune:steep` (vanilla, Forge, BoP, RU); `TakenPlaces.takeApart` (`PlaceClaims.APART` 32 chunks). Protocol 118.
+
+## 4.1.41 (HexGhoul): the Reaper's blade turned over (testing)
+
+See `.github/release-notes-4.1.41.md`. "it's just fucking invert the fucking axis, bro. Just completely invert it and it's fine": `ReaperBladeMesh.inverted` (the blade built turned over about its length: v and w negated), `drawnV` for the shards. Protocol 118.
+
+## 4.1.40 (HexGhoul): older worlds' townspeople find their streets again; "complete all" keeps later abilities open (testing)
+
+See `.github/release-notes-4.1.40.md`. "just look for bugs on your own": `RetiredSites` (maps 3 and 4 for the people of towns built before 4.1.36; `SiteMaps.byMap` falls back to it); `QuestServer.loggedIn` opens every gate for a log finished for good. Protocol 118.
+
+## 4.1.39 (HexGhoul): Small City fixes: humans stay in their village, the city's land worked out once, protocol bumped (testing)
+
+See `.github/release-notes-4.1.39.md`. "just look for bugs on your own ... That could be related to the city": `VillageHumans.HOME` (a brought human keeps within `HOME_RANGE` 24 of its villager's spot: `HumanBrain`'s homeless wander); `City.ground` cached per generator, noise, seed and corner (`GROUNDS`, `measure`); protocol 118 (the registries differ since 4.1.36).
+
+## 4.1.38 (HexGhoul): two minutes after a fight, the Reaper puts his jacket back on (testing)
+
+See `.github/release-notes-4.1.38.md`. "after the fight ends, I should note, let's say 2 minutes without fighting, Arima puts back his jacket in his normal" (reversed, in place): `AgentBrain.dress` (`REAPER_REDRESS_CALM` 2400, `CcgAgent.DRESS` 13, untouchable and pinned), `ReaperDressPose` (the case fetched by his left hand and set at his right fist, the blade back in, the draw backwards, then the coat's taking off backwards), his first phase back and healed at `REAPER_DRESS_SWAP`. Protocol 117.
+
+## 4.1.37 (HexGhoul): the Reaper's change: a real coat taken off, untouchable, a slower draw, the blade held point-down, his blows clashable (testing)
+
+See `.github/release-notes-4.1.37.md`. "whenever he's transforming, you can still grab him ... he should actually like take off an actual jacket ... The taking out the quinque from the case also should take a little longer": untouchable through his change and end (`AgentBrain.untouchable`: `LivingAttackEvent` cancelled, `EtoBrain.spared` so the original's target checks say no, `PlayerArms.mayHit`, `pin`/`free` every tick); the Formal Overcoat's model in white taken off and dropped (`ReaperCoatPose`, `ReaperCoatLayer`, `tools/reaper_coat.py`); the draw 62 ticks (was 36), lowered into a one-handed point-down guard (`ReaperBladePose.GUARD`, `HANG_X`, `bothHands`); blade and brawl blows on the clash board (`KaguneClash.swing`/`meets`); a change that waited for ever in water. Protocol 117.
+
+## 4.1.36 (HexGhoul): the Small City in every world, the villages gone, humans in vanilla villages (testing)
+
+See `.github/release-notes-4.1.36.md`. "Delete all ids hexkagune:village_x ( and anything related) add Hexkagune:small_city ... (a bit rarer than a normal village), Humans can now however spawn in normal minecraft villages": `hexkagune:small_city` (`ControlStructures.City`, four quarters at the four start chunks offered together by the placement `hexkagune:city`, `CityPlacement`, a random spread of 48/36; turn and ground from the seed and the whole footprint: `CityPlan`), over rivers, never a sea, on the land's middle height (`City.ground`, `CityPlan.ground`); places kept out of built cities (`inCity`); `village_1`, `village_2`, `village` and their set, pools, pieces and tool deleted; `VillageHumans` brings humans to vanilla villagers. Protocol 117.
+
+## 4.1.35 (HexGhoul): the Small City, cut for 1.20.1 (testing)
+
+See `.github/release-notes-4.1.35.md`. "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City"": the whole 544 x 544 city read from `art/city/small-city.zip` by `tools/city_structure.py`, cut into four 272 x 272 quarters (`small_city_0..3`, maps 7-10, one ground) by `tools/exploration_structures.py` (pale oak wall signs, tuff bricks, wildflowers and infested stone swapped; banner patterns kept; shelves' entities dropped); `tools/city_render.py` draws it. Not placed in worlds yet (4.1.36). Protocol 117.
+
+## 4.1.34 (HexGhoul): the quest menu, a cute box (testing)
+
+See `.github/release-notes-4.1.34.md`. "It's just really dull, really bad looking, not interactive at all", "the background and all, they're also super ugly", "why not just a cute box?": `QuestJournalView` laid out as a 640 x 380 box (`UI_WIDTH`/`UI_HEIGHT`) with `QuestStyle` (plate, brackets, honeycomb, icons, chips, checks, badges), cards with hover, a mastery bar to the next quest, a clickable road (`roadmap`); `QuestScreen` draws no full-screen overlay. Protocol 117.
+
+## 4.1.33 (HexGhoul): quests finished once, for good (testing)
+
+See `.github/release-notes-4.1.33.md`. "Once you did all of them /quest complete, all of them should be finished. Even if you pick another kagune": `/kagune quest complete all` now also calls `QuestLog.finishAll` (every PATH and GHOUL quest of `QuestBook` done, a saved `all=1` flag that `state` honours for any quest, later ones included); hunts and favours still come; `reset` clears it. Protocol 117.
+
+## 4.1.32 (HexGhoul): a quinque's M1 comes first (testing)
+
+See `.github/release-notes-4.1.32.md`. "Whenever using a Quinque, I think that it should be prioritized over any combat": with a CCG quinque out, `WeaponClient.quinqueFirst` (HIGH priority) lands the hit itself (`MultiPlayerGameMode.attack`) and cancels the click, so the original's kagune listener (`KaguneKeys$ForgeBus.attackInput`, which cancels the game's attack while the kagune is out) never runs; `KaguneCombat.startSwipe` returns while a quinque or a kagune-made weapon is out. Protocol 117.
+
+## 4.1.31 (HexGhoul): Arima, phase 2 part 4: the blade shatters, he falls to his knees (testing)
+
+See `.github/release-notes-4.1.31.md`. "The blade shatters at the end, and it's just broken ... he just falls on his knees and dies after the weapon shatters": the blow that would take him to `AgentRules.REAPER_END_HEALTH` leaves him at 1 (`endClamp`) and begins his end (`AgentBrain.ending`, `CcgAgent.END`): the blade lowered to the ground, shattered (`ReaperBladeMesh.broken`, shards `ReaperBladeRules.shard`/`ReaperBladePose.shard` drawn by `ReaperBladeLayer.shards`), on his knees, head bowed (`ReaperBladePose.end`), dead at `REAPER_END_TICKS` by that blow (Slain Reaper, mastery and Dawn as 4.1.23). Protocol 117.
+
+## 4.1.30 (HexGhoul): Arima, phase 2 part 3: close combat, precise rushes, dodges (testing)
+
+See `.github/release-notes-4.1.30.md`. "He can dash more precisely ... He will always try to, get into range and kill you. He'll dodge moves": with his blade he rushes in from up to 12 blocks and stops exactly at his blade's reach (`AgentBrain.rush`, `ReaperBladeRules.rushStep`, `RUSH_STOP`), swinging as he arrives; he sidesteps shots (projectile entities via `TendrilShield.incoming`, Ukaku's simulated fire and crystal via `UkakuFire.shots`/`UkakuCrystalCombat.shots`) and kagune blows (`KaguneClash.threat`) square to their way (`ReaperBladeRules.dodge`), giving up a blow still in its chamber (`committed`). Protocol 117.
+
+## 4.1.29 (HexGhoul): Arima, phase 2 part 2: the golden case and his heavy blade (testing)
+
+See `.github/release-notes-4.1.29.md`. "Trigger when he reaches about 90 HP ... pulls out a random briefcase from his back like a golden looking briefcase", "the briefcase just splits apart open like a normal fucking briefcase and releases the weapon", "keep it only for himself": the change starts at 90 HP (`AgentRules.REAPER_SHED_HEALTH`, `shedClamp`), immortal through the jacket and the draw (`REAPER_CHANGE_TICKS`); the golden case (`ReaperBladeMesh.goldHalf`/`goldHandle`, split on its hinge by `opened`, the blade slid out by `slid`) drawn by `ReaperBladePose.draw`/`caseTurn`/`dropped` and `client/render/ReaperBladeLayer`; his blade (`quinque/ReaperBladeMesh`, NPC only, no item) and its string (`ReaperBladePose.STRING`, hands first: both straight arms solved onto the grip, the wrist turning the blade; `npc/ReaperBladeRules` timing; `AgentBrain.blade`/`bladeLands`, bleeding via `UkakuCrystalCombat.agentBleed`). Protocol 117.
+
+## 4.1.28 (HexGhoul): Arima, phase 2 part 1: the jacket comes off (testing)
+
+See `.github/release-notes-4.1.28.md`. "He just removes his jacket, revealing a new skin ... he gets way faster": at half health (once, saved as `HexCcgAgentBare`) the White Reaper takes his jacket off (`AgentBrain.shed`, swing code `CcgAgent.SHED`, drawn by `AgentPose.shed`), his look switched to the appended `ccg_reaper_bare` (`AgentRules.REAPER_BARE_LOOK`, the owner's `art/reaper/Reaper_Phase2.png`, wide arms), faster (`REAPER_BARE_SPEED`, `REAPER_BARE_PACE`); no blow takes him past half with it on (`AgentRules.shedClamp`), none lands while he does it. Protocol 117.
+
+## 4.1.27 (HexGhoul): Arima, part 5: the ground strike grows Dawn's blades, not a tentacle (testing)
+
+See `.github/release-notes-4.1.27.md`. "It shouldn't be a tentacle. It should be like a smooth part of the blade, as if the blade grew out of the ground": the ground strike raises Dawn's blades (`ReaperTendril.blades`: a great one and three round it, leaning, staggered) drawn from `QuinqueDawnMesh.risingBlade` by `client/render/ReaperTendrils` in place of the Rinkaku tube; its gameplay unchanged. Protocol 117.
+
+## 4.1.26 (HexGhoul): Arima, part 4: Dawn smooth, opening like a reverse umbrella (testing)
+
+See `.github/release-notes-4.1.26.md`. "Dawn needs a major rework in look so it's smooth and not cubic ... spread open ... Like a reverse umbrella": Dawn is a smooth mesh (`quinque/QuinqueDawnMesh`, built in its item pixels along x, cached at `STEPS` open steps) drawn by `client/QuinqueItemRenderer` (`QuinqueMesh.has/diagonal/drawn/caseBox/of(q, open)` per quinque); firing, its guard turns inside out into a cup opening forward round the spike, the lightning at its point, as open as its stack's shot says (`Quinque.dawnOpening`, `QuinqueClient.dawnOpening`; players' and Arima's shots set the same tags). Protocol 117.
+
+## 4.1.25 (HexGhoul): Arima, part 3: both fighting styles (testing)
+
+See `.github/release-notes-4.1.25.md`. "Use both styles of fighting that we got. Both the Kickmaster and the normal one": up close the White Reaper sometimes throws Kick Master's string or the Speed Blitz (`AgentRules.brawlStyle`, `REAPER_BRAWL_*`; `AgentBrain.brawl`, its blinks and impacts), a player's strikes on their own ticks, synced as swing codes (`CcgAgent.STRIKE` + the strike's ordinal) and drawn whole by `AgentPose.brawl` (PaleMotions.strike) with Dawn carried clear at his right shoulder, raised as far as his trunk leans. Protocol 117.
+
+## 4.1.24 (HexGhoul): Arima, part 2: his mansion, one per world, him in its garden (testing)
+
+See `.github/release-notes-4.1.24.md`. "A schematic where he's going to spawn in always ... outside in the garden ... doesn't spawn like in the ground": the owner's mansion (`art/reaper/arima_mansion.schem`) is `hexkagune:reaper_mansion`, a one-of-a-kind dry place (`DryLand.PLACES`, `MANSION_SALT`, `PlaceClaims`, `/kagune places`) lifted onto its footprint's highest ground, its lawn on the surface (an anchor jigsaw on it), the air under the lawn filled; the White Reaper is baked into its garden (`tools/companion_structures.py`, ForgeData flags) and keeps to it (`AgentBrain` home, `AgentRules.REAPER_HOME_*`); never in the wild (`REAPER_CHANCE` 0). Protocol 117.
+
+## 4.1.23 (HexGhoul): Arima, part 1: Dawn every time, Slain Reaper for everyone who hit him (testing)
+
+See `.github/release-notes-4.1.23.md`. "He drops Dawn 100% guaranteed ... make sure that both players get it": Dawn's case drops every time the White Reaper falls (`AgentRules.dawnChance` 1); every player who hit him in the last five minutes (`AgentRules.REAPER_SHARE_TICKS`, `AgentBrain.reaperStruck`) and his killer earn the new challenge advancement `hexkagune:slain_reaper` (Adventure tab, awarded by code on an impossible criterion: `AgentBrain.reaperSlain`) and, if a ghoul, his 60 mastery. Protocol 117.
+
+## 4.1.22 (HexGhoul): first person for the kagune-made weapons (testing)
+
+See `.github/release-notes-4.1.22.md`. "Just make the first person of the other weapons. Don't touch their looks": the bone greatsword, the flesh hammer and the crystal spear are drawn in first person on the posed right arm as their third person layer draws them (`ArmItemLayer.throughBody(..., false)` then `WeaponLayer.mesh`), seen from behind the head (`FirstPersonQuinque.arm` mirrors it for tests and previews). The launcher (aims down the crosshair) and the whip (its tendril's own path) keep theirs. `QuinqueTests.firstPersonArms`. Protocol 117.
+
+## 4.1.21 (HexGhoul): the katana's five cuts, hands in front, a real diagonal (testing)
+
+See `.github/release-notes-4.1.21.md`. "Look at how it's pointed. Look at the hands, bro": the katana's cuts are solved hands first (each fist at the end of a full arm, out in front of him; `QuinqueAim.HAND` now outweighs the blade), with wrists that turn the blade in the fist a human amount (`QuinquePose.Key.wristX/wristZ`, `RigPose.weaponX/Z`; drawn by `QuinqueItemRenderer` through `client/QuinqueWrists` and `QuinqueGrip.wristInItem`, in third person, an investigator's hands and first person). Five cuts rewritten and checked on renders from the front, the side and above. `QuinqueTests.aimed` measures the arm's real turn between frames and the wrists' range. Protocol 117.
+
+## 4.1.20 (HexGhoul): a katana grown out of kagune, smooth, no squares (testing)
+
+See `.github/release-notes-4.1.20.md`. "The katana should be like every weapon in the game should look like it's made from a kagune ... I don't want squares": the katana is a smooth mesh grown out of kagune (`quinque/QuinqueMesh`), drawn by its own item renderer everywhere it shows (`client/QuinqueItemRenderer`, Forge's client item extensions): a dark plated blade with a glowing wavy temper edge, a flesh collar with RC eyes, a veined kagune tsuba with two Rinkaku tendrils coiled over it, a ribbed hilt bound in crossing sinew, a flesh pommel with an eye. It grows out of the fist as its case shrinks; enchanted, it shimmers. Same place in the hand as before, so every grip, cut and first person view holds. Protocol 117.
+
+## 4.1.19 (HexGhoul): quinques in first person move exactly as your body swings them (testing)
+
+See `.github/release-notes-4.1.19.md`. "don't forget the the first person animation, like first person view to match the animation that they got": the katana, spear, mace, blade and Dawn are placed in first person by the same arm, hand, model and transforms as in third person, frame by frame, the body's step carrying them, seen from just behind the head, looking a little down, zoomed to a held weapon's size (`FirstPersonQuinque`), so every cut crosses the screen the way the body swings it. At rest each is right of and below the crosshair; every impact is in view; nothing comes within a block of the camera (but the mace's old second swing, rewritten next). Protocol 117.
+
+## 4.1.18 (HexGhoul): a real katana, five cuts that hit where they look, quinques that slide out of their cases (testing)
+
+See `.github/release-notes-4.1.18.md`. "like the katana looks like shit": the katana rebuilt as a katana (a steel blade with a glowing crimson hamon, a proper curve, an iron oval guard, a wrapped hilt with gold fittings). "We need to improve every single M1 of every single weapon": its three swings are now five (kesa-giri, gyaku-kesa, yoko-giri, tsuki, and a spinning kaiten-giri finisher), written by where the blade points and the hands are, the arm solved for it (QuinqueAim), tested to hit where they look. Every quinque slides out of its case through seven frames. First person and the other quinques' strings are next. Protocol 117.
+
+## 4.1.17 (HexGhoul): no gap in the coats, places on top of the ground and never twice, Ukaku spikes in their colour everywhere (testing)
+
+See `.github/release-notes-4.1.17.md`. "whenever you walk ... it opens like a gap in every armor": the two halves of a coat's tails overlap at the middle like a buttoned coat, and a strip of its cloth under the jacket's hem covers the hip as a half swings back. "they are spawning under the ground ... always at the top max area": Ken's tower is no longer fixed at y 63, and every one-of-a-kind place is lifted onto the highest ground under its footprint. "there's multiple structures of each": a place already standing becomes the world's one when its chunk loads, another mod's chunk wrapper can no longer get every spot built, and duplicates are logged. Ukaku spikes and kakuja needles stuck in blocks stay in the kagune's colour. Protocol 117.
+
+## 4.1.16 (HexGhoul): every woman blushes through a kiss, as deep as her mood; eyes that read as eyes (testing)
+
+See `.github/release-notes-4.1.16.md`. Your words: "Confirm that all females when kissing have a blush, sort of ... adapt all eyes to make sure that they all look like eyes". Every woman (Eto, Touka, village women) blushes through the whole of a kiss and a few seconds after, as deep as her mood (shy to the ears, angry only a flush), rising and fading smoothly. Ayato's eyes repainted (his iris was his hair's own purple); nothing drawn under Touka's fringe; 16 kids' blinks and 9 kids' kakugan no longer let the open eye peek out (they were drawn on the outer layer only). Wild ghouls checked: all aligned. Protocol 117.
+
+## 4.1.15 (HexGhoul): they react to who you're with, a better night together, more kid games (no touching teenage sons), six new kisses (testing)
+
+See `.github/release-notes-4.1.15.md`. Your words: "Now add more interactions, like if you're married to touka ayato will respond, and more this is just an example, improve the making love scene, add more kid interactions, add more kiss types and better the animation". Everyone who comes up to talk now knows who you're dating, married to and have children with (Ayato on his sister's marriage, Uncle Ken, Auntie Touka, the General's files...). The night together has its own captions for who it's with, their mood, the weather, a first night or a long marriage, the kids down the hall, with rain, thunder and dawn in the cutscene. Five new kid games (nuzzle, boop, fist bump, patty-cake, dance) on a two-page play menu. "stop the touching with your fucking son": from his teens on a son gets no hugs, pats, nuzzles, dances or hand held, a fist bump instead. Six new kisses (shy, the morning after, in the rain, a film's, nose to nose, a kiss on the hand), each companion their own way, and the kiss and every gesture blend smoothly into the next. Protocol 117.
+
+## 4.1.14 (HexGhoul): the places are built wherever the world can hold them, coats attached to the legs, no Ukaku M1 spam (testing)
+
+See `.github/release-notes-4.1.14.md`. Your words: "Fix structures still not spawning at all or able to be located (still not spawning)". The hideout, the CCG building, Ken's tower, Anteiku and the library were each allowed in one chunk per world only, so anything that stopped them there (another mod's structure rules) left the world without them. Now any spot of theirs on dry land can hold them, and the first the world builds takes it, kept with the world. A spot another mod stops is skipped, so `/locate` finds the next one. "Change the armors so they dont open like skirts, simply attach to the leg properly": each half of a coat's tails is drawn on its own leg like the trousers. "Prevent m1 spam with ukaku": each wing slam plays out in full before the next, however fast M1 is pressed, at 1.3 times the damage so the pace holds. Protocol 116.
+
+## 4.1.13 (HexGhoul): the wing slams bend like hands and stay off his body, the guard clamps round him, /kagune places checks each place (testing)
+
+See `.github/release-notes-4.1.13.md`. Your words: "that they actually bend like that, like hands ... While being perfectly aligned as well, and it doesn't like clip to the body." Every Ukaku M1 slam is now an arm and a hand. The wing's base comes out of his back behind his shoulder, then the arm swings forward and the hand curls onto the target. The slap and swing whip across his front, the rising wing ends high in front, the overhead slams come down on the ground in front, and the twin slam's two hands meet in front. Every move and the guard were tuned against his posed body, fire and crystal, so no wing goes through his head, chest or arms. `/kagune places` now makes each one-of-a-kind place's chunk and says whether it was built there or what stopped it (Structure Essentials' minimum distance can). Coat previews: `docs/handoff/coat-*-4.1.13.png`. Protocol 116.
+
+## 4.1.12 (HexGhoul): places never nowhere, /kagune places, slower slams, no slam particles, coat halves on their own legs (testing)
+
+See `.github/release-notes-4.1.12.md`. The hideout, the CCG building, Ken's tower, Anteiku and the library always get a spot (the nearest when none is on dry land); `/kagune places` lists where each stands. The wing slams spawn no particles, and run about 1.75 times as long (a slap 16 ticks) so the swing can be seen. Each half of a coat's tails hangs from its own leg (no more skirt thrown out flat in a jump or a kick). Protocol 116.
+
+## 4.1.11 (HexGhoul): the wings lash out as far as they hit (testing)
+
+See `.github/release-notes-4.1.11.md`. Your words: "it currently just feels like a little chicken wings, bro. Whenever they stretch to slap something, they can stretch to be larger in size and length as well." The slams hit about 8 blocks out (12.8 at mastery 1000) with a wing drawn 3 blocks long; now the striking wing grows bigger and longer through the drive until its tip lands exactly where the hit reaches, held through the carry, drawn back in on the recoil, folded into a long tongue of fire aimed ahead at the target's height. The whip's spring now keeps pace with each blow. Protocol 116.
+
+## 4.1.10 (HexGhoul): the Ukaku's wing slams thrown like real blows (testing)
+
+See `.github/release-notes-4.1.10.md`. Your words: "put all your focus into the combat rework, and kagune rework for the ukaku ... make it look smooth and beautiful." Every wing slam and its body used to slow down as it landed and then hold; now each has a chamber, a drive that lands at full speed, an overshoot and a recoil, the wing whips (its tip trails, then snaps past), its feathers tuck on the drive and flare on the hit, the fire streams off it, the other wing pulls back, and the body leads the wing. The guard flares, slams shut past and settles. Previews: `docs/handoff/ukaku-slams-*`. Only how it looks changed. Protocol 116.
+
+## 4.1.9 (HexGhoul): the inventory crash, and every special place findable in any biome (testing)
+
+See `.github/release-notes-4.1.9.md`. Your words: "Opening the inventory crashes the game instantly." Fixed: the creative tabs listed their items under the wrong 1.20.1 method name. And "Cant find CCG building, Aogiri Hideout or Kaneki's building AT ALL not even with locate": every place had a short biome list, so a mod's biomes (your Regions Unexplored ones) were no place at all. Now every place stands in any overworld biome, a mod's too (Biomes O' Plenty and the rest), only never in or by water; the hideout, the CCG building, Anteiku, the library and Ken's tower are one per world each (the last three were three each), read from the world's own structure settings. Protocol 116.
+
+## 4.1.8 (HexGhoul): Kick Master's twirling speed kick (testing)
+
+See `.github/release-notes-4.1.8.md`. Your words: "Right click is a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side twirl." Hold right click (hand empty) to charge a side-on coil; let go and she is gone in the Speed Kick's dash, there out of nowhere in a whole side twirl in the air into the chamber, then the flying side kick. Reach 6 to 20 blocks and blow 30% to 100% of the Speed Kick's with the charge. The right click stays the game's on a block and a talk on anyone you talk to (aim just past them to kick them). The General throws it too. Protocol 116.
+
+## 4.1.7 (HexGhoul): Kick Master (testing)
+
+See `.github/release-notes-4.1.7.md`. Your words: "He teaches a new combat style mixing kicks and punches (mostly side kicks, spinning kicks etc), he only teaches the player this through quests if the player is either a human or wearing a full mask." Eight blows on M1 (jab, cross, round kick, side kick, spinning back kick, hook, spinning hook kick, tornado kick), the kicks posed by where the foot goes and checked from the side. The General teaches it through three watches of the night shift (8 kills after dark, 3 in the air, 3 at dawn, all empty-handed) to a human or a ghoul behind a full mask. A human uses it whenever the hand is empty; it replaces the Speed Blitz. The General fights with it. The right click (the teleport speed kick) is next. Protocol 115.
+
+## 4.1.6 (HexGhoul): The hideout and the CCG building, always somewhere (testing)
+
+See `.github/release-notes-4.1.6.md`. Your words: "also I cant get the aogiri hideout to spawn or the ccg building at all." Each was built only at the first of its spots that was completely dry; many worlds had none, so they had no hideout at all. Now a world always gets both if any spot is on land: the first dry near spot (unchanged where there was one), then a dry one further out, then the driest near one. `/place structure hexkagune:aogiri_hideout` and `hexkagune:ccg_building` build them where you stand (old worlds). The log names where they stand. Protocol 114.
+
+## 4.1.5 (HexGhoul): The General (testing)
+
+See `.github/release-notes-4.1.5.md`. Your words: "Attitude: Tough, softens up when romanced, embarrased easily, proud of the CCG, has to be convinced to love a ghoul, Only interested in woman players." and "use this skin for the general and give him all the formal outfit (but the hat)" General Kuroda, a human, in the top-floor office of the CCG building: an official character (one in a world, back a day after he's killed), in the skin you sent, wearing the Formal Outfit's coat, trousers and shoes and never its cap. Women only; five courtship chapters; a ghoul has to convince him (regard 90) before he'll be asked out; a full mask hides a ghoul from him. He teaches nothing yet: Kick Master is next. Protocol 114.
+
+## 4.1.4 (HexGhoul): The CCG building (testing)
+
+See `.github/release-notes-4.1.4.md`. Your words: "CCG building, tons of ccg agents guard and patrol the area, sit in their offices" and "Also I forgot to send you the CCG building, this is it, also like the others only 1 of them spawns." Your `ccg_building.schem` as a place of its own, one per world, at the nearest of its offered spots that is dry land and away from the mansion and the villages. 38 investigators: 4 guards outside, 6 on patrol round it, 21 sat at desks (three a floor) and 7 in the halls; a fight gets them up and they go back after. `/locate structure hexkagune:ccg_building`. The General and Kick Master come next. Protocol 113.
+
+## 4.1.3 (HexGhoul): Fighting styles, and Speedster from Ayato (testing)
+
+See `.github/release-notes-4.1.3.md`. Your words: "The default M1 fighting style is only unlocked through a new quest with ayato, until a fighting style is unlocked, the player can only use default punches in kakugan mode, right click is also default, the previous M1 and M2 flips are now all part of a fighting style called Speedster." With only the kakugan open and no style learned, M1 is the game's own punch and right click the game's own. Ayato teaches Speedster (the Speed Blitz on M1, the flips on right click) to any ghoul, after his proof: six hostile things killed with your bare hands, eyes open. No save starts with it. Z and V are as they were. Protocol 112.
+
+## 4.1.2 (HexGhoul): The Ukaku's wing slams and wing guard (testing)
+
+See `.github/release-notes-4.1.2.md`. Your words: "Another rework: Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos. (create highly detailed moveset switching between left wing and right wing slaps, swings, upwards to downwards slams (These can now clash like Rinkaku) and has lightly less range than Rinkaku. Right click (M2) is now a protection like Rinkaku has, wings grow and protect the player , they come together to protect the player, just like rinkaku they break after a bunch of hits, perfectly timed right clicks can do the same as Rinkaku and stagger. Note: Crystal mode still has the same custom shooting crystals and right click, we're only touching the base from, everything else stays as it is." The fire's M1 is a string of wing blows (twin wings: two slaps, a wide swing, a rising wing, two overhead slams and a Twin Slam; Rabbit Guise: four with the left wing), which clash like Rinkaku's and reach 85% as far. Right click is the wing guard, by Rinkaku's rules (it breaks, a perfect one staggers). The base form's fire shots, enders and Fire Dash are gone; crystal mode keeps its own. Protocol 111.
+
+## 4.1.1 (HexGhoul): No structure in water (testing)
+
+See `.github/release-notes-4.1.1.md`. Your words: "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently happily resting at the very bottom of the ocean..." Every structure checks the land under it and 8 blocks round it: no wet biome (sea, river, beach, swamp) every 4 blocks, no water on the ground every 16. The mansion is built at the nearest of its world's offered spots that is dry land, still one per world; the villages try nearby spots, and Anteiku, the library and Ken's tower move up to 5 chunks to dry land. Chunks already made don't change. Protocol 110.
+
+## 4.1.0 (HexGhoul): Ayato's way of bringing the kagune out (testing)
+
+See `.github/release-notes-4.1.0.md`. Your words: "after training with Ayato (Ukaku kakuja quest) the player gains a new pull out kagune animation sort of like Ken gives the player. the player lifts both hands god like and then they're unleashed." Once Ayato has taught you the First Kakuja, you bring the kagune out his way: up on your toes, both arms lifted out wide, palms to the sky, chin up, and the wings are unleashed. Protocol 109.
+
+## 4.0.9 (HexGhoul): Ken's new tower, and he sits on the top (testing)
+
+See `.github/release-notes-4.0.9.md`. Your words: "I sent you a replacement for the Ken tower as well, make sure he sits on the top." Your new tower (from `Ken_tower.litematic`), nine of the repeating floors taken out of each of its two tallest tiers so it stands under a 1.20.1 world's top (238 tall, every part kept; tuff swapped for andesite and stone bricks). Ken lives on its top deck and sits there looking out whenever nothing calls him. Protocol 108.
+
+## 4.0.8 (HexGhoul): Ayato's new skin, a little muscular (testing)
+
+See `.github/release-notes-4.0.8.md`. Your words: "I sent you the new ayato skin, make him a little muscular but way less than the male player." Ayato wears your new skin (his kakugan, closed eyes and blush made from it, on the wide arms) and a broader chest, 30% of the White Reaper's build (a male player's is 60%). Protocol 107.
+
+## 4.0.7 (HexGhoul): A full mask hides your kakugan (testing)
+
+See `.github/release-notes-4.0.7.md`. Your words: "Full masks (only full masks not half masks) prevent CCG agents and humans to tell you're a ghoul when your eyes are in Kakugan." With a full mask on (16 of yours, 8 generic), investigators and townsfolk don't see your kakugan; your kagune or a kakuja still give you away; half masks and the Cloth Wrap don't hide the eyes. Protocol 107.
+
+## 4.0.6 (HexGhoul): A torn-off limb takes its clothes, armour and mask with it (testing)
+
+See `.github/release-notes-4.0.6.md`. Your words: "Make sure that when limbs are removed, over layer of the skin also goes with the head and etc, coats and armors go with the limbs as well. (same with masks)". A part torn off by Potential Unlock carries its skin's outer layer (as before), its coat sleeve, trouser leg and boot, and the head its cap and mask; your body draws none of it, nor vanilla armour on that part, nor the kakuja masks on a head that's off. Coat tails stay with the body. Protocol 107.
+
+## 4.0.5 (HexGhoul): New worlds load again; official NPCs stay at home (testing)
+
+See `.github/release-notes-4.0.5.md`. Your words: "also game crash upon creating world": since 4.0.2 the one-per-world Aogiri hideout's placement lacked the `salt` Minecraft requires, so no new world could be made; fixed, and every placement is now tested for its required fields. Your words: "Official NPCS disappear from their residential areas and dont come back they should always stay there unless married to a player and set home in another place." Once anyone has met an official character, no other body of hers takes her place while she lives (one from another of her buildings did, once hers had lain unloaded five days, and hers was sent away). If you've been at her home half a minute and she's nowhere about (not out or left waiting), she's made there again. A married character's home is the one you share. Protocol 107.
+
+## 4.0.4 (HexGhoul): Your 24 new masks (testing)
+
+See `.github/release-notes-4.0.4.md`. Your words, with `Tokyo_Ghoul_24_Masks_1.20.1.zip`: "New masks, replace ALL the masks with these models." All 24 of your masks are your new pack's models and textures, every cube as you made it, read from your Blockbench projects with no refitting (half masks leave the eyes clear, full masks' eye holes lowered, every shell clear of the head and its hat layer); the asymmetric details on the wearer's left, as your renders have them. "Gourmet's Half Mask" is now "Gourmet's Mask". The nine generic masks are unchanged. Protocol 107.
+
+## 4.0.3 (HexGhoul): Coats that hang over the legs; sleeves closed; the Crimson Outfit without its hood, with a high collar (testing)
+
+See `.github/release-notes-4.0.3.md`. Your words: "Do I need to say anything about both outfit's legs and arms?"; "On the Ougiri outfit, no more hood, make it less bulky around the shoulders and head to be similar to the formal outfit, and, give it a high collar on the sides of the head pointing outwards." The coat tails hang over both legs (fronts with the leg furthest forward, backs with the one furthest back, folded at the knee, pushed clear of shins and boots, falling back slowly), so no leg comes through them; every sleeve closes over the arm's inner side; each half of a piece cut at a joint shows its own part of the texture. The Crimson Outfit has no hood (the Crimson Hood item is gone): its coat has a high collar beside the head, flaring out, and the head is free for a mask. Protocol 107.
+
+## 4.0.2 (HexGhoul): Armour that moves; the Aogiri mansion; Ayato poses, Noro tilts his head (testing)
+
+See `.github/release-notes-4.0.2.md`. Your words: "the armor does not allow for animation"; "the jacket also breaks when walking"; "replace the Ougiri hideout with another schematic ... I give them a mansion"; Ayato "a massive poser"; "Noro simply like tilts his head"; "The crack fingers animation is only Kaneki's". The outfits bend at the knees, elbows and torso with PlayerAnimator, the coat tails hang from the hip; your mansion is the world's one Aogiri hideout (guards at both gates who ask your business once, a patrol round the house, members on every floor, Noro and Ayato in rooms of their own; a wrong answer keeps you out five days); the villages as rare as Minecraft's; Ayato poses, Noro tilts his head (and his students tilt theirs as the kagune comes out); the finger crack is Kaneki's alone; the mod's own creative tabs (HexKagune, Quinques, Outfits, Masks). Protocol 106.
+
+## 4.0.1 (HexGhoul): Outfits thinner and finished; The Walker strides (testing)
+
+See `.github/release-notes-4.0.1.md`. Your words: "They seem a little too thick ... add more details"; "add like a color or something to the formal outfit"; on The Walker: "One leg at a time, not two in front at once ... They don't go back like further back enough or forward enough ... you can always tell where the next step is gonna be". Both outfits drawn close to the body; the Formal Outfit in navy piping, a white shirt, silver buttons and badges, a red pocket square, a belt, epaulettes, polished shoes and a visored cap; the Crimson Outfit with dark piping, a belt and buckled straps. The Walker strides one leg at a time, each foot from well ahead to well behind, every step's length, landing, height and speed random, the legs springy tentacle S-curves, your body swaying over them. Protocol 105.
+
+## 4.0.0 (HexGhoul): The Great Exploration (testing)
+
+See `.github/release-notes-4.0.0.md`. Your 4.0.0 spec, as one release: the human town (`hexkagune:village_1`), the CCG settlement (`hexkagune:village_2`) and the Aogiri Tree hideout (`hexkagune:aogiri_hideout`) from your schematics; the Formal and Crimson outfits and your 24 masks as real items (first and third person, players and NPCs), plus nine generic masks for wild ghouls; wild ghouls ranked D to SS; investigators in the Formal Outfit (each piece its own small drop); Aogiri members in the Crimson Outfit and their faction's mask; Ayato Kirishima (Ukaku, his kakuja, a romance on Ken's animations, the Ukaku kakuja questline and its cutscene); Noro (quiet, never romanced, the Bikaku teacher, three worms in a fight). Your to-do list too: masks fitted (half masks below the eyes, eye holes on the skin's eyes, more detail), armour snug and slim-armed for Alex skins, Bikaku regeneration free of energy, The Walker's legs arched and eased, a Bikaku parent's children (a worm; one parent's kind or both, by chance). Protocol 105.
+
+## 3.7.3 (HexGhoul): Bikaku: Potential Unlock, torn apart and pulled back together (testing)
+
+See `.github/release-notes-3.7.3.md`. Your request is in `docs/handoff/owner-words-mutations.md`; on the preview: "Continue Im still at 96". With energy, a blow that would kill you leaves you at one heart and tears a part off (an arm, a leg, now and then the head); a single blow of half your health does too. Each part is thrown, lies there in your skin, and strands of your kagune in your kagune colour reach it, wrap it and haul it back upright; whole in about 5 s, then a small heal; no energy, it waits. Off your model until then. Protocol 104.
+
+## 3.7.2 (HexGhoul): Bikaku: absorbing a body gives Speed and the food's strength buffs for 15 s (testing)
+
+See `.github/release-notes-3.7.2.md`. Your words: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from foods, any that give special strength and buffs also for 15 seconds"; you chose "Grand Devouring only (Recommended)" and "Strength, Resistance, Refreshed, Replenished (Recommended)". When a body Grand Devouring swallowed is in you: Speed, Strength, Resistance, Refreshed and Replenished, level I, 15 seconds. Protocol 103.
+
+## 3.7.1 (HexGhoul): Bikaku: The Walker on tap K, carried 3.5 blocks up over any ground (testing)
+
+See `.github/release-notes-3.7.1.md`. Your words: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain ... the walker is the first tap K half kakuja, the full kakuja is the hold K"; its cost: "Half the kakuja's cost (Recommended)". K tapped: The Walker (12.5 energy, then half the kakuja's drain); K held: the kakuja. Carried 3.5 blocks up for real on two long legs, over the highest ground round you, let down under roofs, climbing walls, at a walking pace; no fall damage; not kicked for floating. Protocol 103. Preview: `docs/handoff/bikaku-walker-3.7.1.png`.
+
+## 3.7.0 (HexGhoul): Fix: The Walker's arms never swing (testing)
+
+See `.github/release-notes-3.7.0.md`. Your words: "the arms should not swing at any point (they currently do)". In The Walker your arms hang still at your sides (none of Minecraft's walking or attack swing), as your legs do. Protocol 103.
+
+## 3.6.9 (HexGhoul): Fix: the Bikaku kakuja shatters when you turn back (testing)
+
+See `.github/release-notes-3.6.9.md`. Your words: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has." Turning back, the kakuja breaks into pieces that fly off, spin, bounce once and fade, with the glass, as the Rinkaku's does (the same machinery); the worm grows back out of you. Protocol 103. Preview: `docs/handoff/bikaku-shatter-3.6.9.png`.
+
+## 3.6.8 (HexGhoul): Fix: the Bikaku kakuja's camera fits its size (testing)
+
+See `.github/release-notes-3.6.8.md`. Your words: "IN kakuja form you cant see anything, the camera needs to adapt to the new size." In the Bikaku kakuja the third-person camera turns round its crest and sits 9 blocks behind it (Minecraft's own sat inside its back); in first person your view is lifted to its crest. It grows in and comes back down with the kakuja; nothing of it is drawn within 2.6 blocks of the lens. Protocol 103.
+
+## 3.6.7 (HexGhoul): Bikaku: Potential Unlock, first part (testing)
+
+See `.github/release-notes-3.6.7.md`. Your words: "The maximum energy capacity is also permanently multiplied by 3", "Upon unlocking Potential Unlock, the player's energy bar permanently changes color", then "Should be Purple, the bar, my bad". Potential Unlock (unlocked by the NPC's quest; operators meanwhile: `/kagune bikaku mutation potential_unlock on|off`): three times the energy (everything spends a third of the bar; the menu reads "192 / 300"), the one bar (energy and food) purple, the menu's too; kept through death, relogging and restarts; Bikaku only. The Bikaku menu's bar reads "ENERGY" now (your words: "RC bar IS NOT A THING"). Coming: surviving, tearing off and the strands. Protocol 103. Previews: `docs/handoff/potential-bar-3.6.7.png`, `bikaku-menu-potential-3.6.7.png`.
+
+## 3.6.6 (HexGhoul): Fix: no RC bar (testing)
+
+See `.github/release-notes-3.6.6.md`. Your words: "The RC bar does not exist and is not meant to be a thing anymore, the energy and FOOD bar are the same, RC bar IS NOT A THING". The original's RC bar is never drawn now (it still was in creative and with the diet switched off, while the kagune was out). One bar: energy and food. Protocol 103.
+
+## 3.6.5 (HexGhoul): Bikaku: Grand Devouring from inside the mouth (GeckoLib) (testing)
+
+See `.github/release-notes-3.6.5.md`. Your words: "If the victim is another player, they must experience a special first-person perspective from inside the kagune's mouth"; on the draft: "I like the inside of the mouth, proceed wit hthe mod". A player being eaten sees, in first person, the inside of the mouth drawn with GeckoLib: breathing walls of flesh in the eater's kagune colour, rows of fangs, the throat into darkness, and the jaws closing in step with the world worm until the outside is shut out; the gulp squeezes up the throat. It is placed along the worm's own curve. The worm's head now stays down over the body until it is swallowed. Your words: "Grand devouring should not be in the kakuja form by the way." (it isn't). Protocol 103. Previews: `docs/handoff/devour-inside-3.6.5.png`, `bikaku-devour-3.6.5.png`.
+
+## 3.6.4 (HexGhoul): Fix: /kagune cooldowns off ends the Bikaku cooldowns (testing)
+
+See `.github/release-notes-3.6.4.md`. Your words, on `/kagune cooldowns off` not ending the Bikaku cooldowns already running: "it should." It now ends every Bikaku cooldown that is running (each move's, the kakuja's, Grand Devouring's), and switching to creative does too. Protocol 103.
+
+## 3.6.3 (HexGhoul): Bikaku: Grand Devouring (testing)
+
+See `.github/release-notes-3.6.3.md`. Your words are in `docs/handoff/owner-words-mutations.md`. GeckoLib is now required (your words: "use geckolib it is meant to be a requirement"). Grand Devouring: a body within 10 blocks at 1 heart or less is swallowed whole by one of your worms on its own. It rises and swells, arches over, comes down over the body, closes slowly, gulps, and a bulge runs down to your back; your bar refills. It is reshaped after your reports: thin out of your back, one smooth arch, steadily bigger to the mouth. 1-minute cooldown (your words: "Forgot to mention but Grand Devour should have a cooldown of 1 minute"). Not opened by mastery (your words: "these mutations are NOT unlocked through mastery they're gonna be unlocked through an NPC's quest introduced later today"); until then `/kagune bikaku mutation grand_devouring on|off` (operators). The body caught is held and stripped; its things are given back if it lives. The feeding worm does nothing else. Protocol 103. Previews: `docs/handoff/bikaku-devour-3.6.3.png`, `bikaku-devour-before-after-3.6.3.png`, `bikaku-menu-3.6.3.png`.
+
+## 3.6.2 (HexGhoul): Bikaku: The Walker (testing)
+
+See `.github/release-notes-3.6.2.md`. Your words: "the fourth before the Kakuja should be like the player no longer even like walks with their own legs, like they get like two separate appendages on either, like both sides emerging from the same spot as the worms, that when the player walks his body doesn't move, but like he controls these tentacles that walk around adapt to terrain. Being able to climb anything, like Dr. Octopus pretty much." The Walker (750): two walking tentacles out of the worms' root, one on each side, carry you. Your legs hang still, the feet step on the blocks around you (steps, ledges), and you climb any wall you walk into (sneak to hang on). No fall damage while it is out. Its moves are Three Worms'. Protocol 102. Preview: `docs/handoff/bikaku-walker-3.6.2.png`.
+
+## 3.6.1 (HexGhoul): Bikaku: every move made by all the worms (testing)
+
+See `.github/release-notes-3.6.1.md`. Your words: "to basically become overpowered, like, to do enhanced versions of themselves whenever they're, like, in different transformations, such as, like, the move that, like, drag pursuit, you can send all three of them, all three of the worm-like things, and the thing that sends the worm underground and then up can be like more than one, and whatsoever." In Twin Worms and Three Worms every move is made by all the worms, each from its own lane and a beat after the one before. Devouring Maw and Predatory Drag catch a body per worm. Ravenous Pursuit sends every worm after its own body, three bites each. Carrion Eruption comes up once per worm, under each one's body. One Worm is as before. Protocol 102. Preview: `docs/handoff/bikaku-form-moves-3.6.1.png`.
+
+## 3.6.0 (HexGhoul): Bikaku: the forms (Twin Worms, Three Worms) (testing)
+
+See `.github/release-notes-3.6.0.md`. Your words: "another form should have like two worms. The third should have three". Forms picked in the menu: One Worm, Twin Worms (250), Three Worms (500); The Walker (750) shown, coming. The worms come out of one root, each in its own lane; M1's bites take turns among them. The moves are made by the first worm for now (every worm in 3.6.1). Protocol 101. Preview: `docs/handoff/bikaku-forms-3.6.0.png`.
+
+## 3.5.9 (HexGhoul): Bikaku: the worm goes round blocks (testing)
+
+See `.github/release-notes-3.5.9.md`. Your words: "go around blocks like a worm, sort of, and actually go around them. It's being able to adapt to the terrain itself and pulling people back". M1's bites, Devouring Maw, Predatory Drag (along the ground) and Ravenous Pursuit find a way round what is between them and their target (the server's search through the open blocks, sent to everyone), are drawn along it, bite where it ends, and pull what they catch back round it; the way counts toward the reach. Protocol 100. Preview: `docs/handoff/bikaku-round-3.5.9.png`.
+
+## 3.5.8 (HexGhoul): Bikaku: hold to throw further, up to 30 blocks (testing)
+
+See `.github/release-notes-3.5.8.md`. Your words: "it should be a held move that the longer you hold it for, the longer it goes for ... up to like 30 blocks. Of course, attacks are not able to be performed until the kagune is pulled fully back." M1 and the worm's thrown moves (G, J, Z, B) wind up while held and are thrown as far as they were held for: a tap as before, 30 blocks after 2 s; a longer throw is slower out and back, nothing else until it is back; the reach on the action bar. Not round blocks yet (next). Protocol 99. Preview: `docs/handoff/bikaku-held-3.5.8.png`.
+
+## 3.5.7 (HexGhoul): Bikaku: the kakuja's four moves and its passives (testing)
+
+See `.github/release-notes-3.5.7.md`. In the kakuja (mastery 1000, mastery alone): Thousand Jaws (Z: every mouthed tentacle biting its own body again and again, the grins snapping at what is close), Endless Hunger (G: three mouths and a coiling tentacle hold one body and bite it, then the great maw crushes it; every bite heals), Flesh Cataclysm (B: draws in, bursts out roaring, tentacles flung out and swept round: close bodies hurled, struck ones hit hard), Undying Abomination (C: 10 s of extraordinary regeneration and still less damage, slowed but never stopped by a heavy blow). Autonomous Predation: its tentacles bite hostile bodies near it on their own. Protocol 98. Previews: `docs/handoff/bikaku-kakuja-moves-3.5.7.png`, `bikaku-kakuja-undying-3.5.7.png`.
+
+## 3.5.6 (HexGhoul): Fix: Predatory Drag swings out wide round you (testing)
+
+See `.github/release-notes-3.5.6.md`. Your words on 3.5.5's Drag: "why not make a bigger angle? it's going too close to the body". The Drag's worm now swings out in a wide arc to your right (its coils, the point it comes down past, where it meets the ground, where it holds its catch from), grips its catch from its own side, and swings wide on the way back: about 0.6 blocks clear of you typically, never under about 0.25 (it was about 5 cm). Protocol 97. Preview: `docs/handoff/bikaku-drag-wide-3.5.6.png`.
+
+## 3.5.5 (HexGhoul): Fix: the Bikaku worm goes round your body, not through it (testing)
+
+See `.github/release-notes-3.5.5.md`. Your report: Predatory Drag (and a few moves) went through the player's body. Every Bikaku worm is now drawn round you (the stretch that would pass through you swept round your side, smoothed; unchanged where it doesn't come near you). Predatory Drag comes down your right side to in front of your right foot, and drags its catch in to the side it came from. Protocol 97. Preview: `docs/handoff/bikaku-drag-round-3.5.5.png`.
+
+## 3.5.4 (HexGhoul): Bikaku: the kakuja (testing)
+
+See `.github/release-notes-3.5.4.md`. K at mastery 1000: you grow into a lopsided mass about 4.8 blocks high, covered in grinning mouths, with the worm's maw and six great tentacles (3 s in, 1.5 s out). In it you barely move, take 45% of every blow, can't be knocked back and regenerate; M1 is a tentacle's bite up to 14 blocks out. 25 RC, then 1 RC a second; 60 s cooldown. Protocol 97. Previews: `docs/handoff/bikaku-kakuja-3.5.4.png`, `bikaku-kakuja-close-3.5.4.png`.
+
+## 3.5.3 (HexGhoul): Bikaku: Monstrous Regeneration and the passives (testing)
+
+See `.github/release-notes-3.5.3.md`. Monstrous Regeneration (C, mastery 600): 8 s of strong regeneration, strands of the kagune crawling over your body and knitting it; 45 s cooldown, not invincible. With the worm out: Abnormal Regeneration (a ghoul's regeneration sooner and faster) and Pain Suppression (hard to knock back, stuns half as long). Protocol 96. Preview: `docs/handoff/bikaku-regeneration-3.5.3.png`.
+
+## 3.5.2 (HexGhoul): Fix: Bikaku's bites heal again (testing)
+
+See `.github/release-notes-3.5.2.md`. A Bikaku bite's half a heart (Predatory Feeding) was cancelled by the ghoul's regeneration, which takes any small heal it didn't make for food's natural regeneration. Every Bikaku heal now goes through as the ghoul's own.
+
+## 3.5.1 (HexGhoul): Bikaku: Ravenous Pursuit and Carrion Eruption (testing)
+
+See `.github/release-notes-3.5.1.md`. Ravenous Pursuit (Z, mastery 300): the worm splits into three thinner worms that lunge in snakes at up to three bodies (all three on one). Carrion Eruption (B, mastery 450): it tunnels under the ground (the ground heaving over it) and bursts up under its mark, biting and throwing it into the air. Previews: `docs/handoff/bikaku-pursuit-3.5.1.png`, `bikaku-eruption-3.5.1.png`.
+
+## 3.5.0 (HexGhoul): Bikaku: Devouring Maw and Predatory Drag (testing)
+
+See `.github/release-notes-3.5.0.md`. The worm's moves are on your kagune keys, opened by mastery alone. Devouring Maw (G): thrown wide, it clamps on, holds them up and shakes them, then flings them aside. Predatory Drag (J, mastery 150): along the ground, it drags them back to you, lifts them and slams them down. Protocol 95. Preview: `docs/handoff/bikaku-grabs-3.5.0.png`.
+
+## 3.4.9 (HexGhoul): Bikaku, the worm kagune, in the game (testing)
+
+See `.github/release-notes-3.4.9.md`. A third path on the starting screen: Bikaku. One thick worm out of the lower back (about 8 blocks of zigzag coils, a round mouth of fangs over the right shoulder), alive at rest, in your kagune colour, with a string of three M1 bites (Snap, Lunge, Maul) that heal you a little when they land. Its other moves and its kakuja come next. Protocol 94. Previews: `docs/handoff/bikaku-*-3.4.9.png`.
+
+## 3.4.8 (HexGhoul): Fix: the Bone Greatsword's moves rebuilt (testing)
+
+See `.github/release-notes-3.4.8.md`. The greatsword's six blows and its three moves are rebuilt with both hands on the grip: the sword turns in the hands (an arm here is a stiff stick, and set at one angle in the fist the left hand hung up to half a block off the grip and the blade flicked about). The stance, the hammer, the whip and the spear are unchanged. Sheet: `docs/handoff/bone_sword-moves-3.4.8.png`.
+
+## 3.4.7 (HexGhoul): Fix: the move guide is one narrow column again (testing)
+
+See `.github/release-notes-3.4.7.md`. The move guide above the chat is one narrow vertical column again (3.4.6's two columns made it wider, not smaller), drawn at 60% of its size with tighter spacing; every move is still a word or two.
+
+## 3.4.6 (HexGhoul): A smaller move guide (testing)
+
+See `.github/release-notes-3.4.6.md`. The owner's ask: the move guide was too big and clanky. Now every move is named in a word or two ("Fists", "Heavy", "Thy Death", "Eyes only"), the board goes to two columns past five moves, the title and form share one line, and it's a little smaller. Same moves, keys, colours and cooldowns, about half the size. Not tested in game.
+
+## 3.4.5 (HexGhoul): Fix: the Spire Wave stays on your hand (testing)
+
+See `.github/release-notes-3.4.5.md`. Fix (the owner's report): War's Spire Wave came loose from your hand in first person when you moved. 3.2.8 started the mass at the spot it set out from. It now starts at the fist you see, found again every frame from your eyes and look, so it stays on your hand as you move and turn. Not tested in game.
+
+## 3.4.4 (HexGhoul): Fix: a crystal forming sounds like crystal (testing)
+
+See `.github/release-notes-3.4.4.md`. Fix (the owner: 3.3.5's crystal forming sounds were bad): a crystal forming is now a rubbed wine glass singing (three swells) or a small bell's ring. These are real CC0 freesound recordings by ani_music and AlaskaRobotics, from Sonic Pi's sample library, used as recorded. A crystal's hit and shatter are unchanged. Not tested in game.
+
+## 3.4.3 (HexGhoul): Fix: clashes follow who's stronger (testing)
+
+See `.github/release-notes-3.4.3.md`. Fix (the owner's report: investigators, even the Reaper, sent a maxed ghoul flying in clashes): clash throws now follow only the gap between the two. The stronger stands its ground, the weaker is thrown, and at twice as strong it's flung. An even clash pushes both a short way apart, and one eye counts. A maxed ghoul flings Rank 0 to 3 and is never flung by the Reaper. Not tested in game.
+
+## 3.4.2 (HexGhoul): Welcome home (testing)
+
+See `.github/release-notes-3.4.2.md`. From the owner's list after 3.2.1, the last of it: kids greet you after days away. Each child now remembers (kept with your save) when it last saw you. After two or more in-game days away, it greets you by its temper and age, with more to say after a week, then runs in for its hug. Not tested in game.
+
+## 3.4.1 (HexGhoul): A word at the door (testing)
+
+See `.github/release-notes-3.4.1.md`. From the owner's list after 3.2.1: the companion and the child talk to each other at the door after your scene. Once you've answered the companion's door card, they and the child brought home have a four-line talk: the parent in their voice, found or after an outing, to a toddler or a bigger child; the child by its temper; the parent's answer to that; the child's last word. To a baby the parent talks alone. Not tested in game.
+
+## 3.4.0 (HexGhoul): Where WERE you? (testing)
+
+See `.github/release-notes-3.4.0.md`. From the owner's list after 3.2.1: siblings at home react to the one brought back. An older one covers for it or wants to know where it WAS, a younger one tells on it, one left behind from an outing minds it, and the one brought back answers, all by their tempers and ages (about 150 new lines). Not tested in game.
+
+## 3.3.9 (HexGhoul): Homecomings without a home (testing)
+
+See `.github/release-notes-3.3.9.md`. From the owner's list after 3.2.1: homecomings without a home. Bringing a child back used to need a family home; without one nothing happened. Now the place the child lives counts as home (16 blocks round it), with new scenes for the companions and the children that don't talk about a house, and the old house-and-door scenes kept for families that have one. Not tested in game.
+
+## 3.3.8 (HexGhoul): Who's at the door (testing)
+
+See `.github/release-notes-3.3.8.md`. From the owner's list after 3.2.1: temper-aware door scenes. When you bring a child home, Eto, Touka or Ken now meet you at the door by who that child is: a scene for each of the seven tempers, found or back from an outing (42 new scenes), and by age (baby, toddler, child or teen). Not tested in game.
+
+## 3.3.7 (HexGhoul): Talking it out (testing)
+
+See `.github/release-notes-3.3.7.md`. From the owner's list after 3.2.1: reconciliation talks. A companion who is cross with you, or a jealous partner, can now be asked "Can we talk about it?" (or "Are we okay?", "Are we still friends?", "Can we talk about earlier?"). It's a real talk with branches: owning it, being honest or offering to make it up ends it; "you're overreacting" or "you're being paranoid" makes it worse. New lines in each one's voice, and a second way each comes to make it up on their own (picked at random). Not tested in game.
+
+## 3.3.6 (HexGhoul): A jealous partner acts it out (testing)
+
+See `.github/release-notes-3.3.6.md`. From the owner's list after 3.2.1: a jealous animation. A jealous companion partner now acts it out (about 7 s): back turned, arms folded, a glare over the shoulder, a huff, the snub with a foot tapping, turning back round. It plays when you ask another companion out, or ask a villager to be together or confess to one, while they see it. They also say a new line about it in their own voice, and replay the act now and then while still jealous. Protocol 93. Not tested in game.
+
+## 3.3.5 (HexGhoul): Crystal sounds from real glass (testing)
+
+See `.github/release-notes-3.3.5.md`. 3.2.6's crystal sounds were the pack's steel and needle sounds raised in pitch. Now real glass recordings from the web, as recorded: three glass breaks for the shatter, glasses clinking and a crack for forming and hits (CC0, freesound via the WilhelmSFX mirror, credited). Same loudness as before. Not tested in game.
+
+## 3.3.4 (HexGhoul): One partner, for good (testing)
+
+See `.github/release-notes-3.3.4.md`. The owner's rule: one partner, no break-up, no divorce. While you have a partner (dating or married, Eto, Touka, Ken or a villager) nobody else will start anything with you, and no ring while you're married. Killing Eto, Touka or Ken no longer ends it: they come back, still yours. A villager partner's death is the only thing that frees you. Old saves keep the partners they have. Not tested in game.
+
+## 3.3.3 (HexGhoul): The Dragon has a voice: real recordings from the web (testing)
+
+See `.github/release-notes-3.3.3.md`. The Kakuja V2 Dragon only played the pack's quiet sounds (3-37% volume) and breathed once every 3.5 s: from the camera, silence. Now 14 real CC0 recordings from freesound (via the WilhelmSFX mirror), as recorded, at full volume: roars as it breaks out and every few seconds, a death cry as it shatters, its crawl (a growl-chitter and heavy stomps), earthquake crashes, crunching bites, its body cracking apart. Credited in sfx/recorded/CREDITS.txt. Not tested in game (and not listened to: tell me which sounds wrong).
+
+## 3.3.2 (HexGhoul): Dawn has an idle (testing)
+
+See `.github/release-notes-3.3.2.md`. Standing still with Dawn out, a slow loop: breathing, Dawn turned to and fro in your fingers, then carried up and aside at ease (point raised to your right, left hand on your hip, head tilted, the point tapping), and back down. Moving, swinging or aiming stops it. Hold and M1s unchanged. Not tested in game.
+
+## 3.3.1 (HexGhoul): Ken teaches the Rubble Hurl and the Impale, with proofs (testing)
+
+See `.github/release-notes-3.3.1.md`. The Rubble Hurl and the Impale now come from Ken, not mastery alone: past 250 and 350 he teaches them (the Hurl first), each after a proof in his words: throw five bodies from your tails, then crush five in them. Until then the key says who teaches it and the guide shows them greyed. New this week, so no save keeps them. Not tested in game.
+
+## 3.3.0 (HexGhoul): The move guide shows what your keys do right now (Rinkaku) (testing)
+
+See `.github/release-notes-3.3.0.md`. The Rinkaku guide on the left crammed what G, N and H do with and without someone held onto shared lines, and showed Lift and Slam as ready when they need someone held. Now it follows your tails live: nothing held, Grab, Rubble Hurl (N held), Impale (H held), Lift · Slam greyed; a tail holding someone, Throw, Crush, Lift, Slam them and Grab another. Not tested in game.
+
+## 3.2.9 (HexGhoul): Fix: the Wing Vortex: thinner, round, straight forward, and you can see past it (testing)
+
+See `.github/release-notes-3.2.9.md`. The vortex was big rolling loops of flat ribbons (crumpled panels up close), aimed from the shoulder at a body's middle or the ground under the crosshair (so it often went into the ground a few blocks off and ended: "stays in place"), and in first person it and its launch burst filled the view. Now a thin round corkscrew (three round strands, a thin jet) flying straight forward along your look, only a little up or down; from your own eyes a see-through jet that opens as it goes, no burst or smoke at your eyes. Not tested in game.
+
+## 3.2.8 (HexGhoul): Fix: War's Spire Wave was a mess in first person (testing)
+
+See `.github/release-notes-3.2.8.md`. In first person the Spire Wave's charge centipedes coiled round the third-person body's arm under your eyes, and the beam bent back to it, a wall of centipede heads in your face. Now your own left arm is drawn (your skin, War's sleeve), reaching out as it charges and thrust with the beam, the centipedes coiled round it; the beam leaves your fist as a cone that widens away from you. Third person unchanged. Not tested in game.
+
+## 3.2.7 (HexGhoul): Fix: Peace's shields looked like shields and floated off the tails (testing)
+
+See `.github/release-notes-3.2.7.md`. Aegis of :Re's three shields were knight's heater shields (silver rim, red cross), held in the air off their tendrils' ends, the top one flat over his head. Now each tendril opens like a hand into a cupped fan of crimson flesh on seven white bone ribs that run on into claws, grown on a stalk at the tendril's end; the top one rises behind his head like a hood, the side ones hang close. Gameplay unchanged. Not tested in game.
+
+## 3.2.6 (HexGhoul): Fix: crystals sounded like punches (testing)
+
+See `.github/release-notes-3.2.6.md`. The crystal's shatter was a bone crack and punch collisions, its hit the punch hits. Now crystal forms, hits and shatters from the pack's brightest steel and needle sounds raised into a ring, no punch or bone in any of it. The pack still has no real glass recording: send crystal sounds (or OK vanilla's amethyst) for the real thing. Not tested in game.
+
+## 3.2.5 (HexGhoul): Fix: clash impacts were barely audible (testing)
+
+See `.github/release-notes-3.2.5.md`. The clash sounds were set to 3.5-8% of their volume (a cap to keep three stacked from clipping); now every clash sound plays at full gain (21-29 dB louder), the loudest in the pack, and the ground rumble at 60%. Not tested in game.
+
+## 3.2.4 (HexGhoul): Fix: a maxed ghoul thrown back in clashes by low-rank investigators (testing)
+
+See `.github/release-notes-3.2.4.md`. Clashes now measure both sides on one scale: an investigator by their rank, you from a fresh Rank 0's power up to the Reaper's with your mastery, the gates of your path opened by quests and lessons, and the ghoul meat in you (plus form and mutations). Fully progressed, you meet the Reaper as an equal, out-push every investigator up to Rank 7, and send Rank 0-1 flying. Not tested in game.
+
+## 3.2.3 (HexGhoul): Fix: companions frozen in the kiss pose (testing)
+
+See `.github/release-notes-3.2.3.md`. The owner's bug: a companion sometimes stayed stuck leaning in after a kiss. A blush given as a reaction (37 talk answers, your kakugan) used the kiss's held pose and never let go. Now a held pose with no kiss or hand behind it ends after 4 seconds, a reaction blush is drawn as a shy one, and villagers' kiss and hand poses end with the kiss. Not tested in game.
+
+## 3.2.2 (HexGhoul): One at a time: nobody piles on (testing)
+
+See `.github/release-notes-3.2.2.md`. While someone has you (walking up, a hug, a kiss, on your arm, by the hand, a child's moment, a card or a talk), nobody else starts something with you by themselves; the next waits 4 seconds after they let go. Companions, children, villagers and ghouls alike; what you ask for is never held back. Not tested in game.
+
+## 3.2.1 (HexGhoul): Bringing your child home yourself: who meets you at the door (testing)
+
+See `.github/release-notes-3.2.1.md`. Carry or walk a child of yours home after a while out: its other parent at home (Eto, Touka, Ken) meets you at the door, and it matters whether you found the child or the two of you were out together, the hour, carrying it, their mood, your other partner; the child calls out to them in its own temper. With nobody waiting, the child talks to you itself, by age and temper. 94 new scenes, about 950 lines. Not tested in game.
+
+## 3.2.0 (HexGhoul): The word at the door: bringing the child home, by who is talking (testing)
+
+See `.github/release-notes-3.2.0.md`. When Eto, Touka or Ken brings a wandering, night-roaming or rampaging child home, the word at the door is now a real exchange that knows why: the parent on what happened, the child in its own temper, the parent's answer to that kind of child, sometimes the child's last word. About 350 new lines. Not tested in game.
+
+## 3.1.9 (HexGhoul): Jealousy you can see; co-wives and half-siblings who know about each other (testing)
+
+See `.github/release-notes-3.1.9.md`. A partner who sees you being sweet on another says so to your face. Two of your partners who meet talk (first meeting, rivalry, the kids, settled), and your children by different mothers or fathers talk about it. New conversations about the other wife and the half-siblings. Not tested in game.
+
+## 3.1.8 (HexGhoul): A signature move for the greatsword, the hammer and the whip (testing)
+
+See `.github/release-notes-3.1.8.md`. Sneak + M1: the Tendril Whip's Tendril Swing (lash a block, get hauled to it), the Flesh Hammer's Fault Line (the ground breaks open in a line ahead), the Bone Greatsword's Bone Wall (a guard; a perfect parry staggers them and readies the overhead cleave). Protocol 92. Not tested in game.
+
+## 3.1.7 (HexGhoul): Rubble Hurl tails go round the body, never through it (testing)
+
+See `.github/release-notes-3.1.7.md`. The tails gripping the Rubble Hurl's chunk cut straight through the torso and head; now they leave the back, go round their own side and up behind the shoulder beside the head, then to the chunk. A new check builds 4,400 grip poses and requires the tail never to touch the body. Not tested in game.
+
+## 3.1.6 (HexGhoul): Rinkaku's Rubble Hurl on the Throw key (testing)
+
+See `.github/release-notes-3.1.6.md`. With nobody held, N is the Rubble Hurl: two tails tear a chunk out of the block you look at (or the ground before you; put back later, only where you may break it), hold N to make it bigger, let go to hurl it at what you aim at. It bursts on what it hits: damage, knockback, a short stun; in the final kakuja it splits in three. With someone held, N is still the throw. Protocol 91. Not tested in game.
+
+## 3.1.5 (HexGhoul): Rinkaku's Impale on the Crush key (testing)
+
+See `.github/release-notes-3.1.5.md`. With nobody held, H is the Impale: one random tail (never a centipede leg) rises over its shoulder and shoots straight out where you look, its end a sharp point; hold H and it keeps going (16 to 30 blocks). Whatever it runs through is impaled and dragged along, mobs and players; a wall pins them; let go and it tears out. With someone held, H is still the crush. Protocol 90. Not tested in game.
+
+## 3.1.4 (HexGhoul): Expand personality and mood dialogue (testing)
+
+See `.github/release-notes-3.1.4.md`. Over 730 additional spoken lines for Touka, Eto, Ken and every human temperament, retaining the original dialogue and relationship rules. Not tested in game.
+
+## 3.1.3 (HexGhoul): Show every quinque attack in first person (testing)
+
+See `.github/release-notes-3.1.3.md`. Dedicated first-person attacks for old and new quinques, with the full whip tendril, visible impact poses and direct swing tracking. Held quinques take M1 priority over eye-mode/final-form unarmed attacks. Not tested in game.
+
+## 3.1.2 (HexGhoul): Add a rebindable briefcase key for every quinque (testing)
+
+See `.github/release-notes-3.1.2.md`. Y (rebindable in Controls) folds the held quinque into its briefcase. Both right-click abilities remain available. Applies to old and new quinques. Not tested in game.
+
+## 3.1.1 (HexGhoul): Limit weapon carry fixes to heavy sword, hammer and whip (testing)
+
+See `.github/release-notes-3.1.1.md`. The walking/carry fix targets only the heavy sword (Bone Greatsword), heavy hammer (Flesh Hammer) and Tendril Whip. Other quinques keep their existing poses. Includes the marriage and family pathfinding fixes. Not tested in game.
+
+## 3.1.0 (HexGhoul): Investigators keep walking while carrying kagune quinques (testing)
+
+See `.github/release-notes-3.1.0.md`. Moving investigators retain their walking legs and body motion with all four kagune-made quinques; the whip curls above the floor instead of lying flat, and the long spear clears the floor on a sprint. Not tested in game.
+
+## 3.0.9 (HexGhoul): Family followers walk instead of teleporting (testing)
+
+See `.github/release-notes-3.0.9.md`. Spouses and children walk to catch up, including beyond 24 blocks; clinging no longer snaps to the player. Home recovery ignores followers and fighters and counts only block collisions. Not tested in game.
+
+## 3.0.8 (HexGhoul): Jealousy preserves existing marriages (testing)
+
+See `.github/release-notes-3.0.8.md`. Marrying another companion by command keeps the previous spouse married. Jealousy is temporary and no longer drains affection. A surviving wedding record can recover a marriage erased by the old command when its companion is unclaimed. Not tested in game.
+
+## 3.0.7 (HexGhoul): Recorded insect, swing and flesh sounds; finger crack leads the mix (testing)
+
+See `.github/release-notes-3.0.7.md`. Centipede legs use real insect recordings, both Rinkaku half-kakuja transformations are quiet hisses, and kagune swings use recorded air swishes. The synthetic flesh-impact, blood-spray and gush pools are replaced with recorded melon foley; stab samples stay the same. The owner's finger-crack recording is unchanged and plays at full gain, with every other pack sound mixed lower. All new recordings are CC0 and credited in the pack. Protocol 88, unchanged. Not tested in game.
+
+## 3.0.6 (HexGhoul): The kagune-made weapons are real items (testing)
+
+See `.github/release-notes-3.0.6.md`. The four kagune-made weapons are real items now. The Tendril Whip, Crystal Spear, Flesh Hammer and Bone Greatsword each have their own case and weapon item: given by /give, in the Combat tab, and dropped by the investigators who carry them (their own case now, not the regular quinque case; a masterwork's stays a masterwork). Right click the case and the weapon tears out of it in your hand (drawn from the same mesh the investigators use). M1 runs its whole string of blows with the investigators' animations, right click is its first move and Shift + right click its second (Bind/Flay, Crystal Javelin/Piercing Charge, Quake/Whirlwind, Leaping Cut/Cleave), each on a cooldown. Put it in another slot and it folds back into its case. Investigators carry the new case at peace too.
+
+## 3.0.5 (HexGhoul): Rinkaku's tails stop shaking while holding someone (testing)
+
+See `.github/release-notes-3.0.5.md`. Rinkaku's tails stop shaking while one of them holds someone. Not tested in game. This is the cause found in the code, so tell me if any shaking is left.
+
+## 3.0.4 (HexGhoul): Eto is in the library you find (testing)
+
+See `.github/release-notes-3.0.4.md`. Eto is in the library you find. A world has three libraries (placed in a ring, like strongholds), but only one Eto, and whichever library loaded first claimed her, often one a player only passed within range of without ever seeing it. The library they then found removed its own Eto on her first tick. Not tested in game.
+
+## 3.0.3 (HexGhoul): No pause at the start of the finger-crack pull-out (testing)
+
+See `.github/release-notes-3.0.3.md`. The pause at the start of the finger-crack pull-out is gone: the arm moves the moment you press the key, and the kagune comes out about a quarter of a second sooner. Not tested in game.
+
+## 3.0.2 (HexGhoul): Investigators' case drops scaled by how common the case is (testing)
+
+See `.github/release-notes-3.0.2.md`. Investigators' case drops now follow how common the case is: the commoner the weapon an investigator fought with, the likelier its case drops. It used to be a flat 2.5% for every one of them. Not tested in game.
+
+## 3.0.1 (HexGhoul): CCG weapons re-animated (footwork, no folding) and the greatsword, spear and hammer remodelled (testing)
+
+See `.github/release-notes-3.0.1.md`. The CCG weapons, redone after 3.0.0 shipped with animations that folded the body at the hips and a greatsword that looked like a strip of paper. Every blow and move of all four weapons is re-animated, and the sword, spear and hammer have new models. Not tested in game.
+
+## 3.0.0 (HexGhoul): CCG rework: kagune-made weapons for the higher ranks (experimental) (testing)
+
+See `.github/release-notes-3.0.0.md`. Experimental. The CCG rework: investigators of Rank 4 and up may carry a weapon grown from a kagune (a tendril whip, a crystal spear, a flesh hammer, a bone greatsword), each with a long M1 string and two moves of its own that they use whenever they see fit. Not tested in game. Install matching versions on client and server (network protocol 87).
+
+## 2.5.7 (HexGhoul): Another baby on the sweet page, five days apart; the night comes at home (testing)
+
+See `.github/release-notes-2.5.7.md`. Another baby: asked for on the sweet page now, in each companion's own words, five Minecraft days after the last was born; and at the home you share, the night you asked for actually comes (she comes to you for it, as she did before you had a home).
+
+## 2.5.6 (HexGhoul): Lag check: children's threat search and the kagune passes' scans throttled (testing)
+
+See `.github/release-notes-2.5.6.md`. Lag check. Two hot spots found, both from recent versions, both fixed: children looked for monsters with a line-of-sight ray to every monster within 10 blocks on every tick, and the kagune passes scanned for nearby children and wild ghouls up to six times a frame. Everything else that runs every tick or every frame was checked and is already throttled.
+
+## 2.5.5 (HexGhoul): A child's Rinkaku is drawn whenever it is out (testing)
+
+See `.github/release-notes-2.5.5.md`. A child's Rinkaku (and its wings) is now drawn whenever it is out, whether or not the child's body was drawn the usual way that frame. Before, the tentacle was only drawn for a child its body's renderer had noted during the same frame, so anything that skips or replaces that call (an entity-culling or performance mod, a body drawn some other way) left the kagune invisible even while the child fought with it. This is the fix the wild ghouls' tails got in 2.0.27, which children never had.
+
+## 2.5.4 (HexGhoul): Children fight monsters that come close in their sight; ghoul children's kakugan at night (testing)
+
+See `.github/release-notes-2.5.4.md`. Your sons and daughters stand their ground now: any child old enough to be taught (child, teen or grown) goes for a monster that comes close and that it can see, taught or not (lessons still make its blows harder); babies and toddlers still run to a parent. And at night a ghoul child's eyes turn to kakugan (the eye or eyes it was born with), not only while it fights.
+
+## 2.5.3 (HexGhoul): The finger crack: the owner's sound; the arm stretches out, then bends, smoothly (testing)
+
+See `.github/release-notes-2.5.3.md`. The finger crack uses the owner's own sound now, and the arm stretches out straight first, then bends at the elbow (the hand curling up toward the chest) before the crack, all of it eased, never a jump; it straightens and lowers together afterwards.
+
+## 2.5.2 (HexGhoul): No hearts when the kagune or a kakuja comes out (testing)
+
+See `.github/release-notes-2.5.2.md`. No more hearts when the kagune or a kakuja comes out. They were vanilla's damage-indicator particles (dark red hearts) that the original mod's fallback effects drew as "blood" and "mist" where the tails root at your lower back, on every limb tearing out and every landing impact; and a companion partner seeing your kagune also puffed hearts between you (behind you when they follow you). Rinkaku now throws the mod's own blood out of the back as each limb tears out.
+
+## 2.5.1 (HexGhoul): The finger crack flows: eased up and down, never a snap; a cleaner crack sound (testing)
+
+See `.github/release-notes-2.5.1.md`. The finger crack is now one flowing movement: the arm eases up over almost a second, the thumb presses into the finger, the finger cracks (a small flick of the hand, the head tipping with it), a moment held, then the arm eases back down to rest. On a player it starts and ends exactly where their body already was, instead of jumping to the pose. The crack sound is replaced with a cleaner, shorter knuckle-style crack.
+
+## 2.5.0 (HexGhoul): Final sweep: a new world never inherits the last one's timers; favours survive death; protocol 86 (testing)
+
+See `.github/release-notes-2.5.0.md`. Final sweep for multiplayer and single player. Quitting a world and opening another in the same game session no longer carries over the last world's timers (ability cooldowns, kagune locks, "presumed dead", a companion's recall home, villagers coming up to you, scene and talk cooldowns, a Thy Death or finger crack under way), which could otherwise lock things in the new world for hours. A villager's favour now survives your death, letting go of Z while disconnecting no longer errors, and the network protocol is bumped so a client and server on different builds are refused cleanly.
+
+## 2.4.9 (HexGhoul): Spouse cooking: a furnace needed, in front of it, a full routine; the food to the Food chest, handed to you at home, sometimes for a kiss (testing)
+
+See `.github/release-notes-2.4.9.md`. The spouse's cooking is redone. A furnace or smoker at home is now needed (a campfire, table or chest no longer counts). At the stove the spouse stands right in front of it (the way it faces) and goes through a whole routine: feeding the fire, stirring, seasoning, stirring, tasting off the spoon, stirring. When the food is done they carry it to the chest they labeled "Food" when sorting. If you're inside the home's grounds, they walk up and hand you your meal (holding it out), and sometimes, depending on their mood, ask for a kiss for it.
+
+## 2.4.8 (HexGhoul): Ken's one-arm finger crack with a real bone crack; Ken's pull-out for kakuja users; no regeneration hearts (testing)
+
+See `.github/release-notes-2.4.8.md`. Ken's finger crack now puts one arm out (the right, held out low with the elbow bent; the left hangs at his side) and is heard: a real bone crack fetched from the web (Oculus Audio Pack 01, CC BY 4.0, credited in the pack). A player who has learned a kakuja (Centipede, Full Kakuja, Dragon or Final Kakuja) now brings their kagune out his way: the same one-arm crack, then the kagune tears out of their back with blood thrown out behind and up, a ripping crunch, and everything close shoved away. The heart particles that puffed behind the player when Rinkaku came out are gone.
+
+## 2.4.7 (HexGhoul): villagers' favours: rare mini quests, more village talk (testing)
+
+See `.github/release-notes-2.4.7.md`. Village humans now ask for favours: rare mini quests that come up through the alert banner, raise their regard and pay out. More village talk too.
+
+## 2.4.6 (HexGhoul): Ukaku's Vortex: a slow, massive rolling blow (testing)
+
+See `.github/release-notes-2.4.6.md`. Ukaku's Vortex reworked to match the reference: a slow, massive, twisting blow instead of a fast horizontal tornado. The wing still leaves the shoulder blade, but now it rears up and comes down ahead, then rolls on along the ground in great upright loops, like the black mass in the reference, curling over each loop's top. The loops grow in as it lengthens, so it starts as a rising arch.
+
+## 2.4.5 (HexGhoul): Rinkaku's Thy Death: every tail hunts on its own (testing)
+
+See `.github/release-notes-2.4.5.md`. Rinkaku's Rapid Strike is now **Thy Death**. Hold Z and every tail you have out hunts on its own.
+
+## 2.4.4 (HexGhoul): better reactions to War and Peace (testing)
+
+See `.github/release-notes-2.4.4.md`. Better reactions to the final forms, War and Peace.
+
+## 2.4.3 (HexGhoul): NPCs swim like players, never stuck in water (testing)
+
+See `.github/release-notes-2.4.3.md`. NPCs swim like players now and don't get stuck in water. This covers every NPC in the mod: companions, children, villagers, wild ghouls, investigators and thralls. Before, they only bobbed at the surface, crawled at the game's slow mob pace, and nosed at the bank without getting out.
+
+## 2.4.2 (HexGhoul): Not That Easily: everything thinks you're dead (testing)
+
+See `.github/release-notes-2.4.2.md`. "You Thought You'd Get Rid of Me That Easily?" now makes everything think you're dead. That covers every path's version: Rinkaku's passive, Ukaku's, Graft's and Pale's mutations. Vanilla mobs already forgot you, but this mod's own fighters kept their own minds and came straight back for you.
+
+## 2.4.1 (HexGhoul): partners come to you far less; no false talk alerts (testing)
+
+See `.github/release-notes-2.4.1.md`. Partners come to you far less, and the false "wants to talk to you" alert is gone. Spouses and partners were walking up to kiss, hug, cling and take your hand almost constantly. The biggest cause was a 1-in-100 chance every tick of clinging to you whenever they stood near you in a soft mood, which made it every few seconds.
+
+## 2.4.0 (HexGhoul): final sweep: health kept across logins, children's halves only added (testing)
+
+See `.github/release-notes-2.4.0.md`. The final sweep after 2.3.2 to 2.3.9. All 34 test suites pass (millions of checks), the Minecraft API check passes, and two problems that would have shown up in play are fixed.
+
+## 2.3.9 (HexGhoul): an unwanted kiss let go, never stuck (testing)
+
+See `.github/release-notes-2.3.9.md`. Fix: a spouse could get stuck leaning in for a kiss you didn't want. She now never stays leaning in for long, and turning down a kiss she came asking for is no offence.
+
+## 2.3.8 (HexGhoul): a child can always be sent home (testing)
+
+See `.github/release-notes-2.3.8.md`. Fix: there was no button to send a child home. "Go home." only showed while the child was out away from home, never while it followed you around nearby. Now it's on the page whenever the child can walk.
+
+## 2.3.7 (HexGhoul): bubbles steady in bed; children's kagune shown, both parents' halves (testing)
+
+See `.github/release-notes-2.3.7.md`. Fixes: bubbles jumping over NPCs in bed, and children's kagune that couldn't be seen. Children now also have both parents' halves of the kagune.
+
+## 2.3.6 (HexGhoul): endgame ghouls far tougher: more health, more resistance (testing)
+
+See `.github/release-notes-2.3.6.md`. Endgame ghouls are far tougher. Before, a player with mastery 1000, every quest done and 100+ ghoul meat eaten still had only 20 health and took about 46% of every blow with the kagune out, so a Rank 7 investigator could nearly one-shot them. Now every factor counts for more, the quests count too, and health grows.
+
+## 2.3.5 (HexGhoul): mood kisses: each companion's own, the face kept clear (testing)
+
+See `.github/release-notes-2.3.5.md`. The mood kisses, redone: each companion has their own, and no kiss closes the arms in front of the face any more. Before, every kiss was the same pose on all three, and some brought both arms up crossed or together in front of her face. That's exactly where your face and first-person camera are, so it would have blocked your view.
+
+## 2.3.4 (HexGhoul): human partners: a real kiss, no fear, a ring (testing)
+
+See `.github/release-notes-2.3.4.md`. Village human partners now get the full romance the companions have.
+
+## 2.3.3 (HexGhoul): the male chest stays in every form (testing)
+
+See `.github/release-notes-2.3.3.md`. Fix: a male player's chest vanished whenever he transformed. The build was switched off in every form (Ukaku's kakuja, Graft's hide, War, Peace and the Dragon's turning), so the chest dropped back to the plain torso. It now stays in every form, and each form's torso armour is widened to fit over it instead: about 10% wider and 28% deeper, centred on the torso, so it covers the chest and the jacket layer.
+
+## 2.3.2 (HexGhoul): Rinkaku strikes go round the right side again (testing)
+
+See `.github/release-notes-2.3.2.md`. Fix: Rinkaku strikes came round the wrong side. A strike from your right tail swept round through your left side, and the other way round, in every Rinkaku form. 2.1.6 changed which side a tail is "on" to stop tails swinging across on their way back. That side also feeds the code that steers a strike round your body, and that code's "+1" is your left even though it calls it right, so every strike passing you went round the opposite side. Strikes now go round the tail's own side again. The 2.1.6 fix for tails swinging across on their way back is kept.
+
+## 2.3.1 (HexGhoul): the mood kisses rendered; possessive, giddy and tender reworked (testing)
+
+See `.github/release-notes-2.3.1.md`. The mood kisses (2.2.4) are rendered for the first time, and three of them are reworked after seeing the renders. Possessive and tender looked almost the same (both arms straight out). Giddy's "hands clasped at the chest" just looked like arms hanging, because a mob's arms don't bend at the elbow.
+
+## 2.3.0 (HexGhoul): grown daughters take their mother's height (testing)
+
+See `.github/release-notes-2.3.0.md`. Grown daughters now take their mother's height, and each one varies a little. A daughter grows up to her mother's size: Eto's, Touka's, or a woman player's (the female body). She then comes out up to 4% taller or shorter than her mother, by her own genes, so sisters aren't all the same height. Before, every grown daughter was drawn at one fixed size.
+
+## 2.2.9 (HexGhoul): investigators give mastery and rations; Dawn a rare prize (testing)
+
+See `.github/release-notes-2.2.9.md`. CCG investigators now pay out properly. Every one you bring down as a ghoul gives mastery, and now and then one leaves a field ration: human food the cookbook's recipes use. The White Reaper's Dawn is now a rare prize instead of a sure drop.
+
+## 2.2.8 (HexGhoul): quests complete all unlocks everything (testing)
+
+See `.github/release-notes-2.2.8.md`. `/kagune quests complete all` now unlocks everything. Besides finishing every open quest, it opens every gate, including the ones a companion teaches: the Centipede, the Full Kakuja, the Dragon, Crystal Wings, Gatling, the first and final Ukaku kakujas, and every mutation's gate. Nobody sends you to a teacher any more.
+
+## 2.2.7 (HexGhoul): a command to marry a companion outright (testing)
+
+See `.github/release-notes-2.2.7.md`. New operator command: `/kagune eto marry`, `/kagune touka marry` and `/kagune ken marry` (with an optional player after it, like `max`). It marries you to that companion at once and fills everything about the relationship.
+
+## 2.2.6 (HexGhoul): village humans come up to you (testing)
+
+See `.github/release-notes-2.2.6.md`. Village humans now come up to you on their own. A villager who knows you will sometimes notice you (within 12 blocks, in sight), walk over and say something. Why they come, how often, and what they say depend on their temper (all 12) and how close you are. Partners come most. Strangers never do.
+
+## 2.2.5 (HexGhoul): a male player's chest a little smaller (testing)
+
+See `.github/release-notes-2.2.5.md`. A male player's chest is a little smaller. The upper chest no longer stands out as far: it's broader than the waist, as before, but only 60% as far out past the torso as the White Reaper's, across the shoulders, in front and behind. The arms hang a little closer in to match. The White Reaper keeps his build exactly as it was.
+
+## 2.2.4 (HexGhoul): a kiss for every mood (testing)
+
+See `.github/release-notes-2.2.4.md`. A kiss for every mood. It works the same as before: they lean in and wait, a tap of Shift is a quick kiss, holding makes them blush, and holding longer makes them pull you in. Now each mood gives its own kiss: how they wait, how long, what they say, how they move, and what they do after. A kiss is never turned down any more. Ask an angry partner for one and you get an angry one.
+
+## 2.2.3 (HexGhoul): a partner's mood shapes what they do (testing)
+
+See `.github/release-notes-2.2.3.md`. A partner's mood now shapes what they do, not just what they say. Mad or jealous, they never come up asking for a kiss, and they turn yours down. Lonely, affectionate or clingy, they come for kisses far more often. Sleepy or starving, less. Once a sulk or a jealous spell has passed, they come to you on their own to make it up.
+
+## 2.2.2 (HexGhoul): a grown half-human child's kakuja (testing)
+
+See `.github/release-notes-2.2.2.md`. A ghoul's and a human's child, once grown (adult), uses its kagune's kakuja in a fight. A Rinkaku child grows two centipede legs out of its back beside its tail, which strike what's in reach by turns. An Ukaku child's wings become Ukaku's first kakuja, and its blows land harder. Other children still never have a kakuja.
+
+## 2.2.1 (HexGhoul): a ghoul's and a human's child (testing)
+
+See `.github/release-notes-2.2.1.md`. A child of a ghoul and a human (a human player and Eto, Touka or Ken) is now rarely carried to term. 7 in 10 such pregnancies are lost, somewhere in the first half. The one that lives is born a one-eyed ghoul, always, with the ghoul parent's kagune whole. It has 60% more health, 50% harder blows (fists and kagune) and 30% more speed than any other child, and it fights with the White Reaper's dashes. Its kakuja once grown (Ukaku's first kakuja, Rinkaku's centipede legs) comes in the next version.
+
+## 2.2.0 (HexGhoul): tolerance, and sorry is always there (testing)
+
+See `.github/release-notes-2.2.0.md`. Companions are far more tolerant, and you can always say sorry. A first accidental hit or a missed kiss is brushed off with a word. Only more of them close together put your partner out, and then for 20 seconds to a minute, never the old 5 minutes. When they're put out, talking to them opens "I'm sorry." / "It was an accident. I swear." and that forgives you on the spot.
+
+## 2.1.9 (HexGhoul): Peace and War break the nerve of whoever faces them (testing)
+
+See `.github/release-notes-2.1.9.md`. Rinkaku's final kakuja (Peace or War) now breaks the nerve of whoever faces it. Doves of Rank 0 to 4 and the two weaker tiers of wild ghouls run from it, and keep running while it's in sight. Rank 5 to 7 Doves and the strongest wild ghouls stand and fight, but tremble the whole time, and every few seconds their nerve gives and they back off before coming again. Rank 8 and above (Special Class, the White Reaper) stand as before.
+
+## 2.1.8 (HexGhoul): Ken asks for proof before a final kakuja (testing)
+
+See `.github/release-notes-2.1.8.md`. Ken's final-kakuja lessons are harder. Before he teaches the Full Kakuja, the Dragon or Ukaku's final kakuja, he asks you to prove you're ready. The proof is set the moment you ask, tracked on the action bar, and the lesson is taught (or the trial lived through) once it's done.
+
+## 2.1.7 (HexGhoul): the Reaper's dashes for Ukaku's final kakuja (testing)
+
+See `.github/release-notes-2.1.7.md`. Ukaku's final kakuja gets the White Reaper's dashes: tap sprint twice to dash the way you're moving. You have 3 charges, the action bar shows "Dash 2/3" as one is spent, and one comes back every 5 seconds until you're at 3/3 again. No kakuja vanishes any more. Also, after each release, only the 5 newest releases and the 5 newest action runs are kept.
+
+## 2.1.6 (HexGhoul): Rinkaku tails no longer swing across on their way back (testing)
+
+See `.github/release-notes-2.1.6.md`. Fix: Rinkaku tails no longer swing across the back after an attack or when the kagune comes out. Each tail's rest spot was on the opposite side from where the original's own motion carries that tail. So every time a tail eased back into rest (after a blow, when transforming), it crossed over to the other side, which looked like the tails rotating or swapping. Once it settled the picture looked right, because the rest shape is symmetric. The kagune's model, shape and rest position are unchanged. Each tail now rests on its own side.
+
+## 2.1.5 (HexGhoul): courtships out of the mod's own world (testing)
+
+See `.github/release-notes-2.1.5.md`. The companions' courtships now come from the mod's own world, not generic chores. The CCG's Doves (some of a given rank), wild ghouls of the Pack, a ghoul preying on a human village, a wild ghoul made your ally, village humans who come to care for you or tell you a secret, a walk through a human village at night, a drink from Touka's cookbook, ghoul meat. Every chapter's scene is rewritten to match.
+
+## 2.1.4 (HexGhoul): romance for every personality (testing)
+
+See `.github/release-notes-2.1.4.md`. Romance with village humans now has words for every personality. You can flirt with anyone (strangers, friends and close friends each answer differently). A partner gets conversations of their own. Kisses, hugs and "I love you" have more variety.
+
+## 2.1.3 (HexGhoul): every villager is someone (testing)
+
+See `.github/release-notes-2.1.3.md`. Every village human is now someone of their own. Each has a trade, a family, a pastime, an odd habit, a fear, a dream, a secret, a favourite gift and a view of ghouls, all fixed for life, and says them in their personality's voice. A new "Talk a while." page lets you ask about all of it. Getting to know them warms them to you, and their trade decides what they sell.
+
+## 2.1.2 (HexGhoul): each companion's own courtship, and dates (testing)
+
+See `.github/release-notes-2.1.2.md`. Eto, Touka and Ken no longer share the same three errands (three books, ten kills at night, a flower). Each now has their own five-chapter courtship. Every chapter asks for something only that companion would ask for, and closes with a written scene that has choices, played the moment the task is done. Once you're together, you can take them on dates.
+
+## 2.1.1 (HexGhoul): final forms rest five minutes: Exhaustion (testing)
+
+See `.github/release-notes-2.1.1.md`. The final forms (War and Peace) now have a 5-minute cooldown, shown as a new custom effect, Exhaustion, with its own icon: a kakugan half shut under a heavy, cracked lid, its red dimmed, a drop of RC running from it. Once a final form is let go (taken off, run dry, or the player killed in it), Exhaustion runs for 5 minutes, and calling War or Peace meanwhile is refused with the time left ("Exhausted: War can't be called again for 4:12").
+
+## 2.1.0 (HexGhoul): kakuja legs and mask in the kagune's colours (testing)
+
+See `.github/release-notes-2.1.0.md`. A Rinkaku kakuja's centipede legs and mask now take on the kagune's colour, blending with it while staying distinct. Before, both were a fixed plum. The centipede's segments are always greys, black and white: charcoal plates with pale grey and white rims, or bone-white plates for a kagune too dark to stand apart from them. They carry only a breath of the kagune's hue. The glowing flesh between the plates is the kagune's own colour. The mask has the same grey shell leaning a little more toward the kagune's colour, with the kagune's dark in its edges. The red kakugan lens stays. From this version on, the last number never reaches 10 (after x.y.9 comes x.(y+1).0), the owner's rule.
+
+## 2.0.51 (HexGhoul): Rinkaku tails fixed and alive (testing)
+
+See `.github/release-notes-2.0.51.md`. The Rinkaku tails are fixed and alive. The texture breakage the owner showed in game is gone. At rest the tails take the shape from the showcase render instead of the original chain's coiled, twitching rest. They stretch and draw in, swells run along them, their middles breathe, and the veins are fine and realistic.
+
+## 2.0.50 (HexGhoul): Rinkaku scales, leaf shape and more glow (testing)
+
+See `.github/release-notes-2.0.50.md`. The Rinkaku tails are reworked as asked: realistic scales, thin where they leave the body, and more glowing veins.
+
+## 2.0.49 (HexGhoul): the White Reaper fights as a tactician (testing)
+
+See `.github/release-notes-2.0.49.md`. The White Reaper fights as a tactician. Each fight he reads his opponent and picks a play ahead of the moves every investigator has: a backflip launched as Up We Go launches one, firing the volley from mid-air; closing in on openings; vaulting over a guard; shooting a target out of the air.
+
+## 2.0.48 (HexGhoul): the White Reaper's five-ball volley (testing)
+
+See `.github/release-notes-2.0.48.md`. The White Reaper can fire a five-ball volley from Dawn. All five lightning balls leave its point together, open out into a ring around the line he aimed along (1.6 blocks across, 1.0 up and down, one ball at the top and the rest evenly round), then close in on the spot he aimed at from every side at once: a pincer. Standing still gets you caught, while a good step aside slips it. Past that spot they cross and spread again. Each ball carries 40% of a single shot, so all five on one target is twice a single ball. From 7 blocks or more, half his shots are the volley.
+
+## 2.0.47 (HexGhoul): Dawn bigger and smoother (testing)
+
+See `.github/release-notes-2.0.47.md`. Dawn, the White Reaper's lance, is bigger and smoother. It's drawn about 20% bigger in the hand (scale 0.74 to 0.9). Its spike is half as thick again all along and meets the cone guard without a step; before, it read as a needle beside the guard. The spike and grip are 16-sided (were 8) in finer steps. Same silhouette as before: a black lance with a flared, gold-banded guard, a gun-sword style grip with its hooked knuckle guard, and a spiked pommel.
+
+## 2.0.46 (HexGhoul): male players get the White Reaper's build (testing)
+
+See `.github/release-notes-2.0.46.md`. Players who pick male on the gender screen now have the White Reaper's build. The upper torso is drawn a little bigger over their own: broader across the shoulders and chest, the chest standing out in front of the belly, tapering into the normal waist, in their own skin and jacket layer. The arms hang slightly further out to clear it. Players who haven't picked a gender look as before, and female players keep their figure.
+
+## 2.0.45 (HexGhoul): the White Reaper's build (testing)
+
+See `.github/release-notes-2.0.45.md`. The White Reaper has a heavier build. His upper torso is a little bigger than the part that meets his legs: broader across the shoulders and chest, with the chest standing about a pixel out in front of his belly and a touch fuller at the back, tapering into his normal waist (a V-shape). No spheres or sculpted muscle: it's his own torso drawn again a little larger, in his own skin and coat layer. His arms hang slightly further out to clear it.
+
+## 2.0.44 (HexGhoul): the Reaper's pocket hand on a straight arm (testing)
+
+See `.github/release-notes-2.0.44.md`. Fix for 2.0.43: the White Reaper's free hand now actually goes into his pocket in game. Investigators are drawn on vanilla's player model, which doesn't bend elbows or knees, but 2.0.43's pocket arm relied on a bent elbow, so in game it would have hung off at an angle. The arm is now solved for a straight arm: angled in to his hip, the hand sunk into the pocket at its front.
+
+## 2.0.43 (HexGhoul): the White Reaper at ease (testing)
+
+See `.github/release-notes-2.0.43.md`. The White Reaper has his own idle when he stands around with his case shut, in place of the regular investigators' one. He leans well back from the hips with his hip cocked and his weight sunk on the leg that holds the case. His other leg is loose, out in front and turned out. His chest is turned open, his head cocked with his chin a touch up so he looks down at you, and his free hand is in his coat pocket. It's a pose: only a slow breath, and no glancing about.
+
+## 2.0.42 (HexGhoul): Rinkaku Blocking with perfect blocks (testing)
+
+See `.github/release-notes-2.0.42.md`. Rinkaku has a new move, Blocking, on the right click: hold it with the tails out and they swing up off your back, round your shoulders and cross in front of you (an X per pair, one pair above the next), while you raise your forearms over your face in a ready stance. Every blow from in front or the sides is stopped completely. Too many hits break the guard: the tails are thrown back, you are knocked back and the block goes on a 5 s cooldown. A perfect block (the blow lands within 3 ticks, 0.15 s, of pressing) causes an impact, gives you no knockback and staggers the attacker for 1.2 s: they are stunned and pushed off, and can't hurt anything, so you get a free hit.
+
+## 2.0.41 (HexGhoul): Rinkaku tails' living material (testing)
+
+See `.github/release-notes-2.0.41.md`. Rinkaku tails now have a living material at the level of Ukaku's wings: glowing veins running through the flesh with a pulse of RC flowing from the body to the point, a glossy rim toward the silhouette, a wet glint where the light catches them, a slightly clear skin seen edge-on (the veins on the far side show faintly through), a hotter, glowing root where they leave the back and darker points. All in the player's kagune colour.
+
+## 2.0.40 (HexGhoul): where the Rinkaku tails tear out (testing)
+
+See `.github/release-notes-2.0.40.md`. While a Rinkaku's tails are out, the skin of the lower back shows where they tear out, as in the owner's reference: a glowing opening with a torn rim and red veins branching out from it across the back, in the kagune's own colour.
+
+## 2.0.39 (HexGhoul): Rinkaku tails as in the reference (testing)
+
+See `.github/release-notes-2.0.39.md`. Rinkaku tails are drawn as the owner's reference picture has them: broad, flat ribbons that swell a little past the back and taper to a point, bright at the middle of each face and deep at the edges with darker smudges along them, a light stripe running along each face near one edge, and thin chevrons all over them, black and light, pointing back toward the body. Every colour follows the player's own kagune colour.
+
+## 2.0.38 (HexGhoul): Rinkaku tails grow out of the back (testing)
+
+See `.github/release-notes-2.0.38.md`. Rinkaku tails now grow out of the body: each tail's root is sunk inside the lower back (its start hidden in the body) and its first 0.4 blocks leave the back as a rigid base, fanned out to its own side, before it blends into the motion it always had. Before, every tail started at a point hanging just behind the hips and fell from there like a rope.
+
+## 2.0.37 (HexGhoul): Rinkaku's guard removed (testing)
+
+See `.github/release-notes-2.0.37.md`. Rinkaku's C move, the tendril guard, is gone: C does nothing on the Rinkaku path any more and the guard is no longer listed in the ability guide. Rinkaku's defence becomes its right click (the block, in a coming version).
+
+## 2.0.36 (HexGhoul): four new villager tempers (testing)
+
+See `.github/release-notes-2.0.36.md`. Villagers have four new tempers, for twelve in all: Playful (teasing, games and pranks), Stoic (calm, few words, steady), Sarcastic (dry wit), and Romantic (a hopeless romantic, flowery and sincere). Each has its own lines for everything a villager says and its own body language.
+
+## 2.0.35 (HexGhoul): who villagers fall for (testing)
+
+See `.github/release-notes-2.0.35.md`. Every villager, man or woman, now has their own idea of who they fall for and what they look for in a partner. You can romance male and female villagers alike, as long as you're who they fall for; ask "What's your type?" to find out.
+
+## 2.0.34 (HexGhoul): village women's bodies (testing)
+
+See `.github/release-notes-2.0.34.md`. Village women now have the female body the game already gives its CCG women and grown daughters: hips and thighs shaped, a wide-painted skin's arms drawn slim, the bust in her own skin (and its second layer), bouncing as she moves, drawn a little shorter and slimmer than the men.
+
+## 2.0.33 (HexGhoul): the White Reaper's ground tendril (testing)
+
+See `.github/release-notes-2.0.33.md`. The White Reaper has a new move only he uses: he raises Dawn and drives it point first into the ground, the spot where his prey stood is marked on the ground for 0.8 s, then a huge black tendril bursts up out of it. Step off the mark in time and it misses.
+
+## 2.0.32 (HexGhoul): Dawn's lightning in a player's hand (testing)
+
+See `.github/release-notes-2.0.32.md`. A player holding Dawn fires its yellow lightning ball with right click: the point opens, the ball gathers there for a quarter of a second while the lance comes up onto your aim, then it flies and explodes on impact with the same lightning effects as the White Reaper's. Shift + right click folds Dawn back into its case.
+
+## 2.0.31 (HexGhoul): Dawn's own M1s (testing)
+
+See `.github/release-notes-2.0.31.md`. Dawn has its own three M1s, made for a three-block lance held in one hand at the hip: a wide level sweep, a rising backhand, and a lunging thrust as the finisher. Before, it borrowed the katana's two-handed chops, and every swing ended with its point in the ground. The White Reaper and any player holding Dawn swing it the same way.
+
+## 2.0.30 (HexGhoul): Dawn smoothed (testing)
+
+See `.github/release-notes-2.0.30.md`. Dawn is round where it was square: its guard is a 16-sided cone in fine steps (it was an 8-sided one in 12 big steps), and its spike, grip and butt are 8-sided along smooth profiles, with the spike's two ridges turning about it along its thicker middle.
+
+## 2.0.29 (HexGhoul): /kagune reaper, and the Reaper turns up once in a while (testing)
+
+See `.github/release-notes-2.0.29.md`. `/kagune reaper` (operators) puts the White Reaper five blocks ahead of you for testing; in the wild he now turns up about once in a hundred in-game days instead of about once in 660.
+
+## 2.0.28 (HexGhoul): the White Reaper's own skin (testing)
+
+See `.github/release-notes-2.0.28.md`. The White Reaper always wears the owner's own skin, on the slim arms it is painted for; no other investigator can roll it.
+
+## 2.0.27 (HexGhoul): wild ghouls' kagune always drawn (testing)
+
+See `.github/release-notes-2.0.27.md`. Wild ghouls' kagune no longer depends on their body's draw call being noticed: Rinkaku tails and Ukaku wings are drawn for every living wild ghoul with its kagune out within 48 blocks, and one ghoul failing to draw never hides the others.
+
+## 2.0.26 (HexGhoul): White Reaper human-meat loot (testing)
+
+See `.github/release-notes-2.0.26.md`. The White Reaper drops raw Human Meat on death using the existing human loot rule.
+
+## 2.0.25 (HexGhoul): Dawn lightning (testing)
+
+See `.github/release-notes-2.0.25.md`. The White Reaper now points Dawn at distant targets and fires an explosive yellow lightning ball.
+
+## 2.0.24 (HexGhoul): Cap legacy investigator pairs at Rank 9 (testing)
+
+See `.github/release-notes-2.0.24.md`. A pair loaded from an older save can include a former Rank 10. Its superior now caps correctly at Rank 9 and keeps the superior’s health and damage bonus. Protocol 75 is unchanged.
+
+## 2.0.23 (HexGhoul): White Reaper front kick (testing)
+
+See `.github/release-notes-2.0.23.md`. The White Reaper can mix a telegraphed front kick into Dawn’s melee strings.
+
+## 2.0.22 (HexGhoul): Dawn and its black briefcase (testing)
+
+See `.github/release-notes-2.0.22.md`. The White Reaper now carries Dawn, a black lance swung as a sword.
+
+## 2.0.21 (HexGhoul): White Reaper encounter (testing)
+
+See `.github/release-notes-2.0.21.md`. Rank 10 is now the White Reaper, a solo encounter with a single world-wide slot.
+
+## 2.0.20 (HexGhoul): an investigator's superior is always the stronger (testing)
+
+See `.github/release-notes-2.0.20.md`: a pair's leader ranks above its partner and has a superior's edge (more health, harder hits) on top.
+
+## 2.0.19 (HexGhoul): fix the crash while the game loads (testing)
+
+See `.github/release-notes-2.0.19.md`: the quinques' model frames are registered through Forge's reflection helper (the vanilla method is private; the launch did not make it public), and a failure there can no longer stop the game.
+
+## 2.0.18 (HexGhoul): CCG agents dash in zigzags, more by rank (testing)
+
+See `.github/release-notes-2.0.18.md`: chained dashes, each the other way, 1 at Rank 0 up to 6 at Rank 10, faster, likelier and sooner by rank.
+
+## 2.0.17 (HexGhoul): CCG ranks 0 to 10, stronger by rank (testing)
+
+See `.github/release-notes-2.0.17.md`: Rank 0 to 10, each with more health, speed, armour, harder hits and shorter rests; 8 to 10 rare and dangerous.
+
+## 2.0.16 (HexGhoul): projectile trails in the kagune's colour (testing)
+
+See `.github/release-notes-2.0.16.md`: every Ukaku particle (trails, the vortex's, impacts, bursts) and War's spike embers in the shooter's kagune colour.
+
+## 2.0.15 (HexGhoul): Ukaku's shots no longer burn (testing)
+
+See `.github/release-notes-2.0.15.md`: every Ukaku projectile (players', children's, wild ghouls') only hurts and pushes; fire moves that aren't shots are unchanged.
+
+## 2.0.14 (HexGhoul): villagers sell seeds and farming goods too (testing)
+
+See `.github/release-notes-2.0.14.md`: seven wares each: a staple, two foods, two farming goods (seeds, bone meal, saplings, cane, hay, a hoe, a bucket, a composter), two basic goods.
+
+## 2.0.13 (HexGhoul): trading with village humans (testing)
+
+See `.github/release-notes-2.0.13.md`: "Let's trade." on a villager's talk page; mostly the cookbook's non-meat ingredients plus basic goods, for the emeralds in your hand; they buy crops and plain goods.
+
+## 2.0.12 (HexGhoul): clashes shake the screen (testing)
+
+See `.github/release-notes-2.0.12.md`: every clash shakes the view hard (about 6 degrees, the hardest about 10), harder the nearer.
+
+## 2.0.11 (HexGhoul): bigger, louder clashes; the weaker one flies (testing)
+
+See `.github/release-notes-2.0.11.md`: the clash sound louder and layered, its wind bigger; the weaker side pushed further; a 2.5x gap sends it off like the Speed Kick, through blocks, down and stunned.
+
+## 2.0.10 (HexGhoul): the release of 2.0.8 and 2.0.9's changes (testing)
+
+See `.github/release-notes-2.0.10.md`: the build's sound check now allows the stove's crackle you approved; this jar carries the cooking and chest sorting.
+
+## 2.0.9 (HexGhoul): your spouse sorts the house's chests by kind (testing)
+
+See `.github/release-notes-2.0.9.md`: chests labelled Food, Blocks, Tools & Weapons, Armor, Ores & Minerals, Plants & Seeds, Mob Drops and Whatever; your own named chests left alone.
+
+## 2.0.8 (HexGhoul): cooking at the stove takes its time, and a task is finished first (testing)
+
+See `.github/release-notes-2.0.8.md`: three rounds of stirring at the stove with its crackle, no turning away, chores finished before her own errands.
+
+## 2.0.7 (HexGhoul): no more teleporting home; out by day, home by night (testing)
+
+See `.github/release-notes-2.0.7.md`: the spouse and children walk home instead of being put there; farther out by day, home by night; put home only when stuck.
+
+## 2.0.6 (HexGhoul): children have a chance at one kagune or both (testing)
+
+See `.github/release-notes-2.0.6.md`: parents of two kinds give 40% the mother's, 40% the father's, 20% both; why Touka and an Ukaku player only ever had Ukaku children.
+
+## 2.0.5 (HexGhoul): other players and someone else's children, never dateable (testing)
+
+See `.github/release-notes-2.0.5.md`: a real talk page for players who aren't the parents (by age and temper; babies and toddlers never coherent; gentle choices only), parents-only things kept for parents, children frightened by a stranger's kagune, and a test that no child is ever dateable.
+
+## 2.0.4 (HexGhoul): babies after the first, and the village clears its ground (testing)
+
+See `.github/release-notes-2.0.4.md`: the night for another child comes at the shared bed; the world's own ground over the village is cleared as it is placed.
+
+## 2.0.3 (HexGhoul): children grow up; grown daughters get the woman's body (testing)
+
+See `.github/release-notes-2.0.3.md`: a grown-up stage after the teen years (from day 16, protocol 73); grown daughters drawn with Touka's adult female body; no younger stage ever has it.
+
+## 2.0.2 (HexGhoul): villages, Anteiku, the Cyber Tower and the library in many more biomes (testing)
+
+See `.github/release-notes-2.0.2.md`: all four structures beyond plains (meadows, cherry groves, savannas, snowy plains, forests and taigas for the buildings, and Biomes O' Plenty's open biomes), a gentler land check for the village, villages a little closer together.
+
+## 2.0.1 (HexGhoul): the crash fixed, the new village, on dry land (testing)
+
+See `.github/release-notes-2.0.1.md`: the speech-bubble crash fixed (and bubbles can never crash the game), the right face on every talk screen, the new village from the owner's schematic (`hexkagune:village`, 26 villagers, 6 investigators) only on dry, flat land, investigator pairs about once a day.
+
+## 2.0.0 (HexGhoul): Release 2.0
+
+See `.github/release-notes-2.0.0.md`: the living tank (resistance, not health), the Brick Village with 16 villagers (talk, romance, gestures, dates), blinking, 136 new children's looks, CCG ranks, the bug/lag and animation passes.
+
+## 1.3.83 (HexGhoul): animation pass: six broken poses fixed (testing)
+
+See `.github/release-notes-1.3.83.md`.
+
+## 1.3.82 (HexGhoul): bug and lag pass (testing)
+
+See `.github/release-notes-1.3.82.md`.
+
+## 1.3.81 (HexGhoul): twice the villagers, never two alike in a village (testing)
+
+See `.github/release-notes-1.3.81.md`.
+
+## 1.3.80 (HexGhoul): ghouls are living tanks: resistance, not health (testing)
+
+See `.github/release-notes-1.3.80.md`.
+
+## 1.3.79 (HexGhoul): 136 new looks for the children: other hair and eye colours (testing)
+
+See `.github/release-notes-1.3.79.md`.
+
+## 1.3.78 (HexGhoul): dates with a villager: walking hand in hand through the village (testing)
+
+See `.github/release-notes-1.3.78.md`.
+
+## 1.3.77 (HexGhoul): villagers' gestures: kisses, hugs, blushes and more (testing)
+
+See `.github/release-notes-1.3.77.md`.
+
+## 1.3.76 (HexGhoul): villagers and children blink (testing)
+
+See `.github/release-notes-1.3.76.md`.
+
+## 1.3.75 (HexGhoul): the villagers' own cute skins (testing)
+
+See `.github/release-notes-1.3.75.md`.
+
+## 1.3.74 (HexGhoul): romance with the villagers, and a ghoul must confess first (testing)
+
+See `.github/release-notes-1.3.74.md`.
+
+## 1.3.73 (HexGhoul): talk to the villagers, each with a name and a personality of their own (testing)
+
+See `.github/release-notes-1.3.73.md`.
+
+## 1.3.72 (HexGhoul): the Brick Village's people trade and chat in the streets (testing)
+
+See `.github/release-notes-1.3.72.md`.
+
+## 1.3.71 (HexGhoul): the Brick Village spawns in plains, with its people living in it (testing)
+
+See `.github/release-notes-1.3.71.md`.
+
+## 1.3.70 (HexGhoul): CCG ranks, they attack only what shows itself, and protecting humans comes first (testing)
+
+See `.github/release-notes-1.3.70.md`.
+
+## 1.3.69 (HexGhoul): the ghouls' arm blade, sharper and less cubic (testing)
+
+See `.github/release-notes-1.3.69.md`.
+
+## 1.3.68 (HexGhoul): wild ghouls prowl and hunt humans at night, and hide what they are by day (testing)
+
+See `.github/release-notes-1.3.68.md`.
+
+## 1.3.67 (HexGhoul): new, more dramatic runs for War and Peace (testing)
+
+See `.github/release-notes-1.3.67.md`.
+
+## 1.3.66 (HexGhoul): War's back tendrils come alive, like your other kagunes' tentacles (testing)
+
+See `.github/release-notes-1.3.66.md`.
+
+## 1.3.65 (HexGhoul): everyone fears War, and every final kakuja gets its own reactions (testing)
+
+See `.github/release-notes-1.3.65.md`.
+
+## 1.3.64 (HexGhoul): NPCs see War and Peace when they are worn, and the Rinkaku and Ukaku final kakujas count as final (testing)
+
+See `.github/release-notes-1.3.64.md`.
+
+## 1.3.63 (HexGhoul): the same big move meeting itself cancels both with a big impact (testing)
+
+See `.github/release-notes-1.3.63.md`.
+
+## 1.3.62 (HexGhoul): a clash is as big as the two blows were hard, and a hard one shakes the ground (testing)
+
+See `.github/release-notes-1.3.62.md`.
+
+## 1.3.61 (HexGhoul): the owner's new clash sounds on every clash (testing)
+
+See `.github/release-notes-1.3.61.md`.
+
+## 1.3.60 (HexGhoul): two fixes to family talks, found reviewing 1.3.53 to 1.3.59 (testing)
+
+See `.github/release-notes-1.3.60.md`.
+
+## 1.3.59 (HexGhoul): big brothers and sisters play with the baby (testing)
+
+See `.github/release-notes-1.3.59.md`.
+
+## 1.3.58 (HexGhoul): brothers and sisters play hide and seek (testing)
+
+See `.github/release-notes-1.3.58.md`.
+
+## 1.3.57 (HexGhoul): they act out what they say: gestures and poses with every line (testing)
+
+See `.github/release-notes-1.3.57.md`.
+
+## 1.3.56 (HexGhoul): Eto's child moves its body when it fights with her flesh (testing)
+
+See `.github/release-notes-1.3.56.md`.
+
+## 1.3.55 (HexGhoul): one escort for a toddler that wandered off (testing)
+
+See `.github/release-notes-1.3.55.md`.
+
+## 1.3.54 (HexGhoul): a game of tag stays in the yard (testing)
+
+See `.github/release-notes-1.3.54.md`.
+
+## 1.3.53 (HexGhoul): nobody walks away mid-conversation (testing)
+
+See `.github/release-notes-1.3.53.md`.
+
+## 1.3.52 (HexGhoul): speech bubbles take turns and keep out of each other's way (testing)
+
+See `.github/release-notes-1.3.52.md`.
+
+## 1.3.51 (HexGhoul): brothers and sisters: they talk, tease, scheme, squabble, play tag, mind the little ones and fight side by side (testing)
+
+See `.github/release-notes-1.3.51.md`.
+
+## 1.3.50 (HexGhoul): Eto's child fights with her flesh, and badly hurt its arm mutates (no kakuja) (testing)
+
+See `.github/release-notes-1.3.50.md`.
+
+## 1.3.49 (HexGhoul): parenting: the companion parent fetches a wandering child, stops a rampage, and scolds it, back and forth in their bubbles (testing)
+
+See `.github/release-notes-1.3.49.md`.
+
+## 1.3.48 (HexGhoul): children use their parents' whole kit: crystal wings and spikes, the tentacle's grab, throw and crush, back and front flips (never a kakuja) (testing)
+
+See `.github/release-notes-1.3.48.md`.
+
+## 1.3.47 (HexGhoul): children are as tough as their parents: they grow into the stronger parent's health and more, and heal on their own (testing)
+
+See `.github/release-notes-1.3.47.md`.
+
+## 1.3.46 (HexGhoul): a child of a Rinkaku and an Ukaku parent is born with one of three looks: over either shoulder, or a tail with both wings (testing)
+
+See `.github/release-notes-1.3.46.md`.
+
+## 1.3.45 (HexGhoul): a child's tentacle leans out to the right, its wing on the left: the back isn't crowded any more (testing)
+
+See `.github/release-notes-1.3.45.md`.
+
+## 1.3.44 (HexGhoul): fix: a Rinkaku child has one real Rinkaku tentacle, not two graft tails (testing)
+
+See `.github/release-notes-1.3.44.md`.
+
+## 1.3.43 (HexGhoul): children inherit their parents' kagune, part 1: Rinkaku tails and Ukaku wings, colour from one parent (testing)
+
+See `.github/release-notes-1.3.43.md`.
+
+## 1.3.42 (HexGhoul): Home Living, part 3: your partner cooks the cookbook's dishes at home (testing)
+
+See `.github/release-notes-1.3.42.md`.
+
+## 1.3.41 (HexGhoul): Home Living, part 2: Touka's cookbook (trade it for two cocoa beans) and its illustrated book (testing)
+
+See `.github/release-notes-1.3.41.md`.
+
+## 1.3.40 (HexGhoul): Home Living, part 1: the ghoul kitchen (66 foods with their own icons, recipes and effects), The Human, mutants, endless ghoul-meat growth, homes by biome (testing)
+
+See `.github/release-notes-1.3.40.md`.
+
+## 1.3.39 (HexGhoul): fixes: NPCs stay put while you talk to them; nobody suffocates in blocks while holding your hand; wild ghouls fight back in creative, so their kagune shows (testing)
+
+See `.github/release-notes-1.3.39.md`.
+
+## 1.3.38 (HexGhoul): real speech bubbles: white, rounded, outlined, with a tail; thought clouds for actions; a "z Z z" cloud over sleepers (testing)
+
+See `.github/release-notes-1.3.38.md`.
+
+## 1.3.37 (HexGhoul): a sleeping spouse or child only half wakes when you touch them, drowsy and in their own way; a parent gets up for a CCG investigator by the house too (testing)
+
+See `.github/release-notes-1.3.37.md`.
+
+## 1.3.36 (HexGhoul): a new kagune only wild ghouls have: the arm blade, a Koukaku that spirals down the arm into a blade, with its own wind-up, three-cut string, guard and sprint (testing)
+
+See `.github/release-notes-1.3.36.md`.
+
+## 1.3.35 (HexGhoul): random colours for every path: Ukaku's wings, their crystal forms and every shard in your kagune's colour; wild ghouls get random kagune colours too (testing)
+
+See `.github/release-notes-1.3.35.md`.
+
+## 1.3.34 (HexGhoul): every Rinkaku kagune gets a random colour of its own; /kagune color reroll for another (testing)
+
+See `.github/release-notes-1.3.34.md`.
+
+## 1.3.33 (HexGhoul): the crystal launcher rebuilt as a real gun with a rifle hold and twice the fire rate; both hands stay on two-handed quinques through every combo; new M1s for every quinque; a tap of right click folds a quinque back into its case; investigators dash left and right with brief afterimages (testing)
+
+See `.github/release-notes-1.3.33.md`.
+
+## 1.3.32 (HexGhoul): the airplane spins the right way on NPC parents; kids never hover after a moment; a Shift tap lets go of your kid's hand; the spouse never teleports around the house (testing)
+
+See `.github/release-notes-1.3.32.md`.
+
+## 1.3.31 (HexGhoul): a spouse who actually helps at home: cooks (and keeps you a meal), smelts, harvests and replants, guards the house and the kids; nobody greets or talks to you through walls; /kagune home (testing)
+
+See `.github/release-notes-1.3.31.md`.
+
+## 1.3.30 (HexGhoul): NPCs talk in speech bubbles over their heads (not the chat); the spouse keeps house instead of following you about; Touka leans in for a kiss; shut eyes show a line; a parent holds a baby the whole time (testing)
+
+See `.github/release-notes-1.3.30.md`.
+
+## 1.3.29 (HexGhoul): companions, children and allies come up to you with something to say (the Answer key); a spouse keeps house at home (chests sorted, the floor swept into a chest, flowers watered); "Go home, please."; quests only from whoever gives them, feats, hunts on request, a Romance tab; Touka her own way (testing)
+
+See `.github/release-notes-1.3.29.md`.
+
+## 1.3.28 (HexGhoul): investigators carry their case by the handle, fight as a pair (one in front, one round the back), idle at ease; the quinque case's own mechanical sound (testing)
+
+See `.github/release-notes-1.3.28.md`.
+
+## 1.3.27 (HexGhoul): CCG investigators: pairs in the owner's skins, fast and acrobatic, with quinques, clashes and parries; wild ghouls rarer; cases can't be crafted (testing)
+
+See `.github/release-notes-1.3.27.md`.
+
+## 1.3.26 (HexGhoul): Touka's wings show again; quinques reworked: a bigger mid-grip spear, a two-handed katana, a flesh mace, a crystal launcher, custom M1s (testing)
+
+See `.github/release-notes-1.3.26.md`.
+
+## 1.3.25 (HexGhoul): the CCG's quinques: briefcases that open into a Bikaku blade and a Koukaku spear (testing)
+
+See `.github/release-notes-1.3.25.md`.
+
+## 1.3.24 (HexGhoul): Touka lives at Anteiku, Ken on top of the tower; NPCs fight to the end; the airplane spin fixed (testing)
+
+See `.github/release-notes-1.3.24.md`.
+
+## 1.3.23 (HexGhoul): Ken's kakugan iris fixed (testing)
+
+See `.github/release-notes-1.3.23.md`.
+
+## 1.3.22 (HexGhoul): holding hands fixed: the hands actually meet now (testing)
+
+See `.github/release-notes-1.3.22.md`.
+
+## 1.3.21 (HexGhoul): a family home: beds at night, doors, hand in hand, tucked in, fed; kids die for good; companions never hit their kids; strong parents, strong kids (testing)
+
+See `.github/release-notes-1.3.21.md`.
+
+## 1.3.20 (HexGhoul): moments with your kids: hugs, head pats, high fives, tickles, peekaboo, tosses, airplane spins, shoulder rides (testing)
+
+See `.github/release-notes-1.3.20.md`.
+
+## 1.3.19 (HexGhoul): Ken fights in Peace, every move of it; Touka's crystal wings (testing)
+
+See `.github/release-notes-1.3.19.md`.
+
+## 1.3.18 (HexGhoul): the owner's skins for sons and daughters, with real kakugan; Touka's legs a touch slimmer (testing)
+
+See `.github/release-notes-1.3.18.md`.
+
+## 1.3.17 (HexGhoul): Touka reskinned (slim arms), curvier (testing)
+
+See `.github/release-notes-1.3.17.md`.
+
+## 1.3.16 (HexGhoul): carrying a child fixed, little ones on little proportions and bigger, /kagune children, NPC parents (testing)
+
+See `.github/release-notes-1.3.16.md`.
+
+## 1.3.15 (HexGhoul): crash fix (a child with no renderer), Touka a little skinnier, Ken's embrace loosened (testing)
+
+See `.github/release-notes-1.3.15.md`.
+
+## 1.3.14 (HexGhoul): Touka and Ken: companions who teach the wings and the kakujas; Ken's trial; your partner is never hurt by you (testing)
+
+See `.github/release-notes-1.3.14.md`.
+
+## 1.3.13 (HexGhoul): holding hands is alive: she trails as you pull her, swings out on turns, the hands sway (testing)
+
+See `.github/release-notes-1.3.13.md`.
+
+## 1.3.12 (HexGhoul): Eto takes your hand on her own, hugs, leans, hums, reads, dances; many more lines (testing)
+
+See `.github/release-notes-1.3.12.md`.
+
+## 1.3.11 (HexGhoul): NPCs react to your eyes, kagune, kakuja and the worst forms; strangers fear a kakuja (testing)
+
+See `.github/release-notes-1.3.11.md`.
+
+## 1.3.10 (HexGhoul): pregnancy and children: married to Eto, ask for a baby; two days later, "9 months later..." (testing)
+
+See `.github/release-notes-1.3.10.md`. The child skins are made from CC BY-SA parts of the edit_skin mod (credits:
+`src/main/resources/assets/hexkagune/textures/entity/child/CREDITS.txt`).
+
+## 1.3.9 (HexGhoul): pick your gender after your eyes; female players get Eto's body and size (testing)
+
+See `.github/release-notes-1.3.9.md`.
+
+## 1.3.8 (HexGhoul): Eto's Owl kakuja, her last resort (testing)
+
+See `.github/release-notes-1.3.8.md`.
+
+## 1.3.7 (HexGhoul): Eto's Mutated Arm (testing)
+
+See `.github/release-notes-1.3.7.md`.
+
+## 1.3.6 (HexGhoul): Eto's Owl DNA flesh: the swipe, the grab and throw, the Flesh Hammer, Watch This (testing)
+
+See `.github/release-notes-1.3.6.md`.
+
+## 1.3.5 (HexGhoul): holding hands: the held hands stay still as you walk, arms stretched further apart (testing)
+
+See `.github/release-notes-1.3.5.md`.
+
+## 1.3.4 (HexGhoul): Eto fights with the Owl DNA kit (Speed Blitz, Big Punch into Witness This, Speed Kick), hand in hand for real (testing)
+
+See `.github/release-notes-1.3.4.md`.
+
+## 1.3.3 (HexGhoul): a living talk screen, holding hands with Eto, she clings to your arm, no fall damage, she always finds her way home (testing)
+
+See `.github/release-notes-1.3.3.md`.
+
+## 1.3.2 (HexGhoul): Eto reworked: one of her per world, talk by who you are to her, moods, marriage with a ring, her kagune in a fight (testing)
+
+See `.github/release-notes-1.3.2.md`.
+
 ## 1.2.7 (HexGhoul): your transformation sounds on every form (kakujas, the Dragon, Centipede Dominion); 1.2.6: War and Peace Z/V fixed (testing)
 
 See `.github/release-notes-1.2.7.md`.

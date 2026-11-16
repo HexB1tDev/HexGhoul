@@ -5,4 +5,5 @@ public interface Component {
     /** literal */ static MutableComponent m_237113_(String text) { throw new UnsupportedOperationException(); }
     /** translatable */ static MutableComponent m_237115_(String key) { throw new UnsupportedOperationException(); }
     /** translatable(key, args) */ static MutableComponent m_237110_(String key, Object... args) { throw new UnsupportedOperationException(); }
+    /** getString (FormattedText's, never obfuscated) */ default String getString() { throw new UnsupportedOperationException(); }
 }

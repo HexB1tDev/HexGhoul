@@ -98,7 +98,7 @@ public final class PaleClient {
             kickFrom = null;
             return;
         }
-        if (view.move() != PaleMove.KICK && view.move() != PaleMove.OWL_KICK) {
+        if (view.move() != PaleMove.KICK && view.move() != PaleMove.OWL_KICK && view.move() != PaleMove.DASH_KICK) {
             kickFrom = null;
             return;
         }
@@ -110,6 +110,8 @@ public final class PaleClient {
         // 6.2.0: the Owl's kick dashes all but unseen and plants her there through all of it (OwlRules.kickPlace).
         double[] next = view.move() == PaleMove.OWL_KICK
             ? com.hex.kagune.control.pale.OwlRules.kickPlace(to, view.detail(), Math.toRadians(view.yaw()), view.age(clock(0.0F)) + 1.0)
+            // 4.1.87: Kick Master's dash kick: the run (seen), the hop into the blow and down.
+            : view.move() == PaleMove.DASH_KICK ? PaleRules.dashPlace(to, view.detail(), view.charge(), view.age(clock(0.0F)) + 1.0)
             : PaleRules.kickPlace(to, view.detail(), view.charge(), view.age(clock(0.0F)) + 1.0);
         if (next == null) {
             return;
@@ -192,6 +194,9 @@ public final class PaleClient {
         if (frozenIn(self) != null) {
             return true; // 6.2.0: frozen in someone's Witness This
         }
+        if (view.move() == PaleMove.DASH_KICK) {
+            return view.age(clock(0.0F)) < PaleRules.dashArrive(view.detail()) + PaleRules.DASH_LAND; // 4.1.87: until her foot is down
+        }
         return view.move() == PaleMove.KICK && view.age(clock(0.0F)) < PaleRules.kickArrive(view.detail()) + PaleRules.KICK_LAND;
     }
 
@@ -235,6 +240,11 @@ public final class PaleClient {
             message.charge(), message.yaw(), message.x(), message.y(), message.z(), began));
     }
 
+    /** 1.3.50: the move of any body told by its UUID (Eto's child's flesh is told as a player's is). */
+    public static PaleView get(java.util.UUID id) {
+        return id == null ? PaleView.NONE : VIEWS.getOrDefault(id, PaleView.NONE);
+    }
+
     public static PaleView get(Player player) {
         return player == null ? PaleView.NONE : VIEWS.getOrDefault(player.m_36316_().getId(), PaleView.NONE);
     }
@@ -262,9 +272,39 @@ public final class PaleClient {
         return view != null && view.on() && !view.preview();
     }
 
+    /**
+     * 4.1.3: the fighting style of the player at the keys with only the eyes open ({@link com.hex.kagune.control.FightStyle}), as the server
+     * last said their gates stand (nothing known yet: none, and the server decides anyway).
+     */
+    public static com.hex.kagune.control.FightStyle style() {
+        return com.hex.kagune.control.FightStyle.of(gate -> QuestClient.log().open(gate));
+    }
+
     /** 7.0.1: whether {@code player}'s body is hers now: Owl DNA with the base form out, or the eyes alone ({@link #eyes}). */
     public static boolean fighter(Player player) {
         return isPale(player) && com.hex.kagune.client.KaguneClientState.get(player).active() || eyes(player);
+    }
+
+    /**
+     * 4.1.7: this client's own player is a human who learned Kick Master and holds nothing in the main hand: M1 is its string (the server's
+     * {@code PaleServer.bare}; it decides anyway).
+     */
+    public static boolean bare(Player player) {
+        return player != null && !com.hex.kagune.client.KaguneClientState.get(player).unlocked() && player.m_21205_().m_41619_()
+            && style() == com.hex.kagune.control.FightStyle.KICK_MASTER;
+    }
+
+    /**
+     * 4.1.7: whether the fight poses {@code player}'s body now: the eyes alone ({@link #eyes}), or a human (no kagune) whose blow the server
+     * says is under way (Kick Master: what anyone else has learned is never known here, only what they throw).
+     */
+    public static boolean fighting(Player player) {
+        return eyes(player) || player != null && !com.hex.kagune.client.KaguneClientState.get(player).unlocked() && get(player).move() != PaleMove.NONE;
+    }
+
+    /** 4.1.7: the style whose right click this client's own player uses ({@code FightStyle.use}). */
+    public static com.hex.kagune.control.FightStyle useStyle() {
+        return com.hex.kagune.control.FightStyle.use(gate -> QuestClient.log().open(gate));
     }
 
     @SubscribeEvent

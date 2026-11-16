@@ -1,0 +1,185 @@
+> **Newer handoff: read `docs/handoff/next-ai-3.4.8.md` first** (3.4.8 and the Bikaku path started; its prompt is `docs/handoff/next-prompt-3.4.8.md`).
+
+# HANDOFF: HexGhoul after 3.4.8 (kept current as versions ship). Read this first.
+
+Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
+their judgment calls), `docs/handoff/next-ai-2.0.45.md` (header: versions, protocol history, the 2.x/3.x log), `docs/handoff/next-ai-1.3.60.md`
+(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.7
+are this session's, with file-level detail).
+
+Note on the session before this one (3.2.2 to 3.2.6, branch `claude/magical-fermi-cec8n1`): it wrote a handoff at 3.2.1 and then went on
+for five versions without updating it; its parked work (a break-up/divorce `git stash`, a move-guide patch) was only in its container and was
+lost. **Commit and push every version as it is built, and keep this file current**: this session's worker was restarted four times.
+
+## Where things are
+
+- **3.4.8 on:** branch **`claude/wizardly-hopper-h08wf2`** (started from tag `v3.4.7`; the two "awaiting approval" Owl mask commits after 3.4.7 on `claude/exciting-bell-3kklnc` are not in it). Before that:
+- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.7 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
+  will be given its own branch: start it from `origin/claude/exciting-bell-3kklnc`
+  (`git fetch origin claude/exciting-bell-3kklnc && git checkout -B <your-branch> origin/claude/exciting-bell-3kklnc`). Push only to the
+  branch you are given; never to `main`; no PR unless asked.
+- **Releases:** `.github/workflows/release.yml` publishes `v<version>` on GitHub for every push to `claude/**` that adds
+  `.github/release-notes-<version>.md` (about 5 minutes). The owner plays those. When they say "push an update", push what is built.
+- **Version 3.4.8** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.9** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
+- Full `python3 build.py` ended **EXIT 0** for every version (javac `--release 17` on JDK 21; about 5 minutes; run it in the background).
+  **Nothing is tested in game. Never claim it is.**
+- The quick loop: `python3 tools/quick_check.py [--noverify] KingTests UkakuTests ...` (needs one full `build.py` first). It does **not**
+  rebuild the Dragon's `awakening/` code (Mojang names, `-Werror`): only the full build checks that.
+
+## What this session shipped (each its own version)
+
+| Version | What | Key files |
+|---|---|---|
+| 3.2.7 | **Fix:** Peace's Aegis shields were knight's heater shields hanging off their tendrils, the top one over his head: now fans of crimson flesh on seven bone ribs grown on each tendril's end, the top one a hood behind his head. | `PeaceFxModel.shield/edge/stalk/shieldRest`, KingTests `aegisGrown` |
+| 3.2.8 | **Fix:** War's Spire Wave (B) in first person: the left arm drawn in the hand pass (`PlayerRenderer.renderLeftHand`, allowlisted), coils round it, the beam a cone out of the fist. Third person byte-identical. | `king/SpireArm`, `KingFirstPerson.spireArm`, `WarHoldModel.coils/mass` |
+| 3.2.9 | **Fix:** the Wing Vortex: a thin round corkscrew straight along its flight; flown straight forward (it dived at a body's middle into the ground and ended: "stays in place"); a see-through jet in first person. | `WingVortex` (rebuilt), `UkakuRules.vortexHeading`, `UkakuFx` |
+| 3.3.0 | The move guide: Rinkaku's rows follow whether a tail holds someone. | `AbilityGuide.Input.holding`, `AbilityHud` |
+| 3.3.1 | Ken teaches the Rubble Hurl and the Impale, after proofs (5 throws, 5 crushes); never grandfathered. | `Gate.RINKAKU_HURL/IMPALE`, `Teaching` (`inOrder`, proofs), `UkakuGates` |
+| 3.3.2 | Dawn has an idle (breathing, a turn in the fingers, carried aside at ease). Hold and M1s unchanged. | `QuinquePose.idle`, `QuinqueClient.stillFor` |
+| 3.3.3 | The Kakuja V2 Dragon has a voice: 14 real CC0 recordings (roars, a death cry, crawl, quakes, bites). | `sfx_pack.py` `dragon_*`, `DragonTimeline.roars/crawls`, `DragonSession` |
+| 3.3.4 | One partner, for good (no break-up, no divorce): nobody new while you have a partner anywhere; killing Eto/Touka/Ken never ends it; a villager partner's death frees you. | `server/Vows`, `Romance.endsWithDeath/villagerKey`, `EtoServer`, `HumanTalk` |
+| 3.3.5 | Crystal sounds from real glass recordings (3.2.6's were pitched-up steel). | `sfx_pack.py` crystal pools, `sfx_recordings.json` |
+| 3.3.6 | A jealous partner acts it out (back turned, glare, huff, snub, foot tapping), when you ask someone else out or confess to a villager while spoken for; new lines in voice; replayed now and then while jealous. Protocol 93. | `EtoGesture.JEALOUS`, `EtoPose`, `RomanceServer.tempted`, `Blended.tempted`, `BlendedServer.sulks` |
+| 3.3.7 | Talking it out: "Can we talk about it?" / "Are we okay?" / "Are we still friends?" for a cross companion, "Can we talk about earlier?" for a jealous partner: branching talks that end it (`mend`) or make it worse (`sulk`); a second way each comes to make up. | `talk/*.txt` `mend_*`, `make_up_2`, `jealous_over_2`; `SceneServer.mend/variant`, `SceneBook.variantOf` |
+| 3.3.8 | Door scenes by the brought child's temper (7, found or outing) and age (baby, toddler, child or older): 19 `door_*` scenes per companion. | `Homecoming.flags`, `SceneWords` (`<t>kid`, `babykid/littlekid/bigkid`), `SceneServer` |
+| 3.3.9 | Homecomings without a home: the place a child lives counts (16 blocks); house-and-door homecoming scenes wait on `home`; new `!home` scenes (4 per companion, 7 for children). | `ChildBrain` home check, `Homecoming.NO_HOUSE`, `talk/*.txt`, SceneTests `HOUSE` |
+| 3.4.0 | Siblings at home react to the one brought back (the big one covers, the little one tells, "where WERE you?", left behind) and it answers, by temper and age. | `family/SiblingWelcome`, `HomecomingServer.siblings` |
+| 3.4.1 | After the player's door card, the companion and the child brought home talk in four turns (parent, child by temper, parent's answer, child's last word); a baby: the parent alone. | `family/DoorTalk`, `HomecomingServer.doorTalk` (a `Conversation`) |
+| 3.4.2 | Kids greet you after days away (2+ game days; more after a week), by temper and age; the last sight is kept in the player's NpcMemory so it outlasts an unloaded child. | `family/KidGreeting`, `ChildBrain.lines` |
+| 3.4.3 | **Fix:** clashes threw both sides by the clash's size (both blows together), so a stronger player was thrown harder, a maxed ghoul and the Reaper a block a tick, everyone lifted alike; one eye didn't count. Now by the gap alone: the stronger stands its ground at 2x, the weaker flies at `GAP` 2.0, an even clash is a short push; one eye x1.15. | `ClashRules.thrown/lifted`, `KaguneClash.apart/strength`, `ClashPower.ONE_EYED`, ClashTests `gap` |
+| 3.4.4 | **Fix:** a crystal forming (3.3.5's kitchen clinks) is now a rubbed wine glass singing (3 swells, ani_music) and a small bell (AlaskaRobotics): CC0 freesound recordings from Sonic Pi's samples. `crystal_hit`/`shatter` unchanged. | `sfx_recordings.json` `crystal_glassrub.flac`/`crystal_bell.flac`, `crystal_form_1..4`, `sfx_pack.py` POOLS |
+| 3.4.5 | **Fix:** War's Spire Wave mass came loose from the first-person fist when moving (3.2.8 started it at the server's launch spot): now `SpireArm.fist` (eyes + look, every frame). | `SpireArm.toWorld/fist`, `WarHoldFx.draw`, KingTests `spireAttached` |
+| 3.4.6 | The move guide redone: every move in a word or two, two columns past five, one-line header, scale 0.7 (every board; War's and Peace's too). About half the size. | `AbilityGuide.brief/briefSubtitle`, `AbilityHudView` (columns), `AbilityHud.SCALE`, ControlTests `briefBoard` |
+| 3.4.7 | **Fix:** the owner: 3.4.6's two columns made the board wider ("it should be vertical, and you made it horizontal"). One column on every board, scale 0.6, tighter spacing. | `AbilityHudView.layout` (one column), `AbilityHud.SCALE`, ControlTests `briefBoard` |
+| 3.4.8 | **Fix** (branch `claude/wizardly-hopper-h08wf2`, from v3.4.7): the Bone Greatsword's moves rebuilt with both hands on the grip (the weapon turned in the fist); the hammer and whip left as they were (the owner: "they're good"). | `WeaponPose.hold/Grip/wristed`, `RigPose.weapon*`, `WeaponLayer.mesh`, `QuinqueGrip.held/blendTurn`, `GreatswordTests` |
+
+Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `war-spire-first-person-3.2.8.png`, `ukaku-vortex-3.2.9.png`,
+`dawn-idle-3.3.2.png`, `jealous-3.3.6.png`, `move-guide-3.4.6.png`, `move-guide-3.4.7.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
+
+## The owner's words this session (binding)
+
+- Peace's keys "not matching the other forms'" (a 3.2.6-era report): **"Ignore that bug its done."**
+- War's janky first-person move: **"The move that charges centipides from the left arm and shoots them forwards in a beam of sorts of
+  centipides."** (the Spire Wave, B).
+- Wing Vortex: **"Basically the vortex is meant to be less janky, thinner and more circular, cant see anything in first person and glitches
+  a ton instead of going straight forward somestimes it stays in place, its really really strange."**
+- Dawn ("hold, ambient and M1s"): asked, they picked **only the idle/ambient**.
+- The centipede dragon's sounds: **the Kakuja V2 Dragon is silent.**
+- Break-up/divorce, replaced: **"I changed my mind. From now on, you can only have one wife, no matter what, okay? ... There's no divorce
+  button. No anything. When you're married to them, that's it. The only way you can remarry is if you kill them. But if it's an official NPC
+  like Toka, Ken, or Ito, there's no way to unmarry or to anything. You guys are stuck forever."** Never build break-ups or divorce.
+- Sounds: **"Get the sounds from the web, don't generate them yourself. You suck at that."** Never make a sound by pitching, layering or
+  synthesis: fetch real recordings (see below).
+- **"push an update asap"**: push each version the moment it builds.
+- Clashes (3.4.3): **"no matter how strong you are, what CCG investigators are just gonna send you flying during clashes for some reason.
+  This should be balanced, that the master should be more reflective of how strong the clash is. If you're stronger than investigators,
+  then you should send them flying in the same for players. If you're max mastery, I don't think that the Reaper should be able to even
+  send you flying, but currently he does. Even at max mastery, one-eyed, and with max ghoul meat eaten, he still ignores that and sends
+  you flying regardless."**
+- Crystal forming (3.4.4): **"Your crystal sounds from the internet. The ones you added for the crystal form are fucking dog shit, bro.
+  Just download better ones."**
+- Spire Wave (3.4.5): **"In the Warpath, Spirewave now is kind of bugged. It detaches from your hand if you move. Like, before it was
+  fine, you could, like, move and it would still be attached to your body. But now when you leave, like, whenever you move around, that
+  detaches."** The move guide (3.4.6): **"it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to
+  summarize things a bit more."**
+- The move guide again (3.4.7), of 3.4.6's two columns: **"I said the menu was cluttered and your solution is to make it like even bigger
+  on the screen ... it should be vertical, and you made it horizontal, bro. No one wants the menu like this."** Keep it one narrow column.
+- The Owl kakuja (Eto's form at 100 HP), asked for with reference pictures (Owl.zip, not in the repo): **"redoing and bettering as much as
+  possible the owl DNA's transformation currently being used by Eto ... It has to look identical to it ... it has to be beautiful ... Just
+  like the dragon Kakuja ... Every limb has to be animated ... For now, just focus on movements, jumping, and whatsoever, and the looks
+  mainly."** Shown renders of an in-progress procedural rebuild (never committed), the owner: **"Wtf is that model. That looks like shit,
+  all of it."** Ask what they want before rebuilding it.
+
+## The owner's 3.2.2 list (all done by 3.4.2)
+
+From the owner's message after 3.2.1 (nine asks; 3.2.2 did "one at a time", break-up/divorce was replaced by 3.3.4):
+
+1. ~~A jealous animation~~ (done: 3.3.6).
+2. ~~Reconciliation talks~~ (done: 3.3.7).
+3. ~~Temper-aware door scenes~~ (done: 3.3.8).
+4. ~~Homecomings without a home~~ (done: 3.3.9).
+5. ~~Siblings~~ (done: 3.4.0).
+6. ~~Companion-child door talk~~ (done: 3.4.1).
+7. ~~Kids greeting you after days away~~ (done: 3.4.2).
+
+**The list is done.** Nothing is queued: ask the owner what to do next (and whether the judgment calls below are right).
+
+Family/scene system notes are in `next-ai-3.1.9.md` and `next-ai-3.2.1.md` (scenes are data: `talk/*.txt`, `SceneBook`, `SceneWords`,
+validated by SceneTests).
+
+## Judgment calls the owner hasn't confirmed (tell them, ask if unsure)
+
+- **3.2.7:** the look of the bulwarks (a fan of flesh on bone ribs; the top one a hood behind the head); at rest from the front the side
+  ones blend into the crimson mass.
+- **3.2.8:** the first-person arm placement and the beam's cone (0.26); not seen how the hand pass's FOV and view bobbing line the arm up
+  with the beam, which stays in the world.
+- **3.2.9:** "more circular" read as a round corkscrew round a straight line; the pitch limits (-0.22 to 0.3 of the heading) and the
+  18-degree aim assist. The owner's 2.4.6 reference gif was never in the repo: ask for it if this isn't it.
+- **3.3.1:** five throws / five crushes; never grandfathered (so even the owner's maxed save goes to Ken); a maxed Rinkaku's clash gate
+  share is 9/11 until taught.
+- **3.3.2:** stiff arms can't rest Dawn on the shoulder (the hand would be over the head) nor point it down (into the ground): it is carried
+  aside at ease instead; "hand on hip" is the left arm angled out.
+- **3.3.3 / 3.3.5:** which recordings: chosen by name and measured loudness, **never heard** (no audio here). freesound.org is blocked, so
+  each sound's own page couldn't be re-checked: CC0 per the WilhelmSFX mirror's licence. Ask which sound wrong.
+- **3.4.7:** scale 0.6 for the one-column board (the owner was angry that 3.4.6 made it wider). Preview `docs/handoff/move-guide-3.4.7.png`.
+- **3.4.6:** the brief names (the board no longer shows the explanations: "Space held: launch", "on time: stagger"); two columns past
+  five moves; scale 0.7. Preview `docs/handoff/move-guide-3.4.6.png` (`tools/UiPreview.java <out> hud`).
+- **3.4.5:** view bobbing and the hand pass's sway aren't followed by the mass's start (a hair off the fist while sprinting).
+- **3.4.4:** which recordings and excerpts (never heard: no audio here); a bell among the glass. Ask whether `crystal_hit` (still the
+  clinks) should be replaced too.
+- **3.4.3:** the constants (an even clash 0.42 b/t, stands at 2x, flung at 2x, one eye 15%); the Reaper's kick and a landed
+  finisher's knockback untouched (not clashes); Rinkaku's two Ken lessons still count in the gate share.
+- **3.4.2:** two game days to count, a week for the longer greeting; a save from before has no record (no greeting the first time).
+- **3.4.1:** the parent's answer by four temper groups; the talk is let go if it can't start within a minute.
+- **3.4.0:** which temper covers, asks or tells (my map); speech bubbles, nobody walks over.
+- **3.3.9:** a child put down elsewhere settles there, so that becomes the place it lives; the 16 blocks.
+- **3.3.8:** a child and a teen share the `bigkid` scenes; weights (about 4 in 10 by temper, 4 in 10 by age, the rest the old ones).
+- **3.3.7:** the talk doesn't know what made them cross (a hit or a bad answer); villager partners have no such talk.
+- **3.3.6:** the turn away is about 55 degrees (the glare over the shoulder must reach you); villager partners don't act jealous (no
+  gestures); asking someone out / confessing while spoken for is the trigger (the one-partner rule leaves nobody to kiss).
+- **3.3.4:** a villager partner's death frees you whoever killed it (the owner said "if you kill them"); only partners online in its world
+  when it dies are freed; old saves keep partners they already had.
+
+## Things to watch when the owner plays (all untested in game)
+
+- Peace's bulwarks swinging out to meet blows (they stay one piece with their tendrils: tested), and from the front at rest.
+- War's B in first person: the arm, the coils, the beam leaving the fist; an off-hand item hidden during it.
+- The Wing Vortex: flying straight; ending only at real walls; the first-person jet.
+- Ken's two lessons and their proofs' action-bar counts; the guide's "Ken teaches it" rows.
+- Dawn's idle starting after 1.5 s still and stopping on any move.
+- The Dragon's voice (volume, how often it roars: every 5.5 s) and the crystal sounds.
+- A second partner refused everywhere; killing Eto/Touka/Ken keeping the marriage.
+- 3.3.6: the jealous act (the turn, the glare's reach, how often the sulk replays: 1 in 5 checks every 100 ticks).
+- 3.3.7: "Can we talk about it?" on a cross companion's page; "Can we talk about earlier?" beside "It's only you.".
+- 3.3.8 / 3.3.9: which door scene comes up (temper, age, the old ones); homecomings with no house (16 blocks round where the child lives).
+- 3.4.0 / 3.4.1: siblings' bubbles after the child's call-out; the door talk starting once the card is done (the child must not be carried).
+- 3.4.2: the greeting after two in-game days away, and the hug after it.
+- 3.4.3: clashes with investigators and the Reaper: who is thrown, how far, who is flung.
+
+## How to get sounds (the owner's rule: real recordings from the web)
+
+- freesound.org, OpenGameArt, Wikimedia, Pixabay, Sonniss, archive.org, Hugging Face, Zenodo and kenney.nl are blocked from these
+  sessions; `raw.githubusercontent.com`, public GitHub and GitLab git (`git clone --depth 1 --filter=blob:none --sparse <url>` then
+  `git sparse-checkout set --no-cone /path/file`) and the npm/PyPI registries are not.
+- 3.4.4: **Sonic Pi's samples** (`github.com/sonic-pi-net/sonic-pi`, `etc/samples/`, README links every original) are CC0 freesound
+  recordings (glass rub, glass hum, bells, drums...). Rejected for want of a licence: VoxeLibre's amethyst sounds, TidalCycles
+  Dirt-Samples, Veloren's ice_crack (author "Unknown").
+- The WilhelmSFX sound bank mirrors freesound recordings on GitHub under CC0:
+  `https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/` (`LICENSE` is CC0; `config.yaml`
+  names every sample, `Samples/<id>__<user>__<name>.wav`; `README.md` links each to its freesound page: take authors from those links).
+  Take only freesound-sourced ones (its Sonniss/Bluezone/CREA ones aren't CC0).
+- Add each source (title, author, page, download URL, sha256) and clip (excerpt, optional `gain_db` for a quiet one) to
+  `tools/sfx_recordings.json`, put the downloaded files (named as the manifest's sources) and the shipped `CC0-1.0.txt` in a directory, and
+  run `python3 tools/sfx_pack.py --import-recordings <dir> --only <clip,clip>`: it encodes only those, keeps every earlier clip byte for byte,
+  and rewrites `sfx/recorded/CREDITS.txt` and `SOURCES.json`. Then add the pool in `POOLS` (no pitch) and run `python3 tools/sfx_pack.py`
+  (regenerates sounds.json; diff it: only your pools should change). Subtitles go in `en_us.json`.
+
+## House rules (unchanged; full text in `next-ai-1.3.60.md`)
+
+Each fix or feature its own version: both version strings, `.github/release-notes-<v>.md`, a README entry, a new top section in
+`companions-handoff.md` (rename the old START HERE to "State after ..."), the header lines and the log line of `next-ai-2.0.45.md`, full
+`python3 build.py` to EXIT 0 (don't edit sources while it runs), commit (`3.x.y: ...` with the session's trailers, no model names in anything
+pushed), push. Owner's bug reports first. Banned in the jar: Kaneki, Ayato, Furuta; in visible text: Takatsuki, Aogiri, Yoshimura. Sounds only
+from the hexkagune pack (real recordings). Never alter the owner's files. New Minecraft API: an allowlist entry with [srg]/[forge] evidence plus a
+stub. Answer the owner in English, plainly; say what is untested and what was approximated. When the owner's exact words for a report are
+missing, ask them (AskUserQuestion) rather than guess.

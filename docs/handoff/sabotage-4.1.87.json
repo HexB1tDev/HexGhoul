@@ -1,0 +1,338 @@
+[
+ {
+  "name": "eight ticks of run lost",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return Math.max(0, Math.min(15, ticks)) | Math.round(clamp01(charge) * 15.0F) << 4;",
+  "new": "        return Math.max(0, Math.min(7, ticks)) | Math.round(clamp01(charge) * 15.0F) << 4;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a run faster than seen",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "public static final double DASH_SPEED = 2.6;",
+  "new": "public static final double DASH_SPEED = 5.0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a short run",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "public static final int DASH_MAX = 8;",
+  "new": "public static final int DASH_MAX = 6;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a run to her own feet",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return distance < DASH_NONE ? 0 : (int)Math.max(",
+  "new": "        return distance < 0.0 ? 0 : (int)Math.max(",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "there before the lean",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return DASH_BURST + dashTicks(detail);\n    }\n\n    /** The tick it is over",
+  "new": "        return dashTicks(detail);\n    }\n\n    /** The tick it is over",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a run at one pace",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        double u = s * (DASH_PEAK - (DASH_PEAK - 1.0) * s);\n        return new double[] {to[0] * u, to[1] * u + lift * dashRise(detail, age), to[2] * u};",
+  "new": "        double u = s;\n        return new double[] {to[0] * u, to[1] * u + lift * dashRise(detail, age), to[2] * u};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "no hop",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return new double[] {to[0] * u, to[1] * u + lift * dashRise(detail, age), to[2] * u};",
+  "new": "        return new double[] {to[0] * u, to[1] * u, to[2] * u};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "carried on forever",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        if (age >= dashArrive(detail) + DASH_LAND) {\n            return null;\n        }\n        double s = ticks",
+  "new": "        if (age >= dashArrive(detail) + DASH_LAND + 100.0) {\n            return null;\n        }\n        double s = ticks",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the hop held down",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        } else if (since <= DASH_CONTACT + 0.8) {\n            return 1.0;",
+  "new": "        } else if (since <= DASH_CONTACT + 0.8) {\n            return 0.5;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "turned to her right",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return Math.PI / 2.0 * u * u * (3.0 - 2.0 * u);\n    }\n\n    /** How far up",
+  "new": "        return -Math.PI / 2.0 * u * u * (3.0 - 2.0 * u);\n    }\n\n    /** How far up",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "turned half round",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return Math.PI / 2.0 * u * u * (3.0 - 2.0 * u);\n    }\n\n    /** How far up",
+  "new": "        return Math.PI * u * u * (3.0 - 2.0 * u);\n    }\n\n    /** How far up",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "turned through the run",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        double from = dashArrive(detail) + DASH_CONTACT - 0.5;",
+  "new": "        double from = DASH_BURST;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "launched straight ahead",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return new double[] {-1.0, 0.0};\n    }\n\n    /**\n     * True if a body",
+  "new": "        return new double[] {0.0, 1.0};\n    }\n\n    /**\n     * True if a body",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "launched to her right",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return new double[] {-1.0, 0.0};\n    }\n\n    /**\n     * True if a body",
+  "new": "        return new double[] {1.0, 0.0};\n    }\n\n    /**\n     * True if a body",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "swept behind her",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "&& z >= -DASH_REACH_BACK - half && z <= DASH_REACH_FRONT + half",
+  "new": "&& z >= -3.0 - half && z <= DASH_REACH_FRONT + half",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "swept far to her right",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "return x >= -DASH_REACH_LEFT - half && x <= DASH_REACH_RIGHT + half",
+  "new": "return x >= -DASH_REACH_LEFT - half && x <= 3.0 + half",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "swept over her head",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "            && y + height >= DASH_REACH_LOW && y <= DASH_REACH_HIGH;",
+  "new": "            && y + height >= DASH_REACH_LOW;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "hopped sky high",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return Math.max(0.0, Math.min(DASH_LIFT_MAX, head - DASH_SOLE_Y));",
+  "new": "        return Math.max(0.0, head - DASH_SOLE_Y);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "untouchable to the end",
+  "file": "src/main/java/com/hex/kagune/control/pale/PaleRules.java",
+  "old": "        return age >= 0.0 && age < dashArrive(detail) + DASH_CONTACT;",
+  "new": "        return age >= 0.0 && age < dashEnd(detail);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the kick out of her guard, not the run",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "            pose = sample(PaleStrikePoses.dashKick(), (float)(age - arrive), ran);",
+  "new": "            pose = sample(PaleStrikePoses.dashKick(), (float)(age - arrive), PaleStrikePoses.guard());",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "floating over her feet",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        standing(pose);\n        pose.drop *= (float)(1.0 - PaleRules.dashRise(detail, age));",
+  "new": "        pose.drop *= (float)(1.0 - PaleRules.dashRise(detail, age));",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the stride from halfway",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "            stride(pose, (float)Math.cos(Math.PI * Math.max(0.0, age - STRIDE_FROM) / DASH_STRIDE));",
+  "new": "            stride(pose, (float)Math.cos(Math.PI * Math.max(0.0, age - STRIDE_FROM) / DASH_STRIDE + 1.5));",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "let go: the old V kick",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "        PaleServer.begin(player, state, PaleMove.DASH_KICK, PaleRules.dashDetail(plan.ticks(), charge),",
+  "new": "        PaleServer.begin(player, state, PaleMove.KICK, PaleRules.dashDetail(plan.ticks(), charge),",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "through walls",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "            if (Double.isNaN(ground)) {\n                break;\n            }",
+  "new": "            if (Double.isNaN(ground)) {\n                ground = 0.0;\n            }",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the path left standing",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "                kickedLeft(player, state, body, PaleRules.DASH_SHOVE, now);",
+  "new": "                body.m_6084_();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the path kicked twice",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "                entity -> entity != target && PaleBlitz.valid(player, entity) && !state.hit.contains(entity.m_19879_()))) {",
+  "new": "                entity -> entity != target && PaleBlitz.valid(player, entity))) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the blow anywhere round her",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "            if (!PaleRules.dashStruck(x, rel.f_82480_, z, body.m_20205_() * 0.5, body.m_20206_())) {\n                continue;",
+  "new": "            if (false) {\n                continue;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the blow never comes",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "        if (age == contact) {\n            dashLands(player, state, now);",
+  "new": "        if (age == contact + 1000L) {\n            dashLands(player, state, now);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "kicked the way she ran",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "        Vec3 along = right.m_82490_(flight[0]).m_82549_(facing.m_82490_(flight[1]));\n        double power = PaleRules.twirlPower",
+  "new": "        Vec3 along = facing;\n        double power = PaleRules.twirlPower",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "pushed, not flying",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "        BlockSmash.kick(player, body, along, speed, PaleRules.DASH_UP, damage);\n        PaleKnockdown.launched(body, now);",
+  "new": "        body.m_20256_(along);\n        PaleKnockdown.launched(body, now);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "never down after",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "        BlockSmash.kick(player, body, along, speed, PaleRules.DASH_UP, damage);\n        PaleKnockdown.launched(body, now);",
+  "new": "        BlockSmash.kick(player, body, along, speed, PaleRules.DASH_UP, damage);\n        body.m_6084_();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "never over",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "        if (age >= PaleRules.dashEnd(state.detail)) {\n            PaleServer.end(player, state);",
+  "new": "        if (age >= PaleRules.dashEnd(state.detail) + 1000L) {\n            PaleServer.end(player, state);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "hurt on the run",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleServer.java",
+  "old": "            case DASH_KICK -> PaleRules.dashUntouchable(state.detail, age); // 4.1.87: through the run, until the blow",
+  "new": "            case DASH_KICK -> false; // 4.1.87: through the run, until the blow",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "never ticked",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "            case DASH_KICK -> tickDashKick(player, state, now); // 4.1.87",
+  "new": "            case DASH_KICK -> { } // 4.1.87",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General's old kick",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoOwl.java",
+  "old": "        if (npc.persona().kickMaster()) {",
+  "new": "        if (npc.persona().kickMaster() && false) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General never turned",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoOwl.java",
+  "old": "        float yaw = f.yaw - (float)Math.toDegrees(PaleRules.dashTurn(f.detail, age + 1.0));",
+  "new": "        float yaw = f.yaw;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General's kicked straight ahead",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoOwl.java",
+  "old": "        Vec3 along = right.m_82490_(flight[0]).m_82549_(facing.m_82490_(flight[1]));\n        Vec3 struck = target",
+  "new": "        Vec3 along = facing;\n        Vec3 struck = target",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the player not run",
+  "file": "src/main/java/com/hex/kagune/control/client/PaleClient.java",
+  "old": "            : view.move() == PaleMove.DASH_KICK ? PaleRules.dashPlace(to, view.detail(), view.charge(), view.age(clock(0.0F)) + 1.0)\n",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her keys hers on the run",
+  "file": "src/main/java/com/hex/kagune/control/client/PaleClient.java",
+  "old": "            return view.age(clock(0.0F)) < PaleRules.dashArrive(view.detail()) + PaleRules.DASH_LAND; // 4.1.87: until her foot is down",
+  "new": "            return false; // 4.1.87: until her foot is down",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her view turned right",
+  "file": "src/main/java/com/hex/kagune/control/client/PaleCamera.java",
+  "old": "            player.m_19884_(-step / 0.15, 0.0);",
+  "new": "            player.m_19884_(step / 0.15, 0.0);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her view never turned",
+  "file": "src/main/java/com/hex/kagune/control/client/PaleCamera.java",
+  "old": "            dashTurn(player);\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "never posed",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleAnimator.java",
+  "old": "            pose = PaleMotions.dashKick(since, view.detail(), this.from); // 4.1.87",
+  "new": "            pose = PaleMotions.guard(); // 4.1.87",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "no leg in first person",
+  "file": "src/main/java/com/hex/kagune/control/client/render/PaleFleshRenderer.java",
+  "old": "                RigPose body = PaleMotions.dashKickBody(view.age(time), view.detail(),",
+  "new": "                RigPose body = PaleMotions.kickBody(view.age(time), view.detail(),",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "no clash",
+  "file": "src/main/java/com/hex/kagune/control/pale/MoveClashRules.java",
+  "old": "            case KICK, OWL_KICK, DASH_KICK -> Family.KICK; // 4.1.87: Kick Master's dash kick is a kick",
+  "new": "            case KICK, OWL_KICK -> Family.KICK; // 4.1.87: Kick Master's dash kick is a kick",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the old protocol",
+  "file": "src/main/java/com/hex/kagune/control/network/ControlNetwork.java",
+  "old": "private static final String PROTOCOL = \"127\";",
+  "new": "private static final String PROTOCOL = \"126\";",
+  "suite": "BikakuWormTests"
+ },
+ {
+  "name": "the guide's old name",
+  "file": "src/main/java/com/hex/kagune/control/AbilityGuide.java",
+  "old": "rows.add(row(in, \"Dash Kick (hold, let go)\", EYES, 0, Key.USE));",
+  "new": "rows.add(row(in, \"Twirling Speed Kick (hold, let go)\", EYES, 0, Key.USE));",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "past the crosshair's spot",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "                want = Math.min(range, Math.sqrt(UkakuFire.horizontal(hit.m_82450_().m_82546_(from)).m_82556_()));",
+  "new": "                want = range;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the crosshair's spot never looked for",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleMoves.java",
+  "old": "            if (hit.m_6662_() == HitResult.Type.BLOCK) {\n                want = Math.min(",
+  "new": "            if (false) {\n                want = Math.min(",
+  "suite": "CompanionTests"
+ }
+]

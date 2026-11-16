@@ -3,7 +3,7 @@ package com.hex.kagune.control.kakugan;
 import com.hex.kagune.control.ukaku.UkakuModel;
 
 /**
- * Rinkaku's kakuja mask (3.1.0) in the centipede legs' colours: a crumpled, glossy plum shell over the forehead and his right
+ * Rinkaku's kakuja mask (3.1.0) in the centipede legs' colours (2.1.0: the kagune's own, {@link #colours}): a crumpled, glossy plum shell over the forehead and his right
  * eye, its edge rippling in petals; a round black lens with a red pupil where his right eye is; his left eye left bare in a
  * window of skin; and a long ridged beak from the bridge of the nose down past his chin. Same space as {@link RinkakuMask}
  * (head pixels: x to the player's left, y down from the neck, z backward, the face at z = -4); the lens and the window follow
@@ -12,11 +12,29 @@ import com.hex.kagune.control.ukaku.UkakuModel;
  */
 public final class CentipedeMask {
     // The centipede legs' palette (CentipedeTail).
-    static final int SHADOW = 0x22142A;
-    static final int DARK = 0x36213C;
-    static final int PLUM = 0x563A5E;
-    static final int HI = 0x6F5078;
-    static final int GLOSS = 0xD8C2E2;
+    // 2.1.0: in the kagune's colours (KakujaPalette): the legs' greys leaning a little more toward its colour, its walls in its dark,
+    // set before it is drawn ({@link #colours}: the render thread's alone). These are the default crimson kagune's.
+    static int SHADOW;
+    static int DARK;
+    static int PLUM;
+    static int HI;
+    static int GLOSS;
+
+    static {
+        colours(com.hex.kagune.control.KakujaPalette.of(com.hex.kagune.control.KaguneColours.DEFAULT));
+    }
+
+    /** How much more the mask's shell leans to the kagune's colour than the legs' plates (it sits on the face, by the eyes). */
+    public static final double LEAN = 0.24;
+
+    /** 2.1.0: the mask drawn next is in {@code palette} (the kagune's: {@code KakujaPalette.of}). */
+    public static void colours(com.hex.kagune.control.KakujaPalette.Palette palette) {
+        SHADOW = palette.fleshDark();
+        DARK = mix(palette.dark(), palette.fleshDark(), LEAN);
+        PLUM = mix(palette.plate(), palette.flesh(), LEAN * 0.85);
+        HI = mix(palette.hi(), palette.flesh(), LEAN * 0.7);
+        GLOSS = palette.gloss();
+    }
     static final int LENS = 0x0B090E;
     static final int LENS_SHEEN = 0x5E5670;
     static final int PUPIL = 0x8E141A;

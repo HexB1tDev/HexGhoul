@@ -2,4 +2,7 @@
 package net.minecraft.world.effect;
 
 public class MobEffect {
+    /** 1.3.40: a kitchen effect's (the original's bleeding effect calls it too) */
+    protected MobEffect(MobEffectCategory category, int color) {
+    }
 }

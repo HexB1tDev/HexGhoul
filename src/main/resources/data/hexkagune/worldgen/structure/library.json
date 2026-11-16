@@ -1,7 +1,7 @@
 {
-  "type": "minecraft:jigsaw",
-  "biomes": "#hexkagune:has_structure/library",
-  "step": "surface_structures",
+  "type": "hexkagune:dry_place",
+  "biomes": "#hexkagune:overworld",
+  "step": "top_layer_modification",
   "spawn_overrides": {},
   "terrain_adaptation": "beard_thin",
   "start_pool": "hexkagune:library/start",

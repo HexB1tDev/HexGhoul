@@ -79,19 +79,27 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
             double shell = KakujaModel.halfMaskShell(eyeCells, KakuganClient.covered(player), KakuganClient.skinRead(player),
                 PlayerLayers.skinLayers3d());
             KakujaModel.halfMask(collect(head), eyeCells, grow, 1.0, shell);
-            pose.m_85836_();
-            PlayerLayers.upperBody(pose, player, partialTick);
-            model.f_102808_.m_104299_(pose);
-            emit(consumer, head, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_());
-            pose.m_85849_();
+            // 4.0.6 (the owner: "when limbs are removed ... coats and armors go with the limbs as well. (same with masks)"): a head off him
+            // (Potential Unlock's torn parts) takes its half mask with it.
+            if (model.f_102808_.f_104207_) {
+                pose.m_85836_();
+                PlayerLayers.upperBody(pose, player, partialTick);
+                model.f_102808_.m_104299_(pose);
+                emit(consumer, head, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), com.hex.kagune.control.client.KaguneTints.of(player));
+                pose.m_85849_();
+            }
+        }
+        if (!model.f_102810_.f_104207_) {
+            return;
         }
         pose.m_85836_();
         model.f_102810_.m_104299_(pose);
+        BuildLayer.fit(pose, player, model); // 2.3.3: over a man's chest
         if (PlayerLayers.skinLayers3d()) {
             pose.m_85841_(1.0F, 1.0F, CHEST_CLEARANCE);
         }
         // 5.0.19: the body part itself carries the lean now (RigPose), so the chest rides it as drawn.
-        emit(consumer, chest, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_());
+        emit(consumer, chest, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), com.hex.kagune.control.client.KaguneTints.of(player));
         pose.m_85849_();
     }
 
@@ -99,13 +107,14 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
         return (a, b, c, d, n, ca, cb, cc, cd) -> out.add(new Piece(new double[][] {a, b, c, d}, n, new int[] {ca, cb, cc, cd}));
     }
 
-    private static void emit(VertexConsumer consumer, List<Piece> pieces, int light, Matrix4f matrix, Matrix3f normals) {
+    /** 1.3.35: in the player's own kagune colour ({@code tint}, KaguneTint: the crimson leaves it as it was). */
+    private static void emit(VertexConsumer consumer, List<Piece> pieces, int light, Matrix4f matrix, Matrix3f normals, int tint) {
         for (Piece piece : pieces) {
             // The model's glow convention: a quad lit from straight above is RC light, at full brightness.
             boolean glow = piece.normal()[0] == 0.0 && piece.normal()[1] == 1.0 && piece.normal()[2] == 0.0;
             for (int corner = 0; corner < 4; corner++) {
                 double[] p = piece.corners()[corner];
-                int colour = piece.argb()[corner];
+                int colour = com.hex.kagune.control.KaguneTint.recolour(piece.argb()[corner], tint);
                 consumer.m_252986_(matrix, (float)(p[0] / 16.0), (float)(p[1] / 16.0), (float)(p[2] / 16.0))
                     .m_6122_((colour >> 16) & 0xFF, (colour >> 8) & 0xFF, colour & 0xFF, colour >>> 24)
                     .m_7421_(0.5F, 0.5F)

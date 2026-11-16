@@ -589,6 +589,21 @@ public final class BlockSmash {
         return type != null && "minecraft".equals(type.m_135827_());
     }
 
+    /**
+     * 3.1.6, Rinkaku's Rubble Hurl: the chunk his tails tear out of {@code pos} taken out of the world as a smashed block is (only if it
+     * is his to break, no harder than {@code hardest}, with no block entity, and block smashing is on), put back exactly later. Either
+     * way it breaks up there for all to see and hear. True if the block itself is out.
+     */
+    public static boolean tear(ServerPlayer owner, BlockPos pos, BlockState state, float hardest) {
+        ServerLevel level = owner.m_284548_();
+        if (ControlConfig.blockSmash() && level.m_7702_(pos) == null && breakable(level, pos, state, hardest)
+            && smash(level, owner, pos, state, Vec3.f_82478_)) {
+            return true;
+        }
+        level.m_46796_(2001, pos, Block.m_49956_(state));
+        return false;
+    }
+
     /** Takes the block out (if it is hers to break) and remembers it to put back; true when it is out. */
     private static boolean smash(ServerLevel level, ServerPlayer owner, BlockPos pos, BlockState state, Vec3 velocity) {
         Waiting waiting = Waiting.of(level);

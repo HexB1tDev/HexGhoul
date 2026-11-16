@@ -30,10 +30,39 @@ public final class PalePreview {
             blitzGif(new File(out, "pale-blitz.gif"), new double[] {3.0, 1.6, 2.6}, "Speed blitz, real time");
         }
         if (wanted.contains("strike-gifs")) {
-            for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
+            for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
                 double side = strike.right ? 1.0 : -1.0;
                 strikeGif(new File(out, "pale-" + strike.name().toLowerCase(java.util.Locale.ROOT) + ".gif"), strike, new double[] {3.2 * side, 1.55, 2.2}, 4.0);
             }
+        }
+        if (wanted.contains("kicks")) {
+            kicks(new File(out, "kick-master.png"));
+        }
+        if (wanted.contains("dash-kick")) {
+            dashKick(new File(out, "dash-kick.png")); // 4.1.87 (4.1.8's twirl-kick is gone)
+        }
+        if (wanted.contains("kick-stance")) {
+            kickStance(new File(out, "kick-stance.png")); // 4.1.88
+        }
+        if (wanted.contains("kicks-film")) {
+            kicksFilm(new File(out, "kick-master-film.png"), new File(out, "kick-master.gif"));
+        }
+        if (wanted.contains("kick-test")) {
+            List<ArtPreview.Shot> shots = new ArrayList<>();
+            double[][] legs = {{-0.3, 0.96, 0.6, 1.28}, {-0.3, 1.5, 0.0, 1.57}, {-0.3, 0.0, 1.5, 1.57}, {-1.5, 0.0, 0.0, 0.0}, {-0.3, 1.5, 0.0, 0.0}, {-0.3, -1.5, 0.0, 0.0}};
+            for (double[] l : legs) {
+                RigPose p = new RigPose();
+                p.armHold = 1.0F;
+                p.legHold = 1.0F;
+                p.rightLegX = (float)l[0];
+                p.rightLegZ = (float)l[1];
+                p.roll = (float)l[2];
+                p.spin = (float)l[3];
+                p.settle(1.0F);
+                shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "legX %.1f legZ %.2f roll %.1f spin %.2f", l[0], l[1], l[2], l[3]), p,
+                    ArtPreview.NO_WINGS, new double[] {3.4, 1.6, 2.6}, new double[] {0.0, 0.95, 0.75}, dummy(DUMMY_Z)));
+            }
+            ArtPreview.sheet(new File(out, "kick-test.png"), "leg conventions", shots, 6, 300, 330);
         }
         if (wanted.isEmpty() || wanted.contains("punch")) {
             punch(new File(out, "pale-big-punch.png"));
@@ -141,7 +170,7 @@ public final class PalePreview {
     static void eyes(File file) throws Exception {
         List<ArtPreview.Shot> shots = new ArrayList<>();
         double[] target = {0.0, 0.95, 0.75};
-        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
             RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.impact, null);
             p.settle(1.0F);
             double side = strike.right ? 1.0 : -1.0;
@@ -1185,7 +1214,7 @@ public final class PalePreview {
     static void blitz(File file) throws Exception {
         List<ArtPreview.Shot> shots = new ArrayList<>();
         double[] target = {0.0, 0.95, 0.75};
-        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
             int i = strike.impact;
             double[] ages = {i - 1.2, i - 0.45, i, i + 0.55, i + 1.6};
             String[] names = {"coiled", "driving", "IMPACT", "overshoot", "hold"};
@@ -1203,12 +1232,148 @@ public final class PalePreview {
             300, 330);
     }
 
+    /** 4.1.7: where a kick's target stands: its front where the server stands her for a kick (PaleRules.comboKickStand), this thin dummy's middle behind it. */
+    static final double KICK_DUMMY_Z = com.hex.kagune.control.pale.PaleRules.comboKickStand(0.0) + 0.125;
+
+    /**
+     * 4.1.7: Kick Master's string, every blow key by key, seen square from the side (the only view where a kick's height and reach can be
+     * judged), then its impact three quarters in front from her open side.
+     */
+    static void kicks(File file) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS)) {
+            if (!strike.kick()) {
+                continue;
+            }
+            int i = strike.impact;
+            double[] ages = {i - 2.4, i - 1.3, i - 0.5, i, i + 0.6, i + 2.4};
+            String[] names = {"winding", "chambered", "driving", "IMPACT", "through", "folding"};
+            double side = strike.right ? 1.0 : -1.0;
+            String name = strike.name().toLowerCase(java.util.Locale.ROOT).replace('_', ' ');
+            for (int k = 0; k < ages.length; k++) {
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, Math.max(0.0, ages[k]), null);
+                p.settle(1.0F);
+                shots.add(new ArtPreview.Shot(name + ": " + names[k], p, ArtPreview.NO_WINGS, new double[] {-4.6 * side, 1.0, 0.7},
+                    new double[] {0.0, 0.95, 0.7}, dummy(KICK_DUMMY_Z)));
+            }
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, i, null);
+            p.settle(1.0F);
+            shots.add(new ArtPreview.Shot(name + ": IMPACT, 3/4", p, ArtPreview.NO_WINGS, new double[] {3.2 * side, 1.7, 3.0},
+                new double[] {0.0, 0.95, 0.7}, dummy(KICK_DUMMY_Z)));
+        }
+        ArtPreview.sheet(file, "Kick Master: every kick from the side (winding, chambered, driving, the server's impact tick, through, folding), then 3/4",
+            shots, 7, 300, 300);
+    }
+
+    /**
+     * 4.1.88: Kick Master's own stance (the owner: "the kick master should give you a different stance, especially on the arms") beside the
+     * guard both styles had (fists up), from her front, her front-left, her left side, behind and in first person; then the stance into
+     * the string's first blows and back out of its kicks, the stance kept after a blow (her own legs under it, as the game keeps it),
+     * and the dash kick's charge sunk into from it.
+     */
+    static void kickStance(File file) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        double[] look = {0.0, 1.0, 0.0};
+        double[][] eyes = {{0.0, 1.45, 3.4}, {-2.4, 1.5, 2.4}, {-3.4, 1.3, 0.0}, {3.4, 1.3, 0.0}, {1.4, 1.7, -3.0}};
+        String[] views = {"front", "front-left", "her left side", "her right side", "behind"};
+        RigPose[] poses = {com.hex.kagune.control.client.animation.PaleMotions.guard(), com.hex.kagune.control.client.animation.PaleMotions.kickStance()};
+        String[] names = {"BEFORE (both styles): the guard", "NOW, Kick Master: her stance"};
+        double stand = com.hex.kagune.control.pale.PaleRules.strikeStand(0.6);
+        for (int k = 0; k < poses.length; k++) {
+            for (int v = 0; v < eyes.length; v++) {
+                RigPose p = new RigPose().add(poses[k], 1.0F);
+                p.settle(1.0F);
+                shots.add(new ArtPreview.Shot(names[k] + ", " + views[v], p, ArtPreview.NO_WINGS, eyes[v], look, List.of()));
+            }
+            RigPose p = new RigPose().add(poses[k], 1.0F);
+            p.settle(1.0F);
+            shots.add(armsShot(names[k] + ", first person", p, stand));
+        }
+        // Into the string and back: the jab and the cross out of the stance, the kicks' last ticks back into it.
+        com.hex.kagune.control.pale.PaleStrike[] string = com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS);
+        double[] quarter = {-3.0, 1.6, 2.8};
+        double[] at = {0.0, 0.95, 0.7};
+        com.hex.kagune.control.pale.PaleStrike jab = string[0];
+        for (double age : new double[] {0.0, 1.0, jab.impact, jab.duration}) {
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(jab, age, null);
+            p.settle(1.0F);
+            shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "out of it: the jab, tick %.0f%s", age, age == jab.impact ? " HIT" : ""), p,
+                ArtPreview.NO_WINGS, quarter, at, dummy(KICK_DUMMY_Z)));
+        }
+        for (com.hex.kagune.control.pale.PaleStrike strike : string) {
+            if (!strike.kick()) {
+                continue;
+            }
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.duration, null);
+            p.settle(1.0F);
+            String name = strike.name().toLowerCase(java.util.Locale.ROOT).replace('_', ' ');
+            shots.add(new ArtPreview.Shot(name + ": its end, back in it", p, ArtPreview.NO_WINGS, quarter, at, dummy(KICK_DUMMY_Z)));
+        }
+        // Kept after a blow: her own legs under it (a step of her walk), as PaleAnimator keeps it.
+        for (double stride : new double[] {0.0, 0.5, -0.5}) {
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.kickStance();
+            p.legHold = 0.0F;
+            p.rightLegX = (float)stride;
+            p.leftLegX = (float)-stride;
+            p.rightKnee = 0.0F;
+            p.leftKnee = 0.0F;
+            p.drop = 0.0F;
+            p.settle(1.0F);
+            shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "kept after a blow, walking (stride %.1f)", stride), p, ArtPreview.NO_WINGS,
+                eyes[1], look, List.of()));
+        }
+        for (double age : new double[] {0.0, 1.5, 3.0, 30.0}) {
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(age, null);
+            p.settle(1.0F);
+            shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "the dash kick held, tick %.1f", age), p, ArtPreview.NO_WINGS, eyes[1], look,
+                List.of()));
+        }
+        ArtPreview.sheet(file, "Kick Master's own stance (4.1.88): side-on, the hands low and loose; before, both styles' fists-up guard", shots, 6, 300, 300);
+    }
+
+    /**
+     * 4.1.7: Kick Master's whole string chained as the server chains it (each strike out of the last one's pose at its chain tick), a
+     * frame a tick from the side, to judge the blends between keys and between blows; and the same as a GIF at 30 fps from 3/4.
+     */
+    static void kicksFilm(File sheet, File gif) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        List<java.awt.image.BufferedImage> frames = new ArrayList<>();
+        com.hex.kagune.control.pale.PaleStrike[] all = com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS);
+        double[] side = {-4.6, 1.0, 0.7};
+        double[] quarter = {3.4, 1.8, 3.2};
+        double[] look = {0.0, 0.95, 0.7};
+        for (int f = 0; f < 10; f++) {
+            frames.add(ArtPreview.render(new ArtPreview.Shot("Kick Master, real time", com.hex.kagune.control.client.animation.PaleMotions.guard(),
+                ArtPreview.NO_WINGS, quarter, look, dummy(KICK_DUMMY_Z)), 420, 360));
+        }
+        RigPose from = null;
+        for (int s = 0; s < all.length; s++) {
+            com.hex.kagune.control.pale.PaleStrike strike = all[s];
+            double length = s == all.length - 1 ? strike.duration + 4 : strike.chain;
+            for (double age = 0.0; age < length - 1.0E-6; age += 1.0 / 3.0) {
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, Math.min(age, strike.duration), from);
+                RigPose drawn = new RigPose().add(p, 1.0F);
+                drawn.settle(1.0F);
+                frames.add(ArtPreview.render(new ArtPreview.Shot("Kick Master, real time", drawn, ArtPreview.NO_WINGS, quarter, look,
+                    dummy(KICK_DUMMY_Z)), 420, 360));
+                if (Math.abs(age - Math.rint(age)) < 1.0E-6) {
+                    String name = strike.name().toLowerCase(java.util.Locale.ROOT).replace('_', ' ');
+                    shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "%s %.0f%s", name, age, Math.rint(age) == strike.impact ? " HIT" : ""),
+                        drawn, ArtPreview.NO_WINGS, side, look, dummy(KICK_DUMMY_Z)));
+                }
+            }
+            from = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.chain, from);
+        }
+        ArtPreview.sheet(sheet, "Kick Master's string chained as the server chains it, a frame a tick, from the side", shots, 10, 210, 210);
+        writeGif(gif, frames, 3);
+    }
+
     /** The whole blitz chained as the server chains it (each strike from the last one's chain tick), as an animated GIF at 30 fps. */
     static void blitzGif(File file, double[] eye, String label) throws Exception {
         List<java.awt.image.BufferedImage> frames = new ArrayList<>();
         double fps = 30.0;
         RigPose shown = null;
-        com.hex.kagune.control.pale.PaleStrike[] all = com.hex.kagune.control.pale.PaleStrike.values();
+        com.hex.kagune.control.pale.PaleStrike[] all = com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ);
         // A beat in the guard first.
         for (int f = 0; f < 10; f++) {
             frames.add(ArtPreview.render(new ArtPreview.Shot(label, com.hex.kagune.control.client.animation.PaleMotions.guard(), ArtPreview.NO_WINGS, eye,
@@ -1614,6 +1779,106 @@ public final class PalePreview {
         }
         ArtPreview.sheet(file, "Owl DNA's Speed Kick (V tapped): the lunge, gone, there in the chamber, the leg driven straight into its middle (Kizaru)",
             shots, 4, 330, 330);
+    }
+
+    /**
+     * 4.1.87: Kick Master's dash kick: the coil on the hold, then let go: off the mark, the run (seen: a real dash), there, the leg cocked
+     * back, swept up and across to her left through the head of what she ran at (a 2-block figure: her hop puts the sole at its head), the
+     * figure flying off to her left, her body turned a quarter to her left with the kick, down in her guard facing left. Side on (from her
+     * right), from her front-left and from above; and in real time (dash-kick.gif).
+     */
+    static void dashKick(File file) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        int ticks = 4;
+        int detail = com.hex.kagune.control.pale.PaleRules.dashDetail(ticks, 1.0F);
+        int arrive = com.hex.kagune.control.pale.PaleRules.dashArrive(detail);
+        double contact = arrive + com.hex.kagune.control.pale.PaleRules.DASH_CONTACT;
+        double lift = com.hex.kagune.control.pale.PaleRules.dashLift(2.0 * com.hex.kagune.control.pale.PaleRules.DASH_HEAD);
+        double run = ticks * com.hex.kagune.control.pale.PaleRules.DASH_SPEED;
+        double ahead = 0.25 + com.hex.kagune.control.pale.PaleRules.DASH_STAND + 0.3;
+        double[] coilAges = {3.0, 30.0};
+        String[] coilNames = {"held: the coil", "held: full"};
+        double[] ages = {1.2, com.hex.kagune.control.pale.PaleRules.DASH_BURST + 1.0, com.hex.kagune.control.pale.PaleRules.DASH_BURST + 2.0, arrive + 1.4,
+            contact - 0.7, contact, contact + 0.7, arrive + com.hex.kagune.control.pale.PaleRules.DASH_TURNED,
+            arrive + com.hex.kagune.control.pale.PaleRules.DASH_LAND, arrive + com.hex.kagune.control.pale.PaleRules.DASH_TICKS};
+        String[] names = {"let go: off the mark", "the run", "the run", "THE LEG COCKED BACK", "the sweep: up", "THE BLOW: at the head", "through, to her left",
+            "turned: facing it", "down", "her guard, facing left"};
+        double[][] eyes = {{4.6, 1.3, 0.9}, {-3.4, 1.9, 3.6}, {0.9, 6.5, -1.2}};
+        String[] views = {"side on", "her front-left", "above"};
+        double[] flight = com.hex.kagune.control.pale.PaleRules.dashFlight();
+        for (int pass = 0; pass < eyes.length; pass++) {
+            double[] eye = eyes[pass];
+            for (int i = 0; i < coilAges.length; i++) {
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(coilAges[i], null);
+                p.settle(1.0F);
+                List<WingPreview.Tri> scene = figure(new double[] {0.0, 1.0, ahead + run});
+                box(scene, new double[] {-6.0, -0.2, -4.0}, new double[] {4.0, 0.0, 14.0}, 0xFF4E5A44);
+                shots.add(new ArtPreview.Shot(coilNames[i] + " (" + views[pass] + ")", p, ArtPreview.NO_WINGS, eye, new double[] {0.0, 0.9, 0.5}, scene));
+            }
+            for (int i = 0; i < ages.length; i++) {
+                double age = ages[i];
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.dashKick(age, detail, null);
+                p.settle(1.0F);
+                double[] at = com.hex.kagune.control.pale.PaleRules.dashPlace(new double[] {0.0, 0.0, run}, detail, lift, age);
+                double gone = at == null ? run : at[2];
+                double up = at == null ? 0.0 : at[1];
+                double flown = age > contact ? Math.min(6.0, (age - contact) * 2.4) : 0.0;
+                List<WingPreview.Tri> scene = flown > 5.5 ? new ArrayList<>()
+                    : figure(new double[] {flight[0] * flown, 1.0 - up + flown * 0.15, ahead + run - gone + flight[1] * flown});
+                box(scene, new double[] {-6.0, -0.2 - up, -4.0}, new double[] {4.0, -up, 14.0}, 0xFF4E5A44);
+                shots.add(new ArtPreview.Shot(names[i] + " (" + views[pass] + String.format(java.util.Locale.ROOT, ", tick %.1f)", age), p, ArtPreview.NO_WINGS,
+                    new double[] {eye[0], eye[1] - up * 0.3, eye[2]}, new double[] {0.0, 0.9 - up * 0.4, 0.5}, scene));
+            }
+        }
+        ArtPreview.sheet(file, "Kick Master's dash kick (right click held, let go): the coil, the run, the leg cocked back, swept up and left through the head, facing left",
+            shots, 12, 250, 270);
+        // Close: the kick alone, every half tick from there to her guard, from behind her (as the player sees it) and from her front.
+        List<ArtPreview.Shot> close = new ArrayList<>();
+        double[][] closeEyes = {{0.4, 1.7, -3.2}, {0.2, 1.3, 3.4}};
+        String[] closeViews = {"behind", "front"};
+        for (int pass = 0; pass < closeEyes.length; pass++) {
+            for (double since = 0.0; since <= com.hex.kagune.control.pale.PaleRules.DASH_TICKS + 1.0E-9; since += 0.5) {
+                double age = arrive + since;
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.dashKick(age, detail, null);
+                p.settle(1.0F);
+                List<WingPreview.Tri> scene = new ArrayList<>();
+                box(scene, new double[] {-3.0, -0.2, -3.0}, new double[] {3.0, 0.0, 3.0}, 0xFF4E5A44);
+                close.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "%s +%.1f", closeViews[pass], since), p, ArtPreview.NO_WINGS,
+                    closeEyes[pass], new double[] {0.0, 1.0, 0.3}, scene));
+            }
+        }
+        ArtPreview.sheet(new File(file.getParentFile(), "dash-kick-close.png"), "The dash kick from where she is there (ticks after): cocked, swept up and left, turned, down",
+            close, 21, 200, 240);
+        // In real time (30 fps), from her front-left: held a second, let go.
+        List<java.awt.image.BufferedImage> frames = new ArrayList<>();
+        double[] eye = eyes[1];
+        for (double age = 0.0; age < 20.0; age += 2.0 / 3.0) {
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(age, null);
+            p.settle(1.0F);
+            List<WingPreview.Tri> scene = figure(new double[] {0.0, 1.0, ahead + run});
+            box(scene, new double[] {-6.0, -0.2, -4.0}, new double[] {4.0, 0.0, 14.0}, 0xFF4E5A44);
+            frames.add(ArtPreview.render(new ArtPreview.Shot("Kick Master: right click held", p, ArtPreview.NO_WINGS, eye, new double[] {0.0, 0.9, 0.5}, scene),
+                420, 360));
+        }
+        RigPose from = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(20.0, null);
+        for (double age = 0.0; age < com.hex.kagune.control.pale.PaleRules.dashEnd(detail) + 4.0; age += 2.0 / 3.0) {
+            RigPose p = age < com.hex.kagune.control.pale.PaleRules.dashEnd(detail)
+                ? com.hex.kagune.control.client.animation.PaleMotions.dashKick(age, detail, from) : com.hex.kagune.control.client.animation.PaleMotions.guard();
+            if (age >= com.hex.kagune.control.pale.PaleRules.dashEnd(detail)) {
+                p.spin += (float)(Math.PI / 2.0);
+            }
+            p.settle(1.0F);
+            double[] at = com.hex.kagune.control.pale.PaleRules.dashPlace(new double[] {0.0, 0.0, run}, detail, lift, age);
+            double gone = at == null ? run : at[2];
+            double up = at == null ? 0.0 : at[1];
+            double flown = age > contact ? Math.min(7.0, (age - contact) * 2.4) : 0.0;
+            List<WingPreview.Tri> scene = flown > 6.5 ? new ArrayList<>()
+                : figure(new double[] {flight[0] * flown, 1.0 - up + flown * 0.15, ahead + run - gone + flight[1] * flown});
+            box(scene, new double[] {-8.0, -0.2 - up, -30.0}, new double[] {8.0, -up, 30.0}, 0xFF4E5A44);
+            frames.add(ArtPreview.render(new ArtPreview.Shot("Kick Master: let go", p, ArtPreview.NO_WINGS, new double[] {eye[0], eye[1] - up * 0.3, eye[2]},
+                new double[] {0.0, 0.9 - up * 0.4, 0.5}, scene), 420, 360));
+        }
+        writeGif(new File(file.getParentFile(), "dash-kick.gif"), frames, 3);
     }
 
     /**

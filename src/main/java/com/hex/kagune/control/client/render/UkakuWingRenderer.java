@@ -65,7 +65,7 @@ public final class UkakuWingRenderer {
      * turned {@code yaw} (radians, the body's), the whole turned {@code flip} about the hips (the Black Rabbit's backflip).
      */
     private static void emit(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, List<WingRig.Quad> quads, double x, double y, double z, double yaw,
-                             float flip) {
+                             float flip, int tint) {
         double forwardX = -Math.sin(yaw);
         double forwardZ = Math.cos(yaw);
         double rightX = -Math.cos(yaw);
@@ -74,7 +74,7 @@ public final class UkakuWingRenderer {
         double flipSin = Math.sin(-flip);
         for (WingRig.Quad quad : quads) {
             float[] xyz = quad.xyz();
-            int[] argb = quad.argb();
+            int[] argb = com.hex.kagune.control.KaguneTint.recolour(quad.argb(), tint); // 1.3.35: in its owner's colour
             double qy = quad.ny();
             double qz = quad.nz();
             if (flip != 0.0F) {
@@ -110,7 +110,7 @@ public final class UkakuWingRenderer {
      * com.hex.kagune.control.client.animation.BodyFrame#carry}: the posed torso's rigid transform).
      */
     private static void emit(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, List<WingRig.Quad> quads, double x, double y, double z, double yaw,
-                             double[] carry) {
+                             double[] carry, int tint) {
         double forwardX = -Math.sin(yaw);
         double forwardZ = Math.cos(yaw);
         double rightX = -Math.cos(yaw);
@@ -118,7 +118,7 @@ public final class UkakuWingRenderer {
         double[] a = carry;
         for (WingRig.Quad quad : quads) {
             float[] xyz = quad.xyz();
-            int[] argb = quad.argb();
+            int[] argb = com.hex.kagune.control.KaguneTint.recolour(quad.argb(), tint); // 1.3.35: in its owner's colour
             double qx = a[0] * quad.nx() + a[1] * quad.ny() + a[2] * quad.nz();
             double qy = a[3] * quad.nx() + a[4] * quad.ny() + a[5] * quad.nz();
             double qz = a[6] * quad.nx() + a[7] * quad.ny() + a[8] * quad.nz();
@@ -220,15 +220,18 @@ public final class UkakuWingRenderer {
             if (consumer == null) {
                 consumer = buffers.m_6299_(TYPE);
             }
+            int tint = view.color(); // 1.3.35: the player's own kagune colour (KaguneColours), its wings and crystals turned to it
             if (carry != null) {
-                emit(consumer, matrix, normals, quads, x, y, z, yaw, carry);
+                emit(consumer, matrix, normals, quads, x, y, z, yaw, carry, tint);
             } else {
-                emit(consumer, matrix, normals, quads, x, y, z, yaw, flip);
+                emit(consumer, matrix, normals, quads, x, y, z, yaw, flip, tint);
             }
         }
         // 7.0.2: the ukaku ghoul NPCs in view: the twin wings, as Ukaku's, aiming as they shoot.
         double clock = com.hex.kagune.control.client.PaleClient.clock(partial);
+        // 2.0.27: each ghoul on its own: one that fails is skipped (logged), never the rest of them nor the companions' wings after.
         for (com.hex.kagune.control.npc.GhoulNpc npc : GhoulNpcRenderer.drawn()) {
+            try {
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(npc.m_19879_());
             if (seen == null || seen.identity().kind() != com.hex.kagune.control.npc.NpcIdentity.Kind.UKAKU || !npc.m_6084_() || npc.m_20145_()) {
                 continue;
@@ -274,7 +277,144 @@ public final class UkakuWingRenderer {
             }
             // 1.0.41: its wings turned over with it as it flips.
             com.hex.kagune.control.client.animation.RigPose flipping = com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_());
-            emit(consumer, matrix, normals, quads, x, y, z, yaw, flipping == null ? 0.0F : flipping.flip);
+            emit(consumer, matrix, normals, quads, x, y, z, yaw, flipping == null ? 0.0F : flipping.flip,
+                com.hex.kagune.control.KaguneTint.wild(seen.identity().seed()));
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("a wild ghoul's wings", failure);
+            }
+        }
+        // 1.3.19: a companion's wings (Touka's): a lesser pair at her size, riding her torso as it was drawn, crystal as she throws.
+        for (int id : com.hex.kagune.control.client.NpcWingsClient.ids()) {
+            com.hex.kagune.control.client.NpcWingsClient.View wings = com.hex.kagune.control.client.NpcWingsClient.get(id);
+            if (!(level.m_6815_(id) instanceof com.hex.kagune.control.npc.EtoNpc npc) || !npc.m_6084_() || npc.m_20145_() || !npc.persona().wings()) {
+                continue; // 4.0.0: (Noro's view says when his worms are out: no wings of his)
+            }
+            float deploy = com.hex.kagune.control.client.NpcWingsClient.deploy(wings, clock);
+            double distance = npc.m_20280_(self);
+            if (deploy <= 0.005F || distance > MAX_DISTANCE_SQR) {
+                continue;
+            }
+            double size = npc.persona().size();
+            double x = npc.f_19790_ + (npc.m_20185_() - npc.f_19790_) * partial - camera.f_82479_;
+            double y = npc.f_19791_ + (npc.m_20186_() - npc.f_19791_) * partial - camera.f_82480_;
+            double z = npc.f_19792_ + (npc.m_20189_() - npc.f_19792_) * partial - camera.f_82481_;
+            float yawDelta = ((npc.f_20883_ - npc.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+            double yaw = Math.toRadians(npc.f_20884_ + yawDelta * partial);
+            double forwardX = -Math.sin(yaw);
+            double forwardZ = Math.cos(yaw);
+            double rightX = -Math.cos(yaw);
+            double rightZ = -Math.sin(yaw);
+            double[] eye = {-(rightX * x + rightZ * z) / size, -y / size, -(forwardX * x + forwardZ * z) / size};
+            double[] aim = WingRig.FORWARD;
+            net.minecraft.world.entity.Entity prey = wings.prey() == 0 ? null : level.m_6815_(wings.prey());
+            if (prey != null) {
+                double px = prey.f_19790_ + (prey.m_20185_() - prey.f_19790_) * partial - camera.f_82479_ - x;
+                double py = prey.f_19791_ + (prey.m_20186_() - prey.f_19791_) * partial + prey.m_20206_() * 0.52 - camera.f_82480_ - y - WingRig.ROOT_Y * size;
+                double pz = prey.f_19792_ + (prey.m_20189_() - prey.f_19792_) * partial - camera.f_82481_ - z;
+                double[] rig = {px * rightX + pz * rightZ, py, px * forwardX + pz * forwardZ};
+                double length = Math.sqrt(rig[0] * rig[0] + rig[1] * rig[1] + rig[2] * rig[2]);
+                if (length > 1.0E-3) {
+                    aim = new double[] {rig[0] / length, rig[1] / length, rig[2] / length};
+                }
+            }
+            float aimed = com.hex.kagune.control.client.NpcWingsClient.aim(wings, clock);
+            float crystal = com.hex.kagune.control.client.NpcWingsClient.crystal(wings, clock);
+            // 1.3.26: through WingRules.companion (the owner: "she's not manifesting at all": both wings were passed as thrown, so none drew).
+            WingRig.Input input = com.hex.kagune.control.npc.WingRules.companion(deploy, time / 20.0, crystal, !wings.out(), aimed, aim,
+                com.hex.kagune.control.client.NpcWingsClient.kick(wings, 1, clock), com.hex.kagune.control.client.NpcWingsClient.kick(wings, -1, clock),
+                distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F);
+            // 4.0.0: Ayato's wings are a full pair; badly hurt, his kakuja (the first kakuja's armoured tentacles, as an Ukaku player's).
+            float grownKakuja = com.hex.kagune.control.client.NpcWingsClient.kakuja(wings, clock);
+            if (npc.persona().kakuja()) {
+                input = com.hex.kagune.control.npc.WingRules.full(input, grownKakuja > 0.02F);
+            }
+            // 4.1.54: Banjou's one small wing, slapping (WingRules.banjou): never aiming, nothing thrown.
+            float[] slap = npc.persona().slapsOnly() ? com.hex.kagune.control.client.NpcWingsClient.slap(wings, clock) : null;
+            if (npc.persona().slapsOnly()) {
+                input = com.hex.kagune.control.npc.WingRules.banjou(deploy, time / 20.0, crystal, !wings.out(), distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F,
+                    slap == null ? -1 : (int)slap[0], slap == null ? 0.0F : slap[1]);
+            }
+            List<WingRig.Quad> quads = WingRig.build(input, eye);
+            if (quads.isEmpty()) {
+                continue;
+            }
+            if (consumer == null) {
+                consumer = buffers.m_6299_(TYPE);
+            }
+            // Her torso as drawn this frame (her lean, her flips), and her size: the wings ride both.
+            com.hex.kagune.control.client.animation.RigPose drawn = EtoRenderer.lastPose(id);
+            double[] carry = drawn == null ? new double[] {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}
+                : com.hex.kagune.control.client.animation.BodyFrame.carry(drawn, "torso");
+            if (npc.persona().slapsOnly()) {
+                carry = com.hex.kagune.control.npc.WingRules.shrunk(carry, com.hex.kagune.control.npc.WingRules.SLAP_SCALE); // 4.1.54: "super small"
+            }
+            double[] scaled = new double[12];
+            for (int k = 0; k < 12; k++) {
+                scaled[k] = carry[k] * size;
+            }
+            // Each in its own colour: Touka's and Ayato's the original crimson, Banjou's blue (4.1.54, the owner: "blue Ukaku wing").
+            emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, npc.persona().kaguneColour());
+        }
+        // 1.3.43: the ghoul children in view with Ukaku of their own: one wing (born of two kinds: 1.3.45: on the left beside a tentacle,
+        // else the side its seed gives) or the pair,
+        // at their size, aiming as they shoot, in the colour they took from a parent.
+        for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            try {
+            com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
+            com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
+            int wings = kid == null ? 0 : com.hex.kagune.control.family.ChildKaguneRules.wingCount(kid.genome().kagune(), kid.genome().seed()); // 1.3.46
+            if (wings == 0 || !child.m_6084_() || child.m_20145_() || child.m_5803_()) {
+                continue;
+            }
+            // 2.3.7: shown whenever it fights (its kakugan out), even before its kagune's own state reaches this side.
+            float deploy = Math.max(seen == null ? 0.0F : com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock), kid.turned() ? 1.0F : 0.0F);
+            boolean out = seen != null ? seen.out() : kid.turned();
+            double distance = child.m_20280_(self);
+            if (deploy <= 0.005F || distance > MAX_DISTANCE_SQR) {
+                continue;
+            }
+            double size = com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage());
+            double x = child.f_19790_ + (child.m_20185_() - child.f_19790_) * partial - camera.f_82479_;
+            double y = child.f_19791_ + (child.m_20186_() - child.f_19791_) * partial - camera.f_82480_;
+            double z = child.f_19792_ + (child.m_20189_() - child.f_19792_) * partial - camera.f_82481_;
+            float yawDelta = ((child.f_20883_ - child.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+            double yaw = Math.toRadians(child.f_20884_ + yawDelta * partial);
+            double forwardX = -Math.sin(yaw);
+            double forwardZ = Math.cos(yaw);
+            double rightX = -Math.cos(yaw);
+            double rightZ = -Math.sin(yaw);
+            double[] eye = {-(rightX * x + rightZ * z) / size, -y / size, -(forwardX * x + forwardZ * z) / size};
+            double[] aim = WingRig.FORWARD;
+            net.minecraft.world.entity.Entity prey = seen == null || seen.prey() == 0 ? null : level.m_6815_(seen.prey());
+            if (prey != null) {
+                double px = prey.f_19790_ + (prey.m_20185_() - prey.f_19790_) * partial - camera.f_82479_ - x;
+                double py = prey.f_19791_ + (prey.m_20186_() - prey.f_19791_) * partial + prey.m_20206_() * 0.52 - camera.f_82480_ - y - WingRig.ROOT_Y * size;
+                double pz = prey.f_19792_ + (prey.m_20189_() - prey.f_19792_) * partial - camera.f_82481_ - z;
+                double[] rig = {px * rightX + pz * rightZ, py, px * forwardX + pz * forwardZ};
+                double length = Math.sqrt(rig[0] * rig[0] + rig[1] * rig[1] + rig[2] * rig[2]);
+                if (length > 1.0E-3) {
+                    aim = new double[] {rig[0] / length, rig[1] / length, rig[2] / length};
+                }
+            }
+            float aimed = com.hex.kagune.control.client.GhoulNpcClient.aim(seen, clock);
+            WingRig.Input input = com.hex.kagune.control.npc.WingRules.child(com.hex.kagune.control.family.ChildKaguneRules.wingMastery(kid.stage()), wings,
+                com.hex.kagune.control.family.ChildKaguneRules.wingSide(kid.genome().kagune(), kid.genome().seed()), deploy, time / 20.0, !out, aimed, aim,
+                com.hex.kagune.control.client.GhoulNpcClient.kick(seen, 1, clock), com.hex.kagune.control.client.GhoulNpcClient.kick(seen, -1, clock),
+                distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F,
+                com.hex.kagune.control.client.NpcWingsClient.crystal(com.hex.kagune.control.client.NpcWingsClient.get(child.m_19879_()), clock), // 1.3.48
+                com.hex.kagune.control.family.HalfBlood.kakuja(kid.genome(), kid.stage(), out)); // 2.2.2: a grown half-human child's kakuja
+            List<WingRig.Quad> quads = WingRig.build(input, eye);
+            if (quads.isEmpty()) {
+                continue;
+            }
+            if (consumer == null) {
+                consumer = buffers.m_6299_(TYPE);
+            }
+            double[] scaled = {size, 0, 0, 0, size, 0, 0, 0, size, 0, 0, 0};
+            emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, com.hex.kagune.control.client.KaguneTints.of(child));
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("a child's wings", failure); // 2.5.5: one child failing never hides the others
+            }
         }
         // Shards of Ukaku's fire and crystal spikes in flight (camera-relative, facing the camera).
         double[] eye = {0.0, 0.0, 0.0};
@@ -290,7 +430,7 @@ public final class UkakuWingRenderer {
             if (consumer == null) {
                 consumer = buffers.m_6299_(TYPE);
             }
-            RcShard.Sink sink = glowing(consumer, matrix, normals);
+            RcShard.Sink sink = tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(bolt.shooter()));
             double age = time - bolt.born();
             float fade = (float)Math.max(0.0, Math.min(1.0, Math.min((age + 1.0) / 1.5, bolt.life() + 1.0 - age)));
             double[] heading = {bolt.velocity().f_82479_, bolt.velocity().f_82480_, bolt.velocity().f_82481_};
@@ -312,12 +452,9 @@ public final class UkakuWingRenderer {
             if (away > MAX_DISTANCE_SQR) {
                 continue;
             }
-            if (vortex.shooter() == self.m_19879_() && minecraft.f_91066_.m_92176_().m_90612_() && vortex.unwind(time) <= 0.0F) {
-                // In first person, start it a little out from your own shoulder, so it doesn't fill the view.
-                Vec3 along = head.m_82546_(root);
-                double length = along.m_82553_();
-                root = length < 1.0E-6 ? root : root.m_82549_(along.m_82490_(Math.min(length * 0.8, 1.6) / length));
-            }
+            // 3.2.9: in first person your own is a thin jet near your eyes, opening only as it goes off (WingVortex own), instead of
+            // its root shoved 1.6 blocks out (it still filled the view).
+            boolean own = vortex.shooter() == self.m_19879_() && minecraft.f_91066_.m_92176_().m_90612_();
             if (consumer == null) {
                 consumer = buffers.m_6299_(TYPE);
             }
@@ -330,9 +467,10 @@ public final class UkakuWingRenderer {
                 dusk = Math.max(0.0, Math.min(1.0, (KaguneClientState.get(shooter).mastery() - 250) / 200.0));
                 dusk = dusk * dusk * (3.0 - 2.0 * dusk);
             }
-            WingVortex.build(glowing(consumer, matrix, normals), new double[] {root.f_82479_, root.f_82480_, root.f_82481_},
+            WingVortex.build(tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(vortex.shooter())),
+                new double[] {root.f_82479_, root.f_82480_, root.f_82481_},
                 new double[] {head.f_82479_, head.f_82480_, head.f_82481_}, vortex.size(), time / 20.0, vortex.seed(), eye, fade, unwind, dusk,
-                away < DETAIL_DISTANCE_SQR);
+                away < DETAIL_DISTANCE_SQR, own);
         }
         // Crystal spikes stuck in bodies: on the body as it moves and turns, the point inside it, glowing hotter as the burst comes.
         for (Map.Entry<Integer, UkakuSpikes.Body> entry : UkakuSpikes.bodies().entrySet()) {
@@ -365,12 +503,13 @@ public final class UkakuWingRenderer {
                 double settle = Math.max(0.0, Math.min(1.0, (time - spike.stuckAt()) / 3.0));
                 double[] at = {tip.f_82479_, tip.f_82480_, tip.f_82481_};
                 double[] pointing = {dir.f_82479_, dir.f_82480_, dir.f_82481_};
+                // 1.3.35: in the colour of whoever shot it (remembered from its flight).
+                RcShard.Sink stuck = tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(UkakuFx.shooter(spike.id())));
                 if (needle) {
-                    KakujaNeedle.build(glowing(consumer, matrix, normals), at, pointing, size, eye, 0.0, heat * heat, time / 20.0, spike.id() & 0xFFFF,
-                        away < DETAIL_DISTANCE_SQR, 1.0);
+                    KakujaNeedle.build(stuck, at, pointing, size, eye, 0.0, heat * heat, time / 20.0, spike.id() & 0xFFFF, away < DETAIL_DISTANCE_SQR, 1.0);
                 } else {
-                    CrystalSpike.build(glowing(consumer, matrix, normals), at, pointing, size, eye, 0.3 * (1.0 - settle), heat * heat, time / 20.0,
-                        spike.id() & 0xFFFF, away < DETAIL_DISTANCE_SQR, 1.0);
+                    CrystalSpike.build(stuck, at, pointing, size, eye, 0.3 * (1.0 - settle), heat * heat, time / 20.0, spike.id() & 0xFFFF,
+                        away < DETAIL_DISTANCE_SQR, 1.0);
                 }
             }
         }
@@ -403,7 +542,8 @@ public final class UkakuWingRenderer {
                     consumer = buffers.m_6299_(TYPE);
                 }
                 Vec3 dir = UkakuThorns.world(body, thorn.direction(), partial, true);
-                CrystalSpike.build(glowing(consumer, matrix, normals), new double[] {tip.f_82479_, tip.f_82480_, tip.f_82481_},
+                CrystalSpike.build(tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(body)),
+                    new double[] {tip.f_82479_, tip.f_82480_, tip.f_82481_},
                     new double[] {dir.f_82479_, dir.f_82480_, dir.f_82481_}, CrystalThorns.drawnSize(thorn, out) * scale, eye, glow, 0.0, time / 20.0,
                     thorn.seed(), away < DETAIL_DISTANCE_SQR, 1.0);
             }
@@ -421,12 +561,13 @@ public final class UkakuWingRenderer {
             double left = Math.max(0.0, Math.min(1.0, (planted.until() - time) / 8.0));
             double[] at = {tip.f_82479_, tip.f_82480_, tip.f_82481_};
             double[] pointing = {planted.direction().f_82479_, planted.direction().f_82480_, planted.direction().f_82481_};
+            // 4.1.17 (the owner: "It should remain the same color as the Kagune or when it hits the mob ... This also applies for the
+            // kakuja"): in the colour of whoever shot it, as a spike stuck in a body is (it was drawn untinted: the default red).
+            RcShard.Sink sink = tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(planted.shooter()));
             if (planted.kind() == UkakuFx.NEEDLE_KIND) {
-                KakujaNeedle.build(glowing(consumer, matrix, normals), at, pointing, planted.size(), eye, 0.0, 0.0, time / 20.0, planted.seed(),
-                    away < DETAIL_DISTANCE_SQR, left);
+                KakujaNeedle.build(sink, at, pointing, planted.size(), eye, 0.0, 0.0, time / 20.0, planted.seed(), away < DETAIL_DISTANCE_SQR, left);
             } else {
-                CrystalSpike.build(glowing(consumer, matrix, normals), at, pointing, planted.size(), eye, 0.0, 0.0, time / 20.0, planted.seed(),
-                    away < DETAIL_DISTANCE_SQR, left);
+                CrystalSpike.build(sink, at, pointing, planted.size(), eye, 0.0, 0.0, time / 20.0, planted.seed(), away < DETAIL_DISTANCE_SQR, left);
             }
         }
         if (consumer != null) {
@@ -465,6 +606,16 @@ public final class UkakuWingRenderer {
         Vec3 up = Math.abs(dir.f_82480_) < 0.9 ? new Vec3(0.0, 1.0, 0.0) : new Vec3(1.0, 0.0, 0.0);
         Vec3 side = dir.m_82537_(up).m_82541_();
         return dir.m_82549_(side.m_82490_(amount)).m_82541_();
+    }
+
+    /** 1.3.35: {@code sink} with every colour turned to {@code tint} (KaguneTint; the original crimson passes as it is). */
+    private static RcShard.Sink tinted(RcShard.Sink sink, int tint) {
+        if ((tint & 0xFFFFFF) == com.hex.kagune.control.KaguneColours.DEFAULT) {
+            return sink;
+        }
+        return (a, b, c, d, ca, cb, cc, cd) -> sink.quad(a, b, c, d, com.hex.kagune.control.KaguneTint.recolour(ca, tint),
+            com.hex.kagune.control.KaguneTint.recolour(cb, tint), com.hex.kagune.control.KaguneTint.recolour(cc, tint),
+            com.hex.kagune.control.KaguneTint.recolour(cd, tint));
     }
 
     /** A sink that writes glowing quads (full bright, lit from above) in camera-relative blocks. */

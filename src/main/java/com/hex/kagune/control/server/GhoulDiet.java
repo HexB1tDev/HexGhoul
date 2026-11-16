@@ -118,6 +118,8 @@ public final class GhoulDiet {
                 FoodProperties properties = eaten.getFoodProperties(player);
                 int nutrition = properties == null ? 2 : Math.max(1, properties.m_38744_());
                 // Raw flesh fills the reserve (vanilla hunger is held still under it).
+                // 1.3.40: a mutant gets more out of every bite (Mutant.FEED).
+                nutrition = com.hex.kagune.control.Mutant.feed(GhoulMeatServer.mutant(player), nutrition);
                 GhoulReserveServer.set(player, GhoulReserve.eat(GhoulReserveServer.get(player), nutrition));
                 if (!state.preEatHadHunger) {
                     player.m_21195_(MobEffects.f_19612_);

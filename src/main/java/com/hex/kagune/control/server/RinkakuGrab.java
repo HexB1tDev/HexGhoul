@@ -129,7 +129,7 @@ public final class RinkakuGrab {
             0.0F, 0.0F};
         com.hex.kagune.control.network.ControlNetwork.broadcastAround(body, new com.hex.kagune.control.network.S2CKingFx(body.m_20148_(),
             com.hex.kagune.control.network.S2CKingFx.MARK, new int[] {com.hex.kagune.control.king.KingMarkFx.GLINT, 0}, data));
-        UkakuFire.sound(player.m_284548_(), at, "block.note_block.bell", 0.9F, 1.8F);
+        UkakuFire.sound(player.m_284548_(), at, com.hex.kagune.control.RinkakuSounds.CUE, 0.9F, 1.8F);
     }
 
     /**

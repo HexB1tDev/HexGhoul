@@ -1,0 +1,51 @@
+[
+ {
+  "name": "a stroll up the stairs again",
+  "file": "src/main/java/com/hex/kagune/control/npc/EtoRules.java",
+  "old": "return sharedHome || Math.abs(toY - homeFeetY) <= FLOOR_STEP;",
+  "new": "return true;",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "a stroll's floor never judged",
+  "file": "src/main/java/com/hex/kagune/control/npc/EtoNpc.java",
+  "old": "return to == null || EtoBrain.strollsTo(EtoNpc.this, to.f_82480_) ? to : null;",
+  "new": "return to;",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "a married one kept to one floor of her home",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoBrain.java",
+  "old": "return EtoRules.strollsTo(npc.homeFeet()[1], toY, Households.forCompanion(level, npc) != null);",
+  "new": "return EtoRules.strollsTo(npc.homeFeet()[1], toY, false);",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "off her floor not out of place",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoBrain.java",
+  "old": "&& (offFloor || npc.m_20238_(homeAt) >",
+  "new": "&& (npc.m_20238_(homeAt) >",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "off her floor, she stays there",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoBrain.java",
+  "old": "            npc.m_21573_().m_26519_(feet[0], feet[1], feet[2], 0.6);\n",
+  "new": "",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "/kagune places says nothing of why",
+  "file": "src/main/java/com/hex/kagune/control/server/UniqueNpcs.java",
+  "old": "            String why = diagnosis(level, key, slot, spot, level.m_46467_());",
+  "new": "            String why = \"\";",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "a version past .9",
+  "file": "build.py",
+  "old": "VERSION = \"4.2.0\"",
+  "new": "VERSION = \"4.1.104\"",
+  "suite": "TraceTests"
+ }
+]

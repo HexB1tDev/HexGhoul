@@ -21,9 +21,50 @@ public final class EtoRules {
     /** Whether a player may wear one kakugan: kept in their profile root once she has made them like her (or they already were). */
     public static final String GRANT = "HexEtoGrant";
 
-    public static final float HEALTH = 150.0F;
+    /** 1.3.2: stacked: twice the health she had, and her skin hard as armour. */
+    public static final float HEALTH = 300.0F;
+    public static final double ARMOR = 14.0;
+    /** 1.3.1: how much smaller than a player she is: drawn and boxed. 1.3.9: the one female body's ({@code FemaleBody}), shared. */
+    public static final float SIZE = com.hex.kagune.control.FemaleBody.SIZE;
+
+    /**
+     * 1.3.10: her colours as a mother passes them on (read off her skin, art/eto_skin.png: the teal on the top of her head, her pale
+     * skin, her own dark eye), and she is a one-eyed ghoul.
+     */
+    public static final int HAIR = 0x78C0A8;
+    public static final int SKIN = 0xEBE0E0;
+    public static final int EYES = 0x3E333D;
+
+    /** 1.3.1: her bust's bounce (1.3.9: the shared female body's, {@code FemaleBody}). */
+    public static final double JIGGLE_STIFF = com.hex.kagune.control.FemaleBody.JIGGLE_STIFF;
+    public static final double JIGGLE_DAMP = com.hex.kagune.control.FemaleBody.JIGGLE_DAMP;
+    public static final double JIGGLE_MOST = com.hex.kagune.control.FemaleBody.JIGGLE_MOST;
+
+    /** Her bust's bounce carried on ({@code FemaleBody#jiggle}). */
+    public static void jiggle(double[] state, double moved, double ticks) {
+        com.hex.kagune.control.FemaleBody.jiggle(state, moved, ticks);
+    }
+
+    /** How far (model pixels, up) her bust's tip is drawn off its rest for a lag of {@code lag} blocks. */
+    public static float jigglePixels(double lag) {
+        return com.hex.kagune.control.FemaleBody.jigglePixels(lag);
+    }
+
     /** How far from home she wanders (blocks), how far she chases before she goes back, how far off she is put back home. */
     public static final int HOME_RADIUS = 4;
+
+    /**
+     * 4.2.0 (the owner: Touka "leaves the front desk of the cafe sometimes to go to a fucking room at the top of her little thing, and she just
+     * stays in the corner"): how far above or below her home's floor an idle stroll may end (a step, a slab). The game's stroll picks any
+     * point within her home's radius as a ball, so the floor above the counter was in reach: she climbed the stairs and stood where it
+     * ended, in a corner. At a home shared with a spouse she roams all of it, every floor (her chores and her bed are there).
+     */
+    public static final double FLOOR_STEP = 1.5;
+
+    /** 4.2.0: true if an idle stroll may end at height {@code toY} for one whose home's feet are at {@code homeFeetY} ({@link #FLOOR_STEP}). */
+    public static boolean strollsTo(double homeFeetY, double toY, boolean sharedHome) {
+        return sharedHome || Math.abs(toY - homeFeetY) <= FLOOR_STEP;
+    }
     public static final int LEASH = HOME_RADIUS + 3;
     public static final double LOST = 16.0;
 
@@ -49,22 +90,26 @@ public final class EtoRules {
     public static final int HUNT_DONE = 512;
     public static final int FLOWER_DONE = 1024;
     public static final int DATING = 2048;
+    /** 1.3.2: her last lesson taught (its quest, {@code eto_one_eye}, is open). */
+    public static final int TAUGHT_TRIAL = 4096;
 
-    /** The three lessons, in the order she teaches them: the quest each opens, the gate it leads to, the regard it waits for. */
+    /**
+     * Her lessons, in the order she teaches them: the quest each opens and the gate it leads to (1.3.2: to anyone who isn't her enemy;
+     * no friendship needed). The last, her trial, opens no gate: done, she makes them one-eyed.
+     */
     public enum Lesson {
-        KICK("eto_kick", Gate.EYES_KICK, 20, TAUGHT_KICK),
-        SOAR("eto_soar", Gate.EYES_SOAR, 40, TAUGHT_SOAR),
-        WITNESS("eto_witness", Gate.EYES_WITNESS, 60, TAUGHT_WITNESS);
+        KICK("eto_kick", Gate.EYES_KICK, TAUGHT_KICK),
+        SOAR("eto_soar", Gate.EYES_SOAR, TAUGHT_SOAR),
+        WITNESS("eto_witness", Gate.EYES_WITNESS, TAUGHT_WITNESS),
+        TRIAL("eto_one_eye", null, TAUGHT_TRIAL);
 
         public final String quest;
         public final Gate gate;
-        public final int regard;
         public final int flag;
 
-        Lesson(String quest, Gate gate, int regard, int flag) {
+        Lesson(String quest, Gate gate, int flag) {
             this.quest = quest;
             this.gate = gate;
-            this.regard = regard;
             this.flag = flag;
         }
 
@@ -74,9 +119,15 @@ public final class EtoRules {
         }
     }
 
-    /** Her errands at {@link NpcBonds#MOST}, in order, and how many of each: then the player may ask her out. */
+    /**
+     * Where the player is on the road to dating her. 2.1.2: {@link #COURTING} through her own chapters ({@link Courtship}), then
+     * {@link #ASK}. BOOKS, HUNT and FLOWER were the three errands every companion shared before it; kept (the journal's cards send this by
+     * ordinal) and never returned now.
+     */
     public enum Step {
-        NONE(0), BOOKS(3), HUNT(10), FLOWER(1), ASK(0), DATING(0);
+        NONE(0), BOOKS(3), HUNT(10), FLOWER(1), ASK(0), DATING(0),
+        // 2.1.2
+        COURTING(0);
 
         public final int need;
 
@@ -85,8 +136,8 @@ public final class EtoRules {
         }
     }
 
-    /** What she makes of a book or a flower held out to her (by item id). */
-    static final Set<String> BOOKS = Set.of("minecraft:book", "minecraft:writable_book", "minecraft:written_book", "minecraft:enchanted_book",
+    /** What she makes of a book or a flower held out to her (by item id). 1.3.2: a written book is a letter ({@link #letter}), not a book. */
+    static final Set<String> BOOKS = Set.of("minecraft:book", "minecraft:writable_book", "minecraft:enchanted_book",
         "minecraft:knowledge_book");
     static final Set<String> FLOWERS = Set.of("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium",
         "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy",
@@ -128,12 +179,14 @@ public final class EtoRules {
 
     /** She asks for one of her own at most this often per player (game ticks: twenty minutes), on a roll every few seconds. */
     public static final long KISS_ASK_EVERY = 24000L;
-    public static final double KISS_ASK_CHANCE = 0.12;
+    public static final double KISS_ASK_CHANCE = 0.03; // 2.4.1: was 0.12 (asked every few seconds once her 20 minutes were up)
     public static final double KISS_ASK_NEAR = 6.0;
     /** She leans in and waits this long; a shift shorter than {@link #KISS_TAP} is a peck, longer she blushes and holds it. */
     public static final int KISS_WAIT = 160;
     public static final int KISS_TAP = 8;
     public static final int KISS_HOLD_MOST = 600;
+    /** 1.3.2: held this long (ticks), she pulls them in: her arms round their head. */
+    public static final int KISS_PULL = 50;
     /** She stops this close to them; farther off than {@link #KISS_AWAY} while she waits, they left her hanging. */
     public static final double KISS_NEAR = 1.3;
     public static final double KISS_AWAY = 4.0;
@@ -142,7 +195,7 @@ public final class EtoRules {
 
     /** Where a kiss is. */
     public enum Kiss {
-        WAIT, BLUSH, KISSED, HANGING
+        WAIT, BLUSH, KISSED, HANGING, PULL
     }
 
     /**
@@ -159,14 +212,17 @@ public final class EtoRules {
             }
             return distance > KISS_AWAY || waited >= KISS_WAIT && !shift ? Kiss.HANGING : Kiss.WAIT;
         }
-        if (now == Kiss.BLUSH) {
+        if (now == Kiss.BLUSH || now == Kiss.PULL) {
             if (!shift) {
                 return Kiss.KISSED;
             }
             if (distance > KISS_AWAY) {
                 return Kiss.HANGING;
             }
-            return waited >= KISS_HOLD_MOST ? Kiss.KISSED : Kiss.BLUSH;
+            if (waited >= KISS_HOLD_MOST) {
+                return Kiss.KISSED;
+            }
+            return now == Kiss.BLUSH && held >= KISS_PULL ? Kiss.PULL : now;
         }
         return now;
     }
@@ -189,38 +245,78 @@ public final class EtoRules {
         return lesson == null ? 0 : lesson.flag;
     }
 
-    /** The next lesson she has to teach (null: all three taught). */
+    /** The next lesson she has to teach (null: all taught). */
     public static Lesson next(QuestLog.Bond bond) {
+        return next(bond, lesson -> false);
+    }
+
+    /**
+     * 1.3.2: the next lesson she has to teach, skipping any already known some other way ({@code known}: its quest done, or the gate
+     * it leads to already open): nobody is sent on a quest they have already finished.
+     */
+    public static Lesson next(QuestLog.Bond bond, java.util.function.Predicate<Lesson> known) {
         for (Lesson lesson : Lesson.values()) {
-            if (!bond.has(lesson.flag)) {
+            if (!bond.has(lesson.flag) && !known.test(lesson)) {
                 return lesson;
             }
         }
         return null;
     }
 
-    /** Why she would not teach {@code lesson} now, or null if she will. {@code beforeDone}: the lesson before it practised (its quest done). */
-    public static Refusal refusal(Lesson lesson, int regard, boolean ghoul, boolean beforeDone) {
+    /**
+     * Why she would not teach {@code lesson} now, or null if she will. {@code beforeDone}: the lesson before it practised (its quest
+     * done, or known already). 1.3.2: no friendship is asked for: anyone she talks to can learn.
+     */
+    public static Refusal refusal(Lesson lesson, boolean ghoul, boolean beforeDone) {
         if (lesson == null) {
             return Refusal.ALL_TAUGHT;
         }
         if (!ghoul) {
             return Refusal.HUMAN;
         }
-        if (lesson.before() != null && !beforeDone) {
-            return Refusal.PRACTISE;
-        }
-        return regard < lesson.regard ? Refusal.NOT_CLOSE : null;
+        return lesson.before() != null && !beforeDone ? Refusal.PRACTISE : null;
     }
 
     /** Why a lesson is refused. */
     public enum Refusal {
-        ALL_TAUGHT, HUMAN, PRACTISE, NOT_CLOSE
+        ALL_TAUGHT, HUMAN, PRACTISE
+    }
+
+    // ---------------------------------------------------------------- 1.3.2: a human's way to one eye
+
+    /** What she asks of a human who wants to be like her, in order, and how many of each: then the surgery. */
+    public enum Pact {
+        NONE(0), HUNT(12), GHOUL(1), MEAT(1), READY(0);
+
+        public final int need;
+
+        Pact(int need) {
+            this.need = need;
+        }
+
+        public static Pact byOrdinal(long ordinal) {
+            Pact[] all = values();
+            return ordinal >= 0 && ordinal < all.length ? all[(int)ordinal] : NONE;
+        }
+
+        /** The step after this one is done. */
+        public Pact then() {
+            return this == READY ? READY : values()[this.ordinal() + 1];
+        }
+    }
+
+    /** {@code amount} more of {@code step} with {@code count} done: the step and count after (the next step, its count from 0, once met). */
+    public static long[] pact(Pact step, int count, Pact doing, int amount) {
+        if (step != doing || step.need <= 0 || amount <= 0) {
+            return new long[] {step.ordinal(), count};
+        }
+        int done = count + amount;
+        return done >= step.need ? new long[] {step.then().ordinal(), 0} : new long[] {step.ordinal(), done};
     }
 
     // ---------------------------------------------------------------- her errands
 
-    /** Where the player is in her errands. */
+    /** Where the player is on the road to dating her (2.1.2: through her chapters, {@link Courtship}). */
     public static Step step(QuestLog.Bond bond) {
         if (bond.has(DATING)) {
             return Step.DATING;
@@ -228,16 +324,10 @@ public final class EtoRules {
         if (!bond.has(LINE_ON)) {
             return Step.NONE;
         }
-        if (!bond.has(BOOKS_DONE)) {
-            return Step.BOOKS;
-        }
-        if (!bond.has(HUNT_DONE)) {
-            return Step.HUNT;
-        }
-        return bond.has(FLOWER_DONE) ? Step.ASK : Step.FLOWER;
+        return Courtship.closed(bond, Courtship.CHAPTERS) >= Courtship.CHAPTERS ? Step.ASK : Step.COURTING;
     }
 
-    /** How much of the errand on is done. */
+    /** How much of the chapter on is done. */
     public static int count(QuestLog.Bond bond) {
         return bond.favours() & 0xFF;
     }
@@ -267,39 +357,25 @@ public final class EtoRules {
         return giftDay(bond) == Math.floorMod(day, 0x7FFFFFL);
     }
 
-    /** The errands begun (at {@link NpcBonds#MOST}): books first. */
+    /** 2.1.2: the courtship begun ({@link Courtship#BEGIN_AT}): the first chapter on. */
     public static QuestLog.Bond begin(QuestLog.Bond bond) {
-        return count(bond.with(LINE_ON, true), 0);
+        return Courtship.begin(bond);
     }
 
-    /**
-     * {@code amount} more done on {@code step} (it must be the errand on): the bond as it then is, the errand finished and the next one
-     * on (its count from 0) once {@link Step#need} is reached.
-     */
-    public static QuestLog.Bond advance(QuestLog.Bond bond, Step step, int amount) {
-        if (step(bond) != step || step.need <= 0 || amount <= 0) {
-            return bond;
-        }
-        int done = count(bond) + amount;
-        if (done < step.need) {
-            return count(bond, done);
-        }
-        int flag = switch (step) {
-            case BOOKS -> BOOKS_DONE;
-            case HUNT -> HUNT_DONE;
-            default -> FLOWER_DONE;
-        };
-        return count(bond.with(flag, true), 0);
-    }
-
-    /** Asked out once every errand is done: they are dating. */
+    /** Asked out once every chapter is closed: they are dating. */
     public static QuestLog.Bond date(QuestLog.Bond bond) {
         return step(bond) == Step.ASK ? bond.with(DATING, true) : bond;
     }
 
-    /** Killed by them: she remembers nothing kind of them, only that they are her enemy (her lessons and errands with it). */
+    /** The lesson flags, kept whatever else is forgotten (what was taught stays taught). */
+    static final int TAUGHT = TAUGHT_KICK | TAUGHT_SOAR | TAUGHT_WITNESS | TAUGHT_TRIAL;
+
+    /**
+     * Killed by them: she remembers nothing kind of them, only that they are her enemy (her courtship and any dating with it). 1.3.2: what
+     * she taught stays taught: a lesson is never asked for twice.
+     */
     public static QuestLog.Bond killedBy(QuestLog.Bond bond) {
-        return new QuestLog.Bond(NpcBonds.LEAST, bond.chatted(), bond.flags() & NpcBonds.MET, 0);
+        return new QuestLog.Bond(NpcBonds.LEAST, bond.chatted(), bond.flags() & (NpcBonds.MET | NpcBonds.ASKED | TAUGHT), 0);
     }
 
     // ---------------------------------------------------------------- what she is given
@@ -310,6 +386,11 @@ public final class EtoRules {
 
     public static boolean flower(String item) {
         return item != null && FLOWERS.contains(item);
+    }
+
+    /** 1.3.2: a letter (a written book): an apology, or just a letter. */
+    public static boolean letter(String item) {
+        return "minecraft:written_book".equals(item);
     }
 
     // ---------------------------------------------------------------- one eye
@@ -329,94 +410,251 @@ public final class EtoRules {
         return granted || oneEyedPath(path) || !eyes.oneEyed() ? eyes : eyes.withGhoul(KakuganEyes.BOTH);
     }
 
-    // ---------------------------------------------------------------- her fight
+    // ---------------------------------------------------------------- her fight (1.3.4: the Owl DNA kit, the player's own moves)
 
-    /** What she does next in a fight. */
-    public enum Move {
-        NONE, STRIKE, BLITZ, PUNCH, KICK, FLIP_FORWARD, FLIP_BACK;
+    /**
+     * What she does next in a fight: her Owl DNA moves, the very ones a Pale player throws ({@code PaleMove}): the Speed Blitz's
+     * strikes chained (blinks, the backfist, the twin palm finisher), the Big Punch charged and let go (her blink in front of it; at the
+     * full charge, landed, Witness This), the Speed Kick (gone, there, the heel through it), and her flips.
+     */
+    public enum Act {
+        /** Run at it. */
+        CHASE,
+        /** Close enough to step in and strike. */
+        STEP_IN,
+        /** The next strike of the blitz. */
+        STRIKE,
+        /** Wind up the Big Punch. */
+        PUNCH,
+        /** The Speed Kick. */
+        KICK,
+        /** A front flip in over the gap, or a back flip clear. */
+        FLIP_IN,
+        FLIP_BACK,
+        /** 1.3.6: the flesh out of her back raking across everything in front of her. */
+        SWIPE,
+        /** 1.3.6: the flesh reaching for it, holding it up, hauling it over her and flinging it. */
+        GRAB,
+        /** 1.3.6: the Flesh Hammer: the club grown round her raised leg, the axe kick slamming it down. */
+        HAMMER,
+        /** 1.3.6: Watch This: her arms out in a cross, two tentacles out of her back hunting on their own for ten seconds. */
+        WATCH,
+        /** 1.3.7: the Mutated Arm: her right arm turned to flesh and shot out at it, catching what it meets. */
+        ARM,
+        /** 1.3.8: the Owl, her kakuja, grown out of her: her last resort. */
+        OWL,
+        /** 1.3.8, in the Owl: its Rend, the four cuts of the giant blades, the last its jaws. */
+        OWL_REND,
+        /** 1.3.8, in the Owl: its Reaping Whirl, a whole turn with both giant arms out. */
+        OWL_WHIRL,
+        /** 1.3.8, in the Owl: its Pounce, the bound and both blades driven into the ground as it lands. */
+        OWL_LEAP
+    }
 
-        public static Move byOrdinal(int ordinal) {
-            Move[] all = values();
-            return ordinal >= 0 && ordinal < all.length ? all[ordinal] : NONE;
+    /** The mastery her moves are thrown at (the most there is: her fists as hard as a master's). */
+    public static final int MASTERY = 1000;
+    /** Close enough to strike (blocks, centre to centre, less half its width); the front flip's range in; the kick's nearest. */
+    public static final double STRIKE_REACH = 2.6;
+    public static final double FLIP_IN_FROM = 8.0;
+    public static final double FLIP_IN_TO = 13.0;
+    public static final double KICK_FROM = 4.0;
+    /** How often a flip, the Big Punch and the Speed Kick come back (ticks, before her phase cuts them down). */
+    public static final int FLIP_EVERY = 50;
+    public static final int PUNCH_EVERY = 70;
+    public static final int KICK_EVERY = 80;
+
+    /**
+     * Her pick (pure). {@code distance}: to its near side; {@code sees} it; {@code grounded}; {@code health} her share left; when each
+     * of her big moves is ready again; {@code roll} in [0, 1) so she is never quite predictable. The Speed Kick from range when it is
+     * ready (always, once she is serious), the Big Punch from mid range or up close, a flip in over a gap, the blitz up close (a flip
+     * clear now and then once she is serious), a step in from just out of reach, else she runs at it.
+     */
+    public static Act choose(double distance, boolean sees, boolean grounded, float health, long now, long punchReady, long kickReady, long flipReady,
+                             double roll) {
+        return choose(distance, sees, grounded, health, now, Ready.only(punchReady, kickReady, flipReady), roll);
+    }
+
+    /** 1.3.6: how often her flesh moves and Watch This come back (ticks, before her phase cuts them down). */
+    public static final int SWIPE_EVERY = 70;
+    public static final int GRAB_EVERY = 150;
+    public static final int HAMMER_EVERY = 120;
+    public static final int WATCH_EVERY = 520;
+    /** 1.3.6: Watch This once something is this close (blocks); the grab from this far to as far as the flesh reaches on her; the hammer this close. */
+    public static final double WATCH_FROM = 8.0;
+    public static final double GRAB_FROM = 4.5;
+    public static final double GRAB_TO = com.hex.kagune.control.pale.PaleRules.GRAB_RANGE * SIZE;
+    public static final double HAMMER_TO = 3.2;
+    /** 1.3.6: the swipe's reach on her (blocks): the flesh is as much smaller as she is. */
+    public static final double SWIPE_TO = com.hex.kagune.control.pale.PaleRules.SWIPE_REACH * SIZE - 1.0;
+
+    /** 1.3.6: when each of her moves is ready again (game ticks; {@code Long.MAX_VALUE}: not hers to throw). */
+    public record Ready(long punch, long kick, long flip, long swipe, long grab, long hammer, long watch, long arm) {
+        public static Ready only(long punch, long kick, long flip) {
+            return new Ready(punch, kick, flip, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE);
         }
     }
 
-    /** Reach and timing (ticks) of each move; damage before she transforms. */
-    public static final double STRIKE_REACH = 2.0;
-    public static final double BLITZ_FROM = 3.0;
-    public static final double BLITZ_TO = 7.0;
-    public static final double CLOSE_REACH = 2.6;
-    public static final double FLIP_IN_FROM = 7.0;
-    public static final double FLIP_IN_TO = 12.0;
-    public static final int STRIKE_EVERY = 12;
-    public static final int BLITZ_EVERY = 50;
-    public static final int PUNCH_EVERY = 110;
-    public static final int KICK_EVERY = 70;
-    public static final int FLIP_EVERY = 60;
-    public static final int BLITZ_TICKS = 6;
-    public static final int PUNCH_WINDUP = 12;
-    public static final int PUNCH_TICKS = 20;
-    public static final int KICK_TICKS = 10;
-    public static final float STRIKE_DAMAGE = 5.0F;
-    public static final float BLITZ_DAMAGE = 7.0F;
-    public static final float PUNCH_DAMAGE = 14.0F;
-    public static final float KICK_DAMAGE = 8.0F;
-    /** Below this share of her health she transforms: her eye open, faster, harder. */
-    public static final float TRANSFORM_AT = 0.5F;
-    public static final float TRANSFORM_SPEED = 1.3F;
-    public static final float TRANSFORM_POWER = 1.35F;
+    /** 1.3.7: how often the Mutated Arm comes back (ticks, before her phase cuts it down), and from how far to how far she throws it. */
+    public static final int ARM_EVERY = 180;
+    public static final double ARM_FROM = 6.0;
+    public static final double ARM_TO = com.hex.kagune.control.pale.ArmRules.TAP_REACH * SIZE * 0.9;
+
+    /**
+     * 1.3.8: the Owl, her kakuja and her last resort: below this share of her health she grows it (when it is back); in it she takes
+     * this share of every blow; out of a fight this long (ticks) she sheds it; it comes back this long after she shed it.
+     */
+    public static final float OWL_AT = 0.25F;
+    public static final float OWL_TAKEN = 0.5F;
+    public static final long OWL_SHED_AFTER = 120L;
+    public static final int OWL_EVERY = 1200;
+    /** 1.3.8: how often its Reaping Whirl and its Pounce come back (ticks); the Pounce from this far to this far. */
+    public static final int WHIRL_EVERY = 60;
+    public static final int LEAP_EVERY = 50;
+    public static final double LEAP_FROM = 4.5;
+    public static final double LEAP_TO = 12.0;
+
+    /** 1.3.8: whether she grows the Owl now: hurt far enough, not in it already, and it is back. */
+    public static boolean owlNow(float health, boolean inOwl, long now, long owlReady) {
+        return !inOwl && health < OWL_AT && now >= owlReady;
+    }
+
+    /**
+     * 1.3.8: her pick in the Owl (pure): the Pounce onto it from mid range, the Reaping Whirl with more than one about her (or now and
+     * then), the Rend up close (its four cuts chained), else after it.
+     */
+    public static Act chooseOwl(double distance, boolean sees, boolean grounded, long now, long whirlReady, long leapReady, int around, double roll) {
+        if (sees && grounded && now >= leapReady && distance >= LEAP_FROM && distance <= LEAP_TO) {
+            return Act.OWL_LEAP;
+        }
+        if (grounded && now >= whirlReady && distance <= com.hex.kagune.control.pale.OwlRules.WHIRL_REACH && (around >= 2 || roll < 0.25)) {
+            return Act.OWL_WHIRL;
+        }
+        if (distance <= com.hex.kagune.control.pale.OwlRules.REND_REACH[0] - 0.4) {
+            return Act.OWL_REND;
+        }
+        return Act.CHASE;
+    }
+
+    /** 1.3.7: whether she holds the Mutated Arm out to charge it (the maniac, mostly: whatever it caught crushed in the sphere). */
+    public static boolean armHeld(Phase phase, double roll) {
+        return phase == Phase.MANIAC ? roll < 0.75 : phase == Phase.SERIOUS && roll < 0.25;
+    }
+
+    /**
+     * 1.3.6: her pick with the whole Owl DNA kit (pure). Once she is serious: Watch This the moment it is back with something close
+     * (the tentacles hunt on their own while she fights on); the grab from mid range; the Flesh Hammer up close (the maniac most of
+     * all). The swipe at any time, now and then when calm, often once serious. Otherwise as before: the kick, the Big Punch, the flips,
+     * the blitz, a step in, the chase.
+     */
+    public static Act choose(double distance, boolean sees, boolean grounded, float health, long now, Ready ready, double roll) {
+        Phase phase = Phase.of(health);
+        boolean serious = phase != Phase.CALM;
+        boolean maniac = phase == Phase.MANIAC;
+        if (serious && sees && grounded && now >= ready.watch() && distance <= WATCH_FROM) {
+            return Act.WATCH;
+        }
+        if (sees && grounded && now >= ready.kick() && distance >= KICK_FROM && distance <= com.hex.kagune.control.pale.PaleRules.KICK_RANGE
+            && (serious || roll < 0.55)) {
+            return Act.KICK;
+        }
+        if (serious && sees && grounded && now >= ready.grab() && distance >= GRAB_FROM && distance <= GRAB_TO && roll < (maniac ? 0.8 : 0.5)) {
+            return Act.GRAB;
+        }
+        if (serious && sees && now >= ready.arm() && distance >= ARM_FROM && distance <= ARM_TO && roll < (maniac ? 0.5 : 0.3)) {
+            return Act.ARM;
+        }
+        if (serious && sees && grounded && now >= ready.hammer() && distance <= HAMMER_TO && roll < (maniac ? 0.6 : 0.35)) {
+            return Act.HAMMER;
+        }
+        if (sees && grounded && now >= ready.swipe() && distance >= 1.0 && distance <= SWIPE_TO && roll < (serious ? 0.45 : 0.15)) {
+            return Act.SWIPE;
+        }
+        long punchReady = ready.punch();
+        long flipReady = ready.flip();
+        if (sees && grounded && now >= punchReady && (distance >= 2.0 && distance <= 10.0 && (serious || roll < 0.45)
+            || distance < 2.0 && roll < (serious ? 0.5 : 0.3))) {
+            return Act.PUNCH;
+        }
+        boolean flip = grounded && now >= flipReady;
+        if (flip && sees && distance > FLIP_IN_FROM && distance < FLIP_IN_TO) {
+            return Act.FLIP_IN;
+        }
+        if (distance <= STRIKE_REACH) {
+            return flip && serious && roll > 0.9 ? Act.FLIP_BACK : Act.STRIKE;
+        }
+        return sees && distance <= com.hex.kagune.control.pale.PaleRules.STEP_IN_RANGE ? Act.STEP_IN : Act.CHASE;
+    }
+
+    /**
+     * How long she winds the Big Punch up (ticks): calm, mostly a quick one, now and then the full charge; serious, the full charge
+     * more often than not; maniac, always (a full charge that lands is Witness This).
+     */
+    public static int punchHold(Phase phase, double roll) {
+        int full = com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS;
+        return switch (phase) {
+            case MANIAC -> full;
+            case SERIOUS -> roll < 0.65 ? full : 14 + (int)(roll * 12.0);
+            default -> roll < 0.25 ? full : 8 + (int)(roll * 14.0);
+        };
+    }
+
+    /**
+     * 1.3.6: how long she lets the Flesh Hammer's club grow round her raised leg (ticks): anything from the leg just up to the club
+     * fully grown; the maniac always lets it grow all the way (hers is True Anonymity's, grown on past that).
+     */
+    public static int hammerHold(Phase phase, double roll) {
+        int raise = com.hex.kagune.control.pale.PaleRules.HAMMER_RAISE_TICKS;
+        int grow = com.hex.kagune.control.pale.PaleRules.HAMMER_GROW_TICKS;
+        return phase == Phase.MANIAC ? grow : raise + (int)Math.round(Math.max(0.0, Math.min(1.0, roll)) * (grow - raise));
+    }
+
+    /** A cooldown of {@code ticks}, cut down as she gets serious. */
+    public static long cooldown(int ticks, Phase phase) {
+        return Math.max(4L, Math.round(ticks * phase.cooldowns));
+    }
+
+    /** Below this share of her health she gets serious: her eye open, faster, harder ({@link Phase}). */
+    public static final float TRANSFORM_AT = 0.6F;
+    public static final float MANIAC_AT = 0.3F;
+
+    /**
+     * 1.3.2: how seriously she takes a fight, by what is left of her health. Calm, she plays with them. Serious, her eye opens, she
+     * is faster, harder to hurt, and her moves come back sooner. Maniac, below a third, she laughs and stops holding anything back.
+     */
+    public enum Phase {
+        CALM(1.0F, 1.0F, -1, -1, 1.1),
+        SERIOUS(1.4F, 0.6F, 0, 0, 1.35),
+        MANIAC(1.8F, 0.35F, 1, 1, 1.55);
+
+        /** What her blows deal, times. */
+        public final float power;
+        /** Her moves' cooldowns, times. */
+        public final float cooldowns;
+        /** The speed and resistance she has (effect levels; -1 none). */
+        public final int speed;
+        public final int resistance;
+        /** How fast she chases. */
+        public final double chase;
+
+        Phase(float power, float cooldowns, int speed, int resistance, double chase) {
+            this.power = power;
+            this.cooldowns = cooldowns;
+            this.speed = speed;
+            this.resistance = resistance;
+            this.chase = chase;
+        }
+
+        public static Phase of(float health) {
+            return health < MANIAC_AT ? MANIAC : health < TRANSFORM_AT ? SERIOUS : CALM;
+        }
+    }
+
     /** Out of a fight this long (ticks), she heals this much a second. */
     public static final long CALM_TICKS = 100L;
     public static final float HEAL_PER_SECOND = 2.0F;
 
-    /** When each move is ready again (game ticks; anything at or before {@code now} is ready). */
-    public record Ready(long strike, long blitz, long punch, long kick, long flip) {
-        public static final Ready NOW = new Ready(Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE);
-
-        /** As now, {@code move} used at {@code now}. */
-        public Ready used(Move move, long now) {
-            return switch (move) {
-                case STRIKE -> new Ready(now + STRIKE_EVERY, this.blitz, this.punch, this.kick, this.flip);
-                case BLITZ -> new Ready(now + STRIKE_EVERY, now + BLITZ_EVERY, this.punch, this.kick, this.flip);
-                case PUNCH -> new Ready(now + STRIKE_EVERY + PUNCH_TICKS, this.blitz, now + PUNCH_EVERY, this.kick, this.flip);
-                case KICK -> new Ready(now + STRIKE_EVERY, this.blitz, this.punch, now + KICK_EVERY, this.flip);
-                case FLIP_FORWARD, FLIP_BACK -> new Ready(this.strike, this.blitz, this.punch, this.kick, now + FLIP_EVERY);
-                default -> this;
-            };
-        }
-    }
-
-    /**
-     * Her pick (pure): far but in sight, a front flip in; at blitz range, the Speed Blitz; up close the Big Punch on something tough
-     * or when she is transformed, the Speed Kick to launch it, else a plain strike, and hurt and pressed, a back flip clear. {@code roll}
-     * in [0, 1) keeps her from being too predictable; {@code tough}: the target has a lot of health left.
-     */
-    public static Move choose(double distance, long now, Ready ready, boolean grounded, boolean sees, float health, boolean tough, double roll) {
-        boolean flip = grounded && now >= ready.flip();
-        if (distance > FLIP_IN_FROM && distance < FLIP_IN_TO && flip && sees) {
-            return Move.FLIP_FORWARD;
-        }
-        if (distance >= BLITZ_FROM && distance <= BLITZ_TO && now >= ready.blitz() && sees) {
-            return Move.BLITZ;
-        }
-        if (distance > CLOSE_REACH) {
-            return Move.NONE;
-        }
-        boolean transformed = health < TRANSFORM_AT;
-        if (flip && transformed && roll < 0.2) {
-            return Move.FLIP_BACK;
-        }
-        if (now >= ready.punch() && (tough || transformed || roll < 0.35)) {
-            return Move.PUNCH;
-        }
-        if (now >= ready.kick() && roll < 0.7) {
-            return Move.KICK;
-        }
-        return distance <= STRIKE_REACH + 0.3 && now >= ready.strike() ? Move.STRIKE : Move.NONE;
-    }
-
-    /** What a blow of hers deals: {@code base}, more once she has transformed. */
+    /** What a blow of hers deals: {@code base} (a Pale player's at her mastery), more the more serious she is ({@link Phase#power}). */
     public static float damage(float base, float health) {
-        return health < TRANSFORM_AT ? base * TRANSFORM_POWER : base;
+        return base * Phase.of(health).power;
     }
 }

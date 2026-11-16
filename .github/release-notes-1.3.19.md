@@ -1,0 +1,8 @@
+## 1.3.19 (HexGhoul): Ken fights in Peace, every move of it; Touka's crystal wings (testing)
+HexKagune 1.3.19 for Forge 1.20.1. Install on client and server (**protocol 61**: update both). Testing build: compiled, tests pass, not tried in game.
+
+- **Ken wears Peace the moment a fight finds him** (its transformation drawn on him, untouchable while it comes over him), the strongest NPC there is: twice his health in it, faster, a third of every blow taken off, its shields taking the rest.
+- **Every Peace move is his**, the very kit a player wears, on the same ticks: the blades' chain with the launcher, the blows in the air and the spike, the heavy (Cross Cleave, or held, the Seraph Thrust), Crossblade Waltz, Aegis of :Re, White Wing Ascent (and the slam down onto you from up there), Piercing Salvation (held, driven out), Rebirth Instinct (his flesh climbs out of the ground to fight beside him), The Final Horizon. His waits about half a player's.
+- **Eto's body grammar too:** the Speed Blitz's fists, the Big Punch, the Speed Kick, flips in and out whenever they suit him, and a dash in (or back out) far faster than anyone runs.
+- His blades, shields and flesh only go for his foes: never his partner, a child, another companion, or a player he isn't fighting. His moves never break blocks. Long after a fight, Peace goes back into him.
+- **Touka's wings:** a lesser pair (about halfway grown) out of her back in a fight, turned to crystal: volleys of crystal spikes, a fan of five, and now and then the barrage. Up close, her fists, kick and flips as before. Her spikes sting; nowhere near Ken or Eto.

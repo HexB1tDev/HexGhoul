@@ -14,4 +14,6 @@ public abstract class EntityRenderer<T extends net.minecraft.world.entity.Entity
     }
 
     /** getTextureLocation */ public net.minecraft.resources.ResourceLocation m_5478_(T entity) { throw new UnsupportedOperationException(); }
+    /** renderNameTag (1.3.2) */ protected void m_7649_(T entity, net.minecraft.network.chat.Component name, com.mojang.blaze3d.vertex.PoseStack pose,
+        net.minecraft.client.renderer.MultiBufferSource buffers, int light) { throw new UnsupportedOperationException(); }
 }

@@ -64,7 +64,6 @@ public final class QuestServer {
     private static final float BOSS_HEALTH = 150.0F;
     /** Dusk and dawn, in the day's ticks. */
     private static final long DUSK = 12000L;
-    private static final long DUSK_END = 13000L;
     private static final long DAWN = 23500L;
     private static final long NOTICE_TICKS = 40L;
 
@@ -108,6 +107,38 @@ public final class QuestServer {
         return cached(player).log;
     }
 
+    /**
+     * 4.1.78: mastery and mutation points paid outside a quest (a gang's daily), as {@link #complete} pays a quest's: a Rinkaku's or
+     * Bikaku's points as mastery ({@link Reward#RINKAKU_POINT_MASTERY} each), the rest into the log. A ghoul's only. What was paid, said
+     * ("40 mastery, 1 mutation point"), or empty.
+     */
+    static String payGhoul(ServerPlayer player, int mastery, int points) {
+        if (!KaguneProfile.isUnlocked(player)) {
+            return "";
+        }
+        boolean asMastery = PathServer.path(player) == KagunePath.RINKAKU || PathServer.path(player) == KagunePath.BIKAKU;
+        if (points > 0 && asMastery) {
+            mastery += points * Reward.RINKAKU_POINT_MASTERY;
+        }
+        if (mastery > 0) {
+            KaguneProfile.addMastery(player, mastery);
+            com.hex.kagune.network.KaguneNetwork.broadcast(player);
+        }
+        if (points > 0 && !asMastery) {
+            Cached cached = cached(player);
+            cached.log.grant(points);
+            write(player, cached);
+        }
+        StringBuilder said = new StringBuilder();
+        if (mastery > 0) {
+            said.append(mastery).append(" mastery");
+        }
+        if (points > 0 && !asMastery) {
+            said.append(said.length() > 0 ? ", " : "").append(points).append(" mutation point").append(points == 1 ? "" : "s");
+        }
+        return said.toString();
+    }
+
     private static void write(ServerPlayer player, Cached cached) {
         cached.saved = cached.log.save();
         KaguneProfile.root(player).m_128359_(KEY, cached.saved);
@@ -121,6 +152,24 @@ public final class QuestServer {
     static boolean had(ServerPlayer player, Gate gate) {
         if (gate == Gate.RINKAKU_DRAGON) {
             return false; // 1.0.4: the Dragon is earned by its quest, whatever the mastery
+        }
+        if (gate == Gate.STYLE_SPEEDSTER) {
+            return false; // 4.1.3: a fighting style is learned from Ayato, whatever the mastery
+        }
+        if (gate == Gate.STYLE_KICK_STANCE || gate == Gate.STYLE_KICK_CHAMBER || gate == Gate.STYLE_KICK_MASTER) {
+            return false; // 4.1.7: Kick Master is learned from the General, whatever the mastery
+        }
+        if (gate == Gate.RINKAKU_HURL || gate == Gate.RINKAKU_IMPALE) {
+            return false; // 3.3.1: Ken teaches them (new this week: no save had them under the old progression)
+        }
+        if (gate == Gate.UKAKU_AYATO_DOVES || gate == Gate.UKAKU_AYATO_HUNT) {
+            // 4.0.0: Ayato's respect is earned, never had; one who has the first kakuja already passed it.
+            return KaguneProfile.mastery(player) >= Gate.UKAKU_KAKUJA.mastery() && PathServer.path(player) == KagunePath.UKAKU;
+        }
+        if (gate == Gate.BIKAKU_DEVOURING || gate == Gate.BIKAKU_POTENTIAL) {
+            // 4.0.0: a mutation an operator already gave stays.
+            return BikakuDevour.has(player, gate == Gate.BIKAKU_DEVOURING ? com.hex.kagune.control.bikaku.BikakuMutation.GRAND_DEVOURING
+                : com.hex.kagune.control.bikaku.BikakuMutation.POTENTIAL_UNLOCK);
         }
         KagunePath path = PathServer.path(player);
         if (!gate.on(path) || !path.chosen() && gate.path() != null) {
@@ -148,6 +197,13 @@ public final class QuestServer {
         if (open(player, gate)) {
             return true;
         }
+        // 1.3.14: a gate a companion teaches: who to go and ask.
+        com.hex.kagune.control.npc.Teaching.Lesson lesson = com.hex.kagune.control.npc.Teaching.teaching(gate);
+        if (lesson != null) {
+            notice(player, Component.m_237113_(com.hex.kagune.control.npc.Teaching.gatedText(gate,
+                com.hex.kagune.control.npc.Persona.of(lesson.teacher()).name())));
+            return false;
+        }
         notice(player, Component.m_237110_("message.hexkagune.quest.gated", gate.displayName(), QuestBook.openersText(gate)));
         return false;
     }
@@ -165,6 +221,11 @@ public final class QuestServer {
     /** 7.0.2: how the player stands with {@code npc} now (saved, and sent to their journal). */
     public static void bond(ServerPlayer player, String npc, QuestLog.Bond bond) {
         Cached cached = cached(player);
+        // 1.3.40: Content (the kitchen's): the ones you love warm to you faster.
+        int before = cached.log.bond(npc).regard();
+        if (bond.regard() > before) {
+            bond = bond.regard(before + KitchenServer.warmth(player, bond.regard() - before));
+        }
         cached.log.bond(npc, bond);
         write(player, cached);
     }
@@ -178,8 +239,8 @@ public final class QuestServer {
         }
         write(player, cached);
         QuestLog.Favour favour = cached.log.favourFrom(giver);
-        player.m_5661_(Component.m_237113_("Favour taken on: " + favour.quest().objectives().get(0).text() + ". It is in your journal, the ghoul's way."),
-            false);
+        // 4.1.97 (the owner: quest info isn't for the chat: "details are in the Quest menu"): on the action bar.
+        player.m_5661_(Component.m_237113_("§eFavour taken on: §f" + favour.quest().title() + " §7(quest menu)"), true);
         return true;
     }
 
@@ -230,12 +291,14 @@ public final class QuestServer {
             String form = switch (path) {
                 case UKAKU -> UkakuServer.form(player).id();
                 case GRAFT -> GraftServer.stage(player).id();
+                case BIKAKU -> "bikaku_worm"; // 3.4.9
                 default -> KaguneProfile.form(player).id();
             };
             tags.add(Tags.form(form));
             boolean kakuja = switch (path) {
                 case UKAKU -> UkakuServer.form(player).kakuja();
                 case GRAFT -> GraftServer.kakuja(player);
+                case BIKAKU -> BikakuServer.kakuja(player); // 3.5.4
                 default -> RinkakuForms.kakuja(KaguneProfile.form(player));
             };
             if (kakuja) {
@@ -247,6 +310,24 @@ public final class QuestServer {
         }
         if (GhoulNpcBrain.allyNear(player)) {
             tags.add(Tags.ALLY);
+        }
+        if (!player.m_20096_() && !player.m_20069_()) {
+            tags.add(Tags.AIRBORNE);
+        }
+        if (player.m_21223_() <= player.m_21233_() / 3.0F) {
+            tags.add(Tags.LOW);
+        }
+        return tags;
+    }
+
+    /**
+     * 4.1.78: a human's state as they kill (a gang's daily: the CCG's are often human): the night, in the air, low on health. Nothing of a
+     * ghoul's read ({@link #context}'s PathServer.path would write a path into a human's profile).
+     */
+    static Set<String> bare(ServerPlayer player) {
+        Set<String> tags = new HashSet<>();
+        if (night(player)) {
+            tags.add(Tags.NIGHT);
         }
         if (!player.m_20096_() && !player.m_20069_()) {
             tags.add(Tags.AIRBORNE);
@@ -348,6 +429,7 @@ public final class QuestServer {
         }
         if (ControlItems.ghoulMeat(eaten)) {
             tags.add(Tags.GHOUL_MEAT);
+            EtoServer.proved(player, com.hex.kagune.control.npc.Teaching.Deed.EAT_GHOUL, 0); // 2.1.8: Ken's proof before the Full Kakuja
         }
         feed(player, new QuestEvent(Signal.EAT, 1, tags));
     }
@@ -444,33 +526,63 @@ public final class QuestServer {
 
     private static void hunts(ServerPlayer player, Cached cached, long now) {
         for (Quest gone : cached.log.expire(now)) {
-            player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt_over", gone.title()), false);
+            player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt_over", gone.title()), true); // 4.1.97: the action bar
             write(player, cached);
         }
+        // 1.3.29: no hunt comes by itself any more (the owner: no quest given at random): a ghoul asked at night gives one (huntable).
+    }
+
+    /** 1.3.29: true if a ghoul asked now would give {@code player} a hunt: night, a path chosen, room for one, none asked for yet tonight. */
+    static boolean huntable(ServerPlayer player) {
+        if (!KaguneProfile.isUnlocked(player) || !PathServer.path(player).chosen()) {
+            return false;
+        }
+        Cached cached = cached(player);
+        long now = player.m_9236_().m_46467_();
         long day = Math.floorMod(player.m_9236_().m_46468_(), 24000L);
-        if (day < DUSK || day >= DUSK_END || now < cached.log.nextHuntAt() || cached.log.hunts().size() >= Hunts.MAX_ON
-            || !PathServer.path(player).chosen()) {
-            return;
+        return day >= DUSK && day < DAWN && now >= cached.log.nextHuntAt() && cached.log.hunts().size() < Hunts.MAX_ON;
+    }
+
+    /** 1.3.29: asked of a ghoul at night: tonight's hunt for {@code player} (till dawn), or null if there is none to give. */
+    static Quest askHunt(ServerPlayer player) {
+        if (!huntable(player)) {
+            return null;
         }
+        Cached cached = cached(player);
+        long now = player.m_9236_().m_46467_();
+        long day = Math.floorMod(player.m_9236_().m_46468_(), 24000L);
         Random random = new Random(now * 31L + player.m_20148_().getLeastSignificantBits());
-        // Whether one comes or not, the next chance is a night or two away: hunts never come on a timetable.
-        cached.log.nextHuntAt(now + 24000L - (day - DUSK) + (random.nextBoolean() ? 0L : 24000L));
-        if (random.nextDouble() < Hunts.OFFER_CHANCE) {
-            offerHunt(player, cached, random, now);
-        }
+        offerHunt(player, cached, random, now);
+        // One asked for a night: the next can be had from the next dusk.
+        long untilDusk = day >= DUSK ? 24000L - day + DUSK : DUSK - day;
+        cached.log.nextHuntAt(now + untilDusk);
         write(player, cached);
+        cached.dirty = true;
+        List<QuestLog.Hunt> on = cached.log.hunts();
+        return on.isEmpty() ? null : on.get(on.size() - 1).quest();
     }
 
     /** A hunt for tonight: on until dawn. */
     static void offerHunt(ServerPlayer player, Cached cached, Random random, long now) {
         long day = Math.floorMod(player.m_9236_().m_46468_(), 24000L);
         long untilDawn = day < DAWN ? DAWN - day : 24000L - day + DAWN;
-        Hunts.Spec spec = Hunts.draw(random, GhoulKinds.roaming());
+        // 4.2.1: its prey one that lives where they stand tonight (Hunts.here: never husks in plains, strays off the snow, a mansion's).
+        Hunts.Spec spec = Hunts.draw(random, GhoulKinds.roaming(), biomeAt(player));
         cached.log.startHunt(spec, now + untilDawn);
         Quest quest = Hunts.quest(spec);
-        player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt", quest.title(), quest.objectives().get(0).text(),
-            quest.objectives().get(0).count(), Hunts.payText(spec)), false);
+        player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt", quest.title()), true); // 4.1.97: its details in the quest menu
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.wolf.howl", 0.5F, 0.6F);
+    }
+
+    /** 4.2.1: the id of the biome {@code player} stands in ("minecraft:desert"), or "" if it can't be read. */
+    static String biomeAt(ServerPlayer player) {
+        try {
+            net.minecraft.core.BlockPos at = new net.minecraft.core.BlockPos((int)Math.floor(player.m_20185_()), (int)Math.floor(player.m_20186_()),
+                (int)Math.floor(player.m_20189_()));
+            return player.m_9236_().m_204166_(at).m_203543_().map(key -> key.m_135782_().toString()).orElse("");
+        } catch (RuntimeException | LinkageError unknown) {
+            return "";
+        }
     }
 
     // ------------------------------------------------------------------ telling and paying
@@ -481,7 +593,8 @@ public final class QuestServer {
         int mastery = KaguneProfile.mastery(player);
         Set<String> open = new HashSet<>();
         for (Quest quest : QuestBook.all()) {
-            if (cached.log.state(quest, path, mastery) == QuestLog.State.OPEN) {
+            // 1.3.29: only what has been given and is listed (a feat counts by itself, unannounced: it shows once it is done).
+            if (cached.log.state(quest, path, mastery) == QuestLog.State.OPEN && cached.log.shown(quest, QuestLog.State.OPEN)) {
                 open.add(quest.id());
             }
         }
@@ -489,7 +602,7 @@ public final class QuestServer {
             for (String id : open) {
                 if (!cached.open.contains(id)) {
                     Quest quest = QuestBook.get(id);
-                    player.m_5661_(Component.m_237110_("message.hexkagune.quest.new", quest.title()), false);
+                    player.m_5661_(Component.m_237110_("message.hexkagune.quest.new", quest.title()), true); // 4.1.97: the action bar
                     cached.dirty = true;
                 }
             }
@@ -514,8 +627,9 @@ public final class QuestServer {
         Reward reward = quest.reward();
         int mastery = reward.mastery();
         int points = reward.points();
-        if (points > 0 && PathServer.path(player) == KagunePath.RINKAKU) {
-            mastery += points * Reward.RINKAKU_POINT_MASTERY; // his mutations come with mastery tiers, not points
+        boolean asMastery = PathServer.path(player) == KagunePath.RINKAKU || PathServer.path(player) == KagunePath.BIKAKU;
+        if (points > 0 && asMastery) {
+            mastery += points * Reward.RINKAKU_POINT_MASTERY; // his mutations come with mastery tiers, not points (3.4.9: Bikaku has none yet)
         }
         if (mastery > 0) {
             KaguneProfile.addMastery(player, mastery);
@@ -531,21 +645,27 @@ public final class QuestServer {
         if (mastery > 0) {
             pays.append(mastery).append(" mastery");
         }
-        if (points > 0 && PathServer.path(player) != KagunePath.RINKAKU) {
+        if (points > 0 && !asMastery) {
             pays.append(pays.length() > 0 ? ", " : "").append(points).append(" mutation point").append(points == 1 ? "" : "s");
         }
         if (reward.ghoulMeat() > 0) {
             pays.append(pays.length() > 0 ? ", " : "").append(reward.ghoulMeat()).append(" Ghoul Meat");
         }
-        player.m_5661_(Component.m_237110_("message.hexkagune.quest.done", quest.title(), pays.length() == 0 ? "-" : pays.toString()), false);
+        // 4.1.97 (the owner: quest info isn't for the chat: "details are in the Quest menu"): one line on the action bar: done, what it paid,
+        // what it opened (what it closed is in the DONE tab).
+        StringBuilder told = new StringBuilder(QuestBook.giver(quest) == QuestBook.Giver.FEAT ? "\u00a76\u2726 Feat: \u00a7f" : "\u00a76Quest complete: \u00a7f");
+        told.append(quest.title()).append(pays.length() == 0 ? "" : " \u00a77(" + pays + ")");
         for (Gate gate : reward.gates()) {
-            player.m_5661_(Component.m_237110_("message.hexkagune.quest.unlocked", gate.displayName()), false);
+            told.append(" \u00a7c\u00b7 ").append(gate.displayName());
         }
-        for (Quest rival : closed) {
-            player.m_5661_(Component.m_237110_("message.hexkagune.quest.closed", rival.title()), false);
-        }
+        player.m_5661_(Component.m_237113_(told.toString()), true);
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "ui.toast.challenge_complete", 0.6F, 1.0F);
         cached.dirty = true;
+        // 4.2.1 (the owner: "check all the other quests"): a ghoul's favour done counts as one ("Do a favour for a ghoul", "Do favours for
+        // ghouls"). Nothing ever sent it: A Friend in the Dark could never be finished, nor Errands of the Night and Side by Side after it.
+        if (quest.line() == com.hex.kagune.control.quest.Quest.Line.FAVOUR) {
+            signal(player, Signal.FAVOUR, 1);
+        }
     }
 
     private static void notice(ServerPlayer player, Component message) {
@@ -561,8 +681,14 @@ public final class QuestServer {
         }
     }
 
+    /** 4.1.95: {@code player}'s log changed outside a quest (a mission begun or over): saved and sent. */
+    static void changed(ServerPlayer player) {
+        write(player, cached(player));
+        sync(player);
+    }
+
     static void sync(ServerPlayer player) {
-        ControlNetwork.sendTo(player, new S2CQuests(log(player).save()));
+        ControlNetwork.sendTo(player, new S2CQuests(log(player).save(), com.hex.kagune.control.npc.RomanceCard.save(RomanceServer.cards(player))));
     }
 
     // ------------------------------------------------------------------ commands
@@ -624,9 +750,32 @@ public final class QuestServer {
             complete(player, cached, quest);
             done.add(quest.title());
         }
+        // 4.1.33: and every other quest, every path's, for good: none comes back with another kagune or more mastery.
+        cached.log.finishAll();
         write(player, cached);
         sync(player);
         return done;
+    }
+
+    /**
+     * 2.2.8 (the owner: "/kagune quests complete all should include the dragon quests and everything for the Kakujas ... it should
+     * instantly unlock everything"): every gate open at once, those a companion teaches too (the Dragon, the kakujas, Crystal Wings), so
+     * nobody sends them to a teacher; the gates newly opened, by name.
+     */
+    static List<String> grantAll(ServerPlayer player) {
+        Cached cached = cached(player);
+        List<String> opened = new java.util.ArrayList<>();
+        for (Gate gate : Gate.values()) {
+            if (!cached.log.open(gate)) {
+                cached.log.grant(gate);
+                if (gate.on(PathServer.path(player))) {
+                    opened.add(gate.displayName());
+                }
+            }
+        }
+        write(player, cached);
+        sync(player);
+        return opened;
     }
 
     static void grant(ServerPlayer player, Gate gate) {
@@ -650,6 +799,16 @@ public final class QuestServer {
         if (event.getEntity() instanceof ServerPlayer player) {
             Cached cached = cached(player);
             cached.open = null;
+            // 4.1.40: quests finished for good (4.1.33) count every quest a later version adds as done: what those open must be open too, or
+            // an ability gated by a new quest could never be had (nothing left to do for it). The command opened every gate there was then.
+            if (cached.log.finished()) {
+                for (Gate gate : Gate.values()) {
+                    if (!cached.log.open(gate)) {
+                        cached.log.grant(gate);
+                    }
+                }
+                write(player, cached);
+            }
             sync(player);
         }
     }

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:pumpkin"
+    },
+    {
+      "item": "minecraft:sugar"
+    },
+    {
+      "item": "minecraft:egg"
+    },
+    {
+      "item": "hexkagune:blood_bottle"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:blood_pumpkin_pie",
+    "count": 1
+  }
+}

@@ -363,7 +363,11 @@ public final class GraftServer {
             state.startedAt = Long.MIN_VALUE;
         }
         player.m_5661_(Component.m_237110_("message.hexkagune.graft.stage", wanted.displayName()), true);
-        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 0.9F, KaguneServerController.vary(player, 0.85F, 0.05F));
+        if (wanted == GraftStage.CENTIPEDE || state.kakuja) {
+            UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.body_warp", 0.9F, 1.0F);
+        } else {
+            KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 0.9F, KaguneServerController.vary(player, 0.85F, 0.05F));
+        }
         broadcast(player, state);
     }
 
@@ -407,8 +411,7 @@ public final class GraftServer {
         state.startedAt = Long.MIN_VALUE;
         state.kakuja = true;
         state.kakujaAt = now;
-        KaguneServerController.playSelf(player, HexKaguneSounds.MANIFEST_RIP, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.warden.roar", 0.7F, KaguneServerController.vary(player, 1.3F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.heavy_morph", 1.0F, 1.0F);
         KaguneNetwork.sendTo(player, player);
         broadcast(player, state);
     }
@@ -423,7 +426,7 @@ public final class GraftServer {
         state.kakuja = false;
         state.kakujaAt = now;
         state.kakujaReadyAt = now + Cooldowns.of(player, (long)GraftRules.KAKUJA_COOLDOWN);
-        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_DISMISS, 0.9F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        KaguneServerController.playSelf(player, HexKaguneSounds.CENTIPEDE_CLICK, 0.9F, KaguneServerController.vary(player, 0.9F, 0.05F));
         broadcast(player, state);
     }
 

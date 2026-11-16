@@ -57,6 +57,9 @@ public final class GhoulServer {
         if (!KaguneProfile.isUnlocked(player) || !player.m_6084_()) {
             return;
         }
+        if (BikakuDevour.held(player)) {
+            return; // 3.6.3: being devoured: no kagune, no eyes
+        }
         boolean out = KaguneProfile.isActive(player);
         GhoulKey result = GhoulKey.press(out, ghoul(player), unleash);
         // Coming out: the eyes first; going in: the kagune first, then the eyes.

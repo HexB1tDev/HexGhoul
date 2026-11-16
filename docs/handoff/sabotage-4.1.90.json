@@ -1,0 +1,79 @@
+[
+ {
+  "name": "a Regions Unexplored field not a hotel's",
+  "file": "src/main/resources/data/hexkagune/tags/worldgen/biome/plains.json",
+  "old": "    {\n      \"id\": \"regions_unexplored:grassland\",\n      \"required\": false\n    },\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "an Oh The Biomes We've Gone field not a hotel's",
+  "file": "src/main/resources/data/hexkagune/tags/worldgen/biome/plains.json",
+  "old": "    {\n      \"id\": \"biomeswevegone:rose_fields\",\n      \"required\": false\n    },\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a highland taken for a field",
+  "file": "src/main/resources/data/hexkagune/tags/worldgen/biome/plains.json",
+  "old": "\"regions_unexplored:steppe\"",
+  "new": "\"regions_unexplored:highland_fields\"",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a TerraBlender field required",
+  "file": "src/main/resources/data/hexkagune/tags/worldgen/biome/plains.json",
+  "old": "      \"id\": \"regions_unexplored:prairie\",\n      \"required\": false",
+  "new": "      \"id\": \"regions_unexplored:prairie\",\n      \"required\": true",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "no village in a Regions Unexplored field",
+  "file": "src/main/resources/data/minecraft/tags/worldgen/biome/has_structure/village_plains.json",
+  "old": "    {\n      \"id\": \"regions_unexplored:flower_fields\",\n      \"required\": false\n    },\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "vanilla's plains villages replaced",
+  "file": "src/main/resources/data/minecraft/tags/worldgen/biome/has_structure/village_plains.json",
+  "old": "\"replace\": false",
+  "new": "\"replace\": true",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a Regions Unexplored marsh dry",
+  "file": "src/main/resources/data/hexkagune/tags/worldgen/biome/wet.json",
+  "old": "\"regions_unexplored:marsh\"",
+  "new": "\"regions_unexplored:marsh_x\"",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "Oh The Biomes We've Gone's dead sea dry",
+  "file": "src/main/resources/data/hexkagune/tags/worldgen/biome/wet.json",
+  "old": "\"biomeswevegone:dead_sea\"",
+  "new": "\"biomeswevegone:dead_sea_x\"",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "Oh The Biomes We've Gone's peaks not steep",
+  "file": "src/main/resources/data/hexkagune/tags/worldgen/biome/steep.json",
+  "old": "\"biomeswevegone:howling_peaks\"",
+  "new": "\"biomeswevegone:howling_peaks_x\"",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a field called steep",
+  "file": "src/main/resources/data/hexkagune/tags/worldgen/biome/steep.json",
+  "old": "\"regions_unexplored:pine_slopes\"",
+  "new": "\"regions_unexplored:barley_fields\"",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "the jar takes all of the game's data",
+  "file": "build.py",
+  "old": "    \"data/minecraft/tags/worldgen/biome/has_structure/village_plains.json\",\n)",
+  "new": "    \"data/minecraft/\",\n)",
+  "suite": "NpcTests"
+ }
+]

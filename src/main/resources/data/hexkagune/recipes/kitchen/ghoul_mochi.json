@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "minecraft:sugar"
+    },
+    {
+      "item": "hexkagune:ghoul_meat"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:ghoul_mochi",
+    "count": 1
+  }
+}

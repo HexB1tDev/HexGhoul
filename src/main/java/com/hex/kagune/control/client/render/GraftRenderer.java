@@ -93,6 +93,7 @@ public final class GraftRenderer {
         MultiBufferSource.BufferSource buffers = minecraft.m_91269_().m_110104_();
         VertexConsumer[] consumer = {null};
         for (AbstractClientPlayer player : level.m_6907_()) {
+            try {
             if (!GraftClient.isGraft(player) || !player.m_6084_() || player.m_20145_() || player.m_5803_() || player.m_21255_()
                 || com.hex.kagune.control.client.ReviveClient.apart(player, partial)) {
                 continue;
@@ -143,9 +144,16 @@ public final class GraftRenderer {
             } else {
                 java.util.Arrays.fill(limbs.colossi, null);
             }
+            } catch (RuntimeException failure) {
+                // 2.0.27: one player's limbs failing never keeps the next player's, the wild ghouls' or the children's from being drawn.
+                LIMBS.remove(player.m_20148_());
+                PlayerLayers.failed("a Graft player's limbs", failure);
+            }
         }
         // 7.0.2: the rinkaku ghoul NPCs in view: the transplant's tails, as a player's, at their tier's size.
+        // 2.0.27: each ghoul on its own: one that fails is skipped (logged), never the rest of them nor the children after.
         for (com.hex.kagune.control.npc.GhoulNpc npc : GhoulNpcRenderer.drawn()) {
+            try {
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(npc.m_19879_());
             if (seen == null || seen.identity().kind() != com.hex.kagune.control.npc.NpcIdentity.Kind.RINKAKU || !npc.m_6084_() || npc.m_20145_()) {
                 continue;
@@ -162,14 +170,104 @@ public final class GraftRenderer {
             GraftClient.View view = com.hex.kagune.control.client.GhoulNpcClient.graft(seen);
             Limbs limbs = LIMBS.computeIfAbsent(npc.m_20148_(), id -> new Limbs());
             limbs.seen = level.m_46467_();
-            limbs.stage = GraftStage.TRANSPLANT;
+            GraftStage ranked = com.hex.kagune.control.npc.NpcRules.graftStage(seen.identity().tier()); // 4.0.0: S three tails, SS four
+            limbs.stage = ranked;
             Frame frame = Frame.of(npc, partial);
             GraftRig.Body body = body(npc, partial, clock, frame, prey(level, npc, limbs, partial, frame));
             VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];
-            // 1.0.41: its tails turned over with it as it flips (carried on its torso, as a player's are).
-            drawSet(out, matrix, normals, level, npc, view, GraftStage.TRANSPLANT, limbs.base, deploy, view, body, frame, camera, clock, partial,
-                seen.identity().lookMastery(), distance <= DETAIL_DISTANCE_SQR, null,
-                com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_()));
+            // 1.0.41: its tails turned over with it as it flips (carried on its torso, as a player's are). 1.3.35: in its own colour.
+            tint = com.hex.kagune.control.KaguneTint.wild(seen.identity().seed());
+            try {
+                drawSet(out, matrix, normals, level, npc, view, ranked, limbs.base, deploy, view, body, frame, camera, clock, partial,
+                    seen.identity().lookMastery(), distance <= DETAIL_DISTANCE_SQR, null,
+                    com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_()));
+            } finally {
+                tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+            }
+            } catch (RuntimeException failure) {
+                LIMBS.remove(npc.m_20148_());
+                PlayerLayers.failed("a wild ghoul's tails", failure);
+            }
+        }
+        // 4.1.49 (the owner: Roma "has a Rinkaku with 4 purple tendrils"): a companion's Rinkaku tendrils (Persona.tendrils), drawn as a wild
+        // Rinkaku ghoul's tails are, from the same message under her id (NpcTendrils): the transplant's tails, four of them two a side, in
+        // her purple, at her size, riding her body as it was drawn this frame.
+        for (com.hex.kagune.control.npc.EtoNpc npc : com.hex.kagune.control.server.NpcIndex.of(level, com.hex.kagune.control.npc.EtoNpc.class, self.m_20191_().m_82400_(64.0),
+            living -> living.m_6084_() && !living.m_20145_() && living.persona().tendrils() > 0)) {
+            try {
+                com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(npc.m_19879_());
+                float deploy = com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock);
+                if (seen == null || deploy <= 0.005F) {
+                    LIMBS.remove(npc.m_20148_());
+                    continue;
+                }
+                double distance = npc.m_20280_(self);
+                if (distance > MAX_DISTANCE_SQR) {
+                    continue;
+                }
+                int[] targets = new int[com.hex.kagune.control.network.S2CGraftState.TARGETS];
+                targets[0] = seen.prey();
+                GraftClient.View view = new GraftClient.View(GraftStage.TRANSPLANT, false, Long.MIN_VALUE, -1.0E6, seen.move(), seen.moveAt(),
+                    seen.moveBegan(), 0.0F, seen.x(), seen.y(), seen.z(), targets, 0, 0);
+                Limbs limbs = LIMBS.computeIfAbsent(npc.m_20148_(), id -> new Limbs());
+                limbs.seen = level.m_46467_();
+                limbs.stage = GraftStage.TRANSPLANT;
+                Frame frame = Frame.of(npc, partial, npc.persona().size());
+                GraftRig.Body body = body(npc, partial, clock, frame, prey(level, npc, limbs, partial, frame));
+                VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];
+                tint = npc.persona().kaguneColour();
+                try {
+                    drawSet(out, matrix, normals, level, npc, view, GraftStage.TRANSPLANT, limbs.base, deploy, view, body, frame, camera, clock, partial,
+                        seen.identity().lookMastery(), distance <= DETAIL_DISTANCE_SQR, null, EtoRenderer.drawn(npc.m_19879_(), clock),
+                        npc.persona().tendrils());
+                } finally {
+                    tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+                }
+            } catch (RuntimeException failure) {
+                LIMBS.remove(npc.m_20148_());
+                PlayerLayers.failed("a companion's tendrils", failure);
+            }
+        }
+        // 1.3.43: the ghoul children in view with a Rinkaku tentacle of their own. 1.3.44 (the owner: "one tentacle, not two", and not the
+        // graft's toothed tails): one, drawn as a Rinkaku player's is (the original's tube, KaguneWorldRenderer.emitTubeLegacy), curled over
+        // its head at rest as a player's first tentacle is, lashing on the beats of its string, at its size, in the colour it took.
+        for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            try {
+            com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
+            com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
+            if (kid == null || !com.hex.kagune.control.family.KaguneGenes.tails(kid.genome().kagune()) || !child.m_6084_()
+                || child.m_20145_() || child.m_5803_()) {
+                continue;
+            }
+            // 2.3.7 (the owner: "when he manifests the [kagune], I cannot see [it] at all"): shown whenever it fights (its kakugan out,
+            // S2CChild's turned), even before (or without) its kagune's own state.
+            float deploy = Math.max(seen == null ? 0.0F : com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock), kid != null && kid.turned() ? 1.0F : 0.0F);
+            if (deploy <= 0.005F) {
+                LIMBS.remove(child.m_20148_());
+                continue;
+            }
+            if (child.m_20280_(self) > MAX_DISTANCE_SQR) {
+                continue;
+            }
+            Limbs limbs = LIMBS.computeIfAbsent(child.m_20148_(), id -> new Limbs());
+            limbs.seen = level.m_46467_();
+            GraftStage ranked = com.hex.kagune.control.npc.NpcRules.graftStage(seen.identity().tier()); // 4.0.0: S three tails, SS four
+            limbs.stage = ranked;
+            Frame frame = Frame.of(child, partial, com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage()));
+            GraftRig.Body body = body(child, partial, clock, frame, prey(level, child, limbs, partial, frame));
+            VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];
+            drawTentacle(0, out, matrix, normals, level, child, kid, seen == null ? GraftClient.View.NONE : com.hex.kagune.control.client.GhoulNpcClient.graft(seen), limbs, deploy, body, frame,
+                camera, clock, partial);
+            if (com.hex.kagune.control.family.KaguneGenes.tentacles(kid.genome().kagune()) > 1) {
+                // 2.3.7: its other parent's tentacle, over its other shoulder (at rest while the first lashes).
+                drawTentacle(1, out, matrix, normals, level, child, kid, GraftClient.View.NONE, limbs, deploy, body, frame,
+                camera, clock, partial);
+            }
+            } catch (RuntimeException failure) {
+                // 2.5.5: one child failing to draw never hides the others (logged), as the wild ghouls' and the Graft players'.
+                LIMBS.remove(child.m_20148_());
+                PlayerLayers.failed("a child's tentacle", failure);
+            }
         }
         if (consumer[0] != null) {
             buffers.m_109912_(TYPE);
@@ -177,7 +275,113 @@ public final class GraftRenderer {
         if (level.m_46467_() % 40L == 0L) {
             long now = level.m_46467_();
             LIMBS.values().removeIf(limbs -> now - limbs.seen > 100L);
+            TENTACLES.keySet().removeIf(id -> level.m_6815_(id) == null);
         }
+    }
+
+    /** 1.3.44: each child's tentacle as the original's tube needs it (its own, so its rings keep their turn from frame to frame). */
+    private static final Map<Integer, com.hex.kagune.client.render.TendrilChain> TENTACLES = new HashMap<>();
+
+    /**
+     * 1.3.44: a ghoul child's one Rinkaku tentacle (ChildKaguneRules): at rest the curl a Rinkaku player's first tentacle has, swaying;
+     * in a lash the move's path (GraftRig, one limb, on the beats the server strikes on) moved onto its pelvis; followed by springs (the
+     * same as every limb's, GraftMotion), grown out as far as it is, and drawn by the original's own tube (its taper, surface, veins and
+     * point) in the child's colour and its veins, as thick as a Rinkaku player's first tentacle at the child's size.
+     */
+    private static void drawTentacle(int index, VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, com.hex.kagune.control.npc.ChildNpc child,
+                                     com.hex.kagune.control.client.ChildClient.View kid, GraftClient.View moving, Limbs limbs, double grown,
+                                     GraftRig.Body body, Frame frame, Vec3 camera, double clock, float partial) {
+        int mastery = com.hex.kagune.control.family.ChildKaguneRules.tailMastery(kid.stage());
+        double length = GraftStage.TRANSPLANT.length(mastery);
+        GraftMove move = moving.move();
+        double age = moving.age(clock);
+        if (age > move.ticks() + 2) {
+            move = GraftMove.NONE;
+        }
+        // 1.3.46: over the shoulder it was born to carry it over, or as a tail.
+        com.hex.kagune.control.family.ChildKaguneRules.Layout layout = com.hex.kagune.control.family.ChildKaguneRules.layout(kid.genome().kagune(),
+            kid.genome().seed());
+        if (index > 0) {
+            // 2.3.7: the second tentacle over the other shoulder from the first.
+            layout = layout == com.hex.kagune.control.family.ChildKaguneRules.Layout.SHOULDER_LEFT
+                ? com.hex.kagune.control.family.ChildKaguneRules.Layout.SHOULDER_RIGHT : com.hex.kagune.control.family.ChildKaguneRules.Layout.SHOULDER_LEFT;
+        }
+        GraftRig.Pose pose;
+        if (move == GraftMove.NONE) {
+            double[][] rest = com.hex.kagune.control.family.ChildKaguneRules.tentacleRest(length, clock, child.m_19879_(), GraftMotion.POINTS, layout);
+            pose = new GraftRig.Pose(rest, new double[] {0.0, 1.0, 0.0}, 0.0, 1.0, length, 1.0, 0.0);
+        } else {
+            double[] aim = frame.rig(new double[] {moving.x(), moving.y(), moving.z()});
+            if (move.follows() && moving.targets()[0] != 0) {
+                Entity followed = level.m_6815_(moving.targets()[0]);
+                if (followed != null) {
+                    aim = frame.rig(centre(followed, partial));
+                }
+            }
+            // 1.3.48: a grab's tentacle wound round what it holds (the server holds it there).
+            double[] held = null;
+            double heldRadius = 0.3;
+            Entity grabbed = move.holds() && moving.targets()[0] != 0 ? level.m_6815_(moving.targets()[0]) : null;
+            if (grabbed != null) {
+                held = frame.rig(centre(grabbed, partial));
+                heldRadius = grabbed.m_20205_() * 0.5 / frame.scale() + 0.15;
+            }
+            GraftRig.Pose lash = GraftRig.pose(new GraftRig.Input(GraftStage.TRANSPLANT, com.hex.kagune.control.family.ChildKaguneRules.TENTACLES, 0, length,
+                body, move, age, aim, null, held, heldRadius));
+            // The move's path, carried from the graft's root onto the pelvis it leaves from.
+            double[] from = GraftRig.root(GraftStage.TRANSPLANT, 1, 0, body.crouching());
+            double[] to = com.hex.kagune.control.family.ChildKaguneRules.tentacleRoot(layout);
+            double[][] points = new double[lash.points().length][];
+            for (int i = 0; i < points.length; i++) {
+                double f = 1.0 - i / (double)Math.max(1, points.length - 1);
+                double[] p = lash.points()[i];
+                points[i] = new double[] {p[0] + (to[0] - from[0]) * f, p[1] + (to[1] - from[1]) * f, p[2] + (to[2] - from[2]) * f};
+            }
+            pose = new GraftRig.Pose(points, lash.dorsal(), 0.0, 1.0, length, lash.response(), 0.0);
+        }
+        if (limbs.base[index] == null) {
+            limbs.base[index] = new GraftMotion.Limb();
+        }
+        GraftMotion.Limb leg = limbs.base[index];
+        leg.follow(pose, clock);
+        double[][] rig = leg.points();
+        // Evenly along its curve, only as much as has grown out of its back.
+        int samples = 64;
+        double[][] dense = new double[samples + 1][];
+        double[] along = new double[samples + 1];
+        for (int i = 0; i <= samples; i++) {
+            dense[i] = CentipedeTail.catmullRom(rig, i / (double)samples);
+            along[i] = i == 0 ? 0.0 : along[i - 1] + GraftMesh.length3(GraftMesh.sub(dense[i], dense[i - 1]));
+        }
+        double shown = along[samples] * Math.max(0.04, Math.min(1.0, grown));
+        int count = 28;
+        Vec3[] path = new Vec3[count];
+        int j = 0;
+        for (int i = 0; i < count; i++) {
+            double want = shown * i / (count - 1);
+            while (j < samples - 1 && along[j + 1] < want) {
+                j++;
+            }
+            double span = along[j + 1] - along[j];
+            double f = span < 1.0E-9 ? 0.0 : Math.max(0.0, Math.min(1.0, (want - along[j]) / span));
+            double[] p = new double[3];
+            for (int k = 0; k < 3; k++) {
+                p[k] = dense[j][k] + (dense[j + 1][k] - dense[j][k]) * f;
+            }
+            double[] world = frame.place(p, camera);
+            path[i] = new Vec3(world[0], world[1], world[2]);
+        }
+        int colour = kid.genome().colour() < 0 ? com.hex.kagune.control.KaguneColours.DEFAULT : kid.genome().colour() & 0xFFFFFF;
+        float size = (float)frame.scale();
+        com.hex.kagune.client.KaguneClientState.View look = new com.hex.kagune.client.KaguneClientState.View(true, true, 0, 100.0F, colour,
+            com.hex.kagune.control.KaguneColours.veinOf(colour), com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, 1, 0L, 1.0F, 1.0F, 1, 1, 0,
+            com.hex.kagune.gameplay.TendrilMode.IDLE, 0L, 0, 0, 0, 1, 1, Vec3.f_82478_, 0L, 0, -1, 0, Vec3.f_82478_,
+            com.hex.kagune.gameplay.CentipedeTechnique.STRIKE, 0L, 0, -1, Vec3.f_82478_, new int[6], (float)(length * size),
+            com.hex.kagune.control.family.ChildKaguneRules.TENTACLE_THICKNESS * size, 0.46F, 6.0F, 10.0F, 8.5F, 5.0F, false, false, 0, 0, 0);
+        com.hex.kagune.client.render.TendrilChain chain = TENTACLES.computeIfAbsent(child.m_19879_(), id -> new com.hex.kagune.client.render.TendrilChain(0));
+        int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(child.m_20185_(), child.m_20186_() + 1.0, child.m_20189_()));
+        // 2.0.39: as a Rinkaku player's tail is drawn now (RinkakuTube: the owner's reference, in the child's own colour).
+        RinkakuTube.emit(out, matrix, normals, path, look.thickness(), colour, light, child.m_19879_() + index * 7919, new double[] {0.0, 0.0, 0.0}, clock);
     }
 
     /** Every limb of {@code stage}, grown {@code grown} of the way out, making {@code moving}'s move (null: at rest). */
@@ -185,9 +389,18 @@ public final class GraftRenderer {
                                 GraftClient.View view, GraftStage stage, GraftMotion.Limb[] motion, double grown, GraftClient.View moving,
                                 GraftRig.Body body, Frame frame, Vec3 camera, double clock, float partial, int mastery, boolean fine,
                                 double[] eyeRig, com.hex.kagune.control.client.animation.RigPose posed) {
-        int n = Math.min(motion.length, stage.limbs(mastery));
+        drawSet(out, matrix, normals, level, player, view, stage, motion, grown, moving, body, frame, camera, clock, partial, mastery, fine, eyeRig,
+            posed, 0);
+    }
+
+    /** As above, with {@code count} limbs (4.1.49: Roma's four transplant tendrils; 0: the stage's own number). */
+    private static void drawSet(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, LivingEntity player,
+                                GraftClient.View view, GraftStage stage, GraftMotion.Limb[] motion, double grown, GraftClient.View moving,
+                                GraftRig.Body body, Frame frame, Vec3 camera, double clock, float partial, int mastery, boolean fine,
+                                double[] eyeRig, com.hex.kagune.control.client.animation.RigPose posed, int count) {
+        int n = Math.min(motion.length, count > 0 ? count : stage.limbs(mastery));
         double length = stage.length(mastery);
-        double width = stage.width(mastery);
+        double width = stage.width(mastery) * frame.scale(); // 1.3.43: a child's tails as thick as they are long, at its size
         GraftMove move = moving == null ? GraftMove.NONE : moving.move();
         double age = moving == null ? 0.0 : moving.age(clock);
         if (moving != null && age > move.ticks() + 2) {
@@ -209,6 +422,10 @@ public final class GraftRenderer {
                 held = frame.rig(centre(entity, partial));
                 heldRadius = entity.m_20205_() * 0.5 + width * 0.6;
             }
+        } else if (move == GraftMove.ROMA_HURL && aim != null) {
+            // 4.1.49: Roma's Rubble Hurl: her lower pair wrapped round the chunk they tore up (its middle is the move's point).
+            held = aim;
+            heldRadius = 0.55;
         }
         // 7.0.2: the job running alongside (the crawl, the mouth dragging), on its own clock (never the kakuja's colossi).
         GraftMove job = moving == null || moving.job().stage() != stage ? GraftMove.NONE : moving.job();
@@ -276,8 +493,8 @@ public final class GraftRenderer {
                 new double[][] {GraftRig.root(stage, n, 0, body.crouching())})[0], camera);
             if (eyeRig == null) {
                 GraftMesh.blob((a, b, c, d, nn, ca, cb, cc, cd) -> quad(out, matrix, normals, a, b, c, d, nn, ca, cb, cc, cd, light), root,
-                    frame.turn(new double[] {1.0, 0.0, 0.0}), new double[] {0.0, 1.0, 0.0}, frame.turn(new double[] {0.0, 0.0, 1.0}), 0.22 * heave,
-                    0.18 * heave, 0.14 * heave, 5, 8, 0.25, player.m_19879_(), v -> 0.4 + 0.4 * v, 0x8A1820, 0x3A050C, 1.0);
+                    frame.turn(new double[] {1.0, 0.0, 0.0}), new double[] {0.0, 1.0, 0.0}, frame.turn(new double[] {0.0, 0.0, 1.0}), 0.22 * heave * frame.scale(),
+                    0.18 * heave * frame.scale(), 0.14 * heave * frame.scale(), 5, 8, 0.25, player.m_19879_(), v -> 0.4 + 0.4 * v, 0x8A1820, 0x3A050C, 1.0);
             }
         }
     }
@@ -334,22 +551,30 @@ public final class GraftRenderer {
             entity.f_19792_ + (entity.m_20189_() - entity.f_19792_) * partial};
     }
 
-    /** A player's rig frame for this frame: feet in the world, and the body's forward and right. */
-    private record Frame(double x, double y, double z, double forwardX, double forwardZ, double rightX, double rightZ, double bodyYaw) {
+    /**
+     * A player's rig frame for this frame: feet in the world, and the body's forward and right; 1.3.43: and its size (a ghoul child's tails
+     * are a grown ghoul's rig drawn at its size: every rig point placed {@code scale} as far from its feet, every world point read back).
+     */
+    private record Frame(double x, double y, double z, double forwardX, double forwardZ, double rightX, double rightZ, double bodyYaw, double scale) {
         static Frame of(LivingEntity player, float partial) {
+            return of(player, partial, 1.0);
+        }
+
+        static Frame of(LivingEntity player, float partial, double scale) {
             double feetX = player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial;
             double feetY = player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial;
             double feetZ = player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial;
             float previousYaw = player.f_20884_;
             double bodyYaw = previousYaw + wrap(player.f_20883_ - previousYaw) * partial;
             double yaw = Math.toRadians(bodyYaw);
-            return new Frame(feetX, feetY, feetZ, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw), bodyYaw);
+            return new Frame(feetX, feetY, feetZ, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw), bodyYaw, scale);
         }
 
         /** A rig point in the world, relative to the camera. */
         double[] place(double[] rig, Vec3 camera) {
-            return new double[] {this.x + this.rightX * rig[0] + this.forwardX * rig[2] - camera.f_82479_, this.y + rig[1] - camera.f_82480_,
-                this.z + this.rightZ * rig[0] + this.forwardZ * rig[2] - camera.f_82481_};
+            double s = this.scale;
+            return new double[] {this.x + (this.rightX * rig[0] + this.forwardX * rig[2]) * s - camera.f_82479_, this.y + rig[1] * s - camera.f_82480_,
+                this.z + (this.rightZ * rig[0] + this.forwardZ * rig[2]) * s - camera.f_82481_};
         }
 
         /** A rig direction in the world. */
@@ -359,9 +584,9 @@ public final class GraftRenderer {
 
         /** A world point in the rig. */
         double[] rig(double[] world) {
-            double dx = world[0] - this.x;
-            double dz = world[2] - this.z;
-            return new double[] {dx * this.rightX + dz * this.rightZ, world[1] - this.y, dx * this.forwardX + dz * this.forwardZ};
+            double dx = (world[0] - this.x) / this.scale;
+            double dz = (world[2] - this.z) / this.scale;
+            return new double[] {dx * this.rightX + dz * this.rightZ, (world[1] - this.y) / this.scale, dx * this.forwardX + dz * this.forwardZ};
         }
     }
 
@@ -375,7 +600,11 @@ public final class GraftRenderer {
         vertex(out, matrix, normals, d, n, cd, lit);
     }
 
-    private static void vertex(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, double[] p, double[] n, int colour, int light) {
+    /** 1.3.35: the colour the limbs being drawn now are turned to (a wild ghoul's own, KaguneTint.wild; the render thread's alone). */
+    private static int tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+
+    private static void vertex(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, double[] p, double[] n, int argb, int light) {
+        int colour = com.hex.kagune.control.KaguneTint.recolour(argb, tint);
         consumer.m_252986_(matrix, (float)p[0], (float)p[1], (float)p[2])
             .m_6122_((colour >> 16) & 0xFF, (colour >> 8) & 0xFF, colour & 0xFF, colour >>> 24)
             .m_7421_(0.5F, 0.5F)

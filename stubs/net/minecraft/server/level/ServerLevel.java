@@ -8,8 +8,12 @@ public class ServerLevel extends net.minecraft.world.level.Level {
     /** getBlockState */ public net.minecraft.world.level.block.state.BlockState m_8055_(net.minecraft.core.BlockPos pos) { throw new UnsupportedOperationException(); }
     /** noCollision(entity, box) (CollisionGetter) */ public boolean m_45756_(net.minecraft.world.entity.Entity entity, net.minecraft.world.phys.AABB box) { throw new UnsupportedOperationException(); }
     /** getEntity(int) */ public net.minecraft.world.entity.Entity m_6815_(int id) { throw new UnsupportedOperationException(); }
+    /** getEntity(UUID) */ public net.minecraft.world.entity.Entity m_8791_(java.util.UUID id) { throw new UnsupportedOperationException(); }
     /** getEntitiesOfClass */ public <T extends net.minecraft.world.entity.Entity> java.util.List<T> m_6443_(Class<T> type,
         net.minecraft.world.phys.AABB area, java.util.function.Predicate<? super T> filter) { throw new UnsupportedOperationException(); }
     /** sendParticles */ public <T extends net.minecraft.core.particles.ParticleOptions> int m_8767_(T type, double x, double y, double z,
         int count, double dx, double dy, double dz, double speed) { throw new UnsupportedOperationException(); }
+    /** sendParticles to one player (4.1.82: a trial's bodies marked for their own player only) */ public <T extends net.minecraft.core.particles.ParticleOptions> boolean m_8624_(ServerPlayer player, T particle, boolean force, double x, double y, double z, int count, double dx, double dy, double dz, double speed) { throw new UnsupportedOperationException(); }
+    /** getChunkSource (4.1.94: the overworld's generator, PlaceClaims.overworld) */ public ServerChunkCache m_7726_() { throw new UnsupportedOperationException(); }
+    /** structureManager (4.1.94: the place a position stands in, ControlStructures.startAt) */ public net.minecraft.world.level.StructureManager m_215010_() { throw new UnsupportedOperationException(); }
 }

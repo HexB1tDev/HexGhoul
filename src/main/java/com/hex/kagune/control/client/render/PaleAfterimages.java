@@ -38,8 +38,11 @@ public final class PaleAfterimages {
     static final int MOST = 24;
     private static final int FULL_BRIGHT = 0xF000F0;
 
-    /** One afterimage: the pose, her feet and body yaw (degrees) where she was, when (PaleClient's clock). */
-    record Ghost(RigPose pose, double x, double y, double z, float yaw, double at) {
+    /**
+     * One afterimage: the pose, her feet and body yaw (degrees) where she was, when (PaleClient's clock); 1.3.33: its own colour, life
+     * (ticks), how see-through it starts, and the body's size (across, up: an investigator is drawn bigger or slimmer than a player).
+     */
+    record Ghost(RigPose pose, double x, double y, double z, float yaw, double at, int colour, double life, float alpha, float wide, float tall) {
     }
 
     private static final List<Ghost> GHOSTS = new ArrayList<>();
@@ -48,10 +51,15 @@ public final class PaleAfterimages {
     }
 
     public static void add(RigPose pose, Vec3 feet, float bodyYaw, double time) {
+        add(pose, feet, bodyYaw, time, COLOUR, LIFE, ALPHA, 1.0F, 1.0F);
+    }
+
+    /** 1.3.33: one of someone else's (a CCG investigator's dash), in its own colour, life and size. */
+    public static void add(RigPose pose, Vec3 feet, float bodyYaw, double time, int colour, double life, float alpha, float wide, float tall) {
         if (GHOSTS.size() >= MOST) {
             GHOSTS.remove(0);
         }
-        GHOSTS.add(new Ghost(pose, feet.f_82479_, feet.f_82480_, feet.f_82481_, bodyYaw, time));
+        GHOSTS.add(new Ghost(pose, feet.f_82479_, feet.f_82480_, feet.f_82481_, bodyYaw, time, colour, life, alpha, wide, tall));
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
@@ -75,19 +83,21 @@ public final class PaleAfterimages {
         for (Iterator<Ghost> it = GHOSTS.iterator(); it.hasNext(); ) {
             Ghost ghost = it.next();
             double age = time - ghost.at();
-            if (age > LIFE || age < -20.0) {
+            if (age > ghost.life() || age < -20.0) {
                 it.remove();
                 continue;
             }
             if (age < 0.0) {
                 continue;
             }
-            double fade = 1.0 - age / LIFE;
-            int alpha = (int)Math.round(255.0 * ALPHA * fade * fade);
+            double fade = 1.0 - age / ghost.life();
+            int alpha = (int)Math.round(255.0 * ghost.alpha() * fade * fade);
             if (alpha <= 0) {
                 continue;
             }
-            int colour = alpha << 24 | COLOUR;
+            int colour = alpha << 24 | (ghost.colour() & 0xFFFFFF);
+            float wide = ghost.wide();
+            float tall = ghost.tall();
             double yaw = Math.toRadians(ghost.yaw());
             // Rig space (x her right, z forward) into the world at her feet, then relative to the camera.
             double fx = -Math.sin(yaw);
@@ -104,7 +114,9 @@ public final class PaleAfterimages {
             BodyFrame.surface(ghost.pose(), (a, b, c, d, n) -> {
                 double[] normal = {rx * n[0] + fx * n[2], n[1], rz * n[0] + fz * n[2]};
                 for (double[] p : new double[][] {a, b, c, d}) {
-                    out.m_252986_(matrix, (float)(ox + rx * p[0] + fx * p[2]), (float)(oy + p[1]), (float)(oz + rz * p[0] + fz * p[2]))
+                    double px = p[0] * wide;
+                    double pz = p[2] * wide;
+                    out.m_252986_(matrix, (float)(ox + rx * px + fx * pz), (float)(oy + p[1] * tall), (float)(oz + rz * px + fz * pz))
                         .m_6122_((colour >> 16) & 0xFF, (colour >> 8) & 0xFF, colour & 0xFF, colour >>> 24)
                         .m_7421_(0.5F, 0.5F)
                         .m_86008_(OverlayTexture.f_118083_)

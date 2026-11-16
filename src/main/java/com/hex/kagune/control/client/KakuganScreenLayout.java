@@ -6,7 +6,7 @@ import com.hex.kagune.control.kakugan.KakuganEyes;
 /**
  * Geometry of the kakugan screen in GUI-scaled pixels (pure, tested at every GUI size): the player's own face drawn
  * big as a grid of skin pixels, the placement controls beside it (below it on narrow screens), Done / Later, and the
- * "which eye?" box the One eyed control opens.
+ * "which eye?" box the One eyed control opens. 4.1.62: all of it inside the quest menu's box ({@link #box}), the world seen round it.
  */
 public final class KakuganScreenLayout {
     public static final int MARGIN = 12;
@@ -19,7 +19,11 @@ public final class KakuganScreenLayout {
     public static final int SIDE_BY_SIDE_FROM = 380;
     public static final int COMPACT_BELOW_HEIGHT = 300;
     public static final int MIN_CELL = 5;
-    public static final int MAX_CELL = 28;
+    public static final int MAX_CELL = 36;
+    /** 4.1.62: the quest menu's box (the other menus' size at most) and the room left round it on a small screen. */
+    public static final int BOX_WIDTH = UkakuMenuView.BOX_WIDTH;
+    public static final int BOX_HEIGHT = UkakuMenuView.BOX_HEIGHT;
+    public static final int OUTSIDE = 8;
 
     public final int width;
     public final int height;
@@ -28,6 +32,11 @@ public final class KakuganScreenLayout {
     public final int titleY;
     public final int subtitleY;
     public final int subtitleLines;
+    /** 4.1.62: the box everything is in, and the rule under its header. */
+    public final Box box;
+    public final int ruleY;
+    /** The face's frame (a tile round it). */
+    public final Box tile;
     /** The face (8 x 8 skin pixels of {@link #cell} GUI pixels each). */
     public final Box face;
     public final int cell;
@@ -55,31 +64,38 @@ public final class KakuganScreenLayout {
     private KakuganScreenLayout(int width, int height) {
         this.width = width;
         this.height = height;
-        this.compact = height < COMPACT_BELOW_HEIGHT;
-        this.sideBySide = width >= SIDE_BY_SIDE_FROM;
-        this.titleY = this.compact ? 6 : 10;
+        // 4.1.62: the quest menu's box, as big as the screen lets it be (up to the menus' own size), everything inside it.
+        int w = Math.max(0, Math.min(BOX_WIDTH, width - 2 * OUTSIDE));
+        int h = Math.max(0, Math.min(BOX_HEIGHT, height - 2 * OUTSIDE));
+        int ox = (width - w) / 2;
+        int oy = (height - h) / 2;
+        this.box = new Box(ox, oy, w, h);
+        this.compact = h < COMPACT_BELOW_HEIGHT;
+        this.sideBySide = w >= SIDE_BY_SIDE_FROM;
+        this.titleY = oy + (this.compact ? 6 : 10);
         this.subtitleY = this.titleY + 18;
         this.subtitleLines = this.compact ? 1 : 2;
-        int contentTop = this.subtitleY + this.subtitleLines * LINE + (this.compact ? 6 : 10);
-        this.hintY = this.compact ? -1 : height - 6 - LINE;
-        int buttonsY = (this.hintY < 0 ? height - 6 : this.hintY - 4) - BUTTON_HEIGHT;
+        this.ruleY = this.subtitleY + this.subtitleLines * LINE + (this.compact ? 2 : 4);
+        int contentTop = this.ruleY + (this.compact ? 5 : 8);
+        this.hintY = this.compact ? -1 : oy + h - 6 - LINE;
+        int buttonsY = (this.hintY < 0 ? oy + h - 6 : this.hintY - 4) - BUTTON_HEIGHT;
         int contentBottom = buttonsY - (this.compact ? 6 : 10);
         int area = Math.max(0, contentBottom - contentTop);
 
         int doneWidth = 110;
         int laterWidth = 80;
-        int buttonsX = (width - (doneWidth + 8 + laterWidth)) / 2;
+        int buttonsX = ox + (w - (doneWidth + 8 + laterWidth)) / 2;
         this.done = new Box(buttonsX, buttonsY, doneWidth, BUTTON_HEIGHT);
         this.later = new Box(buttonsX + doneWidth + 8, buttonsY, laterWidth, BUTTON_HEIGHT);
 
         if (this.sideBySide) {
             int columnHeight = 6 * CONTROL_HEIGHT + 5 * GAP;
-            this.cell = clamp(Math.min((width - 2 * MARGIN - CONTROL_WIDTH - 2 * GAP) / 8, area / 8), MIN_CELL, MAX_CELL);
+            this.cell = clamp(Math.min((w - 2 * MARGIN - CONTROL_WIDTH - 2 * GAP - 8) / 8, (area - 6) / 8), MIN_CELL, MAX_CELL);
             int size = 8 * this.cell;
-            int x = (width - (size + 2 * GAP + CONTROL_WIDTH)) / 2;
+            int x = ox + (w - (size + 2 * GAP + 8 + CONTROL_WIDTH)) / 2;
             int y = contentTop + (area - size) / 2;
             this.face = new Box(x, y, size, size);
-            int cx = x + size + 2 * GAP;
+            int cx = x + size + 2 * GAP + 8;
             int cy = y + (size - columnHeight) / 2;
             this.mirror = new Box(cx, cy, CONTROL_WIDTH, CONTROL_HEIGHT);
             this.eyeHeight = new Box(cx, cy + (CONTROL_HEIGHT + GAP), CONTROL_WIDTH, CONTROL_HEIGHT);
@@ -89,13 +105,13 @@ public final class KakuganScreenLayout {
             this.reset = new Box(cx, cy + 5 * (CONTROL_HEIGHT + GAP), CONTROL_WIDTH, CONTROL_HEIGHT);
         } else {
             int controls = 3 * CONTROL_HEIGHT + 8;
-            this.cell = clamp(Math.min((width - 2 * MARGIN) / 8, (area - controls - GAP) / 8), MIN_CELL, MAX_CELL);
+            this.cell = clamp(Math.min((w - 2 * MARGIN - 6) / 8, (area - controls - GAP - 6) / 8), MIN_CELL, MAX_CELL);
             int size = 8 * this.cell;
-            int y = contentTop + Math.max(0, (area - (size + GAP + controls)) / 2);
-            this.face = new Box((width - size) / 2, y, size, size);
-            int controlWidth = Math.min(CONTROL_WIDTH, (width - 2 * MARGIN - 4) / 2);
-            int left = (width - (2 * controlWidth + 4)) / 2;
-            int top = y + size + GAP;
+            int y = contentTop + 3 + Math.max(0, (area - 6 - (size + GAP + controls)) / 2);
+            this.face = new Box(ox + (w - size) / 2, y, size, size);
+            int controlWidth = Math.min(CONTROL_WIDTH, (w - 2 * MARGIN - 4) / 2);
+            int left = ox + (w - (2 * controlWidth + 4)) / 2;
+            int top = y + size + GAP + 3;
             this.mirror = new Box(left, top, controlWidth, CONTROL_HEIGHT);
             this.eyeHeight = new Box(left + controlWidth + 4, top, controlWidth, CONTROL_HEIGHT);
             this.iris = new Box(left, top + CONTROL_HEIGHT + 4, controlWidth, CONTROL_HEIGHT);
@@ -103,6 +119,8 @@ public final class KakuganScreenLayout {
             this.reset = new Box(left, top + 2 * (CONTROL_HEIGHT + 4), controlWidth, CONTROL_HEIGHT);
             this.oneEye = new Box(left + controlWidth + 4, top + 2 * (CONTROL_HEIGHT + 4), controlWidth, CONTROL_HEIGHT);
         }
+        // The face's frame: a tile round it, three pixels out.
+        this.tile = new Box(this.face.x() - 3, this.face.y() - 3, this.face.width() + 6, this.face.height() + 6);
         // The "which eye?" box goes where the controls are, so the face (and the eyes it asks about) stays in sight: over the
         // column beside it, or under it on narrow screens.
         int choiceHeight = 84;
@@ -110,15 +128,15 @@ public final class KakuganScreenLayout {
         int choiceX;
         int choiceY;
         if (this.sideBySide) {
-            choiceX = this.face.right() + GAP;
-            choiceWidth = Math.min(236, width - 8 - choiceX);
+            choiceX = this.tile.right() + GAP;
+            choiceWidth = Math.min(236, ox + w - 6 - choiceX);
             choiceY = this.face.y() + (this.face.height() - choiceHeight) / 2;
         } else {
-            choiceWidth = Math.min(236, width - 2 * MARGIN);
-            choiceX = (width - choiceWidth) / 2;
-            choiceY = this.face.bottom() + 4;
+            choiceWidth = Math.min(236, w - 2 * MARGIN);
+            choiceX = ox + (w - choiceWidth) / 2;
+            choiceY = this.tile.bottom() + 4;
         }
-        choiceY = Math.max(4, Math.min(choiceY, height - 4 - choiceHeight));
+        choiceY = Math.max(oy + 4, Math.min(choiceY, oy + h - 4 - choiceHeight));
         this.choice = new Box(choiceX, choiceY, choiceWidth, choiceHeight);
         int half = (choiceWidth - 3 * 8) / 2;
         this.choiceRight = new Box(choiceX + 8, choiceY + 30, half, BUTTON_HEIGHT);

@@ -83,7 +83,8 @@ public final class GraftRig {
     /** +1 for a limb on his right, -1 on his left (the centre ones count as right). */
     public static int side(GraftStage stage, int limbs, int limb) {
         return switch (stage) {
-            case TRANSPLANT, KAKUJA -> limb == 0 ? 1 : -1;
+            case TRANSPLANT -> limb % 2 == 0 ? 1 : -1; // 4.1.49: Roma's four, two a side (one or two as before: right, then left)
+            case KAKUJA -> limb == 0 ? 1 : -1;
             case CENTIPEDE -> limb == 2 ? -1 : 1;
             case THORNS -> limb % 2 == 0 ? 1 : -1;
             // The many-eyed kagune towers to his right, every layer on the one side.
@@ -107,7 +108,9 @@ public final class GraftRig {
         double drop = crouching ? 0.22 : 0.0;
         double x = central(stage, limbs, limb) ? 0.0 : 0.1 * s;
         return switch (stage) {
-            case TRANSPLANT, KAKUJA -> new double[] {x, 0.95 - drop, -0.17};
+            // 4.1.49: Roma's third and fourth tendrils leave her back lower, under the first two.
+            case TRANSPLANT -> new double[] {x * (limb >= 2 ? 1.2 : 1.0), (limb >= 2 ? 0.8 : 0.95) - drop, -0.17};
+            case KAKUJA -> new double[] {x, 0.95 - drop, -0.17};
             case CENTIPEDE -> new double[] {x, (limb == 0 ? 1.0 : 0.88) - drop, -0.17};
             case THORNS -> new double[] {0.12 * s, (limb < 2 ? 1.02 : 0.84) - drop, -0.17};
             // The many-eyed crescents leave his back one over another, from between his shoulder blades down to the small of it.
@@ -124,6 +127,12 @@ public final class GraftRig {
     /** One tail: out of the small of the back, up and out round his side in a wide arc, its point hooked forward at his shoulder. */
     static final double[][] TAIL = {{0.1, 0.95, -0.17}, {0.35, 1.15, -0.62}, {0.95, 1.65, -1.0}, {1.65, 2.35, -0.85}, {2.0, 2.85, -0.15},
         {1.85, 2.85, 0.65}, {1.4, 2.45, 1.15}};
+    /**
+     * 4.1.49: Roma's lower tendrils (a transplant's third and fourth): out of the small of the back under the first two, wide and low round
+     * her side at the hip, rising again to point forward past her waist, below the upper pair's hook.
+     */
+    static final double[][] TAIL_LOW = {{0.12, 0.8, -0.17}, {0.45, 0.85, -0.6}, {1.15, 1.05, -0.95}, {1.9, 1.35, -0.75}, {2.35, 1.6, -0.05},
+        {2.25, 1.75, 0.75}, {1.8, 1.65, 1.3}};
     /** The centipedes' mouth: reared high over his head, arching forward, its head looking down. */
     static final double[][] MAW = {{0.0, 1.0, -0.17}, {0.0, 1.45, -0.8}, {0.1, 2.6, -1.25}, {0.15, 3.65, -0.8}, {0.12, 4.15, 0.2},
         {0.05, 3.8, 1.05}, {0.0, 3.2, 1.4}};
@@ -170,7 +179,7 @@ public final class GraftRig {
     /** The rest design for this limb (right-side coordinates). */
     static double[][] design(GraftStage stage, int limbs, int limb) {
         return switch (stage) {
-            case TRANSPLANT -> TAIL;
+            case TRANSPLANT -> limb >= 2 ? TAIL_LOW : TAIL; // 4.1.49: Roma's lower pair
             case CENTIPEDE -> limb == 0 ? MAW : HOOK;
             case THORNS -> limb < 2 ? THORN_HIGH : THORN_LOW;
             case DRAGON -> LAYERS[Math.min(LAYERS.length - 1, limb)];

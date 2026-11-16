@@ -15,8 +15,20 @@ public final class ReserveBarView {
     public static final int WIDTH = 81;
     public static final int HEIGHT = 9;
     /** The tail runs over columns 0 to TAIL - 1, the kakuhou over the rest. */
-    static final int TAIL = 72;
-    private static final float BULB_X = 76.5F;
+    public static final int TAIL = 72;
+    /**
+     * 4.1.70 (the owner, Anteiku's traits: "Enegy bar increases size and increases maximum capacity."; of a first try that ran past the
+     * hotbar: "naw man just make the energy bar smaller but longer to fit the bar, dont make it past it wtf bruh"; then, of two ways, "B:
+     * shrunk into its spot"): one of Anteiku's bar is drawn on half pixels ({@link #FINE}) in the usual bar's own spot: half as tall, its
+     * tail {@link #ANTEIKU_TAIL} of them long (about twice the usual's), the kakuhou on its end; nothing past the hotbar, nothing under the
+     * level number.
+     */
+    public static final int FINE = 2;
+    public static final int ANTEIKU_TAIL = WIDTH * FINE - (WIDTH - TAIL);
+    /** 4.1.70: how far down the usual spot the finer bar sits, centred in its 9 rows (GUI pixels, on the half-pixel grid). */
+    public static final float FINE_DOWN = 2.5F;
+    /** The kakuhou's middle, past the tail's end. */
+    private static final float BULB_PAST = 4.5F;
     private static final float BULB_Y = 4.5F;
     private static final float BULB_R = 4.6F;
 
@@ -32,22 +44,42 @@ public final class ReserveBarView {
     }
 
     public static void draw(UiCanvas c, int x, int y, Frame frame) {
+        draw(c, x, y, frame, TAIL);
+    }
+
+    /** 4.1.70: one frame with a tail {@code tail} columns long (the whole bar {@link #width} wide). */
+    public static void draw(UiCanvas c, int x, int y, Frame frame, int tail) {
+        int length = Math.max(12, tail);
         c.batch(() -> {
-            tail(c, x, y, frame);
-            kakuhou(c, x, y, frame);
+            tail(c, x, y, frame, length);
+            kakuhou(c, x, y, frame, length);
         });
     }
 
-    private static void tail(UiCanvas c, int x, int y, Frame f) {
+    /** 4.1.70: one of Anteiku's bar, in the usual bar's spot at ({@code x}, {@code y}): the finer, longer one (on half pixels). */
+    public static void drawFine(UiCanvas c, int x, int y, Frame frame) {
+        c.push();
+        c.translate(x, y + FINE_DOWN);
+        c.scale(1.0F / FINE);
+        draw(c, 0, 0, frame, ANTEIKU_TAIL);
+        c.pop();
+    }
+
+    /** 4.1.70: how wide the bar is with a tail {@code tail} columns long (the kakuhou past it). */
+    public static int width(int tail) {
+        return Math.max(12, tail) + WIDTH - TAIL;
+    }
+
+    private static void tail(UiCanvas c, int x, int y, Frame f, int length) {
         float fill = clamp(f.fill());
         boolean empty = fill <= 0.001F;
-        float front = (1.0F - fill) * TAIL;
-        float ghostFront = (1.0F - Math.max(fill, clamp(f.ghost()))) * TAIL;
+        float front = (1.0F - fill) * length;
+        float ghostFront = (1.0F - Math.max(fill, clamp(f.ghost()))) * length;
         float beat = beat(f);
         float writhe = 0.55F + 1.3F * clamp(f.hunger());
         int flow = (int)Math.floor(f.time() * 0.22);
-        for (int i = 0; i < TAIL; i++) {
-            float u = i / (float)(TAIL - 1);
+        for (int i = 0; i < length; i++) {
+            float u = i / (float)(length - 1);
             float half = 1.1F + 2.65F * (float)Math.pow(u, 0.8);
             float centre = BULB_Y + writhe * (float)Math.sin(i * 0.17 - f.time() * 0.11) * (float)Math.pow(1.0F - u, 1.6);
             int top = Math.round(centre - half);
@@ -64,14 +96,14 @@ public final class ReserveBarView {
                     colour = rim(r == top && r != bottom, beat, empty);
                 } else if (empty) {
                     boolean crack = ((i * 7 + r * 13) % 11 == 0) || ((i + r * 3) % 17 == 0 && i % 2 == 0);
-                    colour = crack ? 0xFF0A0607 : (TAIL - 1 - i) % 6 == 0 ? 0xFF2C2326 : 0xFF221A1D;
+                    colour = crack ? 0xFF0A0607 : (length - 1 - i) % 6 == 0 ? 0xFF2C2326 : 0xFF221A1D;
                 } else if (i + meniscus(r, f) >= front) {
                     colour = blood(i, r, top, bottom, middle, flow, i + meniscus(r, f) - front < 1.0F && fill < 0.999F);
                     if (f.flash() > 0.0F) {
                         colour = blend(colour, 0xFFFFF4F4, 0.6F * clamp(f.flash()));
                     }
                 } else {
-                    colour = (TAIL - 1 - i) % 6 == 0 ? 0xFF2A0B13 : 0xFF13050A;
+                    colour = (length - 1 - i) % 6 == 0 ? 0xFF2A0B13 : 0xFF13050A;
                     if (f.ghostAlpha() > 0.0F && i + meniscus(r, f) >= ghostFront) {
                         colour = blend(colour, 0xFFFFC2CE, 0.85F * clamp(f.ghostAlpha()));
                     }
@@ -80,7 +112,7 @@ public final class ReserveBarView {
             }
         }
         if (!empty) {
-            cells(c, x, y, f, front);
+            cells(c, x, y, f, front, length);
         }
     }
 
@@ -111,31 +143,33 @@ public final class ReserveBarView {
     }
 
     /** Bright RC cells carried down the blood toward the tip. */
-    private static void cells(UiCanvas c, int x, int y, Frame f, float front) {
-        float length = TAIL - 1 - front;
-        if (length < 3.0F) {
+    private static void cells(UiCanvas c, int x, int y, Frame f, float front, int length) {
+        float run = length - 1 - front;
+        if (run < 3.0F) {
             return;
         }
         int[] rows = {4, 3, 5, 4};
         for (int k = 0; k < rows.length; k++) {
             float speed = 0.16F + 0.07F * k;
-            float along = (float)((f.time() * speed + k * 17.3) % length);
-            int i = Math.round(TAIL - 2 - along);
-            if (i > front + 1.0F && i < TAIL - 1) {
+            float along = (float)((f.time() * speed + k * 17.3) % run);
+            int i = Math.round(length - 2 - along);
+            if (i > front + 1.0F && i < length - 1) {
                 c.fill(x + i, y + rows[k], x + i + 1, y + rows[k] + 1, k % 2 == 0 ? 0xFFFFD2DA : 0xFFFFA8B6);
             }
         }
     }
 
     /** The kakuhou on the tail's root, and its kakugan. */
-    private static void kakuhou(UiCanvas c, int x, int y, Frame f) {
+    private static void kakuhou(UiCanvas c, int x, int y, Frame f, int length) {
+        float bulbX = length + BULB_PAST;
+        int wide = width(length);
         float fill = clamp(f.fill());
         float hunger = clamp(f.hunger());
         float beat = beat(f);
         boolean empty = fill <= 0.001F;
         // Where the eye looks: mostly down the tail, now and then at the player.
         float look = (float)Math.sin(f.time() * 0.021) > 0.6F ? 0.6F : -0.7F;
-        float irisX = BULB_X + look;
+        float irisX = bulbX + look;
         float iris = 2.35F;
         int irisColour = empty ? 0xFF4A2026 : blend(0xFF8A1424, 0xFFFF2440, fill);
         // The pupil: a slit when fed, wide and round when starving.
@@ -143,9 +177,9 @@ public final class ReserveBarView {
         float pupilH = 1.6F + 0.4F * hunger;
         double blink = f.time() % 170.0;
         float lid = blink < 5.0 ? (float)(blink < 2.5 ? blink / 2.5 : (5.0 - blink) / 2.5) : 0.0F;
-        for (int col = TAIL; col < WIDTH; col++) {
+        for (int col = length; col < wide; col++) {
             for (int r = 0; r < HEIGHT; r++) {
-                float dx = col + 0.5F - BULB_X;
+                float dx = col + 0.5F - bulbX;
                 float dy = r + 0.5F - BULB_Y;
                 float d = (float)Math.sqrt(dx * dx + dy * dy);
                 if (d > BULB_R) {

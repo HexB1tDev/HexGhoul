@@ -32,7 +32,36 @@ public final class NpcTalk {
         ASK_OUT("Go out with me."),
         KISS("Kiss her."),
         HUG("Hug her."),
-        SURGERY("Make me like you.");
+        SURGERY("Make me like you."),
+        // 1.3.2: the one-of-a-kind NPCs' (Eto's first). SAY_1..SAY_8 carry the words the page gives them (a topic, a reply).
+        SAY_1("..."),
+        SAY_2("..."),
+        SAY_3("..."),
+        SAY_4("..."),
+        SAY_5("..."),
+        SAY_6("..."),
+        SAY_7("..."),
+        SAY_8("..."),
+        SWEET("Be sweet to her."),
+        PUPPY("I brought you a little someone. (the baby animal on your lead)"),
+        PROPOSE("Marry me. (offer the ring)"),
+        NIGHT("Come to bed."),
+        TRIAL("I'm ready. Make me one-eyed."),
+        TEASE("Tease her."),
+        LETTER("I wrote you something. (give the written book)"),
+        BACK("Back."),
+        // 1.3.21: to a spouse: the home they share (sent by ordinal: new ones at the end).
+        HOME("This is our home now."),
+        // 1.3.29: the Answer key (or a right-click) on someone who came up to them with something to say: what they came to say.
+        ANSWER("...");
+
+        /** The reply slots, in order. */
+        public static final Choice[] SAYS = {SAY_1, SAY_2, SAY_3, SAY_4, SAY_5, SAY_6, SAY_7, SAY_8};
+
+        /** The slot this is (0..7), or -1. */
+        public int say() {
+            return this.ordinal() >= SAY_1.ordinal() && this.ordinal() <= SAY_8.ordinal() ? this.ordinal() - SAY_1.ordinal() : -1;
+        }
 
         private final String text;
 
@@ -89,7 +118,9 @@ public final class NpcTalk {
     public static List<Choice> choices(Context c) {
         List<Choice> out = new ArrayList<>();
         NpcTemper temper = c.who().temper();
-        out.add(Choice.WHO);
+        if (!c.asked()) {
+            out.add(Choice.WHO); // 4.2.4: asked once (before: every time)
+        }
         out.add(Choice.CHAT);
         if (c.meatInHand() && temper != NpcTemper.ANTEIKU) {
             out.add(Choice.GIFT);
@@ -144,7 +175,8 @@ public final class NpcTalk {
             case INSULT -> insult(c);
             case LEAVE -> new Reply("", 0, Effect.CLOSE);
             // 1.3.0: Eto's alone (EtoTalk); never offered by a ghoul NPC.
-            case BOOK, FLOWER, LESSON, ASK_OUT, KISS, HUG, SURGERY -> new Reply("", 0, Effect.CLOSE);
+            case BOOK, FLOWER, LESSON, ASK_OUT, KISS, HUG, SURGERY, SAY_1, SAY_2, SAY_3, SAY_4, SAY_5, SAY_6, SAY_7, SAY_8, SWEET, PUPPY, PROPOSE,
+                NIGHT, TRIAL, TEASE, LETTER, BACK, HOME, ANSWER -> new Reply("", 0, Effect.CLOSE);
         };
     }
 
@@ -263,17 +295,45 @@ public final class NpcTalk {
     }
 
     static String[] chat(NpcTemper temper) {
+        // 4.2.8 (the owner: "So develop every single NPC even further, add more dialogue"): more of each one's talk.
         return switch (temper) {
             case ANTEIKU -> new String[] {"The trick to good coffee is patience. Same as the trick to not killing people.",
-                "Some nights I just walk, and listen to the city breathing.", "A human dropped her keys yesterday. I gave them back. She smiled at me."};
+                "Some nights I just walk, and listen to the city breathing.", "A human dropped her keys yesterday. I gave them back. She smiled at me.",
+                "There's a bakery two streets down. I can't eat anything in it. I still stop to smell the bread every morning.",
+                "The old man who runs the cafe says every cup you pour is a choice. I've poured a lot of cups.",
+                "I learned to read humans' faces before I learned to read. It's the only way to live among them.",
+                "A child waved at me from a window tonight. I waved back. It's the small things that keep you human. Or close to it.",
+                "If you're new to all this: the bridge, the cliffs, the river. That's where the ones who've already decided go. You don't have to hunt.",
+                "I keep a list of the people I've never hurt. It's longer than the other list. I want to keep it that way."};
             case PACK -> new String[] {"The doves are getting bolder. Soon they'll learn.", "Fear's useful. Teach them to fear you and they leave you alone.",
-                "Anteiku talks about peace. Peace is what the strong let the weak have."};
+                "Anteiku talks about peace. Peace is what the strong let the weak have.", "Three investigators last week. I left their cases on the "
+                + "station steps. A message.", "You run with someone, you bleed with them. That's the only rule worth having.",
+                "The strong eat. The weak get eaten. Everything else is a story people tell to feel better.",
+                "Ever kicked down a dove's door? The look on their faces. They think they're the hunters.",
+                "The Gourmets think they're better than us because they use cutlery. A knife's a knife.",
+                "Show me your kagune and I'll tell you what you're worth. ...Not here. Somewhere with room."};
             case SCAVENGER -> new String[] {"There's a cave west of here with bones in it. Old ones. Not mine.",
-                "The Pack came through two nights ago. I hid in a hole for a whole day.", "Do you ever miss the taste of bread? I do."};
+                "The Pack came through two nights ago. I hid in a hole for a whole day.", "Do you ever miss the taste of bread? I do.",
+                "I found a coat in a skip last week. Still warm. ...I didn't ask whose.", "If you hear three knocks on a wall, don't answer. That's "
+                + "the doves' trick.", "I eat what the others leave. It's not much. It's enough. Mostly enough.",
+                "You're not going to hurt me, are you? ...Sorry. I ask everyone. It's a habit.",
+                "The rats in the old drains know which way the doves are coming. I follow the rats.",
+                "Someone left a tin of meat by my hole once. Never found out who. I think about them a lot."};
             case GOURMET -> new String[] {"Most hunters have no patience. A meal should be anticipated.",
-                "There's a ghoul near here whose scent is... exquisite. I can almost taste it."};
+                "There's a ghoul near here whose scent is... exquisite. I can almost taste it.",
+                "Fear sours the meat. A good hunter is a calm hunter. A great one is a charming one.",
+                "I once waited three months for a single dinner. Worth every evening.",
+                "You have a very interesting scent, you know. ...Don't look so alarmed. It's a compliment. Mostly.",
+                "The Pack eats like dogs. Anteiku barely eats at all. Somewhere between them is civilisation.",
+                "Do you know what a sommelier is? I'm one of those. For something else entirely."};
             default -> new String[] {"Rain's coming. You can smell it on the wind.",
-                "Ever notice how quiet it gets right before dawn? That's when they're done hunting.", "I had a name for the moon once. Forgot it."};
+                "Ever notice how quiet it gets right before dawn? That's when they're done hunting.", "I had a name for the moon once. Forgot it.",
+                "I've walked from one end of this land to the other. It's bigger than you think and emptier than it looks.",
+                "Don't stay in one place too long. Places remember you. So do doves.",
+                "I sleep in a different spot every night. It's not fear. It's arithmetic.",
+                "Met a ghoul once who'd never killed anyone. Lived to be very old. Never could work out how.",
+                "Mountains are good. Nobody climbs them for no reason. Nobody follows you up.",
+                "The wind's turned east. Something's moving in the next valley. Doesn't concern me. Might concern you."};
         };
     }
 

@@ -28,6 +28,28 @@ public record C2SUkakuAction(int action, int targetId) {
      * forward (W or no direction), -1 back (S).
      */
     public static final int DASH = 6;
+    /**
+     * 2.0.42: Rinkaku's block on the right click: {@code targetId} 2 when the button goes down, 1 every few ticks while it is held, 0 when
+     * it is let go ({@code RinkakuBlockServer}).
+     */
+    public static final int BLOCK = 7;
+    /**
+     * 2.1.7: the White Reaper's dash in Ukaku's final kakuja (the sprint key tapped twice): {@code targetId} the way the player was moving,
+     * in tenths of a degree of world yaw ({@code ReaperDash.encode}).
+     */
+    public static final int REAPER_DASH = 8;
+    /** 2.4.5: Rinkaku's Thy Death (Z held): {@code targetId} 2 as it goes down, 1 every few ticks while held, 0 let go ({@code ThyDeathServer}). */
+    public static final int THY_DEATH = 9;
+    /**
+     * 3.1.5: Rinkaku's Impale (H held with nothing held): {@code targetId} 2 as it goes down, 1 every few ticks while held, 0 let go
+     * ({@code ImpaleServer}).
+     */
+    public static final int IMPALE = 10;
+    /**
+     * 3.1.6: Rinkaku's Rubble Hurl (N held with nothing held): {@code targetId} 2 as it goes down, 1 every few ticks while held, 0 let go
+     * ({@code HurlServer}).
+     */
+    public static final int HURL = 11;
 
     public static void encode(C2SUkakuAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);

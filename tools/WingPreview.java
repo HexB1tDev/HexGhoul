@@ -323,11 +323,25 @@ public final class WingPreview {
             for (int k = 0; k < 4; k++) {
                 c[k] = new double[] {v[k * 3], v[k * 3 + 1], v[k * 3 + 2]};
             }
-            int[] a = q.argb();
+            int[] a = com.hex.kagune.control.KaguneTint.recolour(q.argb(), tint);
             tris.add(new Tri(new double[][] {c[0], c[1], c[2]}, new int[] {a[0], a[1], a[2]}, n, false));
             tris.add(new Tri(new double[][] {c[0], c[2], c[3]}, new int[] {a[0], a[2], a[3]}, n, false));
         }
         return tris;
+    }
+
+    /** 1.3.35: the kagune colour the wings are drawn in (KaguneTint; the original crimson as they always were). */
+    static int tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+
+    /** 1.3.35: one sheet cell per colour: the wings recoloured to it. */
+    static List<Tri> tinted(int colour, WingRig.Input input, double[] eye) {
+        int was = tint;
+        tint = colour;
+        try {
+            return scene(input, false, eye);
+        } finally {
+            tint = was;
+        }
     }
 
     /** Steve-proportioned stand-in for Ukaku (x right, y up, z forward): black clothes, pale skin, dark navy hair. */
@@ -698,6 +712,20 @@ public final class WingPreview {
         int night = 0x1A2234;
         int day = 0x7D8B96;
         double t = 1.3;
+        if (wanted(args, "part-tint")) {
+            // 1.3.35: the wings and their crystal form in a few rolled kagune colours (KaguneTint), the original crimson first.
+            int[] colours = {com.hex.kagune.control.KaguneColours.DEFAULT, 0x1F8A7A, 0x6A2BC9, 0xD9A21A, 0x2E5FD6, 0x3FAF3A,
+                com.hex.kagune.control.KaguneColours.BLACK, com.hex.kagune.control.KaguneColours.BONE};
+            for (int colour : colours) {
+                tint = colour;
+                sheet(new File(out, "tint-" + Integer.toHexString(colour) + ".png"), com.hex.kagune.control.KaguneColours.name(colour) + " "
+                    + com.hex.kagune.control.KaguneColours.hex(colour), new Object[][] {
+                    {"gaseous", in(WingForm.TWIN, 0, 1, t, 0, WingRig.Motion.NONE, 0, 0), "back34", 6.0, day},
+                    {"crystal", in(WingForm.TWIN, 300, 1, t, 1.0F, WingRig.Motion.NONE, 0, 0), "back34", 6.0, day},
+                }, 2, 360, 300);
+            }
+            tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+        }
         if (wanted(args, "part-flame")) {
             sheet(new File(out, "part-flame.png"), "Gaseous wings (UkakuFlame) against the anime", new Object[][] {
                 {"S1 gas puffs (ref 2)", "2.png"},

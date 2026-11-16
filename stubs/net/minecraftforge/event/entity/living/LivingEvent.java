@@ -3,4 +3,8 @@ package net.minecraftforge.event.entity.living;
 
 public class LivingEvent extends net.minecraftforge.event.entity.EntityEvent {
     public net.minecraft.world.entity.LivingEntity getEntity() { throw new UnsupportedOperationException(); }
+
+    /** 1.3.21: fired each tick of every living entity (a sleeper's night, HomeLife). */
+    public static class LivingTickEvent extends LivingEvent {
+    }
 }

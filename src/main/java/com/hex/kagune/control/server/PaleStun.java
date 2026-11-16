@@ -46,6 +46,11 @@ public final class PaleStun {
     private PaleStun() {
     }
 
+    /** 4.1.74: {@code body} no longer stunned (nor kept from being stunned again): the White Reaper's end takes everything off him. */
+    static void clear(LivingEntity body) {
+        STUNNED.remove(body.m_19879_());
+    }
+
     /**
      * {@code body} was hit now: stunned for {@code ticks} more (renewed, capped). 7.0.2: a player kept stunned too long breaks free
      * ({@link StunRules#breaksFree}) and can't be stunned for a moment after. True if it is stunned now (false: it broke free, or
@@ -72,7 +77,9 @@ public final class PaleStun {
             stun.immuneUntil = now + StunRules.PLAYER_IMMUNE;
             return false;
         }
-        stun.until = StunRules.renewed(stun.until, now, ticks);
+        // 3.5.3: a Bikaku player with the worm out shrugs half a stun off (Pain Suppression).
+        int taken = (int)Math.max(1L, Math.round(ticks * BikakuServer.stunShare(body)));
+        stun.until = StunRules.renewed(stun.until, now, taken);
         hold(body);
         return true;
     }

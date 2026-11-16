@@ -1,0 +1,7 @@
+{
+ "parent": "hexkagune:item/quinque/bikaku_case_carried_slim",
+ "textures": {
+  "q": "hexkagune:item/quinque_arm_bone_greatsword",
+  "particle": "hexkagune:item/quinque_arm_bone_greatsword"
+ }
+}

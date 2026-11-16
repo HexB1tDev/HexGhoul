@@ -1,0 +1,24 @@
+{
+  "replace": false,
+  "values": [
+    "hexkagune:ghoul_meat",
+    "hexkagune:cooked_ghoul_meat",
+    "hexkagune:rc_broth",
+    "hexkagune:ghoul_sandwich",
+    "hexkagune:kakuja_burger",
+    "hexkagune:black_risotto",
+    "hexkagune:rc_ramen",
+    "hexkagune:centipede_soba",
+    "hexkagune:red_hunger_stew",
+    "hexkagune:kagune_kebab",
+    "hexkagune:kakuhou_tartare",
+    "hexkagune:kuro_sushi",
+    "hexkagune:owls_omelette",
+    "hexkagune:ghouls_pie",
+    "hexkagune:kakuja_cake",
+    "hexkagune:ghoul_mochi",
+    "hexkagune:golden_heart",
+    "hexkagune:rc_tonic",
+    "hexkagune:kakuja_shot"
+  ]
+}

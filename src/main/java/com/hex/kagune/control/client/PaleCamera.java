@@ -27,7 +27,23 @@ public final class PaleCamera {
     private static double rumbleAt = Double.NEGATIVE_INFINITY;
     private static double rumbleFor;
 
+    /** 2.0.12: the last clash's shake: how hard, from when, for how long (PaleClient's clock, ticks). */
+    private static float clash;
+    private static double clashAt = Double.NEGATIVE_INFINITY;
+    private static double clashFor;
+
     private PaleCamera() {
+    }
+
+    /** 2.0.12: a clash shaking the view, {@code strength} 1 about 4 degrees of pitch (peaks near 7), fading out over {@code ticks} (a stronger one takes over). */
+    public static void clash(float strength, double ticks, double time) {
+        double since = time - clashAt;
+        float left = since >= 0.0 && since < clashFor ? clash * (float)(1.0 - since / clashFor) : 0.0F;
+        if (strength >= left) {
+            clash = strength;
+            clashAt = time;
+            clashFor = Math.max(1.0, ticks);
+        }
     }
 
     /** Swing the view {@code degrees} (+ to the right) over {@code ticks}. */
@@ -66,6 +82,7 @@ public final class PaleCamera {
         if (player != null && dt > 0.0) {
             lockOn(player, dt);
             kingLock(player, dt);
+            dashTurn(player);
         }
         if (player == null || Math.abs(turnLeft) < 1.0E-3 || dt <= 0.0) {
             return;
@@ -73,6 +90,33 @@ public final class PaleCamera {
         double step = Math.signum(turnLeft) * Math.min(Math.abs(turnLeft), turnRate * dt);
         turnLeft -= step;
         player.m_19884_(step / 0.15, 0.0);
+    }
+
+    /** 4.1.87: the dash kick her view has been turned with so far (degrees, to her left), and which one that is (its start). */
+    private static double dashTurned;
+    private static long dashStarted = Long.MIN_VALUE;
+
+    /**
+     * 4.1.87 (the owner, of Kick Master's dash kick: "He faces where he kicked at. So basically, he ends up facing to the left."): her view
+     * turns with her body, a quarter turn to her left with the kick (PaleRules.dashTurn), each frame by what it has turned since the last,
+     * as the mouse turns it (so the mouse still works on top), and ends facing the way it flew.
+     */
+    private static void dashTurn(LocalPlayer player) {
+        PaleClient.PaleView view = PaleClient.get(player);
+        if (view.move() != com.hex.kagune.control.pale.PaleMove.DASH_KICK) {
+            dashStarted = Long.MIN_VALUE;
+            return;
+        }
+        if (dashStarted != view.startedAt()) {
+            dashStarted = view.startedAt();
+            dashTurned = 0.0;
+        }
+        double want = Math.toDegrees(com.hex.kagune.control.pale.PaleRules.dashTurn(view.detail(), view.age(PaleClient.clock(Minecraft.m_91087_().m_91296_()))));
+        double step = want - dashTurned;
+        dashTurned = want;
+        if (Math.abs(step) > 1.0E-4) {
+            player.m_19884_(-step / 0.15, 0.0);
+        }
     }
 
     /** 6.2.0: how quickly (a second) the view settles onto the head she kicks, and how long after the blow it is held there. */
@@ -90,10 +134,13 @@ public final class PaleCamera {
         // (6.2.0: the Speed Kick's blow comes a lunge and a dash in, and her view is on its middle, where her foot goes.)
         // (6.2.0: Witness This too, all the way down to the crater.)
         boolean witness = view.move() == com.hex.kagune.control.pale.PaleMove.WITNESS;
+        // (4.1.87: Kick Master's dash kick: onto its head through the run, never past where her view starts to turn with the kick.)
+        boolean dash = view.move() == com.hex.kagune.control.pale.PaleMove.DASH_KICK;
         double until = owl ? view.detail() + com.hex.kagune.control.pale.OwlRules.KICK_BLOW
             : witness ? com.hex.kagune.control.pale.WitnessRules.IMPACT - LOCK_AFTER
+            : dash ? com.hex.kagune.control.pale.PaleRules.dashArrive(view.detail()) + com.hex.kagune.control.pale.PaleRules.DASH_CONTACT - 0.5 - LOCK_AFTER
             : com.hex.kagune.control.pale.PaleRules.kickArrive(view.detail()) + com.hex.kagune.control.pale.PaleRules.KICK_CONTACT;
-        if (view.move() != com.hex.kagune.control.pale.PaleMove.KICK && !owl && !witness || view.targetId() == 0
+        if (view.move() != com.hex.kagune.control.pale.PaleMove.KICK && !owl && !witness && !dash || view.targetId() == 0
             || view.age(PaleClient.clock(0.0F)) > until + LOCK_AFTER) {
             return;
         }
@@ -103,7 +150,7 @@ public final class PaleCamera {
         }
         net.minecraft.world.phys.Vec3 eye = player.m_146892_();
         net.minecraft.world.phys.Vec3 head = owl ? target.m_146892_()
-            : target.m_20182_().m_82520_(0.0, target.m_20206_() * com.hex.kagune.control.pale.PaleRules.KICK_AIM, 0.0);
+            : target.m_20182_().m_82520_(0.0, target.m_20206_() * (dash ? com.hex.kagune.control.pale.PaleRules.DASH_HEAD : com.hex.kagune.control.pale.PaleRules.KICK_AIM), 0.0);
         double dx = head.f_82479_ - eye.f_82479_;
         double dy = head.f_82480_ - eye.f_82480_;
         double dz = head.f_82481_ - eye.f_82481_;
@@ -150,7 +197,7 @@ public final class PaleCamera {
 
     @SubscribeEvent
     public static void cameraAngles(ViewportEvent.ComputeCameraAngles event) {
-        if (kick <= 0.0F && rumble <= 0.0F || !ControlConfig.cameraEffects()) {
+        if (kick <= 0.0F && rumble <= 0.0F && clash <= 0.0F || !ControlConfig.cameraEffects()) {
             return;
         }
         double time = PaleClient.clock((float)event.getPartialTick());
@@ -172,6 +219,18 @@ public final class PaleCamera {
             float roll = (float)(Math.sin(t * 3.3 + 2.1) + 0.5 * Math.sin(t * 11.9 + 0.7));
             event.setPitch(event.getPitch() + 1.2F * fade * pitch * scale);
             event.setRoll(event.getRoll() + 0.9F * fade * roll * scale);
+        }
+        double clashing = time - clashAt;
+        if (clash > 0.0F && clashing >= 0.0 && clashing < clashFor) {
+            // 2.0.12: a clash: a hard jolt that shudders out (fast uneven sines), pitch, roll and a little yaw, dying away to nothing.
+            float fade = clash * (float)Math.pow(1.0 - clashing / clashFor, 1.6);
+            double t = clashing;
+            float pitch = (float)(Math.sin(t * 5.3 + 0.2) + 0.55 * Math.sin(t * 12.1 + 1.1) + 0.3 * Math.sin(t * 19.7));
+            float roll = (float)(Math.sin(t * 4.4 + 1.7) + 0.5 * Math.sin(t * 13.3 + 0.5));
+            float yaw = (float)(Math.sin(t * 6.1 + 2.4) + 0.4 * Math.sin(t * 15.9));
+            event.setPitch(event.getPitch() + 4.0F * fade * pitch * scale);
+            event.setRoll(event.getRoll() + 3.0F * fade * roll * scale);
+            event.setYaw(event.getYaw() + 1.8F * fade * yaw * scale);
         }
     }
 }

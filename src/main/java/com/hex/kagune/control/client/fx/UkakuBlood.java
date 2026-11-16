@@ -35,6 +35,13 @@ import net.minecraftforge.fml.ModList;
  * blood is never doubled.
  */
 public final class UkakuBlood {
+    /**
+     * 2.5.2: what the original's fallback blood, mist and landing dust draw instead of vanilla's damage indicator (a dark heart, which
+     * the owner kept seeing behind them as the kagune or a kakuja came out): a small drop of dark red (KagunePatch.noHearts).
+     */
+    public static final net.minecraft.core.particles.ParticleOptions FALLBACK =
+        new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f(0.42F, 0.02F, 0.03F), 1.1F);
+
     private static final ResourceLocation[] DROPS = {
         KaguneMod.id("textures/particle/blood_0.png"), KaguneMod.id("textures/particle/blood_1.png"),
         KaguneMod.id("textures/particle/blood_2.png"), KaguneMod.id("textures/particle/blood_3.png")};

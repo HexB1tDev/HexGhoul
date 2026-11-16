@@ -5,6 +5,7 @@ import com.hex.kagune.control.client.KingClient;
 import com.hex.kagune.control.client.animation.BodyFrame;
 import com.hex.kagune.control.client.animation.KaguneBodyAnimation;
 import com.hex.kagune.control.client.animation.RigPose;
+import com.hex.kagune.control.king.SpireArm;
 import com.hex.kagune.control.king.WarHoldModel;
 import com.hex.kagune.control.king.KingMove;
 import com.hex.kagune.control.king.WarRules;
@@ -140,18 +141,26 @@ public final class WarHoldFx {
                     AbstractClientPlayer who = WarPathFx.player(level, owner);
                     double[] from = {data[0], data[1], data[2]};
                     double[] hand = from;
-                    if (who != null) {
+                    Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
+                    if (who != null && ownFirstPerson(who)) {
+                        // 3.4.5 (the owner: "It detaches from your hand if you move"): in his own first person it leaves the fist the hand
+                        // pass draws (KingFirstPerson.spireArm), found again every frame from his eyes and his look; 3.2.8 left it on the
+                        // server's spot, so walking off left the mass hanging where it set out.
+                        double[] ends = spireEnds(who);
+                        double yaw = who.f_19859_ + (who.m_146908_() - who.f_19859_) * partial;
+                        double pitch = who.f_19860_ + (who.m_146909_() - who.f_19860_) * partial;
+                        hand = SpireArm.fist(new double[] {camera.f_82479_, camera.f_82480_, camera.f_82481_}, yaw, pitch, SpireArm.thrust(age, ends[0], ends[1]));
+                    } else if (who != null) {
                         RigPose pose = KaguneBodyAnimation.current(who, partial);
                         hand = new Body(who, partial, pose == null ? new RigPose() : pose).at("leftArm", WarHoldModel.HAND);
                     }
                     double front = WarRules.spireFront(age, data[6], data[8]);
-                    Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
                     double mx = data[0] + data[3] * front * 0.5 - camera.f_82479_;
                     double my = data[1] + data[4] * front * 0.5 - camera.f_82480_;
                     double mz = data[2] + data[5] * front * 0.5 - camera.f_82481_;
                     boolean fine = mx * mx + my * my + mz * mz < 40.0 * 40.0;
                     WarHoldModel.draw(sink, WarHoldModel.mass(from, new double[] {data[3], data[4], data[5]}, hand, data[6], data[7], data[8], data[9],
-                        Math.max(1, Math.round(data[10])), ids.length > 0 ? ids[0] : 0, age, now), fine);
+                        Math.max(1, Math.round(data[10])), ids.length > 0 ? ids[0] : 0, age, now, who != null && ownFirstPerson(who) ? SpireArm.NEAR : 1.0), fine);
                 }
             }
             case S2CKingFx.DEFY_SPIKE -> {
@@ -177,6 +186,9 @@ public final class WarHoldFx {
         if (move != KingMove.REAPER && move != KingMove.SPIRE_AIM) {
             return;
         }
+        if (move == KingMove.SPIRE_AIM && ownFirstPerson(player)) {
+            return; // 3.2.8: drawn round the arm the hand pass draws (KingFirstPerson.spireArm), not round the body's, under the eyes
+        }
         RigPose pose = KaguneBodyAnimation.current(player, partial);
         if (pose == null) {
             pose = new RigPose();
@@ -189,6 +201,12 @@ public final class WarHoldFx {
         } else {
             coils(sink, body, age, now, fine);
         }
+    }
+
+    /** 3.2.8: whether {@code player} is this client's own, seen in first person. */
+    static boolean ownFirstPerson(AbstractClientPlayer player) {
+        Minecraft minecraft = Minecraft.m_91087_();
+        return player == minecraft.f_91074_ && minecraft.f_91066_ != null && minecraft.f_91066_.m_92176_().m_90612_();
     }
 
     /** A player's body this frame: its pose, and where it stands and faces in the world. */

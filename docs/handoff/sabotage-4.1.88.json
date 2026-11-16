@@ -1,0 +1,142 @@
+[
+ {
+  "name": "her blows out of the guard",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        RigPose rest = from != null ? from : strike.style == PaleStrike.Style.KICKS ? PaleStrikePoses.kickStance() : null;",
+  "new": "        RigPose rest = from;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a left blow from her stance unmirrored",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        RigPose start = rest == null ? PaleStrikePoses.guard() : strike.right ? copy(rest) : mirror(rest);",
+  "new": "        RigPose start = rest == null ? PaleStrikePoses.guard() : from == null ? copy(rest) : strike.right ? copy(rest) : mirror(rest);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her stance the guard",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        RigPose pose = PaleStrikePoses.kickStance();\n        grounded(pose);",
+  "new": "        RigPose pose = PaleStrikePoses.guard();\n        grounded(pose);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her stance floating",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        RigPose pose = PaleStrikePoses.kickStance();\n        grounded(pose);",
+  "new": "        RigPose pose = PaleStrikePoses.kickStance();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the dash kick not hers",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        return move == PaleMove.DASH_KICK || move == PaleMove.TWIRL_CHARGE\n",
+  "new": "        return move == PaleMove.TWIRL_CHARGE\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the charge not hers",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        return move == PaleMove.DASH_KICK || move == PaleMove.TWIRL_CHARGE\n",
+  "new": "        return move == PaleMove.DASH_KICK\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the Speed Blitz hers",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "            || move == PaleMove.STRIKE && PaleStrike.byOrdinal(detail).style == PaleStrike.Style.KICKS;",
+  "new": "            || move == PaleMove.STRIKE;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the charge out of the guard",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        RigPose start = from == null ? PaleStrikePoses.kickStance() : copy(from);\n        start.spin = wrap(start.spin);\n        start.flip = wrap(start.flip);\n        start.roll = wrap(start.roll);\n        RigPose coil",
+  "new": "        RigPose start = from == null ? PaleStrikePoses.guard() : copy(from);\n        start.spin = wrap(start.spin);\n        start.flip = wrap(start.flip);\n        start.roll = wrap(start.roll);\n        RigPose coil",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the coil's fists up",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        RigPose coil = PaleStrikePoses.kickStance(); // 4.1.88",
+  "new": "        RigPose coil = PaleStrikePoses.guard(); // 4.1.88",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the dash kick out of the guard",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java",
+  "old": "        RigPose start = from == null ? PaleStrikePoses.kickStance() : copy(from); // 4.1.88: out of her own stance",
+  "new": "        RigPose start = from == null ? PaleStrikePoses.guard() : copy(from); // 4.1.88: out of her own stance",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the guard kept after her blows",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleAnimator.java",
+  "old": "        RigPose guard = kicker ? PaleMotions.kickStance() : PaleMotions.guard();",
+  "new": "        RigPose guard = PaleMotions.guard();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "never told whose",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleAnimator.java",
+  "old": "        RigPose guard = guardKept(p, PaleMotions.kickMasters(this.ended, this.detail));",
+  "new": "        RigPose guard = guardKept(p, false);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the jab back to the guard",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java",
+  "old": "                new PaleMotions.Key(7.00F, PaleMotions.mirror(kickStance()), PaleMotions.Ease.SMOOTH)};",
+  "new": "                new PaleMotions.Key(7.00F, guard(), PaleMotions.Ease.SMOOTH)};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the side kick back to it unmirrored",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java",
+  "old": "                new PaleMotions.Key(10.00F, PaleMotions.mirror(kickStance()), PaleMotions.Ease.SMOOTH)};",
+  "new": "                new PaleMotions.Key(10.00F, kickStance(), PaleMotions.Ease.SMOOTH)};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the tornado back to the guard",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java",
+  "old": "                new PaleMotions.Key(16.00F, spun(kickStance(), 6.283185F), PaleMotions.Ease.SMOOTH)};",
+  "new": "                new PaleMotions.Key(16.00F, spun(guard(), 6.283185F), PaleMotions.Ease.SMOOTH)};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the dash kick down in the guard",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java",
+  "old": "                new PaleMotions.Key(10.00F, spun(kickStance(), 1.570796F), PaleMotions.Ease.SMOOTH)};",
+  "new": "                new PaleMotions.Key(10.00F, spun(guard(), 1.570796F), PaleMotions.Ease.SMOOTH)};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "square on",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java",
+  "old": "p.headY = 0.300F; p.lean = 0.040F; p.twist = 0.350F;",
+  "new": "p.headY = 0.300F; p.lean = 0.040F; p.twist = 0.000F;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "her face turned away",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java",
+  "old": "p.headY = 0.300F; p.lean = 0.040F; p.twist = 0.350F;",
+  "new": "p.headY = -0.300F; p.lean = 0.040F; p.twist = 0.350F;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the lead hand up",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java",
+  "old": "    static RigPose kickStance() {\n        RigPose p = new RigPose();\n        p.headX = -0.024F; p.headY = 0.300F; p.lean = 0.040F; p.twist = 0.350F; p.rightArmX = 0.031F; p.rightArmY = -0.503F;\n        p.rightArmZ = 0.274F; p.rightElbow = 0.846F; p.leftArmX = -0.405F;",
+  "new": "    static RigPose kickStance() {\n        RigPose p = new RigPose();\n        p.headX = -0.024F; p.headY = 0.300F; p.lean = 0.040F; p.twist = 0.350F; p.rightArmX = 0.031F; p.rightArmY = -0.503F;\n        p.rightArmZ = 0.274F; p.rightElbow = 0.846F; p.leftArmX = -1.205F;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the rear hand up",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java",
+  "old": "    static RigPose kickStance() {\n        RigPose p = new RigPose();\n        p.headX = -0.024F; p.headY = 0.300F; p.lean = 0.040F; p.twist = 0.350F; p.rightArmX = 0.031F; p.rightArmY = -0.503F;\n        p.rightArmZ = 0.274F; p.rightElbow = 0.846F; p.leftArmX = -0.405F;",
+  "new": "    static RigPose kickStance() {\n        RigPose p = new RigPose();\n        p.headX = -0.024F; p.headY = 0.300F; p.lean = 0.040F; p.twist = 0.350F; p.rightArmX = -0.731F; p.rightArmY = -0.503F;\n        p.rightArmZ = 0.274F; p.rightElbow = 1.846F; p.leftArmX = -0.405F;",
+  "suite": "CompanionTests"
+ }
+]

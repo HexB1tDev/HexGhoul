@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:glass_bottle"
+    },
+    {
+      "item": "hexkagune:human_meat"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:blood_bottle",
+    "count": 1
+  }
+}

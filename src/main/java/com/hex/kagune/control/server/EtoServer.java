@@ -1,15 +1,24 @@
 package com.hex.kagune.control.server;
 
+import com.hex.kagune.control.ControlItems;
 import com.hex.kagune.control.network.ControlNetwork;
-import com.hex.kagune.control.network.S2CEtoSurgery;
+import com.hex.kagune.control.network.S2CCutscene;
 import com.hex.kagune.control.network.S2CNpcTalk;
 import com.hex.kagune.control.network.S2CPathPrompt;
 import com.hex.kagune.control.npc.EtoGesture;
+import com.hex.kagune.control.npc.EtoLines;
+import com.hex.kagune.control.npc.EtoMood;
 import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.EtoRules;
 import com.hex.kagune.control.npc.EtoTalk;
+import com.hex.kagune.control.npc.EtoTopics;
+import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.NpcBonds;
+import com.hex.kagune.control.npc.NpcMemory;
 import com.hex.kagune.control.npc.NpcTalk;
+import com.hex.kagune.control.npc.Romance;
+import com.hex.kagune.control.npc.Script;
+import com.hex.kagune.control.npc.UniqueNpc;
 import com.hex.kagune.control.quest.Quest;
 import com.hex.kagune.control.quest.QuestBook;
 import com.hex.kagune.control.quest.QuestLog;
@@ -19,14 +28,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -43,13 +56,28 @@ import net.minecraftforge.registries.ForgeRegistries;
  * regard (the player's bond {@link EtoRules#KEY}, a ghoul's or a human's), the book or flower handed over, a lesson taught (its quest
  * opens), her errands begun and counted (books, kills at night, a flower), dating, a kiss or a hug (she walks up), and her surgery
  * ({@link #surgery}). A player who kills her is her enemy from then on.
+ *
+ * <p>1.3.2: the talk is pages ({@link EtoTalk.Page}): the first, the topics and what is said back on them, her partner's sweet page,
+ * the gifts. She belongs to one player for good once they date ({@link UniqueNpcs}): the ring marries them (the whole server is told),
+ * the night together is a cutscene, and every other player gets her cold side. Cross with someone, she can be won back with a baby
+ * animal on a lead (a puppy, a kitten...) or a letter. Anyone can learn from her: a ghoul through her lessons and her last trial, a
+ * human through her pact; at the end she makes them one-eyed, gently for her partner, coldly for anyone else.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class EtoServer {
     static final double REACH = 6.0;
     static final double KEEP = 9.0;
+    /** How far from her a baby animal on the player's lead counts as brought to her. */
+    static final double PUPPY_NEAR = 8.0;
 
-    private record Talk(int npc, List<NpcTalk.Choice> offered) {
+    /** What page a conversation is on. */
+    enum Kind {
+        MAIN, TALK, TOPIC, SWEET, GIFTS, OFFER, CLOSED,
+        // 1.3.29: a scene's page (something she came up with, or one of her scripted topics: SceneServer)
+        SCENE
+    }
+
+    private record Talk(int npc, List<EtoTalk.Option> offered, Kind kind) {
     }
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
@@ -74,37 +102,520 @@ public final class EtoServer {
         TALKS.remove(event.getEntity().m_20148_());
     }
 
+    /** 1.3.39: true while {@code player} has a talk with {@code npc} open on their screen. */
+    static boolean talkingWith(ServerPlayer player, EtoNpc npc) {
+        Talk talk = TALKS.get(player.m_20148_());
+        return talk != null && talk.npc() == npc.m_19879_();
+    }
+
+    /** 1.3.29: true while {@code player} has a talk with a companion open. */
+    static boolean talking(ServerPlayer player) {
+        return TALKS.containsKey(player.m_20148_());
+    }
+
     static void open(ServerPlayer player, EtoNpc npc) {
         long now = player.m_9236_().m_46467_();
-        if (!npc.m_6084_() || npc.mind == null) {
+        EtoBrain.Mind mind = npc.mind;
+        if (!npc.m_6084_() || mind == null) {
             return;
         }
-        QuestLog.Bond bond = QuestServer.bond(player, EtoRules.KEY);
-        if (!EtoTalk.talks(bond.regard()) || npc.mind.target != 0) {
-            player.m_5661_(Component.m_237113_(EtoRules.NAME + " is in no mood to talk."), true);
+        if (mind.target != 0 && mind.target != player.m_19879_()) {
+            player.m_5661_(Component.m_237113_(npc.persona().script().busy()), true);
             return;
         }
-        if (EtoBrain.ignoring(npc, player, now)) {
-            player.m_5661_(Component.m_237113_(EtoRules.NAME + " turns her nose up at you. Hmph."), true);
-            return;
+        migrate(player, npc);
+        QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+        boolean partner = UniqueNpcs.stage(player.m_284548_(), npc.persona().key(), player).together();
+        boolean enemy = !partner && !EtoTalk.talks(bond.regard());
+        boolean cross = EtoBrain.ignoring(npc, player, now) || sulking(mind, player, now) || mind.grudges.containsKey(player.m_20148_())
+            || mind.target == player.m_19879_();
+        String line = null;
+        if (enemy || cross) {
+            // 1.3.2: won back with a little someone on a lead, or (cross, not her enemy) a letter.
+            EtoTalk.Context c = context(player, npc);
+            Mob puppy = puppy(player, npc);
+            if (puppy != null) {
+                give(puppy);
+                if (enemy) {
+                    QuestServer.bond(player, npc.persona().key(), bond.regard(Math.max(bond.regard(), 0)));
+                } else {
+                    QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + 10));
+                }
+                EtoBrain.forgive(npc, player);
+                EtoBrain.gesture(mind, EtoGesture.PET, now);
+                EtoBrain.giddy(npc, player, now);
+                line = npc.persona().script().puppy(c, kind(puppy), true);
+            } else if (!enemy && take(player, EtoRules::letter)) {
+                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + 6));
+                EtoBrain.forgive(npc, player);
+                EtoBrain.gesture(mind, EtoGesture.READ, now);
+                line = npc.persona().script().letter(c, true);
+            } else if (!enemy && mind.target != player.m_19879_()) {
+                // 2.2.0: put out, not an enemy: they can always say sorry (or come back with a little someone, or a letter).
+                EtoBrain.listen(npc, player, now);
+                List<EtoTalk.Option> options = new java.util.ArrayList<>();
+                options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_1, "I'm sorry.", "sorry"));
+                options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_2, "It was an accident. I swear.", "sorry"));
+                // 3.3.7 (the owner's list: reconciliation talks): or talk it out, if they're not too far gone to.
+                com.hex.kagune.control.npc.scene.Scene mend = sulking(mind, player, now) || EtoBrain.ignoring(npc, player, now)
+                    ? SceneServer.mend(player, npc, c, npc.m_217043_().m_188503_(1000)) : null;
+                if (mend != null) {
+                    options.add(SceneServer.mendOption(player, npc, c, mend, NpcTalk.Choice.SAY_3));
+                }
+                options.add(new EtoTalk.Option(NpcTalk.Choice.LEAVE, "", ""));
+                show(player, npc, c, new EtoTalk.Page(com.hex.kagune.control.npc.Tolerance.putOut(npc.persona().key(), npc.m_217043_().m_188503_(100)),
+                    options), Kind.MAIN);
+                return;
+            } else {
+                player.m_5661_(Component.m_237113_(npc.persona().script().snub(npc.m_217043_().m_188503_(100), enemy)), true);
+                return;
+            }
+            bond = QuestServer.bond(player, npc.persona().key());
         }
         if (!bond.has(NpcBonds.MET)) {
-            QuestServer.bond(player, EtoRules.KEY, bond.with(NpcBonds.MET, true));
+            QuestServer.bond(player, npc.persona().key(), bond.with(NpcBonds.MET, true));
+        }
+        UniqueNpcs.met(player.m_284548_(), npc.persona().key()); // 3.0.4: she stays the one they met
+        if (npc.m_5803_() && mind.bed != null) {
+            // 1.3.37: asleep in her bed at night: a hand on her shoulder only half wakes her, drowsy (HomeLife leaves her lying there).
+            mind.drowsyUntil = now + DROWSY;
+            EtoBrain.listen(npc, player, now);
+            EtoTalk.Context sleepy = context(player, npc);
+            show(player, npc, sleepy, drowsy(player, npc), Kind.MAIN);
+            return;
         }
         EtoBrain.listen(npc, player, now);
         EtoTalk.Context context = context(player, npc);
-        show(player, npc, context, EtoTalk.greeting(context), EtoTalk.choices(context));
+        NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.SEEN, now);
+        Script script = npc.persona().script();
+        // 1.3.29: she came up to them with something: the talk opens on it.
+        if (line == null && scene(player, npc, context)) {
+            return;
+        }
+        // 2.1.2: a courtship chapter's task done: its moment, before anything else.
+        if (line == null && moment(player, npc, null)) {
+            return;
+        }
+        // 4.1.67 (the owner: the spouse "constantly demanding they quit the gang"): a leader's spouse in another gang hears it first.
+        String demand = line == null ? GangServer.spouseDemand(player, npc.persona(), context.seed()) : null;
+        show(player, npc, context, script.main(context, line != null ? line : demand != null ? demand : script.greeting(context)), Kind.MAIN);
+    }
+
+    /**
+     * 2.1.8: a lesson asked for that needs its proof first ({@code Teaching.proof}): set as it is asked (his words), or how far along it is;
+     * true while it isn't done (the lesson waits). Done, it is taught as before, and the proof forgotten.
+     */
+    private static boolean proofFirst(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        if (!c.teaching().ready()) {
+            return false;
+        }
+        com.hex.kagune.control.npc.Teaching.Lesson next = c.teaching().next();
+        com.hex.kagune.control.npc.Teaching.Proof proof = com.hex.kagune.control.npc.Teaching.proof(next);
+        if (proof == null) {
+            return false;
+        }
+        String key = npc.persona().key();
+        NpcMemory memory = NpcMemoryServer.of(player);
+        long bit = com.hex.kagune.control.npc.Teaching.bit(next);
+        if (memory.get(key, NpcMemory.PROOF, 0L) != bit) {
+            memory.set(key, NpcMemory.PROOF, bit).set(key, NpcMemory.PROOF_COUNT, 0L);
+            NpcMemoryServer.save(player);
+            player.m_5661_(Component.m_237113_(npc.persona().colour() + npc.displayName() + "'s proof before " + next.name() + ": "
+                + proof.bar(npc.persona().name(), 0)), false);
+            show(player, npc, c, npc.persona().script().main(c, com.hex.kagune.control.npc.Teaching.fill(proof.ask(), proof, 0)), Kind.MAIN);
+            return true;
+        }
+        int done = (int)memory.get(key, NpcMemory.PROOF_COUNT, 0L);
+        if (done < proof.need()) {
+            show(player, npc, c, npc.persona().script().main(c, com.hex.kagune.control.npc.Teaching.fill(proof.progress(), proof, done)), Kind.MAIN);
+            return true;
+        }
+        memory.forget(key, NpcMemory.PROOF).forget(key, NpcMemory.PROOF_COUNT);
+        NpcMemoryServer.save(player);
+        return false;
+    }
+
+    /** 2.1.8: one more {@code deed} toward any proof a teacher set {@code player} ({@code rank}: a Dove's). */
+    static void proved(ServerPlayer player, com.hex.kagune.control.npc.Teaching.Deed deed, int rank) {
+        NpcMemory memory = NpcMemoryServer.of(player);
+        for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+            long bit = memory.get(persona.key(), NpcMemory.PROOF, 0L);
+            if (bit == 0L) {
+                continue;
+            }
+            for (com.hex.kagune.control.npc.Teaching.Lesson lesson : com.hex.kagune.control.npc.Teaching.of(persona.key())) {
+                com.hex.kagune.control.npc.Teaching.Proof proof = com.hex.kagune.control.npc.Teaching.proof(lesson);
+                if (com.hex.kagune.control.npc.Teaching.bit(lesson) != bit || proof == null || proof.deed() != deed || rank < proof.rank()) {
+                    continue;
+                }
+                long done = memory.get(persona.key(), NpcMemory.PROOF_COUNT, 0L);
+                if (done < proof.need()) {
+                    memory.set(persona.key(), NpcMemory.PROOF_COUNT, done + 1);
+                    NpcMemoryServer.save(player);
+                    player.m_5661_(Component.m_237113_(persona.colour() + proof.bar(persona.name(), (int)done + 1)), true);
+                }
+            }
+        }
+    }
+
+    /** 1.3.37: how long a half-woken sleeper waits on a word before the talk would get them up (ticks). */
+    static final long DROWSY = 600L;
+
+    /** 1.3.37: the page of a sleeper half woken: what they mumble, and back to sleep, a goodnight kiss (their partner), or up. */
+    private static EtoTalk.Page drowsy(ServerPlayer player, EtoNpc npc) {
+        String persona = npc.persona().key();
+        List<EtoTalk.Option> options = new java.util.ArrayList<>();
+        options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_1, "Sorry. Go back to sleep.", "sleep:back"));
+        if (player.m_20148_().equals(npc.mind.partner)) {
+            options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_2, "*kiss them goodnight*", "sleep:kiss"));
+        }
+        options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_3, "Wake up. I need you.", "sleep:up"));
+        options.add(new EtoTalk.Option(NpcTalk.Choice.LEAVE, "", ""));
+        return new EtoTalk.Page(com.hex.kagune.control.family.Drowsy.spouse(persona, npc.m_217043_().m_188503_(100)), options);
+    }
+
+    /** 1.3.29: the scene she came up to {@code player} with, opened (true), if she is still waiting on them. */
+    private static boolean scene(ServerPlayer player, EtoNpc npc, EtoTalk.Context context) {
+        SceneServer.Pending pending = SceneServer.take(player, npc.m_19879_());
+        com.hex.kagune.control.npc.scene.Scene scene = pending == null ? null : SceneServer.scene(pending.scene());
+        if (scene == null) {
+            return false;
+        }
+        if (scene.kind() == com.hex.kagune.control.npc.scene.Scene.Kind.MOMENT) {
+            // 2.1.2: she came up with a courtship chapter's moment: it plays (and the chapter closes) if it is still the one due.
+            return moment(player, npc, pending.line());
+        }
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, context);
+        show(player, npc, context, SceneServer.page(scene, scene.first(), sc, pending.line()), Kind.SCENE);
+        return true;
+    }
+
+    // ---------------------------------------------------------------- 2.1.2: the courtship
+
+    /**
+     * The moment of the courtship's chapter on, if its task is done: the chapter closed (the next on), the game says where they are, and
+     * the moment's scene plays ({@code line}: its first words, if already said; null its own). False if no moment is due.
+     */
+    static boolean moment(ServerPlayer player, EtoNpc npc, String line) {
+        String key = npc.persona().key();
+        QuestLog.Bond bond = courtBond(player, key);
+        com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(key, bond);
+        if (chapter == null || !com.hex.kagune.control.npc.Courtship.ready(key, bond)) {
+            return false;
+        }
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        QuestLog.Bond closed = com.hex.kagune.control.npc.Courtship.close(key, bond);
+        QuestServer.bond(player, key, closed.regard(closed.regard() + MOMENT_REGARD));
+        int done = com.hex.kagune.control.npc.Courtship.closed(closed, com.hex.kagune.control.npc.Courtship.CHAPTERS);
+        player.m_5661_(Component.m_237113_(npc.persona().colour() + "\u2764 " + npc.displayName() + ": chapter " + done + " of "
+            + com.hex.kagune.control.npc.Courtship.CHAPTERS + ", " + chapter.title() + (done >= com.hex.kagune.control.npc.Courtship.CHAPTERS
+            ? ". Every chapter closed: ask " + npc.persona().her() + " out." : ". (Your journal has what comes next.)")), false);
+        UkakuFire.sound(level, npc.m_20182_(), "entity.player.levelup", 0.6F, 1.6F);
+        EtoBrain.hearts(level, npc, player, 6);
+        EtoBrain.listen(npc, player, now);
+        com.hex.kagune.control.npc.scene.Scene scene = SceneServer.scene(key + "." + chapter.id());
+        EtoTalk.Context c = context(player, npc);
+        if (scene == null) {
+            show(player, npc, c, npc.persona().script().main(c, "..."), Kind.MAIN);
+            return true;
+        }
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, c);
+        show(player, npc, c, SceneServer.page(scene, scene.first(), sc, line), Kind.SCENE);
+        return true;
+    }
+
+    /** Regard a chapter's moment brings, before anything said in it. */
+    static final int MOMENT_REGARD = 4;
+
+    // ---------------------------------------------------------------- 4.1.80: chapters begun from the talk
+
+    /** Touka's homework being done: the three questions, then how many answered. */
+    static final Map<UUID, int[]> HOMEWORK = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * "Need anything done?" on a chapter begun from the talk (Courtship.Task#begun), not yet done: its ask and the button that begins it
+     * (none on the day of a wrong answer). False if the chapter on is no such one.
+     */
+    static boolean courtTrial(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        String key = npc.persona().key();
+        QuestLog.Bond bond = courtBond(player, key);
+        com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(key, bond);
+        if (!c.mayDate() || chapter == null || !chapter.task().begun() || EtoRules.count(bond) >= chapter.need()) {
+            return false;
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>();
+        String line = com.hex.kagune.control.npc.Courtship.said(chapter, 0);
+        if (chapter.task() == com.hex.kagune.control.npc.Courtship.Task.QUIZ && !mayStudy(player, key)) {
+            line = com.hex.kagune.control.npc.CourtVoice.homework("today", c.seed());
+        } else {
+            out.add(new EtoTalk.Option(NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.Courtship.begin(chapter.task()), "court:go"));
+        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+        show(player, npc, c, new EtoTalk.Page(line, out), Kind.MAIN);
+        return true;
+    }
+
+    /** True if {@code player} may try {@code key}'s homework today (no wrong answer today). */
+    static boolean mayStudy(ServerPlayer player, String key) {
+        return com.hex.kagune.control.npc.Courtship.mayStudy(day(player.m_284548_()), NpcMemoryServer.of(player).get(key, NpcMemory.STUDIED, -1L));
+    }
+
+    /** "court:go" (the spar begun, the homework's first question) and "court:quiz:n" (an answer to the homework). */
+    static void court(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, String key) {
+        String persona = npc.persona().key();
+        QuestLog.Bond bond = courtBond(player, persona);
+        com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(persona, bond);
+        if (!c.mayDate() || chapter == null || !chapter.task().begun() || EtoRules.count(bond) >= chapter.need()) {
+            HOMEWORK.remove(player.m_20148_());
+            return;
+        }
+        Script script = npc.persona().script();
+        if (chapter.task() == com.hex.kagune.control.npc.Courtship.Task.SPAR) {
+            if (key.equals("court:go")) {
+                show(player, npc, c, script.main(c, JoinServer.court(player, npc, c.seed())), Kind.MAIN);
+            }
+            return;
+        }
+        // The homework.
+        if (!mayStudy(player, persona)) {
+            HOMEWORK.remove(player.m_20148_());
+            show(player, npc, c, script.main(c, com.hex.kagune.control.npc.CourtVoice.homework("today", c.seed())), Kind.MAIN);
+            return;
+        }
+        int[] state = HOMEWORK.get(player.m_20148_());
+        if (key.equals("court:go") || state == null) {
+            int[] drawn = com.hex.kagune.control.npc.Courtship.homework(day(player.m_284548_()), player.m_20148_().getLeastSignificantBits());
+            state = new int[] {drawn[0], drawn[1], drawn[2], 0};
+            HOMEWORK.put(player.m_20148_(), state);
+            show(player, npc, c, question(com.hex.kagune.control.npc.CourtVoice.homework("begin", c.seed()), state, c.seed()), Kind.MAIN);
+            return;
+        }
+        int answer = -1;
+        try {
+            answer = Integer.parseInt(key.substring("court:quiz:".length()));
+        } catch (RuntimeException bad) {
+            // not an answer
+        }
+        if (!com.hex.kagune.control.npc.JoinTrial.right(answer)) {
+            HOMEWORK.remove(player.m_20148_());
+            NpcMemoryServer.set(player, persona, NpcMemory.STUDIED, day(player.m_284548_()));
+            EtoBrain.gesture(npc.mind, EtoGesture.POUT, player.m_284548_().m_46467_());
+            show(player, npc, c, script.main(c, com.hex.kagune.control.npc.CourtVoice.homework("wrong", c.seed())), Kind.MAIN);
+            return;
+        }
+        state[3]++;
+        if (state[3] < com.hex.kagune.control.npc.Courtship.ASKED) {
+            show(player, npc, c, question(com.hex.kagune.control.npc.CourtVoice.homework("next", c.seed() + state[3]), state, c.seed()), Kind.MAIN);
+            return;
+        }
+        HOMEWORK.remove(player.m_20148_());
+        QuestServer.bond(player, persona, com.hex.kagune.control.npc.Courtship.progress(persona, bond, com.hex.kagune.control.npc.Courtship.Task.QUIZ, 1));
+        moment(player, npc, com.hex.kagune.control.npc.CourtVoice.homework("done", c.seed()));
+    }
+
+    /** The homework's question {@code state} is at, its three answers turned round by {@code seed} (the right one anywhere). */
+    static EtoTalk.Page question(String said, int[] state, int seed) {
+        com.hex.kagune.control.npc.JoinTrial.Question q = com.hex.kagune.control.npc.Courtship.HOMEWORK[state[state[3]]];
+        List<String[]> answers = new java.util.ArrayList<>(List.of(new String[] {q.answer(0), "court:quiz:0"}, new String[] {q.answer(1), "court:quiz:1"},
+            new String[] {q.answer(2), "court:quiz:2"}));
+        java.util.Collections.rotate(answers, Math.floorMod(seed + state[3], answers.size()));
+        List<EtoTalk.Option> out = new java.util.ArrayList<>();
+        NpcTalk.Choice[] slots = {NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3};
+        for (int i = 0; i < answers.size(); i++) {
+            out.add(new EtoTalk.Option(slots[i], answers.get(i)[0], answers.get(i)[1]));
+        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+        return new EtoTalk.Page(said + " Question " + (state[3] + 1) + " of " + com.hex.kagune.control.npc.Courtship.ASKED + ": " + q.asked(), out);
+    }
+
+    /** {@code player}'s bond with {@code key}, as the courtship keeps it (a bond from before it read as its chapters, and saved so). */
+    static QuestLog.Bond courtBond(ServerPlayer player, String key) {
+        QuestLog.Bond bond = QuestServer.bond(player, key);
+        QuestLog.Bond migrated = com.hex.kagune.control.npc.Courtship.migrate(key, bond, com.hex.kagune.control.npc.Courtship.CHAPTERS);
+        if (migrated != bond) {
+            QuestServer.bond(player, key, migrated);
+        }
+        return migrated;
+    }
+
+    /** How many of what the courtship's chapter on asks for {@code player} holds (both hands). */
+    static int held(ServerPlayer player, String key, QuestLog.Bond bond) {
+        int n = 0;
+        for (ItemStack held : new ItemStack[] {player.m_21205_(), player.m_21206_()}) {
+            if (com.hex.kagune.control.npc.Courtship.wants(key, bond, id(held))) {
+                n += held.m_41613_();
+            }
+        }
+        return n;
+    }
+
+    /** What the chapter on asks for taken from {@code player}'s hands (as much as it still needs): how many. */
+    private static int handOver(ServerPlayer player, String key, QuestLog.Bond bond) {
+        int want = com.hex.kagune.control.npc.Courtship.takes(key, bond, held(player, key, bond));
+        int taken = 0;
+        for (ItemStack held : new ItemStack[] {player.m_21205_(), player.m_21206_()}) {
+            if (taken < want && com.hex.kagune.control.npc.Courtship.wants(key, bond, id(held))) {
+                int some = Math.min(want - taken, held.m_41613_());
+                held.m_41774_(some);
+                taken += some;
+            }
+        }
+        return taken;
+    }
+
+    /** The dates they could go on now: a few of hers that fit, each an answer, and back. */
+    private static EtoTalk.Page dates(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        String key = npc.persona().key();
+        int seed = npc.m_217043_().m_188503_(100000);
+        long today = day(player.m_284548_());
+        if (NpcMemoryServer.of(player).get(key, NpcMemory.DATE_DAY, -1L) == today) {
+            return npc.persona().script().sweet(c, com.hex.kagune.control.npc.Courtship.datedToday(key, seed));
+        }
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, c);
+        List<com.hex.kagune.control.npc.scene.Scene> fit = new java.util.ArrayList<>(com.hex.kagune.control.npc.scene.SceneBook.fitting(
+            SceneServer.book(key), com.hex.kagune.control.npc.scene.Scene.Kind.DATE, sc));
+        fit.removeIf(date -> !CourtTrials.exists(player, com.hex.kagune.control.npc.DateSpot.of(date.id()))); // 4.1.81: only places the world has
+        java.util.Collections.shuffle(fit, new java.util.Random(seed));
+        List<EtoTalk.Option> out = new java.util.ArrayList<>();
+        for (int i = 0; i < fit.size() && i < DATES_OFFERED; i++) {
+            out.add(new EtoTalk.Option(NpcTalk.Choice.SAYS[i], com.hex.kagune.control.npc.scene.SceneBook.fill(fit.get(i).prompt(), sc), "d:" + fit.get(i).key()));
+        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+        return new EtoTalk.Page(com.hex.kagune.control.npc.Courtship.datesAsked(key, seed), out);
+    }
+
+    /** At most this many dates are offered at once. */
+    static final int DATES_OFFERED = 4;
+
+    /** The date {@code key} ("d:eto.date_rooftop") begun: once a day; its scene plays. */
+    private static void date(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, String key) {
+        com.hex.kagune.control.npc.scene.Scene scene = SceneServer.scene(key.substring(2));
+        String persona = npc.persona().key();
+        if (scene == null || scene.kind() != com.hex.kagune.control.npc.scene.Scene.Kind.DATE || !scene.speaker().equals(persona) || !c.dating()) {
+            return;
+        }
+        long today = day(player.m_284548_());
+        if (NpcMemoryServer.of(player).get(persona, NpcMemory.DATE_DAY, -1L) == today) {
+            show(player, npc, c, npc.persona().script().sweet(c, com.hex.kagune.control.npc.Courtship.datedToday(persona, c.seed())), Kind.SWEET);
+            return;
+        }
+        // 4.1.81 (the plan: "real dates at real places"): a date with a place is had there: they lead, she follows, its scene plays when
+        // they arrive together (CourtTrials); one where they already are, or with no place, plays now.
+        com.hex.kagune.control.npc.DateSpot.Spot spot = com.hex.kagune.control.npc.DateSpot.of(scene.id());
+        long now = player.m_284548_().m_46467_();
+        if (spot != null && !CourtTrials.at(player, spot)) {
+            CourtTrials.dateOn(player, npc, scene, spot, now);
+            show(player, npc, c, npc.persona().script().sweet(c, com.hex.kagune.control.npc.CourtVoice.lead(persona, spot, c.seed())), Kind.SWEET);
+            return;
+        }
+        dated(player, npc);
+        EtoTalk.Context after = context(player, npc);
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, after);
+        show(player, npc, after, SceneServer.page(scene, scene.first(), sc, null), Kind.SCENE);
+    }
+
+    /** 4.1.81: a date had with {@code npc} (begun now: here, or where they went together): today's, its regard, her delight. */
+    static void dated(ServerPlayer player, EtoNpc npc) {
+        String persona = npc.persona().key();
+        NpcMemoryServer.set(player, persona, NpcMemory.DATE_DAY, day(player.m_284548_()));
+        QuestLog.Bond bond = QuestServer.bond(player, persona);
+        QuestServer.bond(player, persona, bond.regard(bond.regard() + DATE_REGARD));
+        RomanceServer.romanced(player, persona);
+        EtoBrain.giddy(npc, player, player.m_284548_().m_46467_());
+    }
+
+    /** Regard a date brings, before anything said on it. */
+    static final int DATE_REGARD = 3;
+
+    /** 1.3.29: the topics page: hers as her script has them, and her scripted topics with them (a different few each time). */
+    static EtoTalk.Page topics(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, String line) {
+        EtoTalk.Page own = npc.persona().script().talk(c, line);
+        List<com.hex.kagune.control.npc.scene.Scene> extra = new java.util.ArrayList<>(SceneServer.topics(player, npc, c));
+        if (extra.isEmpty()) {
+            return own;
+        }
+        List<EtoTalk.Option> keep = new java.util.ArrayList<>();
+        for (EtoTalk.Option option : own.options()) {
+            if (option.key().startsWith("topic:") && keep.size() < 3) {
+                keep.add(option);
+            }
+        }
+        java.util.Collections.shuffle(extra, new java.util.Random(c.seed()));
+        List<EtoTalk.Option> out = new java.util.ArrayList<>();
+        int slot = 0;
+        for (EtoTalk.Option option : keep) {
+            out.add(new EtoTalk.Option(NpcTalk.Choice.SAYS[slot++], option.label(), option.key()));
+        }
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, c);
+        for (com.hex.kagune.control.npc.scene.Scene scene : extra) {
+            if (slot >= NpcTalk.Choice.SAYS.length) {
+                break;
+            }
+            out.add(new EtoTalk.Option(NpcTalk.Choice.SAYS[slot++], com.hex.kagune.control.npc.scene.SceneBook.fill(scene.prompt(), sc), "t:" + scene.key()));
+        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+        return new EtoTalk.Page(own.line(), out);
+    }
+
+    private static boolean sulking(EtoBrain.Mind mind, ServerPlayer player, long now) {
+        Long until = mind.sulk.get(player.m_20148_());
+        return until != null && until > now;
+    }
+
+    /** 1.3.0's dating, kept in the player's bond alone, made the world's: she is theirs if she is no one else's yet. */
+    private static void migrate(ServerPlayer player, EtoNpc npc) {
+        QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+        ServerLevel level = player.m_284548_();
+        UniqueNpc unique = UniqueNpcs.get(level, npc.persona().key());
+        if (unique.stageOf(player.m_20148_()).together()) {
+            return;
+        }
+        long wedding = NpcMemoryServer.of(player).get(npc.persona().key(), NpcMemory.WED, -1L);
+        if (unique.recoverWedding(player.m_20148_(), player.m_36316_().getName(), wedding, bond.has(EtoRules.DATING))) {
+            UniqueNpcs.changed(level);
+            QuestServer.bond(player, npc.persona().key(), bond.with(EtoRules.DATING, true));
+            EtoBrain.forgive(npc, player);
+            return;
+        }
+        if (!bond.has(EtoRules.DATING)) {
+            return;
+        }
+        if (unique.claimedFrom(player.m_20148_()) || UniqueNpcs.spouseOf(level, player, npc.persona().key()) != null) {
+            QuestServer.bond(player, npc.persona().key(), bond.with(EtoRules.DATING, false));
+            return;
+        }
+        UniqueNpcs.pair(level, npc.persona().key(), player, Romance.Stage.DATING);
+        NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.SINCE, day(level));
     }
 
     /** An answer from the talk screen (routed here by {@code C2SNpcTalk} when the one talked to is her). */
     public static void heard(ServerPlayer player, int npcId, int ordinal) {
         Talk talk = TALKS.get(player.m_20148_());
         NpcTalk.Choice choice = NpcTalk.Choice.byOrdinal(ordinal);
-        if (talk == null || talk.npc() != npcId || choice != NpcTalk.Choice.LEAVE && !talk.offered().contains(choice)) {
+        if (choice == NpcTalk.Choice.ANSWER) {
+            // 1.3.29: the Answer key: she came up to them with something; the talk opens on it (from where she stands, near enough).
+            if (talk == null && player.m_284548_().m_6815_(npcId) instanceof EtoNpc npc && npc.m_6084_() && npc.m_20280_(player) <= 24.0 * 24.0) {
+                open(player, npc);
+            }
+            return;
+        }
+        if (talk == null || talk.npc() != npcId) {
+            return;
+        }
+        EtoTalk.Option option = null;
+        for (EtoTalk.Option offered : talk.offered()) {
+            if (offered.choice() == choice) {
+                option = offered;
+            }
+        }
+        if (option == null && choice != NpcTalk.Choice.LEAVE) {
             return;
         }
         ServerLevel level = player.m_284548_();
-        if (!(level.m_6815_(npcId) instanceof EtoNpc npc) || !npc.m_6084_() || npc.m_20280_(player) > KEEP * KEEP || npc.mind == null) {
+        // 1.3.29: a scene she came up with may be answered while she is still on her way (further off).
+        double keep = talk.kind() == Kind.SCENE ? 16.0 : KEEP;
+        if (!(level.m_6815_(npcId) instanceof EtoNpc npc) || !npc.m_6084_() || npc.m_20280_(player) > keep * keep || npc.mind == null) {
             TALKS.remove(player.m_20148_());
             return;
         }
@@ -114,68 +625,680 @@ public final class EtoServer {
             EtoBrain.listen(npc, null, now);
             return;
         }
-        EtoTalk.Context context = context(player, npc);
-        EtoTalk.Reply reply = EtoTalk.answer(context, choice);
-        QuestLog.Bond bond = QuestServer.bond(player, EtoRules.KEY);
-        bond = bond.regard(bond.regard() + reply.regard());
+        EtoBrain.listen(npc, player, now);
+        EtoTalk.Context c = context(player, npc);
+        Script script = npc.persona().script();
+        String key = option.key();
+        if (key.startsWith("topic:")) {
+            EtoTopics.Topic topic = script.topicOf(key.substring(6));
+            if (topic != null) {
+                if (topic.once()) {
+                    spoken(player, npc, topic.id(), com.hex.kagune.control.npc.Spoken.TOPIC_BIT); // 4.2.4: brought up once and for all
+                }
+                show(player, npc, c, script.topic(c, topic), Kind.TOPIC);
+            }
+            return;
+        }
+        if (key.startsWith("follow:")) {
+            String[] parts = key.split(":");
+            EtoTopics.Topic topic = script.topicOf(parts[1]);
+            int index = Integer.parseInt(parts[2]);
+            if (topic == null) {
+                return;
+            }
+            // 4.2.4: each reply's warmth paid once a day, kept by its topic's id (before: 14 topics' worth of bits, the rest shared); a
+            // one-time reply marked said, never offered again.
+            List<EtoTopics.Follow> open = topic.open(c);
+            EtoTopics.Follow said = index >= 0 && index < open.size() ? open.get(index) : null;
+            int place = said == null ? -1 : topic.place(said);
+            EtoTalk.Reply reply = script.follow(c, topic, index);
+            boolean first = paysToday(player, npc, level, topic.id(), place);
+            if (said != null && said.once()) {
+                spoken(player, npc, topic.id(), place);
+            }
+            carry(player, npc, c, choice, first ? reply : unpaid(reply), Kind.TALK);
+            return;
+        }
+        if (key.startsWith("sweet:")) {
+            String what = key.substring(6);
+            int bit = 56 + Math.floorMod(what.hashCode(), 8);
+            EtoTalk.Reply reply = script.sweetly(c, what);
+            carry(player, npc, c, choice, firstToday(player, npc, level, bit) ? reply : unpaid(reply), Kind.SWEET);
+            return;
+        }
+        if (key.equals("reassure")) {
+            // 2.2.3: jealous, and told it's only them: over it.
+            NpcMemoryServer.of(player).forget(npc.persona().key(), NpcMemory.JEALOUS);
+            NpcMemoryServer.save(player);
+            if (npc.mind != null) {
+                npc.mind.makeUp.remove(player.m_20148_());
+            }
+            QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+            QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + com.hex.kagune.control.npc.Spoken.warmth(2,
+                choiceFirst(player, npc, level, "reassure")))); // 4.2.4: once a day
+            EtoBrain.giddy(npc, player, level.m_46467_());
+            EtoTalk.Context after = context(player, npc);
+            show(player, npc, after, npc.persona().script().main(after, com.hex.kagune.control.npc.MoodActs.reassured(npc.persona().key(), c.seed())), Kind.MAIN);
+            return;
+        }
+        if (key.equals("sorry")) {
+            // 2.2.0: an apology: forgiven at once, or (hurt again and again) forgiven once she's had a moment.
+            boolean now2 = EtoBrain.apologised(npc, player, level.m_46467_());
+            String line = com.hex.kagune.control.npc.Tolerance.forgiven(npc.persona().key(), !now2, npc.m_217043_().m_188503_(100));
+            EtoTalk.Context after = context(player, npc);
+            if (now2) {
+                QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + com.hex.kagune.control.npc.Spoken.warmth(1,
+                    choiceFirst(player, npc, level, "sorry")))); // 4.2.4: once a day
+                EtoBrain.giddy(npc, player, level.m_46467_());
+                show(player, npc, after, npc.persona().script().main(after, line), Kind.MAIN);
+            } else {
+                show(player, npc, after, new EtoTalk.Page(line, List.of(new EtoTalk.Option(NpcTalk.Choice.LEAVE, "", ""))), Kind.CLOSED);
+            }
+            return;
+        }
+        if (key.equals("gifts")) {
+            show(player, npc, c, script.gifts(c, script.giftsAsked(c.seed())), Kind.GIFTS);
+            return;
+        }
+        if (key.equals("present")) {
+            present(player, npc, c, choice); // 4.1.84
+            return;
+        }
+        if (key.equals("wish")) {
+            // 4.1.85: "what do you want today?": today's wish, in their words; remembered for the day.
+            String wish = com.hex.kagune.control.npc.Tastes.wish(npc.persona().key(), day(player.m_284548_()));
+            if (wish != null) {
+                NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.WISH_DAY, day(player.m_284548_()));
+                carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.wishSaid(npc.persona().key(), wish, c.seed()), 0,
+                    EtoTalk.Effect.NONE), Kind.MAIN);
+            }
+            return;
+        }
+        if (key.startsWith("gang")) {
+            // 4.1.50: joining their gang (Ayato's Aogiri, Roma's Clowns), or how it stands; a joke told to Roma.
+            GangServer.Said said = GangServer.talk(player, npc, npc.persona(), key, c.seed());
+            if (said.jokes() != null) {
+                List<EtoTalk.Option> jokes = new java.util.ArrayList<>();
+                NpcTalk.Choice[] slots = {NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3};
+                for (int i = 0; i < said.jokes().size() && i < slots.length; i++) {
+                    jokes.add(new EtoTalk.Option(slots[i], said.jokes().get(i)[0], said.jokes().get(i)[1]));
+                }
+                jokes.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+                show(player, npc, c, new EtoTalk.Page(said.line(), jokes), Kind.SCENE);
+            } else {
+                show(player, npc, context(player, npc), script.main(context(player, npc), said.line()), Kind.MAIN);
+            }
+            return;
+        }
+        if (key.equals("daily") || key.startsWith("daily:")) {
+            // 4.1.53: today's job from Noro (Aogiri) or Roma (the Clowns): given, how it goes, handed in, paid. 4.1.78: with none taken
+            // today, the board: three jobs to choose from (a page of their own, as Roma's jokes), the one chosen taken.
+            GangServer.Said said = GangServer.daily(player, npc.persona(), key, c.seed());
+            if (said.jokes() != null) {
+                List<EtoTalk.Option> board = new java.util.ArrayList<>();
+                NpcTalk.Choice[] slots = {NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3};
+                for (int i = 0; i < said.jokes().size() && i < slots.length; i++) {
+                    board.add(new EtoTalk.Option(slots[i], said.jokes().get(i)[0], said.jokes().get(i)[1]));
+                }
+                board.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+                show(player, npc, c, new EtoTalk.Page(said.line(), board), Kind.SCENE);
+            } else {
+                show(player, npc, context(player, npc), script.main(context(player, npc), said.line()), Kind.MAIN);
+            }
+            return;
+        }
+        if (key.equals("dates")) {
+            // 2.1.2: where to go together.
+            if (c.dating()) {
+                show(player, npc, c, dates(player, npc, c), Kind.SWEET);
+            }
+            return;
+        }
+        if (key.startsWith("d:")) {
+            date(player, npc, c, key);
+            return;
+        }
+        if (key.startsWith("t:")) {
+            // 1.3.29: one of her scripted topics brought up.
+            EtoTalk.Page page = SceneServer.topic(player, npc, c, key);
+            if (page != null) {
+                show(player, npc, c, page, Kind.SCENE);
+            }
+            return;
+        }
+        if (key.startsWith("s:")) {
+            // 1.3.29: an answer on a scene's page: her reply, what it does, and the page it leads on to (or her own page).
+            SceneServer.Answer answer = SceneServer.answer(player, npc, c, key, level.m_46467_());
+            if (answer != null) {
+                carry(player, npc, c, choice, answer.reply(), answer.topic() ? Kind.TALK : Kind.MAIN, answer.next());
+            }
+            return;
+        }
+        if (key.startsWith("sleep:")) {
+            // 1.3.37: half woken: back to sleep, kissed goodnight, or up properly (HomeLife gets her up once she is no longer drowsy).
+            String persona = npc.persona().key();
+            int seed = npc.m_217043_().m_188503_(100);
+            if (key.equals("sleep:up")) {
+                npc.mind.drowsyUntil = Long.MIN_VALUE;
+                show(player, npc, c, script.main(c, com.hex.kagune.control.family.Drowsy.roused(persona, seed)), Kind.MAIN);
+            } else if (key.equals("sleep:kiss")) {
+                carry(player, npc, c, choice, once(player, npc, level, "sleep_kiss", new EtoTalk.Reply(com.hex.kagune.control.family.Drowsy.kissed(persona, seed), 1,
+                    EtoTalk.Effect.CLOSE)), Kind.MAIN); // 4.2.4: its warmth once a day
+            } else {
+                carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.family.Drowsy.settle(persona, seed), 0, EtoTalk.Effect.CLOSE), Kind.MAIN);
+            }
+            return;
+        }
+        if (key.equals("cookbook")) {
+            // 1.3.41: Touka's cookbook, for the two cocoa beans in your hand.
+            net.minecraft.world.item.ItemStack held = player.m_21205_();
+            int seed = npc.m_217043_().m_188503_(100);
+            net.minecraft.world.item.Item beans = com.hex.kagune.control.ControlItems.vanilla("minecraft:cocoa_beans");
+            int count = beans != null && !held.m_41619_() && held.m_41720_() == beans ? held.m_41613_() : 0;
+            if (!com.hex.kagune.control.kitchen.Cookbook.affordable(QuestServer.bond(player, npc.persona().key()).regard(), count)) {
+                show(player, npc, c, script.main(c, com.hex.kagune.control.kitchen.Cookbook.price(seed)), Kind.MAIN);
+                return;
+            }
+            if (!player.m_7500_()) {
+                held.m_41774_(com.hex.kagune.control.kitchen.Cookbook.PRICE);
+            }
+            net.minecraft.world.item.ItemStack book = new net.minecraft.world.item.ItemStack(com.hex.kagune.control.ControlItems.COOKBOOK.get(), 1);
+            if (!player.m_36356_(book)) {
+                player.m_36176_(book, false);
+            }
+            carry(player, npc, c, choice, once(player, npc, level, "cookbook", new EtoTalk.Reply(com.hex.kagune.control.kitchen.Cookbook.given(seed), 2,
+                EtoTalk.Effect.NONE, EtoGesture.NONE)), Kind.MAIN); // 4.2.4: its warmth once a day
+            return;
+        }
+        if (key.equals("gohome")) {
+            // 1.3.29: "Go home, please.": to the home she shares with her spouse, or back where she belongs; the talk ends there.
+            Going going = going(player, npc);
+            if (going == null) {
+                show(player, npc, c, script.main(c, "I'm already home."), Kind.MAIN);
+                return;
+            }
+            EtoBrain.sendHome(npc, level, going.at(), going.shared(), now);
+            String line = com.hex.kagune.control.family.Chores.goingHome(npc.persona().key(), going.shared(), npc.persona().home(), c.seed());
+            carry(player, npc, c, choice, new EtoTalk.Reply(line, 0, EtoTalk.Effect.CLOSE, EtoGesture.WAVE), Kind.MAIN);
+            return;
+        }
+        if (key.startsWith("court:")) {
+            // 4.1.80: a courtship chapter begun from the talk: Ayato's spar, Touka's homework (and its answers).
+            court(player, npc, c, key);
+            return;
+        }
+        if (choice == NpcTalk.Choice.FAVOUR && courtTrial(player, npc, c)) {
+            return; // 4.1.80: its ask, and the button that begins it
+        }
+        if (choice == NpcTalk.Choice.PROPOSE) {
+            propose(player, npc, c);
+            return;
+        }
+        if ((choice == NpcTalk.Choice.KISS || choice == NpcTalk.Choice.HUG) && c.dating()) {
+            // 2.2.3: in no mood for it (sulking, jealous, a kiss while starving): said so, and back to the page.
+            String no = com.hex.kagune.control.npc.MoodActs.refuse(npc.persona().key(), c.mood(), choice == NpcTalk.Choice.KISS, c.seed());
+            if (no != null) {
+                EtoBrain.gesture(npc.mind, EtoGesture.POUT, level.m_46467_());
+                show(player, npc, c, talk.kind() == Kind.SWEET ? script.sweet(c, no) : script.main(c, no), talk.kind() == Kind.SWEET ? Kind.SWEET : Kind.MAIN);
+                return;
+            }
+        }
+        if (choice == NpcTalk.Choice.BACK && (talk.kind() == Kind.TOPIC || talk.kind() == Kind.SCENE)) {
+            // Back from a topic: to the others.
+            show(player, npc, c, topics(player, npc, c, script.topicsAgain(c.seed())), Kind.TALK);
+            return;
+        }
+        Kind after = talk.kind() == Kind.SWEET || talk.kind() == Kind.TALK ? talk.kind() : Kind.MAIN;
+        if (choice == NpcTalk.Choice.LESSON && proofFirst(player, npc, c)) {
+            return; // 2.1.8: a final kakuja is taught once its proof is done
+        }
+        if (choice == NpcTalk.Choice.LESSON) {
+            // 1.3.29: asked for what they know already (a command, an old quest): "You already know...", and on to the next thing.
+            String known = alreadyKnown(player, npc, c.seed());
+            if (known != null) {
+                EtoTalk.Context fresh = context(player, npc);
+                EtoTalk.Reply reply = script.answer(fresh, choice);
+                carry(player, npc, fresh, choice, once(player, npc, level, choice.name(), new EtoTalk.Reply(known + " " + reply.line(), reply.regard(),
+                    reply.effect(), reply.gesture())), after);
+                return;
+            }
+        }
+        if (choice == NpcTalk.Choice.ASK_OUT && !c.claimed() && !c.mayDate()) {
+            // 3.3.6: asked out while they have a partner: a partner who sees it is jealous.
+            RomanceServer.tempted(player, npc.persona().key(), npc.displayName());
+        }
+        // 4.2.4 (the owner: "Currently, you can just spam one option and it'll give you relationship."): whatever an answer of the first page
+        // is worth, its warmth is paid once a day (a tease, a dinner, a home); what hurts always hurts.
+        carry(player, npc, c, choice, once(player, npc, level, choice.name(), script.answer(c, choice)), after);
+    }
+
+    /** 4.2.4: {@code reply} with its warmth paid only if {@code what} (a choice, a keyed act) hasn't paid {@code npc}'s today. */
+    private static EtoTalk.Reply once(ServerPlayer player, EtoNpc npc, ServerLevel level, String what, EtoTalk.Reply reply) {
+        if (reply.regard() <= 0) {
+            return reply;
+        }
+        return choiceFirst(player, npc, level, what) ? reply : unpaid(reply);
+    }
+
+    /** 4.2.4: true the first time today {@code what} pays {@code npc}'s warmth; marks it paid. */
+    private static boolean choiceFirst(ServerPlayer player, EtoNpc npc, ServerLevel level, String what) {
+        NpcMemory memory = NpcMemoryServer.of(player);
+        String name = com.hex.kagune.control.npc.Spoken.choiceKey(what);
+        long today = day(level);
+        boolean first = com.hex.kagune.control.npc.Spoken.choicePays(memory.get(npc.persona().key(), name, -1L), today);
+        if (first) {
+            memory.set(npc.persona().key(), name, today);
+            NpcMemoryServer.save(player);
+        }
+        return first;
+    }
+
+    /** 4.2.4: true the first time today reply {@code place} of topic {@code topic} pays; marks it paid. */
+    private static boolean paysToday(ServerPlayer player, EtoNpc npc, ServerLevel level, String topic, int place) {
+        if (place < 0) {
+            return false;
+        }
+        NpcMemory memory = NpcMemoryServer.of(player);
+        String name = com.hex.kagune.control.npc.Spoken.paidKey(topic);
+        long today = day(level);
+        long stored = memory.get(npc.persona().key(), name, 0L);
+        boolean first = com.hex.kagune.control.npc.Spoken.pays(stored, today, place);
+        if (first) {
+            memory.set(npc.persona().key(), name, com.hex.kagune.control.npc.Spoken.pay(stored, today, place));
+            NpcMemoryServer.save(player);
+        }
+        return first;
+    }
+
+    /** 4.2.4: {@code bit} of topic {@code topic} (a one-time reply, or {@link com.hex.kagune.control.npc.Spoken#TOPIC_BIT}) marked said for good. */
+    private static void spoken(ServerPlayer player, EtoNpc npc, String topic, int bit) {
+        if (bit < 0) {
+            return;
+        }
+        NpcMemory memory = NpcMemoryServer.of(player);
+        String name = com.hex.kagune.control.npc.Spoken.onceKey(topic);
+        memory.set(npc.persona().key(), name, com.hex.kagune.control.npc.Spoken.mark(memory.get(npc.persona().key(), name, 0L), bit));
+        NpcMemoryServer.save(player);
+    }
+
+    private static EtoTalk.Reply unpaid(EtoTalk.Reply reply) {
+        return new EtoTalk.Reply(reply.line(), Math.min(0, reply.regard()), reply.effect(), reply.gesture());
+    }
+
+    /** True the first time today {@code bit} of the talk is said (its regard paid once a day); marks it said. */
+    private static boolean firstToday(ServerPlayer player, EtoNpc npc, ServerLevel level, int bit) {
+        NpcMemory memory = NpcMemoryServer.of(player);
+        long today = day(level);
+        long said = memory.get(npc.persona().key(), NpcMemory.TALKED_DAY, -1L) == today ? memory.get(npc.persona().key(), NpcMemory.TOPICS, 0L) : 0L;
+        boolean first = (said & 1L << bit) == 0L;
+        memory.set(npc.persona().key(), NpcMemory.TALKED_DAY, today).set(npc.persona().key(), NpcMemory.TOPICS, said | 1L << bit);
+        NpcMemoryServer.save(player);
+        return first;
+    }
+
+    /** An answer carried out (her regard, what she does, what happens), then the page it leads to ({@code stay}: the page they were on). */
+    private static void carry(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, NpcTalk.Choice choice, EtoTalk.Reply reply, Kind stay) {
+        carry(player, npc, c, choice, reply, stay, null);
+    }
+
+    /** 1.3.29: the same, then {@code then} (a scene's next page) if the answer leads on to one and the talk is still open. */
+    private static void carry(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, NpcTalk.Choice choice, EtoTalk.Reply reply, Kind stay,
+                              EtoTalk.Page then) {
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
         long day = day(level);
+        QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+        bond = bond.regard(bond.regard() + reply.regard());
         if (choice == NpcTalk.Choice.WHO) {
             bond = bond.with(NpcBonds.ASKED, true);
         }
-        if (choice == NpcTalk.Choice.CHAT && !context.chattedToday()) {
+        if (choice == NpcTalk.Choice.CHAT && !c.chattedToday()) {
             bond = bond.chatted(day);
         }
+        if (reply.gesture() == EtoGesture.HUG || reply.gesture() == EtoGesture.CLING) {
+            // 1.3.3: a hug or her arm round theirs: she comes to them for it (never a grab at the air from across the room).
+            EtoBrain.walkUp(npc, npc.mind, player, reply.gesture(), now);
+        } else if (reply.gesture() != EtoGesture.NONE) {
+            EtoBrain.gesture(npc.mind, reply.gesture(), now);
+        }
+        if (reply.regard() >= 3 && c.dating()) {
+            EtoBrain.giddy(npc, player, now);
+            EtoBrain.hearts(level, npc, player, 3);
+            RomanceServer.romanced(player, npc.persona().key());
+        }
+        Kind next = stay;
+        String line = reply.line();
         switch (reply.effect()) {
             case BOOK, FLOWER -> {
                 boolean isBook = reply.effect() == EtoTalk.Effect.BOOK;
-                bond = take(player, isBook) ? EtoRules.advance(EtoRules.gifted(bond, day), isBook ? EtoRules.Step.BOOKS : EtoRules.Step.FLOWER, 1)
-                    : bond.regard(bond.regard() - reply.regard());
+                java.util.function.Predicate<String> gift = isBook ? npc.persona()::errandItem : npc.persona()::flower;
+                bond = take(player, gift) ? EtoRules.gifted(bond, day) : bond.regard(bond.regard() - reply.regard());
+                next = Kind.MAIN;
+            }
+            case COURT -> {
+                // 2.1.2: what the chapter asks for handed over (all of it that it still needs), then its moment if that was the last of it.
+                String key = npc.persona().key();
+                bond = com.hex.kagune.control.npc.Courtship.migrate(key, bond, com.hex.kagune.control.npc.Courtship.CHAPTERS);
+                int taken = handOver(player, key, bond);
+                if (taken > 0) {
+                    bond = com.hex.kagune.control.npc.Courtship.progress(key, bond, com.hex.kagune.control.npc.Courtship.Task.GIVE, taken);
+                    EtoBrain.gesture(npc.mind, EtoGesture.BOW, now);
+                }
+                if (com.hex.kagune.control.npc.Courtship.ready(key, bond)) {
+                    QuestServer.bond(player, key, bond);
+                    moment(player, npc, null);
+                    return;
+                }
+                next = Kind.MAIN;
+            }
+            case MEAT -> {
+                if (takeStack(player, ControlItems::ghoulMeat)) {
+                    bond = EtoRules.gifted(bond, day);
+                    pact(player, EtoRules.Pact.MEAT, 1);
+                } else {
+                    bond = bond.regard(bond.regard() - reply.regard());
+                }
+                next = Kind.MAIN;
+            }
+            case LETTER -> {
+                if (take(player, EtoRules::letter)) {
+                    bond = EtoRules.gifted(bond, day);
+                } else {
+                    bond = bond.regard(bond.regard() - reply.regard());
+                }
+                next = Kind.MAIN;
+            }
+            case PUPPY -> {
+                Mob puppy = puppy(player, npc);
+                if (puppy != null) {
+                    give(puppy);
+                    NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.PUPPY_DAY, day);
+                    EtoBrain.giddy(npc, player, now);
+                    EtoBrain.hearts(level, npc, puppy, 6);
+                } else {
+                    bond = bond.regard(bond.regard() - reply.regard());
+                }
+                next = Kind.MAIN;
             }
             case TEACH -> {
-                if (context.next() != null) {
-                    bond = bond.with(context.next().flag, true);
+                if (c.next() != null) {
+                    bond = bond.with(c.next().flag, true);
                 }
             }
-            case BEGIN -> bond = EtoRules.begin(bond);
+            case LEARN -> {
+                // 1.3.14: a companion's lesson: its gate opens now (checked again: the mastery, the step before).
+                if (c.teaching().ready()) {
+                    taught(player, npc, c.teaching().next());
+                    bond = bond.regard(bond.regard() + 10);
+                }
+            }
+            case TORTURE -> {
+                // 1.3.14: lived through first (the cutscene), then the gate.
+                if (c.teaching().ready()) {
+                    QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + 10));
+                    TALKS.remove(player.m_20148_());
+                    EtoBrain.listen(npc, null, now);
+                    TortureServer.begin(player, npc, c.teaching().next());
+                    return;
+                }
+            }
+            case PACT -> {
+                NpcMemoryServer.of(player).set(npc.persona().key(), NpcMemory.TRIAL, EtoRules.Pact.HUNT.ordinal()).set(npc.persona().key(), NpcMemory.TRIAL_COUNT, 0L);
+                NpcMemoryServer.save(player);
+            }
+            case BEGIN -> {
+                // 2.1.2: the courtship begins: the first chapter on.
+                bond = EtoRules.begin(bond);
+                java.util.List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of(npc.persona().key());
+                if (!chapters.isEmpty()) {
+                    player.m_5661_(Component.m_237113_(npc.persona().colour() + "\u2764 " + npc.displayName() + "'s courtship begins. Chapter 1 of "
+                        + chapters.size() + ": " + chapters.get(0).title() + ". (Your journal's Romance tab keeps track.)"), false);
+                }
+            }
             case DATE -> {
-                bond = EtoRules.date(bond);
-                EtoBrain.gesture(npc.mind, EtoGesture.GIGGLE, now);
+                if (c.mayDate() && npc.persona().likes(com.hex.kagune.control.Genders.female(player))) {
+                    bond = EtoRules.date(bond);
+                    UniqueNpcs.pair(level, npc.persona().key(), player, Romance.Stage.DATING);
+                    NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.SINCE, day);
+                    EtoBrain.giddy(npc, player, now);
+                    EtoBrain.hearts(level, npc, player, 10);
+                    npc.mind.dirty = true;
+                    RomanceServer.romanced(player, npc.persona().key());
+                    player.m_5661_(Component.m_237113_(npc.persona().colour() + "\u2764 You and " + npc.displayName() + " are dating."), true);
+                }
             }
             case KISS -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.KISS, now);
             case HUG -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.HUG, now);
-            case ANGER -> npc.mind.grudges.put(player.m_20148_(), now + 400L);
+            case CLING -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.CLING, now);
+            case HAND -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.HAND, now);
+            case ANGER -> {
+                if (!EtoBrain.partnerOf(npc.mind, player)) {
+                    npc.mind.grudges.put(player.m_20148_(), now + 400L);
+                }
+            }
+            case FOLLOW -> npc.follow(player.m_20148_());
+            case STAY -> {
+                npc.follow(null);
+                npc.settle();
+            }
+            case HOME -> {
+                // 1.3.21: their home is here (where the player stands): hers from now on, and their children's.
+                net.minecraft.core.BlockPos at = new net.minecraft.core.BlockPos((int)Math.floor(player.m_20185_()), (int)Math.floor(player.m_20186_()),
+                    (int)Math.floor(player.m_20189_()));
+                Households.Home home = Households.set(player.m_284548_(), player, at);
+                npc.homeAt(home.pos());
+                player.m_5661_(net.minecraft.network.chat.Component.m_237113_("§d\u2302 This is your home now: " + npc.displayName()
+                    + " and your children live here (about " + home.radius() + " blocks round). Beds: the double bed is your spouse's, single beds the children's."), false);
+            }
+            case FORGIVE -> {
+                EtoBrain.forgive(npc, player);
+                NpcMemoryServer.of(player).forget(npc.persona().key(), NpcMemory.JEALOUS);
+                NpcMemoryServer.save(player);
+            }
+            case NIGHT -> {
+                QuestServer.bond(player, npc.persona().key(), bond);
+                night(player, npc, c);
+                return;
+            }
+            case BABY -> {
+                // 1.3.10: asked for: the next night it comes.
+                NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.BABY, 1L);
+                EtoBrain.hearts(player.m_284548_(), npc, player, 6);
+            }
+            case OFFER -> next = Kind.OFFER;
+            case SURGERY -> {
+                QuestServer.bond(player, npc.persona().key(), bond);
+                TALKS.remove(player.m_20148_());
+                ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), npc.displayName(), npc.persona().script().title(c), bond.regard(), false, face(npc), line,
+                    new int[] {NpcTalk.Choice.LEAVE.ordinal()}));
+                surgery(player, c);
+                return;
+            }
+            case TALK -> next = Kind.TALK;
+            case SWEET -> next = Kind.SWEET;
+            case MAIN -> next = Kind.MAIN;
+            case GIFTS -> next = Kind.GIFTS;
             default -> {
             }
         }
-        QuestServer.bond(player, EtoRules.KEY, bond);
-        if (reply.effect() == EtoTalk.Effect.SURGERY) {
-            TALKS.remove(player.m_20148_());
-            ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), EtoRules.NAME, title(bond), bond.regard(), false, -1, reply.line(),
-                new int[] {NpcTalk.Choice.LEAVE.ordinal()}));
-            surgery(player);
-            return;
+        if (reply.effect() == EtoTalk.Effect.CLOSE || reply.effect() == EtoTalk.Effect.ANGER || reply.effect() == EtoTalk.Effect.KISS
+            || reply.effect() == EtoTalk.Effect.HUG || reply.effect() == EtoTalk.Effect.CLING || reply.effect() == EtoTalk.Effect.HAND) {
+            next = Kind.CLOSED;
         }
+        if (choice == NpcTalk.Choice.DECLINE) {
+            next = Kind.MAIN;
+        }
+        QuestServer.bond(player, npc.persona().key(), bond);
         EtoTalk.Context after = context(player, npc);
-        List<NpcTalk.Choice> next = switch (reply.effect()) {
-            case OFFER -> EtoTalk.offer();
-            case CLOSE, ANGER, KISS, HUG -> List.of(NpcTalk.Choice.LEAVE);
-            default -> EtoTalk.choices(after);
-        };
-        if (reply.effect() == EtoTalk.Effect.ANGER || reply.effect() == EtoTalk.Effect.CLOSE) {
+        if (next == Kind.CLOSED) {
             EtoBrain.listen(npc, null, now);
         }
-        show(player, npc, after, reply.line(), next);
+        if (then != null && next != Kind.CLOSED && next != Kind.TALK && next != Kind.SWEET) {
+            show(player, npc, after, then, Kind.SCENE);
+            return;
+        }
+        show(player, npc, after, page(player, npc, after, next, line), next);
     }
 
-    /** One book (or flower) from their hands; false if they no longer hold one. */
-    private static boolean take(ServerPlayer player, boolean book) {
+    /** The page {@code kind} with {@code line} hers. */
+    private static EtoTalk.Page page(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, Kind kind, String line) {
+        Script script = npc.persona().script();
+        return switch (kind) {
+            case TALK -> topics(player, npc, c, line);
+            case SWEET -> c.dating() ? script.sweet(c, line) : script.main(c, line);
+            case GIFTS -> script.gifts(c, line);
+            case OFFER -> new EtoTalk.Page(line, List.of(new EtoTalk.Option(NpcTalk.Choice.ACCEPT, "Yes. Do it.", ""),
+                new EtoTalk.Option(NpcTalk.Choice.DECLINE, "Not yet.", "")));
+            case CLOSED -> new EtoTalk.Page(line, List.of(new EtoTalk.Option(NpcTalk.Choice.LEAVE, "", "")));
+            default -> script.main(c, line);
+        };
+    }
+
+    // ---------------------------------------------------------------- the ring
+
+    private static void propose(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        // 3.3.4: married to anyone else (a companion or a villager): no ring.
+        Romance.Refusal refusal = Romance.propose(c.stage(), c.claimed(), Vows.marriedElsewhere(level, player, npc.persona().key()), c.daysTogether(),
+            c.regard());
+        if (refusal == null && !hasRing(player)) {
+            show(player, npc, c, npc.persona().script().sweet(c, "A ring? Where? ...Don't tease me like that."), Kind.SWEET);
+            return;
+        }
+        Script script = npc.persona().script();
+        String line = script.ring(c, refusal);
+        if (refusal != null) {
+            show(player, npc, c, c.dating() ? script.sweet(c, line) : script.main(c, line), c.dating() ? Kind.SWEET : Kind.MAIN);
+            return;
+        }
+        takeRing(player);
+        UniqueNpcs.pair(level, npc.persona().key(), player, Romance.Stage.MARRIED);
+        GangServer.married(player, npc.persona()); // 4.1.67: one of another gang, out of it
+        NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.WED, day(level));
+        QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+        QuestServer.bond(player, npc.persona().key(), bond.regard(NpcBonds.MOST).with(EtoRules.DATING, true));
+        EtoBrain.gesture(npc.mind, EtoGesture.RING, now);
+        EtoBrain.giddy(npc, player, now);
+        RomanceServer.romanced(player, npc.persona().key());
+        npc.mind.dirty = true;
+        for (int i = 0; i < 4; i++) {
+            level.m_8767_(ParticleTypes.f_123750_, npc.m_20185_(), npc.m_20186_() + 1.0 + i * 0.4, npc.m_20189_(), 8, 0.7, 0.4, 0.7, 0.05);
+        }
+        UkakuFire.sound(level, npc.m_20182_(), "entity.player.levelup", 1.0F, 1.2F);
+        UkakuFire.sound(level, npc.m_20182_(), "block.bell.use", 0.9F, 1.4F);
+        if (level.m_7654_() != null) {
+            level.m_7654_().m_6846_().m_240416_(Component.m_237113_(npc.persona().colour() + "\u2764 " + player.m_36316_().getName() + " and "
+                + npc.displayName() + " are married!"), false);
+        }
+        EtoTalk.Context after = context(player, npc);
+        show(player, npc, after, script.main(after, line), Kind.MAIN);
+    }
+
+    private static boolean hasRing(ServerPlayer player) {
+        return ControlItems.ring(player.m_21205_()) || ControlItems.ring(player.m_21206_());
+    }
+
+    private static void takeRing(ServerPlayer player) {
         for (ItemStack held : new ItemStack[] {player.m_21205_(), player.m_21206_()}) {
-            if (book ? book(held) : flower(held)) {
+            if (ControlItems.ring(held)) {
+                held.m_41774_(1);
+                return;
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- the night
+
+    /** The night together: the screen goes dark, and in the morning she says something. Once a night. */
+    static void night(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        TALKS.remove(player.m_20148_());
+        EtoBrain.listen(npc, null, now);
+        // 4.1.15 (the owner: "improve the making love scene"): the night's own captions (NightWords): whoever it is with, their mood, the
+        // weather, a first night or a long marriage, the children asleep down the hall; read before this night is counted.
+        boolean first = NpcMemoryServer.of(player).get(npc.persona().key(), NpcMemory.NIGHTS, 0L) <= 0L;
+        com.hex.kagune.control.npc.scene.SceneContext moment = SceneServer.context(player, npc, c);
+        NpcMemoryServer.of(player).add(npc.persona().key(), NpcMemory.NIGHTS, 1L).set(npc.persona().key(), NpcMemory.NIGHT_DAY, day(level))
+            .set(npc.persona().key(), NpcMemory.NIGHT_AT, now);
+        NpcMemoryServer.save(player);
+        // 1.3.10: asked for a baby, married, not already carrying: tonight she conceives.
+        boolean conceived = conceive(level, player, npc, c);
+        java.util.List<String> captions = com.hex.kagune.control.npc.NightWords.captions(npc.persona().key(), npc.persona().female(), moment.mood(),
+            moment.flags(), first, c.married(), moment.seed());
+        ControlNetwork.sendTo(player, new S2CCutscene(S2CCutscene.NIGHT, com.hex.kagune.control.npc.NightWords.pack(captions,
+            conceived ? npc.persona().script().conceived(c) : npc.persona().script().morning(c))));
+        player.m_7292_(new MobEffectInstance(MobEffects.f_19605_, 1200, 1, false, true, true));
+        player.m_7292_(new MobEffectInstance(MobEffects.f_19606_, 2400, 0, false, true, true));
+        EtoBrain.giddy(npc, player, now);
+        // 4.1.15: waking together: a yawn, a stretch, a lean against them, by the mood they fell asleep in.
+        EtoBrain.gesture(npc.mind, EtoGesture.valueOf(com.hex.kagune.control.npc.NightWords.waking(moment.mood())), now);
+        RomanceServer.romanced(player, npc.persona().key());
+        EtoBrain.hearts(level, npc, player, 12);
+        QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+        QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + 5));
+    }
+
+    /**
+     * 1.3.10: if they asked for a baby and are married, she conceives tonight (the child decided now); true if she did. 1.3.14: whoever is
+     * the woman of the two carries it (a companion, or the player if the companion is a man), and only a woman and a man can.
+     */
+    private static boolean conceive(ServerLevel level, ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        com.hex.kagune.control.npc.Persona p = npc.persona();
+        if (!c.married() || !c.family().wantsBaby() || !c.mixed()) {
+            return false;
+        }
+        String npcKey = Pregnancies.npc(p.key());
+        String playerKey = Pregnancies.player(player.m_20148_());
+        String mother = p.female() ? npcKey : playerKey;
+        if (Pregnancies.pregnant(level, mother)) {
+            return false;
+        }
+        NpcMemoryServer.of(player).forget(p.key(), NpcMemory.BABY);
+        NpcMemoryServer.save(player);
+        com.hex.kagune.control.family.Genome.Parent theirs = new com.hex.kagune.control.family.Genome.Parent(p.hair(), p.eyes(), p.skin(), true, p.oneEyed(),
+            p.kagune(), p.kaguneColour()); // 1.3.43: and its kagune
+        java.util.Random random = new java.util.Random(level.m_46467_() ^ player.m_20148_().getLeastSignificantBits());
+        // 2.2.1: a ghoul's and a human's child is most often lost (HalfBlood); its fate drawn after the child, so nothing else changes.
+        if (p.female()) {
+            com.hex.kagune.control.family.Genome genome = com.hex.kagune.control.family.Genome.of(theirs, Looks.parent(player), random);
+            double lostAt = genome.half() ? com.hex.kagune.control.family.HalfBlood.lostAt(random.nextDouble(), random.nextDouble()) : -1.0;
+            Pregnancies.conceive(level, npcKey, npc.displayName(), playerKey, player.m_36316_().getName(), genome, lostAt);
+        } else {
+            com.hex.kagune.control.family.Genome genome = com.hex.kagune.control.family.Genome.of(Looks.parent(player), theirs, random);
+            double lostAt = genome.half() ? com.hex.kagune.control.family.HalfBlood.lostAt(random.nextDouble(), random.nextDouble()) : -1.0;
+            Pregnancies.conceive(level, playerKey, player.m_36316_().getName(), npcKey, npc.displayName(), genome, lostAt);
+        }
+        return true;
+    }
+
+    // ---------------------------------------------------------------- what is brought
+
+    /** One of what {@code is} takes from their hands; false if they hold none. */
+    private static boolean take(ServerPlayer player, java.util.function.Predicate<String> is) {
+        for (ItemStack held : new ItemStack[] {player.m_21205_(), player.m_21206_()}) {
+            if (is.test(id(held))) {
                 held.m_41774_(1);
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean takeStack(ServerPlayer player, java.util.function.Predicate<ItemStack> is) {
+        for (ItemStack held : new ItemStack[] {player.m_21205_(), player.m_21206_()}) {
+            if (is.test(held)) {
+                held.m_41774_(1);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean holds(ServerPlayer player, java.util.function.Predicate<String> is) {
+        return is.test(id(player.m_21205_())) || is.test(id(player.m_21206_()));
     }
 
     private static String id(ItemStack stack) {
@@ -186,53 +1309,479 @@ public final class EtoServer {
         return key == null ? null : key.toString();
     }
 
-    private static boolean book(ItemStack stack) {
-        return EtoRules.book(id(stack));
+    /** A baby animal on {@code player}'s lead near her, or null. */
+    static Mob puppy(ServerPlayer player, EtoNpc npc) {
+        for (Mob mob : npc.m_9236_().m_6443_(Mob.class, npc.m_20191_().m_82400_(PUPPY_NEAR), mob -> mob != npc && mob.m_6084_())) {
+            if (mob.m_6162_() && mob.m_21523_() && mob.m_21524_() == player) {
+                return mob;
+            }
+        }
+        return null;
     }
 
-    private static boolean flower(ItemStack stack) {
-        return EtoRules.flower(id(stack));
+    /** What kind of animal it is ({@code wolf}, {@code cat}...). */
+    static String kind(Mob mob) {
+        ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(mob.m_6095_());
+        return key == null ? "animal" : key.m_135815_();
     }
+
+    /** It's hers now: off the lead (the lead dropped), and it stays. */
+    private static void give(Mob puppy) {
+        puppy.m_21455_(true, true);
+        puppy.m_21530_();
+    }
+
+    // ---------------------------------------------------------------- what a page depends on
 
     /** What the next page depends on, as it stands now. */
+    /** 1.3.10: their family as she talks of it: carrying their child (how far along), asked for one, how many they have. */
+    static com.hex.kagune.control.family.FamilyView family(ServerLevel level, ServerPlayer player, NpcMemory memory) {
+        return family(level, player, memory, com.hex.kagune.control.npc.Persona.ETO);
+    }
+
+    /** 1.3.14: the same with any companion: whichever of the two carries their child (her, or the player carrying his). */
+    static com.hex.kagune.control.family.FamilyView family(ServerLevel level, ServerPlayer player, NpcMemory memory, com.hex.kagune.control.npc.Persona p) {
+        String npcKey = Pregnancies.npc(p.key());
+        String playerKey = Pregnancies.player(player.m_20148_());
+        Pregnancies.Carried carried = Pregnancies.get(level, p.female() ? npcKey : playerKey);
+        String father = p.female() ? playerKey : npcKey;
+        double along = carried != null && carried.father.equals(father)
+            ? com.hex.kagune.control.family.Pregnancy.progress(carried.conceived, level.m_46467_()) : -1.0;
+        // 2.5.7: and how long since their last child was born (another only asked for some days after it).
+        long born = Children.lastBorn(level, npcKey, playerKey);
+        long since = born == Long.MIN_VALUE ? Long.MAX_VALUE : Math.max(0L, level.m_46467_() - born);
+        return new com.hex.kagune.control.family.FamilyView(along, memory.get(p.key(), NpcMemory.BABY, 0L) == 1L,
+            (int)memory.get(p.key(), NpcMemory.CHILDREN, 0L), since);
+    }
+
     static EtoTalk.Context context(ServerPlayer player, EtoNpc npc) {
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        QuestLog.Bond bond = courtBond(player, npc.persona().key());
         QuestLog log = QuestServer.log(player);
-        QuestLog.Bond bond = log.bond(EtoRules.KEY);
         boolean ghoul = KaguneProfile.isUnlocked(player);
-        EtoRules.Lesson next = EtoRules.next(bond);
-        boolean beforeDone = true;
-        if (next != null && next.before() != null) {
-            Quest before = QuestBook.get(next.before().quest);
-            beforeDone = before != null && log.state(before, PathServer.path(player), KaguneProfile.mastery(player)) == QuestLog.State.DONE;
-        }
-        long day = day(player.m_284548_());
-        boolean bookHeld = book(player.m_21205_()) || book(player.m_21206_());
-        boolean flowerHeld = flower(player.m_21205_()) || flower(player.m_21206_());
-        return new EtoTalk.Context(bond.regard(), bond.flags(), EtoRules.count(bond), ghoul, bond.chatted() == day, EtoRules.giftedOn(bond, day), bookHeld,
-            flowerHeld, next, beforeDone, KakuganServer.granted(player), npc.m_19879_() + (int)day);
-    }
-
-    private static String title(QuestLog.Bond bond) {
-        return bond.has(EtoRules.DATING) ? "Your date" : "The Library";
-    }
-
-    private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, String line, List<NpcTalk.Choice> choices) {
-        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(choices)));
-        int[] ordinals = new int[choices.size()];
-        for (int i = 0; i < ordinals.length; i++) {
-            ordinals[i] = choices.get(i).ordinal();
-        }
-        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), EtoRules.NAME, title(QuestServer.bond(player, EtoRules.KEY)), context.regard(), false,
-            -1, line, ordinals));
+        com.hex.kagune.control.KagunePath path = PathServer.path(player);
+        int mastery = KaguneProfile.mastery(player);
+        java.util.function.Predicate<EtoRules.Lesson> known = lesson -> {
+            Quest quest = QuestBook.get(lesson.quest);
+            return quest != null && log.state(quest, path, mastery) == QuestLog.State.DONE || lesson.gate != null && log.open(lesson.gate);
+        };
+        com.hex.kagune.control.npc.Persona persona = npc.persona();
+        boolean eto = persona == com.hex.kagune.control.npc.Persona.ETO;
+        // 4.1.5: a human (the General) takes a ghoul behind a full mask for a human (4.0.7: its eyes are not seen). 4.1.7: and teaches as
+        // he sees it (Kick Master, to a human or one he takes for a human).
+        boolean seenGhoul = ghoul && !(persona.human() && Sightings.masked(player));
+        // 1.3.14: Eto's lessons are hers; every other companion teaches what Teaching says it does.
+        EtoRules.Lesson next = eto ? EtoRules.next(bond, known) : null;
+        com.hex.kagune.control.npc.Teaching.View teaching = eto ? com.hex.kagune.control.npc.Teaching.View.NONE
+            // 4.1.3: a proof under way stays the next lesson.
+            : com.hex.kagune.control.npc.Teaching.view(persona.key(), seenGhoul, path, mastery, log::open,
+                NpcMemoryServer.of(player).get(persona.key(), NpcMemory.PROOF, 0L));
+        boolean beforeDone = next == null || next.before() == null || known.test(next.before());
+        long day = day(level);
+        UniqueNpc unique = UniqueNpcs.get(level, npc.persona().key());
+        UUID id = player.m_20148_();
+        Romance.Stage stage = unique.stageOf(id);
+        String claimedBy = unique.claimedFrom(id) ? unique.partnerName : null;
+        NpcMemory memory = NpcMemoryServer.of(player);
+        long since = memory.get(npc.persona().key(), stage == Romance.Stage.MARRIED ? NpcMemory.WED : NpcMemory.SINCE, day);
+        long seen = memory.get(npc.persona().key(), NpcMemory.SEEN, Long.MIN_VALUE);
+        long daysAway = seen == Long.MIN_VALUE ? 0L : Math.max(0L, (now - seen) / 24000L);
+        Mob puppy = puppy(player, npc);
+        EtoRules.Pact pact = EtoRules.Pact.byOrdinal(memory.get(npc.persona().key(), NpcMemory.TRIAL, 0L));
+        Quest trial = QuestBook.get(EtoRules.Lesson.TRIAL.quest);
+        boolean trialDone = trial != null && log.state(trial, path, mastery) == QuestLog.State.DONE;
+        EtoMood mood = EtoBrain.mood(npc, player, now);
+        return new EtoTalk.Context(bond.regard(), bond.flags(), EtoRules.count(bond), seenGhoul, bond.chatted() == day, EtoRules.giftedOn(bond, day),
+            holds(player, persona::errandItem), holds(player, persona::flower), next, beforeDone, KakuganServer.granted(player),
+            npc.m_217043_().m_188503_(100000), stage, claimedBy, id.equals(npc.following()), level.m_46468_(), mood, Romance.days(since, day), daysAway,
+            puppy == null ? null : kind(puppy), hasRing(player), ControlItems.ghoulMeat(player.m_21205_()) || ControlItems.ghoulMeat(player.m_21206_()),
+            holds(player, EtoRules::letter), pact, (int)memory.get(npc.persona().key(), NpcMemory.TRIAL_COUNT, 0L), trialDone,
+            memory.get(npc.persona().key(), NpcMemory.NIGHT_DAY, -1L) == day, player.m_36316_().getName(),
+            Vows.partnerElsewhere(level, player, npc.persona().key()) != null, family(level, player, memory, persona), teaching, // 3.3.4
+            persona.female() != com.hex.kagune.control.Genders.female(player), held(player, persona.key(), bond),
+            new com.hex.kagune.control.npc.Spoken(memory.starting(persona.key(), "o_"))); // 4.2.4: what was said once and for all
     }
 
     /**
-     * Her surgery: their screen goes black, they hear it, and she wakes them. From then on they may wear one kakugan, a ghoul's turning
-     * one-eyed at once; a human wakes a ghoul (one-eyed, the path to choose), as she is.
+     * 1.3.29: the lessons {@code npc} would teach {@code player} that they know already some other way (a command, an old quest): marked as
+     * told (Eto's as taught), and her words for it; null if there are none.
      */
-    static void surgery(ServerPlayer player) {
+    private static String alreadyKnown(ServerPlayer player, EtoNpc npc, int seed) {
+        List<String> names = knownLessons(player, npc, true);
+        return names.isEmpty() ? null : com.hex.kagune.control.npc.Teaching.alreadyKnown(npc.persona().key(), names, seed);
+    }
+
+    /** 1.3.29: the names of the lessons {@code npc} has for {@code player} that they know some other way ({@code mark}: and mark them told). */
+    private static List<String> knownLessons(ServerPlayer player, EtoNpc npc, boolean mark) {
+        List<String> names = new java.util.ArrayList<>();
+        if (!KaguneProfile.isUnlocked(player)) {
+            return names;
+        }
+        QuestLog log = QuestServer.log(player);
+        com.hex.kagune.control.KagunePath path = PathServer.path(player);
+        int mastery = KaguneProfile.mastery(player);
+        String key = npc.persona().key();
+        if (npc.persona() == com.hex.kagune.control.npc.Persona.ETO) {
+            QuestLog.Bond bond = log.bond(key);
+            QuestLog.Bond marked = bond;
+            for (EtoRules.Lesson lesson : EtoRules.Lesson.values()) {
+                Quest quest = QuestBook.get(lesson.quest);
+                boolean known = quest != null && log.state(quest, path, mastery) == QuestLog.State.DONE || lesson.gate != null && log.open(lesson.gate);
+                if (!bond.has(lesson.flag) && known) {
+                    names.add(quest != null ? quest.title() : lesson.name());
+                    marked = marked.with(lesson.flag, true);
+                }
+            }
+            if (mark && marked != bond) {
+                QuestServer.bond(player, key, marked);
+            }
+            return names;
+        }
+        NpcMemory memory = NpcMemoryServer.of(player);
+        long told = memory.get(key, NpcMemory.TAUGHT, 0L);
+        for (com.hex.kagune.control.npc.Teaching.Lesson lesson : com.hex.kagune.control.npc.Teaching.knownElsewhere(key, path, log::open, told)) {
+            names.add(lesson.name());
+            told |= com.hex.kagune.control.npc.Teaching.bit(lesson);
+        }
+        if (mark && !names.isEmpty()) {
+            NpcMemoryServer.set(player, key, NpcMemory.TAUGHT, told);
+        }
+        return names;
+    }
+
+    /** 1.3.29: Eto's first page offers her lesson when there is one they know already (she says so, then goes on). */
+    private static EtoTalk.Page withLesson(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        if (npc.persona() != com.hex.kagune.control.npc.Persona.ETO || page.options().size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        int leave = -1;
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            if (choice == NpcTalk.Choice.LESSON || choice == NpcTalk.Choice.TRIAL) {
+                return page;
+            }
+            if (choice == NpcTalk.Choice.LEAVE) {
+                leave = i;
+            }
+        }
+        if (leave < 0 || knownLessons(player, npc, false).isEmpty()) {
+            return page;
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        out.add(Math.max(0, leave - 1), new EtoTalk.Option(NpcTalk.Choice.LESSON, "", ""));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
+    /** 1.3.29: where "Go home, please." sends her: the home she shares with her spouse ({@code shared}), or where she belongs. */
+    record Going(net.minecraft.core.BlockPos at, boolean shared) {
+    }
+
+    /**
+     * 1.3.29: where she would go if sent home now, or null if she is home already (or her home is in another world): following someone,
+     * or settled anywhere but her home (the one she shares with her spouse once they have one; else her own place).
+     */
+    static Going going(ServerPlayer player, EtoNpc npc) {
+        ServerLevel level = player.m_284548_();
+        boolean following = npc.following() != null;
+        net.minecraft.core.BlockPos home = npc.home();
+        Households.Home house = Households.of(level, EtoBrain.spouse(npc));
+        if (house != null) {
+            if (!house.in(level) || !following && house.at(home)) {
+                return null;
+            }
+            return new Going(house.pos(), true);
+        }
+        net.minecraft.core.BlockPos origin = npc.origin();
+        if (origin == null || home == null || UniqueNpcs.overworld(level) != level) {
+            return null;
+        }
+        double dx = origin.m_123341_() - home.m_123341_();
+        double dy = origin.m_123342_() - home.m_123342_();
+        double dz = origin.m_123343_() - home.m_123343_();
+        return following || dx * dx + dy * dy + dz * dz > 6.0 * 6.0 ? new Going(origin, false) : null;
+    }
+
+    /**
+     * 1.3.29: her first page offers "Go home, please." next to "Follow me." / "Wait here." when she is away from home (following them,
+     * waiting where she was told to). Only where she would follow or wait for them at all, only if there is room.
+     */
+    private static EtoTalk.Page withHome(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        int at = -1;
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            if (choice == NpcTalk.Choice.SAY_7) {
+                return page;
+            }
+            if (choice == NpcTalk.Choice.FOLLOW || choice == NpcTalk.Choice.STAY) {
+                at = i;
+            }
+        }
+        if (at < 0 || page.options().size() >= S2CNpcTalk.MOST || going(player, npc) == null) {
+            return page;
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        out.add(at + 1, new EtoTalk.Option(NpcTalk.Choice.SAY_7, "Go home, please.", "gohome"));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
+    /**
+     * 1.3.41: Touka's first page offers her cookbook ("Got any recipes? For ghouls.") once she likes you
+     * ({@link com.hex.kagune.control.kitchen.Cookbook#REGARD}), before the goodbye, if there is room. She asks two cocoa beans for it.
+     */
+    /** 4.1.50: Ayato's and Roma's first page: their gang (joining it, how it stands), before the way out. */
+    private static EtoTalk.Page withGang(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        if (!GangServer.leads(npc.persona()) || page.options().size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        int at = page.options().size();
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            if (choice == NpcTalk.Choice.SAY_3) {
+                return page;
+            }
+            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        out.add(at, new EtoTalk.Option(NpcTalk.Choice.SAY_3, GangServer.ask(player, npc.persona()), "gang"));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
+    /** 4.1.53: Noro's (Aogiri's) and Roma's (the Clowns') first page: today's job, for one of their gang, before the way out. */
+    private static EtoTalk.Page withDaily(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        String ask = GangServer.dailyAsk(player, npc.persona());
+        if (ask == null || page.options().size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        java.util.Set<NpcTalk.Choice> used = new java.util.HashSet<>();
+        int at = page.options().size();
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            used.add(choice);
+            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        for (NpcTalk.Choice slot : NpcTalk.Choice.SAYS) {
+            if (!used.contains(slot)) {
+                List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+                out.add(at, new EtoTalk.Option(slot, ask, "daily"));
+                return new EtoTalk.Page(page.line(), out);
+            }
+        }
+        return page;
+    }
+
+    private static EtoTalk.Page withCookbook(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        if (npc.persona() != com.hex.kagune.control.npc.Persona.TOUKA || page.options().size() >= S2CNpcTalk.MOST
+            || QuestServer.bond(player, npc.persona().key()).regard() < com.hex.kagune.control.kitchen.Cookbook.REGARD) {
+            return page;
+        }
+        int at = page.options().size();
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            if (choice == NpcTalk.Choice.SAY_6) {
+                return page;
+            }
+            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        out.add(at, new EtoTalk.Option(NpcTalk.Choice.SAY_6, com.hex.kagune.control.kitchen.Cookbook.ASK, "cookbook"));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
+    /**
+     * 4.1.84: what is in {@code player}'s main hand, if it is a present for {@code npc}: anything with no gift of its own on her pages (her
+     * errand's item, her flower, Ghoul Meat, a letter, the ring, what her courtship's chapter asks for); else null.
+     */
+    static String present(ServerPlayer player, EtoNpc npc) {
+        ItemStack held = player.m_21205_();
+        String item = id(held);
+        com.hex.kagune.control.npc.Persona persona = npc.persona();
+        if (item == null || persona.errandItem(item) || persona.flower(item) || ControlItems.ghoulMeat(held) || EtoRules.letter(item)
+            || ControlItems.ring(held) || com.hex.kagune.control.npc.Courtship.wants(persona.key(), QuestServer.bond(player, persona.key()), item)) {
+            return null;
+        }
+        return item;
+    }
+
+    /**
+     * 4.1.84 (romance: gifts each companion loves or hates): a present in hand is offered on the gifts page ("present"); on the main page,
+     * where no gifts link is, the link is added (SAY_8, the only slot it ever takes), while the page has room. Never to someone else's.
+     */
+    static EtoTalk.Page withPresent(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, EtoTalk.Page page, Kind kind) {
+        if (c.claimedBy() != null || kind != Kind.MAIN && kind != Kind.GIFTS) {
+            return page;
+        }
+        String item = present(player, npc);
+        if (item == null) {
+            return page;
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        int at = out.size();
+        boolean link = false;
+        boolean leave = false;
+        for (int i = 0; i < out.size(); i++) {
+            EtoTalk.Option option = out.get(i);
+            link |= "gifts".equals(option.key()) || "present".equals(option.key());
+            leave |= option.choice() == (kind == Kind.GIFTS ? NpcTalk.Choice.BACK : NpcTalk.Choice.LEAVE); // a main page (not a chapter's), the gifts page
+            if (option.choice() == NpcTalk.Choice.LEAVE || option.choice() == NpcTalk.Choice.BACK || option.choice() == NpcTalk.Choice.INSULT
+                || option.choice() == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        if (link || !leave || out.size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        out.add(at, kind == Kind.GIFTS ? new EtoTalk.Option(NpcTalk.Choice.SAY_1, com.hex.kagune.control.npc.Tastes.offer(item), "present")
+            : new EtoTalk.Option(NpcTalk.Choice.SAY_8, "I brought you something...", "gifts"));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
+    /**
+     * 4.1.84: the present in their hand given: once a day, as every gift (EtoRules.gifted: one hated counts too); loved or liked, it is
+     * taken; hated, pushed back. Regard by how she takes it (npc.Tastes), in her words, with her gesture.
+     */
+    static void present(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, NpcTalk.Choice choice) {
+        String key = npc.persona().key();
+        String item = present(player, npc);
+        if (item == null) {
+            show(player, npc, c, npc.persona().script().gifts(c, npc.persona().script().giftsAsked(c.seed())), Kind.GIFTS);
+            return;
+        }
+        if (c.giftedToday()) {
+            carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.again(key, c.seed()), 0, EtoTalk.Effect.NONE), Kind.MAIN);
+            return;
+        }
+        com.hex.kagune.control.npc.Tastes.Taste taste = com.hex.kagune.control.npc.Tastes.of(key, item);
+        long today = day(player.m_284548_());
+        QuestServer.bond(player, key, EtoRules.gifted(QuestServer.bond(player, key), today));
+        if (taste != com.hex.kagune.control.npc.Tastes.Taste.HATED) {
+            player.m_21205_().m_41774_(1);
+        }
+        // 4.1.85: today's wish, asked for today and brought: remembered, and more for it.
+        boolean wished = c.dating() && item.equals(com.hex.kagune.control.npc.Tastes.wish(key, today))
+            && NpcMemoryServer.of(player).get(key, NpcMemory.WISH_DAY, -1L) == today;
+        if (wished) {
+            NpcMemoryServer.set(player, key, NpcMemory.WISH_DAY, -1L);
+            EtoBrain.hearts(player.m_284548_(), npc, player, 5);
+        }
+        carry(player, npc, c, choice, new EtoTalk.Reply(wished ? com.hex.kagune.control.npc.Tastes.granted(key, item, c.seed())
+            : com.hex.kagune.control.npc.Tastes.said(key, taste, item, c.seed(), c.dating()),
+            com.hex.kagune.control.npc.Tastes.regard(taste) + (wished ? com.hex.kagune.control.npc.Tastes.WISH_REGARD : 0), EtoTalk.Effect.NONE,
+            com.hex.kagune.control.npc.Tastes.gesture(key, taste)), Kind.MAIN);
+    }
+
+    /**
+     * 4.1.85 (romance: "a small daily 'what do you want today?' once together"): on the main page of one they are together with (dating or
+     * married), while today's wish isn't granted, "What do you want today?" in a free reply slot, while the page has room.
+     */
+    static EtoTalk.Page withWish(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, EtoTalk.Page page) {
+        String key = npc.persona().key();
+        long today = day(player.m_284548_());
+        if (!c.dating() || c.giftedToday() || com.hex.kagune.control.npc.Tastes.wish(key, today) == null || page.options().size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        java.util.Set<NpcTalk.Choice> used = new java.util.HashSet<>();
+        int at = page.options().size();
+        boolean main = false;
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            used.add(choice);
+            main |= choice == NpcTalk.Choice.LEAVE;
+            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        if (!main) {
+            return page;
+        }
+        for (NpcTalk.Choice slot : NpcTalk.Choice.SAYS) {
+            if (!used.contains(slot)) {
+                List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+                out.add(at, new EtoTalk.Option(slot, com.hex.kagune.control.npc.Tastes.WISH_ASK, "wish"));
+                return new EtoTalk.Page(page.line(), out);
+            }
+        }
+        return page;
+    }
+
+    private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, EtoTalk.Page page, Kind kind) {
+        if (kind == Kind.MAIN && context.dating() && context.mood() == EtoMood.JEALOUS) {
+            // 2.2.3: jealous: they can tell them it's only them.
+            List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+            out.add(Math.max(0, out.size() - 1), new EtoTalk.Option(NpcTalk.Choice.SAY_5, com.hex.kagune.control.npc.MoodActs.REASSURE, "reassure"));
+            // 3.3.7: or talk it out properly ("Can we talk about earlier?").
+            com.hex.kagune.control.npc.scene.Scene mend = SceneServer.mend(player, npc, context, context.seed());
+            if (mend != null) {
+                out.add(Math.max(0, out.size() - 1), SceneServer.mendOption(player, npc, context, mend, NpcTalk.Choice.SAY_4));
+            }
+            page = new EtoTalk.Page(page.line(), out);
+        }
+        page = withPresent(player, npc, context, page, kind); // 4.1.84
+        if (kind == Kind.MAIN) {
+            page = withHome(player, npc, page);
+            page = withCookbook(player, npc, page);
+            page = withLesson(player, npc, page);
+            page = withGang(player, npc, page);
+            page = withDaily(player, npc, page);
+            page = withWish(player, npc, context, page); // 4.1.85: last, in a slot none of the others takes
+        }
+        List<EtoTalk.Option> options = page.options().size() > S2CNpcTalk.MOST ? page.options().subList(0, S2CNpcTalk.MOST) : page.options();
+        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(options), kind));
+        int[] ordinals = new int[options.size()];
+        String[] labels = new String[options.size()];
+        for (int i = 0; i < ordinals.length; i++) {
+            ordinals[i] = options.get(i).choice().ordinal();
+            labels[i] = options.get(i).label();
+        }
+        String temper = npc.persona().script().title(context) + " - " + context.mood().word();
+        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), npc.displayName(), temper, context.regard(), false, face(npc), page.line(), ordinals,
+            labels, GangServer.shown(player, GangServer.memberOf(npc.persona()))));
+    }
+
+    /** 1.3.14: the face on the talk screen: -1 Eto's, -2 Touka's, -3 Ken's (Persona's order). */
+    static int face(EtoNpc npc) {
+        return -1 - Math.max(0, com.hex.kagune.control.npc.Persona.ALL.indexOf(npc.persona()));
+    }
+
+    /** 1.3.14: {@code lesson} taught: its gate opens, the game says so, and it is remembered. */
+    static void taught(ServerPlayer player, EtoNpc npc, com.hex.kagune.control.npc.Teaching.Lesson lesson) {
+        taught(player, npc.persona(), npc.displayName(), lesson);
+    }
+
+    /** The same, by who taught it (the trial ends after the talk has closed). */
+    static void taught(ServerPlayer player, com.hex.kagune.control.npc.Persona persona, String name, com.hex.kagune.control.npc.Teaching.Lesson lesson) {
+        if (lesson == null) {
+            return;
+        }
+        QuestServer.grant(player, lesson.gate());
+        // 4.0.0: Noro's last two are the Bikaku's mutations themselves: taught is had.
+        if (lesson.gate() == com.hex.kagune.control.quest.Gate.BIKAKU_DEVOURING) {
+            BikakuDevour.grant(player, com.hex.kagune.control.bikaku.BikakuMutation.GRAND_DEVOURING, true);
+        } else if (lesson.gate() == com.hex.kagune.control.quest.Gate.BIKAKU_POTENTIAL) {
+            BikakuDevour.grant(player, com.hex.kagune.control.bikaku.BikakuMutation.POTENTIAL_UNLOCK, true);
+        }
+        // 1.3.29: remembered as this teacher's (asked again, they never say it was known some other way).
+        long told = NpcMemoryServer.of(player).get(persona.key(), NpcMemory.TAUGHT, 0L);
+        NpcMemoryServer.set(player, persona.key(), NpcMemory.TAUGHT, told | com.hex.kagune.control.npc.Teaching.bit(lesson));
+        ServerLevel level = player.m_284548_();
+        UkakuFire.sound(level, player.m_20182_(), "entity.player.levelup", 0.8F, 0.8F);
+        player.m_5661_(Component.m_237113_(persona.colour() + name + " taught you: \u00a7f" + lesson.name() + " \u00a77("
+            + lesson.gate().displayName() + ")"), false);
+    }
+
+    /**
+     * Her surgery: their screen goes black, they hear it, and she wakes them, warmly if they are hers, coldly if not. From then on they
+     * may wear one kakugan, a ghoul's turning one-eyed at once; a human wakes a ghoul (one-eyed, the path to choose), as she is.
+     */
+    static void surgery(ServerPlayer player, EtoTalk.Context c) {
         boolean ghoul = KaguneProfile.isUnlocked(player);
-        ControlNetwork.sendTo(player, new S2CEtoSurgery(ghoul));
+        ControlNetwork.sendTo(player, new S2CCutscene(S2CCutscene.SURGERY, EtoLines.surgeryWords(c)));
         if (!ghoul) {
             KaguneProfile.setUnlocked(player, true);
             KaguneNetwork.broadcast(player);
@@ -245,7 +1794,25 @@ public final class EtoServer {
         return Math.floorDiv(level.m_46468_(), 24000L);
     }
 
-    // ---------------------------------------------------------------- deaths: her errand's kills, and hers
+    // ---------------------------------------------------------------- a human's pact
+
+    /** {@code amount} more of {@code doing} on {@code player}'s pact (if it is the step they are on). */
+    private static void pact(ServerPlayer player, EtoRules.Pact doing, int amount) {
+        NpcMemory memory = NpcMemoryServer.of(player);
+        EtoRules.Pact step = EtoRules.Pact.byOrdinal(memory.get(EtoRules.KEY, NpcMemory.TRIAL, 0L));
+        if (step != doing) {
+            return;
+        }
+        long[] after = EtoRules.pact(step, (int)memory.get(EtoRules.KEY, NpcMemory.TRIAL_COUNT, 0L), doing, amount);
+        memory.set(EtoRules.KEY, NpcMemory.TRIAL, after[0]).set(EtoRules.KEY, NpcMemory.TRIAL_COUNT, after[1]);
+        NpcMemoryServer.save(player);
+        EtoRules.Pact now = EtoRules.Pact.byOrdinal(after[0]);
+        player.m_5661_(Component.m_237113_(now == step
+            ? EtoRules.NAME + "'s price: " + after[1] + " of " + step.need
+            : now == EtoRules.Pact.READY ? EtoRules.NAME + "'s price is paid. Go and see her." : EtoRules.NAME + "'s price: that part's done. Go and see her."), true);
+    }
+
+    // ---------------------------------------------------------------- deaths: a courtship's kills, a human's pact, and hers
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void died(LivingDeathEvent event) {
@@ -254,20 +1821,104 @@ public final class EtoServer {
         if (!(source instanceof ServerPlayer killer) || killer == dead) {
             return;
         }
-        if (dead instanceof EtoNpc) {
-            QuestServer.bond(killer, EtoRules.KEY, EtoRules.killedBy(QuestServer.bond(killer, EtoRules.KEY)));
-            killer.m_5661_(Component.m_237113_(EtoRules.NAME + " will remember this."), true);
+        if (dead instanceof EtoNpc npc) {
+            String key = npc.persona().key();
+            ServerLevel level = killer.m_284548_();
+            UniqueNpc unique = UniqueNpcs.get(level, key);
+            if (unique.stageOf(killer.m_20148_()).together() && Romance.endsWithDeath(true)) {
+                // Their partner killed them: whatever they had is over, for good.
+                UniqueNpcs.pair(level, key, null, Romance.Stage.NONE);
+                NpcMemoryServer.of(killer).forget(key, NpcMemory.SINCE).forget(key, NpcMemory.WED);
+                NpcMemoryServer.save(killer);
+                killer.m_5661_(Component.m_237113_("\u00a74You killed " + npc.persona().her() + ". Whatever you had is over."), false);
+            } else if (unique.stageOf(killer.m_20148_()).together()) {
+                // 3.3.4 (the owner: "if it's an official NPC like Toka, Ken, or Ito, there's no way to unmarry ... You guys are stuck forever"):
+                // not even this ends it. She comes back, and she is still theirs.
+                killer.m_5661_(Component.m_237113_("\u00a74You killed " + npc.persona().her() + ". ..." + Character.toUpperCase(npc.persona().she().charAt(0))
+                    + npc.persona().she().substring(1) + "'ll come back. You're still bound to " + npc.persona().her() + ". That doesn't end."), false);
+            }
+            QuestServer.bond(killer, key, EtoRules.killedBy(QuestServer.bond(killer, key)));
+            killer.m_5661_(Component.m_237113_(npc.displayName() + " will remember this."), true);
             return;
         }
-        if (dead instanceof Enemy && EtoRules.night(killer.m_9236_().m_46468_())) {
-            QuestLog.Bond bond = QuestServer.bond(killer, EtoRules.KEY);
-            if (EtoRules.step(bond) == EtoRules.Step.HUNT) {
-                QuestLog.Bond after = EtoRules.advance(bond, EtoRules.Step.HUNT, 1);
-                QuestServer.bond(killer, EtoRules.KEY, after);
-                killer.m_5661_(Component.m_237113_(EtoRules.step(after) == EtoRules.Step.HUNT
-                    ? EtoRules.NAME + "'s errand: " + EtoRules.count(after) + " of " + EtoRules.Step.HUNT.need + " killed tonight"
-                    : EtoRules.NAME + "'s errand: done. Go and see her."), true);
+        boolean night = EtoRules.night(killer.m_9236_().m_46468_());
+        // 2.1.8: Ken's proofs: Doves of a rank, wild ghouls killed in Ukaku's first kakuja.
+        if (dead instanceof com.hex.kagune.control.npc.CcgAgent agent) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.DOVES, AgentBrain.rankLevel(agent));
+        }
+        if (dead instanceof GhoulNpc && UkakuServer.isUkaku(killer) && KaguneProfile.isActive(killer) && UkakuServer.form(killer).kakuja()) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.GHOULS_IN_KAKUJA, 0);
+        }
+        // 4.0.0: Ayato's and Noro's proofs: wild ghouls (and Aogiri's) of a rank; anything a Bikaku's worm brings down (it eats them).
+        if (dead instanceof GhoulNpc ghoul && ghoul.identity() != null) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.GHOUL_RANK, ghoul.identity().tier());
+        }
+        if (BikakuServer.isBikaku(killer) && KaguneProfile.isActive(killer)) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.DEVOURED, 0);
+        }
+        // 4.1.3: Ayato's proof before Speedster: something hostile killed with the bare hands, only the eyes open.
+        boolean hostile = QuestServer.victim(dead).contains(com.hex.kagune.control.quest.Tags.HOSTILE);
+        if (PaleServer.eyes(killer) && killer.m_21205_().m_41619_() && hostile) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.BARE_HANDS, 0);
+        }
+        // 4.1.7: the General's three watches: something hostile put down with nothing in the hand and no kagune out: after dark; with the
+        // feet off the ground; at dawn.
+        if (hostile && killer.m_21205_().m_41619_() && !KaguneProfile.isActive(killer)) {
+            if (night) {
+                proved(killer, com.hex.kagune.control.npc.Teaching.Deed.NIGHT_BARE, 0);
+            }
+            if (!killer.m_20096_() && !killer.m_20069_()) {
+                proved(killer, com.hex.kagune.control.npc.Teaching.Deed.AIRBORNE, 0);
+            }
+            if (com.hex.kagune.control.npc.Teaching.dawn(killer.m_9236_().m_46468_())) {
+                proved(killer, com.hex.kagune.control.npc.Teaching.Deed.DAWN, 0);
             }
         }
+        // 2.1.2: a courtship chapter of kills counts. 2.1.5: Doves of a rank (alone or with the companion along), Pack ghouls, ghouls
+        // preying on a village, as well as before (at night, at night with them along, any wild ghoul).
+        int rank = dead instanceof com.hex.kagune.control.npc.CcgAgent agent ? AgentBrain.rankLevel(agent) : -1;
+        boolean nearHumans = dead instanceof GhoulNpc && !NpcIndex.of(killer.m_284548_(), com.hex.kagune.control.npc.HumanNpc.class,
+            dead.m_20191_().m_82400_(CourtshipServer.VILLAGE_NEAR), human -> human.m_6084_()).isEmpty();
+        boolean pack = dead instanceof GhoulNpc packed && packed.identity() != null
+            && packed.identity().temper() == com.hex.kagune.control.npc.NpcTemper.PACK;
+        for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+            QuestLog.Bond bond = courtBond(killer, persona.key());
+            com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(persona.key(), bond);
+            if (chapter == null || EtoRules.count(bond) >= chapter.need()) {
+                continue;
+            }
+            boolean along = CourtshipServer.along(killer, persona.key());
+            boolean counts = switch (chapter.task()) {
+                case KILLS -> dead instanceof Enemy && night;
+                case KILLS_WITH -> dead instanceof Enemy && night && along;
+                case GHOUL -> dead instanceof GhoulNpc;
+                case DOVES -> rank >= chapter.rank();
+                case DOVES_WITH -> rank >= chapter.rank() && along;
+                case GHOUL_PACK -> pack;
+                // 4.1.80: the General's: the Pack put down with one of the bureau's own, a quinque in the hand.
+                case QUINQUE -> pack && quinqueInHand(killer);
+                case VILLAGE_GHOUL -> nearHumans;
+                default -> false;
+            };
+            if (counts) {
+                QuestLog.Bond after = com.hex.kagune.control.npc.Courtship.progress(persona.key(), bond, chapter.task(), 1);
+                QuestServer.bond(killer, persona.key(), after);
+                CourtshipServer.tell(killer, persona, after);
+            }
+        }
+        if (!KaguneProfile.isUnlocked(killer)) {
+            if (dead instanceof Enemy && night) {
+                pact(killer, EtoRules.Pact.HUNT, 1);
+            }
+            if (dead instanceof GhoulNpc) {
+                pact(killer, EtoRules.Pact.GHOUL, 1);
+            }
+        }
+    }
+
+    /** 4.1.80: true if {@code player}'s main hand holds a quinque, drawn (a case's weapon, or an arm's). */
+    static boolean quinqueInHand(ServerPlayer player) {
+        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        return ControlItems.quinqueWeapon(held) != null || ControlItems.armWeapon(held) != null;
     }
 }

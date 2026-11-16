@@ -1,0 +1,8 @@
+finger_crack.ogg (2.5.3): the owner's own sound (a finger pop they supplied for the mod), converted to mono OGG Vorbis, the silence
+before the pop trimmed (it started 0.2 s in) so the pop lands with the crack, faded out at 0.27 s, every tag stripped.
+
+kagune_burst.ogg is cut from "Oculus Audio Pack 01" by Oculus VR, LLC
+(https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/), licensed under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/), as published in facebookincubator/Meta-open-sound
+(corpora/oculus-audio-pack): files renamed to the UCS naming convention; OGG previews transcoded from the original WAVs.
+Changes made here: GOREBone_SkullCracking_OS_01 from 0.08 s, faded out at the end, 44.1 kHz mono.

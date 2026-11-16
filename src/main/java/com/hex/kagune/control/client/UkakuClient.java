@@ -112,8 +112,12 @@ public final class UkakuClient {
         }
         boolean ukaku = isUkaku(player);
         ManifestSounds.limb(player, opening, ukaku);
-        if (!ukaku) {
-            KaguneManifestationEffects.spawnBloodLegacy(player, opening);
+        if (!ukaku && player.m_9236_() instanceof net.minecraft.client.multiplayer.ClientLevel level) {
+            // 2.5.2: the mod's own blood thrown out of the back as a limb tears out (the original's fallback drew dark hearts).
+            double yaw = Math.toRadians(player.f_20883_);
+            Vec3 behind = new Vec3(Math.sin(yaw), 0.0, -Math.cos(yaw));
+            Vec3 at = player.m_20182_().m_82520_(behind.f_82479_ * 0.3, 1.0, behind.f_82481_ * 0.3);
+            com.hex.kagune.control.client.fx.UkakuBlood.spurt(level, at, behind.m_82520_(0.0, 0.45, 0.0), opening ? 1.3F : 0.8F, player);
         }
     }
 
@@ -127,7 +131,9 @@ public final class UkakuClient {
         KaguneClientState.View view = KaguneClientState.get(player);
         // 6.1.0: Pale's base form keeps her human shape: no tendrils, no writhing (her flesh is drawn by PaleFleshRenderer).
         // 7.0.0: Graft DNA's limbs are its own (GraftRenderer): the original's tendrils and their writhing are not drawn.
-        return view.active() && (isUkaku(player) || PaleClient.isPale(player) || GraftClient.isGraft(player)) ? inactiveView() : view;
+        // 3.4.9: nor Bikaku's: its worm is its own (BikakuRenderer).
+        return view.active() && (isUkaku(player) || PaleClient.isPale(player) || GraftClient.isGraft(player) || BikakuClient.isBikaku(player))
+            ? inactiveView() : view;
     }
 
     /** The original's own "nothing manifested" state (same values as {@code KaguneClientState}'s empty view). */
@@ -196,8 +202,17 @@ public final class UkakuClient {
         boolean rightThrown = ukaku.vortexSide() > 0;
         boolean leftThrown = ukaku.vortexSide() < 0;
         float[] gunKick = gatlingKick(ukaku, time, gun);
-        return new WingRig.Input(form, mastery, deploy, time / 20.0, smooth.crystalRight, smooth.crystalLeft, strike.motion(),
-            strike.progress(), strike.impact(), 0.0F, 0.0F, player.m_6047_(), detail, alpha,
+        // 4.1.2 (the owner: "wings grow and protect the player, they come together to protect the player"): while his guard is up and no
+        // blow is under way, both wings swing forward round him and meet in front.
+        WingRig.Motion motion = strike.motion();
+        float progress = strike.progress();
+        float guard = motion == WingRig.Motion.NONE ? RinkakuBlockClient.amount(player, time) : 0.0F;
+        if (guard > 0.0F) {
+            motion = WingRig.Motion.GUARD;
+            progress = guard;
+        }
+        return new WingRig.Input(form, mastery, deploy, time / 20.0, smooth.crystalRight, smooth.crystalLeft, motion,
+            progress, strike.impact(), 0.0F, 0.0F, player.m_6047_(), detail, alpha,
             view.mode() == TendrilMode.DISMISS, Math.max(strike.aimRight(), gun), Math.max(strike.aimLeft(), gun), aim,
             Math.max(strike.kickRight(), gunKick[0]), Math.max(strike.kickLeft(), gunKick[1]),
             rightThrown ? thrown[0] : 0.0F, leftThrown ? thrown[0] : 0.0F, rightThrown ? thrown[1] : 1.0F, leftThrown ? thrown[1] : 1.0F,

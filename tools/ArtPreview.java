@@ -25,6 +25,13 @@ public final class ArtPreview {
 
     public static void main(String[] args) throws Exception {
         File out = new File(args.length > 0 ? args[0] : "build/preview");
+        // 2.1.0: -Dkagune=RRGGBB draws the centipede legs and the mask in that kagune's colours (KakujaPalette).
+        String kagune = System.getProperty("kagune");
+        if (kagune != null) {
+            com.hex.kagune.control.KakujaPalette.Palette palette = com.hex.kagune.control.KakujaPalette.of(Integer.parseInt(kagune, 16));
+            com.hex.kagune.control.ukaku.CentipedeTail.colours(palette);
+            com.hex.kagune.control.kakugan.CentipedeMask.colours(palette);
+        }
         out.mkdirs();
         java.util.Set<String> wanted = new java.util.HashSet<>(java.util.Arrays.asList(args).subList(Math.min(1, args.length), args.length));
         if (wanted.isEmpty() || wanted.contains("aim")) {
@@ -35,6 +42,36 @@ public final class ArtPreview {
         }
         if (wanted.isEmpty() || wanted.contains("moves")) {
             moves(new File(out, "ukaku-moves.png"));
+        }
+        // 4.1.9: the base form's wing slams key by key, each with its wing tip's path (only when asked: slams, slams-gif).
+        if (wanted.contains("slams")) {
+            slams(new File(out, "ukaku-slams.png"));
+        }
+        if (wanted.contains("impacts")) {
+            impactsSheet(new File(out, "ukaku-impacts.png"));
+        }
+        if (wanted.contains("guard")) {
+            guardSheet(new File(out, "ukaku-guard.png"));
+        }
+        if (wanted.contains("coat-walk")) {
+            coatWalk(new File(out, "coat-walk-formal.png"), "formal");
+            coatWalk(new File(out, "coat-walk-crimson.png"), "crimson");
+        }
+        if (wanted.contains("coats")) {
+            coatSheet(new File(out, "coat-crimson.png"), "crimson");
+            coatSheet(new File(out, "coat-formal.png"), "formal");
+        }
+        if (wanted.contains("slams-gif")) {
+            slamsGif(new File(out, "ukaku-slams.gif"));
+        }
+        // 4.1.54: Banjou's one small blue wing, at rest and through his string of slaps (only when asked: banjou, banjou-gif).
+        if (wanted.contains("banjou")) {
+            banjouSheet(new File(out, "banjou-wing.png"));
+            banjouSlaps(new File(out, "banjou-slaps.png"));
+            banjouImpacts(new File(out, "banjou-impacts.png"));
+        }
+        if (wanted.contains("banjou-gif")) {
+            banjouGif(new File(out, "banjou-slaps.gif"));
         }
         if (wanted.isEmpty() || wanted.contains("crystal")) {
             crystal(new File(out, "ukaku-crystal.png"));
@@ -117,6 +154,9 @@ public final class ArtPreview {
         if (wanted.contains("war")) {
             war(new File(out, "king-war.png"));
         }
+        if (wanted.contains("war-alive")) {
+            warAlive(new File(out, "king-war-alive.png"));
+        }
         if (wanted.contains("war-combo")) {
             warStrikes(new File(out, "king-war-combo.png"), true);
         }
@@ -176,6 +216,12 @@ public final class ArtPreview {
         }
         if (wanted.contains("peace-rework")) {
             peaceRework(new File(out, "king-peace-rework.png"));
+        }
+        if (wanted.contains("spire-fp")) {
+            spireFirstPerson(new File(out, "war-spire-first-person.png"));
+        }
+        if (wanted.contains("aegis")) {
+            aegis(new File(out, "king-peace-aegis.png"));
         }
         if (wanted.contains("clash")) {
             clash(new File(out, "kagune-clash.png"));
@@ -1718,11 +1764,16 @@ public final class ArtPreview {
     }
 
     static List<WingPreview.Tri> vortexTris(double[] root, double[] head, double size, double[] eye, double unwind, double dusk, double time) {
+        return vortexTris(root, head, size, eye, unwind, dusk, time, false);
+    }
+
+    /** 3.2.9: {@code own}: the thrower's own, from his own eyes (first person). */
+    static List<WingPreview.Tri> vortexTris(double[] root, double[] head, double size, double[] eye, double unwind, double dusk, double time, boolean own) {
         List<WingPreview.Tri> out = new ArrayList<>();
         com.hex.kagune.control.ukaku.WingVortex.build((a, b, c, d, ca, cb, cc, cd) -> {
             out.add(new WingPreview.Tri(new double[][] {a, b, c}, new int[] {ca, cb, cc}, new double[] {0, 1, 0}, false));
             out.add(new WingPreview.Tri(new double[][] {a, c, d}, new int[] {ca, cc, cd}, new double[] {0, 1, 0}, false));
-        }, root, head, size, time, 5, eye, 1.0, unwind, dusk, true);
+        }, root, head, size, time, 5, eye, 1.0, unwind, dusk, true, own);
         return out;
     }
 
@@ -1779,7 +1830,17 @@ public final class ArtPreview {
         double[] behind = {2.5, 3.0, -4.5};
         shots.add(new Shot("A new wing grows back (40%)", new RigPose(), thrownWings(300, 0.0F, 0.4F), behind, new double[] {0.3, 2.0, 0.0}, null));
         shots.add(new Shot("Grown back (80%)", new RigPose(), thrownWings(300, 0.0F, 0.8F), behind, new double[] {0.3, 2.0, 0.0}, null));
-        sheet(file, "Z: Wing Vortex. The wing shoots forward as a spinning vortex, attached until it ends, then detaches; a new one grows", shots, 3, 460, 400);
+        // 3.2.9: your own, from your own eyes: a thin jet by your shoulder, opening as it goes off (no body: first person).
+        double[] eyes = {0.0, 1.62, 0.0};
+        double[] launch = {root[0] + 0.35, root[1] + 0.15, root[2] + 0.75};
+        for (double out : new double[] {3.0, 8.0, 18.0}) {
+            List<WingPreview.Tri> mine = new ArrayList<>(vortexTris(root, new double[] {launch[0], launch[1], launch[2] + out}, 1.0, eyes, 0.0, 0.25, 1.6, true));
+            mine.addAll(field(0.0, 24.0, null, 0.0, 0.0));
+            shots.add(new Shot(String.format(java.util.Locale.ROOT, "Your own, first person, %.0f blocks out", out), null, NO_WINGS, eyes,
+                new double[] {0.0, 1.5, 10.0}, seenFrom(mine, eyes, 0.05)));
+        }
+        sheet(file, "Z: Wing Vortex (3.2.9: a thin round corkscrew straight along its flight). Attached until it ends, then detaches; a new one grows",
+            shots, 3, 460, 400);
     }
 
     /** Twin wings crystallized up to {@code front} (0 fire .. 1 crystal to the tips), optionally aiming. */
@@ -2050,6 +2111,496 @@ public final class ArtPreview {
         sheetFlipped(file, "Ukaku: the M1 chain and the right-click enders (body through PlayerAnimator's real transforms)", shots, frames, 3, 420, 400);
     }
 
+    // ------------------------------------------------------------------ 4.1.9: the wing slams
+
+    /** One slam as the string throws it: its motion, the body's pattern, which side, its impact fraction and its ticks (ComboStyle.UKAKU_WINGS). */
+    record Slam(String name, WingRig.Motion motion, com.hex.kagune.control.StrikePattern pattern, boolean right, boolean both, float impact, int ticks) {
+    }
+
+    /** 4.1.12: each slam's impact and length read from the string itself (ComboStyle.UKAKU_WINGS), never written out here again. */
+    static final Slam[] SLAMS = {
+        slam("1 Right Wing Slap", WingRig.Motion.SLAP_RIGHT, 0, true, false),
+        slam("2 Left Wing Slap", WingRig.Motion.SLAP_LEFT, 1, false, false),
+        slam("3 Right Wing Swing", WingRig.Motion.SWING_RIGHT, 2, true, false),
+        slam("4 Left Rising Wing", WingRig.Motion.RISE_LEFT, 3, false, false),
+        slam("5 Right Overhead Slam", WingRig.Motion.SLAM_RIGHT, 4, true, false),
+        slam("6 Left Overhead Slam", WingRig.Motion.SLAM_LEFT, 5, false, false),
+        slam("7 Twin Slam", WingRig.Motion.TWIN_SLAM, 6, true, true)};
+
+    static Slam slam(String name, WingRig.Motion motion, int stage, boolean right, boolean both) {
+        com.hex.kagune.control.ComboStage s = com.hex.kagune.control.ComboStyle.UKAKU_WINGS.stage(stage);
+        return new Slam(name, motion, s.pattern(), right, both, s.impactFraction(), s.baseDuration());
+    }
+
+    /** The twin wings at {@code progress} through {@code motion}, only the {@code side} wing drawn if {@code only} (for its tip's path). */
+    static WingRig.Input slamWings(WingRig.Motion motion, float progress, float impact, int side, boolean only) {
+        float right = only && side < 0 ? 0.0F : 1.0F;
+        float left = only && side > 0 ? 0.0F : 1.0F;
+        return new WingRig.Input(WingForm.TWIN, 300, 1.0F, 1.3, 0.0F, 0.0F, motion, progress, impact, 0.0F, 0.0F, false, 1.0F, 1.0F, false, 0.0F, 0.0F,
+            WingRig.FORWARD, 0.0F, 0.0F, 0.0F, 0.0F, right, left, 0.0F);
+    }
+
+    /** The tip of the {@code side} wing (rig space): of that wing's corners, the one furthest from its shoulder blade. */
+    static double[] slamTip(WingRig.Motion motion, float progress, float impact, int side) {
+        double[] root = {WingRig.ROOT_X * side, WingRig.ROOT_Y, WingRig.ROOT_Z};
+        double[] best = root;
+        double far = -1.0;
+        for (WingRig.Quad q : WingRig.build(slamWings(motion, progress, impact, side, true))) {
+            if (q.alpha() < 0.5F) {
+                continue; // the soft glow round it, not the wing
+            }
+            float[] v = q.xyz();
+            for (int k = 0; k < 4; k++) {
+                double dx = v[k * 3] - root[0], dy = v[k * 3 + 1] - root[1], dz = v[k * 3 + 2] - root[2];
+                double d = dx * dx + dy * dy + dz * dz;
+                if (d > far) {
+                    far = d;
+                    best = new double[] {v[k * 3], v[k * 3 + 1], v[k * 3 + 2]};
+                }
+            }
+        }
+        return best;
+    }
+
+    /**
+     * The tip's path through a whole slam as dots, one every 1/60 of it: blue to white up to the impact, yellow to red after, so their spacing
+     * shows how fast it goes (close dots slow, far apart fast): a blow should be fastest at the impact.
+     */
+    static List<WingPreview.Tri> tipPath(WingRig.Motion motion, float impact, int side) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        int n = 60;
+        for (int i = 0; i <= n; i++) {
+            float progress = i / (float)n;
+            double[] at = slamTip(motion, progress, impact, side);
+            int colour;
+            if (progress <= impact) {
+                float k = progress / Math.max(0.01F, impact);
+                colour = 0xFF000000 | (int)(40 + 215 * k) << 16 | (int)(110 + 145 * k) << 8 | 255;
+            } else {
+                float k = (progress - impact) / Math.max(0.01F, 1.0F - impact);
+                colour = 0xFF000000 | 255 << 16 | (int)(230 - 200 * k) << 8 | (int)(40 - 30 * k);
+            }
+            boolean hit = Math.abs(progress - impact) < 0.5F / n;
+            out.addAll(dot(at, hit ? 0.09 : 0.045, hit ? 0xFFFFFFFF : colour));
+        }
+        return out;
+    }
+
+    /** A small solid diamond (an octahedron) of radius {@code r} at {@code c}. */
+    static List<WingPreview.Tri> dot(double[] c, double r, int argb) {
+        double[][] v = {{c[0] + r, c[1], c[2]}, {c[0] - r, c[1], c[2]}, {c[0], c[1] + r, c[2]}, {c[0], c[1] - r, c[2]}, {c[0], c[1], c[2] + r},
+            {c[0], c[1], c[2] - r}};
+        int[][] faces = {{0, 2, 4}, {2, 1, 4}, {1, 3, 4}, {3, 0, 4}, {2, 0, 5}, {1, 2, 5}, {3, 1, 5}, {0, 3, 5}};
+        List<WingPreview.Tri> out = new ArrayList<>();
+        for (int[] f : faces) {
+            double[] a = v[f[0]], b = v[f[1]], d = v[f[2]];
+            double[] n = {(a[0] + b[0] + d[0]) / 3 - c[0], (a[1] + b[1] + d[1]) / 3 - c[1], (a[2] + b[2] + d[2]) / 3 - c[2]};
+            double len = Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+            out.add(new WingPreview.Tri(new double[][] {a, b, d}, new int[] {argb, argb, argb}, new double[] {n[0] / len, n[1] / len, n[2] / len}, true));
+        }
+        return out;
+    }
+
+    /**
+     * 4.1.9: the base form's wing slams (the Twin Wings' string) and the guard, key by key: the start of the wind-up, the wind-up, the blow on
+     * its way, the impact, just after it, the way back, and the striking wing tip's path through the whole of it.
+     */
+    static void slams(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        // 4.1.11: far enough back to take in a wing lashed out as far as the slam hits (8 blocks and more).
+        double[] eye = {11.5, 6.5, 13.5};
+        double[] target = {0.0, 2.2, 3.0};
+        double[] high = {7.0, 17.0, 11.0};
+        double[] below = {0.0, 1.4, 3.0};
+        for (Slam slam : new Slam[] {SLAMS[0], SLAMS[2], SLAMS[3], SLAMS[4], SLAMS[6]}) {
+            float i = slam.impact();
+            float[] keys = {0.12F, i - 0.14F, i - 0.05F, i, i + 0.08F, i + 0.25F};
+            String[] names = {"wind-up starts", "wound up", "on its way", "IMPACT", "just after", "on the way back"};
+            int side = slam.right() ? 1 : -1;
+            for (int k = 0; k < keys.length; k++) {
+                float progress = Math.max(0.0F, Math.min(1.0F, keys[k]));
+                shots.add(new Shot(slam.name() + ": " + names[k] + String.format(" (%.2f)", progress),
+                    body(slam.pattern(), slam.right(), slam.both(), progress, i, 0.5F), slamWings(slam.motion(), progress, i, side, false), eye, target,
+                    new ArrayList<>()));
+            }
+            shots.add(new Shot(slam.name() + ": tip's path, from above (white = impact)", body(slam.pattern(), slam.right(), slam.both(), i, i, 0.5F),
+                slamWings(slam.motion(), i, i, side, false), high, below, tipPath(slam.motion(), i, side)));
+        }
+        // The guard: closing by its amount (RinkakuBlockClient.amount), 0 to 1.
+        for (float amount : new float[] {0.1F, 0.3F, 0.5F, 0.7F, 0.85F, 1.0F}) {
+            shots.add(new Shot(String.format("Guard: closing (%.2f)", amount), new RigPose(), slamWings(WingRig.Motion.GUARD, amount, 0.4F, 1, false), eye,
+                target, new ArrayList<>()));
+        }
+        shots.add(new Shot("Guard: right tip's path, from above", new RigPose(), slamWings(WingRig.Motion.GUARD, 1.0F, 0.4F, 1, false), high, below,
+            tipPath(WingRig.Motion.GUARD, 1.0F, 1)));
+        sheet(file, "Ukaku's base form: the wing slams and the guard, key by key (WingRig + UkakuBody as the game poses them)", shots, 7, 300, 300);
+    }
+
+    /** 4.1.9: the whole string (all seven slams, each as soon as the one before ends) at 30 frames a second, from three quarters in front. */
+    static void slamsGif(File file) throws Exception {
+        // 4.1.11: from his side, a little in front and above: a wing lashed out ahead reads at its full length (from in front it comes at the camera).
+        double[] eye = {-17.0, 7.0, 9.5};
+        double[] target = {0.0, 2.0, 5.0};
+        List<BufferedImage> frames = new ArrayList<>();
+        for (Slam slam : SLAMS) {
+            int count = Math.round(slam.ticks() * 1.5F);
+            for (int f = 0; f < count; f++) {
+                float progress = f / (float)count;
+                Shot shot = new Shot(slam.name(), body(slam.pattern(), slam.right(), slam.both(), progress, slam.impact(), 0.5F),
+                    slamWings(slam.motion(), progress, slam.impact(), slam.right() ? 1 : -1, false), eye, target, new ArrayList<>());
+                BufferedImage frame = render(shot, 360, 360);
+                Graphics2D g = frame.createGraphics();
+                g.setColor(new Color(0xEDE3D6));
+                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+                g.drawString(slam.name(), 8, 18);
+                g.dispose();
+                frames.add(frame);
+            }
+        }
+        writeGif(file, frames, 3);
+    }
+
+    /** Frames as a looping GIF ({@code delay} hundredths of a second each). */
+    static void writeGif(File file, List<java.awt.image.BufferedImage> frames, int delay) throws Exception {
+        javax.imageio.ImageWriter writer = javax.imageio.ImageIO.getImageWritersByFormatName("gif").next();
+        try (javax.imageio.stream.ImageOutputStream out = javax.imageio.ImageIO.createImageOutputStream(file)) {
+            writer.setOutput(out);
+            writer.prepareWriteSequence(null);
+            for (int i = 0; i < frames.size(); i++) {
+                java.awt.image.BufferedImage rgb = new java.awt.image.BufferedImage(frames.get(i).getWidth(), frames.get(i).getHeight(),
+                    java.awt.image.BufferedImage.TYPE_INT_RGB);
+                rgb.getGraphics().drawImage(frames.get(i), 0, 0, null);
+                javax.imageio.ImageTypeSpecifier type = javax.imageio.ImageTypeSpecifier.createFromRenderedImage(rgb);
+                javax.imageio.metadata.IIOMetadata meta = writer.getDefaultImageMetadata(type, null);
+                String format = meta.getNativeMetadataFormatName();
+                javax.imageio.metadata.IIOMetadataNode root = (javax.imageio.metadata.IIOMetadataNode)meta.getAsTree(format);
+                javax.imageio.metadata.IIOMetadataNode control = new javax.imageio.metadata.IIOMetadataNode("GraphicControlExtension");
+                control.setAttribute("disposalMethod", "none");
+                control.setAttribute("userInputFlag", "FALSE");
+                control.setAttribute("transparentColorFlag", "FALSE");
+                control.setAttribute("delayTime", Integer.toString(delay));
+                control.setAttribute("transparentColorIndex", "0");
+                root.appendChild(control);
+                if (i == 0) {
+                    javax.imageio.metadata.IIOMetadataNode apps = new javax.imageio.metadata.IIOMetadataNode("ApplicationExtensions");
+                    javax.imageio.metadata.IIOMetadataNode app = new javax.imageio.metadata.IIOMetadataNode("ApplicationExtension");
+                    app.setAttribute("applicationID", "NETSCAPE");
+                    app.setAttribute("authenticationCode", "2.0");
+                    app.setUserObject(new byte[] {1, 0, 0});
+                    apps.appendChild(app);
+                    root.appendChild(apps);
+                }
+                meta.setFromTree(format, root);
+                writer.writeToSequence(new javax.imageio.IIOImage(rgb, null, meta), null);
+            }
+            writer.endWriteSequence();
+        }
+        System.out.println("wrote " + file + " (" + frames.size() + " frames)");
+    }
+
+    // ------------------------------------------------------------------ 4.1.54: Banjou's wing
+
+    /** Banjou's game texture (his skin, arms narrowed for the slim model). */
+    static BufferedImage banjouSkin() throws Exception {
+        return ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/banjou/banjou.png"));
+    }
+
+    /** A shot of Banjou: his skin on the slim arms, his wing shrunk and blue as the game draws it. */
+    static Shot banjouShot(String label, RigPose pose, WingRig.Input wings, double[] eye, double[] target, List<WingPreview.Tri> extra) throws Exception {
+        Shot shot = new Shot(label, pose, wings, eye, target, extra);
+        SKINS.put(shot, banjouSkin());
+        SLIM.add(shot);
+        SHRINK.put(shot, Double.parseDouble(System.getProperty("shrink", Float.toString(com.hex.kagune.control.npc.WingRules.SLAP_SCALE))));
+        TINT.put(shot, Integer.parseInt(System.getProperty("tint", Integer.toHexString(com.hex.kagune.control.npc.Persona.BANJOU.kaguneColour())), 16));
+        return shot;
+    }
+
+    /** His body {@code progress} through blow {@code slap}, as EtoFight.slap puts it on him (UkakuBody's pose at EtoFight.SLAP_BODY). */
+    static RigPose banjouBody(int slap, float progress) {
+        float amp = 0.85F; // EtoFight.SLAP_BODY
+        return body(com.hex.kagune.control.npc.WingRules.SLAP_PATTERNS[slap], true, false, progress, com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[slap],
+            (amp - 0.92F) / 0.16F);
+    }
+
+    /** His wing at rest (out, crystal), and Touka's beside it for its size, front, side, behind and three quarters. */
+    static void banjouSheet(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[][] eyes = {{0.0, 1.6, 6.0}, {6.0, 1.5, 0.4}, {0.0, 2.0, -6.0}, {4.2, 2.4, 4.6}};
+        String[] names = {"front", "his right side", "behind", "three quarters"};
+        double[] target = {0.0, 1.15, 0.0};
+        for (int k = 0; k < eyes.length; k++) {
+            shots.add(banjouShot("Banjou, wing out: " + names[k], new RigPose(), com.hex.kagune.control.npc.WingRules.banjou(1.0F, 1.3, 1.0F, false, 1.0F, -1,
+                0.0F), eyes[k], target, new ArrayList<>()));
+        }
+        for (int k = 0; k < eyes.length; k++) {
+            Shot touka = new Shot("Touka's wing (for its size): " + names[k], new RigPose(), com.hex.kagune.control.npc.WingRules.companion(1.0F, 1.3, 1.0F,
+                false, 0.0F, WingRig.FORWARD, 0.0F, 0.0F, 1.0F), eyes[k], target, new ArrayList<>());
+            SKINS.put(touka, banjouSkin());
+            SLIM.add(touka);
+            shots.add(touka);
+        }
+        sheet(file, "Banjou's one small blue wing (WingRules.banjou, shrunk as UkakuWingRenderer draws it) beside Touka's", shots, 4, 300, 320);
+    }
+
+    /** His string, blow by blow: the wind-up, on its way, the impact, just after, the way back, and the hand's path from above. */
+    static void banjouSlaps(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[] eye = {4.4, 2.6, 5.2};
+        double[] target = {0.2, 1.2, 0.5};
+        double[] high = {1.0, 7.5, 3.0};
+        double[] below = {0.2, 1.2, 0.4};
+        String[] names = {"Slap", "Wide swing", "Rising wing"};
+        for (int s = 0; s < com.hex.kagune.control.npc.WingRules.SLAPS.length; s++) {
+            float i = com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[s];
+            float[] keys = {0.15F, i - 0.14F, i - 0.05F, i, i + 0.1F, i + 0.3F};
+            String[] key = {"wind-up", "wound up", "on its way", "IMPACT", "just after", "way back"};
+            for (int k = 0; k < keys.length; k++) {
+                float progress = Math.max(0.0F, Math.min(1.0F, keys[k]));
+                shots.add(banjouShot((s + 1) + " " + names[s] + ": " + key[k], banjouBody(s, progress), com.hex.kagune.control.npc.WingRules.banjou(1.0F, 1.3,
+                    1.0F, false, 1.0F, s, progress), eye, target, new ArrayList<>()));
+            }
+            List<WingPreview.Tri> path = new ArrayList<>();
+            for (int n = 0; n <= 40; n++) {
+                float progress = n / 40.0F;
+                boolean hit = Math.abs(progress - i) < 0.5F / 40;
+                path.addAll(dot(com.hex.kagune.control.npc.WingRules.slapTip(s, progress), hit ? 0.06 : 0.03, hit ? 0xFFFFFFFF
+                    : progress <= i ? 0xFF4FA0FF : 0xFFFFC040));
+            }
+            shots.add(banjouShot((s + 1) + " " + names[s] + ": hand's path (white: impact)", banjouBody(s, i), com.hex.kagune.control.npc.WingRules.banjou(1.0F,
+                1.3, 1.0F, false, 1.0F, s, i), high, below, path));
+        }
+        sheet(file, "Banjou's string: his one small wing's slap, wide swing and rising wing (WingRules.SLAPS), his body as EtoFight.slap", shots,
+            7, 260, 300);
+    }
+
+    /** A grey stand-in for what he hits: a body's box ({@code w} wide, {@code h} tall) standing {@code at} blocks in front of him. */
+    static List<WingPreview.Tri> dummy(double at, double w, double h) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        double x0 = -w / 2, x1 = w / 2, z0 = at - w / 2, z1 = at + w / 2;
+        double[][][] faces = {
+            {{x0, 0, z0}, {x1, 0, z0}, {x1, h, z0}, {x0, h, z0}}, {{x1, 0, z1}, {x0, 0, z1}, {x0, h, z1}, {x1, h, z1}},
+            {{x0, 0, z1}, {x0, 0, z0}, {x0, h, z0}, {x0, h, z1}}, {{x1, 0, z0}, {x1, 0, z1}, {x1, h, z1}, {x1, h, z0}},
+            {{x0, h, z0}, {x1, h, z0}, {x1, h, z1}, {x0, h, z1}}};
+        double[][] normals = {{0, 0, -1}, {0, 0, 1}, {-1, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        int grey = 0xFF7A7F86;
+        for (int f = 0; f < faces.length; f++) {
+            double[][] q = faces[f];
+            out.add(new WingPreview.Tri(new double[][] {q[0], q[1], q[2]}, new int[] {grey, grey, grey}, normals[f], true));
+            out.add(new WingPreview.Tri(new double[][] {q[0], q[2], q[3]}, new int[] {grey, grey, grey}, normals[f], true));
+        }
+        return out;
+    }
+
+    /** Each blow at its impact from in front, his right side and above, a stand-in body at slapping distance (its near face 0.6 off him). */
+    static void banjouImpacts(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[][] eyes = {{-2.2, 1.7, 7.5}, {7.0, 1.6, 0.9}, {0.4, 8.0, 1.4}};
+        double[][] targets = {{0.0, 1.1, 0.6}, {0.0, 1.1, 0.9}, {0.0, 1.0, 0.9}};
+        String[] views = {"in front (left of him)", "his right side", "above"};
+        String[] names = {"Slap", "Wide swing", "Rising wing"};
+        for (int s = 0; s < com.hex.kagune.control.npc.WingRules.SLAPS.length; s++) {
+            float i = com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[s];
+            for (int k = 0; k < eyes.length; k++) {
+                shots.add(banjouShot((s + 1) + " " + names[s] + " at the impact, " + views[k], banjouBody(s, i), com.hex.kagune.control.npc.WingRules.banjou(1.0F,
+                    1.3, 1.0F, false, 1.0F, s, i), eyes[k], targets[k], dummy(0.6 + 0.3, 0.6, 1.95)));
+            }
+        }
+        sheet(file, "Banjou's blows at the impact, a body at slapping distance (scale " + System.getProperty("shrink", "" + com.hex.kagune.control.npc.WingRules.SLAP_SCALE)
+            + ")", shots, 3, 360, 300);
+    }
+
+    /** His whole string, each blow as soon as the one before ends, then his rest, at 30 frames a second from in front and to his right. */
+    static void banjouGif(File file) throws Exception {
+        double[] eye = {3.6, 2.2, 5.0};
+        double[] target = {0.2, 1.2, 0.5};
+        List<BufferedImage> frames = new ArrayList<>();
+        for (int s = 0; s < com.hex.kagune.control.npc.WingRules.SLAPS.length; s++) {
+            int count = Math.round(com.hex.kagune.control.npc.WingRules.SLAP_TICKS[s] * 1.5F);
+            for (int f = 0; f < count; f++) {
+                float progress = f / (float)count;
+                BufferedImage frame = render(banjouShot("", banjouBody(s, progress), com.hex.kagune.control.npc.WingRules.banjou(1.0F, 1.3 + f / 30.0, 1.0F,
+                    false, 1.0F, s, progress), eye, target, new ArrayList<>()), 360, 360);
+                Graphics2D g = frame.createGraphics();
+                g.setColor(new Color(0xEDE3D6));
+                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+                g.drawString(com.hex.kagune.control.npc.WingRules.SLAPS[s].name(), 8, 18);
+                g.dispose();
+                frames.add(frame);
+            }
+        }
+        writeGif(file, frames, 3);
+    }
+
+    /** 4.1.13: every slam at its impact, from straight in front, from his side and from above (where a hand goes, plainly). */
+    static void impactsSheet(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[][] eyes = {{0.0, 2.0, 11.0}, {11.0, 2.0, 1.5}, {0.6, 13.0, 2.5}};
+        double[] target = {0.0, 1.3, 1.5};
+        String[] names = {"front", "side", "above"};
+        for (Slam slam : new Slam[] {SLAMS[0], SLAMS[2], SLAMS[3], SLAMS[4], SLAMS[6]}) {
+            for (int k = 0; k < eyes.length; k++) {
+                shots.add(new Shot(slam.name().substring(2) + ", " + names[k], body(slam.pattern(), slam.right(), slam.both(), slam.impact(), slam.impact(), 0.5F),
+                    slamWings(slam.motion(), slam.impact(), slam.impact(), slam.right() ? 1 : -1, false), eyes[k], target, new ArrayList<>()));
+            }
+        }
+        sheet(file, "Ukaku's slams at the impact: front, side, above", shots, 3, 380, 300);
+    }
+
+    /**
+     * 4.1.13: an outfit's coat on legs in a stride, a tucked jump and three kicks, from in front, the side and three quarters: its cubes on
+     * the posed body as OutfitLayer draws them (each bone's own turn and bend; 4.1.14: each half of its tails on its own leg). Flat colour
+     * from the outfit's own texture at each face's middle.
+     */
+    static void coatSheet(File file, String id) throws Exception {
+        com.hex.kagune.control.outfit.OutfitModels.Model model;
+        try (java.io.InputStream in = new java.io.FileInputStream("src/main/resources" + com.hex.kagune.control.outfit.OutfitModels.RESOURCE)) {
+            model = com.hex.kagune.control.outfit.OutfitModels.read(in).get(id);
+        }
+        BufferedImage texture = ImageIO.read(new File("art/outfits/" + id + ".png"));
+        String[] names = {"standing", "running stride", "jump (legs tucked)", "front kick", "high kick", "side kick"};
+        float[][] legs = {{0, 0, 0, 0, 0}, {-0.7F, 0.6F, 0.2F, 0.9F, 0}, {-1.1F, -0.6F, 1.7F, 1.2F, 0}, {-1.45F, 0.15F, 0.15F, 0.3F, 0},
+            {-2.0F, 0.25F, 0.0F, 0.4F, 0}, {-0.3F, 0.1F, 0.1F, 0.2F, 1.2F}};
+        double[][] eyes = {{0.0, 1.2, 5.0}, {5.0, 1.2, 0.3}, {3.5, 1.6, 3.5}};
+        WingRig.Input none = new WingRig.Input(WingForm.TWIN, 300, 0.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1, 1, false);
+        List<Shot> shots = new ArrayList<>();
+        for (int i = 0; i < names.length; i++) {
+            RigPose p = new RigPose();
+            p.rightLegX = legs[i][0];
+            p.leftLegX = legs[i][1];
+            p.rightKnee = legs[i][2];
+            p.leftKnee = legs[i][3];
+            p.rightLegZ = legs[i][4];
+            p.settle(1.0F);
+            for (double[] eye : eyes) {
+                shots.add(new Shot(names[i], p, none, eye, new double[] {0, 0.9, 0}, outfit(p, model, texture)));
+            }
+        }
+        sheet(file, "The " + id + " coat: each half of its tails attached to its own leg (front, side, three quarters)", shots, 3, 300, 300);
+    }
+
+    /**
+     * 4.1.17 (the owner: "whenever you walk, like, it opens like a fucking, like a gap in every armor that we got"): a coat close up through a
+     * walk (vanilla's leg swing at a walk and a run, its two ends and in between), from in front and a little above (as the owner saw it),
+     * the side and three quarters.
+     */
+    static void coatWalk(File file, String id) throws Exception {
+        com.hex.kagune.control.outfit.OutfitModels.Model model;
+        try (java.io.InputStream in = new java.io.FileInputStream("src/main/resources" + com.hex.kagune.control.outfit.OutfitModels.RESOURCE)) {
+            model = com.hex.kagune.control.outfit.OutfitModels.read(in).get(id);
+        }
+        BufferedImage texture = ImageIO.read(new File("art/outfits/" + id + ".png"));
+        double[][] eyes = {{0.0, 1.35, 2.6}, {2.7, 1.0, 0.2}, {1.9, 1.3, 1.9}};
+        WingRig.Input none = new WingRig.Input(WingForm.TWIN, 300, 0.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1, 1, false);
+        List<Shot> shots = new ArrayList<>();
+        // A walk swings a leg about 0.55 radians each way (vanilla's 1.4 x cos x about 0.4); a run about 1.0.
+        float[][] legs = {{-0.55F, 0.55F}, {-0.3F, 0.3F}, {0.55F, -0.55F}, {-1.0F, 1.0F}};
+        String[] names = {"walk: right leg forward", "walk: half way", "walk: left leg forward", "run: full stride"};
+        for (int i = 0; i < legs.length; i++) {
+            RigPose p = new RigPose();
+            p.rightLegX = legs[i][0];
+            p.leftLegX = legs[i][1];
+            p.settle(1.0F);
+            for (double[] eye : eyes) {
+                shots.add(new Shot(names[i], p, none, eye, new double[] {0, 0.75, 0}, outfit(p, model, texture)));
+            }
+        }
+        sheet(file, "The " + id + " coat through a walk (front from a little above, side, three quarters)", shots, 3, 360, 360);
+    }
+
+    /** 4.1.13: {@code model}'s cubes on {@code pose} (rig space, as {@link #body} mirrors the body), its tails on the legs. */
+    static List<WingPreview.Tri> outfit(RigPose pose, com.hex.kagune.control.outfit.OutfitModels.Model model, BufferedImage texture) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        PoseRender.Part body = PoseRender.part(pose, "body", 0, 0, 0, 0, 0, 0);
+        PoseRender.Part torso = PoseRender.part(pose, "torso", 0, 0, 0, 0, 0, 0);
+        torso.bendAxis += body.bendAxis;
+        torso.bend += body.bend;
+        PoseRender.Part head = PoseRender.part(pose, "head", 0, 0, 0, 0, 0, 0);
+        PoseRender.Part rightArm = PoseRender.part(pose, "rightArm", -5, 2, 0, 0, 0, PoseRender.BOB);
+        PoseRender.Part leftArm = PoseRender.part(pose, "leftArm", 5, 2, 0, 0, 0, -PoseRender.BOB);
+        PoseRender.Part rightLeg = PoseRender.part(pose, "rightLeg", -1.9, 12, 0.1, 0, 0, 0);
+        PoseRender.Part leftLeg = PoseRender.part(pose, "leftLeg", 1.9, 12, 0.1, 0, 0, 0);
+        double[] upperAxis = {Math.cos(-body.bendAxis), 0, Math.sin(-body.bendAxis)};
+        double upperBend = body.bend;
+        java.util.function.UnaryOperator<double[]> upper = q -> Math.abs(upperBend) < 1.0E-4 ? q
+            : PoseRender.add(new double[] {0, 6, 0}, PoseRender.rotate(PoseRender.sub(q, new double[] {0, 6, 0}), upperAxis, upperBend));
+        PoseRender.Cube leg = new PoseRender.Cube(new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, null);
+        Object[][] bones = {
+            {com.hex.kagune.control.outfit.OutfitModels.HEAD, head, new PoseRender.Cube(new double[] {-4, -8, -4}, new double[] {4, 0, 4}, 0, null), true},
+            {com.hex.kagune.control.outfit.OutfitModels.BODY, torso, new PoseRender.Cube(new double[] {-4, 0, -2}, new double[] {4, 12, 2}, -1, null), false},
+            {com.hex.kagune.control.outfit.OutfitModels.RIGHT_ARM, rightArm, new PoseRender.Cube(new double[] {-3, -2, -2}, new double[] {1, 10, 2}, 1, null), true},
+            {com.hex.kagune.control.outfit.OutfitModels.LEFT_ARM, leftArm, new PoseRender.Cube(new double[] {-1, -2, -2}, new double[] {3, 10, 2}, 1, null), true},
+            {com.hex.kagune.control.outfit.OutfitModels.RIGHT_LEG, rightLeg, leg, false}, {com.hex.kagune.control.outfit.OutfitModels.LEFT_LEG, leftLeg, leg, false},
+            // 4.1.14: the coat's tails on the legs, as OutfitLayer draws them (each half its own leg's turn and bend).
+            {com.hex.kagune.control.outfit.OutfitModels.RIGHT_LEG_COAT, rightLeg, leg, false}, {com.hex.kagune.control.outfit.OutfitModels.LEFT_LEG_COAT, leftLeg, leg, false}};
+        for (Object[] b : bones) {
+            PoseRender.Part part = (PoseRender.Part)b[1];
+            for (com.hex.kagune.control.outfit.OutfitModels.Cube cube : model.on((Integer)b[0], -1)) {
+                for (com.hex.kagune.control.outfit.OutfitModels.Face face : cube.faces()) {
+                    // The four corners, then (4.1.89) a point a quarter pixel out along the face's own normal from its middle: the world
+                    // flips handedness, so the corners' winding alone gave every face an inward normal (slopes and tops lit as if facing away).
+                    double[][] w = new double[5][];
+                    float[] fc = face.corners();
+                    float[] fn = face.normal();
+                    for (int k = 0; k < 5; k++) {
+                        double[] q = k < 4 ? new double[] {fc[k * 3], fc[k * 3 + 1], fc[k * 3 + 2]}
+                            : new double[] {(fc[0] + fc[3] + fc[6] + fc[9]) / 4 + fn[0] * 0.25, (fc[1] + fc[4] + fc[7] + fc[10]) / 4 + fn[1] * 0.25,
+                                (fc[2] + fc[5] + fc[8] + fc[11]) / 4 + fn[2] * 0.25};
+                        q = PoseRender.partPoint(PoseRender.bendPoint(q, (PoseRender.Cube)b[2], part.bendAxis, part.bend), part);
+                        if ((Boolean)b[3]) {
+                            q = upper.apply(q);
+                        }
+                        double[] at = PoseRender.world(pose, q);
+                        w[k] = new double[] {-at[0], at[1], at[2]};
+                    }
+                    outfitFace(out, w, face, texture);
+                }
+            }
+        }
+        return out;
+    }
+
+    /** 4.1.13: one outfit face as two flat triangles, coloured from its texture at its middle (none where the texture is clear). */
+    static void outfitFace(List<WingPreview.Tri> out, double[][] c, com.hex.kagune.control.outfit.OutfitModels.Face face, BufferedImage texture) {
+        float u = 0;
+        float v = 0;
+        for (int k = 0; k < 4; k++) {
+            u += face.uvs()[k * 2] / 4;
+            v += face.uvs()[k * 2 + 1] / 4;
+        }
+        int argb = texture.getRGB(Math.max(0, Math.min(texture.getWidth() - 1, (int)(u * texture.getWidth()))),
+            Math.max(0, Math.min(texture.getHeight() - 1, (int)(v * texture.getHeight()))));
+        if ((argb >>> 24) < 16) {
+            return;
+        }
+        int colour = argb | 0xFF000000;
+        double[] n = PoseRender.norm(PoseRender.cross(PoseRender.sub(c[1], c[0]), PoseRender.sub(c[2], c[0])));
+        if (c.length > 4) {
+            // 4.1.89: turned to the side the face's own normal points (c[4]: a point out along it from the face's middle), as the game lights it.
+            double[] mid = {(c[0][0] + c[1][0] + c[2][0] + c[3][0]) / 4, (c[0][1] + c[1][1] + c[2][1] + c[3][1]) / 4, (c[0][2] + c[1][2] + c[2][2] + c[3][2]) / 4};
+            if (PoseRender.dot(n, PoseRender.sub(c[4], mid)) < 0.0) {
+                n = new double[] {-n[0], -n[1], -n[2]};
+            }
+        }
+        out.add(new WingPreview.Tri(new double[][] {c[0], c[1], c[2]}, new int[] {colour, colour, colour}, n, true));
+        out.add(new WingPreview.Tri(new double[][] {c[0], c[2], c[3]}, new int[] {colour, colour, colour}, n, true));
+    }
+
+    /** 4.1.13: the wing guard closed, from in front, three quarters, the side and above, and closing by its amount from in front. */
+    static void guardSheet(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[] target = {0.0, 1.3, 0.6};
+        double[][] eyes = {{0.0, 1.6, 7.5}, {5.0, 2.6, 5.5}, {7.5, 1.6, 0.6}, {0.6, 9.0, 1.5}};
+        String[] names = {"from in front", "three quarters", "from his side", "from above"};
+        for (int k = 0; k < eyes.length; k++) {
+            shots.add(new Shot("Guard closed, " + names[k], new RigPose(), slamWings(WingRig.Motion.GUARD, 1.0F, 0.4F, 1, false), eyes[k], target, new ArrayList<>()));
+        }
+        for (float amount : new float[] {0.2F, 0.5F, 0.8F, 1.0F}) {
+            shots.add(new Shot(String.format("Closing (%.1f), from in front", amount), new RigPose(), slamWings(WingRig.Motion.GUARD, amount, 0.4F, 1, false),
+                eyes[0], target, new ArrayList<>()));
+        }
+        sheet(file, "Ukaku's wing guard: the wings clamped together in front of him", shots, 4, 340, 340);
+    }
+
     static List<WingPreview.Tri> shardAhead(double z, double y, double size) {
         return shard(new double[] {0.0, y - 0.9, z + 1.5}, WingRig.FORWARD, size, 1.0, 4, new double[] {4.6, 2.6, 3.4});
     }
@@ -2128,6 +2679,16 @@ public final class ArtPreview {
         return out;
     }
 
+    /** 4.1.13: {@code p} carried by {@code carry} (BodyFrame.carry's {A, b}; null: as it is), a point or (not {@code point}) a direction. */
+    static double[] carried(double[] carry, double[] p, boolean point) {
+        if (carry == null) {
+            return p;
+        }
+        double[] a = carry;
+        return new double[] {a[0] * p[0] + a[1] * p[1] + a[2] * p[2] + (point ? a[9] : 0.0), a[3] * p[0] + a[4] * p[1] + a[5] * p[2] + (point ? a[10] : 0.0),
+            a[6] * p[0] + a[7] * p[1] + a[8] * p[2] + (point ? a[11] : 0.0)};
+    }
+
     static BufferedImage render(Shot shot, int w, int h) {
         WingPreview.Panel panel = new WingPreview.Panel(w, h, shot.eye(), shot.target(), fov > 0.0 ? fov : shot.pose() == null ? 70.0 : 40.0, sky);
         panel.dim = dim;
@@ -2138,14 +2699,23 @@ public final class ArtPreview {
         PoseRender.skin = null;
         PoseRender.slim = false;
         PoseRender.stiff = false;
+        // 4.1.13: the wings ride his torso as the game draws them (UkakuWingRenderer: BodyFrame.carry), leaning and turning with it.
+        double[] carry = shot.pose() == null || shot.wings().form().kakuja() ? null
+            : com.hex.kagune.control.client.animation.BodyFrame.carry(shot.pose(), "torso");
+        // 4.1.54: drawn smaller about its root as the game draws Banjou's (WingRules.shrunk), in his colour (KaguneTint.recolour).
+        Double shrink = SHRINK.get(shot);
+        if (shrink != null) {
+            carry = com.hex.kagune.control.npc.WingRules.shrunk(carry, shrink);
+        }
+        Integer tint = TINT.get(shot);
         for (WingRig.Quad q : WingRig.build(shot.wings(), shot.eye())) {
             float[] v = q.xyz();
-            double[] n = {q.nx(), q.ny(), q.nz()};
+            double[] n = carried(carry, new double[] {q.nx(), q.ny(), q.nz()}, false);
             double[][] c = new double[4][];
             for (int k = 0; k < 4; k++) {
-                c[k] = new double[] {v[k * 3], v[k * 3 + 1], v[k * 3 + 2]};
+                c[k] = carried(carry, new double[] {v[k * 3], v[k * 3 + 1], v[k * 3 + 2]}, true);
             }
-            int[] a = q.argb();
+            int[] a = tint == null ? q.argb() : com.hex.kagune.control.KaguneTint.recolour(q.argb(), tint);
             tris.add(new WingPreview.Tri(new double[][] {c[0], c[1], c[2]}, new int[] {a[0], a[1], a[2]}, n, false));
             tris.add(new WingPreview.Tri(new double[][] {c[0], c[2], c[3]}, new int[] {a[0], a[2], a[3]}, n, false));
         }
@@ -2184,6 +2754,10 @@ public final class ArtPreview {
         int[] pixels = PoseRender.USER_SKIN.getRGB(0, 0, 64, 64, null, 0, 64);
         return com.hex.kagune.control.ukaku.KakujaModel.halfMaskShell(eyes(), com.hex.kagune.control.kakugan.KakuganSkin.covered(pixels, 64), true, false);
     }
+
+    /** 4.1.54: shots whose wing is drawn smaller about its root (Banjou's: WingRules.shrunk), and in another colour (KaguneTint). */
+    static final java.util.Map<Shot, Double> SHRINK = new java.util.IdentityHashMap<>();
+    static final java.util.Map<Shot, Integer> TINT = new java.util.IdentityHashMap<>();
 
     /** 7.0.2: the skin a shot's body wears (a ghoul NPC's vanilla skin); none, the stand-in suit. */
     static final java.util.Map<Shot, java.awt.image.BufferedImage> SKINS = new java.util.IdentityHashMap<>();
@@ -2979,6 +3553,44 @@ public final class ArtPreview {
         }
         System.out.println("war: " + quads + " quads");
         sheet(file, "War, the One-Eyed King (final evolution, evil path): smooth living kakuja after the reference sheet", shots, 3, 600, 520);
+    }
+
+    /** 1.3.66: War's whole form with the rinkaku in {@code motion}. */
+    static List<WingPreview.Tri> warTris(RigPose pose, double time, double grow, com.hex.kagune.control.king.WarModel.Motion motion) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        String[] names = {"head", "torso", "rightArm", "leftArm", "rightLeg", "leftLeg"};
+        com.hex.kagune.control.king.WarModel.Part[] parts = com.hex.kagune.control.king.WarModel.Part.values();
+        for (int i = 0; i < parts.length; i++) {
+            com.hex.kagune.control.king.WarModel.Part part = parts[i];
+            String name = names[i];
+            out.addAll(placedLit(sink -> com.hex.kagune.control.king.WarModel.build(sink, part, time, grow, 0.0, motion), q -> onPart(pose, name, q)));
+        }
+        return out;
+    }
+
+    /**
+     * 1.3.66: War's rinkaku alive (the owner: "like unmoving branches of a tree"): from behind, a second apart as they sway; then running
+     * (streaming back), turning (left behind), rising and falling, and in a frenzy.
+     */
+    static void warAlive(File file) throws Exception {
+        RigPose still = new RigPose();
+        double[] back = {-4.2, 2.1, -5.6};
+        double[] side = {-6.6, 1.6, 0.4};
+        double[] look = {0.0, 1.15, 0.0};
+        com.hex.kagune.control.king.WarModel.Motion rest = com.hex.kagune.control.king.WarModel.Motion.STILL;
+        List<Shot> shots = new ArrayList<>();
+        for (int k = 0; k < 6; k++) {
+            double t = 400.0 + k * 20.0;
+            shots.add(new Shot("standing, t+" + k + "s", still, NO_WINGS, back, look, warTris(still, t, 1.0, rest)));
+        }
+        Object[][] moving = {{"running (from the side)", rest.drifting(0.0, 1.0, 0.0), side}, {"turning right", rest.drifting(0.5, 0.0, 0.0), back},
+            {"rising (a jump)", rest.drifting(0.0, 0.0, 0.45), side}, {"falling", rest.drifting(0.0, 0.0, -0.45), side},
+            {"frenzy (his M1)", new com.hex.kagune.control.king.WarModel.Motion(0.0, 0.0, 0.1, 0.9), back},
+            {"standing (from the side)", rest, side}};
+        for (Object[] m : moving) {
+            shots.add(new Shot((String)m[0], still, NO_WINGS, (double[])m[2], look, warTris(still, 460.0, 1.0, (com.hex.kagune.control.king.WarModel.Motion)m[1])));
+        }
+        sheet(file, "1.3.66: War's rinkaku alive: swaying as the original tentacles do, and following him", shots, 6, 360, 400);
     }
 
     /** War as the game draws it at {@code night} (0..1): the plates dimmed, the eye's halo, and the bloom sized for {@code distance}. */
@@ -3809,6 +4421,37 @@ public final class ArtPreview {
         sheet(file, "Rebirth's flesh men: Steve's shape (8x8x8 head, 8x12x4 body, 4x12x4 limbs), the flesh and the arm blades kept", shots, 4, 420, 460);
     }
 
+    /** 3.2.7: Aegis of :Re's three bulwarks round him at rest from every side, and one swung out to meet a blow. */
+    static void aegis(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        RigPose[] posed = new RigPose[1];
+        double[] chest = {0.0, 1.25, 0.0};
+        double[] ahead = {0.0, 0.0, 1.0};
+        double[] right = {-1.0, 0.0, 0.0};
+        double[][] eyes = {{0.0, 1.7, 5.0}, {-3.6, 2.6, 4.6}, {-5.0, 1.6, 0.2}, {2.5, 2.4, -4.6}, {0.6, 6.0, 1.6}, {4.4, 2.8, 5.4}};
+        String[] labels = {"front", "three quarters", "his right side", "behind", "from above", "the right one meeting a blow"};
+        for (int k = 0; k < eyes.length; k++) {
+            List<WingPreview.Tri> tris = new ArrayList<>(peaceIn(com.hex.kagune.control.king.KingMove.NONE, 0, 20.0, null, 0.0, posed));
+            boolean meet = k == eyes.length - 1;
+            tris.addAll(game(sink -> {
+                for (int i = 0; i < com.hex.kagune.control.king.PeaceRules.SHIELDS; i++) {
+                    double[] anchor = com.hex.kagune.control.king.PeaceFxModel.shieldRest(i, chest, ahead, right, 40.0);
+                    if (meet && i == com.hex.kagune.control.king.PeaceRules.SHIELD_RIGHT) {
+                        double[] from = unit3(new double[] {-2.0, 0.3, 2.0});
+                        anchor = new double[] {chest[0] + from[0] * 1.35, chest[1] + from[1] * 1.35, chest[2] + from[2] * 1.35};
+                    }
+                    com.hex.kagune.control.king.PeaceFxModel.aegisShield(sink, i, chest, ahead, right, anchor, 1.0, 40.0, true, 8);
+                }
+            }));
+            if (meet) {
+                tris.addAll(dummy(new double[] {2.4, 0.0, 2.4}, 0.6, 1.8, 0xFF2E4A2A));
+            }
+            tris.addAll(field(0.0, 8.0, null, 0.0, 0.0));
+            shots.add(new Shot("J Aegis: " + labels[k], posed[0], NO_WINGS, eyes[k], new double[] {0.0, 1.35, 0.0}, tris));
+        }
+        sheet(file, "Aegis of :Re (3.2.7): bulwarks grown on the tendrils", shots, 3, 640, 560);
+    }
+
     static void peaceRework(File file) throws Exception {
         List<Shot> shots = new ArrayList<>();
         RigPose[] posed = new RigPose[1];
@@ -4056,6 +4699,99 @@ public final class ArtPreview {
      * rinkaku, on the body as posed, never the body itself): from his eyes, a 70 degree lens, looking ahead and down, at rest, at work
      * and running.
      */
+    /**
+     * 3.2.8: War's Spire Wave (B) from his own eyes, as the game draws it in first person (no body): before (3.2.7: the centipedes round
+     * the third-person body's arm, the mass bent back to its hand) and now (the left arm in the hand pass, SpireArm's placement: the arm
+     * in a stand-in skin box, War's sleeve on it, the centipedes round it; the mass straight on from where it is sent).
+     */
+    static void spireFirstPerson(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[] eye = {0.0, 1.62, 0.0};
+        double[] ahead = {0.0, 1.45, 6.0};
+        double[] look = unit3(new double[] {ahead[0] - eye[0], ahead[1] - eye[1], ahead[2] - eye[2]});
+        double[] right = unit3(cross3(new double[] {0.0, 1.0, 0.0}, look));
+        double[] up = cross3(look, right);
+        com.hex.kagune.control.king.KingMove aim = com.hex.kagune.control.king.KingMove.SPIRE_AIM;
+        com.hex.kagune.control.king.KingMove send = com.hex.kagune.control.king.KingMove.SPIRE_SEND;
+        double charge = 1.0;
+        double reach = com.hex.kagune.control.king.WarRules.spireReach(charge);
+        double size = com.hex.kagune.control.king.WarRules.spireSize(charge);
+        double speed = com.hex.kagune.control.king.WarRules.spireSpeed(charge);
+        int armsN = com.hex.kagune.control.king.WarRules.spireArms(charge);
+        int arrive = com.hex.kagune.control.king.WarRules.spireArrive(reach, speed);
+        int back = com.hex.kagune.control.king.WarRules.spireTicks(reach, speed);
+        double[] dir = {0.0, 0.0, 1.0};
+        double[] from = {eye[0] - 0.3, eye[1] - 0.45, eye[2] + 0.7};
+        // {held (B down) or let go, age}
+        double[][] beats = {{1, 6.0}, {1, 30.0}, {1, 60.0}, {0, 3.0}, {0, 9.0}};
+        for (int row = 0; row < 2; row++) {
+            boolean now = row == 1;
+            for (double[] beat : beats) {
+                boolean held = beat[0] == 1;
+                double age = beat[1];
+                double t = 340.0 + age;
+                List<WingPreview.Tri> tris = new ArrayList<>();
+                if (!now) {
+                    RigPose pose = warHeld(held ? aim : send, 0, age, -1, t, false);
+                    double[] elbow = onPart(pose, "leftArm", com.hex.kagune.control.king.WarHoldModel.ELBOW);
+                    double[] hand = onPart(pose, "leftArm", com.hex.kagune.control.king.WarHoldModel.HAND);
+                    if (held) {
+                        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarHoldModel.draw(sink,
+                            com.hex.kagune.control.king.WarHoldModel.coils(elbow, hand, age, t), true), q -> q));
+                    } else {
+                        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarHoldModel.draw(sink,
+                            com.hex.kagune.control.king.WarHoldModel.mass(from, dir, hand, reach, size, speed, charge, armsN, 5, age, t), true), q -> q));
+                    }
+                } else {
+                    double c = held ? com.hex.kagune.control.king.WarRules.spireCharge(age) : 1.0;
+                    double thrust = held ? 0.0 : com.hex.kagune.control.king.SpireArm.thrust(age, arrive, back);
+                    List<com.hex.kagune.control.king.SpireArm.Step> place = com.hex.kagune.control.king.SpireArm.place(c, thrust);
+                    List<com.hex.kagune.control.king.SpireArm.Step> atShoulder = new ArrayList<>(place);
+                    atShoulder.addAll(com.hex.kagune.control.king.SpireArm.shoulder());
+                    List<com.hex.kagune.control.king.SpireArm.Step> coilFrame = com.hex.kagune.control.king.SpireArm.coilFrame(c, thrust);
+                    // camera space (x right, y up, -z ahead) into this world
+                    java.util.function.Function<double[], double[]> cam = v -> new double[] {eye[0] + right[0] * v[0] + up[0] * v[1] - look[0] * v[2],
+                        eye[1] + right[1] * v[0] + up[1] * v[1] - look[1] * v[2], eye[2] + right[2] * v[0] + up[2] * v[1] - look[2] * v[2]};
+                    // the arm in its skin (vanilla's box: 4 x 12 x 4 pixels from the pivot), a stand-in colour
+                    tris.addAll(placedLit(sink -> box(sink, new double[] {-1.0 / 16.0, -2.0 / 16.0, -2.0 / 16.0}, new double[] {3.0 / 16.0, 10.0 / 16.0, 2.0 / 16.0},
+                        0xFFC89A74), q -> cam.apply(com.hex.kagune.control.king.SpireArm.apply(atShoulder, q))));
+                    tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarModel.build(sink, com.hex.kagune.control.king.WarModel.Part.LEFT_ARM, t, 1.0, 0.0,
+                        com.hex.kagune.control.king.WarModel.Motion.STILL, null), q -> cam.apply(com.hex.kagune.control.king.SpireArm.apply(atShoulder,
+                        new double[] {q[0] / 16.0, q[1] / 16.0, q[2] / 16.0}))));
+                    if (held) {
+                        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarHoldModel.draw(sink, com.hex.kagune.control.king.WarHoldModel.coils(
+                            com.hex.kagune.control.king.SpireArm.elbow(), com.hex.kagune.control.king.SpireArm.hand(), age, t,
+                            com.hex.kagune.control.king.SpireArm.REACH, new double[] {0.0, 1.0, 0.0}, com.hex.kagune.control.king.SpireArm.THICK), true),
+                            q -> cam.apply(com.hex.kagune.control.king.SpireArm.apply(coilFrame, q))));
+                    } else {
+                        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarHoldModel.draw(sink,
+                            com.hex.kagune.control.king.WarHoldModel.mass(from, dir, from, reach, size, speed, charge, armsN, 5, age, t,
+                                com.hex.kagune.control.king.SpireArm.NEAR), true), q -> q));
+                    }
+                }
+                tris.addAll(field(0.0, 30.0, null, 0.0, 0.0));
+                String what = held ? String.format(java.util.Locale.ROOT, "B held, %.0f%% charged", 100.0 * com.hex.kagune.control.king.WarRules.spireCharge(age))
+                    : String.format(java.util.Locale.ROOT, "let go, %.0f t", age);
+                shots.add(new Shot((now ? "now: " : "3.2.7: ") + what, null, NO_WINGS, eye, ahead, seenFrom(tris, eye, 0.05)));
+            }
+        }
+        sheet(file, "3.2.8: War's Spire Wave in first person (top: before; bottom: now)", shots, 5, 400, 280);
+    }
+
+    /** An axis-aligned box from {@code lo} to {@code hi}, one colour, its faces lit out from its middle. */
+    static void box(com.hex.kagune.control.ukaku.UkakuModel.Sink sink, double[] lo, double[] hi, int colour) {
+        double[][] c = new double[8][];
+        for (int i = 0; i < 8; i++) {
+            c[i] = new double[] {(i & 1) == 0 ? lo[0] : hi[0], (i & 2) == 0 ? lo[1] : hi[1], (i & 4) == 0 ? lo[2] : hi[2]};
+        }
+        int[][] faces = {{0, 2, 6, 4}, {1, 5, 7, 3}, {0, 4, 5, 1}, {2, 3, 7, 6}, {0, 1, 3, 2}, {4, 6, 7, 5}};
+        double[][] normals = {{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1.0E-4, 0}, {0, 0, -1}, {0, 0, 1}};
+        for (int f = 0; f < 6; f++) {
+            int[] q = faces[f];
+            sink.quad(c[q[0]], c[q[1]], c[q[2]], c[q[3]], normals[f], colour, colour, colour, colour);
+        }
+    }
+
     static void kingFirstPerson(File file) throws Exception {
         List<Shot> shots = new ArrayList<>();
         double[] eye = {0.0, 1.62, 0.0};

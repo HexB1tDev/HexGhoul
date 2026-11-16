@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:dried_kelp"
+    },
+    {
+      "item": "minecraft:cod"
+    },
+    {
+      "item": "hexkagune:human_mince"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:tide_broth",
+    "count": 1
+  }
+}

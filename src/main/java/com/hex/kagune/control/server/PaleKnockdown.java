@@ -44,6 +44,11 @@ public final class PaleKnockdown {
     private PaleKnockdown() {
     }
 
+    /** 4.1.74: {@code body} no longer down (the White Reaper's end takes everything off him). */
+    static void clear(LivingEntity body) {
+        DOWN.remove(body.m_19879_());
+    }
+
     /** {@code body} was kicked off its feet now. */
     static void launched(LivingEntity body, long now) {
         launched(body, now, PaleRules.KICK_DOWN_TICKS, false);

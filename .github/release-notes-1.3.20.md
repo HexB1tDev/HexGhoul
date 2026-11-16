@@ -1,0 +1,8 @@
+## 1.3.20 (HexGhoul): moments with your kids: hugs, head pats, high fives, tickles, peekaboo, tosses, airplane spins, shoulder rides (testing)
+HexKagune 1.3.20 for Forge 1.20.1. Install on client and server (**protocol 62**: update both). Testing build: compiled, tests pass, not tried in game.
+
+- **A Play page** in your child's talk ("Let's play!"): a hug, a head pat, a high five, tickles, peekaboo, a toss in the air (three throws and catches), an airplane spin, and "Up on my shoulders!" (toddlers and children ride there as you walk; "Down you get." or Shift + right-click to set them down). Each fits its age: a teen gets a hug, a pat, a high five; a baby a pat, tickles, peekaboo, a toss.
+- **Both bodies animated:** you bend down on your knees to a little one, your arms round it, your hand on its head, hands over your face then "boo!", your arms up throwing it, your whole body turning as you spin it; it runs into your arms, beams up at you, squirms, squeals and claps, flies with its arms out like wings.
+- **They come to you on their own:** back from far off, a toddler or child runs to you and hugs you (a baby claps); now and then near you one raises its arms to be picked up, waves, claps, or brings you a flower it found and gives it to you.
+- **Eto, Touka and Ken with their kids:** now and then they hug them, ruffle their hair, tickle them, play peekaboo, spin them round, high-five them, and toss the baby they're holding up into the air (telling you about it if you're near).
+- A moment starts once you close the talk, so you see all of it; the kid walks up to you first (a baby stays where it sits, and you come to it).

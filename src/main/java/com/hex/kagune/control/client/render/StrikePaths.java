@@ -56,7 +56,23 @@ public final class StrikePaths {
     static final double ACTION_RESPONSE = 0.6;
     /** At rest only this share of the original's sway is kept round the calm shape (PathSmoother). */
     static final double IDLE_WIGGLE = 0.25;
+    /** 3.0.5: the tail holding someone: followed calmly, only this share of the original's sway kept. */
+    static final double HOLD_RESPONSE = 2.0;
+    static final double HOLD_WIGGLE = 0.35;
+
+    /** 3.0.5: the modes in which a tail holds someone (the others at rest meanwhile). */
+    public static boolean holding(TendrilMode mode) {
+        return mode == TendrilMode.HOLD || mode == TendrilMode.LIFT || mode == TendrilMode.CRUSH;
+    }
     private static final java.util.Map<TendrilChain, PathSmoother> SMOOTHERS = new java.util.WeakHashMap<>();
+    /** 3.1.5: how far each tail drawn this frame has its end drawn to a point (an Impale); none: not at all. */
+    private static final java.util.Map<TendrilChain, Double> SHARP = new java.util.WeakHashMap<>();
+
+    /** 3.1.5: how far {@code chain}'s tail, as last laid out, is drawn to a point (0 .. 1; {@code CentipedeRenderer.emitTube}). */
+    public static double sharp(TendrilChain chain) {
+        Double sharp = SHARP.get(chain);
+        return sharp == null ? 0.0 : sharp;
+    }
 
     /** {@code path} (world) smoothed in the player's own frame about its root, so his walking and turning carry it unsmoothed. */
     static double[][] smooth(TendrilChain chain, double[][] path, double yaw, double response, double wiggle, double time) {
@@ -112,6 +128,27 @@ public final class StrikePaths {
         return true;
     }
 
+    /** 2.0.38: {@code path} (world) through {@link com.hex.kagune.control.RinkakuRoot#attach} in the owner's frame ({@code feet}, {@code yaw}). */
+    static double[][] attachRoot(double[][] path, int limb, double fanSide, double[] feet, double yaw, double height) {
+        double fx = -Math.sin(yaw);
+        double fz = Math.cos(yaw);
+        double rx = -Math.cos(yaw);
+        double rz = -Math.sin(yaw);
+        double[][] rig = new double[path.length][];
+        for (int i = 0; i < path.length; i++) {
+            double dx = path[i][0] - feet[0];
+            double dz = path[i][2] - feet[2];
+            rig[i] = new double[] {dx * rx + dz * rz, path[i][1] - feet[1], dx * fx + dz * fz};
+        }
+        double[][] grown = com.hex.kagune.control.RinkakuRoot.attach(rig, limb, fanSide, height);
+        double[][] out = new double[path.length][];
+        for (int i = 0; i < path.length; i++) {
+            double[] q = grown[i];
+            out[i] = new double[] {feet[0] + q[0] * rx + q[2] * fx, feet[1] + q[1], feet[2] + q[0] * rz + q[2] * fz};
+        }
+        return out;
+    }
+
     public static Vec3[] clearOwner(Vec3[] points, TendrilChain chain, AbstractClientPlayer player, KaguneClientState.View view, float partialTick) {
         if (points == null || points.length < 3 || player == null || view == null) {
             return points;
@@ -124,7 +161,8 @@ public final class StrikePaths {
         float turn = player.f_20883_ - player.f_20884_;
         turn -= 360.0F * Math.round(turn / 360.0F);
         double yaw = Math.toRadians(player.f_20884_ + turn * partialTick);
-        double side = Math.abs(layout.fanSide()) < 0.01 ? (limb % 2 == 0 ? -1.0 : 1.0) : Math.signum(layout.fanSide());
+        // 2.3.2: BodyClearance's side (its +1 is his left): the tail carried round its own side of him, never round the other.
+        double side = com.hex.kagune.control.RinkakuRoot.clearance(limb, layout.fanSide());
         float thickness = view.limbThickness(layout);
         // Centipede limbs are drawn fatter than their thickness says (KaguneWorldRenderer).
         double radius = layout.segmented() ? Math.max(0.18, thickness * 0.81) : thickness;
@@ -135,9 +173,21 @@ public final class StrikePaths {
         // 3.1.0: the tentacles' own motion smoothed (PathSmoother), before the clearance so that still has the last word.
         boolean smoothed = !layout.segmented();
         if (smoothed) {
-            boolean idle = view.mode() == TendrilMode.IDLE;
-            path = smooth(chain, path, yaw, idle ? IDLE_RESPONSE : ACTION_RESPONSE, idle ? IDLE_WIGGLE : 1.0,
+            // 3.0.5 (the owner: "While Rinkaku is holding a target ... the tails are constantly shaking"): holding someone, the tails not
+            // holding them are at rest (they took the original's twitching, coiled motion at full strength), and the one holding is
+            // calmed too (its end is wrapped round them by the original after this).
+            boolean holds = holding(view.mode()) && view.heldEntityId(limb) != 0;
+            boolean idle = view.mode() == TendrilMode.IDLE || holding(view.mode()) && !holds;
+            path = smooth(chain, path, yaw, idle ? IDLE_RESPONSE : holds ? HOLD_RESPONSE : ACTION_RESPONSE,
+                idle ? IDLE_WIGGLE : holds ? HOLD_WIGGLE : 1.0, com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+        }
+        // 2.0.51: at rest, the shape the tails were drawn with (RinkakuIdle), not the original chain's coiled, twitching rest.
+        if (!layout.segmented()) {
+            double[][] rested = com.hex.kagune.control.client.RinkakuIdleClient.apply(path, limb, player, view, feet, yaw,
                 com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+            if (rested != null) {
+                path = rested;
+            }
         }
         // 5.0.14: a tentacle guarding him against incoming shots (Auto Projectile) swings into its guard.
         boolean guarding = false;
@@ -149,7 +199,51 @@ public final class StrikePaths {
                 guarding = true;
             }
         }
+        // 2.0.42: Rinkaku's block: the tails swung round in front of him (RinkakuBlock), or thrown back by a broken one.
+        if (!layout.segmented()) {
+            double[][] blocking = com.hex.kagune.control.client.RinkakuBlockClient.apply(path, limb, player, view, feet, yaw,
+                com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+            if (blocking != null) {
+                path = blocking;
+                guarding = true;
+            }
+        }
+        // 2.4.5: Thy Death: the tail lunging at its own foe, over its own motion.
+        if (!layout.segmented()) {
+            double[][] lunging = com.hex.kagune.control.client.ThyDeathClient.apply(path, limb, player, layout.fanSide(), yaw,
+                com.hex.kagune.control.client.ControlClient.worldTime(partialTick), partialTick);
+            if (lunging != null) {
+                path = lunging;
+                guarding = true;
+            }
+        }
+        // 3.1.5: the Impale: the tail up over its shoulder and straight out along its line, its end drawn to a point (sharp, for the mesh).
+        if (!layout.segmented()) {
+            double[][] impaling = com.hex.kagune.control.client.ImpaleClient.apply(path, limb, player, layout.fanSide(), feet, yaw,
+                com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+            if (impaling != null) {
+                path = impaling;
+                guarding = true;
+                SHARP.put(chain, com.hex.kagune.control.client.ImpaleClient.sharp());
+            } else {
+                SHARP.remove(chain);
+            }
+        }
+        // 3.1.6: the Rubble Hurl: the tails gripping its chunk, then whipping after it as it is thrown.
+        if (!layout.segmented()) {
+            double[][] gripping = com.hex.kagune.control.client.HurlClient.apply(path, limb, player, layout.fanSide(), feet, yaw,
+                com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+            if (gripping != null) {
+                path = gripping;
+                guarding = true;
+            }
+        }
         boolean moved = BodyClearance.clear(path, feet, -Math.sin(yaw), Math.cos(yaw), player.m_20205_(), player.m_20206_(), radius, side);
+        // 2.0.38: the tail grown out of his lower back (RinkakuRoot): its root sunk in it, its base leaving it, then its own motion.
+        if (!layout.segmented()) {
+            path = attachRoot(path, limb, layout.fanSide(), feet, yaw, player.m_20206_());
+            moved = true;
+        }
         // 1.0.24: the roots ride his body as it is drawn (a lean, a lunge, a drop, a flip, a roll), as Graft's do: before, a body
         // animation left them hanging where his hips would be standing still.
         boolean ridden = ride(path, player, feet, yaw, partialTick);

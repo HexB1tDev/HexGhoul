@@ -1,0 +1,7 @@
+{
+ "parent": "hexkagune:item/quinque/launcher_case_carried_slim",
+ "textures": {
+  "q": "hexkagune:item/quinque_arm_crystal_spear",
+  "particle": "hexkagune:item/quinque_arm_crystal_spear"
+ }
+}

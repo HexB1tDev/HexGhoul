@@ -14,7 +14,6 @@ import com.hex.kagune.effect.KaguneEffects;
 import com.hex.kagune.gameplay.KaguneRuntime;
 import com.hex.kagune.gameplay.KaguneServerController;
 import com.hex.kagune.network.KaguneNetwork;
-import com.hex.kagune.sound.HexKaguneSounds;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -181,14 +180,14 @@ final class UkakuCrystalCombat {
             case CRYSTAL_SHOT -> {
                 Vec3 tip = UkakuFire.tip(player, right ? 1 : -1, aim);
                 launch(player, tip, aim.m_82546_(tip), speed, radius, damage, 0, 1, Kind.SHOT, range);
-                UkakuFire.sound(level, tip, "block.amethyst_block.hit", 0.8F, KaguneServerController.vary(player, 1.6F, 0.1F));
+                UkakuFire.sound(level, tip, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_LAUNCH, 0.9F, KaguneServerController.vary(player, 1.3F, 0.1F));
             }
             case CRYSTAL_LANCE -> {
                 Vec3 tip = form.rightWing() ? UkakuFire.tip(player, 1, aim).m_82549_(UkakuFire.tip(player, -1, aim)).m_82490_(0.5)
                     : UkakuFire.tip(player, -1, aim);
                 launch(player, tip, aim.m_82546_(tip), speed * 1.25F, radius * 1.4F, damage, UkakuRules.lancePierce(mastery), 2, Kind.LANCE, range);
-                UkakuFire.sound(level, tip, "block.amethyst_cluster.break", 1.0F, KaguneServerController.vary(player, 0.8F, 0.05F));
-                UkakuFire.sound(level, tip, "block.amethyst_block.chime", 1.0F, KaguneServerController.vary(player, 0.7F, 0.05F));
+                UkakuFire.sound(level, tip, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.0F, KaguneServerController.vary(player, 0.8F, 0.05F));
+                UkakuFire.sound(level, tip, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_LAUNCH, 1.0F, KaguneServerController.vary(player, 0.8F, 0.05F));
             }
             case SPIKE_FAN -> {
                 int spikes = UkakuRules.spikeFanCount(mastery);
@@ -198,7 +197,7 @@ final class UkakuCrystalCombat {
                     Vec3 tip = UkakuFire.tip(player, side, aim);
                     launch(player, tip, KaguneCombat.rotateYaw(aim.m_82546_(tip), (float)yaw), speed, radius, damage, 0, 1, Kind.FAN, range);
                 }
-                UkakuFire.sound(level, player.m_146892_(), "block.amethyst_cluster.break", 1.0F, KaguneServerController.vary(player, 1.2F, 0.05F));
+                UkakuFire.sound(level, player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.0F, KaguneServerController.vary(player, 1.2F, 0.05F));
             }
             case SPIKE_RAIN -> {
                 Art art = art(player, pattern, started, duration, damage, aim, state.actionTargetId);
@@ -211,7 +210,7 @@ final class UkakuCrystalCombat {
                     Vec3 tip = UkakuFire.tip(player, side, player.m_146892_().m_82520_(0.0, 8.0, 0.0));
                     UkakuFire.fx(player, S2CUkakuFx.SPIKE + Kind.RAIN.ordinal(), nextSpikeId++, tip, new Vec3(side * 0.15, 1.6, 0.0), 0.8F, 5);
                 }
-                UkakuFire.sound(level, player.m_146892_(), "block.amethyst_cluster.place", 1.0F, KaguneServerController.vary(player, 0.9F, 0.05F));
+                UkakuFire.sound(level, player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_GROW, 1.0F, KaguneServerController.vary(player, 0.9F, 0.05F));
             }
             case SPIKE_BARRAGE -> {
                 Art art = art(player, pattern, started, duration, damage, aim, state.actionTargetId);
@@ -230,7 +229,7 @@ final class UkakuCrystalCombat {
                     Vec3 from = muzzles(player, index, player.m_146892_().m_82520_(0.0, 10.0, 0.0), 1)[0];
                     UkakuFire.fx(player, S2CUkakuFx.NEEDLE, nextSpikeId++, from, new Vec3(KakujaRig.sideOf(index) * 0.2, 2.2, 0.0), 1.0F, 5);
                 }
-                UkakuFire.sound(level, player.m_146892_(), "block.amethyst_cluster.place", 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
+                UkakuFire.sound(level, player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_GROW, 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
             }
             case SIX_TAIL_BARRAGE -> {
                 Art art = art(player, pattern, started, duration, damage, aim, state.actionTargetId);
@@ -246,8 +245,8 @@ final class UkakuCrystalCombat {
                         pending.knockback = 0.3F;
                     }
                 }
-                UkakuFire.sound(level, player.m_146892_(), "block.amethyst_cluster.break", 1.2F, KaguneServerController.vary(player, 0.9F, 0.05F));
-                UkakuFire.sound(level, player.m_146892_(), "entity.player.attack.sweep", 0.8F, KaguneServerController.vary(player, 0.8F, 0.05F));
+                UkakuFire.sound(level, player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.2F, KaguneServerController.vary(player, 0.9F, 0.05F));
+                UkakuFire.sound(level, player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.WING_CUT, 0.8F, KaguneServerController.vary(player, 0.8F, 0.05F));
             }
             default -> {
             }
@@ -271,8 +270,8 @@ final class UkakuCrystalCombat {
             }
         }
         if (fired > 0) {
-            UkakuFire.sound(player.m_284548_(), player.m_146892_(), "block.amethyst_block.hit", 0.5F,
-                KaguneServerController.vary(player, 1.8F, 0.1F));
+            UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_LAUNCH, 0.6F,
+                KaguneServerController.vary(player, 1.5F, 0.1F));
         }
     }
 
@@ -327,8 +326,8 @@ final class UkakuCrystalCombat {
                 pending.knockback = UkakuRules.HARROW_KNOCKBACK;
             }
         }
-        UkakuFire.sound(player.m_284548_(), eye, "block.amethyst_cluster.break", 1.1F, KaguneServerController.vary(player, 1.1F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), eye, "entity.player.attack.sweep", 0.7F, KaguneServerController.vary(player, 1.3F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), eye, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.1F, KaguneServerController.vary(player, 1.1F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), eye, com.hex.kagune.control.ukaku.UkakuSounds.WING_CUT, 0.7F, KaguneServerController.vary(player, 1.3F, 0.05F));
     }
 
     /** Piercing Line: the six converge in front of his chest and fire one thick needle through everything in its line. */
@@ -344,8 +343,8 @@ final class UkakuCrystalCombat {
         pending.knockback = 0.5F;
         pending.speed = 1.15F;
         pending.range = UkakuRules.NEEDLE_RANGE + UkakuRules.LINE_EXTRA_RANGE;
-        UkakuFire.sound(player.m_284548_(), from, "block.amethyst_cluster.break", 1.2F, KaguneServerController.vary(player, 0.7F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), from, "block.amethyst_block.chime", 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), from, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.2F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), from, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_RING, 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
     }
 
     /** Thorn Fan: needles swept across the front, the right tentacles covering the right half and the left ones the left. */
@@ -364,7 +363,7 @@ final class UkakuCrystalCombat {
             pending.direction = KaguneCombat.rotateYaw(ahead, yaw);
             pending.spread = 1.0F;
         }
-        UkakuFire.sound(player.m_284548_(), eye, "block.amethyst_cluster.break", 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), eye, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
     }
 
     /** Sends the needles whose turn has come. */
@@ -439,11 +438,11 @@ final class UkakuCrystalCombat {
         ServerLevel level = player.m_284548_();
         Vec3 back = player.m_20182_().m_82520_(0.0, 1.3, 0.0);
         if (on) {
-            UkakuFire.sound(level, back, "block.amethyst_block.chime", 1.2F, KaguneServerController.vary(player, 0.6F, 0.04F));
-            UkakuFire.sound(level, back, "block.amethyst_cluster.place", 1.0F, KaguneServerController.vary(player, 0.75F, 0.04F));
+            UkakuFire.sound(level, back, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_RING, 1.2F, KaguneServerController.vary(player, 0.6F, 0.04F));
+            UkakuFire.sound(level, back, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_GROW, 1.0F, KaguneServerController.vary(player, 0.75F, 0.04F));
         } else {
-            UkakuFire.sound(level, back, "block.amethyst_cluster.break", 0.8F, KaguneServerController.vary(player, 0.7F, 0.04F));
-            UkakuFire.sound(level, back, "item.firecharge.use", 0.6F, KaguneServerController.vary(player, 1.2F, 0.05F));
+            UkakuFire.sound(level, back, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 0.8F, KaguneServerController.vary(player, 0.7F, 0.04F));
+            UkakuFire.sound(level, back, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 0.6F, KaguneServerController.vary(player, 1.2F, 0.05F));
         }
         UkakuFire.fx(player, S2CUkakuFx.CRYSTALLIZE, 0, back, Vec3.f_82478_, 1.0F, on ? 1 : 0);
     }
@@ -595,7 +594,7 @@ final class UkakuCrystalCombat {
         }
         if (wall) {
             UkakuFire.fx(player, S2CUkakuFx.SPIKE_IMPACT, spike.id, end, spike.velocity, 0.0F, spike.kind.ordinal());
-            UkakuFire.sound(level, end, "block.amethyst_block.step", 0.6F, KaguneServerController.vary(player, 1.4F, 0.1F));
+            UkakuFire.sound(level, end, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_TAP, 0.6F, KaguneServerController.vary(player, 1.4F, 0.1F));
             ended(player, spike, end, now);
             return false;
         }
@@ -636,15 +635,14 @@ final class UkakuCrystalCombat {
         if (push.m_165925_() > 1.0E-6 && spike.knockback > 0.0F) {
             target.m_147240_(spike.knockback, -push.f_82479_, -push.f_82481_);
         }
-        if (spike.burnSeconds > 0) {
-            // Wrapped in flame: alight first, so the wound it opens is already a scorched one.
-            target.m_20254_(spike.burnSeconds);
-        }
+        // 2.0.15 (the owner: "Ukaku's projectiles should not burn targets anymore only knockback + damage"): a burning needle no longer sets
+        // what it hits alight.
         bleed(target, spike.stacks, player, now);
         float power = spike.kind == Kind.LANCE ? 1.6F : spike.kind == Kind.BARRAGE ? 0.6F : 1.0F;
         UkakuFire.fx(player, S2CUkakuFx.BLOOD, target.m_19879_(), point, push.m_82541_(), power, 0);
-        KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.7F, KaguneServerController.vary(player, 1.15F, 0.08F));
-        UkakuFire.sound(player.m_284548_(), point, "block.amethyst_cluster.break", 0.55F, KaguneServerController.vary(player, 1.5F, 0.1F));
+        UkakuFire.sound(player.m_284548_(), target.m_20182_().m_82520_(0.0, target.m_20206_() * 0.5, 0.0), com.hex.kagune.control.ukaku.UkakuSounds.STAB, 0.9F,
+            KaguneServerController.vary(player, 1.1F, 0.08F));
+        UkakuFire.sound(player.m_284548_(), point, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 0.55F, KaguneServerController.vary(player, 1.5F, 0.1F));
         if (target.m_6084_()) {
             embed(player, spike, target, point, now);
         }
@@ -717,7 +715,7 @@ final class UkakuCrystalCombat {
         int mastery = KaguneProfile.mastery(player);
         inTarget.add(new Stuck(spike.id, owner, target.m_19879_(), local[0], local[1], local[2], dir[0], dir[1], dir[2], spike.kind.ordinal(), now,
             now + UkakuRules.burstDelay(mastery), UkakuRules.burstDamage(spike.damage), guarded.limb()));
-        UkakuFire.sound(player.m_284548_(), at, "block.amethyst_cluster.place", 0.55F, KaguneServerController.vary(player, 1.5F, 0.1F));
+        UkakuFire.sound(player.m_284548_(), at, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_GROW, 0.55F, KaguneServerController.vary(player, 1.5F, 0.1F));
         dirty(player.m_284548_(), target.m_19879_());
     }
 
@@ -789,7 +787,7 @@ final class UkakuCrystalCombat {
                 UkakuFire.fireBlast(player, null, at, damage * UkakuRules.PYRE_BLAST_SHARE, UkakuRules.PYRE_BLAST_RADIUS);
             }
             UkakuFire.fx(player, S2CUkakuFx.SPIKE_BURST, stuck.id(), at, out, multiplier, stuck.kind());
-            UkakuFire.sound(level, at, "block.amethyst_block.break", 0.9F, KaguneServerController.vary(player, 1.3F, 0.1F));
+            UkakuFire.sound(level, at, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_SHATTER, 0.9F, KaguneServerController.vary(player, 1.3F, 0.1F));
             if (burstingSpikes(player)) {
                 blast(player, null, at, damage * UkakuRules.BURST_EXPLOSION_SHARE);
             }
@@ -799,9 +797,7 @@ final class UkakuCrystalCombat {
         // Bursting out where it sat: the flesh round it torn out.
         WoundHits.expect(target, com.hex.kagune.control.wound.WoundBook.Blow.BURST, at, new Vec3(dir[0], dir[1], dir[2]), 0.0);
         if (target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
-            if (fire) {
-                target.m_20254_(UkakuRules.PYRE_BURN_SECONDS);
-            }
+            // 2.0.15: a needle bursting into flame inside it no longer sets it alight.
             bleed(target, 1, player, now);
             ControlServer.onKaguneHit(player, 1);
         }
@@ -810,8 +806,8 @@ final class UkakuCrystalCombat {
         }
         UkakuFire.fx(player, S2CUkakuFx.SPIKE_BURST, stuck.id(), at, out, multiplier, stuck.kind());
         UkakuFire.fx(player, S2CUkakuFx.BLOOD, target.m_19879_(), at, out, 1.3F * multiplier, 1);
-        UkakuFire.sound(level, at, "block.amethyst_block.break", 0.9F, KaguneServerController.vary(player, 1.3F, 0.1F));
-        UkakuFire.sound(level, at, "block.glass.break", 0.45F, KaguneServerController.vary(player, 1.5F, 0.1F));
+        UkakuFire.sound(level, at, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_SHATTER, 0.9F, KaguneServerController.vary(player, 1.3F, 0.1F));
+        UkakuFire.sound(level, at, com.hex.kagune.control.ukaku.UkakuSounds.GLASS, 0.45F, KaguneServerController.vary(player, 1.5F, 0.1F));
         if (burstingSpikes(player)) {
             blast(player, target, at, damage * UkakuRules.BURST_EXPLOSION_SHARE);
         }
@@ -836,7 +832,7 @@ final class UkakuCrystalCombat {
             }
         }
         UkakuFire.fx(player, S2CUkakuFx.BURST_BLAST, 0, at, Vec3.f_82478_, (float)radius, 0);
-        UkakuFire.sound(player.m_284548_(), at, "entity.generic.explode", 0.6F, KaguneServerController.vary(player, 1.5F, 0.1F));
+        UkakuFire.sound(player.m_284548_(), at, com.hex.kagune.control.ukaku.UkakuSounds.BLAST, 0.6F, KaguneServerController.vary(player, 1.5F, 0.1F));
     }
 
     // ------------------------------------------------------------------ bleeding
@@ -859,6 +855,28 @@ final class UkakuCrystalCombat {
         bleed.until = Math.max(bleed.until, now + duration);
         target.m_147207_(new MobEffectInstance(effect, duration, UkakuRules.bleedAmplifier(bleed.stacks), false, false, true), player);
         dirty(target.m_9236_(), target.m_19879_());
+    }
+
+    /**
+     * 4.1.29: a cut of the White Reaper's blade (the owner: "causes bleed whenever hit"): {@code stacks} of the same bleeding a spike leaves,
+     * stacked as a spike's are, from {@code source} (no player's form to scorch it), every client near the body told at once.
+     */
+    public static void agentBleed(LivingEntity target, LivingEntity source, int stacks, long now) {
+        if (target == null || !target.m_6084_() || !(target.m_9236_() instanceof ServerLevel level)) {
+            return;
+        }
+        MobEffect effect = KaguneEffects.BLEEDING.get();
+        Bleed bleed = BLEEDS.computeIfAbsent(target.m_20148_(), ignored -> new Bleed());
+        if (!target.m_21023_(effect) && now - bleed.lastHit > BLEED_RESET_TICKS || now >= bleed.until + BLEED_RESET_TICKS) {
+            bleed.stacks = 0;
+        }
+        bleed.stacks = Math.min(UkakuRules.MAX_BLEED_STACKS, bleed.stacks + stacks);
+        bleed.lastHit = now;
+        int duration = UkakuRules.bleedDuration(bleed.stacks);
+        bleed.until = Math.max(bleed.until, now + duration);
+        target.m_147207_(new MobEffectInstance(effect, duration, UkakuRules.bleedAmplifier(bleed.stacks), false, false, true), source);
+        dirty(level, target.m_19879_());
+        flushChanged(level, now);
     }
 
     /**
@@ -938,7 +956,7 @@ final class UkakuCrystalCombat {
                     Kind.NEEDLE, UkakuRules.RAIN_HEIGHT + 6.0);
             }
             if (art.fired % 6 == 0) {
-                UkakuFire.sound(level, target, "block.amethyst_block.hit", 0.8F, KaguneServerController.vary(player, 1.6F, 0.15F));
+                UkakuFire.sound(level, target, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.8F, KaguneServerController.vary(player, 1.6F, 0.15F));
             }
             return true;
         }
@@ -960,7 +978,7 @@ final class UkakuCrystalCombat {
                     Kind.NEEDLE, UkakuRules.NEEDLE_RANGE);
             }
             if (art.fired % 4 < 2) {
-                UkakuFire.sound(level, player.m_146892_(), "block.amethyst_block.hit", 0.45F, KaguneServerController.vary(player, 1.9F, 0.12F));
+                UkakuFire.sound(level, player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.45F, KaguneServerController.vary(player, 1.9F, 0.12F));
             }
             return true;
         }
@@ -978,7 +996,7 @@ final class UkakuCrystalCombat {
                     1, Kind.RAIN, UkakuRules.RAIN_HEIGHT + 6.0);
             }
             if (art.fired % 4 == 0) {
-                UkakuFire.sound(level, target, "block.amethyst_block.hit", 0.8F, KaguneServerController.vary(player, 1.2F, 0.15F));
+                UkakuFire.sound(level, target, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.8F, KaguneServerController.vary(player, 1.2F, 0.15F));
             }
             return true;
         }
@@ -1010,7 +1028,7 @@ final class UkakuCrystalCombat {
                 art.damage, 0, 1, Kind.BARRAGE, range);
             art.fired++;
             if (art.fired % 2 == 1) {
-                UkakuFire.sound(level, tip, "block.amethyst_block.hit", 0.55F, KaguneServerController.vary(player, 1.8F, 0.12F));
+                UkakuFire.sound(level, tip, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.55F, KaguneServerController.vary(player, 1.8F, 0.12F));
             }
             return true;
         }
@@ -1051,8 +1069,8 @@ final class UkakuCrystalCombat {
             }
         }
         UkakuFire.fx(player, S2CUkakuFx.BLOOM, 0, chest, Vec3.f_82478_, 1.0F, burst);
-        UkakuFire.sound(level(player), chest, "block.amethyst_block.break", 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
-        UkakuFire.sound(level(player), chest, "block.amethyst_block.chime", 1.2F, KaguneServerController.vary(player, 1.4F, 0.05F));
+        UkakuFire.sound(level(player), chest, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_SHATTER, 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        UkakuFire.sound(level(player), chest, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_RING, 1.2F, KaguneServerController.vary(player, 1.4F, 0.05F));
     }
 
     private static ServerLevel level(ServerPlayer player) {
@@ -1112,6 +1130,20 @@ final class UkakuCrystalCombat {
         return nextSpikeId++;
     }
 
+    /**
+     * 4.1.74 (the owner, of the White Reaper's end: "all effects like bleed etc are removed from him"): {@code body}'s bleeding stopped at
+     * once (its stacks and the original's effect gone) and the spikes stuck in it gone; the clients near it told.
+     */
+    public static void stanch(LivingEntity body, ServerLevel level, long now) {
+        boolean had = BLEEDS.remove(body.m_20148_()) != null;
+        had |= STUCK.remove(body.m_19879_()) != null;
+        body.m_21195_(KaguneEffects.BLEEDING.get());
+        if (had) {
+            dirty(level, body.m_19879_());
+            flushChanged(level, now);
+        }
+    }
+
     // ------------------------------------------------------------------ clients
 
     private static void dirty(Object level, int id) {
@@ -1132,6 +1164,11 @@ final class UkakuCrystalCombat {
                 }
             }
         }
+        flushChanged(level, now);
+    }
+
+    /** Tells every client near each body in {@code level} whose spikes or bleeding changed. */
+    private static void flushChanged(ServerLevel level, long now) {
         Set<Integer> changed = DIRTY.remove(level);
         if (changed == null) {
             return;

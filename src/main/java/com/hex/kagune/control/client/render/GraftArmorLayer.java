@@ -172,6 +172,12 @@ public final class GraftArmorLayer extends RenderLayer<AbstractClientPlayer, Ent
             PlayerLayers.upperBody(pose, player, partial);
         }
         part.m_104299_(pose);
+        // 2.3.3: the hide over a man's chest.
+        if (box == GraftSkin.Box.TORSO && net.minecraft.client.Minecraft.m_91087_() != null
+            && net.minecraft.client.Minecraft.m_91087_().m_91290_().m_114382_(player) instanceof net.minecraft.client.renderer.entity.LivingEntityRenderer<?, ?> renderer
+            && renderer.m_7200_() instanceof net.minecraft.client.model.HumanoidModel<?> model) {
+            BuildLayer.fit(pose, player, model);
+        }
     }
 
     /** A point of {@code box} (an arm or a leg; the head and torso never bend) folded at the elbow or knee as {@code limbs} bends it. */

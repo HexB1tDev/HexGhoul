@@ -3,4 +3,5 @@ package net.minecraftforge.event.entity.living;
 
 public class LivingAttackEvent extends LivingEvent {
     public net.minecraft.world.damagesource.DamageSource getSource() { throw new UnsupportedOperationException(); }
+    public float getAmount() { throw new UnsupportedOperationException(); }
 }

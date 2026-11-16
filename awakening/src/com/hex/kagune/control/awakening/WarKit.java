@@ -673,12 +673,12 @@ final class WarKit implements KingServer.Kit {
     }
 
     /** Living bodies within {@code radius} of the wearer that War's blows may hit. */
-    static List<LivingEntity> near(ServerPlayer player, double radius) {
+    static List<LivingEntity> near(LivingEntity player, double radius) {
         return near(player, center(player), radius);
     }
 
-    static List<LivingEntity> near(ServerPlayer player, V3 at, double radius) {
-        return player.serverLevel().getEntitiesOfClass(LivingEntity.class,
+    static List<LivingEntity> near(LivingEntity player, V3 at, double radius) {
+        return ((net.minecraft.server.level.ServerLevel) player.level()).getEntitiesOfClass(LivingEntity.class,
                 new AABB(at.x() - radius, at.y() - radius, at.z() - radius, at.x() + radius, at.y() + radius, at.z() + radius),
                 body -> body != player && body.isAlive() && !body.isSpectator() && !(body instanceof ArmorStand));
     }
@@ -708,13 +708,13 @@ final class WarKit implements KingServer.Kit {
         return new V3(entity.getX(), entity.getY() + entity.getBbHeight() * 0.5, entity.getZ());
     }
 
-    static V3 eye(ServerPlayer player) {
+    static V3 eye(LivingEntity player) {
         Entity body = player; // (named on Entity, as the API list has it)
         Vec3 eye = body.getEyePosition(1.0F);
         return new V3(eye.x, eye.y, eye.z);
     }
 
-    static V3 look(ServerPlayer player) {
+    static V3 look(LivingEntity player) {
         Entity body = player;
         Vec3 view = body.getViewVector(1.0F);
         return new V3(view.x, view.y, view.z).normalize();

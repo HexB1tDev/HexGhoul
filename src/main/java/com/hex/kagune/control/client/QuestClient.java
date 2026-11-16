@@ -14,13 +14,21 @@ import net.minecraftforge.fml.common.Mod;
 public final class QuestClient {
     private static QuestLog log = new QuestLog();
     private static boolean known;
+    /** 1.3.29: how they stand with each companion (the journal's Romance tab). */
+    private static java.util.List<com.hex.kagune.control.npc.RomanceCard> romance = java.util.List.of();
 
     private QuestClient() {
     }
 
-    public static void accept(String saved) {
+    public static void accept(String saved, String cards) {
         log = QuestLog.load(saved);
+        romance = com.hex.kagune.control.npc.RomanceCard.load(cards);
         known = true;
+    }
+
+    /** 1.3.29: the companions as the server last said they stand with the player. */
+    public static java.util.List<com.hex.kagune.control.npc.RomanceCard> romance() {
+        return romance;
     }
 
     public static QuestLog log() {
@@ -64,6 +72,7 @@ public final class QuestClient {
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         log = new QuestLog();
+        romance = java.util.List.of();
         known = false;
     }
 }

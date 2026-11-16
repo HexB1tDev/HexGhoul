@@ -834,7 +834,7 @@ final class WarPath {
      * What he aims at within {@code range} blocks: what he clicked, else the nearest body his line of sight passes through (its box,
      * a little grown), else the nearest within a few degrees of it; null for none.
      */
-    static LivingEntity aimed(ServerPlayer player, int clicked, double range) {
+    static LivingEntity aimed(LivingEntity player, int clicked, double range) {
         V3 eye = WarKit.eye(player);
         V3 look = WarKit.look(player);
         LivingEntity best = null;
@@ -842,7 +842,7 @@ final class WarPath {
         LivingEntity near = null;
         double nearScore = Double.MAX_VALUE;
         for (LivingEntity body : WarKit.near(player, range + 2.0)) {
-            if (!KaguneServerController.validSwipeTarget(player, body)) continue;
+            if (!com.hex.kagune.control.server.KingEffects.valid(player, body)) continue;
             V3 c = WarKit.center(body);
             V3 to = c.sub(eye);
             double d = to.length();

@@ -1,0 +1,142 @@
+[
+ {
+  "name": "the same wish every day",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "long mixed = day * 0x9E3779B97F4A7C15L + key.hashCode();",
+  "new": "long mixed = key.hashCode();",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a wish out of reach",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "\"ayato\", List.of(\"minecraft:black_dye\", \"minecraft:iron_sword\", \"hexkagune:rc_tonic\"),",
+  "new": "\"ayato\", List.of(\"minecraft:black_dye\", \"minecraft:netherite_sword\", \"hexkagune:rc_tonic\"),",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a wish not loved",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "\"general\", List.of(\"minecraft:clock\", \"minecraft:bread\",",
+  "new": "\"general\", List.of(\"minecraft:paper\", \"minecraft:bread\",",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Noro wishes",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        \"general\", List.of(\"minecraft:clock\", \"minecraft:bread\", \"minecraft:cooked_beef\", \"minecraft:writable_book\", \"minecraft:shield\"),",
+  "new": "        \"noro\", List.of(\"hexkagune:cooked_ghoul_meat\", \"minecraft:rotten_flesh\", \"hexkagune:kakuhou_tartare\"),\n        \"general\", List.of(\"minecraft:clock\", \"minecraft:bread\", \"minecraft:cooked_beef\", \"minecraft:writable_book\", \"minecraft:shield\"),",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "two wishes only",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "\"touka\", List.of(\"hexkagune:anteiku_blend\", \"minecraft:rabbit_hide\", \"minecraft:writable_book\", \"hexkagune:blood_latte\"),",
+  "new": "\"touka\", List.of(\"hexkagune:anteiku_blend\", \"minecraft:rabbit_hide\"),",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the wish worth nothing more",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "public static final int WISH_REGARD = 4;",
+  "new": "public static final int WISH_REGARD = 0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the wish unsaid",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "            case \"ken\" -> one(seed, \"Today? I'd like \" + an(it, false) + \", I think. Only if it's no trouble.\", an(it, true) + \". ...Sorry. It's silly. You asked.\");",
+  "new": "            case \"ken\" -> \"Nothing, really.\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the granted in no one's words",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "            case \"roma\" -> \"My wish came true! Encore! Encore! You're my favourite audience in the WHOLE world!\";",
+  "new": "            case \"roma\" -> \"You remembered.\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "an initialism as a word",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        boolean vowel = !name.isEmpty() && (initials ? \"AEFHILMNORSX\" : \"aeiouAEIOU\").indexOf(name.charAt(0)) >= 0;",
+  "new": "        boolean vowel = !name.isEmpty() && \"aeiouAEIOU\".indexOf(name.charAt(0)) >= 0;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a bread",
+  "file": "src/main/java/com/hex/kagune/control/npc/Tastes.java",
+  "old": "        if (name.equals(\"bread\") || name.endsWith(\" dye\") ||",
+  "new": "        if (name.endsWith(\" dye\") ||",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the day asked forgotten",
+  "file": "src/main/java/com/hex/kagune/control/npc/NpcMemory.java",
+  "old": "    public static final String WISH_DAY = \"wishday\";",
+  "new": "    public static final String WISH_DAY = \"dateday\";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "asked of anyone",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "if (!c.dating() || c.giftedToday() || com.hex.kagune.control.npc.Tastes.wish(key, today) == null || page.options().size() >= S2CNpcTalk.MOST) {",
+  "new": "if (c.giftedToday() || com.hex.kagune.control.npc.Tastes.wish(key, today) == null || page.options().size() >= S2CNpcTalk.MOST) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "asked after today's gift",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "if (!c.dating() || c.giftedToday() || com.hex.kagune.control.npc.Tastes.wish(key, today) == null || page.options().size() >= S2CNpcTalk.MOST) {",
+  "new": "if (!c.dating() || com.hex.kagune.control.npc.Tastes.wish(key, today) == null || page.options().size() >= S2CNpcTalk.MOST) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "asked on a chapter's page",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "            main |= choice == NpcTalk.Choice.LEAVE;\n",
+  "new": "            main = true;\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "asked before the others take their slots",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "            page = withDaily(player, npc, page);\n            page = withWish(player, npc, context, page); // 4.1.85: last, in a slot none of the others takes\n",
+  "new": "            page = withWish(player, npc, context, page); // 4.1.85: last, in a slot none of the others takes\n            page = withDaily(player, npc, page);\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the day asked not kept",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "                NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.WISH_DAY, day(player.m_284548_()));\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "granted unasked",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "            && NpcMemoryServer.of(player).get(key, NpcMemory.WISH_DAY, -1L) == today;",
+  "new": "            && true;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "granted twice",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "            NpcMemoryServer.set(player, key, NpcMemory.WISH_DAY, -1L);\n",
+  "new": "\n",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "granted, nothing more",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "com.hex.kagune.control.npc.Tastes.regard(taste) + (wished ? com.hex.kagune.control.npc.Tastes.WISH_REGARD : 0)",
+  "new": "com.hex.kagune.control.npc.Tastes.regard(taste)",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "granted, no word of it",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "new EtoTalk.Reply(wished ? com.hex.kagune.control.npc.Tastes.granted(key, item, c.seed())\n            : com.hex.kagune.control.npc.Tastes.said(key, taste, item, c.seed(), c.dating()),",
+  "new": "new EtoTalk.Reply(com.hex.kagune.control.npc.Tastes.said(key, taste, item, c.seed(), c.dating()),",
+  "suite": "CompanionTests"
+ }
+]

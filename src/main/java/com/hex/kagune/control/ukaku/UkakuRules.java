@@ -119,7 +119,44 @@ public final class UkakuRules {
         if (form.usable(mastery).kakuja()) {
             return ComboStyle.UKAKU_KAKUJA;
         }
-        return crystalMode && crystalModeAllowed(mastery, form) ? ComboStyle.UKAKU_CRYSTAL : ComboStyle.UKAKU_FIRE;
+        if (crystalMode && crystalModeAllowed(mastery, form)) {
+            return ComboStyle.UKAKU_CRYSTAL;
+        }
+        // 4.1.2 (the owner: "Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos"):
+        // the fire's wings slam, the twin wings right and left in turn, Rabbit Guise (a new Ukaku's one wing) with its left.
+        return form.usable(mastery) == WingForm.RABBIT ? ComboStyle.UKAKU_LEFT_WING : ComboStyle.UKAKU_WINGS;
+    }
+
+    /** 4.1.2: the wing slams' reach, a share of Rinkaku's M1 (the owner: "has lightly less range than Rinkaku"). */
+    public static final double SLAM_REACH = 0.85;
+
+    /**
+     * 4.1.11: how far a wing slam hits (blocks), as the server works it out (KaguneCombat.range): Rinkaku's attack range (the original's
+     * KaguneProfile.attackRange: 7.5 and 0.0075 a mastery point, at most 15; its reach mutations left out here) times {@link #SLAM_REACH}
+     * times the stage's own range ({@code rangeMul}), at most 15. The wings are drawn stretching out to it (WingRig.stretch): before, a slam
+     * hit things 8 blocks off with a wing 3 blocks long (the owner: "it currently just feels like a little chicken wings").
+     */
+    public static double slamReach(int mastery, float rangeMul) {
+        double rinkaku = Math.min(15.0, RINKAKU_RANGE + RINKAKU_RANGE_PER_MASTERY * Math.max(0, mastery));
+        return Math.min(15.0, rinkaku * SLAM_REACH * rangeMul);
+    }
+
+    public static final double RINKAKU_RANGE = 7.5;
+    public static final double RINKAKU_RANGE_PER_MASTERY = 0.0075;
+
+    /** 4.1.2: true for the fire's wing slams (the twin wings' string, or Rabbit Guise's left wing's). */
+    public static boolean slams(ComboStyle style) {
+        return style == ComboStyle.UKAKU_WINGS || style == ComboStyle.UKAKU_LEFT_WING;
+    }
+
+    /**
+     * 4.1.2: whether the Ukaku's right click is the wing guard (the owner: "Right click (M2) is now a protection like Rinkaku has, wings
+     * grow and protect the player, they come together to protect the player"): the wings in the fire, twin or Rabbit Guise's one (not the
+     * crystal mode, whose right click stays its own: "Crystal mode still has the same custom shooting crystals and right click"; not the
+     * One-Winged Kagune or the kakuja).
+     */
+    public static boolean wingGuard(int mastery, WingForm form, boolean crystalMode) {
+        return slams(style(mastery, form, false, crystalMode));
     }
 
     /** {@link #style(int, WingForm, boolean, boolean)} with the crystal mode off. */
@@ -640,7 +677,7 @@ public final class UkakuRules {
     // ------------------------------------------------------------------ Wing Vortex (Z)
 
     /** How far the Wing Vortex flies (blocks). */
-    public static final double VORTEX_RANGE = 25.0;
+    public static final double VORTEX_RANGE = 20.0; // 2.4.6: was 25 (a slow, massive rolling blow now)
     /** Ticks the body coils and the wing twirls up before it is thrown. */
     public static final int VORTEX_WINDUP = 5;
     /** Ticks a new wing takes to grow back out of the shoulder blade once the thrown one has faded. */
@@ -648,27 +685,53 @@ public final class UkakuRules {
     /** Ticks the thrown wing takes to unwind and fade at the end of its flight. */
     public static final int VORTEX_FADE_TICKS = 6;
     /** How hard the vortex throws what it hits: along its flight (blocks per tick) and up. */
-    public static final double VORTEX_KNOCKBACK = 2.1;
-    public static final double VORTEX_LIFT = 0.55;
+    public static final double VORTEX_KNOCKBACK = 1.6;
+    public static final double VORTEX_LIFT = 0.95; // 2.4.6: thrown up and over by the rolling mass
 
     /** Vortex speed in blocks per tick. */
     public static float vortexSpeed(int mastery) {
-        return 1.5F + 0.3F * Math.max(0, Math.min(1000, mastery)) / 1000.0F;
+        // 2.4.6 (the owner: "a slow massive twisting blow"): about 12 blocks a second (was 30 to 36).
+        return 0.55F + 0.15F * Math.max(0, Math.min(1000, mastery)) / 1000.0F;
     }
 
     /** Ticks the vortex takes to fly its whole range. */
+    /** 3.2.9: how far up or down from level the vortex may go with the look (the y of its unit heading), and how far off his look a body turns it. */
+    public static final double VORTEX_PITCH_DOWN = 0.22;
+    public static final double VORTEX_PITCH_UP = 0.3;
+    public static final double VORTEX_ASSIST = Math.cos(Math.toRadians(18.0));
+
+    /**
+     * 3.2.9 (the owner: "instead of going straight forward sometimes it stays in place"): the vortex's unit heading: straight
+     * forward along the look ({@code lx ly lz}), only a little up or down with it; a body {@code tx tz} off the launch (NaN: none)
+     * within {@link #VORTEX_ASSIST} of the look's way turns it level toward that body. It used to be aimed from the shoulder at the
+     * body's middle or the ground under the crosshair, down into the ground a few blocks on, where it ended.
+     */
+    public static double[] vortexHeading(double lx, double ly, double lz, double tx, double tz) {
+        double flat = Math.sqrt(lx * lx + lz * lz);
+        double fx = flat < 1.0E-6 ? 0.0 : lx / flat;
+        double fz = flat < 1.0E-6 ? 1.0 : lz / flat;
+        double tf = Math.sqrt(tx * tx + tz * tz);
+        if (Double.isFinite(tf) && tf > 1.0E-6 && (tx * fx + tz * fz) / tf >= VORTEX_ASSIST) {
+            fx = tx / tf;
+            fz = tz / tf;
+        }
+        double y = Math.max(-VORTEX_PITCH_DOWN, Math.min(VORTEX_PITCH_UP, ly));
+        double across = Math.sqrt(1.0 - y * y);
+        return new double[] {fx * across, y, fz * across};
+    }
+
     public static int vortexFlight(int mastery) {
         return (int)Math.ceil(VORTEX_RANGE / vortexSpeed(mastery));
     }
 
     /** Radius of the vortex (blocks): everything it passes this close to is caught. Wider with the full wings. */
     public static float vortexRadius(int mastery) {
-        return mastery >= 500 ? 1.55F : 1.2F;
+        return mastery >= 500 ? 2.6F : 2.1F; // 2.4.6: massive (was 1.55 and 1.2)
     }
 
     /** Damage to each body it catches. */
     public static float vortexDamage(int mastery) {
-        return meleeDamage(mastery) * 1.5F;
+        return meleeDamage(mastery) * 2.2F; // 2.4.6: one heavy blow (was 1.5)
     }
 
     public static int vortexBurnSeconds(int mastery) {

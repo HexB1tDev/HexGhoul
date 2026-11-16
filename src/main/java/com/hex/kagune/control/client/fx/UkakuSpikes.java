@@ -37,8 +37,13 @@ public final class UkakuSpikes {
     public record Body(int bleedStacks, long bleedUntil, List<S2CUkakuSpikes.Spike> spikes, float yawOffset) {
     }
 
-    /** A spike stuck in a block. */
-    public record Planted(Vec3 tip, Vec3 direction, float size, int kind, long born, long until, int seed) {
+    /**
+     * A spike stuck in a block. 4.1.17 (the owner: "when it hits like a tree or a block or whatever, instead of being green, it turns back
+     * to the default color, which is red. It should remain the same color as the Kagune or when it hits the mob ... This also applies for
+     * the kakuja"): and who shot it ({@code shooter}, an entity id; 0 none), so it stays in their kagune's colour, as one stuck in a body
+     * always did, and so do its chips as it crumbles.
+     */
+    public record Planted(Vec3 tip, Vec3 direction, float size, int kind, long born, long until, int seed, int shooter) {
     }
 
     private static final Map<Integer, Body> BODIES = new HashMap<>();
@@ -106,11 +111,11 @@ public final class UkakuSpikes {
     }
 
     /** A spike that hit a block: it stays in it a moment. */
-    static void plant(Vec3 tip, Vec3 direction, float size, int kind, long now, int seed) {
+    static void plant(Vec3 tip, Vec3 direction, float size, int kind, long now, int seed, int shooter) {
         if (PLANTED.size() >= MOST_PLANTED) {
             PLANTED.remove(0);
         }
-        PLANTED.add(new Planted(tip, direction, size, kind, now, now + PLANTED_TICKS + seed % 12, seed));
+        PLANTED.add(new Planted(tip, direction, size, kind, now, now + PLANTED_TICKS + seed % 12, seed, shooter));
     }
 
     /** Where a stuck spike's point is in the world, and which way it points, for the body as it stands this frame. */
@@ -170,7 +175,7 @@ public final class UkakuSpikes {
             if (now >= planted.until()) {
                 iterator.remove();
                 if (RcFx.near(planted.tip(), VISIBLE)) {
-                    UkakuFx.crumble(planted.tip(), planted.direction(), planted.size());
+                    UkakuFx.crumble(planted.shooter(), planted.tip(), planted.direction(), planted.size());
                 }
             }
         }

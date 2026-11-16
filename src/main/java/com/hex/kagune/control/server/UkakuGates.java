@@ -30,6 +30,10 @@ public final class UkakuGates {
     /** J: Rinkaku's grapple; on the Ukaku path the key is the Gatling, held (its trigger comes as {@code C2SUkakuAction.GATLING}). */
     public static void slingshot(ServerPlayer player) {
         // 6.1.0: on Pale's path J is her flesh (C2SPaleAction, timed by her client): the original's grapple never runs for her.
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.notYet(player); // 3.4.9: the worm's own moves come later
+            return;
+        }
         if (!UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !RinkakuAutonomy.refuse(player)
             && unlocked(player, "The grapple", RinkakuUnlocks.GRAPPLE)) {
             KaguneServerController.slingshotLegacy(player);
@@ -45,17 +49,29 @@ public final class UkakuGates {
         }
     }
 
+    /**
+     * N. 3.1.6 (the owner chose the idea for "the key of throw" with nothing to throw): only with someone held is it the original's throw;
+     * with nobody held the key is the Rubble Hurl ({@link HurlServer}, told by its own hold from the client), and the original's "no
+     * target" is never said.
+     */
     public static void throwHeld(ServerPlayer player) {
-        if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player)
+        if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player) && HurlServer.throwsHeld(player)
             && unlocked(player, "The throw", RinkakuUnlocks.GRAB)) {
             KaguneServerController.throwHeldLegacy(player);
+            EtoServer.proved(player, com.hex.kagune.control.npc.Teaching.Deed.THROWS, 0); // 3.3.1: Ken's proof before the Rubble Hurl
         }
     }
 
+    /**
+     * H. 3.1.5 (the owner: "When someone is not being grabbed by the Kagune, the abilities crush ... becomes the new ability ... impale"):
+     * only with someone held is it the original's crush; with nobody held the key is the Impale ({@link ImpaleServer}, told by its own
+     * hold from the client), and the original's "no target" is never said.
+     */
     public static void crush(ServerPlayer player) {
-        if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player)
+        if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player) && ImpaleServer.crushes(player)
             && unlocked(player, "The crush", RinkakuUnlocks.CRUSH)) {
             KaguneServerController.crushLegacy(player);
+            EtoServer.proved(player, com.hex.kagune.control.npc.Teaching.Deed.CRUSHES, 0); // 3.3.1: Ken's proof before the Impale
         }
     }
 
@@ -66,6 +82,9 @@ public final class UkakuGates {
         } else if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
             // 6.1.0: V is her kicks (C2SPaleAction, timed by her client); 7.0.0: Graft's V is his own (C2SGraftAction).
             return;
+        } else if (BikakuServer.isBikaku(player)) {
+            BikakuServer.notYet(player); // 3.4.9
+            return;
         } else if (!RinkakuAutonomy.refuse(player) && unlocked(player, "The lift", RinkakuUnlocks.LIFT)) {
             KaguneServerController.liftLegacy(player);
         }
@@ -75,24 +94,35 @@ public final class UkakuGates {
         if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
             return; // 6.2.0: B is her Watch This (C2SPaleAction, from her client); 7.0.0: Graft's B is his own
         }
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.notYet(player); // 3.4.9
+            return;
+        }
         if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player)
             && unlocked(player, "The slam", RinkakuUnlocks.SLAM)) {
             KaguneServerController.slamLegacy(player);
         }
     }
 
-    /** C: Rinkaku's tendril guard; Ukaku has no guard (5.0.13: the Wing Block is gone), so the key does nothing for him. */
+    /**
+     * C: the final kakuja's Steel Blade on the Ukaku path. 2.0.37 (the owner: "The C ability called guard is not meant to be in the game
+     * anymore ... completely delete the C move called guard"): Rinkaku's tendril guard (the original's {@code toggleGuardLegacy}, the only
+     * thing that ever raised it) is never called again; a guard somehow still up is let down. Rinkaku's block is its right click now.
+     */
     public static void toggleGuard(ServerPlayer player) {
-        if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
-            return; // 6.1.0: Pale has no tendril guard; C does nothing on her path (7.0.0: Graft's C is his own guard)
+        if (PaleServer.isPale(player) || GraftServer.isGraft(player) || BikakuServer.isBikaku(player)) {
+            return; // 6.1.0: Pale has no tendril guard; C does nothing on her path (7.0.0: Graft's C is his own guard; 3.4.9: nor the worm)
         }
         if (UkakuServer.isUkaku(player)) {
             // 5.0.18: C is the final kakuja's Steel Blade.
             if (KaguneProfile.isActive(player) && player.m_6084_()) {
                 UkakuServer.toggleBlade(player);
             }
-        } else if (!RinkakuAutonomy.refuse(player)) {
-            KaguneServerController.toggleGuardLegacy(player);
+            return;
+        }
+        KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
+        if (state != null && state.guarding) {
+            state.guarding = false;
         }
     }
 
@@ -108,7 +138,8 @@ public final class UkakuGates {
      */
     public static boolean tryStartFallArrest(ServerPlayer player, KaguneRuntime.State state, long now) {
         // 6.1.0: nor on Pale's path: her flesh never comes out to catch her (she lands her flips on her feet).
-        return !UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !KakujaPassive.vanished(player)
+        return !UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !BikakuServer.isBikaku(player)
+            && !KakujaPassive.vanished(player)
             && KaguneServerController.tryStartFallArrestLegacy(player, state, now);
     }
 
@@ -128,6 +159,10 @@ public final class UkakuGates {
     private static boolean refused(ServerPlayer player, String message) {
         if (GraftServer.isGraft(player)) {
             return true; // 7.0.0: his keys are his own moves (C2SGraftAction); the original's grab, throw, crush never run for him
+        }
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.notYet(player); // 3.4.9: the original's grab, throw, crush, threat never run for the worm
+            return true;
         }
         if (PaleServer.isPale(player)) {
             PaleServer.notice(player, PaleServer.state(player), Component.m_237115_("message.hexkagune.pale.no_tendrils"));

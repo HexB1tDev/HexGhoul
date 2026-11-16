@@ -25,7 +25,39 @@ public final class KingTests {
         }
     }
 
+    /** 2.1.1: a final kakuja rests five minutes once it is let go, shown as Exhaustion, and can't be called meanwhile. */
+    static void exhaustion() {
+        check(com.hex.kagune.control.king.KingRules.EXHAUSTION_TICKS == 5 * 60 * 20, "the rest is five minutes");
+        check(com.hex.kagune.control.king.KingRules.restLeft(1000L, 400L) == 600L && com.hex.kagune.control.king.KingRules.restLeft(1000L, 1000L) == 0L
+            && com.hex.kagune.control.king.KingRules.restLeft(1000L, 5000L) == 0L && com.hex.kagune.control.king.KingRules.restLeft(0L, 5000L) == 0L,
+            "what is left of it, none once it is over (or never set)");
+        check(com.hex.kagune.control.king.KingRules.restLeft(Long.MAX_VALUE, 0L) == com.hex.kagune.control.king.KingRules.EXHAUSTION_TICKS,
+            "never more than a whole rest (a stored end far off can't lock it for good)");
+        check(com.hex.kagune.control.king.KingRules.clock(6000L).equals("5:00") && com.hex.kagune.control.king.KingRules.clock(1L).equals("0:01")
+            && com.hex.kagune.control.king.KingRules.clock(1300L).equals("1:05") && com.hex.kagune.control.king.KingRules.clock(0L).equals("0:00"),
+            "shown as minutes and seconds, rounded up");
+        String server = read("src/main/java/com/hex/kagune/control/server/KingServer.java");
+        int off = server.indexOf("public static void off(ServerPlayer player, boolean shown)");
+        check(off > 0 && server.indexOf("exhaust(player)", off) > off && server.indexOf("worn.on() && !worn.preview()", off) > off,
+            "letting a real final kakuja go (not the preview) starts the rest");
+        int toggle = server.indexOf("public static void toggle(ServerPlayer player)");
+        int refused = server.indexOf("message.hexkagune.king.exhausted", toggle);
+        check(toggle > 0 && refused > toggle && refused < server.indexOf("WORN.put(player.m_20148_(), new Worn(form, true, now, false))", toggle),
+            "calling one while resting is refused before it can come over him");
+        check(server.contains("restTick(player)") && server.contains("m_21023_(ControlItems.exhaustion())"), "Exhaustion kept showing while the rest lasts");
+        check(new java.io.File("src/main/resources/assets/hexkagune/textures/mob_effect/exhaustion.png").isFile(), "its icon is there");
+    }
+
+    static String read(String path) {
+        try {
+            return java.nio.file.Files.readString(java.nio.file.Path.of(path));
+        } catch (java.io.IOException failure) {
+            return "";
+        }
+    }
+
     public static void main(String[] args) {
+        exhaustion();
         crown();
         night();
         pose();
@@ -35,6 +67,9 @@ public final class KingTests {
         combo();
         peace();
         peaceBlades();
+        aegisGrown();
+        spireFirstPerson();
+        spireAttached();
         peaceArms();
         cloth();
         coming();
@@ -560,6 +595,372 @@ public final class KingTests {
      * 1.0.16: Peace's four blades in every move, frame by frame: never inside his body (chain or weapon), the roots never leaving his
      * back, every point finite, each blade striking where its move says, the hand-over between moves never jumping.
      */
+    /**
+     * 3.2.8 (the owner: War's Spire Wave, "the move that charges centipedes from the left arm and shoots them forwards in a beam", janky
+     * in first person): from his own eyes the held-out left arm is in view (lower left, in front of him) at every charge and thrust; its
+     * centipedes stay round it, out of the middle of the view and off the eyes; let go, the mass comes out of the fist as a cone and
+     * never comes near the eyes; third person is drawn as before.
+     */
+    /**
+     * 3.4.5 (the owner: "Spirewave now is kind of bugged. It detaches from your hand if you move. Like, before it was fine"): as he sees it
+     * himself, the mass leaves the fist the hand pass draws, found from his eyes and look every frame, so it goes where he goes and turns
+     * as he turns; the server's spot (where it set out) is only where its path runs from.
+     */
+    private static void spireAttached() {
+        double[] eye = {10.0, 70.0, -4.0};
+        boolean front = true;
+        boolean follows = true;
+        boolean turns = true;
+        for (double yaw = -180.0; yaw < 180.0; yaw += 30.0) {
+            for (double pitch = -60.0; pitch <= 60.0; pitch += 30.0) {
+                for (double thrust = 0.0; thrust <= 1.0; thrust += 0.5) {
+                    double[] fist = com.hex.kagune.control.king.SpireArm.fist(eye, yaw, pitch, thrust);
+                    double y = Math.toRadians(yaw);
+                    double p = Math.toRadians(pitch);
+                    double[] look = {-Math.sin(y) * Math.cos(p), -Math.sin(p), Math.cos(y) * Math.cos(p)};
+                    double[] right = {-Math.cos(y), 0.0, -Math.sin(y)};
+                    double[] d = {fist[0] - eye[0], fist[1] - eye[1], fist[2] - eye[2]};
+                    double ahead = d[0] * look[0] + d[1] * look[1] + d[2] * look[2];
+                    double side = d[0] * right[0] + d[2] * right[2];
+                    front &= ahead > 0.35 && side < 0.0 && Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) < 2.0;
+                    // Walked three blocks and stepped up one: the fist with him, exactly.
+                    double[] moved = com.hex.kagune.control.king.SpireArm.fist(new double[] {eye[0] + 3.0, eye[1] + 1.0, eye[2] - 2.0}, yaw, pitch, thrust);
+                    follows &= Math.abs(moved[0] - fist[0] - 3.0) < 1.0E-9 && Math.abs(moved[1] - fist[1] - 1.0) < 1.0E-9 && Math.abs(moved[2] - fist[2] + 2.0) < 1.0E-9;
+                    // Turned: the same distance from the eyes, somewhere else.
+                    double[] turned = com.hex.kagune.control.king.SpireArm.fist(eye, yaw + 90.0, pitch, thrust);
+                    double[] t = {turned[0] - eye[0], turned[1] - eye[1], turned[2] - eye[2]};
+                    turns &= Math.abs(Math.sqrt(t[0] * t[0] + t[1] * t[1] + t[2] * t[2]) - Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2])) < 1.0E-9
+                        && Math.abs(turned[0] - fist[0]) + Math.abs(turned[2] - fist[2]) > 0.2;
+                }
+            }
+        }
+        check(front, "his fist is ahead of his eyes, to the left, within reach, whichever way he looks");
+        check(follows, "walking and climbing, the fist goes with him exactly");
+        check(turns, "turning, the fist turns with him");
+        // The mass leaves that fist, however far he has walked from where it set out.
+        double[] from = {0.0, 64.0, 0.0};
+        double[] fist = com.hex.kagune.control.king.SpireArm.fist(new double[] {6.0, 65.6, 4.0}, 0.0, 0.0, 0.8);
+        boolean leaves = true;
+        for (com.hex.kagune.control.king.WarHoldModel.Arm arm : com.hex.kagune.control.king.WarHoldModel.mass(from, new double[] {0.0, 0.0, 1.0}, fist, 8.0, 1.2,
+            0.6, 1.0, 6, 3, 6.0, 100.0, com.hex.kagune.control.king.SpireArm.NEAR)) {
+            double[] first = arm.path()[0];
+            leaves &= Math.abs(first[0] - fist[0]) + Math.abs(first[1] - fist[1]) + Math.abs(first[2] - fist[2]) < 1.0E-6;
+        }
+        check(leaves, "every centipede of the mass starts at his fist, not where it set out");
+    }
+
+    private static void spireFirstPerson() {
+        double tanV = Math.tan(Math.toRadians(35.0));
+        double tanH = tanV * 16.0 / 9.0;
+        boolean seen = true;
+        boolean clear = true;
+        String why = "";
+        for (double charge = 0.0; charge <= 1.0; charge += 0.25) {
+            for (double thrust = 0.0; thrust <= 1.0; thrust += 0.25) {
+                List<com.hex.kagune.control.king.SpireArm.Step> frame = com.hex.kagune.control.king.SpireArm.coilFrame(charge, thrust);
+                double[] hand = com.hex.kagune.control.king.SpireArm.apply(frame, com.hex.kagune.control.king.SpireArm.hand());
+                double ahead = -hand[2];
+                boolean in = ahead > 0.35 && hand[0] < 0.0 && hand[1] < 0.0 && -hand[0] / ahead < tanH && -hand[1] / ahead < tanV;
+                if (!in) {
+                    seen = false;
+                    why += String.format(java.util.Locale.ROOT, " hand at c%.2f t%.2f: %.2f %.2f %.2f", charge, thrust, hand[0], hand[1], hand[2]);
+                }
+                if (thrust > 0.0) {
+                    continue;
+                }
+                for (double age = 2.0; age <= 100.0; age += 7.0) {
+                    for (com.hex.kagune.control.king.WarHoldModel.Arm arm : com.hex.kagune.control.king.WarHoldModel.coils(
+                        com.hex.kagune.control.king.SpireArm.elbow(), com.hex.kagune.control.king.SpireArm.hand(), age, 300.0 + age,
+                        com.hex.kagune.control.king.SpireArm.REACH, new double[] {0.0, 1.0, 0.0}, com.hex.kagune.control.king.SpireArm.THICK)) {
+                        for (double[] at : arm.path()) {
+                            double[] c = com.hex.kagune.control.king.SpireArm.apply(frame, at);
+                            double far = Math.sqrt(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]);
+                            boolean middle = -c[2] > 0.0 && Math.abs(c[0] / -c[2]) < 0.18 && Math.abs(c[1] / -c[2]) < 0.18;
+                            if (far < 0.3 || middle) {
+                                clear = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(seen, "first person: the held-out left arm is in front of him, lower left, in view at every charge and thrust" + why);
+        check(clear, "first person: the charge's centipedes stay round the arm, off the eyes and out of the middle of the view");
+        // Let go: the mass out of the fist, as the server sends it (0.7 ahead, 0.45 down, 0.3 to the left of the eyes).
+        double[] eye = {0.0, 1.62, 0.0};
+        double[] dir = {0.0, 0.0, 1.0};
+        double[] from = {-0.3, 1.17, 0.7};
+        boolean cone = true;
+        boolean off = true;
+        for (double charge : new double[] {0.0, 0.5, 1.0}) {
+            double reach = WarRulesView.reach(charge);
+            double size = com.hex.kagune.control.king.WarRules.spireSize(charge);
+            double speed = com.hex.kagune.control.king.WarRules.spireSpeed(charge);
+            int arms = com.hex.kagune.control.king.WarRules.spireArms(charge);
+            for (double age = 1.0; age < com.hex.kagune.control.king.WarRules.spireTicks(reach, speed); age += 1.0) {
+                for (com.hex.kagune.control.king.WarHoldModel.Arm arm : com.hex.kagune.control.king.WarHoldModel.mass(from, dir, from, reach, size, speed, charge,
+                    arms, 5, age, 400.0 + age, com.hex.kagune.control.king.SpireArm.NEAR)) {
+                    for (double[] at : arm.path()) {
+                        double x = at[2] - from[2];
+                        double r = Math.hypot(at[0] - from[0], at[1] - from[1]);
+                        if (x < 3.0 && r > 0.06 + x * com.hex.kagune.control.king.WarHoldModel.CONE + 1.0E-6) {
+                            cone = false;
+                        }
+                        if (Math.sqrt(Math.pow(at[0] - eye[0], 2) + Math.pow(at[1] - eye[1], 2) + Math.pow(at[2] - eye[2], 2)) < 0.6) {
+                            off = false;
+                        }
+                    }
+                }
+            }
+        }
+        check(cone, "first person: let go, the mass comes out of the fist as a cone (never wider than 0.06 + 0.26 a block out, in its first 3 blocks)");
+        check(off, "first person: let go, no centipede of the mass comes within 0.6 blocks of the eyes");
+        // Third person (anyone else watching) as before: the old calls are the new ones at their old values.
+        double[] elbow = {0.2, 1.3, 0.3};
+        double[] hand = {0.25, 1.32, 0.9};
+        List<com.hex.kagune.control.king.WarHoldModel.Arm> a = com.hex.kagune.control.king.WarHoldModel.coils(elbow, hand, 33.0, 512.0);
+        List<com.hex.kagune.control.king.WarHoldModel.Arm> b = com.hex.kagune.control.king.WarHoldModel.coils(elbow, hand, 33.0, 512.0, 1.1, new double[] {0.0, 1.0, 0.0},
+            1.0);
+        List<com.hex.kagune.control.king.WarHoldModel.Arm> m = com.hex.kagune.control.king.WarHoldModel.mass(from, dir, hand, 20.0, 2.0, 0.9, 0.8, 7, 5, 9.0, 512.0);
+        List<com.hex.kagune.control.king.WarHoldModel.Arm> n = com.hex.kagune.control.king.WarHoldModel.mass(from, dir, hand, 20.0, 2.0, 0.9, 0.8, 7, 5, 9.0, 512.0, 1.0);
+        check(same(a, b) && same(m, n), "third person: the Spire Wave's coils and mass are drawn exactly as before");
+        double back = 40.0;
+        check(com.hex.kagune.control.king.SpireArm.thrust(0.0, 20.0, back) == 0.0 && com.hex.kagune.control.king.SpireArm.thrust(4.0, 20.0, back) == 1.0
+            && com.hex.kagune.control.king.SpireArm.thrust(20.0, 20.0, back) == 1.0 && com.hex.kagune.control.king.SpireArm.thrust(back, 20.0, back) == 0.0,
+            "first person: the arm is thrust out with the mass, held through the crush, drawn back as it comes home");
+    }
+
+    /** The Spire Wave's reach at {@code charge} (a stand-in name for reading). */
+    private static final class WarRulesView {
+        static double reach(double charge) {
+            return com.hex.kagune.control.king.WarRules.spireReach(charge);
+        }
+    }
+
+    private static boolean same(List<com.hex.kagune.control.king.WarHoldModel.Arm> a, List<com.hex.kagune.control.king.WarHoldModel.Arm> b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+        for (int i = 0; i < a.size(); i++) {
+            com.hex.kagune.control.king.WarHoldModel.Arm x = a.get(i);
+            com.hex.kagune.control.king.WarHoldModel.Arm y = b.get(i);
+            if (x.width() != y.width() || x.path().length != y.path().length) {
+                return false;
+            }
+            for (int j = 0; j < x.path().length; j++) {
+                if (!java.util.Arrays.equals(x.path()[j], y.path()[j])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 3.2.7 (the owner: the shields were "too shield-like and floating above the tails"): every Aegis bulwark is one piece with the
+     * tendril that grows it, at rest and swung out (nothing floats off its end); none rests over his head (the top one rises behind
+     * it, out of what is on his back); the side ones hang close; the plate is a fan, out to its ribs and sagging in between.
+     */
+    private static void aegisGrown() {
+        double[] chest = {0.0, 1.25, 0.0};
+        double[] ahead = {0.0, 0.0, 1.0};
+        double[] right = {-1.0, 0.0, 0.0};
+        boolean whole = true;
+        boolean placed = true;
+        String why = "";
+        for (int frame = 0; frame < 2; frame++) {
+            for (int i = 0; i < com.hex.kagune.control.king.PeaceRules.SHIELDS; i++) {
+                double[] anchor = com.hex.kagune.control.king.PeaceFxModel.shieldRest(i, chest, ahead, right, 40.0 + frame * 17.0);
+                if (frame == 1) {
+                    double[] from = {-0.69, 0.1, 0.69};
+                    anchor = new double[] {chest[0] + from[0] * 1.35, chest[1] + from[1] * 1.35, chest[2] + from[2] * 1.35};
+                } else {
+                    double[] off = {anchor[0] - chest[0], anchor[1] - chest[1], anchor[2] - chest[2]};
+                    double fore = off[2];
+                    double flat = Math.sqrt(off[0] * off[0] + off[2] * off[2]);
+                    if (i == com.hex.kagune.control.king.PeaceRules.SHIELD_TOP) {
+                        placed &= off[1] <= 0.9 && fore < -0.2;
+                    } else {
+                        placed &= flat <= 1.3 && Math.abs(off[1]) < 0.3;
+                    }
+                }
+                List<double[]> quads = new ArrayList<>();
+                com.hex.kagune.control.king.PeaceFxModel.aegisShield((a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new double[] {a[0], a[1], a[2], b[0], b[1], b[2],
+                    c[0], c[1], c[2], d[0], d[1], d[2]}), i, chest, ahead, right, anchor, 1.0, 40.0, true, 8);
+                int pieces = pieces(quads, TOUCH);
+                if (pieces != 1) {
+                    whole = false;
+                    why += " shield " + i + (frame == 1 ? " swung" : " at rest") + ": " + pieces + " pieces";
+                }
+            }
+        }
+        check(whole, "each Aegis bulwark is one piece with its tendril, at rest and swung out" + why);
+        check(placed, "no Aegis bulwark rests over his head: the top one rises behind it, the side ones hang close at his sides");
+        boolean fan = true;
+        int ribs = com.hex.kagune.control.king.PeaceFxModel.RIBS;
+        for (int k = 0; k < ribs; k++) {
+            double a = Math.PI * 2.0 * k / ribs;
+            double between = a + Math.PI / ribs;
+            double next = a + Math.PI * 2.0 / ribs;
+            for (double t = 0.0; t < 200.0; t += 23.0) {
+                double here = com.hex.kagune.control.king.PeaceFxModel.edge(a, t);
+                double there = com.hex.kagune.control.king.PeaceFxModel.edge(next, t);
+                fan &= here >= (k == 0 ? 1.1 : 0.99);
+                fan &= com.hex.kagune.control.king.PeaceFxModel.edge(between, t) <= 0.85 * Math.min(here, there);
+            }
+        }
+        check(fan, "a bulwark is a fan of flesh: out to each rib (the top one hooked further), sagging in at least 15% between them");
+        // And the check above would see one floating: a plate (with its stalk) held 0.4 blocks off its tendril's end, as the old shield hung
+        // off it, is two pieces.
+        List<double[]> apart = new ArrayList<>();
+        com.hex.kagune.control.ukaku.UkakuModel.Sink into = (a, b, c, d, n, ca, cb, cc, cd) -> apart.add(new double[] {a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1],
+            c[2], d[0], d[1], d[2]});
+        double[] side = com.hex.kagune.control.king.PeaceFxModel.shieldRest(com.hex.kagune.control.king.PeaceRules.SHIELD_RIGHT, chest, ahead, right, 40.0);
+        com.hex.kagune.control.king.PeaceFxModel.aegisShield(into, com.hex.kagune.control.king.PeaceRules.SHIELD_RIGHT, chest, ahead, right, side, 1.0, 40.0, false, 8);
+        double[] way = {side[0] - chest[0], (side[1] - chest[1]) * 0.3, side[2] - chest[2]};
+        double len = Math.sqrt(way[0] * way[0] + way[1] * way[1] + way[2] * way[2]);
+        way = new double[] {way[0] / len, way[1] / len, way[2] / len};
+        double[] out = {side[0] + way[0] * 0.44, side[1] + way[1] * 0.44, side[2] + way[2] * 0.44};
+        com.hex.kagune.control.king.PeaceFxModel.shield(into, out, way, new double[] {0.0, 1.0, 0.0}, 1.15, 40.0);
+        check(pieces(apart, TOUCH) >= 2, "a bulwark held off its tendril's end would be seen as floating");
+    }
+
+    /** 3.2.7: how near two parts must come to count as touching (blocks: a corner of one to the surface of the other). */
+    static final double TOUCH = 0.03;
+
+    /**
+     * How many separate pieces {@code quads} (12 numbers each: four corners) make, two touching when a corner of either comes within
+     * {@code touch} of the other's surface (its two triangles).
+     */
+    static int pieces(List<double[]> quads, double touch) {
+        int n = quads.size();
+        int[] parent = new int[n];
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+        }
+        double cellSize = 0.25;
+        java.util.Map<Long, List<Integer>> grid = new java.util.HashMap<>();
+        double[][] box = new double[n][];
+        for (int q = 0; q < n; q++) {
+            double[] p = quads.get(q);
+            double[] b = {1.0E9, 1.0E9, 1.0E9, -1.0E9, -1.0E9, -1.0E9};
+            for (int v = 0; v < 4; v++) {
+                for (int k = 0; k < 3; k++) {
+                    b[k] = Math.min(b[k], p[v * 3 + k] - touch);
+                    b[k + 3] = Math.max(b[k + 3], p[v * 3 + k] + touch);
+                }
+            }
+            box[q] = b;
+            for (long x = (long)Math.floor(b[0] / cellSize); x <= (long)Math.floor(b[3] / cellSize); x++) {
+                for (long y = (long)Math.floor(b[1] / cellSize); y <= (long)Math.floor(b[4] / cellSize); y++) {
+                    for (long z = (long)Math.floor(b[2] / cellSize); z <= (long)Math.floor(b[5] / cellSize); z++) {
+                        grid.computeIfAbsent((x & 0x1FFFFF) << 42 | (y & 0x1FFFFF) << 21 | (z & 0x1FFFFF), k -> new ArrayList<>()).add(q);
+                    }
+                }
+            }
+        }
+        java.util.Set<Long> tried = new java.util.HashSet<>();
+        for (List<Integer> cell : grid.values()) {
+            for (int i = 0; i < cell.size(); i++) {
+                for (int j = i + 1; j < cell.size(); j++) {
+                    int a = cell.get(i);
+                    int b = cell.get(j);
+                    if (root(parent, a) == root(parent, b) || !tried.add((long)Math.min(a, b) << 32 | Math.max(a, b)) || !overlap(box[a], box[b])) {
+                        continue;
+                    }
+                    if (near(quads.get(a), quads.get(b), touch) || near(quads.get(b), quads.get(a), touch)) {
+                        parent[root(parent, a)] = root(parent, b);
+                    }
+                }
+            }
+        }
+        java.util.Set<Integer> roots = new java.util.HashSet<>();
+        for (int q = 0; q < n; q++) {
+            roots.add(root(parent, q));
+        }
+        return roots.size();
+    }
+
+    private static boolean overlap(double[] a, double[] b) {
+        return a[0] <= b[3] && b[0] <= a[3] && a[1] <= b[4] && b[1] <= a[4] && a[2] <= b[5] && b[2] <= a[5];
+    }
+
+    /** Whether a corner of quad {@code p} lies within {@code touch} of quad {@code q}'s surface. */
+    private static boolean near(double[] p, double[] q, double touch) {
+        double[] a = {q[0], q[1], q[2]};
+        double[] b = {q[3], q[4], q[5]};
+        double[] c = {q[6], q[7], q[8]};
+        double[] d = {q[9], q[10], q[11]};
+        for (int v = 0; v < 4; v++) {
+            double[] x = {p[v * 3], p[v * 3 + 1], p[v * 3 + 2]};
+            if (gap(x, a, b, c) <= touch || gap(x, a, c, d) <= touch) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** How far point {@code p} is from triangle {@code a b c} (its nearest point, edges and corners included). */
+    static double gap(double[] p, double[] a, double[] b, double[] c) {
+        double[] ab = sub3(b, a);
+        double[] ac = sub3(c, a);
+        double[] ap = sub3(p, a);
+        double d1 = dot3(ab, ap);
+        double d2 = dot3(ac, ap);
+        double[] at;
+        if (d1 <= 0.0 && d2 <= 0.0) {
+            at = a;
+        } else {
+            double[] bp = sub3(p, b);
+            double d3 = dot3(ab, bp);
+            double d4 = dot3(ac, bp);
+            double[] cp = sub3(p, c);
+            double d5 = dot3(ab, cp);
+            double d6 = dot3(ac, cp);
+            double vc = d1 * d4 - d3 * d2;
+            double vb = d5 * d2 - d1 * d6;
+            double va = d3 * d6 - d5 * d4;
+            if (d3 >= 0.0 && d4 <= d3) {
+                at = b;
+            } else if (d6 >= 0.0 && d5 <= d6) {
+                at = c;
+            } else if (vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0) {
+                at = lerp3(a, ab, d1 / (d1 - d3));
+            } else if (vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0) {
+                at = lerp3(a, ac, d2 / (d2 - d6));
+            } else if (va <= 0.0 && d4 - d3 >= 0.0 && d5 - d6 >= 0.0) {
+                at = lerp3(b, sub3(c, b), (d4 - d3) / ((d4 - d3) + (d5 - d6)));
+            } else {
+                double den = 1.0 / (va + vb + vc);
+                double v = vb * den;
+                double w = vc * den;
+                at = new double[] {a[0] + ab[0] * v + ac[0] * w, a[1] + ab[1] * v + ac[1] * w, a[2] + ab[2] * v + ac[2] * w};
+            }
+        }
+        double[] off = sub3(p, at);
+        return Math.sqrt(dot3(off, off));
+    }
+
+    private static double[] sub3(double[] a, double[] b) {
+        return new double[] {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
+    }
+
+    private static double dot3(double[] a, double[] b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    }
+
+    private static double[] lerp3(double[] a, double[] way, double t) {
+        return new double[] {a[0] + way[0] * t, a[1] + way[1] * t, a[2] + way[2] * t};
+    }
+
+    private static int root(int[] parent, int i) {
+        while (parent[i] != i) {
+            parent[i] = parent[parent[i]];
+            i = parent[i];
+        }
+        return i;
+    }
+
     private static void peaceBlades() {
         com.hex.kagune.control.king.KingMove[] moves = {com.hex.kagune.control.king.KingMove.NONE, com.hex.kagune.control.king.KingMove.BLADES,
             com.hex.kagune.control.king.KingMove.WALTZ, com.hex.kagune.control.king.KingMove.AEGIS, com.hex.kagune.control.king.KingMove.AEGIS_OPEN,
@@ -1238,6 +1639,43 @@ public final class KingTests {
         check(half[half.length - 1][1] < 75.0, "V: and its point leads it up");
         check(Boolean.TRUE.equals(com.hex.kagune.control.king.WarRules.lashes(3.0)) && Boolean.FALSE.equals(com.hex.kagune.control.king.WarRules.lashes(12.0))
             && com.hex.kagune.control.king.WarRules.lashes(30.0) == null, "the instinct lashes near, shoots far, leaves the rest");
+        // 1.3.66 (the owner: "like unmoving branches of a tree"): the rinkaku sway as the original tentacles do, follow him, and never go
+        // into the ground under him.
+        WarModel.Motion calm = WarModel.Motion.STILL;
+        double leastMove = Double.MAX_VALUE;
+        double lowest = Double.MAX_VALUE;
+        boolean sane = true;
+        for (int sx = -1; sx <= 1; sx += 2) {
+            for (int level = 0; level < 3; level++) {
+                double most = 0.0;
+                for (double t = 0.0; t < 2400.0; t += 37.0) {
+                    java.util.List<double[]> a = WarModel.centre(sx, level, t, 1.0, calm);
+                    java.util.List<double[]> b = WarModel.centre(sx, level, t + 40.0, 1.0, calm);
+                    double[] ta = a.get(a.size() - 1);
+                    double[] tb = b.get(b.size() - 1);
+                    most = Math.max(most, Math.sqrt(Math.pow(ta[0] - tb[0], 2) + Math.pow(ta[1] - tb[1], 2) + Math.pow(ta[2] - tb[2], 2)));
+                    for (WarModel.Motion m : new WarModel.Motion[] {calm, calm.drifting(0.6, 1.0, -0.6), calm.drifting(-0.6, 0.0, 0.6),
+                        new WarModel.Motion(0.0, 0.0, 0.1, 0.9).drifting(0.3, 1.0, 0.0)}) {
+                        for (double[] q : WarModel.centre(sx, level, t, 1.0, m)) {
+                            sane &= Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]) && Math.abs(q[0]) < 60.0 && q[1] < 70.0;
+                            lowest = Math.min(lowest, q[1]);
+                        }
+                    }
+                }
+                leastMove = Math.min(leastMove, most);
+            }
+        }
+        check(sane, "the rinkaku stay finite and near him however he moves");
+        check(lowest >= WarModel.FLOOR - 1.0E-9, "never into the ground under him (lowest " + lowest + ")");
+        check(leastMove > 5.0, "every rinkaku's point really moves: at least " + leastMove + " pixels in two seconds somewhere (it swayed 1.3 either way, 2.7 in a jerk)");
+        java.util.List<double[]> standing = WarModel.centre(1, 1, 500.0, 1.0, calm);
+        java.util.List<double[]> running = WarModel.centre(1, 1, 500.0, 1.0, calm.drifting(0.0, 1.0, 0.0));
+        java.util.List<double[]> rising = WarModel.centre(1, 1, 500.0, 1.0, calm.drifting(0.0, 0.0, 0.5));
+        java.util.List<double[]> turning = WarModel.centre(1, 1, 500.0, 1.0, calm.drifting(0.5, 0.0, 0.0));
+        double[] s0 = standing.get(standing.size() - 1);
+        check(running.get(running.size() - 1)[2] > s0[2] + 5.0 && rising.get(rising.size() - 1)[1] < s0[1] - 2.0
+            && turning.get(turning.size() - 1)[0] > s0[0] + 2.0 && Math.abs(running.get(0)[2] - standing.get(0)[2]) < 1.0E-9,
+            "they follow him: streaming back as he runs, left below as he rises, left behind as he turns (the root stays on his back)");
         for (int i = 0; i < 6; i++) {
             double[] tip = WarModel.tendrilTip(i);
             check(Math.signum(tip[0]) == (i % 2 == 0 ? -1.0 : 1.0) && Math.abs(tip[0]) > 10.0, "rinkaku " + i + "'s point is out on its side");
@@ -1268,7 +1706,7 @@ public final class KingTests {
         // 1.0.22: War's and Peace's panels are the other forms' card: the bound keys, the six abilities in order, K and R to turn back.
         java.util.Map<AbilityGuide.Key, String> bound = new java.util.EnumMap<>(AbilityGuide.Key.class);
         String[][] boundNames = {{"ATTACK", "LMB"}, {"USE", "RMB"}, {"TOGGLE", "R"}, {"CYCLE", "K"}, {"RAPID", "Ctrl+F"}, {"SLINGSHOT", "J"},
-            {"GRAB", "G"}, {"SLAM", "B"}, {"GUARD", "C"}, {"LIFT", "V"}, {"UNLEASH", "LCtrl"}};
+            {"GRAB", "G"}, {"SLAM", "B"}, {"GUARD", "C"}, {"LIFT", "V"}, {"UNLEASH", "LCtrl"}, {"REGEN", "X"}};
         for (String[] name : boundNames) {
             bound.put(AbilityGuide.Key.valueOf(name[0]), name[1]);
         }
@@ -1276,14 +1714,17 @@ public final class KingTests {
             AbilityGuide.Panel panel = AbilityGuide.king(bound, peace);
             java.util.List<AbilityGuide.Row> rows = panel.rows();
             int six = com.hex.kagune.control.king.WarRules.Ability.values().length;
-            check(rows.size() == AbilityGuide.KING_FIRST + six + 3, (peace ? "Peace" : "War") + ": M1, air, heavy, six abilities, K, R, Ctrl + R");
+            check(rows.size() == AbilityGuide.KING_FIRST + six + 4, (peace ? "Peace" : "War") + ": M1, air, heavy, six abilities, K, R, Ctrl + R, X");
             check(rows.get(AbilityGuide.KING_FIRST).keys().equals("Ctrl+F") && rows.get(AbilityGuide.KING_FIRST + six - 1).keys().equals("V"),
                 "the abilities on the keys bound in Controls, in order");
             check(rows.get(AbilityGuide.KING_FIRST).name().equals(peace ? com.hex.kagune.control.king.PeaceRules.Ability.WALTZ.displayName()
                 : com.hex.kagune.control.king.WarRules.Ability.EXECUTION.displayName()), "the first ability is its own");
             // 1.2.0: K turns it back, R to kakugan mode (the eyes kept), Ctrl + R puts it all away.
-            check(rows.get(rows.size() - 1).keys().equals("LCtrl+R") && rows.get(rows.size() - 2).keys().equals("R")
-                && rows.get(rows.size() - 3).keys().startsWith("K"), "K turns it back, R to kakugan mode, Ctrl + R all away");
+            check(rows.get(rows.size() - 2).keys().equals("LCtrl+R") && rows.get(rows.size() - 3).keys().equals("R")
+                && rows.get(rows.size() - 4).keys().startsWith("K"), "K turns it back, R to kakugan mode, Ctrl + R all away");
+            // 4.2.2 (the owner: "It shows up in full form like war path or peace path"): the regeneration key last, as on every board.
+            check(rows.get(rows.size() - 1).keys().equals("X hold") && rows.get(rows.size() - 1).name().equals("Regenerate"),
+                (peace ? "Peace" : "War") + ": X held regenerates, the last row");
             check(rows.stream().noneMatch(AbilityGuide.Row::locked), "nothing locked in a final kakuja");
         }
         // 1.0.24: the kagune rides the torso as drawn: the carry is nothing at rest, and as one transform it is the point-by-point one.

@@ -1,0 +1,30 @@
+[
+ {
+  "name": "a trial's news in the chat",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "    static void flash(ServerPlayer player, Live live, String text, long now) {\n        player.m_5661_(Component.m_237113_(text), true);",
+  "new": "    static void flash(ServerPlayer player, Live live, String text, long now) {\n        player.m_5661_(Component.m_237113_(text), false);",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "a flash overwritten at once by the trial's bar",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        live.quietUntil = now + 60L;\n",
+  "new": "",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "a quest's news in the chat",
+  "file": "src/main/java/com/hex/kagune/control/server/QuestServer.java",
+  "old": "player.m_5661_(Component.m_237110_(\"message.hexkagune.quest.new\", quest.title()), true);",
+  "new": "player.m_5661_(Component.m_237110_(\"message.hexkagune.quest.new\", quest.title()), false);",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "the coffee's how told in the chat",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "flash(player, live, \"§6New timed quest: §f\"",
+  "new": "player.m_5661_(Component.m_237113_(\"§6Anteiku: §fKen hands you the makings\"), false); flash(player, live, \"§6New timed quest: §f\"",
+  "suite": "TraceTests"
+ }
+]

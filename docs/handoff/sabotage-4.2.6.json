@@ -1,0 +1,16 @@
+[
+ {"name": "the General's new topics never offered", "file": "src/main/java/com/hex/kagune/control/npc/GeneralScript.java",
+  "old": "        return ALL;\n    }", "new": "        return TOPICS;\n    }", "suite": "TalkRulesTests"},
+ {"name": "Ayato's new topics never offered", "file": "src/main/java/com/hex/kagune/control/npc/AyatoScript.java",
+  "old": "        return ALL;\n    }", "new": "        return TOPICS;\n    }", "suite": "TalkRulesTests"},
+ {"name": "Noro's new topics never offered", "file": "src/main/java/com/hex/kagune/control/npc/NoroScript.java",
+  "old": "        return ALL;\n    }", "new": "        return TOPICS;\n    }", "suite": "TalkRulesTests"},
+ {"name": "the General's partners replaceable for free", "file": "src/main/java/com/hex/kagune/control/npc/GeneralTopics.java",
+  "old": "Get out of my office.\", -6, EtoGesture.ANGRY", "new": "Get out of my office.\", 0, EtoGesture.ANGRY", "suite": "TalkRulesTests"},
+ {"name": "Bunny said again and again", "file": "src/main/java/com/hex/kagune/control/npc/AyatoTopics.java",
+  "old": "                EtoTopics.Follow.once(\"Bunny.\"", "new": "                new EtoTopics.Follow(\"Bunny.\"", "suite": "TalkRulesTests"},
+ {"name": "Noro chattering away", "file": "src/main/java/com/hex/kagune/control/npc/NoroTopics.java",
+  "old": "c -> r(\"...Then it stops.\", 1, EtoGesture.NONE)", "new": "c -> r(\"...Then it stops.\", 9, EtoGesture.NONE)", "suite": "TalkRulesTests"},
+ {"name": "a topic with nothing to say", "file": "src/main/java/com/hex/kagune/control/npc/NoroTopics.java",
+  "old": "c -> \"Is Noro your real name?\", c -> \"*A long silence.* ...No.\",", "new": "c -> \"Is Noro your real name?\", c -> \" \",", "suite": "TalkRulesTests"}
+]

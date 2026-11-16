@@ -146,7 +146,7 @@ public final class UkakuServer {
         }
         KaguneProfile.root(player).m_128405_(MUTATIONS_KEY, mask | mutation.bit());
         player.m_5661_(Component.m_237110_("message.hexkagune.ukaku.mutation_unlocked", mutation.displayName()), true);
-        KaguneServerController.playSelf(player, com.hex.kagune.sound.HexKaguneSounds.KAGUNE_RESHAPE, 0.8F, KaguneServerController.vary(player, 1.3F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.MUTATION, 1.0F, KaguneServerController.vary(player, 1.0F, 0.05F));
         state(player).dirty = true;
     }
 
@@ -220,9 +220,9 @@ public final class UkakuServer {
         state.bladeChangedAt = now;
         state.dirty = true;
         net.minecraft.world.phys.Vec3 arm = player.m_20182_().m_82520_(0.0, 1.2, 0.0);
-        UkakuFire.sound(player.m_284548_(), arm, state.blade ? "item.trident.return" : "item.armor.equip_iron", 1.2F,
+        UkakuFire.sound(player.m_284548_(), arm, state.blade ? com.hex.kagune.control.ukaku.UkakuSounds.BLADE_DRAW : com.hex.kagune.control.ukaku.UkakuSounds.BLADE_SHEATHE, 1.2F,
             KaguneServerController.vary(player, state.blade ? 0.6F : 0.8F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), arm, "block.anvil.place", 0.5F, KaguneServerController.vary(player, 1.6F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), arm, com.hex.kagune.control.ukaku.UkakuSounds.BLADE_SET, 0.5F, KaguneServerController.vary(player, 1.6F, 0.05F));
     }
 
     /**
@@ -254,6 +254,10 @@ public final class UkakuServer {
             String key = form(player) == WingForm.ONE_WING ? "message.hexkagune.ukaku.crystal_one_wing"
                 : form(player).kakuja() ? "message.hexkagune.ukaku.kakuja_no_wings" : "message.hexkagune.ukaku.crystal_locked";
             player.m_5661_(Component.m_237110_(key, new Object[] {UkakuRules.CRYSTAL_MASTERY}), true);
+            return;
+        }
+        // 1.3.14: crystallizing the wings is Touka's to teach (Teaching): the mastery, then her.
+        if (!state.crystalMode && !QuestServer.pass(player, com.hex.kagune.control.quest.Gate.UKAKU_CRYSTAL)) {
             return;
         }
         if (state.crystalChangedAt != Long.MIN_VALUE && now - state.crystalChangedAt < UkakuRules.CRYSTAL_TOGGLE_TICKS
@@ -301,7 +305,8 @@ public final class UkakuServer {
         // Graft DNA's).
         PaleServer.onPathChanged(player);
         GraftServer.onPathChanged(player);
-        if (ukaku || path == KagunePath.PALE || path == KagunePath.GRAFT) {
+        BikakuServer.onPathChanged(player); // 3.4.9
+        if (ukaku || path == KagunePath.PALE || path == KagunePath.GRAFT || path == KagunePath.BIKAKU) {
             RinkakuStash.stash(player);
         } else {
             RinkakuStash.restore(player);
@@ -399,6 +404,22 @@ public final class UkakuServer {
             }
             return;
         }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.BLOCK) {
+            RinkakuBlockServer.input(player, targetId); // 2.0.42: it checks for itself (a stunned body's block comes down)
+            return;
+        }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.THY_DEATH) {
+            ThyDeathServer.input(player, targetId); // 2.4.5
+            return;
+        }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.IMPALE) {
+            ImpaleServer.input(player, targetId); // 3.1.5: it checks for itself (a let-go always gets through)
+            return;
+        }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.HURL) {
+            HurlServer.input(player, targetId); // 3.1.6: it checks for itself (a let-go always gets through)
+            return;
+        }
         if (PaleStun.stunned(player)) {
             return; // 7.0.2: stunned, no kagune answers
         }
@@ -414,7 +435,13 @@ public final class UkakuServer {
             } else if (GraftServer.isGraft(player)) {
                 // 7.0.0: tapped, his kakuja (in or out); held, his next base stage.
                 GraftServer.kakujaKey(player, hold);
+            } else if (BikakuServer.isBikaku(player)) {
+                BikakuServer.kakujaKey(player, hold); // 3.5.4: its kakuja, tapped or held
             }
+            return;
+        }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.REAPER_DASH) {
+            ReaperDashServer.dash(player, targetId); // 2.1.7
             return;
         }
         if (action == com.hex.kagune.control.network.C2SUkakuAction.DASH) {

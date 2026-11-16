@@ -12,5 +12,7 @@ public class LivingEntityUseItemEvent extends LivingEvent {
 
     public static class Finish extends LivingEntityUseItemEvent {
         public net.minecraft.world.item.ItemStack getResultStack() { throw new UnsupportedOperationException(); }
+        /** 1.3.40: a dish's bowl or bottle handed back */
+        public void setResultStack(net.minecraft.world.item.ItemStack result) { throw new UnsupportedOperationException(); }
     }
 }

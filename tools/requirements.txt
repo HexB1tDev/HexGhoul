@@ -1,0 +1,4 @@
+# Python packages the build's checks need (tools/npc_spots.py, run by NpcTests.footing, loads city_render and interior_render).
+# Installed by .github/workflows/build.yml and release.yml; pinned to the versions the local builds ran with.
+numpy==2.5.3
+pillow==12.3.0

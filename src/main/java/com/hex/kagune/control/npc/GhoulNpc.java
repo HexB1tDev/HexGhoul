@@ -26,6 +26,9 @@ public class GhoulNpc extends PathfinderMob {
     public static final String KEY = "HexGhoulNpc";
 
     private NpcIdentity identity;
+    /** 2.1.9: 1 while it trembles (Peace or War in front of it), else 0. */
+    static final net.minecraft.network.syncher.EntityDataAccessor<Integer> AFRAID = net.minecraft.network.syncher.SynchedEntityData.m_135353_(
+        GhoulNpc.class, net.minecraft.network.syncher.EntityDataSerializers.f_135028_);
     /** The server's state for it (its prey, its grudges, its move); null on clients and until its first tick. */
     public GhoulNpcBrain.Mind mind;
 
@@ -41,6 +44,24 @@ public class GhoulNpc extends PathfinderMob {
             .m_22268_(Attributes.f_22277_, 32.0)
             .m_22268_(Attributes.f_22284_, NpcRules.armor(0))
             .m_22268_(Attributes.f_22278_, 0.3);
+    }
+
+    @Override
+    protected void m_8097_() {
+        super.m_8097_();
+        this.f_19804_.m_135372_(AFRAID, 0);
+    }
+
+    /** 2.1.9: true while it trembles before Peace or War. */
+    public boolean afraid() {
+        return this.f_19804_.m_135370_(AFRAID) != 0;
+    }
+
+    public void afraid(boolean afraid) {
+        int value = afraid ? 1 : 0;
+        if (this.f_19804_.m_135370_(AFRAID) != value) {
+            this.f_19804_.m_135381_(AFRAID, value);
+        }
     }
 
     /** Who it is, as kept in its saved data (server), or null if it has none yet. */

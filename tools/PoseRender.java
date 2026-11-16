@@ -177,6 +177,8 @@ public final class PoseRender {
     static boolean slim = false;
     /** 1.0.41: no elbows or knees bent (a mob on vanilla's player model, as a ghoul NPC is drawn): its limbs swing whole. */
     static boolean stiff = false;
+    /** 2.0.45: how much further out (pixels) both arms hang (the White Reaper's, ReaperBuild.ARM_OUT). */
+    static double armOut = 0.0;
     /** What {@link #textured} returns for a see-through texel of the second layer: no cell drawn there. */
     static final int SEE_THROUGH = -1;
 
@@ -258,8 +260,8 @@ public final class PoseRender {
         // 6.2.0: a pose bulked up of its own (RigPose.bulk) pushes its arms out itself.
         double bulk = Math.max(PoseRender.bulk, pose.bulk);
         double out = armSeparation(bulk) - RigPose.BULK_SPREAD * pose.bulk;
-        Part rightArm = part(pose, "rightArm", -5 - out, 2, 0, 0, 0, BOB);
-        Part leftArm = part(pose, "leftArm", 5 + out, 2, 0, 0, 0, -BOB);
+        Part rightArm = part(pose, "rightArm", -5 - out - armOut, 2, 0, 0, 0, BOB);
+        Part leftArm = part(pose, "leftArm", 5 + out + armOut, 2, 0, 0, 0, -BOB);
         Part rightLeg = part(pose, "rightLeg", -1.9, 12, 0.1, 0, 0, 0);
         Part leftLeg = part(pose, "leftLeg", 1.9, 12, 0.1, 0, 0, 0);
         double upperAxisAngle = -body.bendAxis;
@@ -322,8 +324,8 @@ public final class PoseRender {
         Part part;
         Cube cube;
         switch (name) {
-            case "rightArm" -> { part = part(pose, name, -5, 2, 0, 0, 0, BOB); cube = new Cube(new double[] {-3, -2, -2}, new double[] {1, 10, 2}, 1, PoseRender::arm); upperPart = true; }
-            case "leftArm" -> { part = part(pose, name, 5, 2, 0, 0, 0, -BOB); cube = new Cube(new double[] {-1, -2, -2}, new double[] {3, 10, 2}, 1, PoseRender::arm); upperPart = true; }
+            case "rightArm" -> { part = part(pose, name, -5 - armOut, 2, 0, 0, 0, BOB); cube = new Cube(new double[] {-3, -2, -2}, new double[] {1, 10, 2}, 1, PoseRender::arm); upperPart = true; }
+            case "leftArm" -> { part = part(pose, name, 5 + armOut, 2, 0, 0, 0, -BOB); cube = new Cube(new double[] {-1, -2, -2}, new double[] {3, 10, 2}, 1, PoseRender::arm); upperPart = true; }
             case "rightLeg" -> { part = part(pose, name, -1.9, 12, 0.1, 0, 0, 0); cube = new Cube(new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, PoseRender::leg); upperPart = false; }
             case "leftLeg" -> { part = part(pose, name, 1.9, 12, 0.1, 0, 0, 0); cube = new Cube(new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, PoseRender::leg); upperPart = false; }
             case "torso" -> {

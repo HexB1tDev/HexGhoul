@@ -20,6 +20,7 @@ public class PathScreenPreview {
     public static void main(String[] a) throws Exception {
         render(480, 270, 3, "UKAKU", 1.25, a[0] + "/path-choice-1080p.png");
         render(320, 240, 3, "NONE", 0.4, a[0] + "/path-choice-smallest.png");
+        render(480, 270, 3, "BIKAKU", 1.25, a[0] + "/path-choice-bikaku.png"); // 3.4.9
     }
 
     static Color c(int rgb) { return new Color(rgb); }

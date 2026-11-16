@@ -51,6 +51,14 @@ public final class PaleRules {
         return 1.05 + targetWidth * 0.5;
     }
 
+    /**
+     * 4.1.7: how far from a target's middle she stops for a kick (Kick Master): a kicker fights from further out than a boxer, at the
+     * reach of a leg (its front 1.15 blocks off: a model leg is 0.70 long from a hip 0.11 to the side, with the step in behind it).
+     */
+    public static double comboKickStand(double targetWidth) {
+        return 1.15 + targetWidth * 0.5;
+    }
+
     /** A blink needs a target this close. */
     public static final double BLINK_RANGE = 8.0;
 
@@ -372,14 +380,56 @@ public final class PaleRules {
         return (int)Math.max(KICK_DASH_MIN, Math.min(KICK_DASH, Math.ceil(distance / KICK_DASH_SPEED)));
     }
 
-    /** The tick she is there in front of it (the dash {@code dash} ticks): the lunge, then the dash. */
-    public static int kickArrive(int dash) {
-        return KICK_BURST + Math.max(1, dash);
+    // ------------------------------------------------------------------ 4.1.8: Kick Master's right click held (its charge)
+    //
+    // 4.1.8 charged a twirling Speed Kick on the hold. 4.1.87 (the owner: "we need to redo the Kickmaster combat right click ability,
+    // which is basically we just copy pasted the V ability"): let go, it is the dash kick (DASH_KICK, below); the charge is as it was.
+
+    /** 4.1.8: the low bits of a speed kick's detail: the dash's ticks. */
+    public static final int KICK_DASH_BITS = 7;
+    /** 4.1.8: held this long (ticks) it is fully charged; past {@link #TWIRL_MAX_HOLD} it goes by itself. */
+    public static final int TWIRL_CHARGE_TICKS = 25;
+    public static final int TWIRL_MAX_HOLD = 80;
+    /** 4.1.8: how far (blocks) it reaches at no charge and at full; the launch's speed at no charge (of {@link #KICK_SPEED}). */
+    public static final double TWIRL_RANGE_MIN = 6.0;
+    public static final double TWIRL_RANGE_MAX = 20.0;
+    public static final double TWIRL_LAUNCH_MIN = 0.3;
+    public static final int TWIRL_COOLDOWN = 50;
+    public static final float TWIRL_COST = 6.0F;
+
+    /** 4.1.8: the dash's ticks in a speed kick's {@code detail}. */
+    public static int kickTicks(int detail) {
+        return detail & KICK_DASH_BITS;
     }
 
-    /** True while she is gone ({@code age} ticks in, the dash {@code dash} ticks): nothing of her is drawn. */
-    public static boolean kickGone(int dash, double age) {
-        return age >= KICK_BURST && age < kickArrive(dash);
+    /** 4.1.8: 0..1 charge after holding the right click {@code held} ticks (a floor of 0.15 for a quick release). */
+    public static float twirlChargeAt(double held) {
+        return (float)Math.max(0.15, Math.min(1.0, held / TWIRL_CHARGE_TICKS));
+    }
+
+    /** 4.1.8: how far it reaches at {@code charge}. */
+    public static double twirlRange(float charge) {
+        return TWIRL_RANGE_MIN + (TWIRL_RANGE_MAX - TWIRL_RANGE_MIN) * clamp01(charge);
+    }
+
+    /** 4.1.8: how much (0..1 of the Speed Kick's) its blow and launch carry at {@code charge}. */
+    public static double twirlPower(float charge) {
+        return TWIRL_LAUNCH_MIN + (1.0 - TWIRL_LAUNCH_MIN) * clamp01(charge);
+    }
+
+    /** The tick she is there, out of nowhere ({@code detail}: a speed kick's): the lunge, then the dash. */
+    public static int kickThere(int detail) {
+        return KICK_BURST + Math.max(1, kickTicks(detail));
+    }
+
+    /** The tick she is there in front of it, in the chamber the kick starts from ({@code detail}: a speed kick's): the lunge, the dash. */
+    public static int kickArrive(int detail) {
+        return kickThere(detail);
+    }
+
+    /** True while she is gone ({@code age} ticks in; {@code detail} a speed kick's): nothing of her is drawn. */
+    public static boolean kickGone(int detail, double age) {
+        return age >= KICK_BURST && age < kickThere(detail);
     }
 
     /** True while nothing can hurt her: from the lunge until she is there. */
@@ -393,7 +443,7 @@ public final class PaleRules {
      * dropping, down by {@link #KICK_LAND} after she was there.
      */
     public static double kickRise(int dash, double age) {
-        int ticks = Math.max(1, dash);
+        int ticks = Math.max(1, kickTicks(dash));
         double since = age - kickArrive(dash);
         if (since >= KICK_LAND) {
             return 0.0;
@@ -453,7 +503,7 @@ public final class PaleRules {
      * through the blow; then the rebound's hop, coming down where she kicked from. Null once she has landed (she is her own again).
      */
     public static double[] kickPlace(double[] to, int dash, double lift, double age) {
-        int ticks = Math.max(1, dash);
+        int ticks = Math.max(1, kickTicks(dash));
         int arrive = kickArrive(dash);
         if (age >= arrive + KICK_LAND) {
             return null;
@@ -461,7 +511,7 @@ public final class PaleRules {
         double rise = kickHeight(dash, lift, age);
         if (age < arrive) {
             // Fastest off the mark, slowing as she gets there.
-            double s = Math.max(0.0, age - KICK_BURST) / ticks;
+            double s = Math.min(1.0, Math.max(0.0, age - KICK_BURST) / ticks);
             double u = s * (KICK_DASH_PEAK - (KICK_DASH_PEAK - 1.0) * s);
             return new double[] {to[0] * u, to[1] * u + rise, to[2] * u};
         }
@@ -487,6 +537,153 @@ public final class PaleRules {
      */
     public static double kickCarried(double speed, int ticks, int blocks) {
         return speed * Math.pow(KICK_CARRY, Math.max(0, ticks)) * Math.pow(KICK_PER_BLOCK, Math.max(0, blocks));
+    }
+
+    // ------------------------------------------------------------------ 4.1.87: Kick Master's dash kick (right click let go)
+    /*
+     * The owner (quoted exactly): "The right click should be a chargeable dash kick, not a teleport, none of that, just like a dash. And
+     * as soon as you reach the location, you kick. Whatever's in the way is kicked to the left of the player, like hard to the left of
+     * the player. It goes basically flying, just like the V move sends you the enemy flying ragdolled." "The kick should be fairly
+     * simple. Get a location, ... the right leg cocks back, and then it just kicks, it goes upwards and leftwards, sort of, to the height
+     * of like the enemy's head" "Make sure that the head is also proportional. It doesn't rotate out of place." Asked how it ends: "He
+     * faces where he kicked at. So basically, he ends up facing to the left."; asked what it aims at: "A spot, and the dash's path too".
+     *
+     * Let go, she leans off the mark (DASH_BURST) and runs (seen: a real dash, never a teleport) to the spot, fastest off the mark and
+     * slowing into it (DASH_SPEED on average); whatever she runs into on the way is kicked aside, hard, to her left (DASH_SHOVE of the
+     * kick's launch). There (dashArrive), the right leg is cocked back, then swept up and across to her left at the height of a head
+     * (a little hop puts it there: dashLift), the blow on DASH_CONTACT; her whole body turns a quarter to her left with it (dashTurn),
+     * the head with it, and she is facing the way she kicked, to her left, as the leg comes down (DASH_LAND) and she is back in her guard
+     * (DASH_TICKS). Whatever the sweep meets (dashStruck) is launched to her left as the Speed Kick launches (dashFlight).
+     */
+    public static final int DASH_BURST = 2;
+    /** The run: on average this fast (blocks a tick), its fastest tick {@link #DASH_PEAK} times that; at least and at most these ticks. */
+    public static final double DASH_SPEED = 2.6;
+    public static final double DASH_PEAK = 1.3;
+    public static final int DASH_MIN = 2;
+    public static final int DASH_MAX = 8;
+    /** A spot nearer than this (blocks): no run, the kick where she stands. */
+    public static final double DASH_NONE = 0.6;
+    /** Ticks after she is there: the blow; turned to her left; the foot down; done. */
+    public static final int DASH_CONTACT = 3;
+    public static final double DASH_TURNED = 5.0;
+    public static final double DASH_LAND = 6.5;
+    public static final int DASH_TICKS = 10;
+    /** How far (blocks) in front of a body's front she stops for it. */
+    public static final double DASH_STAND = 0.7;
+    /** How high (blocks over her feet) her sole sweeps at the blow (the pose's, tested), and what of a body's height it goes for (its head). */
+    public static final double DASH_SOLE_Y = 1.25;
+    public static final double DASH_HEAD = 0.85;
+    /** The most she hops to put it there (blocks); a head this high (blocks) when there is no body to go by. */
+    public static final double DASH_LIFT_MAX = 1.2;
+    public static final double DASH_HEAD_ANY = 1.6;
+    /** The launch: up this much (blocks a tick) with it; what she runs into on the way gets this much of the kick. */
+    public static final double DASH_UP = 0.55;
+    public static final double DASH_SHOVE = 0.6;
+    /**
+     * Where the sweep reaches (blocks, as she faced when she let go: x to her right, y up from her feet, z ahead): from a little to her
+     * right across her front to well out on her left, from her knees to over a tall head.
+     */
+    public static final double DASH_REACH_RIGHT = 0.9;
+    public static final double DASH_REACH_LEFT = 2.4;
+    public static final double DASH_REACH_FRONT = 2.8;
+    public static final double DASH_REACH_BACK = 0.2;
+    public static final double DASH_REACH_LOW = -0.8;
+    public static final double DASH_REACH_HIGH = 2.8;
+
+    /** The dash kick's detail: its run's {@code ticks} (0..15) and the {@code charge} (0..1) it was let go at. */
+    public static int dashDetail(int ticks, float charge) {
+        return Math.max(0, Math.min(15, ticks)) | Math.round(clamp01(charge) * 15.0F) << 4;
+    }
+
+    /** The run's ticks in a dash kick's {@code detail}. */
+    public static int dashTicks(int detail) {
+        return detail & 15;
+    }
+
+    /** The charge (0..1) a dash kick's {@code detail} was let go at. */
+    public static float dashCharge(int detail) {
+        return ((detail >> 4) & 15) / 15.0F;
+    }
+
+    /** How many ticks the run over {@code distance} blocks takes: none for a spot nearer than {@link #DASH_NONE}. */
+    public static int dashTicksFor(double distance) {
+        return distance < DASH_NONE ? 0 : (int)Math.max(DASH_MIN, Math.min(DASH_MAX, Math.ceil(distance / DASH_SPEED)));
+    }
+
+    /** The tick she is there: the lean off the mark, then the run. */
+    public static int dashArrive(int detail) {
+        return DASH_BURST + dashTicks(detail);
+    }
+
+    /** The tick it is over (her guard, facing the way she kicked). */
+    public static int dashEnd(int detail) {
+        return dashArrive(detail) + DASH_TICKS;
+    }
+
+    /** True while nothing can hurt her ({@code age} ticks in): from letting go to the blow. */
+    public static boolean dashUntouchable(int detail, double age) {
+        return age >= 0.0 && age < dashArrive(detail) + DASH_CONTACT;
+    }
+
+    /**
+     * How far (radians, 0 to a quarter turn, to her left) she has turned {@code age} ticks in: none through the run and the leg cocked
+     * back; from just before the blow the body goes round with the leg, and by {@link #DASH_TURNED} she faces the way she kicked.
+     */
+    public static double dashTurn(int detail, double age) {
+        double from = dashArrive(detail) + DASH_CONTACT - 0.5;
+        double u = (age - from) / (dashArrive(detail) + DASH_TURNED - from);
+        u = Math.max(0.0, Math.min(1.0, u));
+        return Math.PI / 2.0 * u * u * (3.0 - 2.0 * u);
+    }
+
+    /** How far up (0..1 of her hop) she is {@code age} ticks in: off the ground into the blow, up through it, down by {@link #DASH_LAND}. */
+    public static double dashRise(int detail, double age) {
+        double since = age - dashArrive(detail);
+        double u;
+        if (since <= 1.0 || since >= DASH_LAND) {
+            return 0.0;
+        } else if (since < DASH_CONTACT) {
+            u = (since - 1.0) / (DASH_CONTACT - 1.0);
+        } else if (since <= DASH_CONTACT + 0.8) {
+            return 1.0;
+        } else {
+            u = 1.0 - (since - DASH_CONTACT - 0.8) / (DASH_LAND - DASH_CONTACT - 0.8);
+        }
+        return u * u * (3.0 - 2.0 * u);
+    }
+
+    /** How high (blocks) she hops to sweep her foot through a head {@code head} blocks over the ground she stands on. */
+    public static double dashLift(double head) {
+        return Math.max(0.0, Math.min(DASH_LIFT_MAX, head - DASH_SOLE_Y));
+    }
+
+    /**
+     * Where her feet are {@code age} ticks in (blocks, from where she let go; {@code to} the spot, from the same): there through the
+     * lean; the run, fastest off the mark and slowing into it; there, hopping {@code lift} into the blow and down. Null once her feet are
+     * down (she is her own again).
+     */
+    public static double[] dashPlace(double[] to, int detail, double lift, double age) {
+        int ticks = dashTicks(detail);
+        if (age >= dashArrive(detail) + DASH_LAND) {
+            return null;
+        }
+        double s = ticks <= 0 ? (age >= DASH_BURST ? 1.0 : 0.0) : Math.min(1.0, Math.max(0.0, age - DASH_BURST) / ticks);
+        double u = s * (DASH_PEAK - (DASH_PEAK - 1.0) * s);
+        return new double[] {to[0] * u, to[1] * u + lift * dashRise(detail, age), to[2] * u};
+    }
+
+    /** The way what she kicks flies (a level unit vector, {x to her right, z ahead}, as she faced when she let go): to her left. */
+    public static double[] dashFlight() {
+        return new double[] {-1.0, 0.0};
+    }
+
+    /**
+     * True if a body {@code half} wide (half its width) and {@code height} tall, its feet at ({@code x}, {@code y}, {@code z}) from her
+     * feet at the blow (as she faced when she let go), is in the sweep's reach.
+     */
+    public static boolean dashStruck(double x, double y, double z, double half, double height) {
+        return x >= -DASH_REACH_LEFT - half && x <= DASH_REACH_RIGHT + half && z >= -DASH_REACH_BACK - half && z <= DASH_REACH_FRONT + half
+            && y + height >= DASH_REACH_LOW && y <= DASH_REACH_HIGH;
     }
 
     // ------------------------------------------------------------------ Flesh Hammer (V held, released)

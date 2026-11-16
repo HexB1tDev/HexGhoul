@@ -1,0 +1,53 @@
+# HANDOFF: HexGhoul after 1.3.43. Read this first, then `docs/handoff/next-ai-1.3.33.md` (how the owner works, older ideas).
+
+Branch **`claude/relaxed-carson-4y0frw`** (check it out from origin; push with `git push -u origin claude/relaxed-carson-4y0frw`).
+Never push to `main`; no PR unless asked. Version **1.3.51** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
+**1.3.52**: 1.3.44-1.3.51 were the owner's reports and asks on the children; see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
+
+## House rules (the owner's, verbatim where quoted)
+
+- "Rules: nothing is tested in game, never claim it is. Look at your own previews honestly and match my marks exactly. Banned names in
+  the jar: Kaneki, Ayato, Furuta. Banned in visible text: Takatsuki, Aogiri, Yoshimura. Sounds only from the hexkagune: pack. Never
+  alter the owner's skins (only the generated overlays). Any new Minecraft API reference needs an entry in verify/api-allowlist.txt with
+  [srg] or [order] evidence plus a stub; stale entries also fail the build. Append only to ordinal-sent enums."
+- SRG lookups: `python3 tools/find_srg.py <yarn class> <member>`; obf names and ids in `build/mapping-cache/joined.tsrg` and
+  `intermediary-1.20.1.tiny` (verify every id you quote; Forge members cite the 1.20.1 Forge source file and line).
+- Every fix or feature ships as its own version: bump `build.py` VERSION and `patch/KagunePatch.java` VERSION, write
+  `.github/release-notes-<version>.md`, add a README entry (same shape as the others), add a new top section to
+  `docs/handoff/companions-handoff.md`, run the full `python3 build.py` to EXIT 0 (about 10-15 minutes; run it in the background),
+  commit as `1.3.xx: ...` with the trailers `Co-Authored-By: Claude <noreply@anthropic.com>` and the session's `Claude-Session:` line,
+  no model names anywhere (commits, code, docs), then push. Stage the version's files explicitly; never commit scratch files.
+- Answer the owner in English only, even when they write in another language. They value companion life, realism and depth.
+
+## What the last session shipped (details: the top sections of `docs/handoff/companions-handoff.md`)
+
+- **1.3.42** the partner cooks the cookbook's dishes at home (`family/Kitchen.cooking/choose/passes/dishDue`, `HomeKitchen.dinner/
+  cookDish/hand`, `HomeChores` COOK with `Job.dish`; ghoul spouses only; 4 a day, 2 minutes apart; `Menu.NAMES` from `tools/kitchen.py`).
+- **1.3.43** children inherit their parents' kagune, part 1: `family/KaguneGenes` + `Genome.kagune/colour`, Rinkaku tails and Ukaku
+  wing(s) on ghoul children (`server/ChildKagune`, `family/ChildKaguneRules`, drawn by `GraftRenderer`/`UkakuWingRenderer` at the
+  child's scale in the colour from one parent). Protocol 68.
+
+## What's next
+
+0. **The owner's newest asks (after 1.3.45), in this order, one version each:**
+   - (done in 1.3.47: child HP from its parents.)
+   - (done in 1.3.48: crystal, grab/throw/crush, flips; no kakuja. Confirm with the owner how "never a kakuja" squares with Eto's child's
+     "transformation at low health", which is her Owl kakuja.)
+   - (done in 1.3.49: parenting: fetching, night, rampages, the talks, a word when the kagune comes out.)
+1. (done in 1.3.50: Eto's child: her flesh and her Mutated Arm at low health; no Owl.) (done in 1.3.51: brothers and sisters; the
+   owner: "proceed with eto first and then move straight to the interactions"): siblings playing together (tag, chasing, hide and
+   seek, a big one spinning a toddler), talking to each other in bubbles by temper and age (teasing, bragging, comfort, ganging up on a
+   parent), an older one minding a toddler (holding its hand, fetching it back), fighting side by side and reacting to each other's
+   kagune, squabbles the companion parent breaks up, sharing food, sleeping near each other. Build on `Parenting`/`ParentDuty` (talks
+   as `ChildBrain.Mind.talk` queues: a sibling's line is just another speaker id) and `ChildMoment`.
+2. **The Human's structure later** (the owner: "spawnable via command only for now; future structure later"): don't build it until asked.
+3. Then the owner's bug reports from playing (they come first whenever they arrive; each fix its own version).
+
+## Things worth checking when the owner plays (all untested in game)
+
+- 1.3.42: a chore's cooking at the stove with a full chest; the "made" lines; the meal handed over; buckets and bottles put back;
+  `/kagune home`'s dish list. A human spouse gets no cookbook dishes (by design: every dish has ghoul or human meat).
+- 1.3.43/1.3.44: a ghoul child's one Rinkaku tentacle (the original's tube, built from a hand-made `KaguneClientState.View`: check its
+  thickness, veins and point in game) and its wing in a fight at its size (offline: `tools/ChildKagunePreview.java`), the shots' origin
+  at the wing tip, the colour; old children's kagune worked out once a player parent is online.
+- Older: the cookbook screen at every GUI scale; dish effects stacking; The Human's flee pathing; structure generation in new worlds.

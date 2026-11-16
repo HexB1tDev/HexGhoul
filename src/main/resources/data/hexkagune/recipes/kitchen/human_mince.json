@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "hexkagune:human_meat"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:human_mince",
+    "count": 2
+  }
+}

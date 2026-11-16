@@ -281,6 +281,27 @@ public final class KakujaFx {
         glass(player);
     }
 
+    /**
+     * 3.6.9 (the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."): the Bikaku kakuja breaking
+     * the way Rinkaku's does: what it was ({@code quads}, the world) into pieces flying off his middle, with the glass.
+     */
+    public static void shatterBikaku(AbstractClientPlayer player, List<KakujaBurst.Quad> quads) {
+        Minecraft minecraft = Minecraft.m_91087_();
+        if (quads.isEmpty() || minecraft.f_91074_ == null || player.m_20280_(minecraft.f_91074_) > SEEN_SQR) {
+            return;
+        }
+        double feetY = player.m_20186_();
+        double[] body = {player.m_20185_(), feetY + BIKAKU_MIDDLE, player.m_20189_()};
+        double floor = player.m_20096_() ? feetY + 0.03 : feetY - 2.5;
+        double now = player.m_9236_().m_46467_();
+        add(KakujaBurst.shatter(quads, BIKAKU_PIECE, body, floor, 1.0, player.m_19879_() * 0x9E3779B97F4A7C15L + (long)now));
+        glass(player);
+    }
+
+    /** 3.6.9: the Bikaku kakuja's middle above his feet (it is about 4.8 high), and how big its pieces are (blocks across). */
+    public static final double BIKAKU_MIDDLE = 2.2;
+    public static final double BIKAKU_PIECE = 0.7;
+
     private record LegShot(double[][] world, double[] dorsal, int side, CentipedeTail.Look look, long tick) {
     }
 
@@ -455,6 +476,10 @@ public final class KakujaFx {
     }
 
     private static void shatter(AbstractClientPlayer player, Track track, KaguneForm was, double now) {
+        // 2.1.0: what breaks off is in his kagune's own colours (KakujaPalette), as it was drawn.
+        com.hex.kagune.control.KakujaPalette.Palette palette = com.hex.kagune.control.KakujaPalette.of(KaguneClientState.get(player).color());
+        CentipedeTail.colours(palette);
+        com.hex.kagune.control.kakugan.CentipedeMask.colours(palette);
         if (track.shatteredAt == now) {
             return; // (broken already this tick: the death and the kagune put away arrive together)
         }
@@ -586,14 +611,16 @@ public final class KakujaFx {
     /** The kakuja breaking: a low glass break, twice over for weight. */
     private static void glass(AbstractClientPlayer player) {
         double y = player.m_20186_() + player.m_20206_() * 0.6;
-        Minecraft.m_91087_().m_91106_().m_120367_(new Shatter(player.m_20185_(), y, player.m_20189_(), 1.4F, 0.5F));
-        Minecraft.m_91087_().m_91106_().m_120367_(new Shatter(player.m_20185_(), y, player.m_20189_(), 1.0F, 0.62F));
+        // 4.1.93: each kagune's own break, the game's (KaguneVoiceClient); the others keep the pack's glass.
+        SoundEvent sound = com.hex.kagune.control.client.KaguneVoiceClient.kakujaBreak(player);
+        Minecraft.m_91087_().m_91106_().m_120367_(new Shatter(sound == null ? GLASS : sound, player.m_20185_(), y, player.m_20189_(), 1.4F, 0.5F));
+        Minecraft.m_91087_().m_91106_().m_120367_(new Shatter(sound == null ? GLASS : sound, player.m_20185_(), y, player.m_20189_(), 1.0F, 0.62F));
     }
 
     /** A one-shot glass break where the kakuja broke. */
     private static final class Shatter extends AbstractTickableSoundInstance {
-        private Shatter(double x, double y, double z, float volume, float pitch) {
-            super(GLASS, SoundSource.PLAYERS, SoundInstance.m_235150_());
+        private Shatter(SoundEvent sound, double x, double y, double z, float volume, float pitch) {
+            super(sound, SoundSource.PLAYERS, SoundInstance.m_235150_());
             this.f_119578_ = false;
             this.f_119579_ = 0;
             this.f_119573_ = volume;

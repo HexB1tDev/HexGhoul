@@ -2,6 +2,8 @@
 package net.minecraft.world.entity;
 
 public abstract class Entity {
+    /** entityData (1.3.27) */ protected final net.minecraft.network.syncher.SynchedEntityData f_19804_ = null;
+    /** defineSynchedData (1.3.27) */ protected void m_8097_() { throw new UnsupportedOperationException(); }
     /** xo, zo (the position a tick ago; 1.2.2) */ public double f_19854_;
     public double f_19856_;
     /** spawnAtLocation(stack) (7.0.2) */ public net.minecraft.world.entity.item.ItemEntity m_19983_(net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }
@@ -14,12 +16,14 @@ public abstract class Entity {
     /** hurtMarked */ public boolean f_19864_;
     /** hasImpulse */ public boolean f_19812_;
     /** fallDistance */ public float f_19789_;
+    /** 1.3.39: noPhysics */ public boolean f_19794_;
     /** teleportTo(x, y, z) (a ServerPlayer sends it to its client) */ public void m_6021_(double x, double y, double z) { throw new UnsupportedOperationException(); }
     /** setDeltaMovement(x, y, z) */ public void m_20334_(double x, double y, double z) { throw new UnsupportedOperationException(); }
     /** xo */ public double f_19790_;
     /** yo */ public double f_19791_;
     /** zo */ public double f_19792_;
     /** getUUID */ public java.util.UUID m_20148_() { throw new UnsupportedOperationException(); }
+    /** refreshDimensions */ public void m_6210_() { throw new UnsupportedOperationException(); }
     /** getId */ public int m_19879_() { throw new UnsupportedOperationException(); }
     /** level */ public net.minecraft.world.level.Level m_9236_() { throw new UnsupportedOperationException(); }
     /** position */ public net.minecraft.world.phys.Vec3 m_20182_() { throw new UnsupportedOperationException(); }
@@ -45,6 +49,7 @@ public abstract class Entity {
     /** setDeltaMovement */ public void m_20256_(net.minecraft.world.phys.Vec3 motion) { throw new UnsupportedOperationException(); }
     /** setPos(Vec3) */ public final void m_146884_(net.minecraft.world.phys.Vec3 position) { throw new UnsupportedOperationException(); }
     /** onGround */ public boolean m_20096_() { throw new UnsupportedOperationException(); }
+    /** setOnGround (3.7.1) */ public void m_6853_(boolean onGround) { throw new UnsupportedOperationException(); }
     /** isInWater */ public boolean m_20072_() { throw new UnsupportedOperationException(); }
     /** discard */ public void m_146870_() { throw new UnsupportedOperationException(); }
     /** isInWater (the touching-water check vanilla's sprint particles use) */ public boolean m_20069_() { throw new UnsupportedOperationException(); }
@@ -55,6 +60,9 @@ public abstract class Entity {
     /** isShiftKeyDown */ public boolean m_6144_() { throw new UnsupportedOperationException(); }
     /** isAlliedTo */ public boolean m_7307_(Entity other) { throw new UnsupportedOperationException(); }
     /** hasCustomName */ public boolean m_8077_() { throw new UnsupportedOperationException(); }
+    /** isPushable (1.3.15) */ public boolean m_6094_() { throw new UnsupportedOperationException(); }
+    /** setNoGravity (1.3.15) */ public void m_20242_(boolean noGravity) { throw new UnsupportedOperationException(); }
+    /** getCustomName */ public net.minecraft.network.chat.Component m_7770_() { throw new UnsupportedOperationException(); }
     /** hurt */ public boolean m_6469_(net.minecraft.world.damagesource.DamageSource source, float amount) { throw new UnsupportedOperationException(); }
     /** damageSources */ public net.minecraft.world.damagesource.DamageSources m_269291_() { throw new UnsupportedOperationException(); }
     /** getYRot */ public float m_146908_() { throw new UnsupportedOperationException(); }

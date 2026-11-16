@@ -37,7 +37,49 @@ public enum Gate {
     GRAFT_DRAGON("graft_dragon", KagunePath.GRAFT, "Many-Eyed Kagune", 700, false),
     GRAFT_KAKUJA("graft_kakuja", KagunePath.GRAFT, "Kakuja", 900, false),
     GRAFT_APPETITE("graft_appetite", KagunePath.GRAFT, "Rize's Appetite (mutation)", 0, true),
-    GRAFT_NOT_THAT_EASILY("graft_not_that_easily", KagunePath.GRAFT, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true);
+    GRAFT_NOT_THAT_EASILY("graft_not_that_easily", KagunePath.GRAFT, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true),
+    /** 1.3.14: Crystal mode (V crystallizes the wings): Touka teaches it ({@code Teaching}); kept for saves already past its mastery. */
+    UKAKU_CRYSTAL("ukaku_crystal", KagunePath.UKAKU, "Crystal Wings (crystal mode)", com.hex.kagune.control.ukaku.UkakuRules.CRYSTAL_MASTERY, false),
+    /** 3.3.1: Rinkaku's Rubble Hurl (N held, nothing held): Ken teaches it, after a proof ({@code Teaching}). Never grandfathered. */
+    RINKAKU_HURL("rinkaku_hurl", KagunePath.RINKAKU, "Rubble Hurl", com.hex.kagune.control.RinkakuUnlocks.HURL, false),
+    /** 3.3.1: Rinkaku's Impale (H held, nothing held): Ken teaches it, after the Hurl and a proof. Never grandfathered. */
+    RINKAKU_IMPALE("rinkaku_impale", KagunePath.RINKAKU, "Impale", com.hex.kagune.control.RinkakuUnlocks.IMPALE, false),
+    /**
+     * 4.0.0 (the owner: Ayato "the main NPC responsible for unlocking the Ukaku Kakuja progression ... players must earn his respect, complete
+     * meaningful challenges"): his respect, earned in two steps before he teaches the first kakuja ({@code Teaching}). No move of their
+     * own: the road to the kakuja. Never grandfathered.
+     */
+    UKAKU_AYATO_DOVES("ukaku_ayato_doves", KagunePath.UKAKU, "Ayato's Respect: Doves", 600, false),
+    UKAKU_AYATO_HUNT("ukaku_ayato_hunt", KagunePath.UKAKU, "Ayato's Respect: the Hunt", 680, false),
+    /**
+     * 4.0.0 (the owner: Noro "the primary progression NPC for the new Bikaku path, teaching players the abilities associated with its normal
+     * form, Half-Kakuja, Full-Kakuja, and unlockable mutations"): the worms' forms and their later moves (Twin and Three Worms, Ravenous
+     * Pursuit, Carrion Eruption, Monstrous Regeneration), The Walker (the half kakuja), the kakuja, and the two mutations. A save already past
+     * a move's mastery keeps it (it had it); the mutations' only if it has them already.
+     */
+    BIKAKU_WORMS("bikaku_worms", KagunePath.BIKAKU, "Bikaku: the Worms (forms, Pursuit, Eruption, Regeneration)", 250, false),
+    BIKAKU_WALKER("bikaku_walker", KagunePath.BIKAKU, "Bikaku: The Walker (half kakuja)", 750, false),
+    BIKAKU_KAKUJA("bikaku_kakuja", KagunePath.BIKAKU, "Bikaku: the Kakuja", 1000, false),
+    BIKAKU_DEVOURING("bikaku_devouring", KagunePath.BIKAKU, "Grand Devouring (mutation)", 0, true),
+    BIKAKU_POTENTIAL("bikaku_potential", KagunePath.BIKAKU, "Potential Unlock (mutation)", 0, true),
+    /**
+     * 4.1.3 (the owner: "The default M1 fighting style is only unlocked through a new quest with ayato, until a fighting style is unlocked,
+     * the player can only use default punches in kakugan mode, right click is also default, the previous M1 and M2 flips are now all part
+     * of a fighting style called Speedster"): the eye-mode fight's M1 (the Speed Blitz) and right click (the flips) are a fighting style
+     * ({@link com.hex.kagune.control.FightStyle#SPEEDSTER}), which Ayato teaches any ghoul after a proof ({@code Teaching}). Never
+     * grandfathered: a save from before starts with its bare hands.
+     */
+    STYLE_SPEEDSTER("style_speedster", null, "Speedster (fighting style)", 0, false),
+    /**
+     * 4.1.7 (the owner: "He teaches a new combat style mixing kicks and punches (mostly side kicks, spinning kicks etc), he only teaches the
+     * player this through quests if the player is either a human or wearing a full mask ... this combat style upon learned fully replaces
+     * the default M1 combos ... New fighting style called: "Kick Master" Make up the quests yourself"): the General's road, three watches
+     * of the night shift, each a proof ({@code Teaching}): the first two his lessons on the way (no move of their own), the third the style
+     * itself ({@link com.hex.kagune.control.FightStyle#KICK_MASTER}). Never grandfathered.
+     */
+    STYLE_KICK_STANCE("style_kick_stance", null, "Kick Master: the First Watch (the stance)", 0, false),
+    STYLE_KICK_CHAMBER("style_kick_chamber", null, "Kick Master: the Middle Watch (the chamber)", 0, false),
+    STYLE_KICK_MASTER("style_kick_master", null, "Kick Master (fighting style)", 0, false);
 
     private final String id;
     private final KagunePath path;

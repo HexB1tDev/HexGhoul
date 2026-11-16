@@ -1,0 +1,72 @@
+[
+ {
+  "name": "a kept offer handed out to be changed",
+  "file": "src/main/java/com/hex/kagune/control/village/HotelPlan.java",
+  "old": "return kept(this.at, key(x, z), () -> this.offers.at(x, z)).clone();",
+  "new": "return kept(this.at, key(x, z), () -> this.offers.at(x, z));",
+  "suite": "LagTests"
+ },
+ {
+  "name": "kept spots handed out to be changed",
+  "file": "src/main/java/com/hex/kagune/control/village/HotelPlan.java",
+  "old": "                out[i] = kept[i].clone();",
+  "new": "                out[i] = kept[i];",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a full plan never begun again",
+  "file": "src/main/java/com/hex/kagune/control/village/HotelPlan.java",
+  "old": "                if (map.size() >= this.cap) {\n                    map.clear();",
+  "new": "                if (false) {\n                    map.clear();",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the plan's near not kept",
+  "file": "src/main/java/com/hex/kagune/control/village/HotelPlan.java",
+  "old": "            return kept(this.near, key(x, z), () -> HotelPlan.near(this, x, z, this::spots));",
+  "new": "            return HotelPlan.near(this.seed, this.offers, x, z);",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the world's places ask the plan afresh",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "return villageOffers(spread, seed).near(x, z); // 4.1.101: worked out once a chunk (HotelPlan.Memo)",
+  "new": "return com.hex.kagune.control.village.HotelPlan.near(seed, villageOffers(spread, seed), x, z);",
+  "suite": "LagTests"
+ },
+ {
+  "name": "another seed's plan kept",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "if (plan == null || plan.seed != seed) {",
+  "new": "if (plan == null) {",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a column's height never kept",
+  "file": "src/main/java/com/hex/kagune/control/village/DryLand.java",
+  "old": "                kept = this.ground.surface(x, z);\n                this.surfaces.put(column(x, z), kept);",
+  "new": "                kept = this.ground.surface(x, z);",
+  "suite": "LagTests"
+ },
+ {
+  "name": "a biome kept by block where cells were told",
+  "file": "src/main/java/com/hex/kagune/control/village/DryLand.java",
+  "old": "            int cx = this.quarts ? x >> 2 : x;",
+  "new": "            int cx = x;",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the sea read from the wet bit",
+  "file": "src/main/java/com/hex/kagune/control/village/DryLand.java",
+  "old": "            int known = 1 << (2 * which);",
+  "new": "            int known = 1 << (2 * Math.min(which, 0));",
+  "suite": "LagTests"
+ },
+ {
+  "name": "the world's biomes kept by block, not by the game's cells",
+  "file": "src/main/java/com/hex/kagune/control/ControlStructures.java",
+  "old": "        }, true);\n    }",
+  "new": "        }, false);\n    }",
+  "suite": "LagTests"
+ }
+]

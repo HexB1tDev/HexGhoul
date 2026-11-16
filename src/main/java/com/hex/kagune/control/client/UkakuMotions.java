@@ -48,6 +48,12 @@ final class UkakuMotions {
             case KICK -> WingRig.Motion.KICK;
             case WING_SLASH -> right ? WingRig.Motion.SLASH_RIGHT : WingRig.Motion.SLASH_LEFT;
             case WING_CROSS -> WingRig.Motion.CROSS;
+            // 4.1.2: the Twin Wings' slams in the fire.
+            case WING_SLAP -> right ? WingRig.Motion.SLAP_RIGHT : WingRig.Motion.SLAP_LEFT;
+            case WING_SWING -> right ? WingRig.Motion.SWING_RIGHT : WingRig.Motion.SWING_LEFT;
+            case WING_RISE -> right ? WingRig.Motion.RISE_RIGHT : WingRig.Motion.RISE_LEFT;
+            case WING_SLAM -> right ? WingRig.Motion.SLAM_RIGHT : WingRig.Motion.SLAM_LEFT;
+            case TWIN_SLAM -> WingRig.Motion.TWIN_SLAM;
             case SHARD_BURST -> WingRig.Motion.BURST;
             case ONE_WING_SLASH -> WingRig.Motion.ONE_SLASH;
             case ONE_WING_RETURN -> WingRig.Motion.ONE_RETURN;

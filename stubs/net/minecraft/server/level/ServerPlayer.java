@@ -3,5 +3,6 @@ package net.minecraft.server.level;
 
 public class ServerPlayer extends net.minecraft.world.entity.player.Player {
     /** connection */ public net.minecraft.server.network.ServerGamePacketListenerImpl f_8906_;
+    /** getAdvancements */ public net.minecraft.server.PlayerAdvancements m_8960_() { throw new UnsupportedOperationException(); }
     /** serverLevel */ public ServerLevel m_284548_() { throw new UnsupportedOperationException(); }
 }

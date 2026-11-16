@@ -86,16 +86,42 @@ public final class KingEffects {
      * 1.0.34: whether {@code body} is hostile to {@code player} (what Peace's flesh and shields go for unbidden): a monster, something
      * out for him or that he is fighting, or what the original counts so.
      */
-    public static boolean hostile(ServerPlayer player, LivingEntity body) {
-        if (body == player || !body.m_6084_() || body.m_5833_()) {
+    public static boolean hostile(LivingEntity wearer, LivingEntity body) {
+        if (body == wearer || !body.m_6084_() || body.m_5833_()) {
             return false;
+        }
+        if (!(wearer instanceof ServerPlayer player)) {
+            return npcFoe(wearer, body); // 1.3.19: an NPC wearing it (Ken): its own foes
         }
         return body instanceof net.minecraft.world.entity.monster.Enemy || com.hex.kagune.gameplay.KaguneServerController.isHostileTo(player, body)
             || player.m_21188_() == body || body.m_21188_() == player;
     }
 
+    /**
+     * 1.3.19: whether a final kakuja's blows may land on {@code body}: a player's as the original has it (its own swipes'); an NPC's (Ken's)
+     * only on its foes: never its partner, a child, another companion, a player it isn't fighting.
+     */
+    public static boolean valid(LivingEntity wearer, LivingEntity body) {
+        if (wearer instanceof ServerPlayer player) {
+            return com.hex.kagune.gameplay.KaguneServerController.validSwipeTarget(player, body);
+        }
+        return body != wearer && body.m_6084_() && !body.m_5833_() && npcFoe(wearer, body);
+    }
+
+    /** 1.3.19: the harm an NPC wearing a final kakuja does (a mob's attack, by it). */
+    public static net.minecraft.world.damagesource.DamageSource source(LivingEntity by) {
+        return by.m_269291_().m_269333_(by);
+    }
+
+    private static boolean npcFoe(LivingEntity wearer, LivingEntity body) {
+        if (wearer instanceof com.hex.kagune.control.npc.EtoNpc npc) {
+            return EtoBrain.foe(npc, body);
+        }
+        return body instanceof net.minecraft.world.entity.monster.Enemy || body.m_21188_() == wearer;
+    }
+
     /** Bleeding at {@code amplifier} for {@code ticks}. */
-    public static void bleed(LivingEntity body, ServerPlayer by, int ticks, int amplifier) {
+    public static void bleed(LivingEntity body, LivingEntity by, int ticks, int amplifier) {
         body.m_147207_(new MobEffectInstance(KaguneEffects.BLEEDING.get(), ticks, amplifier, false, false, true), by);
     }
 
@@ -116,7 +142,7 @@ public final class KingEffects {
         player.m_147207_(new MobEffectInstance(MobEffects.f_19591_, ticks, 0, false, false, false), player);
     }
 
-    public static void slow(LivingEntity body, ServerPlayer by, int ticks, int amplifier) {
+    public static void slow(LivingEntity body, LivingEntity by, int ticks, int amplifier) {
         body.m_147207_(new MobEffectInstance(MobEffects.f_19597_, ticks, amplifier, false, false, true), by);
     }
 }

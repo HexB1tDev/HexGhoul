@@ -1,0 +1,14 @@
+[
+ {"name": "a Pack ghoul down to three things to say", "file": "src/main/java/com/hex/kagune/control/npc/NpcTalk.java",
+  "old": "                \"Show me your kagune and I'll tell you what you're worth. ...Not here. Somewhere with room.\"};", "new": "                };", "suite": "TalkRulesTests"},
+ {"name": "a feared player's gang mates with one line", "file": "src/main/java/com/hex/kagune/control/npc/GangTalk.java",
+  "old": "    static final String[] FEARED = {\"Y-yes? Whatever you need.\", \"*steps aside* After you.\", \"I didn't see anything. Honest.\",", "new": "    static final String[] FEARED = {\"Y-yes? Whatever you need.\"}; static final String[] UNUSED = {", "suite": "TalkRulesTests"},
+ {"name": "the ally's stars topic gone", "file": "src/main/resources/data/hexkagune/talk/ally.txt",
+  "old": "topic ally_stars\nprompt: Look at the stars.", "new": "scene ally_stars\nwho: anteiku\nmood: happy", "suite": "TalkRulesTests"},
+ {"name": "using an ally costs nothing", "file": "src/main/resources/data/hexkagune/talk/ally.txt",
+  "old": "> I'm just using you. | -4", "new": "> I'm just using you. | +0", "suite": "TalkRulesTests"},
+ {"name": "a human topic's flag on top of married", "file": "src/main/java/com/hex/kagune/control/village/HumanVoice.java",
+  "old": "            return 128 << this.ordinal();", "new": "            return this == ME ? HumanPersona.MARRIED : 128 << this.ordinal();", "suite": "TalkRulesTests"},
+ {"name": "what a human thinks of you paid every time", "file": "src/main/java/com/hex/kagune/control/village/HumanVoice.java",
+  "old": "            return this != GOSSIP && this != TYPE && this != STRANGE && this != ME;", "new": "            return this != GOSSIP && this != TYPE && this != STRANGE;", "suite": "TalkRulesTests"}
+]

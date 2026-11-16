@@ -1,0 +1,14 @@
+## 1.3.71 (HexGhoul): the Brick Village spawns in plains, with its people living in it (testing)
+HexKagune 1.3.71 for Forge 1.20.1. Install on client and server (**protocol 72**, unchanged). Testing build: compiled, tests pass, **not tried in game** (the village has not been seen generating in a world: please look for one).
+
+You asked: "Make my litematic into a schematic and make this village spawn in plains biomes only, adapt it's spawn best you can, humans will spawn there ... CCG agents often patrol the streets in an orderly maner, never going into the houses, Humans ... are assigned their own houses and patrol the streets, they never leave the village perimeter through!"
+
+- **Your litematic is now a structure** (`brick_village`: 99 × 41 × 97 blocks, from your `Brick_Village-from-abfielder.litematic`, made by PaaskeVillads according to the file). It was saved by Minecraft 1.21.8, so the few blocks 1.20.1 doesn't have were swapped for the closest ones: the tuff family became andesite and stone bricks, the oxidized copper doors and trapdoors became warped ones (the same teal), and a waxed copper trapdoor became acacia (the same orange). Signs, banners, pots and chests are written the way 1.20.1 reads them, and the three armor stands keep their diamond armor. Your original file is kept unchanged in the repo.
+- **Where it spawns:** plains and sunflower plains only, rarely (one per roughly 44 × 44 chunk region, at least 18 chunks apart, so about one village every 700 blocks). It sits on the ground the way Anteiku and the Library do: the walking level on the surface, terrain filled in under it and cut away inside it.
+- **Its people come with it:** 8 humans, one in each house (that house is their home), and 2 CCG investigators on the streets. They never despawn.
+- **Humans:** by day they stroll the streets, a street spot near them every 7 to 17 seconds; at night they go home and stay inside. They never go past the village's perimeter, not even when running from a ghoul. Running, they still head for an investigator if one is near (1.3.70).
+- **The CCG patrol:** each investigator walks a fixed loop of 16 street spots round the village, in order (one clockwise, one the other way), on the ground only and never into a house. They don't call in partners and never leave. After a fight, they go back to their loop.
+
+Judgment calls: "plains biomes" includes sunflower plains. The village's people are placed once, when the village generates; if they die, they aren't replaced yet. Tell me if they should be. Trading in the streets, general conversation, personalities, romance (and admitting you're a ghoul), and the humans' cuter looks are the next versions.
+
+Untested in game: compiled and unit tested (the map: streets, homes and the patrol loop inside the perimeter; the turning maths). Try: a new world, find a plains village (`/locate structure hexkagune:brick_village`), and watch it by day and night.

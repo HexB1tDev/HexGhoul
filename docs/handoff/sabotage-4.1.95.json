@@ -1,0 +1,30 @@
+[
+ {
+  "name": "a failed mission asked again at once",
+  "file": "src/main/java/com/hex/kagune/control/quest/Missions.java",
+  "old": "COOLDOWN = 24000L;",
+  "new": "COOLDOWN = 0L;",
+  "suite": "QuestTests"
+ },
+ {
+  "name": "a done mission redone",
+  "file": "src/main/java/com/hex/kagune/control/quest/QuestLog.java",
+  "old": "        if (mission.state() == Missions.DONE) {\n            return Missions.DONE;\n        }\n",
+  "new": "",
+  "suite": "QuestTests"
+ },
+ {
+  "name": "a failed mission barred for good",
+  "file": "src/main/java/com/hex/kagune/control/quest/QuestLog.java",
+  "old": "return mission.state() == Missions.FAILED && now < mission.until() ? Missions.FAILED : -1;",
+  "new": "return mission.state() == Missions.FAILED ? Missions.FAILED : -1;",
+  "suite": "QuestTests"
+ },
+ {
+  "name": "a failure's wait from the mission's start",
+  "file": "src/main/java/com/hex/kagune/control/quest/QuestLog.java",
+  "old": "won ? 0L : now + Missions.COOLDOWN,",
+  "new": "won ? 0L : endsAt + Missions.COOLDOWN,",
+  "suite": "QuestTests"
+ }
+]

@@ -86,7 +86,7 @@ final class UkakuPyre {
             }
         }
         if (fired > 0) {
-            UkakuFire.sound(player.m_284548_(), player.m_146892_(), "block.amethyst_block.hit", 0.5F, KaguneServerController.vary(player, 1.8F, 0.1F));
+            UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.5F, KaguneServerController.vary(player, 1.8F, 0.1F));
         }
     }
 
@@ -105,7 +105,7 @@ final class UkakuPyre {
             double yaw = -UkakuRules.LASH_HALF_ANGLE + 2.0 * UkakuRules.LASH_HALF_ANGLE * k / Math.max(1.0, shards - 1.0);
             UkakuFire.shard(player, from, aim, UkakuFire.Kind.SHOT, damage, yaw, 0.0F, k);
         }
-        UkakuFire.sound(player.m_284548_(), from, "entity.blaze.shoot", 0.7F, KaguneServerController.vary(player, 1.25F, 0.08F));
+        UkakuFire.sound(player.m_284548_(), from, com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.7F, KaguneServerController.vary(player, 1.25F, 0.08F));
     }
 
     /** Needle Fan: needles out of all three right tentacles, fanned across the target, three a tick. */
@@ -121,15 +121,15 @@ final class UkakuPyre {
             pending.direction = KaguneCombat.rotateYaw(ahead, yaw);
             pending.spread = 0.8F;
         }
-        UkakuFire.sound(player.m_284548_(), player.m_146892_(), "block.amethyst_cluster.break", 0.7F, KaguneServerController.vary(player, 1.5F, 0.06F));
+        UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 0.7F, KaguneServerController.vary(player, 1.5F, 0.06F));
     }
 
     /** Fireball: one big ball of fire from between the upper two tendrils; it bursts where it lands and leaves the ground burning. */
     private static void fireball(ServerPlayer player, Vec3 aim, float damage) {
         Vec3 from = mouth(player, 3, aim).m_82549_(mouth(player, 4, aim)).m_82490_(0.5);
         UkakuFire.shard(player, from, aim, UkakuFire.Kind.FLARE, damage, 0.0, UkakuRules.FIREBALL_SIZE, 0L);
-        UkakuFire.sound(player.m_284548_(), from, "item.firecharge.use", 1.0F, KaguneServerController.vary(player, 0.75F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), from, "entity.blaze.shoot", 0.6F, KaguneServerController.vary(player, 0.8F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), from, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 1.0F, KaguneServerController.vary(player, 0.75F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), from, com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.6F, KaguneServerController.vary(player, 0.8F, 0.05F));
     }
 
     /** Crossfire: burning needles from the right, a shard from each tendril on the left, all at the target so they cross on it. */
@@ -144,8 +144,8 @@ final class UkakuPyre {
         for (int index = 3; index < KakujaRig.TENTACLES; index++) {
             UkakuFire.shard(player, mouth(player, index, aim), aim, UkakuFire.Kind.SHOT, damage * 2.0F, 0.0, 0.0F, index - 3);
         }
-        UkakuFire.sound(player.m_284548_(), player.m_146892_(), "block.amethyst_cluster.break", 0.8F, KaguneServerController.vary(player, 1.3F, 0.06F));
-        UkakuFire.sound(player.m_284548_(), player.m_146892_(), "entity.blaze.shoot", 0.8F, KaguneServerController.vary(player, 1.0F, 0.06F));
+        UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 0.8F, KaguneServerController.vary(player, 1.3F, 0.06F));
+        UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.8F, KaguneServerController.vary(player, 1.0F, 0.06F));
     }
 
     // ------------------------------------------------------------------ the enders
@@ -171,8 +171,8 @@ final class UkakuPyre {
         UkakuFire.embers(player, feet, now, UkakuRules.EMBER_TICKS);
         UkakuFire.fx(player, S2CUkakuFx.HOP, 0, feet, back, 1.3F, 0);
         UkakuFire.fx(player, S2CUkakuFx.BURST_BLAST, 0, feet.m_82520_(0.0, 0.3, 0.0), Vec3.f_82478_, (float)(radius / 2.2), 1);
-        UkakuFire.sound(level, feet, "item.firecharge.use", 1.0F, KaguneServerController.vary(player, 0.9F, 0.06F));
-        UkakuFire.sound(level, feet, "entity.ender_dragon.flap", 0.5F, KaguneServerController.vary(player, 1.6F, 0.08F));
+        UkakuFire.sound(level, feet, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 1.0F, KaguneServerController.vary(player, 0.9F, 0.06F));
+        UkakuFire.sound(level, feet, com.hex.kagune.control.ukaku.UkakuSounds.WING_FLAP, 0.5F, KaguneServerController.vary(player, 1.6F, 0.08F));
     }
 
     /** Searing Harrow: a point-blank cone of burning needles from the right three, and fire shards from each tendril into it. */
@@ -197,8 +197,8 @@ final class UkakuPyre {
                 UkakuFire.shard(player, from, reach, UkakuFire.Kind.FAN, damage * 1.5F, yaw, 0.0F, k, UkakuRules.SEARING_FIRE_RANGE);
             }
         }
-        UkakuFire.sound(player.m_284548_(), eye, "block.amethyst_cluster.break", 1.1F, KaguneServerController.vary(player, 1.0F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), eye, "item.firecharge.use", 1.0F, KaguneServerController.vary(player, 1.1F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), eye, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.1F, KaguneServerController.vary(player, 1.0F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), eye, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 1.0F, KaguneServerController.vary(player, 1.1F, 0.05F));
     }
 
     /**
@@ -226,8 +226,8 @@ final class UkakuPyre {
             double yaw = -UkakuRules.SERPENT_FIRE_HALF_ANGLE + 2.0 * UkakuRules.SERPENT_FIRE_HALF_ANGLE * t;
             UkakuFire.shard(player, mouth(player, 3 + k % 3, aim), front, UkakuFire.Kind.FAN, damage * 2.0F, yaw, 0.0F, (long)Math.floor(t * sweep));
         }
-        UkakuFire.sound(player.m_284548_(), eye, "block.amethyst_cluster.break", 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), eye, "item.firecharge.use", 0.9F, KaguneServerController.vary(player, 1.2F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), eye, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), eye, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 0.9F, KaguneServerController.vary(player, 1.2F, 0.05F));
     }
 
     /** Pyre Lance: all six converge in front of his chest and drive one thick burning needle through everything in its line. */
@@ -245,8 +245,8 @@ final class UkakuPyre {
         pending.range = UkakuRules.NEEDLE_RANGE + UkakuRules.LINE_EXTRA_RANGE;
         pending.burnSeconds = UkakuRules.PYRE_LANCE_SECONDS;
         pending.embers = true;
-        UkakuFire.sound(player.m_284548_(), from, "block.amethyst_cluster.break", 1.2F, KaguneServerController.vary(player, 0.7F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), from, "item.firecharge.use", 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), from, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.2F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), from, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
     }
 
     /** Hellrain: needles and fireballs thrown high out of all six; they come down together a few ticks later ({@link #tick}). */
@@ -271,8 +271,8 @@ final class UkakuPyre {
                     1.4F, 5);
             }
         }
-        UkakuFire.sound(player.m_284548_(), player.m_146892_(), "block.amethyst_cluster.place", 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), player.m_146892_(), "entity.blaze.shoot", 1.0F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_GROW, 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 1.0F, KaguneServerController.vary(player, 0.7F, 0.05F));
     }
 
     /** Crimson Pyre: every needle he has stuck in anyone bursts into flame, and a ring of needles and fire flies out round him. */
@@ -295,9 +295,9 @@ final class UkakuPyre {
                 UkakuRules.flameRange(mastery) * 0.6);
         }
         UkakuFire.fx(player, S2CUkakuFx.BLOOM, 0, chest, Vec3.f_82478_, 1.0F, burst);
-        UkakuFire.sound(player.m_284548_(), chest, "block.amethyst_block.break", 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), chest, "entity.generic.explode", 0.7F, KaguneServerController.vary(player, 1.2F, 0.05F));
-        UkakuFire.sound(player.m_284548_(), chest, "item.firecharge.use", 1.2F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), chest, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_SHATTER, 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), chest, com.hex.kagune.control.ukaku.UkakuSounds.BLAST, 0.7F, KaguneServerController.vary(player, 1.2F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), chest, com.hex.kagune.control.ukaku.UkakuSounds.FLAME_BURST, 1.2F, KaguneServerController.vary(player, 0.7F, 0.05F));
     }
 
     // ------------------------------------------------------------------ the rain that keeps falling
@@ -335,10 +335,10 @@ final class UkakuPyre {
             rain.fireballs--;
             Vec3[] fall = fall(player, target, first);
             UkakuFire.shard(player, fall[0], fall[1], UkakuFire.Kind.FLARE, rain.damage * 3.0F, 0.0, 1.2F, 0L, UkakuRules.RAIN_HEIGHT + 6.0);
-            UkakuFire.sound(level, target, "entity.blaze.shoot", 0.6F, KaguneServerController.vary(player, 0.8F, 0.1F));
+            UkakuFire.sound(level, target, com.hex.kagune.control.ukaku.UkakuSounds.SHARD, 0.6F, KaguneServerController.vary(player, 0.8F, 0.1F));
         }
         if (age % 4 == 0) {
-            UkakuFire.sound(level, target, "block.amethyst_block.hit", 0.8F, KaguneServerController.vary(player, 1.5F, 0.15F));
+            UkakuFire.sound(level, target, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.8F, KaguneServerController.vary(player, 1.5F, 0.15F));
         }
         return true;
     }

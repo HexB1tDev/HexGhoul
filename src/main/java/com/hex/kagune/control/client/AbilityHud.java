@@ -29,8 +29,11 @@ import net.minecraftforge.fml.common.Mod;
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class AbilityHud {
-    /** The panel's size on screen (GUI pixels per panel pixel). */
-    static final float SCALE = 0.75F;
+    /**
+     * The panel's size on screen (GUI pixels per panel pixel). 3.4.6: 0.75 before (the owner: "it's too big"); 3.4.7: smaller again, one
+     * narrow column (the owner: "I said the menu was cluttered and your solution is to make it like even bigger on the screen").
+     */
+    public static final float SCALE = 0.6F;
     private static final long KEY_NANOS = 500_000_000L;
     private static Map<AbilityGuide.Key, String> keys = Map.of();
     private static long keysAt = Long.MIN_VALUE;
@@ -72,8 +75,10 @@ public final class AbilityHud {
                 shut.add(gate);
             }
         }
+        // 3.3.0: whether a Rinkaku tail holds someone (G, N, H, V and B do other things then).
+        boolean holding = path == KagunePath.RINKAKU && view.active() && view.hasHeldEntities();
         AbilityGuide.Input input = new AbilityGuide.Input(path, state, view.mastery(), view.form(), wings, crystal, keys, blade,
-            graft.stage(), path == KagunePath.GRAFT && graft.kakuja(), shut);
+            graft.stage(), path == KagunePath.GRAFT && graft.kakuja() || path == KagunePath.BIKAKU && BikakuClient.get(player).kakuja(), shut, holding);
         GuiCanvas canvas = new GuiCanvas(event.getGuiGraphics(), minecraft.f_91062_, null);
         if (!input.equals(shown) || layout == null) {
             layout = AbilityHudView.layout(canvas, AbilityGuide.panel(input));
@@ -90,6 +95,7 @@ public final class AbilityHud {
         Map<AbilityGuide.Key, String> out = new EnumMap<>(AbilityGuide.Key.class);
         out.put(AbilityGuide.Key.ATTACK, name(minecraft.f_91066_.f_92096_));
         out.put(AbilityGuide.Key.QUESTS, name(ControlKeys.QUESTS));
+        out.put(AbilityGuide.Key.REGEN, name(ControlKeys.REGENERATE)); // 4.2.2
         out.put(AbilityGuide.Key.USE, name(minecraft.f_91066_.f_92095_));
         out.put(AbilityGuide.Key.TOGGLE, name(KaguneKeys.TOGGLE));
         out.put(AbilityGuide.Key.MENU, name(KaguneKeys.MENU));

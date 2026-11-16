@@ -30,7 +30,6 @@ public final class ControlConfig {
     private static final ForgeConfigSpec.BooleanValue CAMERA_EFFECTS;
     private static final ForgeConfigSpec.DoubleValue CAMERA_EFFECT_STRENGTH;
     private static final ForgeConfigSpec.BooleanValue URGE_VIEW_PULL;
-    private static final ForgeConfigSpec.BooleanValue CONTROL_INDICATOR;
     private static final ForgeConfigSpec.BooleanValue ABILITY_HUD;
 
     static {
@@ -98,9 +97,6 @@ public final class ControlConfig {
         URGE_VIEW_PULL = client
             .comment("Let instinct urges pull your view toward prey. Disable for motion comfort; server-side urges are unchanged.")
             .define("urgeViewPull", true);
-        CONTROL_INDICATOR = client
-            .comment("Thin kagune-control bar under the RC bar: crimson when the kagune controls you, bone-white when you control it.")
-            .define("controlIndicator", true);
         ABILITY_HUD = client
             .comment("A small panel above the chat listing your kagune's moves with the keys you bound to them, and how to open the eyes",
                 "(R) and unleash the kagune (Ctrl + R). Its moves and colours follow your path and form. Hidden while a screen is open.")
@@ -221,9 +217,5 @@ public final class ControlConfig {
 
     public static boolean urgeViewPull() {
         return bool(URGE_VIEW_PULL, true);
-    }
-
-    public static boolean controlIndicator() {
-        return bool(CONTROL_INDICATOR, true);
     }
 }

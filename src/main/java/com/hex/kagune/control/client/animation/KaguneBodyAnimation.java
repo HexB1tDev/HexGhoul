@@ -140,7 +140,7 @@ public final class KaguneBodyAnimation implements IAnimation {
     private boolean feral() {
         // 6.1.0: nor is Pale: her base form is all play and control. 7.0.0: nor Graft, whose kakuhou was put in him to be used.
         KagunePath path = PathClient.get(this.player);
-        return path != KagunePath.UKAKU && path != KagunePath.PALE && path != KagunePath.GRAFT;
+        return path != KagunePath.UKAKU && path != KagunePath.PALE && path != KagunePath.GRAFT && path != KagunePath.BIKAKU; // 3.4.9: nor Bikaku
     }
 
     /**
@@ -310,11 +310,21 @@ public final class KaguneBodyAnimation implements IAnimation {
     @Override
     public boolean isActive() {
         // PlayerAnimator only ticks layers that already report active, so this must not depend on tick() having run.
-        return this.fade > 0.002F || this.wants() || this.idle.showing();
+        return this.fade > 0.002F || this.wants() || this.idle.showing() || com.hex.kagune.control.Genders.female(this.player)
+            || com.hex.kagune.control.Genders.male(this.player);
     }
 
     private boolean wants() {
-        if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
+        // 1.3.3: holding Eto's hand, the arm reaches out to her (whatever else the body is doing). 1.3.26: or a quinque (its stance, its M1s).
+        if (com.hex.kagune.control.client.KenPullOutClient.age(this.player.m_19879_(), com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) >= 0.0
+            || com.hex.kagune.control.client.NoroPullOutClient.age(this.player.m_19879_(), com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) >= 0.0
+            || com.hex.kagune.control.client.AyatoPullOutClient.age(this.player.m_19879_(), com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) >= 0.0
+            || com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
+            || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())
+            || com.hex.kagune.control.client.QuinqueClient.posing(this.player)) {
+            return this.player.m_6084_() && ControlConfig.bodyAnimations();
+        }
+        if (com.hex.kagune.control.client.PaleClient.fighting(this.player)) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations(); // 7.0.1: the eyes alone fight with the body
         }
         if (this.king() > 0.0F || this.turning() >= 0.0) {
@@ -486,13 +496,67 @@ public final class KaguneBodyAnimation implements IAnimation {
         RigPose p = this.p.clear();
         this.palePosedAt = Double.NaN;
         this.pose(tickDelta);
+        // 1.3.3: hand in hand with Eto (she walks at their right): the right arm out to her side, a little forward. 1.3.5: held still,
+        // none of the walk's swing or the idle bob on it (her hand in it doesn't swing either, EtoPose), stretched out further.
+        float hand = com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) * this.fade;
+        if (hand > 0.0F) {
+            p.rightArmZ += com.hex.kagune.control.npc.EtoHand.ARM * hand;
+            p.rightArmX -= com.hex.kagune.control.npc.EtoHand.FORWARD * hand;
+            p.rightArmHold = Math.max(p.rightArmHold, hand);
+            // 1.3.13: alive (HandSway): back toward her as she trails, out as she swings wide, swaying with hers on its own clock.
+            com.hex.kagune.control.npc.HandSway sway = com.hex.kagune.control.client.HandClient.held(this.player.m_19879_());
+            if (sway != null) {
+                float[] arm = com.hex.kagune.control.npc.HandSway.arm(sway.trail(tickDelta), sway.out(tickDelta),
+                    com.hex.kagune.control.client.HandClient.clock(sway, tickDelta), true, 1.0);
+                p.rightArmX += arm[0] * hand;
+                p.rightArmZ += arm[1] * hand;
+            }
+        }
+        // 1.3.10: carrying a child: both arms in front, cradling it at the chest, held still.
+        if (com.hex.kagune.control.client.ChildClient.carrying(this.player.m_19879_())) {
+            p.rightArmX = -0.95F * this.fade;
+            p.leftArmX = -0.95F * this.fade;
+            p.rightArmY = -0.45F * this.fade;
+            p.leftArmY = 0.45F * this.fade;
+            p.rightArmZ = 0.0F;
+            p.leftArmZ = 0.0F;
+            p.armHold = Math.max(p.armHold, this.fade);
+        }
+        // 1.3.20: a child up on the shoulders (hands up holding its shins), and a moment with one (a hug, a toss, a spin...).
+        double childClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
+        com.hex.kagune.control.client.ChildClient.View riding = com.hex.kagune.control.client.ChildClient.held(this.player.m_19879_());
+        if (riding != null && riding.ride() == com.hex.kagune.control.family.ChildRules.RIDE_SHOULDERS) {
+            ChildMomentPose.blend(p, ChildMomentPose.shouldersParent(), this.fade);
+        } else if (riding != null && riding.ride() == com.hex.kagune.control.family.ChildRules.RIDE_HAND) {
+            // 1.3.21: hand in hand (its arm by their size: a smaller parent's hand a little higher for a teen to reach)
+            ChildMomentPose.blend(p, ChildMomentPose.handParent(riding.stage(), com.hex.kagune.control.npc.ChildNpc.carrySize(this.player)), this.fade);
+        }
+        com.hex.kagune.control.client.ChildClient.View moment = com.hex.kagune.control.client.ChildClient.partnered(this.player.m_19879_(), childClock);
+        if (moment != null) {
+            double age = moment.momentAge(childClock);
+            ChildMomentPose.blend(p, ChildMomentPose.parent(moment.moment(), age, moment.stage(), true),
+                this.fade * (float)com.hex.kagune.control.family.ChildMoment.weight(moment.moment(), age));
+        }
+        // 1.3.26: a quinque in hand: its stance (both hands on a two-handed one), its M1s, the case opening into it.
+        RigPose quinque = com.hex.kagune.control.client.QuinqueClient.pose(this.player, tickDelta);
+        if (quinque != null) {
+            ChildMomentPose.blend(p, quinque, this.fade);
+        }
+        // 4.1.21: its wrists, for the item drawn in this hand (QuinqueItemRenderer: the weapon turned in the fist as the arm is posed).
+        com.hex.kagune.control.client.QuinqueWrists.posed(this.player, quinque == null ? null
+            : new float[] {quinque.weaponX * this.fade, quinque.weaponY * this.fade, quinque.weaponZ * this.fade});
+        // 3.6.2: The Walker: its tentacles carry him: his own legs hang still, and he is lifted a little off the ground.
+        if (PathClient.get(this.player) == KagunePath.BIKAKU && com.hex.kagune.control.client.BikakuClient.walking(this.player, tickDelta)) {
+            double walkerClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
+            WalkerPose.legs(p, walkerClock, this.fade, com.hex.kagune.control.client.render.BikakuRenderer.walkerBody(this.player, walkerClock));
+        }
         // 6.2.0: just whole again after her death that did not take, she stands as the pieces went back together and eases into it.
         float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.PaleClient.clock(tickDelta));
         if (risen < 1.0F) {
             RigPose eased = p.scale(risen);
             p.clear().add(eased, 1.0F);
         }
-        if (PathClient.get(this.player) == KagunePath.PALE || com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
+        if (PathClient.get(this.player) == KagunePath.PALE || com.hex.kagune.control.client.PaleClient.fighting(this.player)) {
             this.paleMoves.shown(p); // a strike or a flip starts from exactly this
         }
         TORSO.put(this.player, new double[] {p.lean, p.side, p.twist, p.drop, ControlClient.worldTime(tickDelta)});
@@ -538,6 +602,15 @@ public final class KaguneBodyAnimation implements IAnimation {
             this.finish(steel, time, tickDelta);
             return;
         }
+        // 1.3.3: only holding Eto's hand (no kagune, no eyes, nothing turning): nothing more on the body than the arm (setupAnim's).
+        if (!view.active() && !com.hex.kagune.control.client.PaleClient.fighting(this.player) && this.king() <= 0.0F
+            && com.hex.kagune.control.client.TurningClient.progress(this.player, time) < 0.0
+            && (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
+            || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())
+            || com.hex.kagune.control.client.QuinqueClient.posing(this.player))) {
+            this.finish(steel, time, tickDelta);
+            return;
+        }
         // 1.0.7: War's body is his own: none of Rinkaku's animal stance, spasms or urges under it. 1.0.15: ahead of the eyes' own moves,
         // or a final kakuja with the eyes open lost its every pose.
         float war = this.king();
@@ -546,7 +619,7 @@ public final class KaguneBodyAnimation implements IAnimation {
             this.finish(steel, time, tickDelta);
             return;
         }
-        if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
+        if (com.hex.kagune.control.client.PaleClient.fighting(this.player)) {
             // 7.0.1: the eyes alone (the shared eye-mode fight): her body's moves on it, nothing of any kagune's.
             this.eyeMoves(tickDelta, now);
             this.finish(steel, time, tickDelta);
@@ -560,8 +633,10 @@ public final class KaguneBodyAnimation implements IAnimation {
             this.finish(steel, time, tickDelta);
             return;
         }
+        // 2.0.42: Rinkaku's block (RinkakuBlockClient): the stance gives way to its guard.
+        float block = view.mode() == TendrilMode.IDLE ? com.hex.kagune.control.client.RinkakuBlockClient.amount(this.player, time) : 0.0F;
         // The ambient stance (Ukaku relaxed, Rinkaku animalistic) when standing still.
-        p.add(this.idle.pose(tickDelta), 1.0F);
+        p.add(this.idle.pose(tickDelta), 1.0F - block);
         if (PathClient.get(this.player) == KagunePath.PALE) {
             // 6.1.0: Pale at play: hip-shot, gestures now and then, and a loose saunter when she walks (6.2.0: none of it in the Owl).
             double owlClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
@@ -736,6 +811,10 @@ public final class KaguneBodyAnimation implements IAnimation {
             default -> {
             }
         }
+        float[] jolt = com.hex.kagune.control.client.RinkakuBlockClient.jolt(this.player, time);
+        if (block > 0.0F || jolt[1] > 0.0F) {
+            RinkakuBlockPose.apply(p, block, jolt[0], jolt[1]);
+        }
         if (view.guarding()) {
             p.rightArmX -= 1.0F;
             p.leftArmX -= 1.0F;
@@ -874,6 +953,15 @@ public final class KaguneBodyAnimation implements IAnimation {
             damp *= 0.5F;
         }
         this.p.settle(damp);
+        // 2.4.8: Ken's way of pulling it out, taught with a kakuja: a finger cracked first, the right arm alone out in front. 3.0.2 (the
+        // owner: "there's a weird stop when you first pull out the Kagune ... it just waits a little bit"): laid on after the layer's own
+        // fade-in (which starts from nothing as the crack begins and scaled the crack down to nearly nothing for its first ticks); the
+        // crack blends itself in from wherever the body is.
+        if (damp > 0.0F) {
+            com.hex.kagune.control.client.KenPullOutClient.apply(this.p, this.player.m_19879_(), time);
+            com.hex.kagune.control.client.NoroPullOutClient.apply(this.p, this.player.m_19879_(), time); // 4.0.2: Noro's way: the head tilts
+            com.hex.kagune.control.client.AyatoPullOutClient.apply(this.p, this.player.m_19879_(), time); // 4.1.0: Ayato's way: the hands lifted
+        }
         if (steel > 0.0F && !lying) {
             this.carry(steel * Math.min(1.0F, this.fade), steel, time, tickDelta);
         }
@@ -1263,6 +1351,24 @@ public final class KaguneBodyAnimation implements IAnimation {
 
     @Override
     public Vec3f get3DTransform(String modelName, TransformType type, float tickDelta, Vec3f value0) {
+        Vec3f shaped = this.transform(modelName, type, tickDelta, value0);
+        if (type == TransformType.POSITION && ("rightLeg".equals(modelName) || "leftLeg".equals(modelName))
+            && com.hex.kagune.control.Genders.female(this.player)) {
+            // 1.3.9: a woman's wider legs, their pivots spread so they meet at the middle (PlayerAnimator puts them back every frame).
+            float shift = com.hex.kagune.control.FemaleBody.legShift() * ("rightLeg".equals(modelName) ? -1.0F : 1.0F);
+            return new Vec3f(shaped.getX() + shift, shaped.getY(), shaped.getZ());
+        }
+        if (type == TransformType.POSITION && ("rightArm".equals(modelName) || "leftArm".equals(modelName))
+            && com.hex.kagune.control.Genders.male(this.player)) {
+            // 2.0.46: a man's arms set out round his broader chest (the White Reaper's build, BuildLayer), as hers are spread. 2.2.5: a
+            // player's chest is slimmer than the Reaper's, so less far.
+            float shift = com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT * ("rightArm".equals(modelName) ? -1.0F : 1.0F);
+            return new Vec3f(shaped.getX() + shift, shaped.getY(), shaped.getZ());
+        }
+        return shaped;
+    }
+
+    private Vec3f transform(String modelName, TransformType type, float tickDelta, Vec3f value0) {
         if (this.fade <= 0.0F && !this.idle.showing()) {
             return value0;
         }

@@ -109,6 +109,9 @@ public final class KaguneCombat {
 
     /** Replaces {@code KaguneServerController.startSwipe} (bytecode trampoline): every M1 and vanilla-attack swipe lands here. */
     public static void startSwipe(ServerPlayer player, Entity hint) {
+        if (quinqueOut(player)) {
+            return; // 4.1.32 (the owner: "whenever using a Quinque, I think that it should be prioritized over any combat"): its blow, not the kagune's
+        }
         KakujaPassive.attacked(player);
         if (PaleServer.isPale(player)) {
             PaleBlitz.click(player, hint); // 6.1.0: Pale fights with her fists (the Speed Blitz)
@@ -116,6 +119,10 @@ public final class KaguneCombat {
         }
         if (GraftServer.isGraft(player)) {
             GraftServer.strike(player, hint); // 7.0.0: Graft's limbs' string, or his blade and the kagune
+            return;
+        }
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.strike(player, hint); // 3.4.9: the worm's string of bites
             return;
         }
         if (RinkakuAutonomy.refuse(player)) {
@@ -140,10 +147,16 @@ public final class KaguneCombat {
         }
     }
 
+    /** 4.1.32: a CCG quinque or a kagune-made weapon out in the main hand: its M1 is the weapon's, never the kagune's. */
+    static boolean quinqueOut(ServerPlayer player) {
+        return com.hex.kagune.control.ControlItems.quinqueWeapon(player.m_21205_()) != null
+            || com.hex.kagune.control.ControlItems.armWeapon(player.m_21205_()) != null;
+    }
+
     /** Instinct-forced strike at {@code prey}. Returns true if the kagune actually lashed out. */
     static boolean startInvoluntary(ServerPlayer player, LivingEntity prey) {
-        if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
-            return false; // 6.1.0: Pale's flesh never lashes out on its own (7.0.0: nor Graft's limbs: he is in control)
+        if (PaleServer.isPale(player) || GraftServer.isGraft(player) || BikakuServer.isBikaku(player)) {
+            return false; // 6.1.0: Pale's flesh never lashes out on its own (7.0.0: nor Graft's limbs: he is in control; 3.4.9: nor the worm)
         }
         KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
         long now = player.m_9236_().m_46467_();
@@ -345,9 +358,10 @@ public final class KaguneCombat {
         int followingImpact = following.impactTick(scaledDuration(player, following, control));
         // Never let chained impacts land inside the target's 10-tick hurt immunity: no wasted (or exploitable) hits.
         // Shots are bolts and spikes, not blows: their own fast cadence (each ignores hurt immunity); an ender plays out first.
+        // 4.1.14 (the owner: "Prevent m1 spam with ukaku."): an Ukaku wing slam plays out in full before the next (ComboStyle.chainOpen).
         combo.chainOpenAt = now + (stage.pattern().ender() ? Math.max(impact + 1, duration - 2)
             : stage.pattern().flame() ? Math.max(impact + 1, UkakuRules.shotCadence(stage.pattern(), KaguneProfile.mastery(player)))
-            : ComboStyle.chainOpenOffset(impact, followingImpact));
+            : ComboStyle.chainOpen(stage, duration, impact, followingImpact));
         state.inputCooldownUntil = combo.chainOpenAt;
         state.guarding = false;
 
@@ -367,7 +381,10 @@ public final class KaguneCombat {
         if (!(ukaku && (stage.pattern().flame() || stage.pattern().crystal() || stage.pattern().finalKakuja()))) {
             // 1.0.40: a blow (not a shot) on its way: another's M1 landing on him before it lands meets it (KaguneClash), and both stop.
             long began = now;
-            KaguneClash.swing(player, now, impact, range, () -> combo.startedAt == began && !combo.impactDone && combo.owns(state),
+            // 1.3.62: as hard as it lands (its first target's damage, as below).
+            // 3.2.4: on the CCG's scale, by how far they have come (ClashPower), not the kagune's balanced-down damage.
+            double hit = KaguneClash.strength(player, stage.damageMul(), true);
+            KaguneClash.swing(player, now, impact, range, hit, () -> combo.startedAt == began && !combo.impactDone && combo.owns(state),
                 () -> clashed(player, state, combo));
         }
 
@@ -401,6 +418,10 @@ public final class KaguneCombat {
     private static double range(ServerPlayer player, ComboStyle style, ComboStage stage) {
         if (style.ukaku()) {
             // 5.0.18: the Steel Blade reaches as far as it is long.
+            if (UkakuRules.slams(style)) {
+                // 4.1.2: the wing slams reach a little less far than Rinkaku's M1 would (UkakuRules.SLAM_REACH of it).
+                return Math.min(15.0, KaguneProfile.attackRange(player) * UkakuRules.SLAM_REACH * stage.rangeMul());
+            }
             return UkakuServer.blade(player) ? com.hex.kagune.control.ukaku.SteelBlade.REACH * stage.rangeMul()
                 : UkakuRules.strikeRange(KaguneProfile.mastery(player), UkakuServer.form(player), stage);
         }
@@ -531,8 +552,12 @@ public final class KaguneCombat {
                 KaguneServerController.applyCentipedeBleed(player, target);
             }
             if (landed <= 3) {
-                KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.9F,
-                    KaguneServerController.vary(player, bleeds ? 0.9F : 1.0F, 0.06F));
+                if (ukaku) {
+                    UkakuCombat.hit(player, target, stage.weight() >= 0.5F); // 4.1.91: a wing slap, the game's own
+                } else {
+                    KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.9F,
+                        KaguneServerController.vary(player, bleeds ? 0.9F : 1.0F, 0.06F));
+                }
             }
             Vec3 away = target.m_20182_().m_82546_(player.m_20182_());
             if (away.m_165925_() > 1.0E-4) {
@@ -543,8 +568,12 @@ public final class KaguneCombat {
         if (stage.shape() == HitShape.SLAM) {
             player.m_284548_().m_8767_(ParticleTypes.f_123797_, impactPoint.f_82479_, impactPoint.f_82480_, impactPoint.f_82481_,
                 14, 0.45, 0.15, 0.45, 0.1);
-            KaguneServerController.playAt(player, impactPoint, HexKaguneSounds.KAGUNE_SLAM, 0.75F,
-                KaguneServerController.vary(player, KaguneServerController.formPitch(player), 0.05F));
+            if (ukaku) {
+                UkakuCombat.slam(player, impactPoint); // 4.1.91: the Warden's blow
+            } else {
+                KaguneServerController.playAt(player, impactPoint, HexKaguneSounds.KAGUNE_SLAM, 0.75F,
+                    KaguneServerController.vary(player, KaguneServerController.formPitch(player), 0.05F));
+            }
         }
         if (ukaku) {
             UkakuCombat.impact(player, stage, combo.direction, impactPoint, range);

@@ -65,10 +65,12 @@ public final class RinkakuMaskLayer extends RenderLayer<AbstractClientPlayer, En
         }
         // 5.0.0: the mask grows over his face when the kakuja bursts out, and is gone the moment it breaks.
         double age = KakujaFx.maskAge(player, com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
-        if (Double.isNaN(age)) {
-            return;
+        if (Double.isNaN(age) || !model.f_102808_.f_104207_) {
+            return; // 4.0.6: none, or his head is off him (it takes the mask with it)
         }
         KakuganEyes eyes = KakuganClient.eyes(player);
+        // 2.1.0: in his kagune's colours, as his centipede legs are (KakujaPalette).
+        com.hex.kagune.control.kakugan.CentipedeMask.colours(com.hex.kagune.control.KakujaPalette.of(view.color()));
         pose.m_85836_();
         PlayerLayers.upperBody(pose, player, partialTick);
         model.f_102808_.m_104299_(pose);

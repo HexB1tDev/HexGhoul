@@ -10,7 +10,8 @@ Pipeline (Java 17+ and Python 3, no downloads):
   7. prove the JAR loads and runs on a dedicated server (no client class on any path a server runs, patch/KaguneServerCheck),
   8. guard every way Minecraft calls into the mod (event listeners, the spike's and the bleeding effect's callbacks): an error
      inside is logged and the game carries on, never a kicked player or a crashed server (patch/KaguneGuard); the archive scope
-     and the dedicated server are checked again on the guarded JAR,
+     and the dedicated server are checked again on the guarded JAR, and (4.1.103) every rewritten class passes the JVM's own
+     verifier (patch/KaguneLinkCheck),
   9. compile and run the pure-logic tests in src/test/java.
 """
 from pathlib import Path
@@ -24,7 +25,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "1.3.0"
+VERSION = "4.2.8"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -55,10 +56,13 @@ CHANGED = {
     "com/hex/kagune/client/KaguneAuraEffects.class",
     "com/hex/kagune/client/render/TendrilChain.class",
     "com/hex/kagune/client/KaguneManifestationEffects.class",
+    "com/hex/kagune/client/KaguneLandingEffects.class",  # 2.5.2: its fallback dust drew dark hearts (KagunePatch.noHearts)
     "com/hex/kagune/KaguneMod.class",
     "com/hex/kagune/data/KaguneProfile.class",
     "com/hex/kagune/client/render/KaguneWorldRenderer.class",
     "com/hex/kagune/client/KaguneAmbientSounds.class",
+    # 4.1.93: the tendrils' writhing loop takes its sound from the player's kagune (KaguneVoiceClient.writhe).
+    "com/hex/kagune/client/KaguneAmbientSounds$WritheSound.class",
     "com/hex/kagune/client/render/KaguneSpikeRenderer.class",
     "com/hex/kagune/gameplay/KaguneForm.class",
     "com/hex/kagune/gameplay/KaguneForm$1.class",
@@ -76,9 +80,17 @@ NEW_PREFIXES = (
     "com/hex/kagune/control/",
     "assets/hexkagune/textures/",
     "assets/hexkagune/models/one_eyed_owl.bin",
+    "assets/hexkagune/models/outfits.bin",  # 4.0.0: the owner's outfits and masks, baked (tools/outfit_models.py)
     "assets/hexkagune/models/item/",  # 7.0.1: the expansion's item models (Ghoul Meat)
     "assets/hexkagune/sounds/",
+    "assets/hexkagune/geo/",  # 3.6.5: GeckoLib models (Grand Devouring's inside)
+    "assets/hexkagune/animations/",  # 3.6.5: GeckoLib animations
     "data/hexkagune/",
+    # 4.1.50: two private characters (U+E000, U+E001: the gangs' emblems) added to the game's own font; this one file, nothing else of it.
+    "assets/minecraft/font/default.json",
+    # 4.1.90: vanilla's plains villages may also stand in TerraBlender's mods' open fields (a hotel stands only beside a village); added to
+    # the game's own list (replace false), this one file, nothing else of the game's data.
+    "data/minecraft/tags/worldgen/biome/has_structure/village_plains.json",
 )
 
 
@@ -157,7 +169,8 @@ def assemble():
 # 1.2.5: no character of the show is named anywhere in the mod's jar (the user's ask): not in a class, a text, a resource or a file
 # name. These are the only places the names are written (to be looked for); the original jar's own are renamed by KagunePatch.
 # 1.3.0: the user allowed "Eto" (the Library's NPC), so her name is no longer looked for.
-FORBIDDEN = re.compile(rb"Kaneki|KANEKI|kaneki|Ayato|AYATO|ayato|Furuta|FURUTA|furuta")
+# 4.0.0: the owner asked for "Ayato Kirishima" as an NPC of his own (The Great Exploration), so his name is no longer looked for either.
+FORBIDDEN = re.compile(rb"Kaneki|KANEKI|kaneki|Furuta|FURUTA|furuta")
 
 
 def check_names():
@@ -242,7 +255,7 @@ def main():
 
     run("java", "-m", "jdk.compiler/com.sun.tools.javac.Main", *EXPORTS, "-nowarn",
         "-d", TOOLS, "patch/KagunePatch.java", "patch/KaguneVerify.java", "patch/KaguneServerCheck.java", "patch/KaguneGuard.java",
-        "patch/KaguneRemap.java")
+        "patch/KaguneRemap.java", "patch/KaguneLinkCheck.java")
     run("java", *EXPORTS, "-cp", TOOLS, "KagunePatch", INPUT, BASE)
 
     javac("--release", "17", "-d", STUBS, *sources("stubs"))
@@ -258,6 +271,8 @@ def main():
     run("java", *EXPORTS, "-cp", TOOLS, "KaguneGuard", OUTPUT, report)
     check_guarded_scope(report)
     run("java", *EXPORTS, "-cp", TOOLS, "KaguneServerCheck", OUTPUT, STUBS)
+    # 4.1.103: every class the guard rewrote loaded by the JVM itself, its own verifier run on each (ASM's check reads no stack map frames).
+    run("java", "-cp", TOOLS, "KaguneLinkCheck", OUTPUT, STUBS, report)
     check_names()
 
     javac("--release", "17", "-cp", os.pathsep.join(map(str, (CLASSES, BASE, STUBS))), "-d", TEST_CLASSES, *sources("src/test/java"))

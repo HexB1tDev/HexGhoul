@@ -1,0 +1,100 @@
+[
+ {
+  "name": "one job offered",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangDaily.java",
+  "old": "OFFERED = 3;",
+  "new": "OFFERED = 1;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "any job taken",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "if (job != null && offered.contains(job)) {",
+  "new": "if (job != null) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "victim's tags dropped",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "                tags.addAll(QuestServer.victim(dead));\n",
+  "new": "",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "kills count whatever",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangDaily.java",
+  "old": "return this.kind == Kind.KILL && tags.containsAll(this.all) && java.util.Collections.disjoint(tags, this.none);",
+  "new": "return this.kind == Kind.KILL;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "watch by day",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "        if (!QuestServer.night(player)) {",
+  "new": "        if (false) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "wrong streak bonus",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangDaily.java",
+  "old": "days > 0 && days % 7 == 0 ? POINT",
+  "new": "days > 0 && days % 5 == 0 ? POINT",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "Ken gives none",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": ": persona == Persona.KEN ? GangPlayer.ANTEIKU : GangPlayer.NONE;",
+  "new": ": GangPlayer.NONE;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "humans get ghoul jobs",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "if (job.ghoulOnly() && !com.hex.kagune.data.KaguneProfile.isUnlocked(player)) {",
+  "new": "if (false) {",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "saved jobs shifted",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangDaily.java",
+  "old": "        CCG_PAPER(GangPlayer.CCG,",
+  "new": "        CCG_EXTRA(GangPlayer.CCG, \"Kill %d ghouls\", 1, 2, Kind.KILL, GHOUL_TAG),\n        CCG_PAPER(GangPlayer.CCG,",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "points rain",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangDaily.java",
+  "old": "POINT_CHANCE = 0.05;",
+  "new": "POINT_CHANCE = 0.5;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "Ken says nothing",
+  "file": "src/main/java/com/hex/kagune/control/npc/DailyVoice.java",
+  "old": "                case \"nothing\" -> \"Nothing today. ...Stay for a coffee instead?\";",
+  "new": "                case \"nothing\" -> \"\";",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "show counts down",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangDaily.java",
+  "old": "return this.claimed || run <= this.count ? this",
+  "new": "return this.claimed ? this",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "humans read as ghouls",
+  "file": "src/main/java/com/hex/kagune/control/server/GangServer.java",
+  "old": "                    : QuestServer.bare(player)); // a human's",
+  "new": "                    : QuestServer.context(player)); // a human's",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "1 cake",
+  "file": "src/main/java/com/hex/kagune/control/npc/GangDaily.java",
+  "old": "            if (goal == 1 && at >= 0) {",
+  "new": "            if (false) {",
+  "suite": "NpcTests"
+ }
+]

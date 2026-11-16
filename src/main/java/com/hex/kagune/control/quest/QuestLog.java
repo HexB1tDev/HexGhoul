@@ -24,7 +24,8 @@ public final class QuestLog {
     /** A kill this soon (ticks) after the last one carries the rampage on. */
     public static final int RAMPAGE_TICKS = 200;
     /** The newest save format; {@link #migrated} below it means the old progression was never looked at. */
-    public static final int VERSION = 1;
+    /** 1.3.14: 2, Crystal Wings gated (Touka teaches it): a save at 1 keeps it if its mastery was already reached, nothing else. */
+    public static final int VERSION = 2;
 
     public enum State {
         LOCKED, OPEN, DONE, CLOSED
@@ -49,6 +50,14 @@ public final class QuestLog {
      * 7.0.2: how the ghoul stands with one ghoul NPC: its {@code regard} ({@link NpcBonds}), the day they last chatted (game days),
      * flags ({@link NpcBonds#MET}, {@link NpcBonds#BEFRIENDED}, {@link NpcBonds#ASKED}, {@link NpcBonds#ALLY}) and the favours done for it.
      */
+    /**
+     * 4.1.95 (the owner: "every mission now gets into a temporary category of the quests ... It's a timed quest"): one of the game's missions
+     * as a timed quest: its kind ({@link Missions}), how it stands ({@link Missions#ON}, {@link Missions#FAILED}, {@link Missions#DONE}),
+     * when its clock runs out (on), when it may be asked for again (failed: a Minecraft day after), and the quest it shows as.
+     */
+    public record Mission(String kind, int state, long endsAt, long until, Quest quest) {
+    }
+
     public record Bond(int regard, long chatted, int flags, int favours) {
         public static final Bond NONE = new Bond(0, Long.MIN_VALUE, 0, 0);
 
@@ -82,8 +91,17 @@ public final class QuestLog {
     private final Map<String, Bond> bonds = new LinkedHashMap<>();
     private int points;
     private int migrated;
+    /**
+     * 4.1.33 (the owner: "once you did all of them /quest complete, all of them should be finished. Even if you pick another kagune, this
+     * should still be finished because you finished all of them"): every quest of the book done for good, on every path, at any mastery,
+     * those a later version adds too (the hunts and favours, taken one night at a time, still come).
+     */
+    private boolean finished;
     /** The game time the next hunt may be offered (0: as soon as it is dusk). */
     private long nextHuntAt;
+
+    /** 4.1.95: the missions given, by kind (timed quests). */
+    private final Map<String, Mission> missions = new LinkedHashMap<>();
 
     public QuestLog() {
     }
@@ -91,11 +109,28 @@ public final class QuestLog {
     // ------------------------------------------------------------------ reading
 
     public State state(Quest quest, KagunePath path, int mastery) {
+        if (quest.line() == Quest.Line.TIMED) {
+            // 4.1.95: a mission's: on (open), failed (closed: struck through while it can't be asked for again), done for good.
+            Mission mission = this.missionOf(quest);
+            return mission == null ? State.LOCKED : mission.state() == Missions.DONE ? State.DONE
+                : mission.state() == Missions.FAILED ? State.CLOSED : State.OPEN;
+        }
         State stored = this.ended.get(quest.id());
         if (stored != null) {
             return stored;
         }
+        if (this.finished && (quest.line() == Quest.Line.PATH || quest.line() == Quest.Line.GHOUL)) {
+            return State.DONE; // 4.1.33: all of them, for good
+        }
         if (!quest.on(path) || mastery < quest.mastery()) {
+            return State.LOCKED;
+        }
+        // 1.3.2: a quest whose every gate is already open (another way led there first) is done: never asked of them again.
+        if (this.learned(quest)) {
+            return State.DONE;
+        }
+        // 1.3.29: a quest nobody has given them yet waits (no quest comes by itself unless the path needs it: QuestBook.giver).
+        if (!this.given(quest)) {
             return State.LOCKED;
         }
         // 1.3.0: one of Eto's lessons waits for her to teach it.
@@ -104,11 +139,71 @@ public final class QuestLog {
             return State.LOCKED;
         }
         for (String before : quest.after()) {
-            if (this.ended.get(before) != State.DONE) {
+            if (this.ended.get(before) != State.DONE && !this.learned(QuestBook.get(before))) {
                 return State.LOCKED;
             }
         }
         return State.OPEN;
+    }
+
+    /**
+     * 1.3.29: true if {@code quest} has been given to them ({@link QuestBook#giver}): the path's own, a feat, a favour or a hunt always;
+     * Eto's lesson once she has taught it; a teacher's practice once its lesson is taught (its gate open); the ghouls' once one has been
+     * talked to; a retired one never. Begun or ended, a quest is always given (no save loses its work).
+     */
+    public boolean given(Quest quest) {
+        if (quest == null) {
+            return false;
+        }
+        if (this.ended.containsKey(quest.id()) || this.started(quest)) {
+            return true;
+        }
+        return switch (QuestBook.giver(quest)) {
+            case PATH, FEAT, ASKED -> true;
+            case ETO -> {
+                int flag = com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id());
+                yield flag != 0 && this.bond(com.hex.kagune.control.npc.EtoRules.KEY).has(flag);
+            }
+            case TEACHER -> {
+                com.hex.kagune.control.npc.Teaching.Lesson lesson = QuestBook.lesson(quest);
+                yield lesson != null && this.gates.contains(lesson.gate());
+            }
+            case GHOULS -> this.metGhoul();
+            case RETIRED -> false;
+        };
+    }
+
+    /** 1.3.29: true if {@code quest} ({@code state} now) is listed in the journal: given, and a feat only once it is done. */
+    public boolean shown(Quest quest, State state) {
+        return this.given(quest) && (QuestBook.giver(quest) != QuestBook.Giver.FEAT || state == State.DONE);
+    }
+
+    /** 1.3.29: true if anything of {@code quest}'s has been counted. */
+    boolean started(Quest quest) {
+        int[] values = this.progress.get(quest.id());
+        if (values != null) {
+            for (int value : values) {
+                if (value > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** 1.3.29: true once a ghoul of the night (not a companion) has been talked to. */
+    boolean metGhoul() {
+        for (Map.Entry<String, Bond> e : this.bonds.entrySet()) {
+            if (e.getValue().has(NpcBonds.MET) && !com.hex.kagune.control.npc.Persona.known(e.getKey())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 1.3.2: true if {@code quest} opens gates and every one of them is open already. */
+    boolean learned(Quest quest) {
+        return quest != null && !quest.reward().gates().isEmpty() && this.gates.containsAll(quest.reward().gates());
     }
 
     /** Progress on {@code quest}'s objective {@code index}. */
@@ -128,6 +223,11 @@ public final class QuestLog {
     /** Mutation points earned from quests (spent alongside the mastery milestones'). */
     public int points() {
         return this.points;
+    }
+
+    /** 4.1.78: mutation points paid outside a quest (a gang's daily), spent as a quest's are. */
+    public void grant(int points) {
+        this.points += Math.max(0, points);
     }
 
     /** How far the ghoul is on {@code side} (each quest for it adds one). */
@@ -200,7 +300,84 @@ public final class QuestLog {
         for (Favour favour : this.favours) {
             all.add(favour.quest());
         }
+        for (Mission mission : this.missions.values()) {
+            all.add(mission.quest()); // 4.1.95: the missions, as timed quests
+        }
         return all;
+    }
+
+    // ------------------------------------------------------------------ 4.1.95: the missions, as timed quests
+
+    /** 4.1.95: every mission known (on, failed, done), in the order they were first given. */
+    public List<Mission> missions() {
+        return List.copyOf(this.missions.values());
+    }
+
+    /** 4.1.95: the mission of kind {@code kind}, or null if it was never given (or its failure is forgotten: {@link #expire}). */
+    public Mission mission(String kind) {
+        return this.missions.get(kind);
+    }
+
+    /** 4.1.95: the mission {@code quest} shows, or null. */
+    public Mission missionOf(Quest quest) {
+        for (Mission mission : this.missions.values()) {
+            if (mission.quest().id().equals(quest.id())) {
+                return mission;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 4.1.95: why mission {@code kind} can't begin at {@code now}: {@link Missions#DONE} (done: never again), {@link Missions#FAILED} (failed
+     * less than a Minecraft day ago), or -1 if it may.
+     */
+    public int barred(String kind, long now) {
+        Mission mission = this.missions.get(kind);
+        if (mission == null) {
+            return -1;
+        }
+        if (mission.state() == Missions.DONE) {
+            return Missions.DONE;
+        }
+        return mission.state() == Missions.FAILED && now < mission.until() ? Missions.FAILED : -1;
+    }
+
+    /** 4.1.95: mission {@code kind} begun at {@code now}, its clock running {@code limit} ticks. */
+    public void startMission(String kind, long now, long limit) {
+        this.missions.remove(kind);
+        Quest old = Missions.quest(kind);
+        if (old != null) {
+            this.progress.remove(old.id()); // 4.1.96: a new try counts from nothing
+        }
+        this.missions.put(kind, new Mission(kind, Missions.ON, now + limit, 0L, Missions.quest(kind)));
+    }
+
+    /** 4.1.96: how far mission {@code kind} is ({@code done} of its count, as its action bar says): true if that changed it. */
+    public boolean missionProgress(String kind, int done) {
+        Mission mission = this.missions.get(kind);
+        if (mission == null || mission.quest().objectives().isEmpty()) {
+            return false;
+        }
+        int value = Math.max(0, Math.min(done, mission.quest().objectives().get(0).count()));
+        if (this.progress(mission.quest(), 0) == value) {
+            return false;
+        }
+        this.set(mission.quest(), 0, value);
+        return true;
+    }
+
+    /** 4.1.95: mission {@code kind} forgotten (over quietly: its step moved on some other way, neither won nor failed). */
+    public void forgetMission(String kind) {
+        this.missions.remove(kind);
+    }
+
+    /** 4.1.95: mission {@code kind} over at {@code now}: done for good, or failed (not to be asked for again for {@link Missions#COOLDOWN}). */
+    public void endMission(String kind, boolean won, long now) {
+        Mission mission = this.missions.get(kind);
+        long endsAt = mission == null ? now : mission.endsAt();
+        this.missions.put(kind, new Mission(kind, won ? Missions.DONE : Missions.FAILED, endsAt, won ? 0L : now + Missions.COOLDOWN,
+            Missions.quest(kind)));
     }
 
     // ------------------------------------------------------------------ changing
@@ -331,7 +508,7 @@ public final class QuestLog {
             int least = Integer.MAX_VALUE;
             for (Map.Entry<String, Bond> entry : this.bonds.entrySet()) {
                 int strength = Math.abs(entry.getValue().regard());
-                if (!entry.getValue().has(NpcBonds.ALLY) && !entry.getKey().equals(npc) && !entry.getKey().equals(com.hex.kagune.control.npc.EtoRules.KEY)
+                if (!entry.getValue().has(NpcBonds.ALLY) && !entry.getKey().equals(npc) && !com.hex.kagune.control.npc.Persona.known(entry.getKey())
                     && strength < least) {
                     least = strength;
                     faintest = entry.getKey();
@@ -347,6 +524,8 @@ public final class QuestLog {
     /** The hunts whose time ran out at {@code now}, taken off (their progress forgotten). */
     public List<Quest> expire(long now) {
         List<Quest> gone = new ArrayList<>();
+        // 4.1.95: a failed mission is shown struck through only while it can't be asked for again; then it is forgotten.
+        this.missions.values().removeIf(mission -> mission.state() == Missions.FAILED && now >= mission.until());
         this.hunts.removeIf(hunt -> {
             if (now < hunt.endsAt()) {
                 return false;
@@ -367,7 +546,8 @@ public final class QuestLog {
             return;
         }
         for (Gate gate : Gate.values()) {
-            if (had.test(gate)) {
+            boolean fresh = this.migrated < 1 || gate == Gate.UKAKU_CRYSTAL;
+            if (fresh && had.test(gate)) {
                 this.gates.add(gate);
             }
         }
@@ -379,8 +559,28 @@ public final class QuestLog {
         this.gates.add(gate);
     }
 
+    /**
+     * 4.1.33: every quest of the book finished for good: each path's and every ghoul's, whatever path or mastery, marked done (those already
+     * closed stay closed), and any added later done as it comes. What they unlock is opened apart (the command's grantAll).
+     */
+    public void finishAll() {
+        this.finished = true;
+        for (Quest quest : QuestBook.all()) {
+            if ((quest.line() == Quest.Line.PATH || quest.line() == Quest.Line.GHOUL) && !this.ended.containsKey(quest.id())) {
+                this.ended.put(quest.id(), State.DONE);
+                this.progress.remove(quest.id());
+            }
+        }
+    }
+
+    /** 4.1.33: true once every quest has been finished for good ({@link #finishAll}). */
+    public boolean finished() {
+        return this.finished;
+    }
+
     /** Everything forgotten (a command; the save is migrated, so nothing is grandfathered back). */
     public void reset() {
+        this.finished = false;
         this.progress.clear();
         this.ended.clear();
         this.gates.clear();
@@ -388,6 +588,7 @@ public final class QuestLog {
         this.hunts.clear();
         this.favours.clear();
         this.bonds.clear();
+        this.missions.clear();
         this.points = 0;
         this.nextHuntAt = 0L;
         this.migrated = VERSION;
@@ -416,6 +617,9 @@ public final class QuestLog {
         StringBuilder out = new StringBuilder();
         out.append("v=").append(this.migrated);
         out.append(";pts=").append(this.points);
+        if (this.finished) {
+            out.append(";all=1");
+        }
         out.append(";hunt@=").append(this.nextHuntAt);
         for (Map.Entry<String, Integer> side : this.sides.entrySet()) {
             out.append(";side.").append(side.getKey()).append('=').append(side.getValue());
@@ -447,6 +651,10 @@ public final class QuestLog {
             out.append(";f.").append(i).append('=').append(favour.spec().save()).append(':').append(favour.number()).append(':')
                 .append(favour.identity()).append(':').append(favour.giver());
         }
+        for (Mission mission : this.missions.values()) {
+            out.append(";m.").append(mission.kind()).append('=').append(mission.state()).append(',').append(mission.endsAt()).append(',')
+                .append(mission.until());
+        }
         for (Map.Entry<String, Bond> entry : this.bonds.entrySet()) {
             Bond bond = entry.getValue();
             out.append(";b.").append(entry.getKey()).append('=').append(bond.regard()).append(',').append(bond.chatted()).append(',')
@@ -469,6 +677,7 @@ public final class QuestLog {
         }
         log.migrated = parse(fields.get("v"), 0);
         log.points = Math.max(0, parse(fields.get("pts"), 0));
+        log.finished = parse(fields.get("all"), 0) == 1;
         log.nextHuntAt = parseLong(fields.get("hunt@"), 0L);
         // Hunts first: their progress is read below like any quest's.
         for (Map.Entry<String, String> field : fields.entrySet()) {
@@ -501,7 +710,16 @@ public final class QuestLog {
         for (Map.Entry<String, String> field : fields.entrySet()) {
             String key = field.getKey();
             String value = field.getValue();
-            if (key.startsWith("b.")) {
+            if (key.startsWith("m.")) {
+                // 4.1.95: a mission: "m.KIND=state,endsAt,until".
+                List<String> values = split(value);
+                String kind = key.substring(2);
+                Quest quest = Missions.quest(kind);
+                int state = values.size() == 3 ? parse(values.get(0), -1) : -1;
+                if (quest != null && state >= Missions.ON && state <= Missions.DONE) {
+                    log.missions.put(kind, new Mission(kind, state, parseLong(values.get(1), 0L), parseLong(values.get(2), 0L), quest));
+                }
+            } else if (key.startsWith("b.")) {
                 List<String> values = split(value);
                 if (values.size() == 4) {
                     log.bonds.put(key.substring(2), new Bond(NpcBonds.clamp(parse(values.get(0), 0)), parseLong(values.get(1), Long.MIN_VALUE),

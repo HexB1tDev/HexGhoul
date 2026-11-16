@@ -40,7 +40,7 @@ public final class KagunePatch implements Opcodes {
     private static final String COOLDOWN = "slingshotCooldownUntil";
     /** 3.0.0: the grapple's flight onto the grabbed block. */
     static final String SLINGSHOT = "com/hex/kagune/control/server/RinkakuSlingshot";
-    static final String VERSION = "1.3.0";
+    static final String VERSION = "4.2.8";
     private static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
     private static final String VECTOR = "net/minecraft/world/phys/Vec3";
     // 1.1.0 kagune control expansion hooks
@@ -56,6 +56,7 @@ public final class KagunePatch implements Opcodes {
     private static final String TENDRIL = "com/hex/kagune/client/render/TendrilChain";
     private static final String VIEW = "com/hex/kagune/client/KaguneClientState$View";
     private static final String MANIFEST = "com/hex/kagune/client/KaguneManifestationEffects";
+    private static final String LANDING = "com/hex/kagune/client/KaguneLandingEffects";
     private static final String CLIENT_PLAYER = "net/minecraft/client/player/AbstractClientPlayer";
     private static final String SERVER_ENTITY = "net/minecraft/world/entity/Entity";
     private static final String BOOTSTRAP = "com/hex/kagune/control/KaguneControlBootstrap";
@@ -310,6 +311,49 @@ public final class KagunePatch implements Opcodes {
     }
 
     /** Renames {@code name} to {@code name + "Legacy"} (public) and adds a same-signature trampoline to {@code owner.target}. */
+    /** 4.1.93: {@link #trampoline} for one overload of {@code name} (its {@code desc}); the original becomes {@code name}Legacy. */
+    private static void trampolineExact(ClassNode node, String name, String desc, String owner, String target) {
+        java.util.List<MethodNode> found = node.methods.stream().filter(m -> m.name.equals(name) && m.desc.equals(desc)).toList();
+        if (found.size() != 1) throw new IllegalStateException("No single " + node.name + "." + name + desc);
+        MethodNode original = found.get(0);
+        if ((original.access & ACC_STATIC) == 0) throw new IllegalStateException("Trampolines are for static methods: " + name);
+        int access = original.access;
+        original.name = name + "Legacy";
+        original.access = original.access & ~(ACC_PRIVATE | ACC_PROTECTED) | ACC_PUBLIC;
+        MethodNode bridge = new MethodNode(access, name, desc, null, null);
+        int slot = 0;
+        for (jdk.internal.org.objectweb.asm.Type argument : jdk.internal.org.objectweb.asm.Type.getArgumentTypes(desc)) {
+            bridge.instructions.add(new VarInsnNode(argument.getOpcode(ILOAD), slot));
+            slot += argument.getSize();
+        }
+        bridge.instructions.add(new MethodInsnNode(INVOKESTATIC, owner, target, desc, false));
+        bridge.instructions.add(new InsnNode(jdk.internal.org.objectweb.asm.Type.getReturnType(desc).getOpcode(IRETURN)));
+        node.methods.add(bridge);
+    }
+
+    /**
+     * 4.1.93: the tendrils' writhing loop takes its sound from the player's kagune: in its constructor the original's
+     * {@code HexKaguneSounds.KAGUNE_IDLE.get()} becomes {@code KaguneVoiceClient.writhe(player)} (the player is its one argument).
+     */
+    private static void patchWritheSound(ClassNode node) {
+        MethodNode init = node.methods.stream().filter(m -> m.name.equals("<init>")).findFirst().orElseThrow();
+        int changed = 0;
+        for (AbstractInsnNode instruction : init.instructions.toArray()) {
+            if (instruction instanceof FieldInsnNode field && field.getOpcode() == GETSTATIC && field.name.equals("KAGUNE_IDLE")
+                    && field.getNext() instanceof MethodInsnNode get && get.name.equals("get")
+                    && get.getNext() instanceof jdk.internal.org.objectweb.asm.tree.TypeInsnNode cast && cast.getOpcode() == CHECKCAST) {
+                init.instructions.insertBefore(field, new VarInsnNode(ALOAD, 1));
+                init.instructions.insertBefore(field, new MethodInsnNode(INVOKESTATIC, "com/hex/kagune/control/client/KaguneVoiceClient", "writhe",
+                    "(Lnet/minecraft/client/player/AbstractClientPlayer;)Lnet/minecraft/sounds/SoundEvent;", false));
+                init.instructions.remove(get);
+                init.instructions.remove(cast);
+                init.instructions.remove(field);
+                changed++;
+            }
+        }
+        expect(changed, 1, "writhe sound by kagune");
+    }
+
     private static void trampoline(ClassNode node, String name, String owner, String target) {
         MethodNode original = method(node, name);
         if (node.methods.stream().filter(m -> m.name.equals(name)).count() != 1)
@@ -344,8 +388,14 @@ public final class KagunePatch implements Opcodes {
         method(node, name).visibleAnnotations = annotations;
     }
 
+    /** 4.1.93: the original's playAt for a point, which every one of its sounds goes through (the other overloads call it). */
+    static final String PLAY_AT_DESC = "(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/phys/Vec3;Lnet/minecraftforge/registries/RegistryObject;FF)V";
+
     private static void patchControllerForControl(ClassNode node) {
         for (String name : CONTROLLER_REUSED) widen(node, name);
+        // 4.1.93 (the owner: "do for both of the other cognates completely. Replace all sounds"): every sound the controller plays is
+        // played as the player's kagune plays it (KaguneVoice): a Rinkaku's, a Bikaku's, an Ukaku's the game's own.
+        trampolineExact(node, "playAt", PLAY_AT_DESC, "com/hex/kagune/control/server/KaguneVoice", "playAt");
         // Every M1 path (C2S SWIPE action, vanilla attack, instinct) funnels through startSwipe.
         trampoline(node, "startSwipe", COMBAT, "startSwipe");
         // 1.3.0: the single manifest rip is replaced by per-limb sounds every client plays (ManifestSounds).
@@ -372,6 +422,20 @@ public final class KagunePatch implements Opcodes {
         trampoline(node, "toggleGuard", GATES, "toggleGuard");
         // 1.2.0: on the Ukaku path the tail-cycle key switches wing form.
         trampoline(node, "cycleTendrils", FORMS, "cycleTendrils");
+        // 2.4.8 (the owner: "While in rinkaku (when first pulling it out) a bunch of heart particles appear behind the player"): the
+        // original's regeneration puffed hearts at the player on every heal (and since 2.3.6 a ghoul's health is under its larger most for
+        // a long while): those particles go through GhoulRegen.particles, which draws none.
+        MethodNode regen = method(node, "tickRegeneration");
+        int puffs = 0;
+        for (AbstractInsnNode instruction : regen.instructions.toArray()) {
+            if (instruction instanceof MethodInsnNode call && call.getOpcode() == INVOKEVIRTUAL && call.name.equals("m_8767_")
+                    && call.owner.equals("net/minecraft/server/level/ServerLevel")) {
+                regen.instructions.set(call, new MethodInsnNode(INVOKESTATIC, "com/hex/kagune/control/server/GhoulRegen", "particles",
+                    "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/particles/ParticleOptions;DDDIDDDD)I", false));
+                puffs++;
+            }
+        }
+        expect(puffs, 1, "regeneration hearts");
         // 3.0.3: a crush is once: when it ends, what it crushed is let go (RinkakuGrip) instead of held for the next one.
         MethodNode crush = method(node, "tickCrush");
         int ends = 0;
@@ -462,6 +526,28 @@ public final class KagunePatch implements Opcodes {
         onAction.instructions.insert(guard);
     }
 
+    /**
+     * 1.3.14: a companion holding the player's hand (or clinging to them, hugging them, kissing them) is never one of their targets: the
+     * original's target checks ({@code isHostileTo}, {@code validSwipeTarget}) say no at once while {@code EtoBrain.spared} says so.
+     */
+    private static void patchSpared(ClassNode node, String name) {
+        MethodNode check = node.methods.stream()
+            .filter(m -> m.name.equals(name) && m.desc.equals("(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/LivingEntity;)Z"))
+            .findFirst().orElseThrow(() -> new IllegalStateException("Missing " + name + "(ServerPlayer, LivingEntity)"));
+        LabelNode proceed = new LabelNode();
+        InsnList guard = new InsnList();
+        guard.add(new VarInsnNode(ALOAD, 0));
+        guard.add(new VarInsnNode(ALOAD, 1));
+        guard.add(new MethodInsnNode(INVOKESTATIC, "com/hex/kagune/control/server/EtoBrain", "spared",
+            "(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/LivingEntity;)Z", false));
+        guard.add(new JumpInsnNode(IFEQ, proceed));
+        guard.add(new InsnNode(ICONST_0));
+        guard.add(new InsnNode(IRETURN));
+        guard.add(proceed);
+        guard.add(new FrameNode(F_SAME, 0, null, 0, null));
+        check.instructions.insert(guard);
+    }
+
     private static void patchTendrilChain(ClassNode node) {
         widen(node, "thrustTarget");
         widen(node, "isActionLimb");
@@ -538,6 +624,23 @@ public final class KagunePatch implements Opcodes {
         // Photon) stay on the Rinkaku path.
         trampoline(node, "spawnOriginMist", UKAKU_CLIENT, "spawnOriginMist");
         trampoline(node, "spawnBlood", UKAKU_CLIENT, "spawnManifestBlood");
+    }
+
+    /** 2.5.2: every damage indicator (a dark heart) {@code node} draws, a drop of blood instead ({@code UkakuBlood.FALLBACK}). */
+    private static int noHearts(ClassNode node) {
+        int swapped = 0;
+        for (MethodNode method : node.methods) {
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (instruction instanceof FieldInsnNode field && field.getOpcode() == GETSTATIC
+                        && field.owner.equals("net/minecraft/core/particles/ParticleTypes") && field.name.equals("f_123798_")) {
+                    field.owner = "com/hex/kagune/control/client/fx/UkakuBlood";
+                    field.name = "FALLBACK";
+                    field.desc = "Lnet/minecraft/core/particles/ParticleOptions;";
+                    swapped++;
+                }
+            }
+        }
+        return swapped;
     }
 
     private static void patchModConstructor(ClassNode node) {
@@ -865,12 +968,20 @@ public final class KagunePatch implements Opcodes {
         patchController(controller);
         patchControllerForControl(controller);
         patchDragonLock(controller);
+        patchSpared(controller, "isHostileTo");
+        patchSpared(controller, "validSwipeTarget");
         patchAura(aura);
         ClassNode tendril = read(entries.get(TENDRIL + ".class"));
         ClassNode manifest = read(entries.get(MANIFEST + ".class"));
         ClassNode mod = read(entries.get(MOD + ".class"));
         patchTendrilChain(tendril);
         patchManifestation(manifest);
+        // 2.5.2 (the owner: "The hearts are still appearing when popping out the kakujas"): the original's fallback blood and mist (drawn
+        // as each limb tears out) and its landing dust drew vanilla's damage indicator, dark hearts; now a dark red drop of blood.
+        expect(noHearts(manifest), 2, "manifestation fallback hearts");
+        ClassNode landing = read(entries.get(LANDING + ".class"));
+        expect(noHearts(landing), 2, "landing fallback hearts");
+        entries.put(LANDING + ".class", write(landing));
         patchModConstructor(mod);
         ClassNode profile = read(entries.get(PROFILE + ".class"));
         // 1.2.0: the chosen path lives inside the profile root, so death-cloning carries it and /kagune reset clears it.
@@ -908,6 +1019,10 @@ public final class KagunePatch implements Opcodes {
         redirectTendrilView(ambient, "clientTick");
         entries.put(WORLD_RENDERER + ".class", write(worldRenderer));
         entries.put(AMBIENT + ".class", write(ambient));
+        // 4.1.93: the writhing loop's sound by the player's kagune (KaguneVoiceClient.writhe).
+        ClassNode writhe = read(entries.get(AMBIENT + "$WritheSound.class"));
+        patchWritheSound(writhe);
+        entries.put(AMBIENT + "$WritheSound.class", write(writhe));
         // 7.0.0: the original RC bar is not drawn while the shared bar (ReserveHud) shows: it is the same bar.
         ClassNode energyHud = read(entries.get(ENERGY_HUD + ".class"));
         trampolineListener(energyHud, "render", "com/hex/kagune/control/client/ReserveHud", "energyHud");
@@ -929,6 +1044,11 @@ public final class KagunePatch implements Opcodes {
         patchFormMenu(screen);
         entries.put(SCREEN + ".class", write(screen));
         replaceText(entries, "META-INF/mods.toml", "version=\"1.0.0\"", "version=\"" + VERSION + "\"");
+        // 3.6.3 (the owner: "use geckolib it is meant to be a requirement"; "we are using Geckolib as a dependancy along with Photon and
+        // player animator"): GeckoLib 4 is required alongside PlayerAnimator, bendylib and Photon, on both sides.
+        replaceText(entries, "META-INF/mods.toml", "modId=\"photon\"\nmandatory=true\nversionRange=\"[1.1.17,)\"\nordering=\"AFTER\"\nside=\"CLIENT\"\n",
+            "modId=\"photon\"\nmandatory=true\nversionRange=\"[1.1.17,)\"\nordering=\"AFTER\"\nside=\"CLIENT\"\n\n[[dependencies.hexkagune]]\nmodId=\"geckolib\"\n"
+                + "mandatory=true\nversionRange=\"[4.4,)\"\nordering=\"AFTER\"\nside=\"BOTH\"\n");
         replaceText(entries, "META-INF/MANIFEST.MF", "Implementation-Version: 1.0.0", "Implementation-Version: " + VERSION);
         Path output = Path.of(args[1]);
         Files.createDirectories(output.toAbsolutePath().getParent());

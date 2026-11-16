@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "ingredient": {
+    "item": "hexkagune:ghoul_meat"
+  },
+  "result": "hexkagune:cooked_ghoul_meat",
+  "experience": 0.35,
+  "cookingtime": 600
+}

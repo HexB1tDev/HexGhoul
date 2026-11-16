@@ -1,0 +1,130 @@
+{
+ "credit": "HexKagune: tools/quinque_models.py (drawn by client/QuinqueItemRenderer.java)",
+ "parent": "minecraft:builtin/entity",
+ "textures": {
+  "q": "hexkagune:item/quinque_dawn",
+  "particle": "hexkagune:item/quinque_dawn"
+ },
+ "display": {
+  "thirdperson_righthand": {
+   "rotation": [
+    29.84,
+    86.56,
+    1.15
+   ],
+   "translation": [
+    0.718,
+    4.287,
+    -9.462
+   ],
+   "scale": [
+    0.9,
+    0.9,
+    0.9
+   ]
+  },
+  "thirdperson_lefthand": {
+   "rotation": [
+    29.84,
+    -86.56,
+    -1.15
+   ],
+   "translation": [
+    0.718,
+    4.287,
+    -9.462
+   ],
+   "scale": [
+    0.9,
+    0.9,
+    0.9
+   ]
+  },
+  "firstperson_righthand": {
+   "rotation": [
+    0,
+    100,
+    0
+   ],
+   "translation": [
+    -2.0,
+    3.0,
+    -5.0
+   ],
+   "scale": [
+    0.66,
+    0.66,
+    0.66
+   ]
+  },
+  "firstperson_lefthand": {
+   "rotation": [
+    0,
+    -100,
+    0
+   ],
+   "translation": [
+    -2.0,
+    3.0,
+    -5.0
+   ],
+   "scale": [
+    0.66,
+    0.66,
+    0.66
+   ]
+  },
+  "gui": {
+   "rotation": [
+    15,
+    -20,
+    20
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.34,
+    0.34,
+    0.34
+   ]
+  },
+  "ground": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    2,
+    0
+   ],
+   "scale": [
+    0.28,
+    0.28,
+    0.28
+   ]
+  },
+  "fixed": {
+   "rotation": [
+    15,
+    -20,
+    20
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.34,
+    0.34,
+    0.34
+   ]
+  }
+ },
+ "gui_light": "front"
+}

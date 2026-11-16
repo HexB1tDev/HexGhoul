@@ -63,7 +63,8 @@ public final class UkakuBody {
      * is set when both wings strike together (cross cut, twin shard burst).
      */
     public static Pose pose(StrikePattern pattern, boolean rightMain, boolean both, float progress, float impact) {
-        Keys keys = new Keys(progress, impact);
+        // 4.1.10: the wing slams' body throws its blow (Keys.blow): it drives into the impact speeding up and lands a beat before the wing.
+        Keys keys = slams(pattern) ? Keys.blow(progress, impact) : new Keys(progress, impact);
         Side side = new Side(rightMain ? 1.0F : -1.0F);
         Pose pose = new Pose();
         switch (bodyOf(pattern)) {
@@ -81,6 +82,42 @@ public final class UkakuBody {
                     keys.at(0.7F, 0.9F, 0.85F));
             }
             case WING_SLASH -> sweep(pose, keys, side, 1.0F);
+            // 4.1.2: the wing slams. A slap, a quick turn of the shoulders into it; a swing, the whole body wound round and unwound.
+            case WING_SLAP -> sweep(pose, keys, side, 0.75F);
+            case WING_SWING -> sweep(pose, keys, side, 1.3F);
+            case WING_RISE -> {
+                // Down low into a crouch, the arm swept down and back; then up through the target, the body rising and leaning back.
+                pose.torsoX = keys.at(0.25F, -0.3F, -0.25F);
+                pose.twist = side.mirror(keys.at(-0.2F, 0.3F, 0.28F));
+                pose.headX = keys.at(0.15F, -0.2F, -0.18F);
+                side.arm(pose, true, keys.at(0.45F, -2.2F, -2.0F), keys.at(0.1F, -0.3F, -0.3F), keys.at(0.25F, 0.4F, 0.38F), keys.at(0.6F, 0.2F, 0.2F));
+                side.arm(pose, false, keys.at(-0.3F, 0.35F, 0.3F), keys.at(0.0F, 0.0F, 0.0F), keys.at(0.2F, 0.3F, 0.28F), keys.at(0.5F, 0.3F, 0.3F));
+                side.leg(pose, true, keys.at(-0.35F, 0.1F, 0.08F), keys.at(0.05F, 0.0F, 0.0F));
+                side.leg(pose, false, keys.at(0.25F, -0.1F, -0.08F), keys.at(0.0F, 0.0F, 0.0F));
+            }
+            case WING_SLAM -> {
+                // Up on the wind-up, leaning back, the arm raised high over the shoulder with the wing; then driven down into a forward
+                // bend as the wing crashes onto the target, a step in on the striking side.
+                pose.torsoX = keys.at(-0.3F, 0.45F, 0.4F);
+                pose.torsoBend = keys.at(0.0F, 0.25F, 0.2F);
+                pose.headX = keys.at(-0.25F, 0.15F, 0.12F);
+                pose.twist = side.mirror(keys.at(0.25F, -0.15F, -0.12F));
+                side.arm(pose, true, keys.at(-2.4F, -0.9F, -0.8F), keys.at(-0.2F, 0.2F, 0.2F), keys.at(0.3F, 0.1F, 0.1F), keys.at(0.4F, 0.2F, 0.2F));
+                side.arm(pose, false, keys.at(-0.3F, 0.4F, 0.35F), keys.at(0.0F, 0.0F, 0.0F), keys.at(0.2F, 0.3F, 0.3F), keys.at(0.3F, 0.4F, 0.35F));
+                side.leg(pose, true, keys.at(0.0F, -0.35F, -0.3F), keys.at(0.0F, 0.05F, 0.05F));
+                side.leg(pose, false, keys.at(0.0F, 0.25F, 0.2F), keys.at(0.0F, 0.0F, 0.0F));
+            }
+            case TWIN_SLAM -> {
+                // Both arms thrown up high as both wings rise, chest open; then everything comes down together into a deep bend. 4.1.13: his
+                // eyes stay on the target through the wind-up (his head thrown back went into the wings rising behind it).
+                pose.torsoX = keys.at(-0.35F, 0.55F, 0.5F);
+                pose.torsoBend = keys.at(0.0F, 0.3F, 0.25F);
+                pose.headX = keys.at(0.15F, 0.2F, 0.15F);
+                for (boolean main : new boolean[] {true, false}) {
+                    side.arm(pose, main, keys.at(-2.6F, -0.7F, -0.6F), keys.at(0.0F, 0.0F, 0.0F), keys.at(0.35F, 0.25F, 0.2F), keys.at(0.3F, 0.3F, 0.25F));
+                    side.leg(pose, main, keys.at(0.1F, -0.2F, -0.18F), keys.at(0.05F, 0.12F, 0.1F));
+                }
+            }
             case ONE_WING_SLASH -> sweep(pose, keys, side, 1.35F);
             case WING_CROSS -> {
                 pose.torsoX = keys.at(0.22F, -0.12F, -0.1F);
@@ -377,24 +414,84 @@ public final class UkakuBody {
         side.leg(pose, false, keys.at(0.0F, -0.25F, -0.22F) * scale, keys.at(0.0F, 0.0F, 0.0F));
     }
 
+    /** 4.1.10: true for the base form's wing slams, whose body throws its blow ({@link Keys#blow}). */
+    public static boolean slams(StrikePattern pattern) {
+        return pattern == StrikePattern.WING_SLAP || pattern == StrikePattern.WING_SWING || pattern == StrikePattern.WING_RISE
+            || pattern == StrikePattern.WING_SLAM || pattern == StrikePattern.TWIN_SLAM;
+    }
+
+    /**
+     * 4.1.10: a slam's body, as a fighter's: it lands this much (a share of the move) before the wing does (the hips and the chest turn
+     * first, the arm and the wing are whipped round after them), its drive takes at most {@link #BODY_DRIVE} (half the time to its impact at
+     * most: 0.55) and speeds up into the hit by {@link #BODY_SNAP}, it loads {@link #BODY_LOAD} past its wind-up first and carries on past its
+     * follow-through key by {@link #BODY_OVER} of its drive.
+     */
+    public static final float BODY_LEAD = 0.035F;
+    public static final float BODY_DRIVE = 0.28F;
+    public static final float BODY_SNAP = 1.5F;
+    public static final float BODY_LOAD = 0.06F;
+    public static final float BODY_OVER = 0.18F;
+    public static final float BODY_FOLLOW = 0.12F;
+
     /** Wind-up, impact and follow-through keys, eased, with rest at both ends. */
     private static final class Keys {
         private final float progress;
         private final float windupAt;
         private final float impactAt;
         private final float followAt;
+        /** 4.1.10: a slam's: where the load ends (the drive starts), and whether this is one (else 0 and false). */
+        private final float loadAt;
+        private final boolean blow;
 
         Keys(float progress, float impact) {
             this.progress = Float.isFinite(progress) ? Math.max(0.0F, Math.min(1.0F, progress)) : 0.0F;
             this.impactAt = Float.isFinite(impact) ? Math.max(0.1F, Math.min(0.8F, impact)) : 0.4F;
             this.windupAt = 0.55F * this.impactAt;
             this.followAt = this.impactAt + 0.18F * (1.0F - this.impactAt);
+            this.loadAt = 0.0F;
+            this.blow = false;
+        }
+
+        private Keys(float progress, float windupAt, float loadAt, float impactAt, float followAt) {
+            this.progress = progress;
+            this.windupAt = windupAt;
+            this.loadAt = loadAt;
+            this.impactAt = impactAt;
+            this.followAt = followAt;
+            this.blow = true;
+        }
+
+        /** 4.1.10: a slam's keys: wound up, loaded, driven into the impact (a beat before the wing's), carried on past, back to rest. */
+        static Keys blow(float progress, float impact) {
+            float p = Float.isFinite(progress) ? Math.max(0.0F, Math.min(1.0F, progress)) : 0.0F;
+            float wing = Float.isFinite(impact) ? Math.max(0.2F, Math.min(0.85F, impact)) : 0.4F;
+            float hit = wing - BODY_LEAD;
+            float load = hit - Math.min(BODY_DRIVE, 0.5F * hit);
+            return new Keys(p, 0.75F * load, load, hit, Math.min(0.92F, hit + BODY_FOLLOW));
         }
 
         float at(float windup, float strike, float follow) {
             float p = this.progress;
             if (p <= 0.0F || p >= 1.0F) {
                 return 0.0F;
+            }
+            if (this.blow) {
+                float loaded = windup + BODY_LOAD * (windup - strike);
+                float past = follow + BODY_OVER * (strike - windup);
+                if (p < this.windupAt) {
+                    return windup * smooth(p / this.windupAt);
+                }
+                if (p < this.loadAt) {
+                    return lerp(windup, loaded, smooth((p - this.windupAt) / (this.loadAt - this.windupAt)));
+                }
+                if (p < this.impactAt) {
+                    return lerp(loaded, strike, (float)Math.pow((p - this.loadAt) / (this.impactAt - this.loadAt), BODY_SNAP));
+                }
+                if (p < this.followAt) {
+                    float u = (p - this.impactAt) / (this.followAt - this.impactAt);
+                    return lerp(strike, past, 1.0F - (1.0F - u) * (1.0F - u));
+                }
+                return past * (1.0F - smooth((p - this.followAt) / (1.0F - this.followAt)));
             }
             if (p < this.windupAt) {
                 return windup * smooth(p / this.windupAt);

@@ -70,7 +70,7 @@ final class UkakuGatling {
             state.gatlingAccum = 0.0;
             state.gatlingShot = 0;
             state.dirty = true;
-            UkakuFire.sound(player.m_284548_(), player.m_146892_(), "block.amethyst_cluster.place", 0.9F, KaguneServerController.vary(player, 1.4F, 0.05F));
+            UkakuFire.sound(player.m_284548_(), player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_GROW, 0.9F, KaguneServerController.vary(player, 1.4F, 0.05F));
         }
         state.gatlingHeldUntil = now + UkakuRules.GATLING_KEEPALIVE;
     }
@@ -110,7 +110,7 @@ final class UkakuGatling {
                 UkakuRules.GATLING_MOST_IN_FLIGHT)) {
                 state.gatlingShot++;
                 if (state.gatlingShot % 2 == 1) {
-                    UkakuFire.sound(level, tip, "block.amethyst_block.hit", 0.5F,
+                    UkakuFire.sound(level, tip, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.5F,
                         KaguneServerController.vary(player, 1.5F + 0.4F * (float)Math.min(1.0, held / 40.0), 0.1F));
                 }
             }
@@ -155,7 +155,7 @@ final class UkakuGatling {
                 float yaw = (player.m_217043_().m_188501_() * 2.0F - 1.0F) * UkakuRules.GATLING_SPREAD;
                 UkakuFire.shard(player, mouth, aim, UkakuFire.Kind.SHOT, UkakuRules.pyreGatlingFireDamage(mastery), yaw, PYRE_FIREBALL_SCALE, 0L);
                 state.gatlingShot++;
-                UkakuFire.sound(level, mouth, "entity.blaze.shoot", 0.4F, KaguneServerController.vary(player, 1.2F + pitch, 0.1F));
+                UkakuFire.sound(level, mouth, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_LAUNCH, 0.45F, KaguneServerController.vary(player, 1.2F + pitch, 0.1F));
                 continue;
             }
             int index = pyre ? UkakuRules.pyreGatlingTentacle(state.gatlingShot) : UkakuRules.sixTailTentacle(state.gatlingShot);
@@ -163,7 +163,7 @@ final class UkakuGatling {
                 UkakuRules.GATLING_MOST_IN_FLIGHT)) {
                 state.gatlingShot++;
                 if (pyre || state.gatlingShot % 2 == 1) {
-                    UkakuFire.sound(level, player.m_146892_(), "block.amethyst_block.hit", 0.45F, KaguneServerController.vary(player, 1.7F + pitch, 0.1F));
+                    UkakuFire.sound(level, player.m_146892_(), com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_HIT, 0.45F, KaguneServerController.vary(player, 1.7F + pitch, 0.1F));
                 }
             }
         }

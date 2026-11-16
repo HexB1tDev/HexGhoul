@@ -146,10 +146,14 @@ final class PaleAnimator {
             pose = PaleMotions.strike(PaleStrike.byOrdinal(this.detail), since, this.from);
         } else if (now == PaleMove.PUNCH_CHARGE) {
             pose = PaleMotions.punchCharge(since, this.from);
+        } else if (now == PaleMove.TWIRL_CHARGE) {
+            pose = PaleMotions.twirlCharge(since, this.from); // 4.1.8
         } else if (now == PaleMove.PUNCH) {
             pose = PaleMotions.punch(since, this.from);
         } else if (now == PaleMove.KICK) {
             pose = PaleMotions.kick(since, view.detail(), this.from);
+        } else if (now == PaleMove.DASH_KICK) {
+            pose = PaleMotions.dashKick(since, view.detail(), this.from); // 4.1.87
         } else if (now == PaleMove.WITNESS) {
             pose = PaleMotions.witness(since, this.from);
         } else if (now == PaleMove.HAMMER_CHARGE) {
@@ -221,7 +225,7 @@ final class PaleAnimator {
             this.last = null;
             return;
         }
-        RigPose guard = guardKept(p);
+        RigPose guard = guardKept(p, PaleMotions.kickMasters(this.ended, this.detail));
         RigPose held;
         if (t < INTO_GUARD) {
             float u = smooth(t / INTO_GUARD);
@@ -236,10 +240,10 @@ final class PaleAnimator {
 
     /**
      * Her guard kept after a strike: the arms up as between strikes; the legs her own again (she can walk with it), the stance
-     * under it what she was doing anyway.
+     * under it what she was doing anyway. 4.1.88: after Kick Master's own moves ({@code kicker}), her stance instead: the hands low.
      */
-    private static RigPose guardKept(RigPose stance) {
-        RigPose guard = PaleMotions.guard();
+    private static RigPose guardKept(RigPose stance, boolean kicker) {
+        RigPose guard = kicker ? PaleMotions.kickStance() : PaleMotions.guard();
         guard.legHold = 0.0F;
         guard.rightLegX = stance.rightLegX;
         guard.rightLegY = stance.rightLegY;

@@ -210,14 +210,19 @@ public final class UkakuForms {
      * 1.2.7: each form's own transformation from the user's pack, for everyone near (it was the original's reshape, to him alone): the
      * Rinkaku Centipede Kakuja, its full kakuja, Ukaku's first and final kakuja; coming out of any of them, the armour shifting off.
      */
-    static final String CENTIPEDE_SOUND = "hexkagune:sfx.transform.body_warp";
-    static final String RINKAKU_KAKUJA_SOUND = "hexkagune:sfx.transform.heavy_morph";
-    static final String UKAKU_KAKUJA_SOUND = "hexkagune:sfx.transform.energy_metamorphosis";
-    static final String FINAL_KAKUJA_SOUND = "hexkagune:sfx.transform.final_form";
+    // 4.1.93: the Rinkaku's, the game's own (RinkakuSounds): the centipede a Ravager's roar, the full kakuja the Wither's birth.
+    static final String CENTIPEDE_SOUND = com.hex.kagune.control.RinkakuSounds.CENTIPEDE;
+    static final String RINKAKU_KAKUJA_SOUND = com.hex.kagune.control.RinkakuSounds.FULL_KAKUJA;
+    // 4.1.91: the Ukaku's, the game's own (UkakuSounds).
+    static final String UKAKU_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA;
+    static final String FINAL_KAKUJA_SOUND = com.hex.kagune.control.ukaku.UkakuSounds.FINAL_KAKUJA;
     static final String KAKUJA_OFF_SOUND = "hexkagune:sfx.transform.organic_armor_shift";
 
     private static void announce(ServerPlayer player, boolean on, String name, String sound) {
         player.m_5661_(Component.m_237110_(on ? "message.hexkagune.kakuja_on" : "message.hexkagune.kakuja_off", name), true);
-        UkakuFire.sound(player.m_284548_(), player.m_20182_().m_82520_(0.0, 1.0, 0.0), on ? sound : KAKUJA_OFF_SOUND, on ? 1.8F : 1.0F, 1.0F);
+        boolean centipede = sound.equals(CENTIPEDE_SOUND) || sound.equals(RINKAKU_KAKUJA_SOUND);
+        boolean ukaku = sound.equals(UKAKU_KAKUJA_SOUND) || sound.equals(FINAL_KAKUJA_SOUND);
+        String selected = on ? sound : centipede ? com.hex.kagune.control.RinkakuSounds.CHITIN_OFF : ukaku ? com.hex.kagune.control.ukaku.UkakuSounds.KAKUJA_OFF : com.hex.kagune.control.RinkakuSounds.KAKUJA_OFF;
+        UkakuFire.sound(player.m_284548_(), player.m_20182_().m_82520_(0.0, 1.0, 0.0), selected, on ? 1.8F : 1.0F, 1.0F);
     }
 }

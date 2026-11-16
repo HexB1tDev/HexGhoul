@@ -1,0 +1,13 @@
+## 1.3.57 (HexGhoul): they act out what they say: gestures and poses with every line (testing)
+HexKagune 1.3.57 for Forge 1.20.1. Install on client and server (**protocol 70**: a child's state carries what it does as it talks). Testing build: compiled, tests pass, **not tried in game**.
+
+The owner: "focusing mainly on the beauty of interactions". In every family talk (a parent fetching a child, the word at the door, siblings' chats, teasing, bragging, comfort, schemes, squabbles, a parent breaking one up, a big sibling minding a toddler, a talk cut short), each one now does something with its body as it says its line:
+
+- **Children have 15 new talk poses:** arms folded with the chin turned away, a stamp of the foot, pointing at the other, hands on hips with the chest out (as close as a model without elbows gets: arms out and back), a shrug, a sorry with the head down and hands behind the back, a cheer with both arms up, a giggle behind a hand, a whisper with a hand by the mouth and a lean in, a "bleh" with hands by the ears and a waggling head, a pat on the other's shoulder, a sulk, a hand to the chin, a wave, and hands together under the chin for a "pleeease". Each eases in, holds while the line is up, and eases out.
+- **Companions use their own gestures** (they already had them): Touka's hands on hips, tapping foot and folded arms when she tells a child off, a huff at the end; Ken's gentle telling-off and a hand to his chin; Eto's amused hand to her chin and a laugh. Breaking up a squabble, a sigh or a tapped foot.
+- **What they do fits the line and the one saying it.** A line that says what it does is done that way ("*crosses her arms*", "Hehe~", "Pleeease?", "*sighs*"). Otherwise it follows the talk and the speaker's temper: in a squabble a bold child points or stamps while a shy one sulks; a brag is said with hands on hips; a scheme is whispered and ends in giggles; a hurt sibling is patted on the shoulder; scolded, a shy child hangs its head while a bold one folds its arms; and after a squabble a mischievous one sometimes sticks its tongue out instead of a proper sorry. Small talk is often said with no gesture at all.
+- A child carried on its parent's hip uses its arms only; a companion holding a toddler keeps holding it.
+
+Previews (off-game, the game's own poses on the child's in-game proportions): `tools/TalkPreview.java` draws every pose on a child and some on a toddler, and two siblings mid-squabble.
+
+Untested in game: compiled and unit tested only. Try: two children at home until they squabble near a companion parent, and a toddler that wanders off.

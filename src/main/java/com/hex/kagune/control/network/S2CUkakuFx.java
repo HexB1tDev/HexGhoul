@@ -84,6 +84,23 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
     public static final int REVEAL = 40;
     /** 6.0.0: the kakuja's dash: a rush of wind from {@code x, y, z} along {@code v}, {@code size} how strong. */
     public static final int GUST = 41;
+    public static final int DAWN_BALL = 42;
+    public static final int DAWN_BURST = 43;
+    /** 2.0.33: the White Reaper's lance gone into the ground: where his tendril will rise is marked ({@code size} its radius) for {@code extra} ticks. */
+    public static final int REAPER_MARK = 44;
+    /** 2.0.33: his black tendril bursting up out of the mark at {@code x, y, z} (its seed in {@code id}), drawn for {@code extra} ticks. */
+    public static final int REAPER_TENDRIL = 45;
+    /**
+     * 2.0.48: one ball of the White Reaper's volley (DawnVolley): from (x, y, z) along v (its speed a tick), {@code size} the distance it
+     * aimed at, {@code extra} its place in the ring times 100 plus its life (ticks).
+     */
+    public static final int DAWN_RING = 46;
+    /** 2.4.8: a player Ken taught a kakuja cracking a finger before the kagune bursts out ({@code shooter}: the player). */
+    public static final int CRACK = 47;
+    /** 4.0.2: a player Noro taught tilting their head before the kagune comes out ({@code shooter}: the player). */
+    public static final int TILT = 48;
+    /** 4.1.0: a player Ayato taught lifting both hands, god-like, before the wings are unleashed ({@code shooter}: the player). */
+    public static final int UNLEASH = 49;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

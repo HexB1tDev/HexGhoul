@@ -38,13 +38,13 @@ final class KingCombos {
     }
 
     /** The way from {@code player} to {@code body}, level (unit), or {@code fallback}. */
-    static V3 toward(ServerPlayer player, Entity body, V3 fallback) {
+    static V3 toward(LivingEntity player, Entity body, V3 fallback) {
         V3 to = new V3(body.getX() - player.getX(), 0.0, body.getZ() - player.getZ());
         return to.length() < 1.0E-4 ? fallback : to.normalize();
     }
 
     /** An air blow landed on {@code body}: it floats up a little, carried on along the blow; he hangs where he is, his fall forgotten. */
-    static void air(ServerPlayer player, LivingEntity body, V3 facing) {
+    static void air(LivingEntity player, LivingEntity body, V3 facing) {
         double steady = 1.0 - 0.75 * KingEffects.steady(body);
         motion(body, facing.x() * 0.12 * steady, KingCombo.FLOAT_UP, facing.z() * 0.12 * steady);
         motion(player, 0.0, KingCombo.HANG_UP, 0.0); // 1.0.36: (not his last speed: the server's idea of it is stale)
@@ -53,7 +53,7 @@ final class KingCombos {
     }
 
     /** The launcher landed on {@code body}: it goes up high; he goes up after it. */
-    static void launch(ServerPlayer player, LivingEntity body, V3 facing) {
+    static void launch(LivingEntity player, LivingEntity body, V3 facing) {
         double steady = 1.0 - 0.6 * KingEffects.steady(body);
         motion(body, facing.x() * 0.1, KingCombo.LAUNCH_UP * steady, facing.z() * 0.1);
         V3 to = new V3(body.getX() - player.getX(), 0.0, body.getZ() - player.getZ());
@@ -65,7 +65,7 @@ final class KingCombos {
     }
 
     /** The spike landed on {@code body}: it is driven down into the ground, he plunging after it; where it lands the ground breaks. */
-    static void spike(ServerPlayer player, LivingEntity body, V3 facing, double power, long now) {
+    static void spike(LivingEntity player, LivingEntity body, V3 facing, double power, long now) {
         motion(body, facing.x() * 0.2, -KingCombo.SPIKE_DOWN, facing.z() * 0.2);
         motion(player, 0.0, -KingCombo.PLUNGE_DOWN, 0.0);
         player.fallDistance = 0.0F;
@@ -78,12 +78,12 @@ final class KingCombos {
     }
 
     /** What {@code player} spiked that hit the ground this tick (each once; given up on after a while). */
-    static List<Landing> landed(ServerPlayer player, long now) {
+    static List<Landing> landed(LivingEntity player, long now) {
         List<Spiked> spiked = SPIKED.get(player.getUUID());
         if (spiked == null || spiked.isEmpty()) return List.of();
         List<Landing> out = new ArrayList<>();
         double r = 48.0;
-        List<LivingEntity> near = player.serverLevel().getEntitiesOfClass(LivingEntity.class, new AABB(player.getX() - r, player.getY() - r, player.getZ() - r,
+        List<LivingEntity> near = ((net.minecraft.server.level.ServerLevel) player.level()).getEntitiesOfClass(LivingEntity.class, new AABB(player.getX() - r, player.getY() - r, player.getZ() - r,
                 player.getX() + r, player.getY() + r, player.getZ() + r), b -> b != player);
         for (Iterator<Spiked> it = spiked.iterator(); it.hasNext(); ) {
             Spiked s = it.next();
@@ -102,7 +102,7 @@ final class KingCombos {
     }
 
     /** It came off, or he died: nothing he spiked is watched any more. */
-    static void forget(ServerPlayer player) {
+    static void forget(LivingEntity player) {
         SPIKED.remove(player.getUUID());
     }
 }

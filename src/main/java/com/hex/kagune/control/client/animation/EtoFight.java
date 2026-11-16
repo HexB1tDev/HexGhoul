@@ -1,0 +1,182 @@
+package com.hex.kagune.control.client.animation;
+
+import com.hex.kagune.control.client.PaleClient;
+import com.hex.kagune.control.npc.EtoNpc;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 1.3.4: Eto's fight on her body: her Owl DNA moves posed by the very animator a Pale player's are ({@link PaleAnimator}: the strikes,
+ * the Big Punch's wind-up and blow, Witness This, the Speed Kick, the flips, each blended out of the pose before it and back into
+ * her guard after), over whatever her gesture was. One animator for each Eto drawn, with her landings followed as a player's are.
+ */
+public final class EtoFight {
+    private static final class Body {
+        final PaleAnimator animator = new PaleAnimator();
+        boolean airborne;
+        float landed = -1000.0F;
+        int seen;
+    }
+
+    private static final Map<Integer, Body> BODIES = new HashMap<>();
+
+    private EtoFight() {
+    }
+
+    /**
+     * Her pose this frame: her fight's move ({@code fight}, from the server) put on {@code under} (her gesture's pose, or null), as a
+     * Pale player's would be; null when nothing poses her at all.
+     */
+    /**
+     * 4.1.54: Banjou's slaps: his body thrown into each blow of his one wing as a player's is into the same blow (UkakuBody's poses, put on the
+     * body as KaguneBodyAnimation puts a player's: the twist, the lean with the head kept on the target, the arms, the legs).
+     */
+    public static RigPose slap(EtoNpc npc, RigPose under, double clock) {
+        if (!npc.persona().slapsOnly()) {
+            return under;
+        }
+        float[] slap = com.hex.kagune.control.client.NpcWingsClient.slap(com.hex.kagune.control.client.NpcWingsClient.get(npc.m_19879_()), clock);
+        if (slap == null) {
+            return under;
+        }
+        int i = (int)slap[0];
+        com.hex.kagune.control.ukaku.UkakuBody.Pose pose = com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.npc.WingRules.SLAP_PATTERNS[i],
+            com.hex.kagune.control.npc.WingRules.SIDE > 0, false, slap[1], com.hex.kagune.control.npc.WingRules.SLAP_IMPACT[i]);
+        RigPose p = under == null ? new RigPose() : under;
+        add(p, pose, SLAP_BODY);
+        return p;
+    }
+
+    /** 4.1.54: how much of a player's body his blows carry (a little less: a man swinging a small wing, not a big one). */
+    static final float SLAP_BODY = 0.85F;
+
+    /** {@code pose} (UkakuBody's) put on {@code p} at {@code amp}, as KaguneBodyAnimation.addUkaku does a player's (its twist too). */
+    public static void add(RigPose p, com.hex.kagune.control.ukaku.UkakuBody.Pose pose, float amp) {
+        p.twist += pose.twist * amp;
+        p.headX += pose.headX * amp - 0.6F * (pose.torsoX + pose.torsoBend) * amp;
+        p.headY += pose.headY * amp;
+        p.lean += (pose.torsoX + pose.torsoBend) * amp;
+        p.rightArmX += pose.rightArmX * amp;
+        p.rightArmY += pose.rightArmY * amp;
+        p.rightArmZ += pose.rightArmZ * amp;
+        p.rightElbow += pose.rightArmBend * amp;
+        p.leftArmX += pose.leftArmX * amp;
+        p.leftArmY += pose.leftArmY * amp;
+        p.leftArmZ += pose.leftArmZ * amp;
+        p.leftElbow += pose.leftArmBend * amp;
+        p.rightLegX += pose.rightLegX * amp;
+        p.rightLegZ += pose.rightLegZ * amp;
+        p.leftLegX += pose.leftLegX * amp;
+        p.leftLegZ += pose.leftLegZ * amp;
+        p.rightKnee += pose.rightKnee * amp;
+        p.leftKnee += pose.leftKnee * amp;
+        p.flip += pose.flip;
+    }
+
+    public static RigPose pose(EtoNpc npc, PaleClient.PaleView fight, RigPose under, double clock, float partial) {
+        Body body = BODIES.computeIfAbsent(npc.m_19879_(), id -> new Body());
+        float age = npc.f_19797_ + partial;
+        boolean air = !npc.m_20096_();
+        if (body.airborne && !air) {
+            body.landed = age;
+        }
+        body.airborne = air;
+        body.seen = npc.f_19797_;
+        RigPose p = under == null ? new RigPose() : new RigPose().add(under, 1.0F);
+        float bodyYaw = npc.f_20884_ + wrap(npc.f_20883_ - npc.f_20884_) * partial;
+        // 1.3.19: Peace worn (Ken): its stance, its coming and going, its moves' gestures, as a player's (KaguneBodyAnimation.war); her
+        // Owl DNA moves (his flips, his strikes) over it.
+        peace(npc, p, partial, bodyYaw, air);
+        // 1.3.8: the Owl growing on her, in it, or going: under its own moves, over anything else (as a player's, KaguneBodyAnimation).
+        com.hex.kagune.control.client.OwlClient.Owl owl = com.hex.kagune.control.client.OwlClient.get(npc, clock);
+        boolean owlMove = fight != null && (fight.move().owl() || body.animator.owlPosing(clock));
+        if (owl != null && owlMove) {
+            OwlPose.body(p, owl.on(), owl.age(clock), clock);
+        }
+        if (fight != null) {
+            float turn = (float)Math.toRadians(wrap(fight.yaw() - bodyYaw));
+            body.animator.apply(p, fight, clock, age, body.landed, turn);
+        }
+        if (owl != null && !owlMove) {
+            OwlPose.body(p, owl.on(), owl.age(clock), clock);
+        }
+        if (owl != null) {
+            float headYaw = npc.f_20886_ + wrap(npc.f_20885_ - npc.f_20886_) * partial;
+            OwlPose.neck(p, Math.toRadians(wrap(headYaw - bodyYaw)), Math.toRadians(npc.m_146909_()), OwlPose.weight(owl.on(), owl.age(clock)));
+        }
+        // 1.3.7: her Mutated Arm's weight on her, whatever she is doing (as a player's, KaguneBodyAnimation).
+        com.hex.kagune.control.client.ArmClient.Arm arm = com.hex.kagune.control.client.ArmClient.get(npc);
+        if (arm != null) {
+            double[] look = arm.aim(partial);
+            double yaw = Math.toRadians(bodyYaw);
+            double[] aim = {-look[0] * Math.cos(yaw) - look[2] * Math.sin(yaw), look[1], -look[0] * Math.sin(yaw) + look[2] * Math.cos(yaw)};
+            ArmPose.body(p, arm.phase, arm.age(clock), arm.reach(clock), aim, arm.afterSphere(), clock);
+        }
+        body.animator.shown(p);
+        return under == null && p.isZero() ? null : p;
+    }
+
+    /** 1.3.19: Peace on {@code npc}'s body, as on a player's (1.3.67: its run too, KingRun.peace; it was left to the legs' own walk). */
+    private static void peace(EtoNpc npc, RigPose p, float partial, float bodyYaw, boolean air) {
+        com.hex.kagune.control.client.KingClient.View worn = com.hex.kagune.control.client.KingClient.get(npc);
+        if (worn == null || worn.form() != com.hex.kagune.control.king.KingForm.PEACE) {
+            return;
+        }
+        double time = com.hex.kagune.control.client.ControlClient.worldTime(partial);
+        double since = time - worn.since();
+        if (com.hex.kagune.control.king.KingTransform.coming(worn.form(), worn.on(), since)) {
+            double ticks = com.hex.kagune.control.king.KingTransform.ticks(worn.form());
+            float stance = (float)Math.max(0.0, Math.min(1.0, (since - (ticks - 10.0)) / 10.0));
+            WarPose.peace(p, time, stance);
+            RigPose coming = new RigPose();
+            WarPose.coming(coming, false, since, time);
+            p.add(coming, 1.0F - stance * stance);
+            return;
+        }
+        if (com.hex.kagune.control.king.KingTransform.going(worn.form(), worn.on(), since)) {
+            WarPose.peace(p, time, (float)Math.max(0.0, 1.0 - since / 4.0));
+            WarPose.going(p, false, since, time);
+            return;
+        }
+        if (!worn.on()) {
+            return;
+        }
+        float run = Math.min(1.0F, npc.f_267362_.m_267711_(partial) * 1.4F);
+        WarPose.peace(p, time, 1.0F - 0.7F * run);
+        com.hex.kagune.control.king.KingMove move = worn.moveAt(time);
+        // 1.3.67: his run is Peace's glide (KingRun.peace), as a player's, its stride his legs' own swing (a fight's pace is a sprint);
+        // a blow has his upper body.
+        if (!air) {
+            KingRun.peace(p, npc.f_267362_.m_267590_(partial) * 0.6662, run, run, move == com.hex.kagune.control.king.KingMove.NONE ? 1.0F : 0.0F, time);
+        }
+        if (move != com.hex.kagune.control.king.KingMove.NONE) {
+            RigPose blow = new RigPose();
+            PeacePose.act(blow, move, time - worn.moveAt(), worn.level(), 1.0F);
+            float headYaw = npc.f_20886_ + wrap(npc.f_20885_ - npc.f_20886_) * partial;
+            blow.spin -= (float)Math.toRadians(wrap(headYaw - bodyYaw));
+            p.add(blow.legs(air ? 1.0F : 0.0F, KaguneBodyAnimation.BLOW_TWIST), 1.0F);
+        }
+    }
+
+    /** True while a move (or its guard after) has her body: her gestures wait. */
+    public static boolean busy(EtoNpc npc, double clock) {
+        Body body = BODIES.get(npc.m_19879_());
+        return body != null && body.animator.busy(clock);
+    }
+
+    /** Forgets every Eto no longer about (her animator goes with her). */
+    public static void prune(java.util.function.IntPredicate gone) {
+        BODIES.keySet().removeIf(gone::test);
+    }
+
+    private static float wrap(float degrees) {
+        float d = degrees % 360.0F;
+        if (d >= 180.0F) {
+            d -= 360.0F;
+        }
+        if (d < -180.0F) {
+            d += 360.0F;
+        }
+        return d;
+    }
+}

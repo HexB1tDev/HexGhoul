@@ -90,7 +90,19 @@ public enum PaleMove {
     /** N let go: raised high and slammed down on the ground ahead (target: what it held). */
     OWL_GRAB_SLAM,
     /** The reach closed on nothing (point: where it clutched). */
-    OWL_GRAB_MISS;
+    OWL_GRAB_MISS,
+    /**
+     * 4.1.8, Kick Master's right click held: sunk side-on into the coil (charge from {@code startedAt}); let go, 4.1.87: it is a
+     * {@link #DASH_KICK}.
+     */
+    TWIRL_CHARGE,
+    /**
+     * 4.1.87, Kick Master's right click let go: a real dash (seen, never a teleport) to a spot (point), the right leg cocked back and swept
+     * up and to her left to the height of a head, her body turned a quarter to her left with it; what it meets, and whatever was in her
+     * way on the dash, flies hard to her left. Detail: the dash's ticks and the charge ({@code PaleRules.dashDetail}); charge: her lift;
+     * target: what she went for, if anything; yaw: the way she dashed.
+     */
+    DASH_KICK;
 
     public static PaleMove byOrdinal(int ordinal) {
         PaleMove[] all = values();

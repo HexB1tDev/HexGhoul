@@ -1,0 +1,16 @@
+## 1.3.53 (HexGhoul): nobody walks away mid-conversation (testing)
+HexKagune 1.3.53 for Forge 1.20.1. Install on client and server (**protocol 69**, unchanged). Testing build: compiled, tests pass, **not tried in game**.
+
+The owner: "prevent NPCs from walking away during conversations". Every talk in the family is now one conversation that everyone in it stays for, from the first line to the last:
+
+- **They stand and face whoever speaks.** Each one stands still and turns its whole body (not just its head) toward whoever is talking, a little each tick like a turn of the shoulders, not a snap. The speaker faces the one it answers or who answers it.
+- **Nothing pulls them away mid-line.** While a talk goes on: no moments with a parent (a hug, a toss), no chores, no being picked up for a cuddle, no tag, no idle chatter or other lines over the top of it, no strolling off, and no creeping back home toward their usual spot. Before, a child's stillness ran out after a fixed time even if its last line hadn't come yet; now it lasts exactly as long as the talk.
+- **Brothers and sisters walk up to each other first.** Before, two siblings could talk from up to 10 blocks apart. Now the one who starts it walks over and stands a couple of blocks from the other, who waits, turned toward it. If they can't get together within 15 seconds, the talk quietly doesn't happen.
+- **A parent breaking up a squabble comes over.** When a squabble starts and Touka, Ken or Eto is nearby, sees it and isn't busy (not fighting, not on a hand or a kiss, not already fetching a child), she puts down her chore and walks over. Her line waits until she's there, then each child says sorry. Before, she said it from wherever she was and went on with her chore.
+- **Fetching a wandered child:** the parent and the child both stay for the scolding (a toddler in her arms, an older child facing her), then walk home. At the door, the last word each is a talk too: she no longer walks off while the child is still answering.
+- **A big brother or sister** who fetches a toddler says its piece with it first, both standing, then walks it home.
+- **It ends cleanly** the moment one of them is hurt, a fight starts (a monster a taught child would fight, or the parent's own fight), one falls asleep, one is gone, one is carried or walks off (more than 8 blocks), or a player starts talking to one of them, takes a hand or picks the child up. The rest of the lines are dropped. Only when someone walks off does the one who stays say something, in its own temper or voice: "Hey! I wasn't done!", "...oh. Okay.", "Yeah, walk away. Real mature." (a teen), "Don't you walk away from me." (Touka), "...We'll talk later, okay?" (Ken), "Running off mid-lecture? How very like you." (Eto). There are 56 such lines, none for a death, a hurt or a fight.
+
+Judgment calls: a player always comes first (opening a talk with a child or a companion ends their family talk rather than waiting for it), and a parent who can't reach a squabble within 12 seconds says her line from where she is if she's within 8 blocks, or drops out of it.
+
+Untested in game: compiled and unit tested only. Try: two children at home by day until they squabble with a companion parent near, and a toddler that wanders off.

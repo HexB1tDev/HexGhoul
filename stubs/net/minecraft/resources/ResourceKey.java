@@ -2,4 +2,5 @@
 package net.minecraft.resources;
 
 public class ResourceKey<T> {
+    /** location (4.2.1) */ public net.minecraft.resources.ResourceLocation m_135782_() { throw new UnsupportedOperationException(); }
 }

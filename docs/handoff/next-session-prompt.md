@@ -1,0 +1,13 @@
+# The prompt for the next session (paste it as it is, and attach the three reference pictures of the lance again)
+
+```
+Continue HexGhoul (Forge 1.20.1 mod). Repo hexb1tdev/hexghoul, branch claude/relaxed-carson-4y0frw: check it out from origin and push only there (git push -u origin claude/relaxed-carson-4y0frw). Never push to main, no PR unless I ask. Answer me in English only.
+
+FIRST read CLAUDE.md, then docs/handoff/next-ai-2.0.21.md (the newest: the White Reaper, what to build and where), then docs/handoff/next-ai-2.0.9.md (what 2.0.5 to 2.0.20 did), then docs/handoff/next-ai-2.0.5.md (how I want you to work), then docs/handoff/next-ai-1.3.60.md (house rules), then the top sections of docs/handoff/companions-handoff.md. Version 2.0.20, the next is 2.0.21. Protocol "73".
+
+Rules: nothing is tested in game, never claim it is. Look at your own previews honestly, zoom into every face or texture before saying it passes, and match my pictures exactly. Banned names in the jar: Kaneki, Ayato, Furuta. Banned in visible text: Takatsuki, Aogiri, Yoshimura. Sounds only from the hexkagune: pack. Never alter my skins or files (only generated copies). Any new Minecraft API reference needs an entry in verify/api-allowlist.txt with [srg] or [order] evidence plus a stub; enum constants keep their names; stale entries also fail the build; never call a vanilla-private method directly (use ObfuscationReflectionHelper). Append only to ordinal-sent enums. Each fix/feature is its own version: bump build.py and patch/KagunePatch.java, release notes, README entry, new top section in companions-handoff.md, commit "2.0.x: ...", then push.
+
+This session: the White Reaper. RANK 10 Investigators are now named White Reaper, get insane speed, and only 1 exists at a time, never 2 at once. Rarer than any other rank and super hard to kill: it should often take a full mastery player with a kakuja, or a duo of players. He uses combat M1s, kicks, dashes, flips, and a new special quinque that is both a sword and a long range weapon (the lance in my pictures). The long range attack is lightning projectiles: a yellow lightning ball that explodes on impact, fired with a simple "point the tip" animation. His quinque case (briefcase) is black instead of white. Ask me the weapon's name, and whether players can get it, before you name or drop it. Tell me the numbers you pick for his health, speed and damage and how you worked them out.
+
+I'm short on usage: be fast, don't run the full build locally, push as soon as each piece is done; CI builds and publishes the jar from .github/release-notes-<version>.md.
+```

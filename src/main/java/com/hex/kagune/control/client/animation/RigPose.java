@@ -42,6 +42,8 @@ public final class RigPose {
     public static final float UPPER_PIVOT = 0.375F;
     /** Where the upper body leans from: the hips, model pixels down from the neck (the bottom of the torso). */
     public static final float HIP_Y = 12.0F;
+    /** 3.4.8: how far a held weapon's turn in the fist may go (each angle): the whole way round. */
+    static final float WEAPON_TURN = (float)Math.PI + 0.01F;
 
     public float headX, headY, headZ;
     public float lean, side, twist, drop, lunge, flip, roll, spin;
@@ -68,6 +70,11 @@ public final class RigPose {
      * scaled like any channel, so a move's limbs blend in and out.
      */
     public float armHold, legHold;
+    /**
+     * 1.3.5: how much of the left arm's own (vanilla) rotation is dropped (1: no walking swing, no bob): a hand held still while the
+     * body walks (Eto's, hand in hand). Added and scaled like any channel, so it blends in and out with the pose that sets it.
+     */
+    public float leftArmHold;
     /**
      * 6.2.2: how much of the head's own (vanilla, camera) turn is dropped (1: the head is the move's alone, square on her body).
      * Witness This turns and tips her whole body every blow; the camera's look on top of that threw her head about.
@@ -100,6 +107,13 @@ public final class RigPose {
      * brought down outside her head. Drawn as nothing.
      */
     public float cut;
+    /**
+     * 3.4.8: a kagune-made weapon turned in the right fist (radians, ModelPart's Rz Ry Rx in the right arm's own frame, about where it is
+     * gripped: WeaponPose.meshToArm's fist). An arm here is a straight stick with the weapon set in its fist; with the weapon's own turn the
+     * blade can point anywhere while both hands stay on its grip. Drawn by the weapon's layers and followed by QuinqueGrip.held. Added
+     * and scaled like any channel.
+     */
+    public float weaponX, weaponY, weaponZ;
 
     public RigPose clear() {
         this.headX = this.headY = this.headZ = 0.0F;
@@ -111,9 +125,11 @@ public final class RigPose {
         this.rightKneeTurn = this.leftKneeTurn = 0.0F;
         this.rightArmHold = this.blade = 0.0F;
         this.armHold = this.legHold = 0.0F;
+        this.leftArmHold = 0.0F;
         this.headHold = 0.0F;
         this.bulk = 0.0F;
         this.cut = 0.0F;
+        this.weaponX = this.weaponY = this.weaponZ = 0.0F;
         this.bladeFit = 0.0F;
         this.bladeReach = 1.0F;
         this.bladeSlim = false;
@@ -158,10 +174,14 @@ public final class RigPose {
         this.rightKneeTurn += other.rightKneeTurn * weight;
         this.leftKneeTurn += other.leftKneeTurn * weight;
         this.armHold += other.armHold * weight;
+        this.leftArmHold += other.leftArmHold * weight;
         this.headHold += other.headHold * weight;
         this.legHold += other.legHold * weight;
         this.bulk += other.bulk * weight;
         this.cut += other.cut * weight;
+        this.weaponX += other.weaponX * weight;
+        this.weaponY += other.weaponY * weight;
+        this.weaponZ += other.weaponZ * weight;
         return this;
     }
 
@@ -203,16 +223,19 @@ public final class RigPose {
         this.headY = clamp(this.headY * damp, 1.3F);
         this.headZ = clamp(this.headZ * damp, 0.6F);
         this.lean = clamp(this.lean * damp, 1.0F);
-        // 6.2.0: as far over as the side kick leans her, away from the leg.
-        this.side = clamp(this.side * damp, 0.6F);
+        // 6.2.0: as far over as the side kick leans her, away from the leg. 4.1.7: Kick Master's side-on kicks lay the trunk further
+        // away from the leg (the counterweight of a leg out level).
+        this.side = clamp(this.side * damp, 0.85F);
         this.twist = clamp(this.twist * damp, 1.2F);
-        this.drop = clamp(this.drop * damp, 4.0F);
+        // 4.1.7: up (a negative drop) as far as the tornado kick's jump lifts her.
+        this.drop = Float.isFinite(this.drop) ? Math.max(-10.0F, Math.min(4.0F, this.drop * damp)) : 0.0F;
         this.lunge = clamp(this.lunge * damp, 8.0F);
         // A flip is all or nothing (a partial turn would leave him lying in the air); so are a roll and a spin.
         float turn = (float)(Math.PI * 2.0);
         this.flip = damp >= 0.5F && Float.isFinite(this.flip) ? Math.max(-turn, Math.min(turn, this.flip)) : 0.0F;
         this.roll = damp >= 0.5F && Float.isFinite(this.roll) ? Math.max(-turn, Math.min(turn, this.roll)) : 0.0F;
-        this.spin = damp >= 0.5F && Float.isFinite(this.spin) ? Math.max(-turn, Math.min(turn, this.spin)) : 0.0F;
+        // 4.1.7: a spin may run on past a whole turn (the tornado kick's full turn and on into the kick).
+        this.spin = damp >= 0.5F && Float.isFinite(this.spin) ? Math.max(-2.0F * turn, Math.min(2.0F * turn, this.spin)) : 0.0F;
         this.rightArmX = clamp(this.rightArmX * damp, 3.3F);
         this.rightArmY = clamp(this.rightArmY * damp, 1.6F);
         this.rightArmZ = clamp(this.rightArmZ * damp, 1.6F);
@@ -244,10 +267,14 @@ public final class RigPose {
         this.leftElbow = Math.max(-0.1F, this.leftElbow);
         this.rightArmHold = Float.isFinite(this.rightArmHold) ? Math.max(0.0F, Math.min(1.0F, this.rightArmHold)) : 0.0F;
         this.armHold = Float.isFinite(this.armHold) ? Math.max(0.0F, Math.min(1.0F, this.armHold * damp)) : 0.0F;
+        this.leftArmHold = Float.isFinite(this.leftArmHold) ? Math.max(0.0F, Math.min(1.0F, this.leftArmHold * damp)) : 0.0F;
         this.legHold = Float.isFinite(this.legHold) ? Math.max(0.0F, Math.min(1.0F, this.legHold * damp)) : 0.0F;
         this.headHold = Float.isFinite(this.headHold) ? Math.max(0.0F, Math.min(1.0F, this.headHold * damp)) : 0.0F;
         this.bulk = Float.isFinite(this.bulk) ? Math.max(0.0F, Math.min(1.0F, this.bulk)) : 0.0F;
         this.blade = Float.isFinite(this.blade) ? Math.max(0.0F, Math.min(1.1F, this.blade)) : 0.0F;
+        this.weaponX = clamp(this.weaponX * damp, WEAPON_TURN);
+        this.weaponY = clamp(this.weaponY * damp, WEAPON_TURN);
+        this.weaponZ = clamp(this.weaponZ * damp, WEAPON_TURN);
     }
 
     public boolean isZero() {
@@ -259,7 +286,7 @@ public final class RigPose {
             && this.leftShoulderY == 0 && this.leftShoulderZ == 0 && this.rightLegX == 0 && this.rightLegY == 0 && this.rightLegZ == 0
             && this.rightKnee == 0 && this.leftLegX == 0 && this.leftLegY == 0 && this.leftLegZ == 0 && this.leftKnee == 0
             && this.rightKneeTurn == 0 && this.leftKneeTurn == 0
-            && this.armHold == 0 && this.legHold == 0 && this.headHold == 0 && this.bulk == 0;
+            && this.armHold == 0 && this.legHold == 0 && this.leftArmHold == 0 && this.headHold == 0 && this.bulk == 0;
     }
 
     /**
@@ -374,7 +401,7 @@ public final class RigPose {
     }
 
     /** ModelPart's rotation as a matrix: Rz(z) Ry(y) Rx(x). */
-    static double[][] zyx(double x, double y, double z) {
+    public static double[][] zyx(double x, double y, double z) {
         double cx = Math.cos(x);
         double sx = Math.sin(x);
         double cy = Math.cos(y);
@@ -419,7 +446,8 @@ public final class RigPose {
         if (type == ROTATION) {
             float both = Float.isFinite(this.armHold) ? Math.max(0.0F, Math.min(1.0F, this.armHold)) : 0.0F;
             if (!right) {
-                return this.heldArm(x, y, z, this.leftArmX, this.leftArmY, this.leftArmZ, 1.0F - both);
+                float left = Float.isFinite(this.leftArmHold) ? Math.max(0.0F, Math.min(1.0F, this.leftArmHold)) : 0.0F;
+                return this.heldArm(x, y, z, this.leftArmX, this.leftArmY, this.leftArmZ, 1.0F - Math.max(both, left));
             }
             float own = 1.0F - Math.max(both, Math.max(0.0F, Math.min(1.0F, this.rightArmHold)));
             float[] turned = this.heldArm(x, y, z, this.rightArmX, this.rightArmY, this.rightArmZ, own);

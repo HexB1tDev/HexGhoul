@@ -60,7 +60,10 @@ public final class RinkakuWounds {
         WoundBook.Blow blow;
         double angle = (player.m_217043_().m_188500_() - 0.5) * 1.6;
         Vec3 at;
-        if (mode == TendrilMode.CRUSH) {
+        if (BikakuServer.slamming(player)) {
+            mode = TendrilMode.SLAM; // 3.5.0: Predatory Drag's slam
+        }
+        if (mode == TendrilMode.CRUSH || HurlServer.crushing(target)) { // 3.1.6: a Rubble Hurl's burst crushes too
             blow = WoundBook.Blow.CRUSH;
             at = center;
         } else if (mode == TendrilMode.SLAM) {
@@ -69,7 +72,11 @@ public final class RinkakuWounds {
             into = new Vec3(0.0, -1.0, 0.0);
         } else {
             StrikePattern pattern = mode == TendrilMode.SWIPE ? KaguneCombat.livePattern(player, state) : null;
-            blow = pattern == StrikePattern.THRUST || pattern == StrikePattern.IMPALE ? WoundBook.Blow.STAB : WoundBook.Blow.SLASH;
+            // 3.1.5: and a body the Impale has run through.
+            // 3.4.9: and a Bikaku worm's bite (its teeth).
+            blow = pattern == StrikePattern.THRUST || pattern == StrikePattern.IMPALE || ImpaleServer.ran(player, target) || BikakuServer.biting(player)
+                ? WoundBook.Blow.STAB
+                : WoundBook.Blow.SLASH;
             if (pattern != null) {
                 angle = switch (pattern) {
                     case OVERHEAD -> Math.PI * 0.5;

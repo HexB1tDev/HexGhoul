@@ -60,9 +60,9 @@ final class UkakuThorns {
     private static void erupt(ServerPlayer player) {
         ServerLevel level = player.m_284548_();
         Vec3 chest = chest(player);
-        UkakuFire.sound(level, chest, "block.amethyst_cluster.place", 1.5F, KaguneServerController.vary(player, 0.5F, 0.04F));
-        UkakuFire.sound(level, chest, "block.amethyst_cluster.break", 1.3F, KaguneServerController.vary(player, 0.65F, 0.05F));
-        UkakuFire.sound(level, chest, "block.amethyst_block.chime", 1.2F, KaguneServerController.vary(player, 0.45F, 0.04F));
+        UkakuFire.sound(level, chest, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_GROW, 1.5F, KaguneServerController.vary(player, 0.5F, 0.04F));
+        UkakuFire.sound(level, chest, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.3F, KaguneServerController.vary(player, 0.65F, 0.05F));
+        UkakuFire.sound(level, chest, com.hex.kagune.control.ukaku.UkakuSounds.SPIKES, 1.3F, KaguneServerController.vary(player, 0.7F, 0.04F));
         UkakuFire.fx(player, S2CUkakuFx.THORNS, player.m_217043_().m_188503_(65536), chest, Vec3.f_82478_, 1.0F, CrystalThorns.COUNT);
     }
 
@@ -78,8 +78,8 @@ final class UkakuThorns {
         }
         if (freed) {
             Vec3 chest = chest(player);
-            UkakuFire.sound(level, chest, "block.amethyst_block.break", 1.4F, KaguneServerController.vary(player, 0.6F, 0.05F));
-            UkakuFire.sound(level, chest, "block.glass.break", 0.7F, KaguneServerController.vary(player, 0.7F, 0.05F));
+            UkakuFire.sound(level, chest, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_SHATTER, 1.4F, KaguneServerController.vary(player, 0.6F, 0.05F));
+            UkakuFire.sound(level, chest, com.hex.kagune.control.ukaku.UkakuSounds.GLASS, 0.7F, KaguneServerController.vary(player, 0.7F, 0.05F));
             UkakuFire.fx(player, S2CUkakuFx.THORNS_PIERCE, 0, chest, Vec3.f_82478_, 1.0F, 0);
         }
     }
@@ -118,9 +118,9 @@ final class UkakuThorns {
         ServerLevel level = player.m_284548_();
         Vec3 chest = chest(player);
         if (shatter) {
-            UkakuFire.sound(level, chest, "block.amethyst_cluster.break", 1.0F, KaguneServerController.vary(player, 0.8F, 0.05F));
+            UkakuFire.sound(level, chest, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_CRACK, 1.0F, KaguneServerController.vary(player, 0.8F, 0.05F));
         } else {
-            UkakuFire.sound(level, chest, "block.amethyst_block.step", 1.0F, KaguneServerController.vary(player, 0.5F, 0.04F));
+            UkakuFire.sound(level, chest, com.hex.kagune.control.ukaku.UkakuSounds.CRYSTAL_TAP, 1.0F, KaguneServerController.vary(player, 0.5F, 0.04F));
         }
         UkakuFire.fx(player, S2CUkakuFx.THORNS_END, 0, chest, Vec3.f_82478_, 1.0F, shatter ? 1 : 0);
     }

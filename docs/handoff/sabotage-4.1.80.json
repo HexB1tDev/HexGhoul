@@ -1,0 +1,478 @@
+[
+ {
+  "name": "Touka's homework a Dove hunt again",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "new Chapter(\"touka_patrol\", \"Help me study\", Task.QUIZ, 1,",
+  "new": "new Chapter(\"touka_patrol\", \"Help me study\", Task.DOVES, 1,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ken's reading not whole minutes",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.READING, 12,",
+  "new": "Task.READING, 10,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ayato's spar three ghouls again",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.SPAR, 1, Set.of(), \"\"",
+  "new": "Task.GHOUL, 1, Set.of(), \"\"",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ayato's roof anywhere high",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.ROOF, 1,",
+  "new": "Task.HIGH, 1,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General's favours a villager's love",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.ERRAND, 2,",
+  "new": "Task.HUMAN_FRIEND, 2,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General's Pack without a quinque",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.QUINQUE, 3,",
+  "new": "Task.GHOUL_PACK, 3,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the General's walk somewhere high",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.VILLAGE_DAY, 12,",
+  "new": "Task.HIGH, 12,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma's show Doves again",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.SHOW, 8,",
+  "new": "Task.DOVES, 8,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma's walk half a minute",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.VILLAGE_NIGHT, 18,",
+  "new": "Task.VILLAGE_NIGHT, 3,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma's walk said as 0.5 of 3",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "\"Walk Roma through a human village after dark: {m} of {mm} minutes\"",
+  "new": "\"Walk Roma through a human village after dark: {mm} of {need} minutes\"",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Banjou's supper Ghoul Meat again",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.SERVE, 3, SUPPER, \"a bowl\",",
+  "new": "Task.GIVE, 3, GHOUL_MEAT, \"a bowl\",",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Banjou's garden Doves again",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Task.GARDEN, 6,",
+  "new": "Task.DOVES, 6,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "reading not timed",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "this == VILLAGE_NIGHT || this == READING || this == VILLAGE_DAY",
+  "new": "this == VILLAGE_NIGHT || this == VILLAGE_DAY",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "homework not once",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "this == SPAR || this == ROOF || this == QUIZ;",
+  "new": "this == SPAR || this == ROOF;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "roof begun from the talk",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "return this == SPAR || this == QUIZ;",
+  "new": "return this == SPAR || this == QUIZ || this == ROOF;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "said ignores once",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "fill(done <= 0 || chapter.task().once() ? chapter.ask()",
+  "new": "fill(done <= 0 ? chapter.ask()",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "supper any dish",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "            if (dish.kind() == com.hex.kagune.control.kitchen.Dish.Kind.BOWL) {\n                out.add",
+  "new": "            if (true) {\n                out.add",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "potted plants planted",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "if (name.startsWith(\"potted_\")) {\n            return false;",
+  "new": "if (false) {\n            return false;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "saplings not planted",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "name.endsWith(\"_sapling\") ||",
+  "new": "name.endsWith(\"_saplingX\") ||",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "any namespace planted",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "if (id == null || !id.startsWith(\"minecraft:\")) {",
+  "new": "if (id == null || !id.contains(\":\")) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "planted where it was",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "if (what.equals(after[i]) && !what.equals(before[i])) {",
+  "new": "if (what.equals(after[i])) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "planted sides unmatched",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "before.length != after.length",
+  "new": "before.length < 0",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "roof needs no tower",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "topTower >= homeY + ROOF_OVER &&",
+  "new": "topTower >= homeY &&",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "roof under a ceiling",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "y >= topHere - 0.5 &&",
+  "new": "y >= topHere - 5.0 &&",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "roof slack wide",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "Math.abs(y - topTower) <= ROOF_SLACK",
+  "new": "Math.abs(y - topTower) <= ROOF_SLACK * 3",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "daylight at dusk",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "return t >= 1000L && t < 12000L;",
+  "new": "return t >= 0L && t < 13000L;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "homework two questions",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "public static final int ASKED = 3;",
+  "new": "public static final int ASKED = 2;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "homework misses one",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "JoinTrial.draw(HOMEWORK.length, ASKED, day, mine)",
+  "new": "JoinTrial.draw(HOMEWORK.length - 1, ASKED, day, mine)",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "homework every day",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "    public static boolean mayStudy(long day, long failedOn) {\n        return day != failedOn;",
+  "new": "    public static boolean mayStudy(long day, long failedOn) {\n        return true;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "old done keeps old count",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "EtoRules.count(bond) >= was ? chapter.need() : 0",
+  "new": "EtoRules.count(bond) >= was ? EtoRules.count(bond) : 0",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "unchanged chapters reset",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "if (was == 0) {\n            return marked;",
+  "new": "if (was == 0 && chapter == null) {\n            return marked;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "never marked 4.1.80",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "bond.flags() | FROM_480, bond.favours());\n        Chapter chapter = chapter(key, bond);",
+  "new": "bond.flags(), bond.favours());\n        Chapter chapter = chapter(key, bond);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "begun without the 4.1.80 mark",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "(bond.flags() | EtoRules.LINE_ON | FROM_215 | FROM_480) & ~LEGACY",
+  "new": "(bond.flags() | EtoRules.LINE_ON | FROM_215) & ~LEGACY",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma's old walk forgotten",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "\"roma_show\", 3, \"roma_walk\", 3,",
+  "new": "\"roma_show\", 3,",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "4.1.80's flag is 2.1.5's",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "FROM_480 = 1 << 17;",
+  "new": "FROM_480 = 1 << 16;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "keyed migrate skips 4.1.80",
+  "file": "src/main/java/com/hex/kagune/control/npc/Courtship.java",
+  "old": "return migrate480(key, migrate(bond, total));",
+  "new": "return migrate(bond, total);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "wrong answer no tomorrow",
+  "file": "src/main/java/com/hex/kagune/control/npc/CourtVoice.java",
+  "old": "We're done for today. Tomorrow, and actually study.\"};",
+  "new": "We're done for today. Later, and actually study.\"};",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "encore one late",
+  "file": "src/main/java/com/hex/kagune/control/npc/CourtVoice.java",
+  "old": "n >= need ? new String[] {\"ENCORE!",
+  "new": "n > need ? new String[] {\"ENCORE!",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "last boy not told",
+  "file": "src/main/java/com/hex/kagune/control/npc/CourtVoice.java",
+  "old": "(n >= need ? \" §7(that's all three: go and see Banjou)\" : \"\")",
+  "new": "(n > need ? \" §7(that's all three: go and see Banjou)\" : \"\")",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "reading by day",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtshipServer.java",
+  "old": "case READING -> along && EtoRules.night(time) && near(",
+  "new": "case READING -> along && near(",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "roof alone",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtshipServer.java",
+  "old": "case ROOF -> along && onRoof(player)",
+  "new": "case ROOF -> onRoof(player)",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "day walk at night",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtshipServer.java",
+  "old": "case VILLAGE_DAY -> along && Courtship.daylight(time)",
+  "new": "case VILLAGE_DAY -> along && EtoRules.night(time)",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "roof of the Library",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtshipServer.java",
+  "old": "GangServer.home(level, \"general\");",
+  "new": "GangServer.home(level, \"eto\");",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a village of one",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtshipServer.java",
+  "old": ".size() >= 2;",
+  "new": ".size() >= 1;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "counted past need",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtshipServer.java",
+  "old": "chapter.task() != task || EtoRules.count(bond) >= chapter.need()) {\n            return null;",
+  "new": "chapter.task() != task) {\n            return null;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Pack without a quinque",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "case QUINQUE -> pack && quinqueInHand(killer);",
+  "new": "case QUINQUE -> pack;",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "arm quinques not quinques",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "|| ControlItems.armWeapon(held) != null;",
+  "new": ";",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "no button for the spar",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "if (choice == NpcTalk.Choice.FAVOUR && courtTrial(player, npc, c)) {",
+  "new": "if (false && courtTrial(player, npc, c)) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "wrong answer forgotten",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "NpcMemoryServer.set(player, persona, NpcMemory.STUDIED, day(player.m_284548_()));",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "homework button after a wrong one",
+  "file": "src/main/java/com/hex/kagune/control/server/EtoServer.java",
+  "old": "if (chapter.task() == com.hex.kagune.control.npc.Courtship.Task.QUIZ && !mayStudy(player, key)) {",
+  "new": "if (false) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "fireworks by day",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "if (!EtoRules.night(player.m_9236_().m_46468_())) {",
+  "new": "if (false) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma watches from anywhere",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "CourtshipServer.nearby(player, \"roma\", Courtship.SHOW_NEAR);",
+  "new": "CourtshipServer.nearby(player, \"roma\", 9999.0);",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a garden anywhere",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "GangServer.home(level, \"banjou\"), Courtship.GARDEN_NEAR)",
+  "new": "GangServer.home(level, \"banjou\"), 9999.0)",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "planted unwatched",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "CourtshipServer.nearby(player, \"banjou\", Courtship.WATCHING) == null",
+  "new": "false",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a click is a planting",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": " || !Courtship.planted(p.what(), p.before(), around(level, p.at()))",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "any gang's supper",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "GangPlayer.of(npc.identity()) != GangPlayer.GAS_MASKS || ",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "supper of anything",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "if (!Courtship.SUPPER.contains(id)) {",
+  "new": "if (id.isEmpty()) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a boy fed twice",
+  "file": "src/main/java/com/hex/kagune/control/server/CourtTrials.java",
+  "old": "npc.getPersistentData().m_128379_(fed, true);",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "the supper never handed",
+  "file": "src/main/java/com/hex/kagune/control/server/GhoulNpcTalk.java",
+  "old": "if (CourtTrials.serve(player, npc)) {",
+  "new": "if (false) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "favours never counted",
+  "file": "src/main/java/com/hex/kagune/control/server/HumanErrandServer.java",
+  "old": "CourtshipServer.event(player, com.hex.kagune.control.npc.Courtship.Task.ERRAND, 1); // 4.1.80",
+  "new": "// removed",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a courtship spar ends on a gang step",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "if (live.courting != null ? !CourtshipServer.on(player, live.courting, com.hex.kagune.control.npc.Courtship.Task.SPAR) : stepGone(player, live)) {",
+  "new": "if (stepGone(player, live)) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a courtship spar moves a gang step",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "        if (live.courting != null) {\n            courted(player, live, won, moment, level, now);\n            return;\n        }\n",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a spar never marked courtship",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "live.courting = courting;",
+  "new": "",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a won spar not counted",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "if (won && CourtshipServer.count(player, live.courting, com.hex.kagune.control.npc.Courtship.Task.SPAR) != null) {",
+  "new": "if (won) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Touka's moment Doves again",
+  "file": "src/main/resources/data/hexkagune/talk/touka.txt",
+  "old": "Three. In a row.",
+  "new": "Four. I counted.",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Ken's setup the Rank 5 Dove",
+  "file": "src/main/resources/data/hexkagune/talk/ken.txt",
+  "old": "...When I can't sleep, I go to the Library and read. Come with me one night. Just sit. Stay.",
+  "new": "...There's a Dove who's been tracking me. Rank 5, maybe more. Walk with me. When he finds us, stay.",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "Roma's briefcases back",
+  "file": "src/main/resources/data/hexkagune/talk/roma.txt",
+  "old": "smoke and sparks still drifting down through the big top's open roof.",
+  "new": "three investigators' cases lined up in front of her like trophies.",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a moment lost",
+  "file": "src/main/resources/data/hexkagune/talk/banjou.txt",
+  "old": "\nmoment banjou_deep\n",
+  "new": "\n# moment banjou_deep\n",
+  "suite": "CompanionTests"
+ }
+]

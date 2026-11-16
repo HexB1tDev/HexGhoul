@@ -24,7 +24,7 @@ import net.minecraftforge.fml.common.Mod;
 
 /**
  * Ukaku's right click: with the wings out it is his M2, the ender of the M1 chain (the server picks which from the shots
- * fired so far, from the fire's enders or, in the crystal mode, the crystal's). It stays the normal use when that is clearly what is meant: crouching, holding something with a use (food,
+ * fired so far, from the crystal's enders or the kakuja's; 4.1.2: in the fire it is the wing guard, RinkakuBlockClient's). It stays the normal use when that is clearly what is meant: crouching, holding something with a use (food,
  * a bow, a shield), or pointing at a block (a door, a chest) outside a fight. One click, one ender: holding the button
  * does not repeat it. It also holds the Gatling's trigger: J (the original's Slingshot key) held down fires it, and times K
  * (the original's tendril-cycle key) on both paths: a tap is the first kakuja, holding it the final kakuja.
@@ -40,6 +40,8 @@ public final class UkakuInput {
     private static final int GATLING_RESEND_TICKS = 4;
     /** K being timed. */
     private static final KakujaKey KAKUJA_KEY = new KakujaKey();
+    /** 2.1.7: the sprint key's presses (a double tap is the White Reaper's dash in the final kakuja). */
+    private static final com.hex.kagune.control.ReaperDash.Taps SPRINT_TAPS = new com.hex.kagune.control.ReaperDash.Taps();
 
     private UkakuInput() {
     }
@@ -64,6 +66,14 @@ public final class UkakuInput {
             : view.form() == com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA;
         if (path == KagunePath.RINKAKU && !dashes) {
             return;
+        }
+        if (path == KagunePath.UKAKU && !dashes) {
+            // 4.1.2 (the owner: "Right click (M2) is now a protection like Rinkaku has"): the wings in the fire guard; the click is the
+            // wing guard's (RinkakuBlockClient, as a Rinkaku's), not an ender. The crystal mode keeps its own right click.
+            UkakuClient.UkakuView wings = UkakuClient.get(player);
+            if (com.hex.kagune.control.ukaku.UkakuRules.wingGuard(view.mastery(), wings.form(), wings.crystalMode())) {
+                return;
+            }
         }
         if (dashes) {
             // Vanilla's right click comes first. Forge asks once per hand, main hand first, and only asks for the off hand when
@@ -112,6 +122,30 @@ public final class UkakuInput {
             armed = true;
         }
         gatling(minecraft);
+        reaperDash(minecraft);
+    }
+
+    /**
+     * 2.1.7: the sprint key tapped twice in Ukaku's final kakuja: the White Reaper's dash, the way they are moving (W, S, A, D and between;
+     * none, the way they look). The server keeps the charges and checks the form.
+     */
+    private static void reaperDash(Minecraft minecraft) {
+        LocalPlayer player = minecraft.f_91074_;
+        if (player == null || minecraft.f_91066_ == null || minecraft.f_91073_ == null) {
+            return;
+        }
+        boolean down = minecraft.f_91080_ == null && minecraft.f_91066_.f_92091_.m_90857_();
+        if (!SPRINT_TAPS.tick(down, minecraft.f_91073_.m_46467_())) {
+            return;
+        }
+        KaguneClientState.View view = KaguneClientState.self();
+        if (PathClient.get(player) != KagunePath.UKAKU || !view.unlocked() || !view.active() || !UkakuClient.finalKakuja(player)) {
+            return;
+        }
+        net.minecraft.client.player.Input input = player.f_108618_;
+        double[] way = com.hex.kagune.control.ReaperDash.direction(player.m_146908_(), input == null ? 0.0 : input.f_108567_,
+            input == null ? 0.0 : input.f_108566_);
+        ControlNetwork.CHANNEL.sendToServer(new C2SUkakuAction(C2SUkakuAction.REAPER_DASH, com.hex.kagune.control.ReaperDash.encode(way)));
     }
 
     /**
@@ -138,7 +172,9 @@ public final class UkakuInput {
         boolean down = minecraft.f_91080_ == null && KaguneKeys.CYCLE_TENDRILS.m_90857_();
         // 7.0.0: Graft DNA's K hold picks his next base stage, at any mastery.
         // 1.0.10: Rinkaku's K held is his final kakuja (War or Peace) once he has chosen it, whatever his mastery.
-        boolean finalUnlocked = path == KagunePath.GRAFT || (path == KagunePath.UKAKU ? WingForm.FINAL_KAKUJA.unlocked(view.mastery())
+        // 3.7.1: Bikaku's K held is its kakuja once open (tapped, The Walker).
+        boolean finalUnlocked = path == KagunePath.GRAFT || (path == KagunePath.BIKAKU ? view.mastery() >= com.hex.kagune.control.bikaku.BikakuRules.KAKUJA
+            : path == KagunePath.UKAKU ? WingForm.FINAL_KAKUJA.unlocked(view.mastery())
             : RinkakuForms.finalKakuja().isUnlocked(view.mastery()) || KingClient.chosen().built());
         int sent = KAKUJA_KEY.tick(pressed, down, finalUnlocked);
         if (sent != KakujaKey.NONE) {

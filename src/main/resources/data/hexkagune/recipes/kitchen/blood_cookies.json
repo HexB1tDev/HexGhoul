@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "minecraft:cocoa_beans"
+    },
+    {
+      "item": "hexkagune:blood_bottle"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:blood_cookies",
+    "count": 8
+  }
+}

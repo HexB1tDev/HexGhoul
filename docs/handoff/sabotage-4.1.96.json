@@ -1,0 +1,30 @@
+[
+ {
+  "name": "the shift's patience a minute",
+  "file": "src/main/java/com/hex/kagune/control/npc/JoinTrial.java",
+  "old": "SHIFT_PATIENCE = 1800;",
+  "new": "SHIFT_PATIENCE = 1200;",
+  "suite": "NpcTests"
+ },
+ {
+  "name": "a bottle in the café brews nothing",
+  "file": "src/main/java/com/hex/kagune/control/server/JoinServer.java",
+  "old": "if (brew(player, live, held)) {",
+  "new": "if (false) {",
+  "suite": "CompanionTests"
+ },
+ {
+  "name": "a new try counts on from the last",
+  "file": "src/main/java/com/hex/kagune/control/quest/QuestLog.java",
+  "old": "            this.progress.remove(old.id()); // 4.1.96: a new try counts from nothing\n",
+  "new": "",
+  "suite": "TraceTests"
+ },
+ {
+  "name": "/kagune places without the officials",
+  "file": "src/main/java/com/hex/kagune/control/server/ControlCommands.java",
+  "old": "                lines.addAll(UniqueNpcs.whereabouts(player.m_284548_())); // 4.1.96: and where each official is now\n",
+  "new": "",
+  "suite": "TraceTests"
+ }
+]

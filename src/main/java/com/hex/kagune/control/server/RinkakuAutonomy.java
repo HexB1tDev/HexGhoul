@@ -27,7 +27,7 @@ import net.minecraftforge.fml.common.Mod;
 public final class RinkakuAutonomy {
     /** A refused key says why at most this often. */
     private static final long NOTICE_TICKS = 60L;
-    private static final Map<UUID, Long> NOTICED = new HashMap<>();
+    private static final Map<UUID, Long> NOTICED = WorldTimes.map();
 
     private RinkakuAutonomy() {
     }

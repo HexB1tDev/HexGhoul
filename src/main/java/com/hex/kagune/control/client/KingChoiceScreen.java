@@ -34,9 +34,10 @@ public final class KingChoiceScreen extends Screen {
             Minecraft.m_91087_().m_91152_(null); // chosen elsewhere, or the crown is gone
             return;
         }
-        this.scale = Math.max(0.25F, Math.min(1.5F, Math.min((this.f_96543_ - 12.0F) / KingChoiceView.UI_WIDTH, (this.f_96544_ - 12.0F) / KingChoiceView.UI_HEIGHT)));
-        this.originX = (this.f_96543_ - KingChoiceView.UI_WIDTH * this.scale) * 0.5F;
-        this.originY = (this.f_96544_ - KingChoiceView.UI_HEIGHT * this.scale) * 0.5F;
+        // 4.1.65: as the quest menu: the box alone over the world, at its own size (smaller on a small window), no overlay.
+        this.scale = Math.max(0.25F, Math.min(1.0F, Math.min((this.f_96543_ - 24.0F) / KingChoiceView.BOX_WIDTH, (this.f_96544_ - 24.0F) / KingChoiceView.BOX_HEIGHT)));
+        this.originX = (this.f_96543_ - KingChoiceView.BOX_WIDTH * this.scale) * 0.5F;
+        this.originY = (this.f_96544_ - KingChoiceView.BOX_HEIGHT * this.scale) * 0.5F;
         long now = System.currentTimeMillis();
         double hold = this.holdStarted < 0L ? 0.0 : (now - this.holdStarted) / (double)HOLD_MILLIS;
         GuiCanvas canvas = new GuiCanvas(graphics, Minecraft.m_91087_().f_91062_, null);

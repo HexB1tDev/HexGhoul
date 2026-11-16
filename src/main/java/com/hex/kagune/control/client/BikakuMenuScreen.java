@@ -1,0 +1,113 @@
+package com.hex.kagune.control.client;
+
+import com.hex.kagune.client.KaguneClientState;
+import com.hex.kagune.client.KaguneKeys;
+import com.hex.kagune.control.client.ui.GuiCanvas;
+import com.hex.kagune.data.KaguneProfile;
+import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
+
+/**
+ * 3.4.9: the Bikaku path's kagune menu (the menu key), drawn by {@link BikakuMenuView}.
+ *
+ * <p>4.1.59 (the owner: "Every single menu in the game is to mimic and look like the quest menu, and be as interactable as it is"): the quest
+ * menu's box with the world round it (no overlay), its tabs, what is picked kept while it is open; a form is taken only by its USE THIS FORM
+ * button.
+ */
+public final class BikakuMenuScreen extends Screen {
+    private final long openedAt = System.currentTimeMillis();
+    private Map<String, UkakuMenuView.Rect> hits = Map.of();
+    private float scale = 1.0F;
+    private float originX;
+    private float originY;
+    private BikakuMenuView.Tab tab = BikakuMenuView.Tab.FORMS;
+    private String picked;
+
+    public BikakuMenuScreen() {
+        super(Component.m_237113_("HexKagune Bikaku"));
+    }
+
+    @Override
+    public void m_88315_(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // 4.1.59: as the quest menu: no overlay over the world, only the box and its shadow round it.
+        this.scale = Math.max(0.25F, Math.min(1.0F, Math.min((this.f_96543_ - 24.0F) / BikakuMenuView.BOX_WIDTH,
+            (this.f_96544_ - 24.0F) / BikakuMenuView.BOX_HEIGHT)));
+        this.originX = (this.f_96543_ - BikakuMenuView.BOX_WIDTH * this.scale) * 0.5F;
+        this.originY = (this.f_96544_ - BikakuMenuView.BOX_HEIGHT * this.scale) * 0.5F;
+        Minecraft minecraft = Minecraft.m_91087_();
+        LocalPlayer player = minecraft.f_91074_;
+        GuiCanvas canvas = new GuiCanvas(graphics, minecraft.f_91062_, player == null ? null : player.m_108560_());
+        KaguneClientState.View state = KaguneClientState.self();
+        // 3.6.3: his mutations, and how long until Grand Devouring can feed again.
+        BikakuClient.View view = player == null ? BikakuClient.View.NONE : BikakuClient.get(player);
+        long world = minecraft.f_91073_ == null ? 0L : minecraft.f_91073_.m_46467_();
+        long wait = view.devourReadyAt() == Long.MIN_VALUE ? 0L : Math.max(0L, view.devourReadyAt() - world);
+        // 3.6.7: Potential Unlock: three times the energy (the bar's own scale, read three times over).
+        int capacity = BikakuClient.capacity(player);
+        BikakuMenuView.Model model = new BikakuMenuView.Model(state.mastery(), state.active(), state.energy() * capacity,
+            KaguneProfile.MAX_ENERGY * capacity, view.form().ordinal(), view.mutations(), wait, QuestLocks.live(), this.tab, this.picked);
+        canvas.push();
+        canvas.translate(this.originX, this.originY);
+        canvas.scale(this.scale);
+        this.hits = BikakuMenuView.draw(canvas, model, (mouseX - this.originX) / this.scale, (mouseY - this.originY) / this.scale,
+            (System.currentTimeMillis() - this.openedAt) / 1000.0);
+        canvas.pop();
+    }
+
+    @Override
+    public boolean m_6375_(double mouseX, double mouseY, int button) {
+        if (button != 0) {
+            return false;
+        }
+        double x = (mouseX - this.originX) / this.scale;
+        double y = (mouseY - this.originY) / this.scale;
+        UkakuMenuView.Rect eyes = this.hits.get("eyes");
+        if (eyes != null && eyes.contains(x, y)) {
+            Minecraft.m_91087_().m_91152_(new KakuganScreen());
+            return true;
+        }
+        for (Map.Entry<String, UkakuMenuView.Rect> entry : this.hits.entrySet()) {
+            if (!entry.getValue().contains(x, y)) {
+                continue;
+            }
+            String key = entry.getKey();
+            if (key.startsWith("tab:")) {
+                this.tab = BikakuMenuView.Tab.valueOf(key.substring(4));
+                this.picked = null;
+                return true;
+            }
+            if (key.startsWith("pick:") || key.startsWith("step:")) {
+                this.picked = key; // 4.1.59: a card or a step looked at; nothing changes in the game
+                return true;
+            }
+        }
+        // 3.6.0: a form picked (the server checks its mastery); 4.1.59: only by its USE THIS FORM button ("formN").
+        for (com.hex.kagune.control.bikaku.BikakuForm form : com.hex.kagune.control.bikaku.BikakuForm.values()) {
+            UkakuMenuView.Rect rect = this.hits.get("form" + form.ordinal());
+            if (rect != null && rect.contains(x, y)) {
+                com.hex.kagune.control.network.ControlNetwork.CHANNEL.sendToServer(new com.hex.kagune.control.network.C2SBikakuAction(
+                    com.hex.kagune.control.network.C2SBikakuAction.FORM, form.ordinal(), 0));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean m_7933_(int keyCode, int scanCode, int modifiers) {
+        if (KaguneKeys.MENU.m_90832_(keyCode, scanCode)) {
+            this.m_7379_();
+            return true;
+        }
+        return super.m_7933_(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean m_7043_() {
+        return false;
+    }
+}

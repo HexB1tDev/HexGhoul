@@ -18,7 +18,9 @@ import net.minecraft.sounds.SoundSource;
  */
 public final class ManifestSounds {
     private static final SoundEvent RINKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_rinkaku"));
-    private static final SoundEvent UKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_ukaku"));
+    private static final SoundEvent CENTIPEDE = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_centipede"));
+    // 4.1.91: the Ukaku's wings tear out ablaze with the game's own sound (UkakuSounds.MANIFEST).
+    private static final SoundEvent UKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_("minecraft", com.hex.kagune.control.ukaku.UkakuSounds.MANIFEST.substring("minecraft:".length())));
     private static final Map<UUID, Tear> PLAYING = new HashMap<>();
 
     private ManifestSounds() {
@@ -53,7 +55,13 @@ public final class ManifestSounds {
         }
         // A little pitch drift so a fast run of tendrils doesn't sound like one sample on repeat.
         float pitch = ukaku ? 1.0F : 0.94F + 0.12F * player.m_217043_().m_188501_();
-        Tear tear = new Tear(player, ukaku ? UKAKU : RINKAKU, ukaku ? 1.0F : 0.95F, pitch);
+        // Both Rinkaku half kakujas, and Graft's centipede bodies, emerge with quiet insect recordings.
+        boolean centipede = !ukaku && (GraftClient.isGraft(player)
+            ? GraftClient.get(player).kakuja() || GraftClient.get(player).stage() == com.hex.kagune.control.graft.GraftStage.CENTIPEDE
+            : com.hex.kagune.client.KaguneClientState.get(player).form().hasCentipedeLegs());
+        // 4.1.93: a Rinkaku's and a Bikaku's tear out with the game's own (KaguneVoiceClient); Graft's centipede bodies keep theirs.
+        SoundEvent own = ukaku ? null : KaguneVoiceClient.tear(player, centipede);
+        Tear tear = new Tear(player, ukaku ? UKAKU : own != null ? own : centipede ? CENTIPEDE : RINKAKU, ukaku ? 1.0F : 0.95F, pitch);
         PLAYING.put(id, tear);
         Minecraft.m_91087_().m_91106_().m_120367_(tear);
     }
