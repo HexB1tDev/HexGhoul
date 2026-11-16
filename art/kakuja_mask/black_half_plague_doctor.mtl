@@ -1,0 +1,40 @@
+newmtl Black_Shell
+Ka 0.06 0.06 0.06
+Kd 1 1 1
+Ks 0.38 0.38 0.38
+Ns 100
+d 1
+illum 2
+map_Kd ../../textures/entity/black_half_plague_doctor.png
+map_Pr ../../textures/entity/black_half_plague_doctor_roughness.png
+
+newmtl Black_Strap
+Ka 0.06 0.06 0.06
+Kd 1 1 1
+Ks 0.38 0.38 0.38
+Ns 60
+d 1
+illum 2
+map_Kd ../../textures/entity/black_half_plague_doctor.png
+map_Pr ../../textures/entity/black_half_plague_doctor_roughness.png
+
+newmtl Black_Edge
+Ka 0.06 0.06 0.06
+Kd 1 1 1
+Ks 0.38 0.38 0.38
+Ns 60
+d 1
+illum 2
+map_Kd ../../textures/entity/black_half_plague_doctor.png
+map_Pr ../../textures/entity/black_half_plague_doctor_roughness.png
+
+newmtl Black_Clips
+Ka 0.06 0.06 0.06
+Kd 1 1 1
+Ks 0.38 0.38 0.38
+Ns 60
+d 1
+illum 2
+map_Kd ../../textures/entity/black_half_plague_doctor.png
+map_Pr ../../textures/entity/black_half_plague_doctor_roughness.png
+

@@ -81,6 +81,7 @@ NEW_PREFIXES = (
     "assets/hexkagune/textures/",
     "assets/hexkagune/models/one_eyed_owl.bin",
     "assets/hexkagune/models/outfits.bin",  # 4.0.0: the owner's outfits and masks, baked (tools/outfit_models.py)
+    "assets/hexkagune/models/kakuja_mask.bin",  # 1.3.1 (HexGhoul): the owner's final kakuja mask, baked (tools/kakuja_mask.py)
     "assets/hexkagune/models/item/",  # 7.0.1: the expansion's item models (Ghoul Meat)
     "assets/hexkagune/sounds/",
     "assets/hexkagune/geo/",  # 3.6.5: GeckoLib models (Grand Devouring's inside)

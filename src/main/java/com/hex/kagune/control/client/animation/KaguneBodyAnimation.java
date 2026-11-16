@@ -94,24 +94,18 @@ public final class KaguneBodyAnimation implements IAnimation {
     private float blowLegsWas;
     private int landedAt = -1000;
     private float landSpeed;
-    /** 5.0.20: the Steel Blade arm this frame: a swing's turn (null: the hold), the last frame's, and where the swing began. */
-    private double[] steelArm;
-    private double[] lastArm;
-    private double[] swingFrom;
-    private double swingStartedAt = Double.NaN;
-    private boolean wasSwinging;
-    private double[] settleFrom;
-    private double settleAt;
     /**
-     * 6.0.4: how much the blade is drawn in to rest off the ground ({@link RigPose#bladeFit}): this frame's in a swing, the last
-     * frame's, what it was as the swing began, and as it settled.
+     * 1.3.1: the Steel Blade moves as the ghouls' arm blade does ({@link BladeArmPose}): this frame's cut (null: none), which of the four it
+     * is, what the body did last frame and what it is crossfading from as it changes from one thing (its stance, its sprint, a cut, the
+     * blade winding out) to another, and since when.
      */
-    private double steelFit = 1.0;
-    private double lastFit = 1.0;
-    private double fitFrom = 1.0;
-    private double settleFit = 1.0;
-    /** How long a cut-short swing takes to ease back into the hold (ticks). */
-    private static final double SETTLE_TICKS = 5.0;
+    private RigPose bladeMove;
+    private String bladeKind = "";
+    private RigPose bladeShown;
+    private RigPose bladeFrom;
+    private double bladeFromAt = Double.NaN;
+    /** How long the body takes to go over from one blade pose to the next (ticks). */
+    private static final double BLADE_BLEND = 4.0;
 
     /**
      * 6.0.0: each player's body layer, so the first-person blade can take its arm from it ({@link #bladePose}). 6.2.0: found by the
@@ -377,12 +371,8 @@ public final class KaguneBodyAnimation implements IAnimation {
     public static RigPose bladePose(AbstractClientPlayer player, float tickDelta) {
         KaguneBodyAnimation layer = layer(player);
         if (layer == null || layer.fade <= 0.0F) {
-            RigPose p = new RigPose();
-            float[] turn = SteelSwing.euler(SteelSwing.hold(ControlClient.worldTime(tickDelta) / 20.0, 0.0, 0.0, 0.0));
+            RigPose p = new RigPose().add(BladeArmPose.guard(), 1.0F);
             p.rightArmHold = 1.0F;
-            p.rightArmX = turn[0];
-            p.rightArmY = turn[1];
-            p.rightArmZ = turn[2];
             p.blade = 1.0F;
             p.bladeFit = 1.0F;
             return p;
@@ -597,7 +587,7 @@ public final class KaguneBodyAnimation implements IAnimation {
         // 5.0.19: the Steel Blade arm holds its own pose ({@link #carry}), whatever else the body does; with the body animations
         // turned off, that is all there is (without it the blade would hang into the ground).
         float steel = (float)UkakuClient.blade(this.player, time);
-        this.steelArm = null;
+        this.bladeMove = null;
         if (!ControlConfig.bodyAnimations()) {
             this.finish(steel, time, tickDelta);
             return;
@@ -968,67 +958,76 @@ public final class KaguneBodyAnimation implements IAnimation {
     }
 
     /**
-     * The Steel Blade's arm, always on while it is out: the right arm drops vanilla's own swing, crouch and bob and holds the
-     * blade in its relaxed hold ({@link SteelSwing#hold}: hanging down at his right side, drawn in to rest just off the ground,
-     * breathing, swaying with his stride, swinging back as he runs, now and then turned over in his hand); a steel swing ({@link SteelSwing#swing})
-     * takes the arm from wherever it is and gives it back to the hold. The arm is sealed in steel, so it doesn't bend. And
-     * whatever the pose, the guard keeps every part of the blade off the ground ({@link BladeCarry#guard}, applied in
-     * {@link RigPose}, where the arm's final turn is known).
+     * The Steel Blade's body, always on while it is out (1.3.1: the owner, "use the arm blade of the wild ghouls for a base"): the ghouls'
+     * own moves ({@link BladeArmPose}): the blade winding out as it forms (the arm across the chest, the free hand on it, flung out into its
+     * guard); its living stance (the bladed side forward, the great blade held up and out, breathing, drifting, now and then turned over on
+     * the wrist); its sprint (pitched forward, the blade swept back to trail level behind); and its four cuts (a chop down from over the
+     * right shoulder, a rising backhand, a wide sweep, the lunging cleave). Going from one to another, the body crossfades over
+     * {@link #BLADE_BLEND} ticks. Whatever the pose, the blade is drawn in rather than driven into the ground ({@link BladeCarry#fit}).
      */
     private void carry(float weight, float steel, double time, float tickDelta) {
         RigPose p = this.p;
-        double[] arm = this.steelArm;
-        double fit;
-        if (arm == null && this.wasSwinging && this.lastArm != null) {
-            // The swing just ended (or was cut short, the combo broken off): eased back into the hold from where it was, from this
-            // very frame (6.0.4: until now the first frame snapped to the hold).
-            this.settleFrom = this.lastArm;
-            this.settleFit = this.lastFit;
-            this.settleAt = time;
-        }
-        if (arm == null) {
-            arm = this.hold(time, tickDelta);
-            fit = 1.0;
-            if (this.settleFrom != null) {
-                double since = time - this.settleAt;
-                if (since < SETTLE_TICKS) {
-                    double t = Math.max(0.0, since) / SETTLE_TICKS;
-                    double eased = t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
-                    arm = SteelSwing.slerp(this.settleFrom, arm, eased);
-                    fit = this.settleFit + (1.0 - this.settleFit) * eased;
-                }
-            }
+        AbstractClientPlayer player = this.player;
+        double dx = player.m_20185_() - player.f_19790_;
+        double dz = player.m_20189_() - player.f_19792_;
+        double speed = Math.sqrt(dx * dx + dz * dz);
+        RigPose target;
+        String kind;
+        if (this.bladeMove != null) {
+            target = this.bladeMove;
+            kind = "cut";
+        } else if (steel < 0.999F) {
+            target = BladeArmPose.wrap(steel);
+            kind = "wrap";
         } else {
-            fit = this.steelFit;
+            float run = player.m_20142_() ? (float)Math.max(0.0, Math.min(1.0, (speed - 0.1) / 0.1)) : 0.0F;
+            if (run > 0.05F) {
+                target = BladeArmPose.run(player.f_267362_.m_267590_(tickDelta) * 0.6662, run);
+                kind = "run";
+            } else {
+                float still = 1.0F - (float)Math.max(0.0, Math.min(1.0, speed / 0.06));
+                target = BladeArmPose.stand(time, player.m_19879_(), still);
+                kind = "stand";
+            }
         }
-        this.wasSwinging = this.steelArm != null;
-        this.lastArm = arm;
-        this.lastFit = fit;
-        // 6.0.4: resting, the blade draws in to hang off the ground; it drives out as a swing winds up.
-        p.bladeFit = (float)fit;
-        float[] turn = SteelSwing.euler(arm);
-        p.rightArmHold = weight;
-        p.rightArmX += weight * turn[0];
-        p.rightArmY += weight * turn[1];
-        p.rightArmZ += weight * turn[2];
+        if (!kind.equals(this.bladeKind)) {
+            this.bladeFrom = this.bladeShown;
+            this.bladeFromAt = time;
+            this.bladeKind = kind;
+        }
+        RigPose shown = target;
+        double since = time - this.bladeFromAt;
+        if (this.bladeFrom != null && since >= 0.0 && since < BLADE_BLEND) {
+            double t = since / BLADE_BLEND;
+            float eased = (float)(t * t * t * (t * (t * 6.0 - 15.0) + 10.0));
+            shown = new RigPose().add(this.bladeFrom, 1.0F - eased).add(target, eased);
+            shown.rightArmHold = 1.0F;
+        }
+        this.bladeShown = new RigPose().add(shown, 1.0F);
+        this.bladeShown.rightArmHold = 1.0F;
+        // The body is the blade's as far as it is out: the rest of the pose (the kakuja's own gait, the idle) gives way to it.
+        RigPose base = new RigPose().add(p, 1.0F);
+        float baseRightHold = p.rightArmHold;
+        p.clear().add(base, 1.0F - weight).add(shown, weight);
+        p.rightArmHold = Math.max(baseRightHold * (1.0F - weight), weight);
         p.rightElbow *= 1.0F - weight;
-        boolean crouching = this.player.m_6047_();
+        boolean crouching = player.m_6047_();
         p.blade = (float)SteelBlade.extend(steel);
-        p.bladeSlim = "slim".equals(this.player.m_108564_());
+        p.bladeFit = 1.0F;
+        p.bladeSlim = "slim".equals(player.m_108564_());
         p.ground = crouching ? BladeCarry.CROUCH_GROUND : BladeCarry.GROUND;
         p.shoulderY = crouching ? BladeCarry.CROUCH_SHOULDER : BladeCarry.SHOULDER;
     }
 
-    /** The Steel Blade's relaxed hold this frame ({@link SteelSwing#hold}), with his stride and how fast he runs. */
-    private double[] hold(double time, float tickDelta) {
-        AbstractClientPlayer player = this.player;
-        double dx = player.m_20185_() - player.f_19790_;
-        double dz = player.m_20189_() - player.f_19792_;
-        double run = Math.max(0.0, Math.min(1.0, (Math.sqrt(dx * dx + dz * dz) - 0.2) / 0.2));
-        double stride = player.f_267362_.m_267590_(tickDelta) * 0.6662;
-        double walk = Math.min(1.0, player.f_267362_.m_267711_(tickDelta));
-        // Crouched it hangs higher, on the same frame vanilla's crouch drops the model.
-        return SteelSwing.hold(time / 20.0, walk, stride, run, player.m_6047_() ? 1.0 : 0.0);
+    /** 1.3.1: which of the ghouls' four cuts a Steel Blade stage is: its place in the string ({@link ComboStyle#UKAKU_STEEL_BLADE}). */
+    static int steelStep(ComboStage stage) {
+        com.hex.kagune.control.ComboStyle style = com.hex.kagune.control.ComboStyle.UKAKU_STEEL_BLADE;
+        for (int i = 0; i < style.stageCount(); i++) {
+            if (style.stage(i).equals(stage)) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     /**
@@ -1207,36 +1206,9 @@ public final class KaguneBodyAnimation implements IAnimation {
         this.addUkaku(pose, amp, head);
     }
 
-    /**
-     * 5.0.20: a Steel Blade swing ({@link SteelSwing#swing}): the body coils, cuts and steps into it, and the blade arm's whole
-     * turn goes to {@link #carry} (it starts from wherever the blade was as the swing began, so one swing flows into the next,
-     * and ends in the hold).
-     */
+    /** 1.3.1: a Steel Blade cut: the ghouls' own ({@link BladeArmPose#swing}), the body and the blade arm both, for {@link #carry}. */
     private void steelStrike(ComboStage stage, double startedAt, float progress, float impact, double time, float tickDelta) {
-        RigPose p = this.p;
-        double[] hold = this.hold(time, tickDelta);
-        if (startedAt != this.swingStartedAt || this.swingFrom == null) {
-            this.swingStartedAt = startedAt;
-            this.swingFrom = this.lastArm != null ? this.lastArm : hold;
-            this.fitFrom = this.lastFit;
-        }
-        SteelSwing.Pose pose = SteelSwing.swing(stage.pattern(), progress, impact, this.swingFrom, hold);
-        this.steelFit = SteelSwing.fit(stage.pattern(), progress, impact, this.fitFrom);
-        p.twist += pose.twist;
-        p.lean += pose.torsoX;
-        p.headX += pose.headX;
-        p.headY += pose.headY;
-        p.leftArmX += pose.leftArmX;
-        p.leftArmY += pose.leftArmY;
-        p.leftArmZ += pose.leftArmZ;
-        p.leftElbow += pose.leftArmBend;
-        p.rightLegX += pose.rightLegX;
-        p.rightLegZ += pose.rightLegZ;
-        p.leftLegX += pose.leftLegX;
-        p.leftLegZ += pose.leftLegZ;
-        p.rightKnee += pose.rightKnee;
-        p.leftKnee += pose.leftKnee;
-        this.steelArm = pose.arm;
+        this.bladeMove = BladeArmPose.swing(steelStep(stage), Math.max(0.0F, Math.min(1.0F, progress)));
     }
 
     /** Adds an Ukaku pose (everything but its twist) at strength {@code amp}, with {@code head} extra on the head's pitch. */

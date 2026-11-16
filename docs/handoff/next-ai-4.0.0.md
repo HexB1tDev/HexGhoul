@@ -1,3 +1,5 @@
+> **Standing rules (the owner, 2026-11-16):** (1) **Always work on the VERY LATEST code.** `main` is not it (it stopped at 1.3.0): before touching anything, `git fetch` and start from the remote branch with the newest commit (`git for-each-ref --sort=-committerdate refs/remotes/origin --format='%(committerdate:iso) %(refname:short) %(subject)' | head`), merged into your session branch. (2) **Every preview render uses the owner's own skin** as the reference body: `art/user_skin.png` (64x64, slim arms, eyes on face rows 5-6); `tools/PoseRender.java` puts it on every preview body without a skin of its own (`-Dhex.skin=...`, set by every `tools/*.sh`), and `ArtPreview.eyes()` fits masks and kakugan to its eyes. Never the old stand-in suit. Pass both rules on in every handoff you write.
+
 # HANDOFF: HexGhoul 4.0.0 "The Great Exploration" (released). READ THIS FIRST.
 
 Branch: `claude/tender-brahmagupta-yhr1ga` (started from 3.7.3, `origin/claude/hopeful-noether-5c2wex` 9c5dcc8). Push only there.

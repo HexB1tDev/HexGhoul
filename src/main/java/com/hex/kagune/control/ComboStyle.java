@@ -232,9 +232,12 @@ public enum ComboStyle {
      * and fast (its reach is the blade's: {@code SteelBlade.REACH}); its own sword swings since 5.0.19.
      */
     UKAKU_STEEL_BLADE(
-        new ComboStage("Steel Sweep", StrikePattern.STEEL_SWEEP, HitShape.SWEEP, 210.0F, 9, 0.4F, 1.05F, 1.3F, 1.0F, 6, 1.0F, new int[] {0}, 0.6F),
-        new ComboStage("Steel Return", StrikePattern.STEEL_RETURN, HitShape.SWEEP, 210.0F, 8, 0.4F, 1.0F, 1.2F, 1.0F, 6, 1.0F, new int[] {0}, 0.55F),
-        new ComboStage("Steel Execution", StrikePattern.STEEL_EXECUTION, HitShape.SWEEP, 240.0F, 12, 0.45F, 1.45F, 1.6F, 1.0F, 8, 1.4F, new int[] {0}, 0.9F)
+        // 1.3.1: the ghouls' arm blade's four cuts (BladeArmPose), timed as theirs (BladeArm.ticks/lands): a chop down from over the right
+        // shoulder, a rising backhand, a wide sweep across (it cuts everyone before it), the lunging cleave.
+        new ComboStage("Steel Chop", StrikePattern.STEEL_SWEEP, HitShape.SWEEP, 200.0F, 10, 0.5F, 1.0F, 1.2F, 1.0F, 4, 1.0F, new int[] {0}, 0.55F),
+        new ComboStage("Steel Backhand", StrikePattern.STEEL_RETURN, HitShape.SWEEP, 200.0F, 10, 0.5F, 1.05F, 1.2F, 1.0F, 4, 1.0F, new int[] {0}, 0.55F),
+        new ComboStage("Steel Sweep", StrikePattern.STEEL_SWEEP, HitShape.SWEEP, 230.0F, 12, 0.5F, 1.2F, 1.4F, 1.1F, 8, 1.1F, new int[] {0}, 0.7F),
+        new ComboStage("Steel Execution", StrikePattern.STEEL_EXECUTION, HitShape.SWEEP, 240.0F, 17, 0.65F, 1.8F, 1.8F, 1.25F, 8, 1.4F, new int[] {0}, 0.95F)
     );
 
     private final ComboStage[] stages;

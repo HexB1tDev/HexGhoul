@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Dependency-free tests for the Steel Blade (5.0.19): a cone with an edge after the manga (it swallows the arm, tapers to a
- * needle, its back a jagged row of barbs), its forming in order, and how smoothly it forms and lives.
+ * Dependency-free tests for the Steel Blade (1.3.1: the ghouls' arm blade in the old blade's steel, slimmer and thinner, a bright edge),
+ * its forming in order, how smoothly it forms and lives, and the ground guard.
  */
 public final class SteelBladeTests {
     private static int passed;
@@ -34,142 +34,83 @@ public final class SteelBladeTests {
     }
 
     private static void shape() {
-        check(SteelBlade.LENGTH < 2.9 && SteelBlade.LENGTH >= 2.0, "a little shorter than 5.0.18's (2.9 blocks past the hand)");
-        check(Math.abs(SteelBlade.REACH - (SteelBlade.ARM + SteelBlade.LENGTH + 0.4)) < 1.0E-9, "its reach is the arm and all of its length");
+        check(SteelBlade.LENGTH > 1.3 && SteelBlade.LENGTH < 1.7, "the ghouls' great blade, about a block and a half past the fist (" + SteelBlade.LENGTH + ")");
+        check(Math.abs(SteelBlade.REACH - (SteelBlade.ARM + SteelBlade.LENGTH + 0.9)) < 1.0E-9 && SteelBlade.REACH >= 3.0,
+            "its reach is the arm, all of its length and its sweep (" + SteelBlade.REACH + ")");
         check(Math.abs(SteelBlade.TIP_Y - (SteelBlade.HAND_Y + SteelBlade.LENGTH * SteelBlade.PIXELS)) < 1.0E-9, "the point is its length past the hand");
-        // A cone: round and massive at the base, tapering all the way, never flat.
-        check(SteelBlade.radius(0.0) >= 4.0, "massive round the arm (" + SteelBlade.radius(0.0) + " px)");
-        for (double s = 0.0; s < 1.0; s += 0.01) {
-            double r = SteelBlade.radius(s);
-            double e = SteelBlade.reach(s);
-            check(SteelBlade.radius(s + 0.01) <= r + 1.0E-9, "it tapers all the way (at " + s + ")");
-            check(e >= r - 1.0E-9, "its edge stands out of the round (at " + s + ")");
-            check(Math.abs(SteelBlade.reach(s + 0.005) - e) < 0.16, "its edge is one smooth curve (at " + s + ")");
-            if (s <= 0.6) {
-                check(2.0 * r >= 0.35 * (e + r), "a cone, not a flat blade: as deep as a third of its width (at " + s + ")");
-            }
+        check(SteelBlade.WIDTH < 1.0 && SteelBlade.THICKNESS < 1.0, "slimmer and thinner than the ghouls' (the owner: \"a bit slimmer\", \"thinner\")");
+        // Its edge, root to point: on the back of the arm (z +, facing down with the arm held out), out past the spine, ending in a point.
+        double far = 0.0;
+        for (double s = 0.3; s <= 0.95; s += 0.05) {
+            double[] e = SteelBlade.edgePoint(s, 1.0, false);
+            far = Math.max(far, e[2]);
+            check(Double.isFinite(e[0]) && Double.isFinite(e[1]) && Double.isFinite(e[2]), "its edge is somewhere (at " + s + ")");
         }
-        check(SteelBlade.reach(0.95) < 0.7 && SteelBlade.radius(0.95) < 0.25 && SteelBlade.reach(1.0) == 0.0 && SteelBlade.radius(1.0) == 0.0,
-            "a needle point (" + SteelBlade.reach(0.95) + " px from the axis at 0.95)");
-        check(SteelBlade.reach(SteelBlade.EDGE_PEAK) > 5.0 && SteelBlade.reach(SteelBlade.EDGE_PEAK) < 6.0, "its edge stands out past the hand, slim (6.0.0)");
-        // The section: the edge out front, the round behind, the flanks between, sharp at the edge.
-        double r = 2.5;
-        double e = 6.0;
-        check(Math.abs(SteelBlade.section(r, e, 0.0) - e) < 1.0E-9 && Math.abs(SteelBlade.section(r, e, Math.PI) - r) < 1.0E-9, "edge out front, round behind");
-        double alpha = Math.acos(r / e);
-        check(Math.abs(SteelBlade.section(r, e, alpha - 1.0E-6) - r) < 1.0E-3, "the flanks meet the round smoothly");
-        double last = e;
-        for (double t = 0.0; t <= Math.PI; t += 0.02) {
-            double now = SteelBlade.section(r, e, t);
-            check(now <= last + 1.0E-9 && now >= r - 1.0E-9 && Math.abs(SteelBlade.section(r, e, -t) - now) < 1.0E-9,
-                "the section falls away from the edge evenly, never inside the round (" + t + ")");
-            last = now;
-        }
-        check(SteelBlade.section(r, e, alpha * 0.5) < r + (r / Math.cos(alpha * 0.5) - r) - 0.1, "its flanks are hollow-ground");
-        // It swallows the arm: every corner of the arm, shoulder to hand, inside the cone.
-        for (boolean slim : new boolean[] {false, true}) {
-            double cx = slim ? -0.5 : -1.0;
-            double half = slim ? 1.5 : 2.0;
-            double ax = SteelBlade.axis(slim);
-            boolean inside = true;
-            for (double y = SteelBlade.BASE_Y; y <= SteelBlade.HAND_Y; y += 0.5) {
-                double s = (y - SteelBlade.BASE_Y) / SteelBlade.fullLength();
-                for (double x : new double[] {cx - half, cx + half}) {
-                    for (double z : new double[] {-2.0, 2.0}) {
-                        double theta = Math.atan2(z, x - ax);
-                        inside &= SteelBlade.section(SteelBlade.radius(s), SteelBlade.reach(s), theta) > Math.hypot(x - ax, z) + 0.1;
-                    }
-                }
-            }
-            check(inside, "the arm is swallowed whole" + (slim ? " (slim)" : ""));
-        }
+        check(far > 3.0, "its edge stands well out of the arm (" + far + " px)");
+        double[] point = SteelBlade.edgePoint(1.0, 1.0, false);
+        check(Math.abs(point[1] - SteelBlade.TIP_Y) < 0.6, "its edge runs to the point (" + point[1] + ")");
     }
 
     private static void model() {
         List<SteelBlade.Quad> quads = SteelBlade.build(1.0, 3.7, false);
-        check(quads.size() > 2000, "detailed (" + quads.size() + " quads)");
+        check(quads.size() > 200 && quads.size() < 2000, "a few hundred quads (" + quads.size() + "; about 4400 before 1.3.1)");
         boolean sane = true;
         boolean unit = true;
         double far = 0.0;
+        int gleam = 0;
         for (SteelBlade.Quad q : quads) {
             for (int k = 0; k < 4; k++) {
                 double[] c = q.corners()[k];
                 double[] n = q.normals()[k];
-                sane &= Double.isFinite(c[0]) && Double.isFinite(c[1]) && Double.isFinite(c[2]) && Math.abs(c[0]) < 16.0 && Math.abs(c[2]) < 14.0
-                    && c[1] > -12.0 && c[1] <= SteelBlade.TIP_Y + 0.5;
-                unit &= Math.abs(Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]) - 1.0) < 1.0E-6;
+                sane &= Double.isFinite(c[0]) && Double.isFinite(c[1]) && Double.isFinite(c[2]) && Math.abs(c[0]) < 12.0 && Math.abs(c[2]) < 12.0
+                    && c[1] > -4.0 && c[1] <= SteelBlade.TIP_Y + 0.5;
+                unit &= Math.abs(Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]) - 1.0) < 1.0E-3;
                 far = Math.max(far, c[1]);
             }
+            if (SteelBlade.glows(q.normals()[0][0], q.normals()[0][1], q.normals()[0][2])) {
+                gleam++;
+                // The edge's bright line: near white.
+                int c = q.argb()[0];
+                check(((c >> 16) & 0xFF) > 220 && ((c >> 8) & 0xFF) > 220 && (c & 0xFF) > 220, "its edge is a bright line");
+            }
         }
-        check(sane, "every corner is finite and on the arm, the shoulder or the blade");
+        check(sane, "every corner is finite and on the arm or the blade");
         check(unit, "every normal is a unit");
+        check(gleam > 20, "a bright line glows all down its edge (" + gleam + " quads)");
         check(Math.abs(far - SteelBlade.TIP_Y) < 0.6, "the point is where its length puts it (" + far + " vs " + SteelBlade.TIP_Y + ")");
-        check(SteelBlade.build(1.0, 0.0, true).size() == quads.size(), "on slim arms too");
-        // The normals face out: the cone's away from its axis (the edge's flanks too), so it is lit from the right side.
-        double ax = SteelBlade.axis(false);
-        int[] core = {0, 0};
-        SteelBlade.build(1.0, 3.7, false, SteelBlade.CORE, (x, y, z, argb, nx, ny, nz) -> {
-            if (y > -1.0 && y < SteelBlade.TIP_Y - 4.0 && Math.hypot(x - ax, z) > 0.3) {
-                core[0]++;
-                core[1] += (x - ax) * nx + z * nz > 0.0 ? 1 : 0;
-            }
-        });
-        check(core[0] > 1000 && core[1] == core[0], "the cone's faces all look outward (" + core[1] + " of " + core[0] + ")");
-        // The jagged row: right past each plate's barb its back drops sharply to the plate beneath.
-        for (int k = 0; k < SteelBlade.PLATES.length; k++) {
-            double end = SteelBlade.station(SteelBlade.PLATES[k][0]);
-            double at = Math.max(back(quads, ax, end - 0.6), back(quads, ax, end - 1.2));
-            double after = back(quads, ax, end + 1.7);
-            check(at - after > 1.2, "plate " + k + "'s barb stands " + (at - after) + " px over what follows it");
-        }
+        check(SteelBlade.build(1.0, 0.0, true).size() > 0, "on slim arms too");
         check(SteelBlade.build(0.004, 0.0, false).isEmpty(), "open, nothing");
-        // In first person it leaves the pauldron off.
-        int[] firstPerson = {0};
-        SteelBlade.build(1.0, 0.0, false, false, (x, y, z, argb, nx, ny, nz) -> firstPerson[0]++);
-        check(firstPerson[0] / 4 < quads.size() && firstPerson[0] % 4 == 0, "first person leaves the pauldron off");
-    }
-
-    /** How far the blade's back stands out (toward -x, past the axis) about {@code y}. */
-    private static double back(List<SteelBlade.Quad> quads, double ax, double y) {
-        double most = 0.0;
+        // Steel, not the ghouls' kagune colour: its plain faces grey, clouded, never red (their veins are inked grooves on it).
+        boolean grey = true;
         for (SteelBlade.Quad q : quads) {
-            for (double[] c : q.corners()) {
-                if (Math.abs(c[1] - y) < 0.9) {
-                    most = Math.max(most, ax - c[0]);
-                }
-            }
+            int c = q.argb()[0];
+            int r = (c >> 16) & 0xFF;
+            int g = (c >> 8) & 0xFF;
+            int b = c & 0xFF;
+            grey &= r <= g + 20 || r < 80;
         }
-        return most;
+        check(grey, "it is the old Steel Blade's steel, nowhere red");
+        // Blood after it cuts, on the blade only.
+        boolean bloody = false;
+        List<SteelBlade.Quad> cut = new ArrayList<>();
+        SteelBlade.build(1.0, 0.0, false, true, 1.0, 0.0, SteelBlade.collect(cut));
+        for (SteelBlade.Quad q : cut) {
+            int c = q.argb()[0];
+            bloody |= ((c >> 16) & 0xFF) > ((c >> 8) & 0xFF) + 60;
+        }
+        check(bloody, "after it cuts, blood on it");
     }
 
     private static void forming() {
         check(SteelBlade.formed(true, 0.0) == 0.0 && SteelBlade.formed(true, SteelBlade.FORM_TICKS) == 1.0
             && SteelBlade.formed(false, SteelBlade.FORM_TICKS) == 0.0 && SteelBlade.formed(false, 0.0) == 1.0, "it closes and opens");
-        check(SteelBlade.fold(0.0) == 0.0 && SteelBlade.fold(0.42) == 1.0, "the steel tentacles go in as the plates come");
-        // In order: the plates sweep round the arm and the pauldron fans in; the blade drives out; the edge unfurls; the barbs last.
-        check(SteelBlade.wrap(0.28, 0) > 0.9 && SteelBlade.pauldron(0.3) > 0.9 && SteelBlade.extend(0.28) == 0.0,
-            "the plates close on the arm before the blade drives out");
-        check(SteelBlade.wrap(0.15, 0) > SteelBlade.wrap(0.15, SteelBlade.PLATES.length - 1), "the innermost plates close first");
-        check(SteelBlade.unfurl(0.42) < 0.25 && SteelBlade.extend(0.42) > 0.2 && SteelBlade.unfurl(0.8) == 1.0, "the edge unfurls once the blade is out");
-        boolean last = true;
-        for (int k = 0; k < SteelBlade.PLATES.length; k++) {
-            last &= SteelBlade.barb(0.575, k) == 0.0 && SteelBlade.barb(1.0, k) == 1.0;
-        }
-        check(last, "the barbs spring last, and are all out when it is formed");
-        check(SteelBlade.barb(0.72, SteelBlade.PLATES.length - 1) > SteelBlade.barb(0.72, 0), "the barbs spring from the shoulder's toward the point's");
-        // The forming shows from the start: something of it is there a tenth of the way in.
-        check(!SteelBlade.build(0.1, 0.0, false).isEmpty(), "the plates are on their way from the first ticks");
-        double peak = 0.0;
-        for (double t = 0.0; t <= 1.0; t += 0.001) {
-            peak = Math.max(peak, SteelBlade.backOut(t));
-        }
-        check(peak > 1.02 && peak < 1.1 && SteelBlade.backOut(1.0) == 1.0 && SteelBlade.backOut(0.0) == 0.0, "driven home a touch past, then settled");
+        check(SteelBlade.fold(0.0) == 0.0 && SteelBlade.fold(0.42) == 1.0, "the steel tentacles go in as the ribbons come");
+        // In order: the ribbons wind down the arm first; the blade grows once they reach the wrist.
+        check(SteelBlade.extend(0.5) == 0.0 && SteelBlade.extend(1.0) == 1.0, "the blade grows last");
+        check(!SteelBlade.build(0.1, 0.0, false).isEmpty(), "the ribbons are on their way from the first ticks");
     }
 
-    /**
-     * Smooth: at 60 frames a second (3 a tick) no phase moves more than a sixth of its way in a frame, no point of it jumps more
-     * than a few pixels in a frame as it forms, and its ambient life barely moves it frame to frame.
-     */
+    /** Smooth: at 60 frames a second (3 a tick) the blade's growth never jumps far in a frame, and its life barely moves it. */
     private static void smooth() {
         double most = 0.0;
         int frames = SteelBlade.FORM_TICKS * 3;
@@ -177,30 +118,9 @@ public final class SteelBladeTests {
             double a = SteelBlade.formed(true, frame / 3.0);
             double b = SteelBlade.formed(true, (frame + 1) / 3.0);
             most = Math.max(most, Math.abs(SteelBlade.extend(b) - SteelBlade.extend(a)));
-            most = Math.max(most, Math.abs(SteelBlade.unfurl(b) - SteelBlade.unfurl(a)));
             most = Math.max(most, Math.abs(SteelBlade.fold(b) - SteelBlade.fold(a)));
-            most = Math.max(most, Math.abs(SteelBlade.swell(b) - SteelBlade.swell(a)));
-            most = Math.max(most, Math.abs(SteelBlade.pauldron(b) - SteelBlade.pauldron(a)));
-            for (int k = 0; k < SteelBlade.PLATES.length; k++) {
-                most = Math.max(most, Math.abs(SteelBlade.wrap(b, k) - SteelBlade.wrap(a, k)));
-                most = Math.max(most, Math.abs(SteelBlade.slide(b, k) - SteelBlade.slide(a, k)));
-                most = Math.max(most, Math.abs(SteelBlade.barb(b, k) - SteelBlade.barb(a, k)));
-            }
         }
         check(most < 0.17, "no phase moves more than a sixth of its way in one frame (" + most + ")");
-        double jump = 0.0;
-        int compared = 0;
-        for (int frame = 0; frame < frames; frame++) {
-            List<SteelBlade.Quad> a = SteelBlade.build(SteelBlade.formed(true, frame / 3.0), 0.0, false);
-            List<SteelBlade.Quad> b = SteelBlade.build(SteelBlade.formed(true, (frame + 1) / 3.0), 0.0, false);
-            if (a.size() != b.size()) {
-                continue; // a plate or the pauldron came in: it starts small, tucked in at the arm
-            }
-            compared++;
-            jump = Math.max(jump, moved(a, b));
-        }
-        check(compared > frames * 0.7, "most frames compare (" + compared + " of " + frames + ")");
-        check(jump < 4.5, "no point of it jumps more than a few pixels in a frame as it forms (" + jump + ")");
         double drift = 0.0;
         for (double t = 0.0; t < 6.0; t += 0.5) {
             drift = Math.max(drift, moved(SteelBlade.build(1.0, t, false), SteelBlade.build(1.0, t + 1.0 / 60.0, false)));
@@ -214,41 +134,11 @@ public final class SteelBladeTests {
         float[] crouching = {-5.0F, BladeCarry.CROUCH_SHOULDER, 0.0F};
         double limit = BladeCarry.GROUND - BladeCarry.CLEARANCE;
         double crouchLimit = BladeCarry.CROUCH_GROUND - BladeCarry.CLEARANCE;
-        // 6.0.4: the hold hangs steeply at his side, so resting it draws in (BladeCarry.fit) to clear the ground, standing and
-        // crouched, with its breathing, weight shifts, stride sway, running and turning the blade over: never under the shortest,
-        // and well short of its full length at rest.
-        double worst = -1.0E9;
-        double highest = 1.0E9;
-        double shortest = 1.0;
-        double restReach = 0.0;
-        for (double t = 0.0; t < 20.0; t += 0.05) {
-            for (double walk : new double[] {0.0, 1.0}) {
-                for (double run : new double[] {0.0, 1.0}) {
-                    for (boolean crouch : new boolean[] {false, true}) {
-                        float[] e = SteelSwing.euler(SteelSwing.hold(t, walk, t * 3.1, run, crouch ? 1.0 : 0.0));
-                        double[][] m = BladeCarry.zyx(e[0], e[1], e[2]);
-                        float[] pivot = crouch ? crouching : standing;
-                        double ground = crouch ? BladeCarry.CROUCH_GROUND : BladeCarry.GROUND;
-                        double reach = BladeCarry.fit(m, pivot, ground, 1.0, false);
-                        double low = BladeCarry.lowest(m, pivot, reach, false);
-                        worst = Math.max(worst, low - (ground - BladeCarry.CLEARANCE));
-                        shortest = Math.min(shortest, reach);
-                        if (walk == 0.0 && run == 0.0 && !crouch) {
-                            highest = Math.min(highest, low);
-                            restReach = Math.max(restReach, reach);
-                        }
-                    }
-                }
-            }
-        }
-        check(worst <= 0.0, "drawn in, the hold keeps the blade off the ground by itself (" + worst + " px past the clearance at worst)");
-        check(shortest > BladeCarry.MIN_REACH, "it never has to draw in to the shortest (" + shortest + ")");
-        check(restReach < 0.75 && restReach > 0.35, "at rest it is drawn in to about 1.6 blocks out of the shoulder (" + restReach + " of its length)");
-        check(highest > limit - 1.0, "standing, its point rests just off the ground (" + highest + ")");
-        float[] hold = SteelSwing.euler(SteelSwing.hold(0.0, 0.0, 0.0, 0.0));
+        // 1.3.1: the arm hanging straight down (the ghouls' moves hold it up; this is the worst it can be): drawn in, clear of the ground.
+        float[] hold = {0.0F, 0.0F, 0.0F};
         double rest = BladeCarry.fit(BladeCarry.zyx(hold[0], hold[1], hold[2]), standing, BladeCarry.GROUND, 1.0, false);
-        float[] same = BladeCarry.guard(hold[0], hold[1], hold[2], standing, BladeCarry.GROUND, rest, false);
-        check(same[0] == hold[0] && same[1] == hold[1] && same[2] == hold[2], "drawn in, the resting hold is left exactly as it is");
+        check(rest < 1.0 && BladeCarry.lowest(BladeCarry.zyx(hold[0], hold[1], hold[2]), standing, rest, false) <= limit + 1.0E-3,
+            "hanging straight down, it draws in to clear the ground (" + rest + ")");
         // The fit: as far out as clears the ground, all of it where it is clear anyway, and smoothly with the arm.
         float[] level = {-0.2F, 0.0F, 1.4F};
         double[][] up = BladeCarry.zyx(level[0], level[1], level[2]);

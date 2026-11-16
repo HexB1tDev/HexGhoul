@@ -513,18 +513,17 @@ public final class UkakuTests {
         check(UkakuRules.ender(5, 0) == 1 && UkakuRules.ender(5, 499) == 4 && UkakuRules.ender(2, 99) == 1, "locked enders fall back to the strongest unlocked");
         check(UkakuRules.enderCooldown(0) > 0 && UkakuRules.enderCooldown(5) >= UkakuRules.enderCooldown(4), "the hop and the big moves have cooldowns");
         check(UkakuRules.ENDER_WINDOW_TICKS >= 15, "there is time to right click after the last shot");
-        // 5.0.18: the Steel Blade reaches as far as it is long, swings wide with the right arm, and comes to a needle point.
+        // 5.0.18: the Steel Blade reaches as far as it is long and swings wide with the right arm (1.3.1: the ghouls' four cuts).
         check(Math.abs(com.hex.kagune.control.ukaku.SteelBlade.REACH - (com.hex.kagune.control.ukaku.SteelBlade.ARM
-            + com.hex.kagune.control.ukaku.SteelBlade.LENGTH + 0.4)) < 1.0E-9 && com.hex.kagune.control.ukaku.SteelBlade.REACH > 3.0,
-            "the blade's reach is the arm and all of its length");
+            + com.hex.kagune.control.ukaku.SteelBlade.LENGTH + 0.9)) < 1.0E-9 && com.hex.kagune.control.ukaku.SteelBlade.REACH > 3.0,
+            "the blade's reach is the arm, all of its length and its sweep");
         boolean right = true;
         for (int i = 0; i < ComboStyle.UKAKU_STEEL_BLADE.stageCount(); i++) {
             right &= ComboStyle.UKAKU_STEEL_BLADE.stage(i).limbs()[0] == 0 && ComboStyle.UKAKU_STEEL_BLADE.stage(i).shapeParam() >= 200.0F;
         }
-        check(right, "the blade swings wide, from the right");
-        check(com.hex.kagune.control.ukaku.SteelBlade.reach(1.0) == 0.0 && com.hex.kagune.control.ukaku.SteelBlade.radius(1.0) == 0.0
-            && !com.hex.kagune.control.ukaku.SteelBlade.build(1.0, 0.0, false).isEmpty()
-            && com.hex.kagune.control.ukaku.SteelBlade.build(0.0, 0.0, false).isEmpty(), "the cone and its edge meet at the point; open, nothing");
+        check(right && ComboStyle.UKAKU_STEEL_BLADE.stageCount() == 4, "the blade swings wide, from the right, four cuts to a string");
+        check(!com.hex.kagune.control.ukaku.SteelBlade.build(1.0, 0.0, false).isEmpty()
+            && com.hex.kagune.control.ukaku.SteelBlade.build(0.0, 0.0, false).isEmpty(), "formed, a blade; open, nothing");
         for (ComboStyle style : ComboStyle.values()) {
             boolean listed = java.util.Arrays.asList(UKAKU_STYLES).contains(style);
             check(style.ukaku() == listed, "only the Ukaku styles are Ukaku styles: " + style);

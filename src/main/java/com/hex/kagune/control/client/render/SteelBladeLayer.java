@@ -97,7 +97,7 @@ public final class SteelBladeLayer extends RenderLayer<AbstractClientPlayer, Ent
             .m_6122_((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, 255)
             .m_7421_(0.5F, 0.5F)
             .m_86008_(OverlayTexture.f_118083_)
-            .m_85969_(light)
+            .m_85969_(SteelBlade.glows(nx, ny, nz) ? FULL_BRIGHT : light) // 1.3.1: the gleam down its edge glows
             .m_252939_(normals, (float)nx, (float)ny, (float)nz)
             .m_5752_();
     }

@@ -85,7 +85,14 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
                 pose.m_85836_();
                 PlayerLayers.upperBody(pose, player, partialTick);
                 model.f_102808_.m_104299_(pose);
-                emit(consumer, head, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), com.hex.kagune.control.client.KaguneTints.of(player));
+                // 1.3.1: the owner's own mask model (KakujaMask), textured; the old half mask only if it could not be read.
+                com.hex.kagune.control.ukaku.KakujaMask.Mesh mask = com.hex.kagune.control.ukaku.KakujaMask.mesh();
+                if (mask != null) {
+                    mask(buffers.m_6299_(MASK), mask, grow, shell, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_());
+                } else {
+                    emit(consumer, head, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(),
+                        com.hex.kagune.control.client.KaguneTints.of(player));
+                }
                 pose.m_85849_();
             }
         }
@@ -101,6 +108,35 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
         // 5.0.19: the body part itself carries the lean now (RigPose), so the chest rides it as drawn.
         emit(consumer, chest, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), com.hex.kagune.control.client.KaguneTints.of(player));
         pose.m_85849_();
+    }
+
+    /** 1.3.1: the owner's mask model, in its own texture. */
+    private static final RenderType MASK = RenderType.m_110473_(Objects.requireNonNull(KaguneMod.id(com.hex.kagune.control.ukaku.KakujaMask.TEXTURE)));
+
+    /** 1.3.1: the owner's mask model on the head ({@link com.hex.kagune.control.ukaku.KakujaMask}), each triangle a quad with its last corner twice. */
+    private static void mask(VertexConsumer out, com.hex.kagune.control.ukaku.KakujaMask.Mesh mesh, float grow, double shell, int light, Matrix4f matrix,
+                             Matrix3f normals) {
+        int alpha = Math.max(0, Math.min(255, Math.round(255.0F * com.hex.kagune.control.ukaku.KakujaMask.alpha(grow))));
+        if (alpha <= 2) {
+            return;
+        }
+        float[] uvs = mesh.uvs();
+        float[] ns = mesh.normals();
+        int[] tris = mesh.triangles();
+        float[] at = new float[3];
+        for (int t = 0; t < tris.length; t += 3) {
+            for (int k = 0; k < 4; k++) {
+                int i = tris[t + Math.min(k, 2)];
+                com.hex.kagune.control.ukaku.KakujaMask.place(mesh, i, grow, shell, at);
+                out.m_252986_(matrix, at[0] / 16.0F, at[1] / 16.0F, at[2] / 16.0F)
+                    .m_6122_(255, 255, 255, alpha)
+                    .m_7421_(uvs[i * 2], uvs[i * 2 + 1])
+                    .m_86008_(OverlayTexture.f_118083_)
+                    .m_85969_(light)
+                    .m_252939_(normals, ns[i * 3], ns[i * 3 + 1], ns[i * 3 + 2])
+                    .m_5752_();
+            }
+        }
     }
 
     private static com.hex.kagune.control.ukaku.UkakuModel.Sink collect(List<Piece> out) {

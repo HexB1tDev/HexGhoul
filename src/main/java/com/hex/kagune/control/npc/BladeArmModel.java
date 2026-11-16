@@ -35,6 +35,29 @@ public final class BladeArmModel {
      * {@code sink}.
      */
     public static void build(double wrap, boolean slim, int colour, Sink sink) {
+        build(wrap, slim, colour, 1.0, sink);
+    }
+
+    /**
+     * 1.3.1 (HexGhoul): as {@link #build(double, boolean, int, Sink)}, the blade driven only {@code bladeReach} (0..1) of its grown length out of
+     * the forearm (the player's Steel Blade draws it in to keep it off the ground; a ghoul's is always all out).
+     */
+    public static void build(double wrap, boolean slim, int colour, double bladeReach, Sink sink) {
+        build(wrap, slim, colour, bladeReach, 1.0, sink);
+    }
+
+    /** 1.3.1 (HexGhoul): as above, the blade {@code width} (1 the ghouls') as broad from its spine to its edge (the Steel Blade's slimmer). */
+    public static void build(double wrap, boolean slim, int colour, double bladeReach, double width, Sink sink) {
+        build(wrap, slim, colour, bladeReach, width, 1.0, 0.16, 1.7, sink);
+    }
+
+    /**
+     * 1.3.1 (HexGhoul): as above, the blade also {@code thickness} (1 the ghouls') as thick across, its gleam running {@code gleamBand} of the
+     * way up each face from the edge (the ghouls' 0.16), and its edge sweeping up to the point at the power {@code point} (the ghouls' 1.7;
+     * higher, a keener point).
+     */
+    public static void build(double wrap, boolean slim, int colour, double bladeReach, double width, double thickness, double gleamBand, double point,
+                             Sink sink) {
         if (wrap <= 0.0) {
             return;
         }
@@ -50,11 +73,11 @@ public final class BladeArmModel {
         for (int r = 0; r < RIBBONS; r++) {
             ribbon(sink, cx, half, r, reach, body, deep, light, vein);
         }
-        double out = BladeArm.blade(wrap);
+        double out = BladeArm.blade(wrap) * Math.max(0.0, Math.min(1.0, bladeReach));
         if (out > 0.0) {
             // 4.1.47 (the owner, shown both: "B: blade turned over"): its edge and its point on the back of the arm (z +), so with the arm
             // held out before it they face down.
-            blade(turned(sink), cx, half, out, body, deep, light, vein, gleam);
+            blade(turned(sink), cx, half, out, width, thickness, gleamBand, point, body, deep, light, vein, gleam);
         }
     }
 
@@ -194,7 +217,8 @@ public final class BladeArmModel {
      * the edge a long convex sweep (widening toward the far end, then curving up to the point on the spine's line), the spine curving back a
      * little; lighter toward the edge, the gleam glowing down the edge, veins at its root where the ribbons flow into it.
      */
-    static void blade(Sink sink, double cx, double half, double out, int body, int deep, int light, int vein, int gleam) {
+    static void blade(Sink sink, double cx, double half, double out, double width, double thickness, double gleamBand, double point, int body, int deep,
+                      int light, int vein, int gleam) {
         double length = (BladeArm.BLADE_LENGTH + (10.0 - ROOT)) * out;
         double grow = 0.4 + 0.6 * out;
         double[][][] ring = new double[SECTIONS + 1][][];
@@ -202,8 +226,8 @@ public final class BladeArmModel {
             double u = (double)i / SECTIONS;
             double y = ROOT + length * u;
             double back = spineAt(u, half) * grow;
-            double front = edgeAt(u, half, back / grow) * grow;
-            double thick = (1.0 + 0.55 * (1.0 - u)) * Math.min(1.0, (1.0 - u) * 14.0 + 0.05) * grow;
+            double front = back + (edgeAt(u, half, back / grow, point) * grow - back) * width;
+            double thick = (1.0 + 0.55 * (1.0 - u)) * Math.min(1.0, (1.0 - u) * 14.0 + 0.05) * grow * thickness;
             double mid = front + (back - front) * 0.42;
             ring[i] = new double[][] {
                 {cx, y, front},                          // 0: the edge
@@ -232,8 +256,8 @@ public final class BladeArmModel {
                 double lift = side == 0 ? 0.04 : -0.04;
                 double[] ea = a[0];
                 double[] eb = b[0];
-                double[] fa = lerp(a[0], a[top], 0.16);
-                double[] fb = lerp(b[0], b[top], 0.16);
+                double[] fa = lerp(a[0], a[top], gleamBand);
+                double[] fb = lerp(b[0], b[top], gleamBand);
                 sink.quad(new double[] {ea[0] + lift * 0.2, ea[1], ea[2]}, new double[] {fa[0] + lift, fa[1], fa[2]},
                     new double[] {fb[0] + lift, fb[1], fb[2]}, new double[] {eb[0] + lift * 0.2, eb[1], eb[2]}, GLOW, gleam, gleam, gleam, gleam);
             }
@@ -255,6 +279,35 @@ public final class BladeArmModel {
         }
     }
 
+    /**
+     * 1.3.1 (HexGhoul): a point on the blade's edge {@code u} (0 its root .. 1 its point) along it, the blade {@code out} (0..1) grown, as
+     * {@link #build} draws it (turned over: the edge on the back of the arm, z +), in the arm's own pixels.
+     */
+    public static double[] edge(double u, boolean slim, double out) {
+        return edge(u, slim, out, 1.0);
+    }
+
+    /** As {@link #edge(double, boolean, double)} for a blade {@code width} as broad. */
+    public static double[] edge(double u, boolean slim, double out, double width) {
+        return edge(u, slim, out, width, 1.7);
+    }
+
+    /** As {@link #edge(double, boolean, double, double)}, its point as keen as {@code point}. */
+    public static double[] edge(double u, boolean slim, double out, double width, double point) {
+        double cx = slim ? -0.5 : -1.0;
+        double half = slim ? 1.5 : 2.0;
+        double grow = 0.4 + 0.6 * out;
+        double length = (BladeArm.BLADE_LENGTH + (10.0 - ROOT)) * out;
+        double back = spineAt(u, half) * grow;
+        double front = back + (edgeAt(u, half, back / grow, point) * grow - back) * width;
+        return new double[] {cx, ROOT + length * u, -front};
+    }
+
+    /** 1.3.1 (HexGhoul): where the blade grows out of the forearm (model pixels down the arm). */
+    public static double root() {
+        return ROOT;
+    }
+
     /** 4.1.47: how far the spine is behind the arm's middle {@code u} along the blade: behind the arm, curving back a little toward the point. */
     static double spineAt(double u, double half) {
         double back = half + 0.9 + 1.4 * u * u;
@@ -267,6 +320,11 @@ public final class BladeArmModel {
      * end, then curving round to meet the spine's line at the point (a convex sweep, no corner).
      */
     static double edgeAt(double u, double half, double back) {
+        return edgeAt(u, half, back, 1.7);
+    }
+
+    /** {@link #edgeAt(double, double, double)}, the edge sweeping up to the point at the power {@code point}. */
+    static double edgeAt(double u, double half, double back, double point) {
         double widest = -(half + 4.6);
         double root = -(half + 1.2);
         if (u <= 0.74) {
@@ -276,7 +334,7 @@ public final class BladeArmModel {
         // Sweeping up ever faster to meet the spine: a sharp point, not a rounded end.
         double t = (u - 0.74) / 0.26;
         double end = back - 0.3;
-        return widest + (end - widest) * Math.pow(t, 1.7);
+        return widest + (end - widest) * Math.pow(t, point);
     }
 
     /** 4.1.47: a point on the blade's face ({@code side} 0 this, 1 the other), {@code u} along it, {@code v} from the edge (0) to the spine (1). */

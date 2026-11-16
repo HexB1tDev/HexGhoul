@@ -10,7 +10,7 @@ rm -rf "$CLASSES"
 mkdir -p "$CLASSES"
 javac -nowarn -encoding UTF-8 --release 17 -cp "$ROOT/build/classes:$ROOT/build/stubs:$ROOT/build/base.jar" -d "$CLASSES" \
   "$ROOT"/src/main/java/com/hex/kagune/control/*.java \
-  "$ROOT"/src/main/java/com/hex/kagune/control/ukaku/*.java "$ROOT"/src/main/java/com/hex/kagune/control/kakugan/*.java \
+  "$ROOT"/src/main/java/com/hex/kagune/control/ukaku/*.java "$ROOT"/src/main/java/com/hex/kagune/control/npc/BladeArm.java "$ROOT"/src/main/java/com/hex/kagune/control/npc/BladeArmModel.java "$ROOT"/src/main/java/com/hex/kagune/control/kakugan/*.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/wound/*.java "$ROOT"/src/main/java/com/hex/kagune/control/king/*.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/RigPose.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/IdlePose.java \

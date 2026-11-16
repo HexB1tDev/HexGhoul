@@ -1,3 +1,5 @@
+> **Standing rules (the owner, 2026-11-16):** (1) **Always work on the VERY LATEST code.** `main` is not it (it stopped at 1.3.0): before touching anything, `git fetch` and start from the remote branch with the newest commit (`git for-each-ref --sort=-committerdate refs/remotes/origin --format='%(committerdate:iso) %(refname:short) %(subject)' | head`), merged into your session branch. (2) **Every preview render uses the owner's own skin** as the reference body: `art/user_skin.png` (64x64, slim arms, eyes on face rows 5-6); `tools/PoseRender.java` puts it on every preview body without a skin of its own (`-Dhex.skin=...`, set by every `tools/*.sh`), and `ArtPreview.eyes()` fits masks and kakugan to its eyes. Never the old stand-in suit. Pass both rules on in every handoff you write.
+
 > **Superseded: read `docs/handoff/next-ai-3.3.5.md` first** (this session went on to 3.2.6 without updating this file; the next session took it to 3.3.5).
 
 # Prompt for the next AI (paste this as the first message)
