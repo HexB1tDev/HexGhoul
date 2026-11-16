@@ -98,12 +98,72 @@ public final class UkakuTests {
         mutations();
         unlocks();
         plantedColour();
+        maskColour();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Ukaku tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 4.2.9 (the owner: "the mask is meant to be the same color as the armor"): the owner's mask model drawn in the kakuja armor's own palette:
+     * navy plate all over, its crests the plates' bright edge, never the black of its old texture; and the game draws it so, tinted as the chest.
+     */
+    private static void maskColour() {
+        com.hex.kagune.control.ukaku.KakujaMask.Mesh mesh;
+        try (java.io.InputStream in = new java.io.FileInputStream("src/main/resources" + com.hex.kagune.control.ukaku.KakujaMask.RESOURCE)) {
+            mesh = com.hex.kagune.control.ukaku.KakujaMask.read(in);
+        } catch (java.io.IOException failure) {
+            check(false, "read the owner's mask: " + failure);
+            return;
+        }
+        int[] colours = com.hex.kagune.control.ukaku.KakujaMask.colours(mesh);
+        check(colours.length == mesh.vertices(), "one mask colour per vertex");
+        double dark = lum(0x0B0D15);
+        double plate = lum(0x1B2133);
+        double lit = lum(0x2A324C);
+        double edge = lum(0x7A8CBA);
+        int navy = 0;
+        int bright = 0;
+        int plated = 0;
+        double r = 0;
+        double g = 0;
+        double b = 0;
+        for (int c : colours) {
+            int cr = (c >> 16) & 0xFF;
+            int cg = (c >> 8) & 0xFF;
+            int cb = c & 0xFF;
+            r += cr;
+            g += cg;
+            b += cb;
+            if (cb >= cg && cg >= cr && cb - cr >= 9) {
+                navy++;
+            }
+            double l = lum(c);
+            check(l >= dark - 0.5 && l <= edge + 0.5, "every mask colour between the plates' dark and their bright edge: " + Integer.toHexString(c));
+            check((c >>> 24) == 0xFF, "the mask's colours opaque (its fade is the grow's alpha)");
+            if (l > lit + 4.0) {
+                bright++;
+            }
+            if (l >= plate - 0.5) {
+                plated++;
+            }
+        }
+        int n = colours.length;
+        check(navy == n, "the whole mask the armor's navy (blue over green over red): " + navy + " of " + n);
+        check(bright > n * 0.04 && bright < n * 0.5, "the mask's crests take the plates' bright edge, not all of it: " + bright + " of " + n);
+        check(plated > n * 0.4, "most of the mask the plate's own colour or lighter, not its dark: " + plated + " of " + n);
+        // Not the old texture's black (30, 33, 37): on average clearly blue, as the plates are.
+        check(b / n - r / n > 12.0, "the mask on average as blue as the armor's plates: " + (b / n - r / n));
+        String layer = read("src/main/java/com/hex/kagune/control/client/render/KakujaArmorLayer.java");
+        check(layer.contains("KakujaMask.colours(mesh)") && layer.contains("KaguneTint.recolour(base[i], tint)")
+            && !layer.contains("KakujaMask.TEXTURE"), "the game draws the mask in the armor's colours, tinted as the chest, not its old texture");
+    }
+
+    private static double lum(int c) {
+        return 0.299 * ((c >> 16) & 0xFF) + 0.587 * ((c >> 8) & 0xFF) + 0.114 * (c & 0xFF);
     }
 
     private static boolean wellFormed(UkakuWing.Poly poly) {

@@ -1,0 +1,8 @@
+[
+ {"name": "the mask back to its old black", "file": "src/main/java/com/hex/kagune/control/ukaku/KakujaMask.java",
+  "old": "            out[i] = 0xFF000000 | colour & 0xFFFFFF;", "new": "            out[i] = 0xFF1E2125;", "suite": "UkakuTests"},
+ {"name": "the mask flat plate, no bright crests", "file": "src/main/java/com/hex/kagune/control/ukaku/KakujaMask.java",
+  "old": "            if (k > RIDGE_FROM) {", "new": "            if (k > 1.0E9) {", "suite": "UkakuTests"},
+ {"name": "the game draws the mask white, untinted", "file": "src/main/java/com/hex/kagune/control/client/render/KakujaArmorLayer.java",
+  "old": "                out[i] = com.hex.kagune.control.KaguneTint.recolour(base[i], tint);", "new": "                out[i] = 0xFFFFFFFF;", "suite": "UkakuTests"}
+]

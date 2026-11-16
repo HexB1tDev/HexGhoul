@@ -1661,7 +1661,8 @@ public final class ArtPreview {
     /** 1.3.1: the owner's mask on {@code pose}'s head, {@code grow} of the way in, textured and lit per corner as the game draws it. */
     static List<WingPreview.Tri> maskTris(RigPose pose, double grow) throws java.io.IOException {
         com.hex.kagune.control.ukaku.KakujaMask.Mesh mesh = mask();
-        WingPreview.Texture tex = WingPreview.Texture.load("src/main/resources/assets/hexkagune/" + com.hex.kagune.control.ukaku.KakujaMask.TEXTURE);
+        // 4.2.9: in the armor's own colours (KakujaMask.colours), as the game draws it on white.
+        int[] colours = com.hex.kagune.control.ukaku.KakujaMask.colours(mesh);
         int alpha = Math.round(255.0F * com.hex.kagune.control.ukaku.KakujaMask.alpha(grow));
         List<WingPreview.Tri> out = new ArrayList<>();
         if (alpha < 3) {
@@ -1672,7 +1673,6 @@ public final class ArtPreview {
         int[] tris = mesh.triangles();
         for (int t = 0; t < tris.length; t += 3) {
             double[][] p = new double[3][];
-            double[][] uv = new double[3][];
             int[] lit = new int[3];
             for (int k = 0; k < 3; k++) {
                 int i = tris[t + k];
@@ -1681,10 +1681,9 @@ public final class ArtPreview {
                 p[k] = onPart(pose, "head", local);
                 double[] tip = onPart(pose, "head", new double[] {at[0] + mesh.normals()[i * 3] * 0.05, at[1] + mesh.normals()[i * 3 + 1] * 0.05,
                     at[2] + mesh.normals()[i * 3 + 2] * 0.05});
-                uv[k] = new double[] {mesh.uvs()[i * 2], mesh.uvs()[i * 2 + 1]};
-                lit[k] = WingPreview.lit(alpha << 24 | 0xFFFFFF, PoseRender.norm(PoseRender.sub(tip, p[k])));
+                lit[k] = WingPreview.lit(alpha << 24 | colours[i] & 0xFFFFFF, PoseRender.norm(PoseRender.sub(tip, p[k])));
             }
-            out.add(new WingPreview.Tri(p, lit, null, true, false, uv, tex));
+            out.add(new WingPreview.Tri(p, lit, null, true, false, null, null));
         }
         return out;
     }
