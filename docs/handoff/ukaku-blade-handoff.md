@@ -9,8 +9,11 @@
 > every time something works (CI builds a jar per branch; they test on their phone through Amethyst, so it must work there); `python3 build.py`
 > must pass (check its exit code) before every push; every preview render on their skin (`art/user_skin.png`), judged before it is sent, saying
 > what differs from their reference; show them a model before building animations or combat on it; every Ukaku sound Minecraft's own (no sound
-> pack, and none shared with the Rinkaku's or Bikaku's: `SfxTests`); never a model id in the repo; no PR and no release unless they ask (a
-> `.github/release-notes-*.md` pushed IS a release: don't add one).
+> pack, and none shared with the Rinkaku's or Bikaku's: `SfxTests`); never a model id in the repo; no PR.
+> **VERSIONS (the owner, furious that it was forgotten): every change you push is a new version, +1; after x.y.9 comes x.(y+1).0** (4.2.9,
+> then 4.3.0, 4.3.1 ...). `build.py` and `patch/KagunePatch.java` both; `TraceTests.version` also wants `.github/release-notes-<version>.md`
+> (their words first, what it was, what it is now, what's left), and pushing it publishes the release: that is how their versions ship. Plus
+> a README entry and a row in `next-ai-4.1.9.md`'s table. Session 2 pushed three changes under 4.2.8 and was told off for it: never again.
 
 # Session 2 (branch `claude/eager-ritchie-xni1ms`, after `claude/great-galileo-cdhewb`): the mask's colour, the flash, the finisher
 
@@ -68,13 +71,40 @@ once. VERSION is still 4.2.8 and nothing is released; the work is labelled 4.2.9
     the scratchpad, never commit it). The finisher previews draw the body at the game's 0.9375 (`bodyScale`): unscaled, the drawn sleeve buried
     the line (their "why does the line stop on the overlayer?").
 
+**4.2.9** is all of the above, released, with one change the owner asked for after: "the sword move that we just created ... is not working,
+bro. I'm double tapping control ... Just make it like the new right click instead of right click dashing. We just have that move instead."
+The Steel Blade's right click is the flash now (no Ctrl; the old right-click dash is gone for the blade, Rinkaku's Full Kakuja keeps its
+dash). The Reaper's dash (sprint tapped twice, final kakuja) is unchanged: Ctrl is both their sprint and the mod's unleash key, which may be
+why the double tap does nothing for them; ask before touching it.
+
 ## Not done yet (next, in order)
 
-1. An Ukaku victim's wings should go down with the top half (the owner: the kagune "cut in perfect half"); now they vanish with the dead body.
+1. **Every mob cut at a random angle through its own body** (the owner, after asking what a Mowzie's Frostmaw would do: "As long as it cuts
+   the [Frostmaw], I'm fine with it. Honestly, I think that any mob, in general, the line should be randomly placed on their mesh itself and be
+   cut randomly in any direction, honestly. I think it would be better for mobs only and for players keeping this fixed a height."). The plan,
+   agreed with them:
+   - Mobs only (anything not a player, the mod's people and big modded bosses included; drop `BladeFinisher.eligible`'s size cap for this);
+     players keep the fixed chest cut (`Carcass`).
+   - Capture the mob's own mesh as its renderer draws it, once, when the stun begins: a recording `VertexConsumer` + `MultiBufferSource`
+     (quads per `RenderType`, with their UVs and colours; skip a layer whose vertex count isn't a multiple of 4), fed by
+     `renderer.render(entity, yaw, 0, identity PoseStack, recorder, light)` (a flag so `FinisherClient`'s own `RenderLivingEvent` handlers
+     let it through). Works for vanilla, GeckoLib and Mowzie's alike. Stubs needed on `VertexConsumer`: `m_7122_` overlayCoords(II),
+     `m_7120_` uv2(II), `m_5601_` normal(FFF), `m_7404_` defaultColor, `m_141991_` unsetDefaultColor (all checked against joined.tsrg
+     `ein`: overlay a(II), light b(II), normal a(FFF), fixedColor b(IIII), unfixColor k()); allowlist them only if the verifier asks.
+   - During the stun show the captured mesh frozen in that pose (trembling), the live mob hidden: the line is drawn on it.
+   - The plane: any direction, through the middle of the mesh (within 30% of its middle each way: never a sliver).
+     `ukaku/MeshCut` (half written, NOT in the repo: the scratch file `MeshCut.java.wip` is lost with the container; rewrite it) does it:
+     `plane(min, max, seed)`, `cut(quads, plane, seed)` (quads clipped, UVs and colours carried; the crossings chained into loops, each
+     closed with mottled meat swelling a little out of the cut), `line(quads, plane)` (where the plane crosses each quad, on its face).
+   - The line grows from the point facing the mob's front both ways round, as the player's does; at the cut the two halves fall as ragdolls
+     (one box per half, in a frame turned to the plane), pushed apart along the plane's normal; 40 s and the fade as now.
+   - Preview first (the rule): a zombie and a giant stand-in (the zombie mesh scaled up) cut at a few random angles, a GIF.
+2. An Ukaku victim's wings should go down with the top half (the owner: the kagune "cut in perfect half"); now they vanish with the dead body.
    `KakujaFx` keeps each Ukaku player's last drawn wing quads (`ukakuDrawn`): carry them on the top piece (`FinisherClient`, kind 2 of SPLIT).
-2. The Ukaku mastered transformation as an evil laugh (their words below, item 5).
-3. Ukaku wings: wider, more violent M1s and M2s (item 6).
-4. Risks to watch on their phone: the ragdoll costs about 70 block clips a tick per corpse while it moves (it sleeps at rest); at most 12 corpses.
+3. The Ukaku mastered transformation as an evil laugh (their words below, item 5) — they asked again: "Make sure that the animations I asked
+   for are ready. The pull out, the new Kaku pull out animation and all that I asked."
+4. Ukaku wings: wider, more violent M1s and M2s (item 6).
+5. Risks to watch on their phone: the ragdoll costs about 70 block clips a tick per corpse while it moves (it sleeps at rest); at most 12 corpses.
 
 # Handoff: the Ukaku final kakuja's mask and Steel Blade (after 4.2.8, unreleased), for the next agent
 

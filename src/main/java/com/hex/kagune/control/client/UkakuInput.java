@@ -88,8 +88,10 @@ public final class UkakuInput {
                 return;
             }
             armed = false;
-            if (path == KagunePath.UKAKU && ControlKeys.unleashHeld()) {
-                // 4.2.9 (the owner: "Blade Arm Control + right click (does a high speed dash, only leaving behind after images)").
+            if (path == KagunePath.UKAKU) {
+                // 4.2.9: the Steel Blade's right click is its flash (the owner: "Blade Arm Control + right click (does a high speed dash,
+                // only leaving behind after images)"; then, Ctrl being their sprint: "Just make it like the new right click instead of right
+                // click dashing. We just have that move instead.").
                 ControlNetwork.CHANNEL.sendToServer(new C2SUkakuAction(C2SUkakuAction.FLASH, 0));
                 return;
             }

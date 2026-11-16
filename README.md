@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.2.9 (HexGhoul): the Steel Blade's flash and finisher, the final kakuja's mask in the armor's colours (testing)
+
+See `.github/release-notes-4.2.9.md`. `ukaku/KakujaMask.colours`; `ukaku/SteelFlash`, `server/BladeFlash`, `client/fx/BladeFlashClient`
+(the blade's right click); `server/BladeFinisher`, `ukaku/Finisher`, `ukaku/Ragdoll`, `client/animation/Carcass`, `client/fx/FinisherClient`;
+protocol 131. `UkakuTests.maskColour`, `flash`, `finisher`; `docs/handoff/sabotage-4.2.9.json`, `sabotage-4.2.9-finisher.json`.
+
 ## 4.2.8 (HexGhoul): wild ghouls, gang members and villagers: more to say, and more to talk about (testing)
 
 See `.github/release-notes-4.2.8.md`. `NpcTalk.chat` (9 lines a temper, a Gourmet's 7), `GangTalk` (every band 5 or more),

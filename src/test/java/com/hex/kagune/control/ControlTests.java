@@ -134,8 +134,9 @@ public final class ControlTests {
         // 6.0.0: with the blade out, its swings, the dash, the vanish and the fireballs.
         AbilityGuide.Panel blade = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.UKAKU, AbilityGuide.State.OUT, 1000,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.FINAL_KAKUJA, false, keys, true));
-        check(find(blade, "Steel Blade:") != null && find(blade, "Dash") != null && find(blade, "Vanish") == null && find(blade, "Reaper's dash") != null && find(blade, "Fireballs") != null,
-            "the Steel Blade's board: swings, dash, the Reaper's dash (2.1.7: no vanish), fireballs");
+        check(find(blade, "Steel Blade:") != null && find(blade, "Flash") != null && find(blade, "Dash (S held") == null && find(blade, "Vanish") == null
+            && find(blade, "Reaper's dash") != null && find(blade, "Fireballs") != null,
+            "the Steel Blade's board: swings, the flash on right click (4.2.9: no more right-click dash), the Reaper's dash (2.1.7: no vanish), fireballs");
         // The player's own keys.
         java.util.Map<AbilityGuide.Key, String> rebound = defaultKeys();
         rebound.put(AbilityGuide.Key.RAPID, AbilityGuide.keyName("key.keyboard.f", "CONTROL"));

@@ -457,8 +457,8 @@ public final class UkakuServer {
         }
         if ((action == com.hex.kagune.control.network.C2SUkakuAction.ENDER || action == com.hex.kagune.control.network.C2SUkakuAction.ENDER_FORWARD)
             && blade(player)) {
-            // 6.0.0: with the Steel Blade out, right click is its dash.
-            KakujaPassive.dash(player, 1);
+            // 4.2.9: with the Steel Blade out, right click is its flash (it was its dash since 6.0.0).
+            BladeFlash.flash(player);
             return;
         }
         // Any ability is an attack: out of the wind.

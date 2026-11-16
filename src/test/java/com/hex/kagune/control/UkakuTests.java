@@ -199,12 +199,14 @@ public final class UkakuTests {
             "the flash's ids appended (12 asked, 50 told)");
         String input = read("src/main/java/com/hex/kagune/control/client/UkakuInput.java");
         int dash = input.indexOf("new C2SUkakuAction(C2SUkakuAction.DASH");
-        int flash = input.indexOf("ControlKeys.unleashHeld()) {");
+        int flash = input.indexOf("            if (path == KagunePath.UKAKU) {\n                // 4.2.9: the Steel Blade's right click is its flash");
         int sent = input.indexOf("new C2SUkakuAction(C2SUkakuAction.FLASH, 0)");
-        check(dash > 0 && flash > 0 && sent > flash && sent < dash && input.indexOf("path == KagunePath.UKAKU && ControlKeys.unleashHeld()") > 0,
-            "Ctrl + right click with the blade out asks for the flash, before the dash");
+        check(dash > 0 && flash > 0 && sent > flash && sent < dash && !input.contains("unleashHeld()) {\n                // 4.2.9"),
+            "the blade's right click is the flash, no Ctrl (the owner: \"Just make it like the new right click instead of right click dashing\")");
         String server = read("src/main/java/com/hex/kagune/control/server/UkakuServer.java");
         check(server.contains("C2SUkakuAction.FLASH) {\n            BladeFlash.flash(player);"), "the server hands the flash to BladeFlash");
+        check(server.contains("// 4.2.9: with the Steel Blade out, right click is its flash (it was its dash since 6.0.0).\n            BladeFlash.flash(player);"),
+            "a right click the server reads as an ender with the blade out is the flash too, not the old dash");
         String blade = read("src/main/java/com/hex/kagune/control/server/BladeFlash.java");
         check(blade.contains("KakujaPassive.kind(player) != KakujaPassive.Kind.BLADE"), "only with the Steel Blade out");
         check(blade.contains("new MobEffectInstance(MobEffects.f_19609_, SteelFlash.TICKS + 3"), "he is not seen for it (the vanish's invisibility)");
@@ -223,8 +225,9 @@ public final class UkakuTests {
             "the clients lay his afterimages along the way, the blade on them");
         String afterimages = read("src/main/java/com/hex/kagune/control/client/render/KingAfterimages.java");
         check(afterimages.contains("ghost.blade() != null && age < BLADE_LIFE") && afterimages.contains("SteelBlade.build("), "an afterimage draws its blade");
-        check(read("src/main/java/com/hex/kagune/control/AbilityGuide.java").contains("\"Flash: afterimages, cuts through\""),
-            "the Steel Blade's board shows the flash");
+        String board = read("src/main/java/com/hex/kagune/control/AbilityGuide.java");
+        check(board.contains("rows.add(new Row(key(in, Key.USE), \"Flash: afterimages, cuts through\", EMBER, 0));"),
+            "the Steel Blade's board shows the flash on the right click");
     }
 
     /** Flat ground at y 0, and with {@code step} a block half high from z 0.55 to 2.4 (the carcass's space), as the game's collision answers. */

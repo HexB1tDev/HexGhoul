@@ -21,10 +21,10 @@
   "suite": "UkakuTests"
  },
  {
-  "name": "Ctrl ignored: right click always the plain dash",
+  "name": "the blade's right click the old dash again",
   "file": "src/main/java/com/hex/kagune/control/client/UkakuInput.java",
-  "old": "            if (path == KagunePath.UKAKU && ControlKeys.unleashHeld()) {",
-  "new": "            if (false) {",
+  "old": "            if (path == KagunePath.UKAKU) {\n                // 4.2.9: the Steel Blade's right click is its flash",
+  "new": "            if (false) {\n                // 4.2.9: the Steel Blade's right click is its flash",
   "suite": "UkakuTests"
  },
  {
@@ -109,6 +109,13 @@
   "file": "src/main/java/com/hex/kagune/control/server/Cooldowns.java",
   "old": "        BladeFlash.clearCooldown(player); // 4.2.9\n",
   "new": "",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the server's ender with the blade out the old dash",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuServer.java",
+  "old": "            // 4.2.9: with the Steel Blade out, right click is its flash (it was its dash since 6.0.0).\n            BladeFlash.flash(player);",
+  "new": "            // 4.2.9: with the Steel Blade out, right click is its flash (it was its dash since 6.0.0).\n            KakujaPassive.dash(player, 1);",
   "suite": "UkakuTests"
  }
 ]

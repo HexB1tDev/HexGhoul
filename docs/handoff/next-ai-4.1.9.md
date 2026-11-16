@@ -2497,6 +2497,7 @@ the next AI now."
 
 | Version | What | State |
 |---|---|---|
+| 4.2.9 | The final kakuja's mask in the armor's colours (`KakujaMask.colours`); the Steel Blade's flash on its right click (`SteelFlash`, `BladeFlash`, `BladeFlashClient`, afterimages with the blade); its finisher (`BladeFinisher`: the death held 2 s, nothing acts or hurts; `Carcass`: the thin glowing line and the cut at the player's chest, arms too; `Ragdoll`; `FinisherClient`: pieces 40 s then a fade, blood, a Rinkaku's or Bikaku's kagune shattering; a zombie's own pose); protocol 131 | pushed, EXIT 0 |
 | 4.1.8 | Kick Master's twirling speed kick | pushed, EXIT 0 |
 | 4.1.9 | The inventory crash; the hideout, the CCG building, Anteiku, the library and Ken's tower in any biome, one of each | pushed, EXIT 0 |
 | 4.1.10 | The Ukaku's wing slams: chamber, drive, overshoot, recoil, the whip; the guard's flare and settle | pushed, EXIT 0 |
