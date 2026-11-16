@@ -11,4 +11,4 @@ javac -nowarn -encoding UTF-8 --release 17 -cp "$ROOT/build/classes:$ROOT/build/
   "$ROOT"/src/main/java/com/hex/kagune/control/pale/*.java "$ROOT"/src/main/java/com/hex/kagune/control/ukaku/BladeCarry.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/RigPose.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/BodyFrame.java "$ROOT"/tools/PalePoseDesign.java
-java -cp "$CLASSES:$ROOT/build/classes" PalePoseDesign "$ROOT/src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java"
+java -Dhex.skin="$ROOT/art/user_skin.png" -cp "$CLASSES:$ROOT/build/classes" PalePoseDesign "$ROOT/src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java"

@@ -1,3 +1,5 @@
+> **Standing rule (the owner, 2026-11-16): every preview render uses the owner's own skin as the reference body.** It is `art/user_skin.png` (64x64, slim arms, eyes on face rows 5-6). `tools/PoseRender.java` puts it on every preview body that has no skin of its own (`-Dhex.skin=...`, set by every `tools/*.sh`), and `ArtPreview.eyes()` fits masks and kakugan to the eyes found on it. Never render with the old stand-in suit. Pass this rule on in every handoff you write.
+
 # Handoff: the final kakujas (War and Peace), state at 1.0.17 (testing), 2026-10-27
 
 Repo **`21M4rco/HexKagunesv2`**, branch **`main`**. Every push to `main` runs `.github/workflows/release.yml`: it builds and

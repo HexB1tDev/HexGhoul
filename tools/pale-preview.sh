@@ -27,4 +27,4 @@ javac -nowarn -encoding UTF-8 --release 17 -cp "$ROOT/build/classes:$ROOT/build/
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/OwlArms.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/OwlLancePose.java \
   "$ROOT"/tools/PoseRender.java "$ROOT"/tools/WingPreview.java "$ROOT"/tools/ArtPreview.java "$ROOT"/tools/PalePreview.java
-java -Djava.awt.headless=true -cp "$CLASSES:$ROOT/build/classes:$ROOT/build/base.jar" PalePreview "$@"
+java -Dhex.skin="$ROOT/art/user_skin.png" -Djava.awt.headless=true -cp "$CLASSES:$ROOT/build/classes:$ROOT/build/base.jar" PalePreview "$@"

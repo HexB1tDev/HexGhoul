@@ -209,8 +209,45 @@ public final class PoseRender {
         return 2.2 * bulk + ARM_GAIN * bulk + 0.35 * bulk;
     }
 
+    /**
+     * 1.3.1: the user's own skin (art/user_skin.png, slim arms), worn by every preview body that is not given a skin of its own
+     * (the user's standing rule: render with their skin). {@code -Dhex.skin=none} for the old stand-in suit.
+     */
+    static final BufferedImage USER_SKIN = loadUserSkin();
+    /** True when {@link #USER_SKIN} is painted for the slim arms (the arm's back columns see-through). */
+    static final boolean USER_SLIM = USER_SKIN != null && (USER_SKIN.getRGB(54, 20) >>> 24) == 0 && (USER_SKIN.getRGB(55, 25) >>> 24) == 0;
+
+    static BufferedImage loadUserSkin() {
+        String path = System.getProperty("hex.skin", "art/user_skin.png");
+        if ("none".equals(path)) {
+            return null;
+        }
+        try {
+            java.io.File file = new java.io.File(path);
+            BufferedImage image = file.isFile() ? javax.imageio.ImageIO.read(file) : null;
+            return image != null && image.getWidth() == 64 && image.getHeight() == 64 ? image : null;
+        } catch (java.io.IOException unreadable) {
+            return null;
+        }
+    }
+
     /** The model's triangles in world space (blocks; the player stands at the origin facing +z). */
     static List<Tri> model(RigPose pose) {
+        BufferedImage given = skin;
+        boolean givenSlim = slim;
+        if (skin == null && USER_SKIN != null && Math.max(PoseRender.bulk, pose.bulk) < 0.001) {
+            skin = USER_SKIN;
+            slim = USER_SLIM;
+        }
+        try {
+            return modelOf(pose);
+        } finally {
+            skin = given;
+            slim = givenSlim;
+        }
+    }
+
+    static List<Tri> modelOf(RigPose pose) {
         List<Tri> tris = new ArrayList<>();
         Part head = part(pose, "head", 0, 0, 0, 0, 0, 0);
         Part torso = part(pose, "torso", 0, 0, 0, 0, 0, 0);
@@ -242,6 +279,9 @@ public final class PoseRender {
                 {new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, rightLeg, null, 0, 16, 0, 32, 0.25},
                 {new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, leftLeg, null, 16, 48, 0, 48, 0.25}};
             for (Object[] p : parts) {
+                if (noRightArm && p[3] == rightArm) {
+                    continue;
+                }
                 double[] mn = (double[])p[0];
                 double[] mx = (double[])p[1];
                 int w = (int)Math.round(mx[0] - mn[0]);

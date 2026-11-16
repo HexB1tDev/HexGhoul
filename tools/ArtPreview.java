@@ -99,6 +99,9 @@ public final class ArtPreview {
         if (wanted.isEmpty() || wanted.contains("tendril-guard")) {
             tendrilGuard(new File(out, "rinkaku-tendril-guard.png"));
         }
+        if (wanted.contains("half-mask")) {
+            halfMaskSheet(new File(out, "ukaku-half-mask.png"));
+        }
         if (wanted.isEmpty() || wanted.contains("steel-blade")) {
             steelBlade(new File(out, "ukaku-steel-blade.png"));
         }
@@ -1452,7 +1455,7 @@ public final class ArtPreview {
         List<WingPreview.Tri> out = new ArrayList<>(tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye,
             com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, com.hex.kagune.control.ukaku.KakujaRig.Action.NONE, null, true)));
         double grow = Math.min(1.0, deploy * 1.4);
-        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, grow, 1.0), q -> onPart(pose, "head", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, eyes(), grow, 1.0, shell()), q -> onPart(pose, "head", q)));
         out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.chest(sink, grow, 1.0, true), q -> onPart(pose, "torso", q)));
         return out;
     }
@@ -1488,12 +1491,39 @@ public final class ArtPreview {
         sheet(file, "Final kakuja (mastery 1000): three armored spike tentacles, three fire tendrils, Ukaku's half mask", shots, 3, 600, 470);
     }
 
+    /** The final kakuja's half mask up close, from every side (on the bare head, then grown in), for comparing with the anime. */
+    static void halfMaskSheet(File file) throws Exception {
+        RigPose still = new RigPose();
+        double[] head = {0.0, 1.68, 0.22};
+        Object[][] views = {
+            {"Front", new double[] {0.0, 1.8, 2.5}, head, 1.0},
+            {"Three quarters, his right", new double[] {1.55, 1.86, 1.75}, head, 1.0},
+            {"Side (profile, his right)", new double[] {2.35, 1.7, 0.24}, head, 1.0},
+            {"Three quarters, his left, low", new double[] {-1.6, 1.5, 1.6}, head, 1.0},
+            {"From below", new double[] {0.55, 0.95, 1.5}, head, 1.0},
+            {"From behind (the straps)", new double[] {1.45, 2.05, -1.7}, new double[] {0.0, 1.7, 0.0}, 1.0},
+            {"Growing in (0.35)", new double[] {1.1, 1.8, 1.6}, head, 0.35},
+            {"Growing in (0.7)", new double[] {1.1, 1.8, 1.6}, head, 0.7},
+            {"On the body, three quarters", new double[] {2.4, 2.0, 3.6}, new double[] {0.0, 1.45, 0.0}, 1.0},
+        };
+        List<Shot> shots = new ArrayList<>();
+        for (Object[] v : views) {
+            double grow = (Double)v[3];
+            shots.add(new Shot((String)v[0], still, NO_WINGS, (double[])v[1], (double[])v[2], placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink,
+                eyes(), grow, 1.0, shell()), q -> onPart(still, "head", q))));
+        }
+        int[] count = {0};
+        com.hex.kagune.control.ukaku.KakujaModel.halfMask((a, b, c, d, n, ca, cb, cc, cd) -> count[0]++, eyes(), 1.0, 1.0);
+        System.out.println("half mask quads: " + count[0]);
+        sheet(file, "Final kakuja: the half mask up close (" + count[0] + " quads)", shots, 3, 520, 520);
+    }
+
     /** The final kakuja on a posed body doing {@code action}: tentacles and tendrils, the half mask and the chest. */
     static List<WingPreview.Tri> finalKit(RigPose pose, double[] eye, com.hex.kagune.control.ukaku.KakujaRig.Action action) {
         WingRig.Input in = new WingRig.Input(WingForm.TWIN, 1000, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1.0F, 1, false);
         List<WingPreview.Tri> out = new ArrayList<>(tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye,
             com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, action, null, true)));
-        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, 1.0, 1.0), q -> onPart(pose, "head", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, eyes(), 1.0, 1.0, shell()), q -> onPart(pose, "head", q)));
         out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.chest(sink, 1.0, 1.0, true), q -> onPart(pose, "torso", q)));
         return out;
     }
@@ -2131,6 +2161,30 @@ public final class ArtPreview {
         return panel.image();
     }
 
+    /**
+     * 1.3.1: the eyes the masks and kakugan are fitted to: found on the user's skin (PoseRender.USER_SKIN) as the game finds them,
+     * the stand-in's own ({1, 4, 5, 4}) without it.
+     */
+    static int[] eyes() {
+        if (PoseRender.USER_SKIN != null) {
+            int[] pixels = PoseRender.USER_SKIN.getRGB(0, 0, 64, 64, null, 0, 64);
+            com.hex.kagune.control.kakugan.KakuganEyes found = com.hex.kagune.control.kakugan.KakuganSkin.detect(pixels, 64);
+            if (found != null) {
+                return new int[] {found.column(true), found.row(true), found.column(false), found.row(false)};
+            }
+        }
+        return new int[] {1, 4, 5, 4};
+    }
+
+    /** 1.3.1: what the mask is fitted over on the user's skin, as the game picks it (its second layer read off the skin). */
+    static double shell() {
+        if (PoseRender.USER_SKIN == null) {
+            return com.hex.kagune.control.ukaku.KakujaModel.OUTER_LAYER;
+        }
+        int[] pixels = PoseRender.USER_SKIN.getRGB(0, 0, 64, 64, null, 0, 64);
+        return com.hex.kagune.control.ukaku.KakujaModel.halfMaskShell(eyes(), com.hex.kagune.control.kakugan.KakuganSkin.covered(pixels, 64), true, false);
+    }
+
     /** 7.0.2: the skin a shot's body wears (a ghoul NPC's vanilla skin); none, the stand-in suit. */
     static final java.util.Map<Shot, java.awt.image.BufferedImage> SKINS = new java.util.IdentityHashMap<>();
     /** 1.0.41: the shots whose skin is painted for the slim arms (a girl ghoul's). */
@@ -2335,7 +2389,7 @@ public final class ArtPreview {
         com.hex.kagune.control.ukaku.KakujaRig.draw(quads, in, com.hex.kagune.control.ukaku.KakujaRig.spines(in, body, limbs), limbs, null, true, eye,
             true);
         List<WingPreview.Tri> out = new ArrayList<>(tris(quads));
-        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, 1.0, 1.0), q -> onPart(pose, "head", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, eyes(), 1.0, 1.0, shell()), q -> onPart(pose, "head", q)));
         out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.chest(sink, 1.0, 1.0, true), q -> onPart(pose, "torso", q)));
         return out;
     }

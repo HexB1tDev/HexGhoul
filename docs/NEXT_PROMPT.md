@@ -1,3 +1,5 @@
+> **Standing rule (the owner, 2026-11-16): every preview render uses the owner's own skin as the reference body.** It is `art/user_skin.png` (64x64, slim arms, eyes on face rows 5-6). `tools/PoseRender.java` puts it on every preview body that has no skin of its own (`-Dhex.skin=...`, set by every `tools/*.sh`), and `ArtPreview.eyes()` fits masks and kakugan to the eyes found on it. Never render with the old stand-in suit. Pass this rule on in every handoff you write.
+
 > **Superseded (7.0.1):** the current prompt is `docs/NEXT_SESSION_PROMPT.md`; this one is kept for its history.
 
 # Prompt for the next session (paste this as the first message)

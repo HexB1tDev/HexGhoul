@@ -10,4 +10,4 @@ javac -nowarn -encoding UTF-8 --release 17 -d "$CLASSES" \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/RigPose.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/IdlePose.java \
   "$ROOT"/tools/PoseRender.java "$ROOT"/tools/PosePreview.java "$ROOT"/tools/ArmSolve.java
-java -Djava.awt.headless=true -Dnoref="${NOREF:-false}" -Dref="${REF_DIR:-$ROOT/docs/reference}" -cp "$CLASSES" PosePreview "$@"
+java -Dhex.skin="$ROOT/art/user_skin.png" -Djava.awt.headless=true -Dnoref="${NOREF:-false}" -Dref="${REF_DIR:-$ROOT/docs/reference}" -cp "$CLASSES" PosePreview "$@"

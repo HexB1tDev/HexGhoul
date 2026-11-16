@@ -1,3 +1,5 @@
+> **Standing rule (the owner, 2026-11-16): every preview render uses the owner's own skin as the reference body.** It is `art/user_skin.png` (64x64, slim arms, eyes on face rows 5-6). `tools/PoseRender.java` puts it on every preview body that has no skin of its own (`-Dhex.skin=...`, set by every `tools/*.sh`), and `ArtPreview.eyes()` fits masks and kakugan to the eyes found on it. Never render with the old stand-in suit. Pass this rule on in every handoff you write.
+
 # The user's requests for 7.0.0, Furuta DNA (verbatim, binding)
 
 Recorded 2026-10-24. The user's own words, unedited. The first message came with five reference images (Furuta's centipede kagune,

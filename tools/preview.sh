@@ -14,4 +14,4 @@ CLASSES="$ROOT/build/preview-classes"
 rm -rf "$CLASSES"
 mkdir -p "$CLASSES"
 javac -nowarn -encoding UTF-8 --release 17 -cp "$ROOT/build/classes" -d "$CLASSES" "$ROOT"/src/main/java/com/hex/kagune/control/ukaku/*.java "$ROOT"/src/main/java/com/hex/kagune/control/kakugan/*.java
-java -Djava.awt.headless=true -Dref="${REF_DIR:-$ROOT/docs/reference}" -cp "$CLASSES:$ROOT/build/classes" "$ROOT/tools/WingPreview.java" "$@"
+java -Dhex.skin="$ROOT/art/user_skin.png" -Djava.awt.headless=true -Dref="${REF_DIR:-$ROOT/docs/reference}" -cp "$CLASSES:$ROOT/build/classes" "$ROOT/tools/WingPreview.java" "$@"
