@@ -1,8 +1,114 @@
 [
- {"name": "the mask back to its old black", "file": "src/main/java/com/hex/kagune/control/ukaku/KakujaMask.java",
-  "old": "            out[i] = 0xFF000000 | colour & 0xFFFFFF;", "new": "            out[i] = 0xFF1E2125;", "suite": "UkakuTests"},
- {"name": "the mask flat plate, no bright crests", "file": "src/main/java/com/hex/kagune/control/ukaku/KakujaMask.java",
-  "old": "            if (k > RIDGE_FROM) {", "new": "            if (k > 1.0E9) {", "suite": "UkakuTests"},
- {"name": "the game draws the mask white, untinted", "file": "src/main/java/com/hex/kagune/control/client/render/KakujaArmorLayer.java",
-  "old": "                out[i] = com.hex.kagune.control.KaguneTint.recolour(base[i], tint);", "new": "                out[i] = 0xFFFFFFFF;", "suite": "UkakuTests"}
+ {
+  "name": "the mask back to its old black",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/KakujaMask.java",
+  "old": "            out[i] = 0xFF000000 | colour & 0xFFFFFF;",
+  "new": "            out[i] = 0xFF1E2125;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the mask flat plate, no bright crests",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/KakujaMask.java",
+  "old": "            if (k > RIDGE_FROM) {",
+  "new": "            if (k > 1.0E9) {",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the game draws the mask white, untinted",
+  "file": "src/main/java/com/hex/kagune/control/client/render/KakujaArmorLayer.java",
+  "old": "                out[i] = com.hex.kagune.control.KaguneTint.recolour(base[i], tint);",
+  "new": "                out[i] = 0xFFFFFFFF;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "Ctrl ignored: right click always the plain dash",
+  "file": "src/main/java/com/hex/kagune/control/client/UkakuInput.java",
+  "old": "            if (path == KagunePath.UKAKU && ControlKeys.unleashHeld()) {",
+  "new": "            if (false) {",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the server drops the flash",
+  "file": "src/main/java/com/hex/kagune/control/server/UkakuServer.java",
+  "old": "            BladeFlash.flash(player); // 4.2.9",
+  "new": "            // dropped",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the flash seen (no invisibility)",
+  "file": "src/main/java/com/hex/kagune/control/server/BladeFlash.java",
+  "old": "        player.m_7292_(new MobEffectInstance(MobEffects.f_19609_, SteelFlash.TICKS + 3, 0, false, false, false));",
+  "new": "",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "hit mid-flash",
+  "file": "src/main/java/com/hex/kagune/control/server/BladeFlash.java",
+  "old": "            event.setCanceled(true);",
+  "new": "            event.getEntity();",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the flash slow",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/SteelFlash.java",
+  "old": "    public static final double SPEED = 2.6;",
+  "new": "    public static final double SPEED = 1.5;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the flash too fast for the server",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/SteelFlash.java",
+  "old": "    public static final double SPEED = 2.6;",
+  "new": "    public static final double SPEED = 5.5;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "afterimages a smear",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/SteelFlash.java",
+  "old": "    public static final double GHOST_EVERY = 1.6;",
+  "new": "    public static final double GHOST_EVERY = 0.5;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the line cuts everything near",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/SteelFlash.java",
+  "old": "        return across <= RADIUS && up <= RADIUS;",
+  "new": "        return across <= RADIUS * 3 && up <= RADIUS;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the line cuts behind where he began",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/SteelFlash.java",
+  "old": "        t = t < 0.0 ? 0.0 : t > 1.0 ? 1.0 : t;",
+  "new": "",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the clients never told",
+  "file": "src/main/java/com/hex/kagune/control/client/fx/UkakuFx.java",
+  "old": "            case S2CUkakuFx.FLASH -> BladeFlashClient.start(message.shooter(), message.id(), at); // 4.2.9: the Steel Blade's flash",
+  "new": "",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "afterimages without the blade",
+  "file": "src/main/java/com/hex/kagune/control/client/render/KingAfterimages.java",
+  "old": "            if (ghost.blade() != null && age < BLADE_LIFE) {",
+  "new": "            if (false) {",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the flash off the board",
+  "file": "src/main/java/com/hex/kagune/control/AbilityGuide.java",
+  "old": "\"Flash: afterimages, cuts through\"",
+  "new": "\"Flash\"",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the flash not on cooldown clear",
+  "file": "src/main/java/com/hex/kagune/control/server/Cooldowns.java",
+  "old": "        BladeFlash.clearCooldown(player); // 4.2.9\n",
+  "new": "",
+  "suite": "UkakuTests"
+ }
 ]

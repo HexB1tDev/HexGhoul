@@ -99,6 +99,7 @@ public final class UkakuTests {
         unlocks();
         plantedColour();
         maskColour();
+        flash();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -164,6 +165,65 @@ public final class UkakuTests {
 
     private static double lum(int c) {
         return 0.299 * ((c >> 16) & 0xFF) + 0.587 * ((c >> 8) & 0xFF) + 0.114 * (c & 0xFF);
+    }
+
+    /**
+     * 4.2.9 (the owner: "Blade Arm Control + right click (does a high speed dash, only leaving behind after images)"): the Steel Blade's flash:
+     * Ctrl + right click with the blade out sends it; far and fast, faster than the blade's dash; he is not seen and not touched for it; the
+     * clients lay his afterimages, the blade on them; what it passes is cut; every sound the game's own.
+     */
+    private static void flash() {
+        double far = com.hex.kagune.control.ukaku.SteelFlash.distance();
+        check(far >= 8.0 && far <= 12.0, "the flash carries him eight to twelve blocks: " + far);
+        check(com.hex.kagune.control.ukaku.SteelFlash.SPEED > 1.7 * 1.4, "the flash far faster than the blade's dash (1.7 a tick)");
+        check(com.hex.kagune.control.ukaku.SteelFlash.SPEED * 2 < 10.0, "two ticks of it in one packet stay under the server's too-fast kick");
+        check(com.hex.kagune.control.ukaku.SteelFlash.COOLDOWN >= 40, "the flash not spammable: two seconds or more between");
+        int ghosts = com.hex.kagune.control.ukaku.SteelFlash.ghosts(com.hex.kagune.control.ukaku.SteelFlash.SPEED);
+        check(ghosts >= 2 && ghosts * (com.hex.kagune.control.ukaku.SteelFlash.TICKS + 1) <= 48,
+            "afterimages along the whole way (" + ghosts + " a tick) and never more than the afterimages kept (48)");
+        check(com.hex.kagune.control.ukaku.SteelFlash.SPEED / ghosts >= 1.0 && com.hex.kagune.control.ukaku.SteelFlash.SPEED / ghosts <= 2.0,
+            "each afterimage its own figure, a body apart, not a smear (" + com.hex.kagune.control.ukaku.SteelFlash.SPEED / ghosts + " blocks)");
+        check(com.hex.kagune.control.ukaku.SteelFlash.ghosts(0.0) == 0 && com.hex.kagune.control.ukaku.SteelFlash.ghosts(Double.NaN) == 0,
+            "no afterimages where he did not move");
+        double[] a = {0.0, 64.0, 0.0};
+        double[] b = {10.0, 64.0, 0.0};
+        check(com.hex.kagune.control.ukaku.SteelFlash.crossed(a, b, new double[] {5.0, 65.0, 0.0}, 0.3, 0.9), "a body on his line is cut");
+        check(com.hex.kagune.control.ukaku.SteelFlash.crossed(a, b, new double[] {5.0, 65.0, 1.4}, 0.3, 0.9), "a body beside his line is cut");
+        check(!com.hex.kagune.control.ukaku.SteelFlash.crossed(a, b, new double[] {5.0, 65.0, 3.5}, 0.3, 0.9), "a body three blocks off is not");
+        check(!com.hex.kagune.control.ukaku.SteelFlash.crossed(a, b, new double[] {-3.0, 65.0, 0.0}, 0.3, 0.9), "a body behind where he began is not");
+        check(!com.hex.kagune.control.ukaku.SteelFlash.crossed(a, b, new double[] {13.5, 65.0, 0.0}, 0.3, 0.9), "a body past where he stopped is not");
+        check(com.hex.kagune.control.ukaku.SteelFlash.crossed(a, b, new double[] {5.0, 67.0, 0.0}, 0.7, 2.6), "a tall body is cut where the line passes it");
+        check(!com.hex.kagune.control.ukaku.SteelFlash.crossed(a, b, new double[] {5.0, 70.0, 0.0}, 0.3, 0.9), "a body high above him is not");
+        check(com.hex.kagune.control.network.C2SUkakuAction.FLASH == 12 && com.hex.kagune.control.network.S2CUkakuFx.FLASH == 50,
+            "the flash's ids appended (12 asked, 50 told)");
+        String input = read("src/main/java/com/hex/kagune/control/client/UkakuInput.java");
+        int dash = input.indexOf("new C2SUkakuAction(C2SUkakuAction.DASH");
+        int flash = input.indexOf("ControlKeys.unleashHeld()) {");
+        int sent = input.indexOf("new C2SUkakuAction(C2SUkakuAction.FLASH, 0)");
+        check(dash > 0 && flash > 0 && sent > flash && sent < dash && input.indexOf("path == KagunePath.UKAKU && ControlKeys.unleashHeld()") > 0,
+            "Ctrl + right click with the blade out asks for the flash, before the dash");
+        String server = read("src/main/java/com/hex/kagune/control/server/UkakuServer.java");
+        check(server.contains("C2SUkakuAction.FLASH) {\n            BladeFlash.flash(player);"), "the server hands the flash to BladeFlash");
+        String blade = read("src/main/java/com/hex/kagune/control/server/BladeFlash.java");
+        check(blade.contains("KakujaPassive.kind(player) != KakujaPassive.Kind.BLADE"), "only with the Steel Blade out");
+        check(blade.contains("new MobEffectInstance(MobEffects.f_19609_, SteelFlash.TICKS + 3"), "he is not seen for it (the vanish's invisibility)");
+        check(blade.contains("LivingAttackEvent") && blade.contains("flashing(player)) {\n            event.setCanceled(true);"),
+            "nothing touches him mid-flash");
+        check(blade.contains("Cooldowns.of(player, SteelFlash.COOLDOWN)") && read("src/main/java/com/hex/kagune/control/server/Cooldowns.java")
+            .contains("BladeFlash.clearCooldown(player);"), "its cooldown, ended with every other when cooldowns are cleared");
+        check(blade.contains("SteelFlash.crossed(") && blade.contains("BladeBlood.cut(") && blade.contains("state.cut.add("),
+            "what it passes is cut once, a Steel Blade cut");
+        check(!blade.contains("\"hexkagune:") && !blade.matches("(?s).*sound\\([^;]*\"[a-z_.]+\".*"),
+            "every flash sound one of UkakuSounds (the game's own)");
+        String fx = read("src/main/java/com/hex/kagune/control/client/fx/UkakuFx.java");
+        String client = read("src/main/java/com/hex/kagune/control/client/fx/BladeFlashClient.java");
+        check(fx.contains("case S2CUkakuFx.FLASH -> BladeFlashClient.start("), "every client told of the flash");
+        check(client.contains("KingAfterimages.add(") && client.contains("? blade : null") && client.contains("SteelFlash.ghosts("),
+            "the clients lay his afterimages along the way, the blade on them");
+        String afterimages = read("src/main/java/com/hex/kagune/control/client/render/KingAfterimages.java");
+        check(afterimages.contains("ghost.blade() != null && age < BLADE_LIFE") && afterimages.contains("SteelBlade.build("), "an afterimage draws its blade");
+        check(read("src/main/java/com/hex/kagune/control/AbilityGuide.java").contains("\"Flash: afterimages, cuts through\""),
+            "the Steel Blade's board shows the flash");
     }
 
     private static boolean wellFormed(UkakuWing.Poly poly) {

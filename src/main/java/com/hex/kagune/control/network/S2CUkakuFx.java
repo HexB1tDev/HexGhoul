@@ -101,6 +101,11 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
     public static final int TILT = 48;
     /** 4.1.0: a player Ayato taught lifting both hands, god-like, before the wings are unleashed ({@code shooter}: the player). */
     public static final int UNLEASH = 49;
+    /**
+     * 4.2.9: the Steel Blade's flash ({@code BladeFlash}): {@code shooter} the player, {@code id} how many ticks it throws him, {@code x, y, z}
+     * where it began, {@code vx, vy, vz} its speed (blocks a tick); every client lays his afterimages along the way.
+     */
+    public static final int FLASH = 50;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

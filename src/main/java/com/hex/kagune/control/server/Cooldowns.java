@@ -66,6 +66,7 @@ public final class Cooldowns {
         UkakuRush.forget(player);
         KaguneCombat.clearCooldowns(player);
         KakujaPassive.clearCooldowns(player);
+        BladeFlash.clearCooldown(player); // 4.2.9
         KingServer.clearCooldowns(player);
         original(player, now);
     }

@@ -88,6 +88,11 @@ public final class UkakuInput {
                 return;
             }
             armed = false;
+            if (path == KagunePath.UKAKU && ControlKeys.unleashHeld()) {
+                // 4.2.9 (the owner: "Blade Arm Control + right click (does a high speed dash, only leaving behind after images)").
+                ControlNetwork.CHANNEL.sendToServer(new C2SUkakuAction(C2SUkakuAction.FLASH, 0));
+                return;
+            }
             boolean back = minecraft.f_91066_.f_92087_.m_90857_() && !minecraft.f_91066_.f_92085_.m_90857_();
             ControlNetwork.CHANNEL.sendToServer(new C2SUkakuAction(C2SUkakuAction.DASH, back ? -1 : 1));
             return;

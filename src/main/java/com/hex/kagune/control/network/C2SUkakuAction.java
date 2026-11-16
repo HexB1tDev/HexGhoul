@@ -50,6 +50,11 @@ public record C2SUkakuAction(int action, int targetId) {
      * ({@code HurlServer}).
      */
     public static final int HURL = 11;
+    /**
+     * 4.2.9 (the owner: "Blade Arm Control + right click (does a high speed dash, only leaving behind after images)"): Ctrl + right click with
+     * the Steel Blade out, its flash ({@code BladeFlash}); {@code targetId} unused (0).
+     */
+    public static final int FLASH = 12;
 
     public static void encode(C2SUkakuAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);

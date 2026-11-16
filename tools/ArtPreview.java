@@ -142,6 +142,9 @@ public final class ArtPreview {
         if (wanted.contains("full-form")) {
             fullForm(new File(out, "ukaku-full-form.png"));
         }
+        if (wanted.contains("flash")) {
+            flashSheet(new File(out, "ukaku-flash.png"));
+        }
         if (wanted.contains("blade-moves")) {
             bladeMoves(new File(out, "ukaku-blade-moves.png"));
         }
@@ -1649,6 +1652,97 @@ public final class ArtPreview {
             shots.add(new Shot((String)b[0], pose, NO_WINGS, eye, look, tris));
         }
         sheet(file, "The final kakuja in full: kakugan, the owner's mask, chest, tentacles and fire; the Steel Blade", shots, 3, 620, 560);
+    }
+
+    /**
+     * 4.2.9 (the owner: "Blade Arm Control + right click (does a high speed dash, only leaving behind after images)"): the Steel Blade's flash
+     * as every client draws it: thrown {@code SteelFlash.SPEED} blocks a tick for {@code TICKS} ticks, not seen while it lasts, an afterimage
+     * every {@code GHOST_EVERY} blocks in the stride of its tick (the run, flat out), pale as steel and fading over {@code KingAfterimages.LIFE}
+     * ticks, the blade on every other one and the newest of each tick for its first five; he arrives at the origin facing +z.
+     */
+    static void flashSheet(File file) throws Exception {
+        double speed = com.hex.kagune.control.ukaku.SteelFlash.SPEED;
+        int ticks = com.hex.kagune.control.ukaku.SteelFlash.TICKS;
+        double start = -speed * ticks;
+        double[] look = {0.0, 1.0, -5.0};
+        double[] side = {16.5, 3.4, -5.0};
+        Object[][] views = {
+            {"Mid-flash (2 ticks in): he is not there, only afterimages", 2.0, side, look},
+            {"He arrives (4 ticks): the trail behind him", 4.0, side, look},
+            {"Arrival, from behind where he started", 4.0, new double[] {4.5, 3.6, -19.0}, new double[] {0.0, 1.0, -4.0}},
+            {"What he flashed at sees", 4.0, new double[] {-3.0, 2.0, 7.5}, new double[] {0.0, 1.1, -3.5}},
+            {"Arrival, close", 4.0, new double[] {6.0, 2.4, -1.0}, new double[] {0.0, 1.1, -2.5}},
+            {"Half a second after: the trail fading", 10.0, side, look},
+        };
+        List<Shot> shots = new ArrayList<>();
+        for (Object[] v : views) {
+            double moment = (Double)v[1];
+            double[] eye = (double[])v[2];
+            List<WingPreview.Tri> tris = new ArrayList<>();
+            int laid = (int)Math.min(moment, ticks);
+            int index = 0;
+            for (int k = 1; k <= laid; k++) {
+                int count = com.hex.kagune.control.ukaku.SteelFlash.ghosts(speed);
+                for (int j = 1; j <= count; j++) {
+                    // As BladeFlashClient.lay: the blade's run, a quarter stride on from the one before.
+                    RigPose stride = com.hex.kagune.control.client.animation.BladeArmPose.run(index++ * Math.PI / 2.0, 1.0F);
+                    stride.settle(1.0F);
+                    double t = j / (double)count;
+                    double z = start + speed * (k - 1 + t);
+                    double age = moment - (k - (1.0 - t));
+                    if (age > 10.0 || z > -0.5) {
+                        continue;
+                    }
+                    double fade = 1.0 - age / 10.0;
+                    int alpha = (int)Math.round(255.0 * 0.5 * fade * fade);
+                    double dz = z;
+                    com.hex.kagune.control.client.animation.BodyFrame.surface(stride, (a, b, c, d, n) -> {
+                        double[][] q = {a, b, c, d};
+                        double[][] at = new double[4][];
+                        for (int i = 0; i < 4; i++) {
+                            at[i] = new double[] {q[i][0], q[i][1], q[i][2] + dz};
+                        }
+                        int colour = alpha << 24 | 0xDCE8FF;
+                        tris.add(new WingPreview.Tri(new double[][] {at[0], at[1], at[2]}, new int[] {colour, colour, colour}, n, false));
+                        tris.add(new WingPreview.Tri(new double[][] {at[0], at[2], at[3]}, new int[] {colour, colour, colour}, n, false));
+                    });
+                    if ((j == count || j % 2 == 0) && age < 5.0) {
+                        List<WingPreview.Tri> blade = blade(stride, 1.0, 0.3);
+                        int bladeAlpha = (int)Math.round(255.0 * 0.42 * (1.0 - age / 5.0));
+                        for (WingPreview.Tri tri : blade) {
+                            double[][] at = new double[3][];
+                            int[] colours = new int[3];
+                            for (int i = 0; i < 3; i++) {
+                                at[i] = new double[] {tri.p()[i][0], tri.p()[i][1], tri.p()[i][2] + dz};
+                                int own = tri.argb()[i];
+                                int r = (((own >> 16) & 0xFF) * 2 + 0xDC * 3) / 5;
+                                int g = (((own >> 8) & 0xFF) * 2 + 0xE8 * 3) / 5;
+                                int b2 = ((own & 0xFF) * 2 + 0xFF * 3) / 5;
+                                colours[i] = bladeAlpha << 24 | r << 16 | g << 8 | b2;
+                            }
+                            tris.add(new WingPreview.Tri(at, colours, tri.n(), false));
+                        }
+                    }
+                }
+            }
+            RigPose shown = null;
+            if (moment >= ticks) {
+                shown = com.hex.kagune.control.client.animation.BladeArmPose.run(ticks * 0.6662, 1.0F);
+                shown.settle(1.0F);
+                tris.addAll(finalKitBlade(shown, eye, 1.0, 1.7));
+                tris.addAll(blade(shown, 1.0, 0.3));
+                tris.addAll(userKakugan(shown, 1.7));
+            }
+            shots.add(new Shot((String)v[0], shown, NO_WINGS, eye, (double[])v[3], tris));
+        }
+        double was = fov;
+        fov = 40.0;
+        try {
+            sheet(file, "The Steel Blade's flash (Ctrl + right click): " + String.format("%.1f", speed * ticks) + " blocks in " + ticks
+                + " ticks, only afterimages left", shots, 3, 620, 520);
+        } finally {
+            fov = was;
+        }
     }
 
     /** 1.3.1: the owner's mask model, read from the mod's resources as the game reads it from its jar. */

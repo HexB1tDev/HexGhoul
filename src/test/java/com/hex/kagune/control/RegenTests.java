@@ -113,7 +113,7 @@ public final class RegenTests {
             && keys.contains("event.register(REGENERATE);"), "the key, X by default, in Controls");
         check(read("src/main/resources/assets/hexkagune/lang/en_us.json").contains("\"key.hexkagune.regenerate\": \"Regenerate (hold)\""), "named in Controls");
         String network = read("src/main/java/com/hex/kagune/control/network/ControlNetwork.java");
-        check(network.contains("registerMessage(59, C2SRegen.class") && network.contains("PROTOCOL = \"129\""), "message 59, protocol 129");
+        check(network.contains("registerMessage(59, C2SRegen.class") && network.contains("PROTOCOL = \"130\""), "message 59, protocol 129 (130 since 4.2.9: the Steel Blade's flash)");
         check(read("src/main/java/com/hex/kagune/control/network/C2SRegen.java").contains("GhoulRegen.held(sender, message.down)"), "the server told");
     }
 

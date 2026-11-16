@@ -51,8 +51,14 @@ public final class KingAfterimages {
     static final double NEWEST = 2.5;
 
     /** One afterimage: whose (for the form's shapes), the pose, his feet and body yaw (degrees) there, when (world ticks), whose tint. */
-    record Ghost(WeakReference<AbstractClientPlayer> player, RigPose pose, double x, double y, double z, float yaw, double at, boolean war, boolean whole) {
+    record Ghost(WeakReference<AbstractClientPlayer> player, RigPose pose, double x, double y, double z, float yaw, double at, boolean war, boolean whole,
+                 double[] blade) {
     }
+
+    /** 4.2.9: how long a ghost carries the Steel Blade on its arm (ticks; the blade is heavy to draw, so only the freshest do). */
+    static final double BLADE_LIFE = 5.0;
+    /** 4.2.9: how see-through the blade on a ghost starts. */
+    static final float BLADE_ALPHA = 0.42F;
 
     private static final List<Ghost> GHOSTS = new ArrayList<>();
     /**
@@ -75,11 +81,19 @@ public final class KingAfterimages {
 
     /** 1.0.36: as above; {@code whole}: the newest drawn as the whole form (the dash's), else only ever his body's shape (the sprint's: light). */
     public static void add(AbstractClientPlayer player, RigPose pose, Vec3 feet, float bodyYaw, double time, boolean war, boolean whole) {
+        add(player, pose, feet, bodyYaw, time, war, whole, null);
+    }
+
+    /**
+     * 4.2.9: as above, with the Steel Blade on its right arm ({@code blade}: how formed, how far out it was posed, 1 for slim arms; null: none),
+     * the flash's ({@code BladeFlashClient}).
+     */
+    public static void add(AbstractClientPlayer player, RigPose pose, Vec3 feet, float bodyYaw, double time, boolean war, boolean whole, double[] blade) {
         if (GHOSTS.size() >= MOST) {
             GHOSTS.remove(0);
         }
         GHOSTS.add(new Ghost(new WeakReference<>(player), new RigPose().add(pose, 1.0F), feet.f_82479_, feet.f_82480_, feet.f_82481_, bodyYaw, time,
-            war, whole));
+            war, whole, blade));
     }
 
     /** 1.0.36: {@code player} is sprinting flat out this tick at {@code vx, vz} (blocks a tick): drawn a little blurred along it. */
@@ -133,6 +147,9 @@ public final class KingAfterimages {
             Frame frame = new Frame(dx, dy, dz, yaw);
             if (ghost.whole() && age < NEWEST && player != null && away < FORM_FAR * FORM_FAR) {
                 form(out, matrix, normals, frame, ghost.pose(), player, tint, (int)Math.round(255.0 * FORM_ALPHA * fade));
+            }
+            if (ghost.blade() != null && age < BLADE_LIFE) {
+                blade(out, matrix, normals, frame, ghost, tint, (int)Math.round(255.0 * BLADE_ALPHA * (1.0 - age / BLADE_LIFE)));
             }
             int alpha = (int)Math.round(255.0 * ALPHA * fade * fade);
             if (alpha > 0) {
@@ -203,6 +220,26 @@ public final class KingAfterimages {
         double[] turn(double[] n) {
             return new double[] {this.rx * n[0] + this.fx * n[2], n[1], this.rz * n[0] + this.fz * n[2]};
         }
+    }
+
+    /** 4.2.9: the Steel Blade on a ghost's right arm, as {@code SteelBladeLayer} builds it in the arm's own pixels, washed to the ghost's tint. */
+    private static void blade(VertexConsumer out, Matrix4f matrix, Matrix3f normals, Frame frame, Ghost ghost, int tint, int alpha) {
+        if (alpha <= 0) {
+            return;
+        }
+        double[] a = carry(ghost.pose(), "rightArm");
+        double[] b = ghost.blade();
+        com.hex.kagune.control.ukaku.SteelBlade.build(b[0], ghost.at() / 20.0, b[2] > 0.5, true, 0.0, 0.0, b[1], (x, y, z, argb, nx, ny, nz) -> {
+            double[] rig = {a[0] * x + a[1] * y + a[2] * z + a[9], a[3] * x + a[4] * y + a[5] * z + a[10], a[6] * x + a[7] * y + a[8] * z + a[11]};
+            double[] n = {a[0] * nx + a[1] * ny + a[2] * nz, a[3] * nx + a[4] * ny + a[5] * nz, a[6] * nx + a[7] * ny + a[8] * nz};
+            double length = Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+            if (length > 1.0E-9) {
+                n[0] /= length;
+                n[1] /= length;
+                n[2] /= length;
+            }
+            vertex(out, matrix, normals, frame.place(rig), alpha << 24 | mix(argb & 0xFFFFFF, tint), frame.turn(n));
+        });
     }
 
     /** The whole form on a ghost: every shape its layer last drew ({@link KingLayer#quads}), each body part's carried by that part as posed. */

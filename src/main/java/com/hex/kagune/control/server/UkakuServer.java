@@ -448,6 +448,10 @@ public final class UkakuServer {
             KakujaPassive.dash(player, targetId < 0 ? -1 : 1);
             return;
         }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.FLASH) {
+            BladeFlash.flash(player); // 4.2.9: it checks for itself (the Steel Blade out)
+            return;
+        }
         if (!isUkaku(player) || !KaguneProfile.isActive(player) || !player.m_6084_()) {
             return;
         }

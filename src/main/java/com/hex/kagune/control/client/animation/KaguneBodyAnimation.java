@@ -981,6 +981,9 @@ public final class KaguneBodyAnimation implements IAnimation {
             kind = "wrap";
         } else {
             float run = player.m_20142_() ? (float)Math.max(0.0, Math.min(1.0, (speed - 0.1) / 0.1)) : 0.0F;
+            if (com.hex.kagune.control.client.fx.BladeFlashClient.flashing(player.m_19879_(), time)) {
+                run = 1.0F; // 4.2.9: the flash: flat out, the blade swept back, whatever his keys say (its afterimages are this stride)
+            }
             if (run > 0.05F) {
                 target = BladeArmPose.run(player.f_267362_.m_267590_(tickDelta) * 0.6662, run);
                 kind = "run";

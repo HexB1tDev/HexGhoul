@@ -233,6 +233,14 @@ public final class PoseRender {
         }
     }
 
+    /**
+     * 4.2.9: which parts {@link #model} draws (a skinned body), a bit each: 1 the head, 2 the torso, 4 the right arm, 8 the left arm, 16 the
+     * right leg, 32 the left leg (the Steel Blade's finisher draws a body's halves apart).
+     */
+    static int parts = 0x3F;
+    static final int TOP = 1 | 2 | 4 | 8;
+    static final int LEGS = 16 | 32;
+
     /** The model's triangles in world space (blocks; the player stands at the origin facing +z). */
     static List<Tri> model(RigPose pose) {
         BufferedImage given = skin;
@@ -280,8 +288,9 @@ public final class PoseRender {
                 {new double[] {-1, slim ? -1.5 : -2, -2}, new double[] {slim ? 2 : 3, slim ? 10.5 : 10, 2}, 1, leftArm, upper, 32, 48, 48, 48, 0.25},
                 {new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, rightLeg, null, 0, 16, 0, 32, 0.25},
                 {new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, leftLeg, null, 16, 48, 0, 48, 0.25}};
-            for (Object[] p : parts) {
-                if (noRightArm && p[3] == rightArm) {
+            for (int index = 0; index < parts.length; index++) {
+                Object[] p = parts[index];
+                if (noRightArm && p[3] == rightArm || (PoseRender.parts & 1 << index) == 0) {
                     continue;
                 }
                 double[] mn = (double[])p[0];

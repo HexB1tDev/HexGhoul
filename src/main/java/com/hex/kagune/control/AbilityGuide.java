@@ -380,6 +380,7 @@ public final class AbilityGuide {
             // 6.0.0: the Steel Blade out.
             rows.add(row(in, "Steel Blade: Sweep · Return · Execution", EMBER, 0, Key.ATTACK));
             rows.add(new Row(key(in, Key.USE), "Dash (S held: back)", EMBER, 0));
+            rows.add(new Row(key(in, Key.UNLEASH) + "+" + key(in, Key.USE), "Flash: afterimages, cuts through", EMBER, 0)); // 4.2.9
             rows.add(new Row("sprint x2", "Reaper's dash: 3 charges, 1 back each 5 s", EMBER, 0)); // 2.1.7
             rows.add(new Row(key(in, Key.SLINGSHOT), "Fireballs", TEXT, 0));
             rows.add(row(in, "Open the wings", TEXT, 0, Key.GUARD));
