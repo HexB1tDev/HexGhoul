@@ -2497,6 +2497,7 @@ the next AI now."
 
 | Version | What | State |
 |---|---|---|
+| 4.3.0 | The mastered Ukaku's pull-out as an evil laugh (`LaughPose`, `LaughPullOutClient`, `LaughPullOut`: hand over the face, head bowed, held still, the HAs over the head in white manga lettering (`laugh_ha.png`), the hand down out to the right, the crack, the wings; mastery 1000, before Ayato's lift); the player's Steel Blade at rest and walking dragging to the ground (`BladeArmPose.drag`); the final kakuja's half mask back (`KakujaModel.halfMask` in the armor's colours; the beaked `KakujaMask` and its baked model removed); protocol 132 | pushed, EXIT 0 |
 | 4.2.9 | The final kakuja's mask in the armor's colours (`KakujaMask.colours`); the Steel Blade's flash on its right click (`SteelFlash`, `BladeFlash`, `BladeFlashClient`, afterimages with the blade); its finisher (`BladeFinisher`: the death held 2 s, nothing acts or hurts; `Carcass`: the thin glowing line and the cut at the player's chest, arms too; `Ragdoll`; `FinisherClient`: pieces 40 s then a fade, blood, a Rinkaku's or Bikaku's kagune shattering; a zombie's own pose); protocol 131 | pushed, EXIT 0 |
 | 4.1.8 | Kick Master's twirling speed kick | pushed, EXIT 0 |
 | 4.1.9 | The inventory crash; the hideout, the CCG building, Anteiku, the library and Ken's tower in any biome, one of each | pushed, EXIT 0 |

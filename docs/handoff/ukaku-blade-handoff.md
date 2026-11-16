@@ -77,6 +77,29 @@ The Steel Blade's right click is the flash now (no Ctrl; the old right-click das
 dash). The Reaper's dash (sprint tapped twice, final kakuja) is unchanged: Ctrl is both their sprint and the mod's unleash key, which may be
 why the double tap does nothing for them; ask before touching it.
 
+**4.3.0** (after 4.2.9): the mastered Ukaku's pull-out as an evil laugh, and the Steel Blade's rest and walk. Their words: "Ukaku Mastered
+animation should be a evil laugh sequence: Put hand on face (head tilted down), start laughing, hand back down a little on the side (right
+hand) the hand should be a little to the right off the body, crack finger with sound, ukaku emerges."; then "its a bit too much jitter, that
+laugh is horrible man", "can you revert it but add like "HAHAHAHAHA" text over the head (similar the angry symbol above the head on npcs)",
+"no, white and with a cool letter type, not that shit"; and, with a picture of a warrior walking with the sword arm hanging and the blade
+trailing to the ground: "instead of pointing forward, this is now the walk/standing still animation of the arm blade of ukaku".
+- `client/animation/LaughPose` (pure): the hand over the face (its arm found on the posed body: the palm on the face, `HandSearch`-style),
+  the head bowed, the body held STILL (no shaking: they hated it), "HA" by "HA" (`text`, `has`: each tilted, popping, fading) over the head,
+  the hand down a little out to the right, the crack at 48, the wings at 52. `client/LaughPullOutClient` poses it (KaguneBodyAnimation) and
+  draws the HAs over the head facing the camera (`textures/misc/laugh_ha.png`: white Inter Black Italic, a thick black outline,
+  `tools/laugh_text.py`). `server/LaughPullOut`: Ukaku at mastery 1000, before Ayato's lift in `PathServer.toggle`; the witch's cackle
+  pitched low (three, with the HAs), `block.bamboo.break` for the crack, the wing beat and blood at the wings. `S2CUkakuFx.LAUGH` 53,
+  protocol 132. Preview `tools/art-preview.sh <out> laugh-gif`.
+- `BladeArmPose.drag` (the player's only; the ghouls keep `stand`): the arm hanging, elbow eased, the forearm turned out (aimRight -0.1,
+  0.05, roll 1.0, elbow 0.8: searched so the tip rests just off the ground at the right, a little ahead), breathing; walking, the legs are
+  the walk's. Preview `blade-drag`. Tests `UkakuTests.laugh`; sabotage `docs/handoff/sabotage-4.3.0.json`.
+- The mask (their words, with Ayato's mask for reference: "revert the mask to the original form we made a few versions ago a small 3d half
+  mask like this one, I dont like this beak"): `KakujaArmorLayer` draws `KakujaModel.halfMask` again; the beaked model (`ukaku/KakujaMask`,
+  `models/kakuja_mask.bin`, its texture, `tools/kakuja_mask.py`) is removed from the mod (their files in `art/kakuja_mask/` stay). The half
+  mask is in the armor's palette now (navy `PLATE`, flanks toward `PLATE_DARK`, the beak's ridge `RIDGE`, its lips `RIM`), recoloured by the
+  kagune tint as the chest is: their earlier ask, "the mask is meant to be the same color as the armor", still stands. `UkakuTests.maskColour`.
+  Previews `half-mask`, `full-form`. Do not bring a beak model back.
+
 ## Not done yet (next, in order)
 
 1. **Every mob cut at a random angle through its own body** (the owner, after asking what a Mowzie's Frostmaw would do: "As long as it cuts
@@ -101,10 +124,9 @@ why the double tap does nothing for them; ask before touching it.
    - Preview first (the rule): a zombie and a giant stand-in (the zombie mesh scaled up) cut at a few random angles, a GIF.
 2. An Ukaku victim's wings should go down with the top half (the owner: the kagune "cut in perfect half"); now they vanish with the dead body.
    `KakujaFx` keeps each Ukaku player's last drawn wing quads (`ukakuDrawn`): carry them on the top piece (`FinisherClient`, kind 2 of SPLIT).
-3. The Ukaku mastered transformation as an evil laugh (their words below, item 5) — they asked again: "Make sure that the animations I asked
-   for are ready. The pull out, the new Kaku pull out animation and all that I asked."
-4. Ukaku wings: wider, more violent M1s and M2s (item 6).
-5. Risks to watch on their phone: the ragdoll costs about 70 block clips a tick per corpse while it moves (it sleeps at rest); at most 12 corpses.
+3. (Done in 4.3.0: the laugh.) Ukaku wings: wider, more violent M1s and M2s (item 6) — they asked: "Make sure that the animations I asked
+   for are ready ... Just make sure that shit's finished."
+4. Risks to watch on their phone: the ragdoll costs about 70 block clips a tick per corpse while it moves (it sleeps at rest); at most 12 corpses.
 
 # Handoff: the Ukaku final kakuja's mask and Steel Blade (after 4.2.8, unreleased), for the next agent
 

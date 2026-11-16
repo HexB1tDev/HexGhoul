@@ -116,6 +116,46 @@ public final class BladeArmPose {
         return p;
     }
 
+    /**
+     * 4.3.1 (the owner, with a picture of a warrior walking, sword arm hanging, the blade trailing to the ground: "instead of pointing forward,
+     * this is now the walk/standing still animation of the arm blade of ukaku"): the player's Steel Blade at rest and walking: the right arm
+     * hanging loose, a little out from the body, the elbow easing so the forearm turns out, the blade running down and out from the fist to
+     * rest its point just off the ground at the right, a little ahead ({@link #DRAG_PITCH}..{@link #DRAG_ELBOW}: found on the posed body);
+     * the left arm loose at the side, the head a little down. It breathes; walking, the legs are the walk's own and the blade drags along.
+     * The ghouls' arm blade keeps {@link #stand}.
+     */
+    public static RigPose drag(double time, int seed, float still) {
+        double phase = Math.floorMod(seed, 997) * 0.37;
+        double breath = Math.sin(time * 2.0 * Math.PI / 70.0 + phase);
+        double sway = Math.sin(time * 2.0 * Math.PI / 113.0 + phase * 1.3);
+        RigPose p = new RigPose();
+        QuinqueGrip.aimRight(p, DRAG_PITCH + 0.02 * breath, DRAG_YAW + 0.03 * sway, DRAG_ROLL);
+        p.rightArmHold = 1.0F;
+        p.rightElbow = (float)(DRAG_ELBOW - 0.02 * breath);
+        float[] a = QuinqueGrip.angles(QuinqueGrip.aim(0.08 + 0.03 * breath, -0.12, 0.0));
+        p.leftArmX = a[0];
+        p.leftArmY = a[1];
+        p.leftArmZ = a[2];
+        p.leftArmHold = 1.0F;
+        p.headX = (float)(0.2 + 0.02 * breath);
+        p.headHold = 0.5F;
+        p.lean = (float)(0.06 + 0.015 * breath);
+        p.drop = (float)(0.15 * breath);
+        // Standing, the weight on the back foot, the blade side's a little forward; walking, the legs are the walk's own.
+        float k = Math.max(0.0F, Math.min(1.0F, still));
+        p.rightLegX = -0.12F * k;
+        p.leftLegX = 0.1F * k;
+        p.leftLegZ = -0.05F * k;
+        p.legHold = k;
+        return p;
+    }
+
+    /** 4.3.1: the drag's arm (QuinqueGrip.aimRight) and elbow: the blade's point just off the ground at the right, a little ahead. */
+    static final double DRAG_PITCH = -0.1;
+    static final double DRAG_YAW = 0.05;
+    static final double DRAG_ROLL = 1.0;
+    static final double DRAG_ELBOW = 0.8;
+
     /** 4.1.47: how often its stance turns the blade over on the wrist, and over how long (ticks). */
     static final double STAND_TURN_EVERY = 160.0;
     static final double STAND_TURN_TICKS = 22.0;

@@ -10,7 +10,7 @@ You're continuing HexKagune (HexGhoul), a Forge 1.20.1 mod built by bytecode-pat
 **First, always work on the VERY LATEST code**: `git fetch`, find the remote branch with the newest commit
 (`git for-each-ref --sort=-committerdate refs/remotes/origin --format='%(committerdate:iso) %(refname:short) %(subject)' | head`) and merge
 it into your session branch before touching anything. `main` is stale (1.3.0). When this was written the newest was
-`claude/eager-ritchie-xni1ms` (4.2.9: the mask in the armor's colours, the Steel Blade's flash on its right click and its finisher).
+`claude/eager-ritchie-xni1ms` (4.3.0: the Steel Blade's flash on its right click, its finisher, the laugh, the blade dragging at rest, the small half mask back in the armor's colours: never the beaked model again).
 
 **Read first:** `docs/handoff/ukaku-blade-handoff.md` (Session 2 at the top: my words, what was done and where, what is left), then the rules in
 `docs/handoff/next-ai-4.1.9.md` (build, allowlist, protocol, sounds).
@@ -21,10 +21,8 @@ it into your session branch before touching anything. `main` is stale (1.3.0). W
    The plan is in the handoff (capture the mob's own mesh as it's drawn, freeze it for the stun, the line where a random plane through its
    middle crosses it, then the two halves as ragdolls). Show me a GIF first.
 2. An Ukaku victim's wings go down with the falling top half instead of vanishing. GIF first.
-3. The Ukaku mastered pull-out as an evil laugh: hand on the face, head tilted down, laughing; the right hand down a little, a little out to
-   the right of the body; a finger crack with its sound; the ukaku emerges. GIF before wiring it in.
-4. Ukaku wings: more violent M1s, spread open like wings; M2s less compacted, wider. GIFs first.
-5. Then ask me how 4.2.9 plays on my phone (the flash on right click, the finisher, any lag).
+3. Ukaku wings: more violent M1s, spread open like wings; M2s less compacted, wider. GIFs first.
+4. Then ask me how 4.2.9 and 4.3.0 play on my phone (the flash on right click, the finisher, the laugh, the blade dragging, any lag).
 
 **Rules:**
 - No agents or subagents. One thing at a time; push every time something works (CI builds a jar per branch; I test on my phone through

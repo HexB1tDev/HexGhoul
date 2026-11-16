@@ -98,11 +98,15 @@ public final class UkakuSounds {
     /** 4.2.9: the Steel Blade's finisher cutting a body apart: the wet of it. */
     public static final String GORE = "minecraft:block.slime_block.break";
 
+    /** 4.3.0: a mastered Ukaku's laugh as the wings come out: a cackle (pitched low), and the fingers' crack. */
+    public static final String LAUGH = "minecraft:entity.witch.celebrate";
+    public static final String FINGER_CRACK = "minecraft:block.bamboo.break";
+
     /** Every sound above (for the tests: each one the game's own). */
     public static final String[] ALL = {WING_FLAP, WING_FLICK, WING_RUSH, WING_CUT, SLAP, SLAP_HEAVY, SLAM, KICK, SHARD, FLAME_BURST, FIREBALL, BURN,
         SNUFF, POP, BLAST, CRYSTAL_GROW, CRYSTAL_LAUNCH, CRYSTAL_HIT, CRYSTAL_CRACK, CRYSTAL_SHATTER, CRYSTAL_RING, CRYSTAL_HUM, CRYSTAL_TAP, GLASS,
         SPIKES, STAB, CRACK, BIG_BURST, BLADE_DRAW, BLADE_SHEATHE, BLADE_SET, VORTEX_SPIN, VORTEX_THROW, SHADOW_STEP, MANIFEST, KAKUJA, FINAL_KAKUJA,
-        MUTATION, KAKUJA_OFF, GORE};
+        MUTATION, KAKUJA_OFF, GORE, LAUGH, FINGER_CRACK};
 
     private UkakuSounds() {
     }

@@ -16,5 +16,7 @@ javac -nowarn -encoding UTF-8 --release 17 -cp "$ROOT/build/fast/classes:$ROOT/b
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/IdlePose.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/WarPose.java \
   "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/Carcass.java \
+  "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/LaughPose.java \
+  "$ROOT"/src/main/java/com/hex/kagune/control/client/animation/BladeArmPose.java \
   "$ROOT"/tools/PoseRender.java "$ROOT"/tools/WingPreview.java "$ROOT"/tools/ArtPreview.java
 java ${HEX_PREVIEW_OPTS:-} -Dhex.skin="$ROOT/art/user_skin.png" -Djava.awt.headless=true -cp "$CLASSES:$ROOT/build/fast/classes:$ROOT/build/classes:$ROOT/build/base.jar" ArtPreview "$@"

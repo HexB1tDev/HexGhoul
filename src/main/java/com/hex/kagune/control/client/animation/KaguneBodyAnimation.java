@@ -951,6 +951,7 @@ public final class KaguneBodyAnimation implements IAnimation {
             com.hex.kagune.control.client.KenPullOutClient.apply(this.p, this.player.m_19879_(), time);
             com.hex.kagune.control.client.NoroPullOutClient.apply(this.p, this.player.m_19879_(), time); // 4.0.2: Noro's way: the head tilts
             com.hex.kagune.control.client.AyatoPullOutClient.apply(this.p, this.player.m_19879_(), time); // 4.1.0: Ayato's way: the hands lifted
+            com.hex.kagune.control.client.LaughPullOutClient.apply(this.p, this.player.m_19879_(), time); // 4.3.0: a mastered Ukaku's laugh
         }
         if (steel > 0.0F && !lying) {
             this.carry(steel * Math.min(1.0F, this.fade), steel, time, tickDelta);
@@ -989,7 +990,7 @@ public final class KaguneBodyAnimation implements IAnimation {
                 kind = "run";
             } else {
                 float still = 1.0F - (float)Math.max(0.0, Math.min(1.0, speed / 0.06));
-                target = BladeArmPose.stand(time, player.m_19879_(), still);
+                target = BladeArmPose.drag(time, player.m_19879_(), still); // 4.3.0: the blade dragging at rest and walking
                 kind = "stand";
             }
         }

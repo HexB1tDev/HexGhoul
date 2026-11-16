@@ -101,6 +101,7 @@ public final class UkakuTests {
         maskColour();
         flash();
         finisher();
+        laugh();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -110,26 +111,34 @@ public final class UkakuTests {
     }
 
     /**
-     * 4.2.9 (the owner: "the mask is meant to be the same color as the armor"): the owner's mask model drawn in the kakuja armor's own palette:
-     * navy plate all over, its crests the plates' bright edge, never the black of its old texture; and the game draws it so, tinted as the chest.
+     * 4.2.9 (the owner: "the mask is meant to be the same color as the armor") and 4.3.0 ("revert the mask to the original form we made a few
+     * versions ago a small 3d half mask like this one, I dont like this beak"): the final kakuja wears the half mask again (KakujaModel.halfMask),
+     * never the beaked model, and in the armor's own palette: navy plate, its ridge and lips the plates' bright crest and rim; the game draws it
+     * tinted as the chest is.
      */
     private static void maskColour() {
-        com.hex.kagune.control.ukaku.KakujaMask.Mesh mesh;
-        try (java.io.InputStream in = new java.io.FileInputStream("src/main/resources" + com.hex.kagune.control.ukaku.KakujaMask.RESOURCE)) {
-            mesh = com.hex.kagune.control.ukaku.KakujaMask.read(in);
-        } catch (java.io.IOException failure) {
-            check(false, "read the owner's mask: " + failure);
-            return;
-        }
-        int[] colours = com.hex.kagune.control.ukaku.KakujaMask.colours(mesh);
-        check(colours.length == mesh.vertices(), "one mask colour per vertex");
+        java.util.List<Integer> colours = new java.util.ArrayList<>();
+        double[] front = {0.0};
+        com.hex.kagune.control.ukaku.KakujaModel.halfMask((qa, qb, qc, qd, normal, ca, cb, cc, cd) -> {
+            for (double[] corner : new double[][] {qa, qb, qc, qd}) {
+                front[0] = Math.min(front[0], corner[2]);
+            }
+            // The vents' dim red slits (the model's glow quads, lit from straight above) are not the plate.
+            if (normal[0] == 0.0 && normal[1] == 1.0 && normal[2] == 0.0) {
+                return;
+            }
+            for (int corner : new int[] {ca, cb, cc, cd}) {
+                colours.add(corner);
+            }
+        }, new int[] {1, 4, 5, 4}, 1.0, 1.0);
         double dark = lum(0x0B0D15);
         double plate = lum(0x1B2133);
-        double lit = lum(0x2A324C);
-        double edge = lum(0x7A8CBA);
+        double lit = lum(0x46527A);
+        double rim = lum(0xA9D2FF);
         int navy = 0;
         int bright = 0;
         int plated = 0;
+        int black = 0;
         double r = 0;
         double g = 0;
         double b = 0;
@@ -144,24 +153,33 @@ public final class UkakuTests {
                 navy++;
             }
             double l = lum(c);
-            check(l >= dark - 0.5 && l <= edge + 0.5, "every mask colour between the plates' dark and their bright edge: " + Integer.toHexString(c));
-            check((c >>> 24) == 0xFF, "the mask's colours opaque (its fade is the grow's alpha)");
+            check(l >= dark - 0.5 && l <= rim + 0.5, "every mask colour between the plates' dark and their cold rim: " + Integer.toHexString(c));
             if (l > lit + 4.0) {
                 bright++;
             }
             if (l >= plate - 0.5) {
                 plated++;
             }
+            // The plates' shadows stay as blue as the plates (blue near twice the red); the old lacquer's blacks were grey (1.4).
+            if (l < dark - 0.5 || (l < plate && cb < 1.6 * cr)) {
+                black++;
+            }
         }
-        int n = colours.length;
-        check(navy == n, "the whole mask the armor's navy (blue over green over red): " + navy + " of " + n);
-        check(bright > n * 0.04 && bright < n * 0.5, "the mask's crests take the plates' bright edge, not all of it: " + bright + " of " + n);
-        check(plated > n * 0.4, "most of the mask the plate's own colour or lighter, not its dark: " + plated + " of " + n);
-        // Not the old texture's black (30, 33, 37): on average clearly blue, as the plates are.
-        check(b / n - r / n > 12.0, "the mask on average as blue as the armor's plates: " + (b / n - r / n));
+        int n = colours.size();
+        check(n > 400, "the half mask drawn: " + n + " corners");
+        check(navy == n, "the whole half mask the armor's navy (blue over green over red): " + navy + " of " + n);
+        check(black == 0, "none of it the old black lacquer: " + black + " of " + n);
+        check(bright > n * 0.04 && bright < n * 0.5, "the beak's ridge and lips take the plates' bright crest, not all of it: " + bright + " of " + n);
+        check(plated > n * 0.3, "much of the half mask the plate's own colour or lighter (its flanks and jaw shaded darker, as the chest's are): " + plated + " of " + n);
+        check(b / n - r / n > 12.0, "the half mask on average as blue as the armor's plates: " + (b / n - r / n));
+        // Small: its short beak stands no more than 2.5 pixels off the face's outer layer (the beaked model stood far out past it).
+        check(front[0] > -(com.hex.kagune.control.ukaku.KakujaModel.OUTER_LAYER + com.hex.kagune.control.ukaku.KakujaModel.MASK_GAP + 2.5),
+            "the half mask small, its beak short: " + front[0] + " pixels out");
         String layer = read("src/main/java/com/hex/kagune/control/client/render/KakujaArmorLayer.java");
-        check(layer.contains("KakujaMask.colours(mesh)") && layer.contains("KaguneTint.recolour(base[i], tint)")
-            && !layer.contains("KakujaMask.TEXTURE"), "the game draws the mask in the armor's colours, tinted as the chest, not its old texture");
+        check(layer.contains("KakujaModel.halfMask(collect(head), eyeCells, grow, 1.0, shell)") && layer.contains("emit(consumer, head, packedLight")
+            && !layer.contains("KakujaMask"), "the game draws the half mask, tinted as the chest, not the beaked model");
+        check(!new java.io.File("src/main/java/com/hex/kagune/control/ukaku/KakujaMask.java").exists()
+            && !new java.io.File("src/main/resources/assets/hexkagune/models/kakuja_mask.bin").exists(), "the beaked model gone from the mod");
     }
 
     private static double lum(int c) {
@@ -417,6 +435,77 @@ public final class UkakuTests {
             "the body cut apart is not drawn: no death animation plays on it");
         check(com.hex.kagune.control.ukaku.Finisher.shatters("RINKAKU") && com.hex.kagune.control.ukaku.Finisher.shatters("BIKAKU")
             && !com.hex.kagune.control.ukaku.Finisher.shatters("UKAKU") && client.contains("KakujaFx.breakApart(player)"), "a Rinkaku's or a Bikaku's kagune shatters");
+    }
+
+    /**
+     * 4.3.0 (the owner: "Ukaku Mastered animation should be a evil laugh sequence: Put hand on face (head tilted down), start laughing, hand
+     * back down a little on the side (right hand) the hand should be a little to the right off the body, crack finger with sound, ukaku
+     * emerges."; then "its a bit too much jitter", "add like "HAHAHAHAHA" text over the head", "white and with a cool letter type").
+     */
+    private static void laugh() {
+        com.hex.kagune.control.client.animation.RigPose laughing = new com.hex.kagune.control.client.animation.RigPose();
+        com.hex.kagune.control.client.animation.LaughPose.over(laughing, 24.0F);
+        double[] palm = com.hex.kagune.control.client.animation.BodyFrame.world(laughing,
+            com.hex.kagune.control.client.animation.BodyFrame.model(laughing, "rightArm", new double[] {-0.5, 9.5, -1.0}));
+        double[] face = com.hex.kagune.control.client.animation.BodyFrame.world(laughing,
+            com.hex.kagune.control.client.animation.BodyFrame.model(laughing, "head", new double[] {0.0, -3.5, -4.6}));
+        double onFace = Math.sqrt(Math.pow(palm[0] - face[0], 2) + Math.pow(palm[1] - face[1], 2) + Math.pow(palm[2] - face[2], 2));
+        check(onFace < 0.08, "laughing, the right hand is on the face: " + onFace + " blocks off it");
+        check(laughing.headX > 0.35F, "laughing, the head bowed: " + laughing.headX);
+        com.hex.kagune.control.client.animation.RigPose later = new com.hex.kagune.control.client.animation.RigPose();
+        com.hex.kagune.control.client.animation.LaughPose.over(later, 25.0F);
+        check(Math.abs(later.headX - laughing.headX) < 1.0E-5 && Math.abs(later.drop - laughing.drop) < 1.0E-5,
+            "the body holds still through the laugh (the owner: \"too much jitter\"): no shaking");
+        com.hex.kagune.control.client.animation.RigPose side = new com.hex.kagune.control.client.animation.RigPose();
+        com.hex.kagune.control.client.animation.LaughPose.over(side, com.hex.kagune.control.client.animation.LaughPose.CRACK - 1.0F);
+        double[] hand = com.hex.kagune.control.client.animation.BodyFrame.world(side,
+            com.hex.kagune.control.client.animation.BodyFrame.model(side, "rightArm", new double[] {-0.5, 9.5, 0.0}));
+        // Out to the right of where the hand hangs at rest (clear of the body), not just where it would be anyway (the rest hand is at 0.35).
+        com.hex.kagune.control.client.animation.RigPose rest = new com.hex.kagune.control.client.animation.RigPose();
+        double[] restHand = com.hex.kagune.control.client.animation.BodyFrame.world(rest,
+            com.hex.kagune.control.client.animation.BodyFrame.model(rest, "rightArm", new double[] {-0.5, 9.5, 0.0}));
+        check(hand[0] > restHand[0] + 0.12 && hand[1] > 0.55 && hand[1] < 1.2, "before the crack the right hand is down a little, out to the right of the body: "
+            + java.util.Arrays.toString(hand) + " (at rest " + java.util.Arrays.toString(restHand) + ")");
+        check(com.hex.kagune.control.client.animation.LaughPose.weight(0.0F) == 0.0F
+            && com.hex.kagune.control.client.animation.LaughPose.weight(com.hex.kagune.control.client.animation.LaughPose.END) == 0.0F
+            && com.hex.kagune.control.client.animation.LaughPose.weight(30.0F) > 0.99F, "laid over the body and eased off it, never a jump");
+        check(com.hex.kagune.control.client.animation.LaughPose.text(com.hex.kagune.control.client.animation.LaughPose.LAUGH).equals("HA")
+            && com.hex.kagune.control.client.animation.LaughPose.text(com.hex.kagune.control.client.animation.LaughPose.LAUGH
+                + com.hex.kagune.control.client.animation.LaughPose.HA_EVERY * 4).equals("HAHAHAHAHA")
+            && com.hex.kagune.control.client.animation.LaughPose.text(com.hex.kagune.control.client.animation.LaughPose.CRACK).isEmpty()
+            && com.hex.kagune.control.client.animation.LaughPose.has(30.0F).length == 5, "HA by HA over the head, to HAHAHAHAHA, gone by the crack");
+        check(java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/assets/hexkagune/textures/misc/laugh_ha.png"))
+            && read("src/main/java/com/hex/kagune/control/client/LaughPullOutClient.java").contains("textures/misc/laugh_ha.png"),
+            "the HA drawn in its white lettering over the head");
+        check(com.hex.kagune.control.server.LaughPullOut.CRACK_AT == (long)com.hex.kagune.control.client.animation.LaughPose.CRACK
+            && com.hex.kagune.control.server.LaughPullOut.OUT_AT == (long)com.hex.kagune.control.client.animation.LaughPose.OUT,
+            "the crack's sound and the wings on the pose's own beats");
+        String server = read("src/main/java/com/hex/kagune/control/server/LaughPullOut.java");
+        check(server.contains("PathServer.path(player) == KagunePath.UKAKU && KaguneProfile.mastery(player) >= MASTERED")
+            && com.hex.kagune.control.server.LaughPullOut.MASTERED == 1000, "a mastered Ukaku's");
+        String path = read("src/main/java/com/hex/kagune/control/server/PathServer.java");
+        int laughAt = path.indexOf("if (LaughPullOut.taught(player)) {");
+        check(laughAt > 0 && laughAt < path.indexOf("if (AyatoPullOut.taught(player)) {"), "the laugh before Ayato's lift");
+        check(!server.contains("\"hexkagune:") && java.util.Arrays.asList(com.hex.kagune.control.ukaku.UkakuSounds.ALL).contains(
+            com.hex.kagune.control.ukaku.UkakuSounds.LAUGH) && java.util.Arrays.asList(com.hex.kagune.control.ukaku.UkakuSounds.ALL).contains(
+            com.hex.kagune.control.ukaku.UkakuSounds.FINGER_CRACK), "its sounds the game's own");
+        // 4.3.1: the Steel Blade at rest and walking (the owner, with a picture: "instead of pointing forward, this is now the walk/standing
+        // still animation of the arm blade of ukaku"): the arm hanging, the blade dragging, its point just off the ground at the right.
+        for (float still : new float[] {1.0F, 0.0F}) {
+            com.hex.kagune.control.client.animation.RigPose drag = com.hex.kagune.control.client.animation.BladeArmPose.drag(17.0, 3, still);
+            double[] tip = com.hex.kagune.control.client.animation.BodyFrame.world(drag, com.hex.kagune.control.client.animation.BodyFrame.model(drag,
+                "rightArm", com.hex.kagune.control.ukaku.SteelBlade.edgePoint(1.0, 1.0, true)));
+            double[] fist = com.hex.kagune.control.client.animation.BodyFrame.world(drag, com.hex.kagune.control.client.animation.BodyFrame.model(drag,
+                "rightArm", new double[] {-0.5, 9.0, 0.0}));
+            check(tip[1] > -0.02 && tip[1] < 0.3, "the blade's point just off the ground (" + (still > 0 ? "at rest" : "walking") + "): " + tip[1]);
+            check(tip[0] > 0.9 && tip[2] < 1.2, "the blade trailing out to the right, not pointed ahead: " + java.util.Arrays.toString(tip));
+            check(fist[1] > 0.6 && fist[1] < 1.0 && fist[0] > 0.3, "the arm hanging, the fist at the hip a little out: " + java.util.Arrays.toString(fist));
+        }
+        check(read("src/main/java/com/hex/kagune/control/client/animation/KaguneBodyAnimation.java").contains("target = BladeArmPose.drag(time, player.m_19879_(), still);"),
+            "the player's blade at rest and walking is the drag (the ghouls keep their stance)");
+        check(read("src/main/java/com/hex/kagune/control/client/animation/KaguneBodyAnimation.java").contains("LaughPullOutClient.apply(this.p")
+            && read("src/main/java/com/hex/kagune/control/client/fx/UkakuFx.java").contains("case S2CUkakuFx.LAUGH -> com.hex.kagune.control.client.LaughPullOutClient.start("),
+            "every client poses it");
     }
 
     private static boolean wellFormed(UkakuWing.Poly poly) {

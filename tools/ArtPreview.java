@@ -167,6 +167,12 @@ public final class ArtPreview {
             sheet(new File(out, "ukaku-finisher-arm.png"), "the line on his arm", shots, 3, 420, 420);
             bodyScale = 1.0;
         }
+        if (wanted.contains("blade-drag")) {
+            bladeDragSheet(new File(out, "ukaku-blade-drag.png"));
+        }
+        if (wanted.contains("laugh-gif")) {
+            laughGif(new File(out, "ukaku-laugh.gif"));
+        }
         if (wanted.contains("finisher-zombie")) {
             finisherZombieGif(new File(out, "zombie-finisher.gif"), System.getProperty("hex.zombie"));
         }
@@ -1592,20 +1598,21 @@ public final class ArtPreview {
         List<Shot> shots = new ArrayList<>();
         for (Object[] v : views) {
             double grow = (Double)v[3];
-            shots.add(new Shot((String)v[0], still, NO_WINGS, (double[])v[1], (double[])v[2], maskTris(still, grow)));
+            shots.add(new Shot((String)v[0], still, NO_WINGS, (double[])v[1], (double[])v[2], maskOn(still, grow)));
         }
-        com.hex.kagune.control.ukaku.KakujaMask.Mesh mesh = mask();
-        System.out.println("kakuja mask: " + mesh.vertices() + " vertices, " + mesh.triangleCount() + " triangles");
-        sheet(file, "Final kakuja: the owner's mask model on their skin (" + mesh.triangleCount() + " triangles)", shots, 3, 520, 520);
+        int[] count = {0};
+        com.hex.kagune.control.ukaku.KakujaModel.halfMask((a, b, c, d, n, ca, cb, cc, cd) -> count[0]++, eyes(), 1.0, 1.0, shell());
+        System.out.println("half mask quads: " + count[0]);
+        sheet(file, "Final kakuja: the half mask on the owner's skin (" + count[0] + " quads)", shots, 3, 520, 520);
     }
 
-    /** 1.3.1: the owner's mask on {@code pose}'s head as the game now draws it in the final kakuja (nothing if it can't be read). */
+    /**
+     * 4.3.1 (the owner: "revert the mask to the original form we made a few versions ago a small 3d half mask like this one, I dont like
+     * this beak"): the half mask on {@code pose}'s head as the game draws it in the final kakuja (KakujaModel.halfMask, fitted to the eyes
+     * and second layer found on the owner's skin).
+     */
     static List<WingPreview.Tri> maskOn(RigPose pose, double grow) {
-        try {
-            return maskTris(pose, grow);
-        } catch (java.io.IOException unreadable) {
-            return new ArrayList<>();
-        }
+        return placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, eyes(), grow, 1.0, shell()), q -> onPart(pose, "head", q));
     }
 
     /** 1.3.1: the eyes the game finds on the owner's skin (KakuganSkin.detect), the default without it. */
@@ -1679,7 +1686,7 @@ public final class ArtPreview {
             tris.addAll(userKakugan(pose, 1.7));
             shots.add(new Shot((String)b[0], pose, NO_WINGS, eye, look, tris));
         }
-        sheet(file, "The final kakuja in full: kakugan, the owner's mask, chest, tentacles and fire; the Steel Blade", shots, 3, 620, 560);
+        sheet(file, "The final kakuja in full: kakugan, the half mask, chest, tentacles and fire; the Steel Blade", shots, 3, 620, 560);
     }
 
     /**
@@ -2154,6 +2161,101 @@ public final class ArtPreview {
         writeGif(file, frames, 5);
     }
 
+    /**
+     * 4.3.0 (the owner: "Ukaku Mastered animation should be a evil laugh sequence: Put hand on face (head tilted down), start laughing, hand
+     * back down a little on the side (right hand) the hand should be a little to the right off the body, crack finger with sound, ukaku
+     * emerges."): the mastered Ukaku's pull-out on the owner's skin, a frame a tick ({@code LaughPose}), the wings unfolding as they come out.
+     */
+    static void laughGif(File file) throws Exception {
+        double[] eye = {1.9, 1.85, 2.9};
+        double[] target = {0.0, 1.25, 0.0};
+        List<BufferedImage> frames = new ArrayList<>();
+        int end = (int)com.hex.kagune.control.client.animation.LaughPose.END + 10;
+        for (int t = 0; t <= end; t++) {
+            RigPose p = new RigPose();
+            com.hex.kagune.control.client.animation.LaughPose.over(p, t);
+            p.settle(1.0F);
+            float deploy = (float)Math.max(0.0, Math.min(1.0, (t - com.hex.kagune.control.client.animation.LaughPose.OUT) / 10.0));
+            WingRig.Input wings = deploy <= 0.0F ? NO_WINGS
+                : new WingRig.Input(WingForm.TWIN, 1000, deploy, t / 20.0, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1.0F, 1, false);
+            String label = t < com.hex.kagune.control.client.animation.LaughPose.FACE ? "the hand to the face, the head bowed"
+                : t < com.hex.kagune.control.client.animation.LaughPose.SIDE ? "laughing"
+                : t < com.hex.kagune.control.client.animation.LaughPose.CRACK ? "the hand down, out to the right"
+                : t < com.hex.kagune.control.client.animation.LaughPose.OUT ? "the fingers crack" : "the ukaku emerges";
+            double[] at = deploy > 0.0F ? new double[] {eye[0] * 2.0, eye[1] + 0.6, eye[2] * 2.0} : eye;
+            double k = Math.min(1.0, deploy * 1.5);
+            double[] cam = {eye[0] + (at[0] - eye[0]) * k, eye[1] + (at[1] - eye[1]) * k, eye[2] + (at[2] - eye[2]) * k};
+            BufferedImage frame = render(new Shot("", p, wings, cam, target, new ArrayList<>()), 480, 480);
+            // The laugh over the head, as the game draws it (LaughPullOutClient): the "HA" lettering (textures/misc/laugh_ha.png), one more each
+            // beat, each tilted its own way, popping in, fading as the hand comes down.
+            double[][] has = com.hex.kagune.control.client.animation.LaughPose.has(t);
+            if (has.length > 0) {
+                WingPreview.Panel panel = new WingPreview.Panel(480, 480, cam, target, fov > 0.0 ? fov : 40.0, sky);
+                double[] over = panel.project(onPart(p, "torso", new double[] {0.0, -10.0, 0.0}));
+                if (over != null) {
+                    BufferedImage ha = javax.imageio.ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/misc/laugh_ha.png"));
+                    Graphics2D g = frame.createGraphics();
+                    g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    double width = 62.0;
+                    double height = width * ha.getHeight() / ha.getWidth();
+                    for (double[] one : has) {
+                        java.awt.geom.AffineTransform place = new java.awt.geom.AffineTransform();
+                        place.translate(over[0] / 2.0 + one[0] * width, over[1] / 2.0 - height * 0.5 - one[1] * height);
+                        place.rotate(one[2]);
+                        place.scale(one[3] * width / ha.getWidth(), one[3] * height / ha.getHeight());
+                        place.translate(-ha.getWidth() / 2.0, -ha.getHeight() / 2.0);
+                        g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, (float)Math.max(0.0, Math.min(1.0, one[4]))));
+                        g.drawImage(ha, place, null);
+                    }
+                    g.dispose();
+                }
+            }
+            frames.add(labelled(frame, String.format("%.2f s  %s", t / 20.0, label)));
+        }
+        writeGif(file, frames, 5);
+    }
+
+    /**
+     * 4.3.1 (the owner, with a picture of a warrior walking, sword arm hanging, the blade trailing to the ground: "instead of pointing forward,
+     * this is now the walk/standing still animation of the arm blade of ukaku"): the Steel Blade at rest and walking ({@code BladeArmPose.drag})
+     * on the owner's skin in the final kakuja.
+     */
+    static void bladeDragSheet(File file) throws Exception {
+        RigPose still = com.hex.kagune.control.client.animation.BladeArmPose.drag(0.0, 7, 1.0F);
+        still.settle(1.0F);
+        double[] look = {0.35, 0.9, 0.3};
+        List<Shot> shots = new ArrayList<>();
+        Object[][] views = {
+            {"At rest: three quarters", still, new double[] {4.4, 2.0, 4.6}},
+            {"At rest: front", still, new double[] {0.6, 1.6, 5.4}},
+            {"At rest: his right side", still, new double[] {5.6, 1.4, 0.4}},
+            {"At rest: from behind", still, new double[] {-2.6, 2.2, -4.6}},
+        };
+        for (Object[] v : views) {
+            RigPose pose = (RigPose)v[1];
+            double[] eye = (double[])v[2];
+            List<WingPreview.Tri> tris = finalKitBlade(pose, eye, 1.0, 1.7);
+            tris.addAll(blade(pose, 1.0, 0.3));
+            tris.addAll(userKakugan(pose, 1.7));
+            shots.add(new Shot((String)v[0], pose, NO_WINGS, eye, look, tris));
+        }
+        // Walking: the walk's own legs (vanilla's swing), the blade dragging.
+        for (int stride = 0; stride < 2; stride++) {
+            RigPose walk = com.hex.kagune.control.client.animation.BladeArmPose.drag(10.0 * stride, 7, 0.0F);
+            float swing = stride == 0 ? 0.55F : -0.55F;
+            walk.rightLegX = swing;
+            walk.leftLegX = -swing;
+            walk.legHold = 1.0F;
+            walk.settle(1.0F);
+            double[] eye = {4.4, 2.0, 4.6};
+            List<WingPreview.Tri> tris = finalKitBlade(walk, eye, 1.0, 1.7);
+            tris.addAll(blade(walk, 1.0, 0.3));
+            tris.addAll(userKakugan(walk, 1.7));
+            shots.add(new Shot("Walking, stride " + (stride + 1), walk, NO_WINGS, eye, look, tris));
+        }
+        sheet(file, "The Steel Blade at rest and walking: the arm hanging, the blade dragging to the ground", shots, 3, 620, 560);
+    }
+
     /** Where a piece's cuts are now (the middle of its inside faces, the carcass's space), or null if it has none. */
     static double[] capCentre(com.hex.kagune.control.client.animation.Carcass.Piece piece, com.hex.kagune.control.ukaku.Ragdoll.Body body) {
         if (piece.caps.isEmpty()) {
@@ -2278,43 +2380,6 @@ public final class ArtPreview {
             double a1 = Math.PI * 2.0 * (k + 1) / sides;
             out.add(new WingPreview.Tri(new double[][] {{x, y, z}, {x + Math.cos(a0) * r, y, z + Math.sin(a0) * r * 0.9},
                 {x + Math.cos(a1) * r, y, z + Math.sin(a1) * r * 0.9}}, new int[] {argb, argb, argb}, new double[] {0, 1, 0}, (argb >>> 24) == 0xFF));
-        }
-        return out;
-    }
-
-    /** 1.3.1: the owner's mask model, read from the mod's resources as the game reads it from its jar. */
-    static com.hex.kagune.control.ukaku.KakujaMask.Mesh mask() throws java.io.IOException {
-        try (java.io.InputStream in = new java.io.FileInputStream("src/main/resources" + com.hex.kagune.control.ukaku.KakujaMask.RESOURCE)) {
-            return com.hex.kagune.control.ukaku.KakujaMask.read(in);
-        }
-    }
-
-    /** 1.3.1: the owner's mask on {@code pose}'s head, {@code grow} of the way in, textured and lit per corner as the game draws it. */
-    static List<WingPreview.Tri> maskTris(RigPose pose, double grow) throws java.io.IOException {
-        com.hex.kagune.control.ukaku.KakujaMask.Mesh mesh = mask();
-        // 4.2.9: in the armor's own colours (KakujaMask.colours), as the game draws it on white.
-        int[] colours = com.hex.kagune.control.ukaku.KakujaMask.colours(mesh);
-        int alpha = Math.round(255.0F * com.hex.kagune.control.ukaku.KakujaMask.alpha(grow));
-        List<WingPreview.Tri> out = new ArrayList<>();
-        if (alpha < 3) {
-            return out;
-        }
-        double shell = shell();
-        float[] at = new float[3];
-        int[] tris = mesh.triangles();
-        for (int t = 0; t < tris.length; t += 3) {
-            double[][] p = new double[3][];
-            int[] lit = new int[3];
-            for (int k = 0; k < 3; k++) {
-                int i = tris[t + k];
-                com.hex.kagune.control.ukaku.KakujaMask.place(mesh, i, grow, shell, at);
-                double[] local = {at[0], at[1], at[2]};
-                p[k] = onPart(pose, "head", local);
-                double[] tip = onPart(pose, "head", new double[] {at[0] + mesh.normals()[i * 3] * 0.05, at[1] + mesh.normals()[i * 3 + 1] * 0.05,
-                    at[2] + mesh.normals()[i * 3 + 2] * 0.05});
-                lit[k] = WingPreview.lit(alpha << 24 | colours[i] & 0xFFFFFF, PoseRender.norm(PoseRender.sub(tip, p[k])));
-            }
-            out.add(new WingPreview.Tri(p, lit, null, true, false, null, null));
         }
         return out;
     }

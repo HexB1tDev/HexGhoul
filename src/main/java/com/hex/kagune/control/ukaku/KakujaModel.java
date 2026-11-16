@@ -522,8 +522,8 @@ public final class KakujaModel {
 
     /**
      * The final kakuja's half mask, in head pixels (as {@link #mask}): Ukaku's own mask, over the lower face only, leaving
-     * the eyes (and the kakugan in them) bare. Black lacquer drawn to a sharp beak down the middle, its ridge broken into
-     * stepped lips; the cheeks wrap back along the jaw, and from each a pointed wing sweeps back and up past the ear; three
+     * the eyes (and the kakugan in them) bare. In the armor's plate (4.3.0; black lacquer before), drawn to a sharp beak down the
+     * middle, its ridge broken into stepped lips; the cheeks wrap back along the jaw, and from each a pointed wing sweeps back and up past the ear; three
      * slanted vents on each side glow a dim red; steel rivets on the beak and by the wings. Its top edge sits just under
      * the eyes wherever they are ({@code eyes} as {@link #mask}) and rises to a point over the nose bridge between them.
      * {@code grow} 0..1 spreads it out from the beak; the wings come last. Fitted over the skin's outer layer as vanilla draws it.
@@ -568,7 +568,11 @@ public final class KakujaModel {
                 }
                 double ridge = Math.max(0.0, 1.0 - Math.abs(mx) / HALF_MASK_BEAK);
                 boolean lip = ridge > 0.0 && (cy + 1) % 3 == 0 && cy < rows - 1;
-                int colour = mix(MASK, MASK_HI, 0.75 * Math.pow(ridge, 3.0) + (lip ? 0.45 * ridge : 0.0));
+                // 4.3.0 (the owner: "the mask is meant to be the same color as the armor"): the plates' navy, darker round the sides, the
+                // beak's ridge the plates' pale crest and each stepped lip catching their cold rim, as every plate's lip does.
+                double flank = Math.min(1.0, Math.abs(mx) / half);
+                int plate = mix(PLATE, PLATE_DARK, 0.4 * flank * flank);
+                int colour = mix(mix(plate, RIDGE, 0.8 * Math.pow(ridge, 3.0)), RIM, lip ? 0.5 * ridge : 0.0);
                 int col = argb(colour, alpha);
                 facet(sink, grid[cx][cy], grid[cx + 1][cy], grid[cx + 1][cy + 1], grid[cx][cy + 1], centre, col, col, col, col);
             }
@@ -718,7 +722,7 @@ public final class KakujaModel {
         int rows = 8;
         double half = shell + MASK_GAP;
         double[] centre = {0.0, -4.0, 0.0};
-        int col = argb(mix(MASK, MASK_HI, 0.2), alpha);
+        int col = argb(mix(PLATE, PLATE_DARK, 0.4), alpha);
         double front = -(half - MASK_CORNER);
         double back = front + (-1.1 - front) * smooth((grow - 0.3) / 0.5);
         for (int k = 0; k < rows; k++) {
@@ -786,9 +790,9 @@ public final class KakujaModel {
         double[] ot = add(tip, mul(out, 0.3));
         double[] mid = mul(add(add(r0, r1), tip), 1.0 / 3.0);
         double[] centre = add(mid, mul(out, 0.5));
-        int face = argb(mix(MASK, MASK_HI, 0.35), alpha);
-        int dark = argb(MASK, alpha);
-        int lit = argb(edgeLit ? mix(MASK_HI, RIVET, 0.45) : MASK_HI, alpha);
+        int face = argb(mix(PLATE, PLATE_HI, 0.35), alpha);
+        int dark = argb(PLATE_DARK, alpha);
+        int lit = argb(edgeLit ? mix(PLATE_HI, RIM, 0.5) : PLATE_HI, alpha);
         // Outer and inner faces, then the two long edges (the upper one catching the light).
         facet(sink, o0, o1, ot, ot, centre, face, face, lit, lit);
         facet(sink, r0, r1, tip, tip, centre, dark, dark, dark, dark);
@@ -809,7 +813,7 @@ public final class KakujaModel {
         double[][] corners = {add(base, mul(u, size)), add(base, mul(v, size)), add(base, mul(u, -size)), add(base, mul(v, -size))};
         double[] centre = add(at, mul(n, -1.0));
         int hi = argb(RIVET, alpha);
-        int lo = argb(mix(RIVET, MASK, 0.55), alpha);
+        int lo = argb(mix(RIVET, PLATE, 0.55), alpha);
         for (int k = 0; k < 4; k++) {
             facet(sink, corners[k], corners[(k + 1) % 4], peak, peak, centre, k < 2 ? hi : lo, k < 2 ? hi : lo, hi, hi);
         }

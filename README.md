@@ -9,6 +9,12 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.3.0 (HexGhoul): the mastered Ukaku laughs the wings out; the Steel Blade drags at rest; the half mask is back (testing)
+
+See `.github/release-notes-4.3.0.md`. `client/animation/LaughPose` (the pose and the HAs), `client/LaughPullOutClient` (the body, the
+lettering over the head: `textures/misc/laugh_ha.png`, `tools/laugh_text.py`), `server/LaughPullOut` (mastery 1000, before Ayato's lift;
+the cackle, the crack, the wings), `S2CUkakuFx.LAUGH`; protocol 132. `BladeArmPose.drag` (the player's Steel Blade at rest and walking). The final kakuja's half mask again (`KakujaModel.halfMask`, in the armor's colours; the beaked `KakujaMask` removed). `UkakuTests.laugh`, `UkakuTests.maskColour`; `docs/handoff/sabotage-4.3.0.json`.
+
 ## 4.2.9 (HexGhoul): the Steel Blade's flash and finisher, the final kakuja's mask in the armor's colours (testing)
 
 See `.github/release-notes-4.2.9.md`. `ukaku/KakujaMask.colours`; `ukaku/SteelFlash`, `server/BladeFlash`, `client/fx/BladeFlashClient`

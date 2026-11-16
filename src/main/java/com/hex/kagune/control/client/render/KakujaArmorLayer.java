@@ -85,16 +85,10 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
                 pose.m_85836_();
                 PlayerLayers.upperBody(pose, player, partialTick);
                 model.f_102808_.m_104299_(pose);
-                // 1.3.1: the owner's own mask model (KakujaMask), textured; the old half mask only if it could not be read.
-                com.hex.kagune.control.ukaku.KakujaMask.Mesh mask = com.hex.kagune.control.ukaku.KakujaMask.mesh();
-                if (mask != null) {
-                    // 4.2.9 (the owner: "the mask is meant to be the same color as the armor"): on white, in the armor's colours and tint.
-                    mask(consumer, mask, grow, shell, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(),
-                        com.hex.kagune.control.client.KaguneTints.of(player));
-                } else {
-                    emit(consumer, head, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(),
-                        com.hex.kagune.control.client.KaguneTints.of(player));
-                }
+                // 4.3.0 (the owner: "revert the mask to the original form we made a few versions ago a small 3d half mask like this one, I
+                // dont like this beak"): the half mask again (KakujaModel.halfMask), in the armor's colours, tinted as the chest is.
+                emit(consumer, head, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(),
+                    com.hex.kagune.control.client.KaguneTints.of(player));
                 pose.m_85849_();
             }
         }
@@ -110,54 +104,6 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
         // 5.0.19: the body part itself carries the lean now (RigPose), so the chest rides it as drawn.
         emit(consumer, chest, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), com.hex.kagune.control.client.KaguneTints.of(player));
         pose.m_85849_();
-    }
-
-    /** 4.2.9: the mask's colours in the last kagune tint asked for (the tint, then one colour per vertex), so they are worked out once. */
-    private static int maskTint;
-    private static int[] maskColours;
-
-    /** The mask's armor colours ({@link com.hex.kagune.control.ukaku.KakujaMask#colours}) in {@code tint}, as the chest's are recoloured. */
-    private static synchronized int[] maskColours(com.hex.kagune.control.ukaku.KakujaMask.Mesh mesh, int tint) {
-        int[] base = com.hex.kagune.control.ukaku.KakujaMask.colours(mesh);
-        if (maskColours == null || maskColours.length != base.length || maskTint != tint) {
-            int[] out = new int[base.length];
-            for (int i = 0; i < base.length; i++) {
-                out[i] = com.hex.kagune.control.KaguneTint.recolour(base[i], tint);
-            }
-            maskColours = out;
-            maskTint = tint;
-        }
-        return maskColours;
-    }
-
-    /**
-     * 1.3.1: the owner's mask model on the head ({@link com.hex.kagune.control.ukaku.KakujaMask}), each triangle a quad with its last corner
-     * twice; 4.2.9: on the armor's white, each corner in the armor's colour, tinted as the chest is.
-     */
-    private static void mask(VertexConsumer out, com.hex.kagune.control.ukaku.KakujaMask.Mesh mesh, float grow, double shell, int light, Matrix4f matrix,
-                             Matrix3f normals, int tint) {
-        int alpha = Math.max(0, Math.min(255, Math.round(255.0F * com.hex.kagune.control.ukaku.KakujaMask.alpha(grow))));
-        if (alpha <= 2) {
-            return;
-        }
-        int[] colours = maskColours(mesh, tint);
-        float[] ns = mesh.normals();
-        int[] tris = mesh.triangles();
-        float[] at = new float[3];
-        for (int t = 0; t < tris.length; t += 3) {
-            for (int k = 0; k < 4; k++) {
-                int i = tris[t + Math.min(k, 2)];
-                com.hex.kagune.control.ukaku.KakujaMask.place(mesh, i, grow, shell, at);
-                int colour = colours[i];
-                out.m_252986_(matrix, at[0] / 16.0F, at[1] / 16.0F, at[2] / 16.0F)
-                    .m_6122_((colour >> 16) & 0xFF, (colour >> 8) & 0xFF, colour & 0xFF, alpha)
-                    .m_7421_(0.5F, 0.5F)
-                    .m_86008_(OverlayTexture.f_118083_)
-                    .m_85969_(light)
-                    .m_252939_(normals, ns[i * 3], ns[i * 3 + 1], ns[i * 3 + 2])
-                    .m_5752_();
-            }
-        }
     }
 
     private static com.hex.kagune.control.ukaku.UkakuModel.Sink collect(List<Piece> out) {

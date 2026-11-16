@@ -116,6 +116,8 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
      * an Ukaku's wings go down with the top half): every client cuts it apart as a ragdoll ({@code FinisherClient}).
      */
     public static final int SPLIT = 52;
+    /** 4.3.0: a mastered Ukaku laughing the wings out ({@code LaughPullOut}; {@code shooter}: the player): every client poses it and writes it. */
+    public static final int LAUGH = 53;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);
