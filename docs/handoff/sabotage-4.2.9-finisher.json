@@ -1,0 +1,107 @@
+[
+ {
+  "name": "the finisher's line thick",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/Carcass.java",
+  "old": "    public static final double LINE = 0.07;",
+  "new": "    public static final double LINE = 0.3;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the line one way round",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/Carcass.java",
+  "old": "                double f = Math.abs(Math.atan2(-mid[0], mid[2])) / Math.PI;",
+  "new": "                double f = (Math.atan2(-mid[0], mid[2]) + Math.PI) / (2.0 * Math.PI);",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the top thrown weakly, onto the legs",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/Carcass.java",
+  "old": "            case TOP -> new double[][] {{0.0, 0.06, 0.2}, {0.11, 0.0, 0.0}};",
+  "new": "            case TOP -> new double[][] {{0.0, 0.01, 0.04}, {0.07, 0.0, 0.0}};",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the arms not cut",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/Carcass.java",
+  "old": "                case \"rightArm\" -> add(top, cube, pose, layout, scale, CUT - SHOULDER, right, limb);",
+  "new": "                case \"rightArm\" -> add(top, cube, pose, layout, scale, Double.NaN, null, null);",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the ragdoll ignores the ground",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/Ragdoll.java",
+  "old": "            double[] at = terrain.hit(from, now);\n            if (at == null) {",
+  "new": "            double[] at = terrain.hit(from, now);\n            if (true) {",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "a kill of the blade's not held off",
+  "file": "src/main/java/com/hex/kagune/control/server/BladeFinisher.java",
+  "old": "        event.setCanceled(true);\n        body.m_21153_(1.0F);",
+  "new": "        body.m_21153_(1.0F);",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the dying not stunned for the NPC brains",
+  "file": "src/main/java/com/hex/kagune/control/server/PaleStun.java",
+  "old": "        if (BladeFinisher.dying(entity)) {",
+  "new": "        if (false) {",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "a quinque while dying",
+  "file": "src/main/java/com/hex/kagune/control/network/C2SArmAction.java",
+  "old": "                if (!com.hex.kagune.control.server.BladeFinisher.dying(sender)) {",
+  "new": "                if (true) {",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the blade's cuts not the finisher's",
+  "file": "src/main/java/com/hex/kagune/control/server/KaguneCombat.java",
+  "old": "            if (steel) {\n                BladeFinisher.arm(player);\n            }",
+  "new": "",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the cut body still drawn",
+  "file": "src/main/java/com/hex/kagune/control/client/fx/FinisherClient.java",
+  "old": "        HIDDEN.put(message.id(), now + LIFE + FADE);",
+  "new": "",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the pieces gone in ten seconds",
+  "file": "src/main/java/com/hex/kagune/control/client/fx/FinisherClient.java",
+  "old": "    public static final double LIFE = 800.0;",
+  "new": "    public static final double LIFE = 200.0;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "a Rinkaku's kagune not shattered",
+  "file": "src/main/java/com/hex/kagune/control/client/fx/FinisherClient.java",
+  "old": "            KakujaFx.breakApart(player); // a Rinkaku's or a Bikaku's kagune shatters",
+  "new": "",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the stun shorter",
+  "file": "src/main/java/com/hex/kagune/control/ukaku/Finisher.java",
+  "old": "    public static final int STUN = 40;",
+  "new": "    public static final int STUN = 20;",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "the line not glowing",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/Carcass.java",
+  "old": "        sink.quad(p0, p1, p2, p3, new double[] {0.0, 1.0, 0.0}, cLo, cLo, cHi, cHi);",
+  "new": "        sink.quad(p0, p1, p2, p3, unit(cross(sub(p1, p0), sub(p3, p0))), cLo, cLo, cHi, cHi);",
+  "suite": "UkakuTests"
+ },
+ {
+  "name": "a zombie's raised arms cut anyway",
+  "file": "src/main/java/com/hex/kagune/control/client/animation/Carcass.java",
+  "old": "        if ((top[1] - cut) * (end[1] - cut) > 0.0 || Math.abs(drop) < 0.5 * length) {\n            return Double.NaN;\n        }",
+  "new": "        if (Math.abs(drop) < 1.0E-9) {\n            return cube.y() + cube.h() * 0.5;\n        }",
+  "suite": "UkakuTests"
+ }
+]

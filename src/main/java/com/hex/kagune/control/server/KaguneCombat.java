@@ -537,11 +537,22 @@ public final class KaguneCombat {
                     : com.hex.kagune.control.wound.WoundBook.Blow.SLASH, centre.m_82546_(into.m_82490_(0.3)), into,
                     (player.m_217043_().m_188500_() - 0.5) * 1.4);
             }
-            if (!target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
+            // 4.2.9: a Steel Blade cut that kills is its finisher (BladeFinisher).
+            boolean steel = ukaku && com.hex.kagune.control.ukaku.SteelSwing.swings(stage.pattern());
+            if (steel) {
+                BladeFinisher.arm(player);
+            }
+            boolean hurt;
+            try {
+                hurt = target.m_6469_(player.m_269291_().m_269075_(player), damage);
+            } finally {
+                BladeFinisher.disarm();
+            }
+            if (!hurt) {
                 continue;
             }
             landed++;
-            if (ukaku && com.hex.kagune.control.ukaku.SteelSwing.swings(stage.pattern())) {
+            if (steel) {
                 BladeBlood.cut(player, target, stage.pattern(), combo.direction, damage);
             }
             if (firstLanded == null) {

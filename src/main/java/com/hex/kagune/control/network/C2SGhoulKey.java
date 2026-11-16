@@ -24,7 +24,7 @@ public record C2SGhoulKey(boolean unleash) {
         ServerPlayer sender = context.getSender();
         if (sender != null) {
             context.enqueueWork(() -> {
-                if (com.hex.kagune.control.DragonLock.dragon(sender)) {
+                if (com.hex.kagune.control.DragonLock.held(sender)) {
                     return;
                 }
                 if (com.hex.kagune.control.server.KingServer.locks(sender.m_20148_())) {

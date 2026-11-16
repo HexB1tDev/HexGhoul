@@ -152,7 +152,14 @@ public final class BladeFlash {
             state.cut.add(target.m_19879_());
             WoundHits.expect(target, com.hex.kagune.control.wound.WoundBook.Blow.SLASH, centre.m_82546_(state.heading.m_82490_(0.3)), state.heading,
                 (player.m_217043_().m_188500_() - 0.5) * 0.6);
-            if (!target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
+            BladeFinisher.arm(player); // 4.2.9: a kill of the flash's is the finisher's too
+            boolean hurt;
+            try {
+                hurt = target.m_6469_(player.m_269291_().m_269075_(player), damage);
+            } finally {
+                BladeFinisher.disarm();
+            }
+            if (!hurt) {
                 continue;
             }
             landed++;

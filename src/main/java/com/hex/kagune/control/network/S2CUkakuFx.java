@@ -106,6 +106,16 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
      * where it began, {@code vx, vy, vz} its speed (blocks a tick); every client lays his afterimages along the way.
      */
     public static final int FLASH = 50;
+    /**
+     * 4.2.9: the Steel Blade's finisher begins ({@code BladeFinisher}): {@code shooter} the killer, {@code id} the body, {@code vy} its body's
+     * yaw, {@code extra} how long the line takes to go round (ticks): every client draws it round the body's chest and arms.
+     */
+    public static final int FINISH = 51;
+    /**
+     * 4.2.9: the line has met itself: {@code id} the body (about to die), {@code vy} its yaw, {@code extra} what its kagune does (1 shatters, 2
+     * an Ukaku's wings go down with the top half): every client cuts it apart as a ragdoll ({@code FinisherClient}).
+     */
+    public static final int SPLIT = 52;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

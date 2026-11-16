@@ -23,7 +23,9 @@ public record C2SRegen(boolean down) {
         NetworkEvent.Context context = supplier.get();
         ServerPlayer sender = context.getSender();
         if (sender != null) {
-            context.enqueueWork(() -> com.hex.kagune.control.server.GhoulRegen.held(sender, message.down));
+            // 4.2.9: dying under the Steel Blade's finisher, nothing closes (a let-go always gets through).
+            context.enqueueWork(() -> com.hex.kagune.control.server.GhoulRegen.held(sender,
+                message.down && !com.hex.kagune.control.server.BladeFinisher.dying(sender)));
         }
         context.setPacketHandled(true);
     }

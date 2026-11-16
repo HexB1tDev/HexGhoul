@@ -5,6 +5,77 @@
 > 5-6); `tools/PoseRender.java` puts it on every preview body without a skin of its own (`-Dhex.skin=...`, set by every `tools/*.sh`), and
 > `ArtPreview.eyes()` / `userEyes()` fit masks and kakugan to its eyes. Never the old stand-in suit. Pass both rules on in every handoff.
 
+> **The owner's rules for every session (2026-11-16, pass them on in every handoff):** no agents or subagents; one thing at a time and push
+> every time something works (CI builds a jar per branch; they test on their phone through Amethyst, so it must work there); `python3 build.py`
+> must pass (check its exit code) before every push; every preview render on their skin (`art/user_skin.png`), judged before it is sent, saying
+> what differs from their reference; show them a model before building animations or combat on it; every Ukaku sound Minecraft's own (no sound
+> pack, and none shared with the Rinkaku's or Bikaku's: `SfxTests`); never a model id in the repo; no PR and no release unless they ask (a
+> `.github/release-notes-*.md` pushed IS a release: don't add one).
+
+# Session 2 (branch `claude/eager-ritchie-xni1ms`, after `claude/great-galileo-cdhewb`): the mask's colour, the flash, the finisher
+
+They watch the renders as they are made (the images you Read reach them): they answer mid-turn, often with a screenshot marked up. Act on it at
+once. VERSION is still 4.2.8 and nothing is released; the work is labelled 4.2.9 in comments and tests. Not tested in game.
+
+## Their words (verbatim, in order)
+
+1. "the mask is meant to be the same color as the armor" — **done**, pushed (`cff3076a`).
+2. (the full-form render, sent) then the flash: "Blade Arm Control + right click (does a high speed dash, only leaving behind after images)" —
+   **done**, pushed (`21e143b3`).
+3. The finisher, refined live: "A bit up, its too low"; "make sure the wound shows the buts, bone etc, for mobs just a red uneven surface like
+   meat."; (a picture: a line across the chest) "Up more around here, the hands/arms get chopped off too and land on the floor (the entire thing
+   is meant to be an adaptive ragdoll that adapts to any terrain, can roll, etc. The vanilla player death animation never plays in this (only
+   for the death screen for the hit player), the body slowly vanishes after around 40 seconds."; "make sure also that during this death fase,
+   the hit player/wild ghoul or whatever, is unable to use any move at all or use the kagune/quinque."; "bro the top half is clearly falling in
+   the legs, it should fall forward a bit more"; "more forward, still too close"; "for the line, just make a really thin red (bright and glowing)
+   line around the whole area of the cut."; "no stripes, an actual line, and even thinner"; "slowly appearing, then give me the gif"; "the line
+   should honestly now start in the very center, and the line flows from both sides at once, left and right"; "no matter the mob, the height of
+   the cut is always this of the player, you dont have to adapt it to literally every mob / the cut height is a fixed thing"; "why does the line
+   stop on the overlayer?"; "when thats done push an update and show me the gif of a zombie dying".
+
+## Done (where it is)
+
+- **Mask colour:** `ukaku/KakujaMask.colours` (the plates' palette by facing and curvature), drawn on white through `KaguneTint` like the chest
+  (`KakujaArmorLayer.mask`). Test `UkakuTests.maskColour`.
+- **Flash:** `ukaku/SteelFlash` (pure: 2.6 blocks a tick for 4 ticks, the line it cuts, afterimages a body apart), `server/BladeFlash` (the
+  push, the vanish's invisibility for its ticks, untouchable, one cut per body), `C2SUkakuAction.FLASH` 12, `S2CUkakuFx.FLASH` 50,
+  `client/fx/BladeFlashClient` (ghosts each a quarter stride on in `BladeArmPose.run`), `KingAfterimages` carries the blade, the board row.
+  Test `UkakuTests.flash`. Render `docs/handoff/ukaku-flash-4.2.9.png`.
+- **Finisher:**
+  - Server `server/BladeFinisher`: a Steel Blade cut or flash cut (`arm`/`disarm` round the hurt in `KaguneCombat` and `BladeFlash`) whose death
+    would land: `LivingDeathEvent` cancelled, health 1 (as a totem), held 40 ticks (slowness, motion, a mob's path and target), nothing hurts it
+    and it hurts nothing (`LivingAttackEvent`), no swing, item, block or use; `DragonLock.locked`/`held`, `PaleStun.stunned` (the NPC brains),
+    `C2SArmAction` (quinques) and `C2SRegen` all refuse a dying body. Then `S2CUkakuFx.SPLIT` 52 (with what its kagune does) and it is killed,
+    the killer's kill. Named NPCs (`UniqueBody`), the White Reaper and boss-sized bodies die as always. Protocol 131.
+  - Pure: `ukaku/Finisher` (the stun, `round`, `line` for non-humanoids, `section`: what a cut shows, person trunk/limb or meat),
+    `ukaku/Ragdoll` (rigid bodies of boxes; contacts swept from each piece's middle to its corners against `Terrain` (the game: `level.clip`
+    COLLIDER), the hit face found on the sixteenth grid (`face`), contacts solved in passes (`solve`), piece on piece, sleep),
+    `client/animation/Carcass` (the body cut in four at the player's chest, fixed: top, belly and legs, both forearms; vanilla's cube UVs
+    cut with the faces; `wound`: the thin glowing line from the chest's middle both ways, past the second layer (flat 0.25 px, 3D Skin Layers
+    1.15); `launch`: the top thrown forward clear of the legs).
+  - Client `client/fx/FinisherClient`: the line on the live body (a player's pose from `KaguneBodyAnimation.body`), the body hidden once cut
+    (`RenderLivingEvent.Pre`/`RenderPlayerEvent.Pre`: no death animation), the pieces simulated and drawn in the body's own texture with their
+    cuts, blood (`UkakuBlood.spurt`, `RcFx`, `BloodStains.pool` where each piece comes to rest), 40 s then a 5 s fade; a Rinkaku's or Bikaku's
+    kagune shatters (`KakujaFx.breakApart`). Non-humanoid mobs: the line round their box, blood, and the vanilla death.
+  - A mob with a humanoid model (zombies, skeletons, the mod's ghouls, CCG, townsfolk): its pose is read off its model each frame of the stun
+    (`FinisherClient.posed`: arms, legs, head held whole in a `RigPose`), drawn at its model's own size (1/0.9375 of a player's), its texture
+    (`EntityRenderer.m_5478_`); vanilla's plain humanoid wears its right limbs' texture mirrored on its left (`Layout.HUMANOID`). The cut is one
+    level plane at the player's chest ("the cut height is a fixed thing"): an arm crossing it is cut where it crosses (`Carcass.armCut`); an arm
+    held up out of it (a zombie reaching) goes whole with the top, with no line round it. The mod's people are BODY inside, other mobs MEAT.
+    Zombie GIF: `HEX_PREVIEW_OPTS=-Dhex.zombie=<zombie.png> tools/art-preview.sh <out> finisher-zombie`.
+  - Tests `UkakuTests.finisher`; sabotage `docs/handoff/sabotage-4.2.9-finisher.json`. Previews `tools/art-preview.sh <out> finisher`,
+    `finisher-gif`, `finisher-arm`, `finisher-zombie` (with `HEX_PREVIEW_OPTS=-Dhex.zombie=<zombie.png>`; the texture is Mojang's: fetch it into
+    the scratchpad, never commit it). The finisher previews draw the body at the game's 0.9375 (`bodyScale`): unscaled, the drawn sleeve buried
+    the line (their "why does the line stop on the overlayer?").
+
+## Not done yet (next, in order)
+
+1. An Ukaku victim's wings should go down with the top half (the owner: the kagune "cut in perfect half"); now they vanish with the dead body.
+   `KakujaFx` keeps each Ukaku player's last drawn wing quads (`ukakuDrawn`): carry them on the top piece (`FinisherClient`, kind 2 of SPLIT).
+2. The Ukaku mastered transformation as an evil laugh (their words below, item 5).
+3. Ukaku wings: wider, more violent M1s and M2s (item 6).
+4. Risks to watch on their phone: the ragdoll costs about 70 block clips a tick per corpse while it moves (it sleeps at rest); at most 12 corpses.
+
 # Handoff: the Ukaku final kakuja's mask and Steel Blade (after 4.2.8, unreleased), for the next agent
 
 Branch `claude/great-galileo-cdhewb` = **4.2.8** (`claude/youthful-gauss-0u9gis`, the newest branch when this was written) merged, plus

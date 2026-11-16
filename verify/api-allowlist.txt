@@ -892,6 +892,7 @@ M net/minecraft/world/entity/Mob m_21455_ (ZZ)V  # [srg] dropLeash: bgb.m_21455_
 M net/minecraft/world/entity/LivingEntity m_6162_ ()Z  # [srg] isBaby: bfz.m_6162_ ()Z (yarn LivingEntity.isBaby)
 M net/minecraft/world/entity/LivingEntity m_21008_ (Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/ItemStack;)V  # [srg] setItemInHand: bfz.m_21008_ (Lbdw;Lcfz;)V (yarn LivingEntity.setStackInHand)
 M net/minecraft/client/renderer/entity/EntityRenderer m_7649_ (Lnet/minecraft/world/entity/Entity;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V  # [srg] renderNameTag: m_7649_ (Lbfj;Lsw;Leij;Lfjx;I)V (yarn EntityRenderer.renderLabelIfPresent)
+M net/minecraft/client/renderer/entity/EntityRenderer m_5478_ (Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/resources/ResourceLocation;  # [srg] getTextureLocation: joined.tsrg fox a (Lbfj;)Lacq; m_5478_ (intermediary method_3931, yarn EntityRenderer.getTexture); 4.2.9 FinisherClient: a mob's own texture on its pieces
 M net/minecraft/server/players/PlayerList m_240416_ (Lnet/minecraft/network/chat/Component;Z)V  # [srg] broadcastSystemMessage: alk.m_240416_ (Lsw;Z)V (yarn PlayerManager.broadcast)
 M net/minecraft/world/item/Item$Properties m_41487_ (I)Lnet/minecraft/world/item/Item$Properties;  # [srg] stacksTo: cfu$a.m_41487_ (I)Lcfu$a; (yarn Item.Settings.maxCount)
 M net/minecraft/core/Vec3i m_123343_ ()I  # [srg] getZ, hz.m_123343_ ()I (yarn Vec3i.getZ)

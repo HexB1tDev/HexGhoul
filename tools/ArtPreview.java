@@ -145,6 +145,34 @@ public final class ArtPreview {
         if (wanted.contains("flash")) {
             flashSheet(new File(out, "ukaku-flash.png"));
         }
+        if (wanted.contains("finisher")) {
+            finisherSheet(new File(out, "ukaku-finisher.png"));
+        }
+        if (wanted.contains("finisher-arm")) {
+            RigPose still = new RigPose();
+            still.settle(1.0F);
+            com.hex.kagune.control.client.animation.Carcass.Layout layout = PoseRender.USER_SLIM
+                ? com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_SLIM : com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_WIDE;
+            List<WingPreview.Tri> tris = new ArrayList<>();
+            com.hex.kagune.control.client.animation.Carcass.wound(still, layout, 1.0, 1.0, (a, b, c, d, n, ca, cb, cc, cd) -> {
+                double[][] q = {flipX(a), flipX(b), flipX(c), flipX(d)};
+                tris.add(new WingPreview.Tri(new double[][] {q[0], q[1], q[2]}, new int[] {ca, cb, cc}, null, true));
+                tris.add(new WingPreview.Tri(new double[][] {q[0], q[2], q[3]}, new int[] {ca, cc, cd}, null, true));
+            });
+            List<Shot> shots = new ArrayList<>();
+            bodyScale = com.hex.kagune.control.client.animation.BodyFrame.SCALE;
+            shots.add(new Shot("his right arm, outside", still, NO_WINGS, new double[] {2.2, 1.2, 0.3}, new double[] {0.3, 1.05, 0.0}, tris));
+            shots.add(new Shot("his right arm, front", still, NO_WINGS, new double[] {0.9, 1.1, 1.8}, new double[] {0.3, 1.05, 0.0}, tris));
+            shots.add(new Shot("his right arm, behind", still, NO_WINGS, new double[] {1.4, 1.2, -1.6}, new double[] {0.3, 1.05, 0.0}, tris));
+            sheet(new File(out, "ukaku-finisher-arm.png"), "the line on his arm", shots, 3, 420, 420);
+            bodyScale = 1.0;
+        }
+        if (wanted.contains("finisher-zombie")) {
+            finisherZombieGif(new File(out, "zombie-finisher.gif"), System.getProperty("hex.zombie"));
+        }
+        if (wanted.contains("finisher-gif")) {
+            finisherGif(new File(out, "ukaku-finisher.gif"));
+        }
         if (wanted.contains("blade-moves")) {
             bladeMoves(new File(out, "ukaku-blade-moves.png"));
         }
@@ -1743,6 +1771,515 @@ public final class ArtPreview {
         } finally {
             fov = was;
         }
+    }
+
+    /**
+     * 4.2.9: the Steel Blade's finisher on the owner's skin (the owner: "Up more around here, the hands/arms get chopped off too and land on
+     * the floor (the entire thing is meant to be an adaptive ragdoll that adapts to any terrain, can roll, etc."): the wound sweeping round the
+     * trunk and both arms through the two seconds' stun ({@code Carcass.wound}), then the body cut in four ({@code Carcass.cut}) falling as the
+     * game's own ragdoll ({@code Ragdoll}) on flat ground and on a step, and its pieces fading at forty seconds.
+     */
+    static void finisherSheet(File file) throws Exception {
+        // As the game draws a player: the player renderer's 0.9375 (the line and the pieces are placed as the game places them).
+        double scaleWas = bodyScale;
+        bodyScale = com.hex.kagune.control.client.animation.BodyFrame.SCALE;
+        try {
+            finisherSheetScaled(file);
+        } finally {
+            bodyScale = scaleWas;
+        }
+    }
+
+    static void finisherSheetScaled(File file) throws Exception {
+        RigPose still = new RigPose();
+        still.settle(1.0F);
+        com.hex.kagune.control.client.animation.Carcass.Layout layout = PoseRender.USER_SLIM
+            ? com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_SLIM : com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_WIDE;
+        WingPreview.Texture skin = WingPreview.Texture.load(System.getProperty("hex.skin"));
+        double start = Math.PI * 0.08;
+        List<Shot> shots = new ArrayList<>();
+        Object[][] stun = {
+            {"Stunned, 0.5 s: the line starts at his chest's middle, both ways", 10.0, new double[] {0.6, 1.35, 2.7}},
+            {"1 s: across both arms at once", 20.0, new double[] {2.6, 1.4, 1.5}},
+            {"2 s: the two ends meet at his back", 40.0, new double[] {-1.3, 1.4, -2.5}},
+        };
+        for (Object[] s : stun) {
+            double amount = com.hex.kagune.control.ukaku.Finisher.round((Double)s[1]);
+            List<WingPreview.Tri> tris = new ArrayList<>();
+            com.hex.kagune.control.client.animation.Carcass.wound(still, layout, 1.0, amount, (a, b, c, d, n, ca, cb, cc, cd) -> {
+                double[][] q = {flipX(a), flipX(b), flipX(c), flipX(d)};
+                // Glowing, as the game draws it at full brightness: unlit, and a soft red halo added round it.
+                tris.add(new WingPreview.Tri(new double[][] {q[0], q[1], q[2]}, new int[] {ca, cb, cc}, null, true));
+                tris.add(new WingPreview.Tri(new double[][] {q[0], q[2], q[3]}, new int[] {ca, cc, cd}, null, true));
+            });
+            shots.add(new Shot((String)s[0], still, NO_WINGS, (double[])s[2], new double[] {0.0, 1.0, 0.0}, tris));
+        }
+        // The ragdoll: flat ground, and (the second run) a step half a block high just in front of him.
+        Object[][] runs = {
+            {"The cut: the top slides off, the forearms drop", 4, false, new double[] {3.2, 1.7, 2.6}, new double[] {0.0, 0.8, 0.3}, 1.0},
+            {"Falling", 10, false, new double[] {3.4, 1.5, 2.2}, new double[] {0.0, 0.6, 0.4}, 1.0},
+            {"At rest: face down, the hands on the floor", 70, false, new double[] {2.6, 2.2, 3.2}, new double[] {0.0, 0.2, 0.5}, 1.0},
+            {"At rest, from his back", 70, false, new double[] {-1.8, 1.9, -2.4}, new double[] {0.0, 0.2, 0.4}, 1.0},
+            {"On a step: the top half lands across it", 70, true, new double[] {3.4, 2.3, 3.0}, new double[] {0.0, 0.3, 0.7}, 1.0},
+            {"From above: where every piece came to rest", 70, false, new double[] {0.6, 4.6, 1.2}, new double[] {0.0, 0.0, 0.5}, 1.0},
+        };
+        for (Object[] run : runs) {
+            int ticks = (Integer)run[1];
+            boolean step = (Boolean)run[2];
+            double fade = (Double)run[5];
+            com.hex.kagune.control.ukaku.Ragdoll.Terrain terrain = previewTerrain(step);
+            List<com.hex.kagune.control.client.animation.Carcass.Piece> pieces = com.hex.kagune.control.client.animation.Carcass.cut(still, layout, 1.0,
+                com.hex.kagune.control.ukaku.Finisher.Inside.BODY);
+            List<com.hex.kagune.control.ukaku.Ragdoll.Body> bodies = new ArrayList<>();
+            for (com.hex.kagune.control.client.animation.Carcass.Piece piece : pieces) {
+                com.hex.kagune.control.ukaku.Ragdoll.Body body = new com.hex.kagune.control.ukaku.Ragdoll.Body(piece.boxes.toArray(new double[0][]),
+                    new double[] {0.0, 0.0, 0.0}, new double[] {1.0, 0.0, 0.0, 0.0});
+                double[][] launch = com.hex.kagune.control.client.animation.Carcass.launch(piece.kind);
+                System.arraycopy(launch[0], 0, body.v, 0, 3);
+                System.arraycopy(launch[1], 0, body.w, 0, 3);
+                bodies.add(body);
+            }
+            for (int t = 0; t < ticks; t++) {
+                com.hex.kagune.control.ukaku.Ragdoll.tick(bodies, terrain);
+            }
+            List<WingPreview.Tri> tris = new ArrayList<>();
+            int alpha = (int)Math.round(255 * fade);
+            for (int i = 0; i < pieces.size(); i++) {
+                com.hex.kagune.control.client.animation.Carcass.Piece piece = pieces.get(i);
+                com.hex.kagune.control.ukaku.Ragdoll.Body body = bodies.get(i);
+                for (com.hex.kagune.control.client.animation.Carcass.Face f : piece.faces) {
+                    double[][] p = new double[4][];
+                    for (int k = 0; k < 4; k++) {
+                        p[k] = flipX(body.toWorld(minus(f.p()[k], body.offset)));
+                    }
+                    double[] n = flipX(com.hex.kagune.control.ukaku.Ragdoll.rotate(body.q, f.n()));
+                    int lit0 = WingPreview.lit(alpha << 24 | 0xFFFFFF, n);
+                    tris.add(new WingPreview.Tri(new double[][] {p[0], p[1], p[2]}, new int[] {lit0, lit0, lit0}, null, fade >= 1.0, false,
+                        new double[][] {f.uv()[0], f.uv()[1], f.uv()[2]}, skin));
+                    tris.add(new WingPreview.Tri(new double[][] {p[0], p[2], p[3]}, new int[] {lit0, lit0, lit0}, null, fade >= 1.0, false,
+                        new double[][] {f.uv()[0], f.uv()[2], f.uv()[3]}, skin));
+                }
+                for (com.hex.kagune.control.client.animation.Carcass.Cap c : piece.caps) {
+                    double[][] p = new double[4][];
+                    for (int k = 0; k < 4; k++) {
+                        p[k] = flipX(body.toWorld(minus(c.p()[k], body.offset)));
+                    }
+                    double[] n = flipX(com.hex.kagune.control.ukaku.Ragdoll.rotate(body.q, c.n()));
+                    int[] a = new int[4];
+                    for (int k = 0; k < 4; k++) {
+                        a[k] = alpha << 24 | c.argb()[k] & 0xFFFFFF;
+                    }
+                    tris.add(new WingPreview.Tri(new double[][] {p[0], p[1], p[2]}, new int[] {a[0], a[1], a[2]}, n, fade >= 1.0));
+                    tris.add(new WingPreview.Tri(new double[][] {p[0], p[2], p[3]}, new int[] {a[0], a[2], a[3]}, n, fade >= 1.0));
+                }
+            }
+            if (step) {
+                tris.addAll(slab(-2.0, 2.0, 0.55, 2.4, 0.0, 0.5, 0xFF6E6A62));
+            }
+            // Blood: pools where the pieces bled and drops thrown round them (the game's blood motes and stains).
+            java.util.Random random = new java.util.Random(7);
+            double spread = Math.min(1.0, ticks / 20.0);
+            for (int i = 0; i < 10; i++) {
+                double px = (random.nextDouble() - 0.5) * 1.4;
+                double pz = random.nextDouble() * (0.4 + 1.1 * spread) - 0.3;
+                double y = step && pz > 0.55 ? 0.5 : 0.0;
+                tris.addAll(pool(px, y + 0.004 + i * 0.0005, pz, (0.1 + random.nextDouble() * 0.22) * (0.4 + 0.6 * spread), (int)(0xE0 * fade) << 24 | 0x580610));
+            }
+            for (int i = 0; ticks < 20 && i < 30; i++) {
+                double a = random.nextDouble() * Math.PI * 2.0;
+                double d = 0.2 + random.nextDouble() * (0.5 + ticks * 0.05);
+                tris.addAll(pool(Math.cos(a) * d, 0.6 + random.nextDouble() * 0.6 - ticks * 0.02, Math.sin(a) * d, 0.025, 0xFFB2222E));
+            }
+            shots.add(new Shot((String)run[0], null, NO_WINGS, (double[])run[3], (double[])run[4], tris));
+        }
+        double was = fov;
+        fov = 40.0;
+        try {
+            sheet(file, "The Steel Blade's finisher: the wound across trunk and arms, then the body falls apart as a ragdoll", shots, 3, 620, 520);
+        } finally {
+            fov = was;
+        }
+    }
+
+    /**
+     * 4.2.9 (the owner: "slowly appearing, then give me the gif"): the finisher as it plays, a frame a tick: the two seconds the line draws itself
+     * round him, then the cut, the pieces falling as the game's ragdoll and the blood thrown out of every cut onto the ground.
+     */
+    static void finisherGif(File file) throws Exception {
+        // As the game draws a player: the player renderer's 0.9375 (the line and the pieces are placed as the game places them).
+        double scaleWas = bodyScale;
+        bodyScale = com.hex.kagune.control.client.animation.BodyFrame.SCALE;
+        try {
+            finisherGifScaled(file);
+        } finally {
+            bodyScale = scaleWas;
+        }
+    }
+
+    static void finisherGifScaled(File file) throws Exception {
+        RigPose still = new RigPose();
+        still.settle(1.0F);
+        com.hex.kagune.control.client.animation.Carcass.Layout layout = PoseRender.USER_SLIM
+            ? com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_SLIM : com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_WIDE;
+        WingPreview.Texture skin = WingPreview.Texture.load(System.getProperty("hex.skin"));
+        double start = Math.PI * 0.08;
+        double[] eye = {3.6, 2.0, 3.9};
+        double[] target = {0.0, 0.85, 0.7};
+        List<BufferedImage> frames = new ArrayList<>();
+        double was = fov;
+        fov = 40.0;
+        try {
+            int stun = com.hex.kagune.control.ukaku.Finisher.STUN;
+            for (int t = 0; t <= stun; t++) {
+                double amount = com.hex.kagune.control.ukaku.Finisher.round(t);
+                List<WingPreview.Tri> tris = new ArrayList<>();
+                com.hex.kagune.control.client.animation.Carcass.wound(still, layout, 1.0, amount, (a, b, c, d, n, ca, cb, cc, cd) -> {
+                    double[][] q = {flipX(a), flipX(b), flipX(c), flipX(d)};
+                    tris.add(new WingPreview.Tri(new double[][] {q[0], q[1], q[2]}, new int[] {ca, cb, cc}, null, true));
+                    tris.add(new WingPreview.Tri(new double[][] {q[0], q[2], q[3]}, new int[] {ca, cc, cd}, null, true));
+                });
+                // Close on the chest while the line draws itself in.
+                double[] closeEye = {1.3, 1.45, 2.3};
+                double[] closeAt = {0.0, 1.05, 0.0};
+                frames.add(labelled(render(new Shot("", still, NO_WINGS, closeEye, closeAt, tris), 480, 480), String.format("%.2f s  stunned", t / 20.0)));
+            }
+            List<com.hex.kagune.control.client.animation.Carcass.Piece> pieces = com.hex.kagune.control.client.animation.Carcass.cut(still, layout, 1.0,
+                com.hex.kagune.control.ukaku.Finisher.Inside.BODY);
+            List<com.hex.kagune.control.ukaku.Ragdoll.Body> bodies = new ArrayList<>();
+            for (com.hex.kagune.control.client.animation.Carcass.Piece piece : pieces) {
+                com.hex.kagune.control.ukaku.Ragdoll.Body body = new com.hex.kagune.control.ukaku.Ragdoll.Body(piece.boxes.toArray(new double[0][]),
+                    new double[] {0.0, 0.0, 0.0}, new double[] {1.0, 0.0, 0.0, 0.0});
+                double[][] launch = com.hex.kagune.control.client.animation.Carcass.launch(piece.kind);
+                System.arraycopy(launch[0], 0, body.v, 0, 3);
+                System.arraycopy(launch[1], 0, body.w, 0, 3);
+                bodies.add(body);
+            }
+            com.hex.kagune.control.ukaku.Ragdoll.Terrain terrain = previewTerrain(false);
+            java.util.Random random = new java.util.Random(11);
+            List<double[]> drops = new ArrayList<>();
+            List<double[]> pools = new ArrayList<>();
+            // The cut: blood out of it in every direction (as the game throws it: drops falling, staining where they land).
+            for (int i = 0; i < 70; i++) {
+                double a = random.nextDouble() * Math.PI * 2.0;
+                double s = 0.04 + random.nextDouble() * 0.12;
+                drops.add(new double[] {Math.cos(a) * 0.15, 1.05 + (random.nextDouble() - 0.5) * 0.1, Math.sin(a) * 0.08 + 0.05,
+                    Math.cos(a) * s, 0.04 + random.nextDouble() * 0.12, Math.sin(a) * s});
+            }
+            int fall = 56;
+            for (int t = 0; t <= fall + 14; t++) {
+                if (t > 0 && t <= fall) {
+                    com.hex.kagune.control.ukaku.Ragdoll.tick(bodies, terrain);
+                    // Each cut keeps bleeding as it falls.
+                    for (int i = 0; t < 26 && i < pieces.size(); i++) {
+                        double[] at = capCentre(pieces.get(i), bodies.get(i));
+                        if (at != null) {
+                            drops.add(new double[] {at[0], at[1], at[2], (random.nextDouble() - 0.5) * 0.04, 0.0, (random.nextDouble() - 0.5) * 0.04});
+                        }
+                    }
+                    for (java.util.Iterator<double[]> it = drops.iterator(); it.hasNext(); ) {
+                        double[] d = it.next();
+                        d[4] -= 0.06;
+                        d[0] += d[3];
+                        d[1] += d[4];
+                        d[2] += d[5];
+                        if (d[1] <= 0.0) {
+                            pools.add(new double[] {d[0], d[2], 0.03 + random.nextDouble() * 0.05, t});
+                            it.remove();
+                        }
+                    }
+                }
+                List<WingPreview.Tri> tris = new ArrayList<>(piecesTris(pieces, bodies, skin));
+                for (double[] d : drops) {
+                    tris.addAll(pool(-d[0], d[1], d[2], 0.022, 0xFFC0202C));
+                }
+                for (int i = 0; i < pools.size(); i++) {
+                    double[] p = pools.get(i);
+                    double grow = Math.min(1.6, 1.0 + (t - p[3]) * 0.02);
+                    tris.addAll(pool(-p[0], 0.003 + i * 0.00002, p[1], p[2] * grow, 0xFF5A0610));
+                }
+                // The pools the pieces lie in, spreading once they are down.
+                for (int i = 0; i < pieces.size(); i++) {
+                    double[] at = capCentre(pieces.get(i), bodies.get(i));
+                    if (at != null && t > 14) {
+                        double r = Math.min(0.42, (t - 14) * 0.012) * (pieces.get(i).kind == com.hex.kagune.control.client.animation.Carcass.Kind.TOP
+                            || pieces.get(i).kind == com.hex.kagune.control.client.animation.Carcass.Kind.BOTTOM ? 1.0 : 0.45);
+                        tris.addAll(pool(-at[0], 0.002, at[2], r, 0xFF4E0610));
+                    }
+                }
+                // The camera pulls back from his chest to the whole fall over the first frames after the cut.
+                double k = Math.min(1.0, t / 8.0);
+                k = k * k * (3.0 - 2.0 * k);
+                double[] at = {1.3 + (eye[0] - 1.3) * k, 1.45 + (eye[1] - 1.45) * k, 2.3 + (eye[2] - 2.3) * k};
+                double[] look = {0.0, 1.05 + (target[1] - 1.05) * k, target[2] * k};
+                frames.add(labelled(render(new Shot("", null, NO_WINGS, at, look, tris), 480, 480), String.format("%.2f s  %s", (stun + t) / 20.0,
+                    t == 0 ? "the line meets its start" : t < 18 ? "cut through" : "lying where they fell")));
+            }
+        } finally {
+            fov = was;
+        }
+        writeGif(file, frames, 5);
+    }
+
+    /**
+     * 4.2.9 (the owner: "show me the gif of a zombie dying"): the finisher on a zombie, as the game plays it: its own pose read off its model
+     * (the arms held out), the line round its chest and arms at the player's cut, then cut apart in its own skin, red meat inside, the pieces
+     * falling as the ragdoll. {@code skin}: the zombie's texture.
+     */
+    static void finisherZombieGif(File file, String skinPath) throws Exception {
+        BufferedImage texture = javax.imageio.ImageIO.read(new File(skinPath));
+        WingPreview.Texture skin = WingPreview.Texture.load(skinPath);
+        // The live body is drawn by the player previewer: a player's layout of the zombie's texture (its right limbs' texture on the left ones,
+        // as vanilla's humanoid model wears it; no second layer but its hat).
+        BufferedImage skinImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < 32; y++) {
+            for (int x = 0; x < 64; x++) {
+                skinImage.setRGB(x, y, texture.getRGB(x, y));
+            }
+        }
+        for (int y = 0; y < 16; y++) {
+            for (int x = 0; x < 16; x++) {
+                skinImage.setRGB(32 + x, 48 + y, texture.getRGB(40 + x, 16 + y));
+                skinImage.setRGB(16 + x, 48 + y, texture.getRGB(x, 16 + y));
+            }
+        }
+        // A zombie as vanilla poses it reaching for you: both arms held out in front (AnimationUtils.animateZombieArms).
+        RigPose zombie = new RigPose();
+        zombie.armHold = 1.0F;
+        zombie.rightArmX = -1.48F;
+        zombie.leftArmX = -1.52F;
+        zombie.rightArmY = -0.1F;
+        zombie.leftArmY = 0.1F;
+        zombie.settle(1.0F);
+        double scale = 1.0 / com.hex.kagune.control.client.animation.BodyFrame.SCALE; // a zombie is drawn at its model's own size
+        com.hex.kagune.control.client.animation.Carcass.Layout layout = com.hex.kagune.control.client.animation.Carcass.Layout.HUMANOID;
+        double[] eye = {3.6, 2.1, 3.9};
+        double[] target = {0.0, 0.85, 0.8};
+        double[] closeEye = {1.6, 1.6, 2.6};
+        double[] closeAt = {0.0, 1.1, 0.3};
+        List<BufferedImage> frames = new ArrayList<>();
+        double was = fov;
+        double scaleWas = bodyScale;
+        fov = 40.0;
+        bodyScale = 1.0;
+        try {
+            int stun = com.hex.kagune.control.ukaku.Finisher.STUN;
+            for (int t = 0; t <= stun; t++) {
+                double amount = com.hex.kagune.control.ukaku.Finisher.round(t);
+                List<WingPreview.Tri> tris = new ArrayList<>();
+                com.hex.kagune.control.client.animation.Carcass.wound(zombie, layout, scale, amount, true,
+                    com.hex.kagune.control.client.animation.Carcass.FLAT_LAYER, (a, b, c, d, n, ca, cb, cc, cd) -> {
+                        double[][] q = {flipX(a), flipX(b), flipX(c), flipX(d)};
+                        tris.add(new WingPreview.Tri(new double[][] {q[0], q[1], q[2]}, new int[] {ca, cb, cc}, null, true));
+                        tris.add(new WingPreview.Tri(new double[][] {q[0], q[2], q[3]}, new int[] {ca, cc, cd}, null, true));
+                    });
+                Shot shot = new Shot("", zombie, NO_WINGS, closeEye, closeAt, tris);
+                SKINS.put(shot, skinImage);
+                frames.add(labelled(render(shot, 480, 480), String.format("%.2f s  a zombie, stunned", t / 20.0)));
+            }
+            List<com.hex.kagune.control.client.animation.Carcass.Piece> pieces = com.hex.kagune.control.client.animation.Carcass.cut(zombie, layout, scale,
+                com.hex.kagune.control.ukaku.Finisher.Inside.MEAT);
+            List<com.hex.kagune.control.ukaku.Ragdoll.Body> bodies = new ArrayList<>();
+            for (com.hex.kagune.control.client.animation.Carcass.Piece piece : pieces) {
+                com.hex.kagune.control.ukaku.Ragdoll.Body body = new com.hex.kagune.control.ukaku.Ragdoll.Body(piece.boxes.toArray(new double[0][]),
+                    new double[] {0.0, 0.0, 0.0}, new double[] {1.0, 0.0, 0.0, 0.0});
+                double[][] launch = com.hex.kagune.control.client.animation.Carcass.launch(piece.kind);
+                System.arraycopy(launch[0], 0, body.v, 0, 3);
+                System.arraycopy(launch[1], 0, body.w, 0, 3);
+                bodies.add(body);
+            }
+            com.hex.kagune.control.ukaku.Ragdoll.Terrain terrain = previewTerrain(false);
+            java.util.Random random = new java.util.Random(5);
+            List<double[]> drops = new ArrayList<>();
+            List<double[]> pools = new ArrayList<>();
+            double cutY = com.hex.kagune.control.client.animation.Carcass.height() * scale;
+            for (int i = 0; i < 70; i++) {
+                double a = random.nextDouble() * Math.PI * 2.0;
+                double s = 0.04 + random.nextDouble() * 0.12;
+                drops.add(new double[] {Math.cos(a) * 0.15, cutY + (random.nextDouble() - 0.5) * 0.1, Math.sin(a) * 0.08 + 0.05,
+                    Math.cos(a) * s, 0.04 + random.nextDouble() * 0.12, Math.sin(a) * s});
+            }
+            int fall = 56;
+            for (int t = 0; t <= fall + 14; t++) {
+                if (t > 0 && t <= fall) {
+                    com.hex.kagune.control.ukaku.Ragdoll.tick(bodies, terrain);
+                    for (int i = 0; t < 26 && i < pieces.size(); i++) {
+                        double[] at = capCentre(pieces.get(i), bodies.get(i));
+                        if (at != null) {
+                            drops.add(new double[] {at[0], at[1], at[2], (random.nextDouble() - 0.5) * 0.04, 0.0, (random.nextDouble() - 0.5) * 0.04});
+                        }
+                    }
+                    for (java.util.Iterator<double[]> it = drops.iterator(); it.hasNext(); ) {
+                        double[] d = it.next();
+                        d[4] -= 0.06;
+                        d[0] += d[3];
+                        d[1] += d[4];
+                        d[2] += d[5];
+                        if (d[1] <= 0.0) {
+                            pools.add(new double[] {d[0], d[2], 0.03 + random.nextDouble() * 0.05, t});
+                            it.remove();
+                        }
+                    }
+                }
+                List<WingPreview.Tri> tris = new ArrayList<>(piecesTris(pieces, bodies, skin));
+                for (double[] d : drops) {
+                    tris.addAll(pool(-d[0], d[1], d[2], 0.022, 0xFFC0202C));
+                }
+                for (int i = 0; i < pools.size(); i++) {
+                    double[] p = pools.get(i);
+                    tris.addAll(pool(-p[0], 0.003 + i * 0.00002, p[1], p[2] * Math.min(1.6, 1.0 + (t - p[3]) * 0.02), 0xFF5A0610));
+                }
+                for (int i = 0; i < pieces.size(); i++) {
+                    double[] at = capCentre(pieces.get(i), bodies.get(i));
+                    if (at != null && t > 14) {
+                        double r = Math.min(0.42, (t - 14) * 0.012) * (pieces.get(i).kind == com.hex.kagune.control.client.animation.Carcass.Kind.TOP
+                            || pieces.get(i).kind == com.hex.kagune.control.client.animation.Carcass.Kind.BOTTOM ? 1.0 : 0.45);
+                        tris.addAll(pool(-at[0], 0.002, at[2], r, 0xFF4E0610));
+                    }
+                }
+                double k = Math.min(1.0, t / 8.0);
+                k = k * k * (3.0 - 2.0 * k);
+                double[] at = new double[3];
+                double[] look = new double[3];
+                for (int q = 0; q < 3; q++) {
+                    at[q] = closeEye[q] + (eye[q] - closeEye[q]) * k;
+                    look[q] = closeAt[q] + (target[q] - closeAt[q]) * k;
+                }
+                frames.add(labelled(render(new Shot("", null, NO_WINGS, at, look, tris), 480, 480), String.format("%.2f s  %s", (stun + t) / 20.0,
+                    t == 0 ? "the line meets itself" : t < 18 ? "cut through" : "lying where they fell")));
+            }
+        } finally {
+            fov = was;
+            bodyScale = scaleWas;
+        }
+        writeGif(file, frames, 5);
+    }
+
+    /** Where a piece's cuts are now (the middle of its inside faces, the carcass's space), or null if it has none. */
+    static double[] capCentre(com.hex.kagune.control.client.animation.Carcass.Piece piece, com.hex.kagune.control.ukaku.Ragdoll.Body body) {
+        if (piece.caps.isEmpty()) {
+            return null;
+        }
+        double[] sum = new double[3];
+        for (com.hex.kagune.control.client.animation.Carcass.Cap c : piece.caps) {
+            for (int k = 0; k < 3; k++) {
+                sum[k] += c.p()[0][k];
+            }
+        }
+        for (int k = 0; k < 3; k++) {
+            sum[k] /= piece.caps.size();
+        }
+        return body.toWorld(minus(sum, body.offset));
+    }
+
+    /** The pieces where their bodies are (preview space), textured with {@code skin}, their cuts coloured. */
+    static List<WingPreview.Tri> piecesTris(List<com.hex.kagune.control.client.animation.Carcass.Piece> pieces,
+                                            List<com.hex.kagune.control.ukaku.Ragdoll.Body> bodies, WingPreview.Texture skin) {
+        List<WingPreview.Tri> tris = new ArrayList<>();
+        for (int i = 0; i < pieces.size(); i++) {
+            com.hex.kagune.control.client.animation.Carcass.Piece piece = pieces.get(i);
+            com.hex.kagune.control.ukaku.Ragdoll.Body body = bodies.get(i);
+            for (com.hex.kagune.control.client.animation.Carcass.Face f : piece.faces) {
+                double[][] p = new double[4][];
+                for (int k = 0; k < 4; k++) {
+                    p[k] = flipX(body.toWorld(minus(f.p()[k], body.offset)));
+                }
+                double[] n = flipX(com.hex.kagune.control.ukaku.Ragdoll.rotate(body.q, f.n()));
+                int lit = WingPreview.lit(0xFFFFFFFF, n);
+                tris.add(new WingPreview.Tri(new double[][] {p[0], p[1], p[2]}, new int[] {lit, lit, lit}, null, true, false,
+                    new double[][] {f.uv()[0], f.uv()[1], f.uv()[2]}, skin));
+                tris.add(new WingPreview.Tri(new double[][] {p[0], p[2], p[3]}, new int[] {lit, lit, lit}, null, true, false,
+                    new double[][] {f.uv()[0], f.uv()[2], f.uv()[3]}, skin));
+            }
+            for (com.hex.kagune.control.client.animation.Carcass.Cap c : piece.caps) {
+                double[][] p = new double[4][];
+                for (int k = 0; k < 4; k++) {
+                    p[k] = flipX(body.toWorld(minus(c.p()[k], body.offset)));
+                }
+                double[] n = flipX(com.hex.kagune.control.ukaku.Ragdoll.rotate(body.q, c.n()));
+                int[] a = c.argb();
+                tris.add(new WingPreview.Tri(new double[][] {p[0], p[1], p[2]}, new int[] {a[0], a[1], a[2]}, n, true));
+                tris.add(new WingPreview.Tri(new double[][] {p[0], p[2], p[3]}, new int[] {a[0], a[2], a[3]}, n, true));
+            }
+        }
+        return tris;
+    }
+
+    /** {@code frame} with {@code text} written in its top left corner. */
+    static BufferedImage labelled(BufferedImage frame, String text) {
+        Graphics2D g = frame.createGraphics();
+        g.setColor(new Color(0xEDE3D6));
+        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
+        g.drawString(text, 10, 22);
+        g.dispose();
+        return frame;
+    }
+
+    static double[] flipX(double[] p) {
+        return new double[] {-p[0], p[1], p[2]};
+    }
+
+    static double[] minus(double[] a, double[] b) {
+        return new double[] {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
+    }
+
+    /** The preview's ground (the ragdoll's carcass space, x his left): flat at 0, and with {@code step} a block half high from z 0.55 to 2.4. */
+    static com.hex.kagune.control.ukaku.Ragdoll.Terrain previewTerrain(boolean step) {
+        java.util.function.Predicate<double[]> solid = p -> p[1] < (step && p[2] > 0.55 && p[2] < 2.4 && Math.abs(p[0]) < 2.0 ? 0.5 : 0.0);
+        return (a, b) -> {
+            if (solid.test(a)) {
+                return a.clone();
+            }
+            double[] last = a;
+            for (int i = 1; i <= 48; i++) {
+                double t = i / 48.0;
+                double[] p = {a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t};
+                if (solid.test(p)) {
+                    double[] lo = last;
+                    double[] hi = p;
+                    for (int k = 0; k < 40; k++) {
+                        double[] m = {(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2};
+                        if (solid.test(m)) {
+                            hi = m;
+                        } else {
+                            lo = m;
+                        }
+                    }
+                    return lo;
+                }
+                last = p;
+            }
+            return null;
+        };
+    }
+
+    /** A grey box from {@code x0, y0, z0} to {@code x1, y1, z1} (preview space: x his right), its top and sides. */
+    static List<WingPreview.Tri> slab(double x0, double x1, double z0, double z1, double y0, double y1, int argb) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        double[][][] quads = {
+            {{x0, y1, z0}, {x1, y1, z0}, {x1, y1, z1}, {x0, y1, z1}},
+            {{x0, y0, z0}, {x1, y0, z0}, {x1, y1, z0}, {x0, y1, z0}},
+        };
+        double[][] normals = {{0, 1, 0}, {0, 0, -1}};
+        for (int i = 0; i < quads.length; i++) {
+            double[][] q = quads[i];
+            int lit = WingPreview.lit(argb, normals[i]);
+            out.add(new WingPreview.Tri(new double[][] {q[0], q[1], q[2]}, new int[] {lit, lit, lit}, normals[i], true));
+            out.add(new WingPreview.Tri(new double[][] {q[0], q[2], q[3]}, new int[] {lit, lit, lit}, normals[i], true));
+        }
+        return out;
+    }
+
+    /** A flat round of colour (a blood pool or drop) at {@code x, y, z}, {@code r} across, facing up. */
+    static List<WingPreview.Tri> pool(double x, double y, double z, double r, int argb) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        int sides = 10;
+        for (int k = 0; k < sides; k++) {
+            double a0 = Math.PI * 2.0 * k / sides;
+            double a1 = Math.PI * 2.0 * (k + 1) / sides;
+            out.add(new WingPreview.Tri(new double[][] {{x, y, z}, {x + Math.cos(a0) * r, y, z + Math.sin(a0) * r * 0.9},
+                {x + Math.cos(a1) * r, y, z + Math.sin(a1) * r * 0.9}}, new int[] {argb, argb, argb}, new double[] {0, 1, 0}, (argb >>> 24) == 0xFF));
+        }
+        return out;
     }
 
     /** 1.3.1: the owner's mask model, read from the mod's resources as the game reads it from its jar. */

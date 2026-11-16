@@ -100,6 +100,7 @@ public final class UkakuTests {
         plantedColour();
         maskColour();
         flash();
+        finisher();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -224,6 +225,195 @@ public final class UkakuTests {
         check(afterimages.contains("ghost.blade() != null && age < BLADE_LIFE") && afterimages.contains("SteelBlade.build("), "an afterimage draws its blade");
         check(read("src/main/java/com/hex/kagune/control/AbilityGuide.java").contains("\"Flash: afterimages, cuts through\""),
             "the Steel Blade's board shows the flash");
+    }
+
+    /** Flat ground at y 0, and with {@code step} a block half high from z 0.55 to 2.4 (the carcass's space), as the game's collision answers. */
+    private static com.hex.kagune.control.ukaku.Ragdoll.Terrain ground(boolean step) {
+        java.util.function.Predicate<double[]> solid = p -> p[1] < (step && p[2] > 0.55 && p[2] < 2.4 ? 0.5 : 0.0);
+        return (a, b) -> {
+            if (solid.test(a)) {
+                return a.clone();
+            }
+            double[] last = a;
+            for (int i = 1; i <= 48; i++) {
+                double t = i / 48.0;
+                double[] p = {a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t};
+                if (solid.test(p)) {
+                    double[] lo = last;
+                    double[] hi = p;
+                    for (int k = 0; k < 40; k++) {
+                        double[] m = {(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2};
+                        if (solid.test(m)) {
+                            hi = m;
+                        } else {
+                            lo = m;
+                        }
+                    }
+                    return lo;
+                }
+                last = p;
+            }
+            return null;
+        };
+    }
+
+    /**
+     * 4.2.9: the Steel Blade's finisher (the owner's words in {@code Finisher}): the line, thin and glowing, from the chest's middle both ways
+     * at the player's chest, fixed; the body cut in four there, the arms with it; the pieces a ragdoll that rests on what is under it, the top
+     * thrown clear of the legs onto its face; forty seconds, then a fade; the dying body held and unable to act; the game's own sounds.
+     */
+    private static void finisher() {
+        // The ragdoll: a cube dropped rests on its face, on the ground, and sleeps; nothing sinks.
+        com.hex.kagune.control.ukaku.Ragdoll.Body cube = new com.hex.kagune.control.ukaku.Ragdoll.Body(new double[][] {{-0.25, -0.25, -0.25, 0.25, 0.25, 0.25}},
+            new double[] {0.0, 1.25, 0.0}, new double[] {1.0, 0.0, 0.0, 0.0});
+        java.util.List<com.hex.kagune.control.ukaku.Ragdoll.Body> one = java.util.List.of(cube);
+        double lowest = 9.0;
+        for (int t = 0; t < 80; t++) {
+            com.hex.kagune.control.ukaku.Ragdoll.tick(one, ground(false));
+            lowest = Math.min(lowest, cube.pos[1]);
+        }
+        check(Math.abs(cube.pos[1] - 0.25) < 0.02 && lowest > 0.2, "a dropped piece comes to rest on the ground, never in it: " + cube.pos[1] + " lowest " + lowest);
+        check(cube.asleep, "a piece at rest sleeps (no more work for it)");
+        check(Math.abs(cube.q[0]) > 0.999, "a cube dropped flat lands flat, unturned");
+        // The ground's face: up through the floor, sideways into a wall, both on the game's sixteenth grid.
+        double[] up = com.hex.kagune.control.ukaku.Ragdoll.face(new double[] {0.3, 0.5, 0.2}, new double[] {0.32, -0.1, 0.25}, new double[] {0.315, 0.0, 0.2375});
+        double[] wall = com.hex.kagune.control.ukaku.Ragdoll.face(new double[] {0.2, 0.4, 0.3}, new double[] {0.8, 0.35, 0.33}, new double[] {0.5, 0.375, 0.315});
+        check(up[1] == 1.0 && wall[0] == -1.0, "a floor faces up, a wall faces back the way the piece came: " + java.util.Arrays.toString(up) + " "
+            + java.util.Arrays.toString(wall));
+        // The cut: the player's chest, the same for every body, through the arms too.
+        double height = com.hex.kagune.control.client.animation.Carcass.height();
+        check(height > 0.95 && height < 1.15, "the cut across the player's chest, a fixed height: " + height);
+        com.hex.kagune.control.client.animation.RigPose still = new com.hex.kagune.control.client.animation.RigPose();
+        java.util.List<com.hex.kagune.control.client.animation.Carcass.Piece> pieces = com.hex.kagune.control.client.animation.Carcass.cut(still,
+            com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_SLIM, 1.0, com.hex.kagune.control.ukaku.Finisher.Inside.BODY);
+        check(pieces.size() == 4, "cut in four: the top, the legs, each forearm with its hand");
+        for (com.hex.kagune.control.client.animation.Carcass.Piece piece : pieces) {
+            check(!piece.faces.isEmpty() && !piece.caps.isEmpty() && !piece.boxes.isEmpty(), "every piece has its skin, its cut and its boxes: " + piece.kind);
+            boolean uv = true;
+            double low = 9.0;
+            double high = -9.0;
+            for (com.hex.kagune.control.client.animation.Carcass.Face f : piece.faces) {
+                for (int k = 0; k < 4; k++) {
+                    uv &= f.uv()[k][0] >= -1.0E-9 && f.uv()[k][0] <= 1.0 + 1.0E-9 && f.uv()[k][1] >= -1.0E-9 && f.uv()[k][1] <= 1.0 + 1.0E-9;
+                    low = Math.min(low, f.p()[k][1]);
+                    high = Math.max(high, f.p()[k][1]);
+                }
+            }
+            check(uv, "every piece textured within its skin: " + piece.kind);
+            boolean below = piece.kind != com.hex.kagune.control.client.animation.Carcass.Kind.TOP;
+            check(below ? high <= height + 0.02 : low >= height - 0.02, "each piece on its side of the cut: " + piece.kind + " " + low + ".." + high);
+        }
+        // A zombie reaching (its arms held out above the cut): the cut is the same level plane, so its arms go whole with the top, and no line
+        // runs round them; it is meat inside.
+        com.hex.kagune.control.client.animation.RigPose zombie = new com.hex.kagune.control.client.animation.RigPose();
+        zombie.armHold = 1.0F;
+        zombie.rightArmX = -1.5F;
+        zombie.leftArmX = -1.5F;
+        double mob = 1.0 / com.hex.kagune.control.client.animation.BodyFrame.SCALE;
+        java.util.List<com.hex.kagune.control.client.animation.Carcass.Piece> undead = com.hex.kagune.control.client.animation.Carcass.cut(zombie,
+            com.hex.kagune.control.client.animation.Carcass.Layout.HUMANOID, mob, com.hex.kagune.control.ukaku.Finisher.Inside.MEAT);
+        check(undead.size() == 2, "a zombie reaching is cut in two, its arms whole with its top: " + undead.size() + " pieces");
+        boolean meat = true;
+        for (com.hex.kagune.control.client.animation.Carcass.Piece piece : undead) {
+            for (com.hex.kagune.control.client.animation.Carcass.Cap cap : piece.caps) {
+                for (int c : cap.argb()) {
+                    meat &= ((c >> 16) & 0xFF) >= ((c >> 8) & 0xFF) * 2 - 4;
+                }
+            }
+        }
+        check(meat, "a mob's cut is red meat, no bone, no fat");
+        double[] zombieLine = {9.0, -9.0};
+        com.hex.kagune.control.client.animation.Carcass.wound(zombie, com.hex.kagune.control.client.animation.Carcass.Layout.HUMANOID, mob, 1.0, true,
+            com.hex.kagune.control.client.animation.Carcass.FLAT_LAYER, (a, b, c, d, n, ca, cb, cc, cd) -> {
+                zombieLine[0] = Math.min(zombieLine[0], Math.min(a[1], c[1]));
+                zombieLine[1] = Math.max(zombieLine[1], Math.max(a[1], c[1]));
+            });
+        check(zombieLine[1] - zombieLine[0] < 0.02, "no line round a zombie's raised arms: the line all at one height " + zombieLine[0] + ".." + zombieLine[1]);
+        // The line: one thin glowing line round chest and arms, from the chest's middle both ways at once.
+        check(com.hex.kagune.control.client.animation.Carcass.LINE <= 0.1, "the line really thin (a tenth of a pixel or less each side)");
+        check((com.hex.kagune.control.client.animation.Carcass.GLOW >> 16 & 0xFF) > 220 && (com.hex.kagune.control.client.animation.Carcass.GLOW & 0xFF) < 80,
+            "the line bright red");
+        double[] reach = new double[1];
+        boolean[] lit = {true};
+        int[] count = new int[1];
+        com.hex.kagune.control.client.animation.Carcass.wound(still, com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_SLIM, 1.0, 0.25,
+            (a, b, c, d, n, ca, cb, cc, cd) -> {
+                double mx = (a[0] + b[0] + c[0] + d[0]) / 4.0;
+                double mz = (a[2] + b[2] + c[2] + d[2]) / 4.0;
+                reach[0] = Math.max(reach[0], Math.abs(Math.atan2(-mx, mz)) / Math.PI);
+                lit[0] &= n[1] == 1.0 && Math.abs((a[1] + c[1]) / 2.0 - height) < 0.03;
+                count[0]++;
+            });
+        check(count[0] > 0 && reach[0] <= 0.27, "a quarter in, the line only on the front, as far each way: " + reach[0]);
+        check(lit[0], "the line at the cut, full bright (glowing)");
+        int[] left = new int[1];
+        int[] right = new int[1];
+        com.hex.kagune.control.client.animation.Carcass.wound(still, com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_SLIM, 1.0, 0.25,
+            (a, b, c, d, n, ca, cb, cc, cd) -> {
+                double mx = (a[0] + b[0] + c[0] + d[0]) / 4.0;
+                if (mx > 0.01) {
+                    left[0]++;
+                } else if (mx < -0.01) {
+                    right[0]++;
+                }
+            });
+        check(left[0] > 0 && Math.abs(left[0] - right[0]) <= 2, "the line flows both ways at once from the middle: " + left[0] + " left, " + right[0] + " right");
+        int[] whole = new int[1];
+        com.hex.kagune.control.client.animation.Carcass.wound(still, com.hex.kagune.control.client.animation.Carcass.Layout.PLAYER_SLIM, 1.0, 1.0,
+            (a, b, c, d, n, ca, cb, cc, cd) -> whole[0]++);
+        check(whole[0] > count[0] * 3, "the whole way round at the end");
+        check(com.hex.kagune.control.ukaku.Finisher.round(0) == 0.0 && Math.abs(com.hex.kagune.control.ukaku.Finisher.round(com.hex.kagune.control.ukaku.Finisher.STUN) - 1.0) < 1.0E-9
+            && com.hex.kagune.control.ukaku.Finisher.STUN == 40, "the line goes round in the two seconds' stun");
+        // The fall: the top thrown clear of the legs onto its face; on a step too.
+        for (boolean step : new boolean[] {false, true}) {
+            java.util.List<com.hex.kagune.control.ukaku.Ragdoll.Body> bodies = new java.util.ArrayList<>();
+            for (com.hex.kagune.control.client.animation.Carcass.Piece piece : pieces) {
+                com.hex.kagune.control.ukaku.Ragdoll.Body b = new com.hex.kagune.control.ukaku.Ragdoll.Body(piece.boxes.toArray(new double[0][]),
+                    new double[] {0.0, 0.0, 0.0}, new double[] {1.0, 0.0, 0.0, 0.0});
+                double[][] launch = com.hex.kagune.control.client.animation.Carcass.launch(piece.kind);
+                System.arraycopy(launch[0], 0, b.v, 0, 3);
+                System.arraycopy(launch[1], 0, b.w, 0, 3);
+                bodies.add(b);
+            }
+            for (int t = 0; t < 120; t++) {
+                com.hex.kagune.control.ukaku.Ragdoll.tick(bodies, ground(step));
+            }
+            com.hex.kagune.control.ukaku.Ragdoll.Body top = bodies.get(0);
+            com.hex.kagune.control.ukaku.Ragdoll.Body legs = bodies.get(1);
+            double[] front = com.hex.kagune.control.ukaku.Ragdoll.rotate(top.q, new double[] {0.0, 0.0, 1.0});
+            check(top.pos[2] - legs.pos[2] > 0.7, "the top lands well forward of the legs" + (step ? " (a step)" : "") + ": " + (top.pos[2] - legs.pos[2]));
+            check(front[1] < -0.6, "the top lies on its face" + (step ? " (a step)" : "") + ": its front points " + java.util.Arrays.toString(front));
+            boolean resting = true;
+            for (com.hex.kagune.control.ukaku.Ragdoll.Body b : bodies) {
+                resting &= b.pos[1] > 0.0 && b.pos[1] < 1.4;
+            }
+            check(resting, "every piece on the ground, none in it nor left in the air" + (step ? " (a step)" : ""));
+        }
+        check(com.hex.kagune.control.client.fx.FinisherClient.LIFE == 800.0 && com.hex.kagune.control.client.fx.FinisherClient.FADE > 0.0,
+            "the pieces lie forty seconds, then fade");
+        // The server: the death taken back, held, unable to act, nothing else hurts it; the game's own sounds.
+        String server = read("src/main/java/com/hex/kagune/control/server/BladeFinisher.java");
+        check(server.contains("LivingDeathEvent") && server.contains("event.setCanceled(true);\n        body.m_21153_(1.0F);"), "a kill of the blade's is held off");
+        check(server.contains("now - d.from < Finisher.STUN") && server.contains("hold(body);"), "held for the stun");
+        check(server.contains("!killing && dying(event.getEntity())") && server.contains("dying(source.m_7639_()) || dying(source.m_7640_())"),
+            "nothing hurts it while it dies, and it hurts nothing");
+        check(server.contains("AttackEntityEvent") && server.contains("RightClickItem") && server.contains("LivingEntityUseItemEvent.Start"),
+            "no swing, no item while dying");
+        check(read("src/main/java/com/hex/kagune/control/DragonLock.java").contains("BladeFinisher.dying(player)")
+            && read("src/main/java/com/hex/kagune/control/server/PaleStun.java").contains("if (BladeFinisher.dying(entity)) {")
+            && read("src/main/java/com/hex/kagune/control/network/C2SArmAction.java").contains("BladeFinisher.dying(sender)")
+            && read("src/main/java/com/hex/kagune/control/network/C2SRegen.java").contains("BladeFinisher.dying(sender)")
+            && read("src/main/java/com/hex/kagune/control/network/C2SKingAction.java").contains("DragonLock.held(sender)"),
+            "no kagune, no quinque, no kakuja, no regeneration while dying; the ghouls' and the CCG's brains see it stunned");
+        String combat = read("src/main/java/com/hex/kagune/control/server/KaguneCombat.java");
+        check(combat.contains("BladeFinisher.arm(player);") && read("src/main/java/com/hex/kagune/control/server/BladeFlash.java").contains("BladeFinisher.arm(player);"),
+            "the blade's cuts and its flash are the finisher's");
+        check(!server.contains("\"hexkagune:") && com.hex.kagune.control.ukaku.UkakuSounds.GORE.startsWith("minecraft:"), "its sounds the game's own");
+        String client = read("src/main/java/com/hex/kagune/control/client/fx/FinisherClient.java");
+        check(client.contains("RenderLivingEvent.Pre event") && client.contains("RenderPlayerEvent.Pre event") && client.contains("HIDDEN.put(message.id()"),
+            "the body cut apart is not drawn: no death animation plays on it");
+        check(com.hex.kagune.control.ukaku.Finisher.shatters("RINKAKU") && com.hex.kagune.control.ukaku.Finisher.shatters("BIKAKU")
+            && !com.hex.kagune.control.ukaku.Finisher.shatters("UKAKU") && client.contains("KakujaFx.breakApart(player)"), "a Rinkaku's or a Bikaku's kagune shatters");
     }
 
     private static boolean wellFormed(UkakuWing.Poly poly) {

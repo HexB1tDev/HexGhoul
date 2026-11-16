@@ -42,7 +42,7 @@ public record C2SKingAction(int kind, int arg, int target) {
         ServerPlayer sender = context.getSender();
         if (sender != null) {
             context.enqueueWork(() -> {
-                if (!com.hex.kagune.control.DragonLock.dragon(sender)) {
+                if (!com.hex.kagune.control.DragonLock.held(sender)) {
                     KingServer.request(sender, message.kind, message.arg, message.target);
                 }
             });

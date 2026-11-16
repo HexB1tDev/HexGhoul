@@ -26,7 +26,16 @@ public final class DragonLock {
      * requests ask {@link #dragon} only.
      */
     public static boolean locked(ServerPlayer player) {
-        return player != null && (test.test(player.m_20148_()) || com.hex.kagune.control.server.KingServer.locks(player.m_20148_()));
+        return player != null && (test.test(player.m_20148_()) || com.hex.kagune.control.server.KingServer.locks(player.m_20148_())
+            || com.hex.kagune.control.server.BladeFinisher.dying(player));
+    }
+
+    /**
+     * 4.2.9: true while {@code player} is the Dragon or dying under the Steel Blade's finisher ({@code BladeFinisher}: "unable to use any move
+     * at all"): the requests that ask only {@link #dragon} (K, the final kakuja's, the ghoul key) ask this.
+     */
+    public static boolean held(ServerPlayer player) {
+        return dragon(player) || com.hex.kagune.control.server.BladeFinisher.dying(player);
     }
 
     /** True while {@code player} is the Dragon. */

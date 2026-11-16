@@ -72,7 +72,7 @@ public record C2SUkakuAction(int action, int targetId) {
             context.enqueueWork(() -> {
                 // 1.0.10: K still answers under a final kakuja (it takes it off); only the Dragon keeps the body from it.
                 boolean kakuja = message.action == KAKUJA || message.action == FINAL_KAKUJA;
-                if (kakuja ? !com.hex.kagune.control.DragonLock.dragon(sender) : !com.hex.kagune.control.DragonLock.locked(sender)) {
+                if (kakuja ? !com.hex.kagune.control.DragonLock.held(sender) : !com.hex.kagune.control.DragonLock.locked(sender)) {
                     UkakuServer.onAction(sender, message.action, message.targetId);
                 }
             });

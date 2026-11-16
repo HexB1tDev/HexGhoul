@@ -89,6 +89,9 @@ public final class PaleStun {
         if (entity == null) {
             return false;
         }
+        if (BladeFinisher.dying(entity)) {
+            return true; // 4.2.9: dying under the Steel Blade's finisher: nothing it has answers (the wild ghouls' and the CCG's brains ask this)
+        }
         Stun stun = STUNNED.get(entity.m_19879_());
         return stun != null && StunRules.holds(stun.until, stun.level.m_46467_()) && stun.level.m_6815_(entity.m_19879_()) == entity;
     }

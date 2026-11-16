@@ -33,7 +33,11 @@ public record C2SArmAction(int kind, int target) {
         NetworkEvent.Context context = supplier.get();
         ServerPlayer sender = context.getSender();
         if (sender != null) {
-            context.enqueueWork(() -> PlayerArms.request(sender, message.kind, message.target));
+            context.enqueueWork(() -> {
+                if (!com.hex.kagune.control.server.BladeFinisher.dying(sender)) { // 4.2.9: no quinque while dying under the finisher
+                    PlayerArms.request(sender, message.kind, message.target);
+                }
+            });
         }
         context.setPacketHandled(true);
     }
