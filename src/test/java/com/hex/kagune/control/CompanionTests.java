@@ -2413,7 +2413,7 @@ public final class CompanionTests {
             && near(eto, "static void dated(ServerPlayer player, EtoNpc npc) {", "bond.regard(bond.regard() + DATE_REGARD)", 400), "had: today's date, its regard");
         check(eto.contains("fit.removeIf(date -> !CourtTrials.exists(player, com.hex.kagune.control.npc.DateSpot.of(date.id())));"), "only places the world has offered");
         String trials = read("src/main/java/com/hex/kagune/control/server/CourtTrials.java");
-        check(near(trials, "static void dateOn(", "npc.follow(player.m_20148_());", 300), "chosen: she follows them");
+        check(near(trials, "static void dateOn(", "npc.followForDate(player.m_20148_());", 400), "chosen: she follows them (4.3.1: for the date only)");
         check(near(trials, "static boolean exists(", "spot == null || spot.place().home == null || GangServer.home(player.m_284548_(), spot.place().home) != null;", 200),
             "a companion's place only where the world has it");
         check(near(trials, "static boolean at(", "spot.when().at(Math.floorMod(player.m_9236_().m_46468_(), 24000L)) && place(player, spot.place());", 150),

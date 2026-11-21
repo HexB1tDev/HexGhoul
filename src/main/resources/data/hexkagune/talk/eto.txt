@@ -185,9 +185,9 @@ scene friend_bored_walk
 who: friend
 mood: bored
 say: Walk with me. I need to stretch my legs before they turn into shelves.
-> Let's go. | +2 follow
+> Let's go. | +2
   - Lead on. Pick somewhere interesting. If it's not interesting I'll make it interesting.
-> Only a short one. | +1 follow
+> Only a short one. | +1
   - Short. Sure. That's what they all say.
 > Not today. | -1
   - Fine. I'll walk in circles. Like that man outside.
@@ -251,7 +251,7 @@ mood: hungry
 when: night ghoul
 say: I'm starving. Are you starving? You look starving. Come hunting with me.
 say: Night's here. I can hear their heartbeats from here. Want to go out?
-> Let's hunt together. | +2 follow lick
+> Let's hunt together. | +2 lick
   - Good. Stay downwind. Try to look harmless. You're bad at it.
 > I've already eaten. | 0
   - Show-off. Next time save me some.
@@ -338,7 +338,7 @@ who: friend
 when: night
 mood: happy bored
 say: The night's clear. Walk with me under it? I'll tell you which stars have names and which ones I've named.
-> Show me your stars. | +2 follow
+> Show me your stars. | +2
   - That one's mine. I called it Footnote. It's very small and nobody notices it.
 > Is it safe out there? | +1
   - With me? Safer than anywhere. For you. Not for whatever's out there.
@@ -453,7 +453,7 @@ who: together
 mood: happy bored
 when: day
 say: I've decided we're going somewhere today. I don't know where yet. Pick somewhere and pretend it was my idea.
-> Let's go exploring. | +2 follow
+> Let's go exploring. | +2
   - Yes. Somewhere with caves. Or ruins. Or both. Lead on, I'll be right behind you.
 > Let's stay in and read. | +2 read
   - Oh, you know me. Pick a book. Not that one. ...Fine, that one.
@@ -586,7 +586,7 @@ say: I'm not sulking. I'm thinking very loudly in your direction.
   - Oh, I'll think VERY quietly. Right at you. For an hour.
 page talk
 say: ...I don't like it when you go and fight without me. You come back smelling of blood that isn't mine to worry about.
-> Next time, come with me. | +3 forgive follow
+> Next time, come with me. | +3 forgive
   - ...Okay. Yes. I'm coming. Don't argue.
 > I'll be more careful. | +2 forgive hair
   - You'd better be. You're mine. You don't get to break.
@@ -658,7 +658,7 @@ mood: lonely clingy
 say: Stay. Just for a bit. You don't have to talk. I just want to hear someone else breathing.
 > Sit with her. | +3 cling
   - Thank you. ...Your breathing's very loud. I like it.
-> Come with me instead. | +2 follow
+> Come with me instead. | +2
   - Yes. Anywhere. As long as it's not here alone.
 > I can't right now. | -2 pout
   - Of course. Go. I'm used to quiet.
@@ -698,7 +698,7 @@ scene couple_clingy_follow
 who: together
 mood: clingy
 say: Where are you going? I'm coming. Don't argue. I've already decided.
-> Come on, then. | +2 follow
+> Come on, then. | +2
   - Good. I'll walk behind you and step on your heels. Lovingly.
 > Hold my hand on the way. | +3 hand
   - ...Fine. Since you asked. You did ask, right? Good.
@@ -787,7 +787,7 @@ who: together
 mood: hungry
 when: night
 say: I'm starving. Come with me. You can watch, or help, or hold my coat. I like you holding my coat.
-> Let's hunt together. | +2 follow lick
+> Let's hunt together. | +2 lick
   - Good. Stay close. Not that close. ...That close is fine.
 > I'll keep watch. | +2
   - My lookout. My lovely lookout. Shout if you see a Dove.
@@ -861,7 +861,7 @@ say: Rain! Perfect. Nobody's coming tonight. Just us and the noise on the glass.
   - There. Your shoulder is the correct height. I've measured.
 > Read me something. | +2 read
   - Head here. '...and the rain kept every secret the town ever told it.' I just made that up. Don't tell my editor.
-> Let's go stand in it. | +3 giggle follow
+> Let's go stand in it. | +3 giggle
   - In the RAIN? ...Yes. Absolutely yes. Last one out is a Dove.
 > I've got things to do. | -1 pout
   - Go, then. Get wet. See if I care. ...I care a little.
@@ -1219,7 +1219,7 @@ mood: bored happy
 say: Let's do something terrible. Not terrible-terrible. Fun-terrible. Like hiding all your shoes.
 > Help her hide my shoes. | +2 giggle
   - Yes! You can't help hide your own shoes, that's cheating. ...Okay, help.
-> Let's prank someone else. | +3 laugh follow
+> Let's prank someone else. | +3 laugh
   - Oh, I like you. Lead the way. I know where a creeper lives.
 > No pranks. | -1 pout
   - Boring. You're wonderful and boring.
@@ -1416,7 +1416,7 @@ say: It's sunny. I'm suspicious of sunny. Sunny days feel like they're hiding so
   - A storm. A plot twist. A Dove on a roof. I trust rain more.
 > You need more sun. | 0 pout
   - I need more shade. And more books. And you to stop saying that.
-> Let's go out in it anyway. | +2 follow
+> Let's go out in it anyway. | +2
   - Fine. Five minutes. I'll complain the whole time. You'll love it.
 
 topic rain_talk
@@ -1576,7 +1576,7 @@ who: together
 mood: hungry
 when: night
 say: I'm going to bite something tonight. I'd prefer it was a monster and not your shoulder. Help me find a monster.
-> Go hunting together. | +2 follow lick
+> Go hunting together. | +2 lick
   - My hero. My lovely, edible hero. Stay close.
 > My shoulder's available. | +2 giggle
   - Don't offer me that. ...Don't take it back either. Kidding. Mostly.

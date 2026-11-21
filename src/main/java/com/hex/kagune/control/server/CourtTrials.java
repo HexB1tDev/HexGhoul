@@ -58,7 +58,15 @@ public final class CourtTrials {
     static void dateOn(ServerPlayer player, EtoNpc npc, com.hex.kagune.control.npc.scene.Scene scene, com.hex.kagune.control.npc.DateSpot.Spot spot,
                        long now) {
         DATING.put(player.m_20148_(), new Dating(npc.persona().key(), scene.key(), spot, now));
-        npc.follow(player.m_20148_());
+        if (!player.m_20148_().equals(npc.following())) {
+            npc.followForDate(player.m_20148_()); // 4.3.1: until the date is over, not for good
+        }
+    }
+
+    /** 4.3.1: true if {@code player} has a date with {@code key} on its way (a companion following them for it keeps on). */
+    static boolean dating(UUID player, String key) {
+        Dating d = player == null ? null : DATING.get(player);
+        return d != null && d.key().equals(key);
     }
 
     /** True if the world has {@code spot}'s place (a companion's home known; a kind of place is anywhere); a date with no place, always. */

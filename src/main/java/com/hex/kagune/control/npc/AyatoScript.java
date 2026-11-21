@@ -143,7 +143,7 @@ final class AyatoScript extends CompanionScript {
                 "I'm not short. You're tall. There's a difference.", "Keep it up. I know where you sleep.", "...You're lucky I like you. Don't repeat that."),
                 1, EtoTalk.Effect.NONE, EtoGesture.HUFF);
             case INSULT -> NpcBonds.clamp(c.regard() + EtoRules.INSULT) <= NpcBonds.ENEMY
-                ? new EtoTalk.Reply("That's it. You're done. Next time I see you, I'm not holding back.", EtoRules.INSULT, EtoTalk.Effect.ANGER,
+                ? new EtoTalk.Reply("That's it. You're done. Don't bother talking to me again.", EtoRules.INSULT, EtoTalk.Effect.ANGER,
                 EtoGesture.ANGRY)
                 : new EtoTalk.Reply(voice == EtoVoice.CLAIMED ? EtoLines.fill(c, "Keep talking. {partner} will love hearing it. Get out.")
                 : one(seed, "Big words from someone that weak. Get out of my sight.", "Say that again. I dare you."), EtoRules.INSULT, EtoTalk.Effect.CLOSE,

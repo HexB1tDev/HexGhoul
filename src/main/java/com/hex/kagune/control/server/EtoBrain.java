@@ -74,6 +74,13 @@ public final class EtoBrain {
         long reachedAt = Long.MIN_VALUE;
         /** Players who hurt her, until when she holds it against them. */
         final Map<UUID, Long> grudges = new HashMap<>();
+        /**
+         * 4.3.1 (Provocation): per player, the harm done her on purpose (health) and when the last such blow was, and when a blow last
+         * cost her regard. Only {@link com.hex.kagune.control.npc.Provocation#FIGHTS_BACK} of it makes a grudge.
+         */
+        final Map<UUID, Float> harm = new HashMap<>();
+        final Map<UUID, Long> harmAt = new HashMap<>();
+        final Map<UUID, Long> stungAt = new HashMap<>();
         /** 1.3.4: her Owl DNA kit's moves ({@link EtoOwl}). */
         final EtoOwl.Fight owl = new EtoOwl.Fight();
         /** 1.3.19: Ken's side of Peace ({@link KenPeace}). */
@@ -367,6 +374,12 @@ public final class EtoBrain {
         }
         // 2.1.2: courtship chapters counted in time and place (a walk, a sit, somewhere high, dawn, the dead of night).
         CourtshipServer.tick(npc, level, now);
+        // 4.3.1 (the owner: "they start following you out of nowhere"): following them only for a date, and the date is over (had, stood
+        // up, they logged out, the server restarted): she stops there, as told "Wait here." (home in her own time, a day on).
+        if (now % 20L == 9L && npc.followsForDate() && !CourtTrials.dating(npc.following(), npc.persona().key())) {
+            npc.follow(null);
+            npc.settle();
+        }
         // 3.0.9: following a player, her home goes with her; she walks to keep up, regardless of distance.
         // 1.3.3: holding someone's hand, the same, at their side.
         UUID leaderId = mind.holding != null ? mind.holding : npc.following();
@@ -741,9 +754,10 @@ public final class EtoBrain {
         for (LivingEntity living : level.m_6443_(LivingEntity.class, around, living -> living instanceof ServerPlayer && living.m_6084_())) {
             double distance = living.m_20280_(npc);
             ServerPlayer player = (ServerPlayer)living;
-            // 1.3.2: her partner, never; whatever they did.
-            boolean fights = !player.m_7500_() && !player.m_5833_() && !partnerOf(mind, player) && (mind.grudges.containsKey(player.m_20148_())
-                || QuestServer.bond(player, npc.persona().key()).regard() <= NpcBonds.ENEMY);
+            // 1.3.2: her partner, never; whatever they did. 4.3.1 (the owner: "they can get pissed at you, sure. You not talk to you if they
+            // get pissed at you"): only one she holds a grudge against (Provocation: 50 health done her on purpose); a poor regard alone
+            // (an enemy) is a snub at the talk, never a fight on sight.
+            boolean fights = !player.m_7500_() && !player.m_5833_() && !partnerOf(mind, player) && mind.grudges.containsKey(player.m_20148_());
             if (fights && distance < nearest) {
                 nearest = distance;
                 best = living;
@@ -872,16 +886,77 @@ public final class EtoBrain {
                 endKiss(npc, mind, null, now);
                 return;
             }
-            QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + EtoRules.BLOW));
-            mind.grudges.put(player.m_20148_(), now + 400L);
-            if (player.m_20148_().equals(mind.talking)) {
-                mind.talking = null;
+            // 4.3.1 (the owner: "official NPCs should not attack you, unless you fucking get rid of 50 heart, 50 HP or something"): a blow
+            // mid-fight is an accident (nothing); one on purpose stings (once a second at most) and counts; only 50 health of it, on purpose,
+            // and she fights back: she lets go of them (no more walking with them) and holds it until they are dead (provoked).
+            UUID id = player.m_20148_();
+            boolean accident = com.hex.kagune.control.npc.Provocation.accident(STRUCK.getOrDefault(id, Long.MIN_VALUE), now, FIGHTING);
+            if (com.hex.kagune.control.npc.Provocation.stings(mind.stungAt.getOrDefault(id, Long.MIN_VALUE), now, accident)) {
+                mind.stungAt.put(id, now);
+                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + com.hex.kagune.control.npc.Provocation.STING));
+                if (now - mind.shrugAt > 40L) {
+                    mind.shrugAt = now;
+                    say(npc, player, com.hex.kagune.control.npc.Tolerance.shrug(npc.persona().key(), npc.m_217043_().m_188503_(100)));
+                }
             }
+            float harm = com.hex.kagune.control.npc.Provocation.harm(mind.harm.getOrDefault(id, 0.0F), mind.harmAt.getOrDefault(id, Long.MIN_VALUE),
+                now, event.getAmount(), accident);
+            if (!accident) {
+                mind.harm.put(id, harm);
+                mind.harmAt.put(id, now);
+            }
+            if (!com.hex.kagune.control.npc.Provocation.fightsBack(harm)) {
+                return; // not enough to fight over: it stings, she says so, that is all
+            }
+            provoked(npc, mind, player, now);
         }
         if (mind.target == 0) {
             mind.target = attacker.m_19879_();
             mind.reachedAt = now; // 1.3.24: a fresh fight
             mind.dirty = true;
+        }
+    }
+
+    /**
+     * 4.3.1: {@code player} has done her {@link com.hex.kagune.control.npc.Provocation#FIGHTS_BACK} on purpose: she fights them, and walks
+     * with them no more (she stays where she is; her home goes back to her own place a day later, as when she is left waiting).
+     */
+    private static void provoked(EtoNpc npc, Mind mind, ServerPlayer player, long now) {
+        mind.grudges.put(player.m_20148_(), now + 400L);
+        if (player.m_20148_().equals(mind.talking)) {
+            mind.talking = null;
+        }
+        if (player.m_20148_().equals(npc.following())) {
+            npc.follow(null);
+            npc.settle();
+        }
+        if (player.m_20148_().equals(mind.holding)) {
+            letGo(npc, mind, (ServerLevel)npc.m_9236_(), now, false);
+        }
+    }
+
+    /**
+     * 4.3.1 (the owner: "she kills me over and over and over again ... that means that it's in a loop and you're gonna keep dying"): a player
+     * dead, every official's fight with them is over: no grudge, no target, the harm counted forgotten. They respawn to nobody hunting them.
+     */
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void playerDied(LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+        UUID id = player.m_20148_();
+        for (EtoNpc npc : LIVE) {
+            Mind mind = npc.mind;
+            if (mind == null) {
+                continue;
+            }
+            mind.grudges.remove(id);
+            mind.harm.remove(id);
+            mind.harmAt.remove(id);
+            if (mind.target == player.m_19879_()) {
+                mind.target = 0;
+                mind.dirty = true;
+            }
         }
     }
 
@@ -918,7 +993,10 @@ public final class EtoBrain {
                 return false;
             }
             Mind mind = npc.mind;
-            return player.m_20148_().equals(mind.holding) || mind.with != 0 && mind.with == player.m_19879_();
+            // 4.3.1: and one walking with them (told "Follow me."), as an ally ghoul is (GhoulNpcBrain.attacked): she fights at their side,
+            // and their kagune passes her by (Eto's "Let me watch you": the Doves cut down beside her, never her). Not in a spar.
+            boolean along = player.m_20148_().equals(npc.following()) && !JoinServer.sparring(player, npc);
+            return along || player.m_20148_().equals(mind.holding) || mind.with != 0 && mind.with == player.m_19879_();
         } catch (RuntimeException failure) {
             return false;
         }

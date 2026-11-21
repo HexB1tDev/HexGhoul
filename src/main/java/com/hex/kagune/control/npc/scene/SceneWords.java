@@ -120,8 +120,12 @@ public final class SceneWords {
     public static final Set<String> GESTURES = Set.of("wave", "stretch", "twirl", "hop", "peace", "lean", "giggle", "blush", "read", "write", "sweep", "hair",
         "hum", "look", "dance", "pout", "yawn", "lick", "pet", "laugh", "cross", "tap", "huff", "sip", "wipe", "kicks", "scold", "shy", "chin", "crack", "bow",
         "angry", "ring");
-    /** A companion's deeds: walking up for a hug, an arm, a hand, a kiss; following or staying; on to her topics or her sweet page. */
-    public static final Set<String> COMPANION_EFFECTS = Set.of("hug", "cling", "hand", "kiss", "peck", "steal", "follow", "stay", "talk", "sweet", "forgive",
+    /**
+     * A companion's deeds: walking up for a hug, an arm, a hand, a kiss; staying; on to her topics or her sweet page. 4.3.1 (the owner: "when
+     * you reach a friendly state with them, they start following you out of nowhere ... without you telling them to follow"): never
+     * following: a scene she starts herself ("Walk with me." "Let's go.") left her trailing them for good; only "Follow me." does that now.
+     */
+    public static final Set<String> COMPANION_EFFECTS = Set.of("hug", "cling", "hand", "kiss", "peck", "steal", "stay", "talk", "sweet", "forgive",
         "night", "close", "sulk", "giddy", "hearts",
         // 3.3.7: talked it out: the sulk, the grudge, the jealousy and any make-up owed all over, whatever else the answer does
         "mend");
@@ -131,8 +135,8 @@ public final class SceneWords {
     public static final Set<String> CHILD_EFFECTS = Set.of("hug", "pat", "high_five", "tickle", "peekaboo", "toss", "spin", "arms_up", "wave", "clap",
         "nuzzle", "boop", "fist_bump", "patty_cake", "dance", // 4.1.15: the new moments (ChildMoment)
         "flower", "up", "down", "shoulders", "hand", "follow", "stay", "bed", "home", "teach", "sad", "proud", "close", "play");
-    /** An ally's deeds: following, waiting, done talking. */
-    public static final Set<String> ALLY_EFFECTS = Set.of("follow", "stay", "close");
+    /** An ally's deeds: waiting, done talking (4.3.1: not following; an ally told to wait follows again only on "Follow me."). */
+    public static final Set<String> ALLY_EFFECTS = Set.of("stay", "close");
     /** What may be given to the player ({@code gift:<item>}): small things, a ghoul's dinner for a ghoul. */
     public static final Set<String> GIFTS = Set.of("poppy", "dandelion", "cornflower", "blue_orchid", "allium", "oxeye_daisy", "lily_of_the_valley",
         "azure_bluet", "red_tulip", "pink_tulip", "sunflower", "cookie", "bread", "apple", "sweet_berries", "glow_berries", "honey_bottle", "pumpkin_pie",

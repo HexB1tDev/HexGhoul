@@ -172,7 +172,7 @@ scene friend_bored_walk
 who: friend
 mood: bored happy
 say: Let's walk. I need to get out of the cafe before I start alphabetising the sugar.
-> Let's go. | +2 follow
+> Let's go. | +2
   - Walk faster. Not that fast. You walk like a duck. ...Keep walking like a duck, it's funny.
 > Where to? | +1
   - Somewhere quiet. Somewhere with no customers. Anywhere.
@@ -214,7 +214,7 @@ scene friend_sleepy_shift
 who: friend
 mood: sleepy
 say: Long shift. My feet hate me. Everything hates me. Carry me home. ...Kidding. Mostly.
-> I'll walk you home. | +2 follow
+> I'll walk you home. | +2
   - ...Okay. Fine. Just so I don't fall asleep in a ditch.
 > Sit down for a bit. | +1
   - If I sit down I won't get up. ...Fine. Five minutes.
@@ -245,7 +245,7 @@ who: friend
 mood: hungry
 when: night ghoul
 say: I'm starving. You look starving too. There's a body down by the river nobody's claimed. Come on. Quietly.
-> Go with her. | +2 follow
+> Go with her. | +2
   - Stay low. Don't make noise. ...You're making noise.
 > I'll find my own. | 0
   - Suit yourself. Don't get caught.
@@ -458,9 +458,9 @@ who: together
 mood: happy bored clingy
 when: day
 say: Walk me to work? I mean. If you're going that way. Which you are. Because I said so.
-> Walk her to work. | +2 follow hand
+> Walk her to work. | +2 hand
   - Hold my— ...fine. Hold it. Since you're here.
-> Race you there. | +2 kicks follow
+> Race you there. | +2 kicks
   - You'll lose. You'll lose so badly.
 > I'm not going that way. | -1 pout
   - You are now. ...Fine. Whatever.
@@ -633,7 +633,7 @@ scene couple_clingy_follow
 who: together
 mood: clingy
 say: Where are you going? I'm coming. I'm not following you. I'm going the same way. Coincidence.
-> Come with me. | +2 follow
+> Come with me. | +2
   - Fine. Walk on the outside. Cars. ...There aren't any cars. Walk on the outside anyway.
 > Hold my hand. | +3 hand
   - ...Fine. Only because there might be cars.
@@ -709,7 +709,7 @@ who: together
 mood: hungry
 when: night
 say: I need to eat. Come with me? You don't have to watch. Just... be nearby. It's better when you're nearby.
-> Go with her. | +2 follow
+> Go with her. | +2
   - Stay behind me. Watch for white coats.
 > I'll keep watch. | +2
   - Good. Whistle if a Dove comes. Don't whistle badly.
@@ -835,7 +835,7 @@ scene couple_dusk
 who: together
 when: dusk
 say: Night's coming. My eye always itches at dusk. ...Walk with me while it's still light? I like the last bit of light.
-> Walk with her. | +2 follow hand
+> Walk with her. | +2 hand
   - ...Slow. Walk slow. The light goes fast.
 > Watch the sunset here. | +2 lean
   - ...It's pretty. Don't tell anyone I said pretty.
@@ -1070,7 +1070,7 @@ scene couple_bored
 who: together
 mood: bored happy
 say: I'm bored. The cafe's dead. Take me somewhere. Anywhere. Somewhere I can kick something.
-> Let's go adventuring. | +2 follow
+> Let's go adventuring. | +2
   - Finally. Walk faster. Let's find trouble.
 > Spar with me. | +2 kicks
   - Yes. Finally. Don't hold back. I won't.
@@ -1114,7 +1114,7 @@ who: together
 when: ghoul
 mood: happy giddy affectionate bored
 say: Let's fly. Not fly. Leap. Off the roofs. Wings out. You've got them, use them. Come on.
-> Race her across the roofs. | +3 follow kicks
+> Race her across the roofs. | +3 kicks
   - You're on. Loser buys coffee. ...You're buying coffee.
 > Show me how. | +2 -> how
 > I'm scared of heights. | +1 laugh
@@ -1267,7 +1267,7 @@ prompt: Want to sit on the roof?
 who: friend together
 when: night
 say: ...Yeah. Okay. Bring a blanket. And don't talk about anything stupid. Or do. I don't care. Just come.
-> Bring a blanket. | +2 follow
+> Bring a blanket. | +2
   - Good. You're useful tonight.
 > I'll bring coffee. | +2 sip
   - Even better. You're learning.
@@ -1398,7 +1398,7 @@ who: together
 mood: hungry
 when: night
 say: I can't sit still. I'm hungry and I'm restless and if you say one annoying thing I'm kicking you into the river. Lovingly.
-> Go for a run with her. | +2 follow kicks
+> Go for a run with her. | +2 kicks
   - Yes. Fast. Keep up or I'll leave you behind.
 > Hold her still. | +2 hug shy
   - Wh— ...okay. That works. Weirdly. Don't let go.
@@ -1411,7 +1411,7 @@ who: together
 mood: hungry
 when: night
 say: I haven't eaten in days. Don't tell me to eat. I know. I'm just... I don't like hunting near the cafe. It feels wrong.
-> We'll go far away together. | +3 follow
+> We'll go far away together. | +3
   - ...Far away. Yeah. Okay. Thanks. Don't tell anyone where we went.
 > I'll find you something. | +2 shy
   - You don't have to do that. ...You're going to do that anyway. Idiot. Thank you.

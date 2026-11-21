@@ -27,6 +27,8 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
     static final String HOME = "HexEtoHome";
     /** 1.3.1: the player she follows (her saved data), if any. */
     static final String FOLLOW = "HexEtoFollow";
+    /** 4.3.1: she follows them only for a date (CourtTrials): kept with her, so a date lost to a restart still ends it. */
+    static final String DATE_FOLLOW = "HexEtoDateFollow";
     /** 1.3.3: where she belongs (her first home, the Library's floor), kept for good. */
     static final String ORIGIN = "HexEtoOrigin";
 
@@ -107,14 +109,29 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
         return tag.m_128403_(FOLLOW) ? tag.m_128342_(FOLLOW) : null;
     }
 
-    /** 1.3.1: she follows this player from now on (null: no one). */
+    /** 1.3.1: she follows this player from now on (null: no one). 4.3.1: as told, not for a date only. */
     public void follow(java.util.UUID player) {
         CompoundTag tag = this.getPersistentData();
+        tag.m_128473_(DATE_FOLLOW);
         if (player == null) {
             tag.m_128473_(FOLLOW);
         } else {
             tag.m_128362_(FOLLOW, player);
         }
+    }
+
+    /**
+     * 4.3.1 (the owner: "they start following you out of nowhere"): she follows {@code player} to a date's place, and only until the date
+     * is over (had, stood up, they logged out, the server restarted): then she stops (EtoBrain), as when told "Wait here.".
+     */
+    public void followForDate(java.util.UUID player) {
+        this.follow(player);
+        this.getPersistentData().m_128379_(DATE_FOLLOW, true);
+    }
+
+    /** 4.3.1: true if she follows someone only for a date ({@link #followForDate}). */
+    public boolean followsForDate() {
+        return this.getPersistentData().m_128471_(DATE_FOLLOW);
     }
 
     @Override

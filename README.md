@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.3.1 (HexGhoul): NPCs follow you only when you ask; official NPCs stop killing you over stray hits (testing)
+
+See `.github/release-notes-4.3.1.md`. Only "Follow me." starts anyone following: `follow` is no scene deed of a companion's or an ally's (`SceneWords`, `SceneServer`; 55 answers in `eto.txt`, `touka.txt`, `ken.txt`, `ally.txt`); a date's following ends with the date (`EtoNpc.followForDate`, `CourtTrials.dating`, `EtoBrain`). `npc/Provocation`: an official fights a player back only after 50 health done her on purpose (`EtoBrain.hurt`, `provoked`); a blow mid-fight is an accident; one on purpose stings -10, once a second; the player she follows can't hit her (`EtoBrain.spared`); a player's death ends every official's fight with them (`EtoBrain.playerDied`); an enemy's regard or an insult is a snub (`EtoServer` ANGER), never a fight. `ProvocationTests`; `docs/handoff/sabotage-4.3.1.json`.
+
 ## 4.3.0 (HexGhoul): the mastered Ukaku laughs the wings out; the Steel Blade drags at rest; the half mask is back (testing)
 
 See `.github/release-notes-4.3.0.md`. `client/animation/LaughPose` (the pose and the HAs), `client/LaughPullOutClient` (the body, the

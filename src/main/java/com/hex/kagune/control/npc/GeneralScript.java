@@ -170,7 +170,7 @@ final class GeneralScript extends CompanionScript {
                 "Thirty years, and nobody has ever spoken to me like that. ...Do it again.", "Insubordination. ...I'll allow it.",
                 "You'll undo my whole reputation. ...Worth it."), 1, EtoTalk.Effect.NONE, EtoGesture.SHY);
             case INSULT -> NpcBonds.clamp(c.regard() + EtoRules.INSULT) <= NpcBonds.ENEMY
-                ? new EtoTalk.Reply("That's enough. You're done here. Next time you're in my building, you're a threat.", EtoRules.INSULT,
+                ? new EtoTalk.Reply("That's enough. You're done here. This conversation is over.", EtoRules.INSULT,
                 EtoTalk.Effect.ANGER, EtoGesture.ANGRY)
                 : new EtoTalk.Reply(voice == EtoVoice.CLAIMED ? EtoLines.fill(c, "{partner} will hear every word of that. Out.")
                 : one(seed, "I've been insulted by better. Out of my office.", "Say that to my investigators. See how far you get."), EtoRules.INSULT,

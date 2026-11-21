@@ -530,7 +530,6 @@ public final class SceneServer {
                 case "cling" -> effect = together ? EtoTalk.Effect.CLING : effect;
                 case "hand" -> effect = together ? EtoTalk.Effect.HAND : effect;
                 case "kiss" -> effect = together ? EtoTalk.Effect.KISS : effect;
-                case "follow" -> effect = EtoTalk.Effect.FOLLOW;
                 case "stay" -> effect = EtoTalk.Effect.STAY;
                 case "talk" -> effect = EtoTalk.Effect.TALK;
                 case "sweet" -> effect = together ? EtoTalk.Effect.SWEET : effect;
@@ -999,9 +998,6 @@ public final class SceneServer {
         if (regard != 0) {
             QuestLog.Bond bond = QuestServer.bond(player, bondKey);
             QuestServer.bond(player, bondKey, bond.regard(bond.regard() + regard));
-        }
-        if (option.does("follow")) {
-            GhoulNpcBrain.follow(npc, true);
         }
         if (option.does("stay")) {
             GhoulNpcBrain.follow(npc, false);

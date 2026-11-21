@@ -1073,8 +1073,14 @@ public final class EtoServer {
             case CLING -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.CLING, now);
             case HAND -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.HAND, now);
             case ANGER -> {
+                // 4.3.1 (the owner: "they can get pissed at you, sure. You not talk to you if they get pissed at you"): insulted into an
+                // enemy, she won't talk to them (and walks with them no more); a fight only ever comes of blows (EtoBrain.provoked).
                 if (!EtoBrain.partnerOf(npc.mind, player)) {
-                    npc.mind.grudges.put(player.m_20148_(), now + 400L);
+                    npc.mind.ignoring.put(player.m_20148_(), now + com.hex.kagune.control.npc.Provocation.SNUBS);
+                    if (player.m_20148_().equals(npc.following())) {
+                        npc.follow(null);
+                        npc.settle();
+                    }
                 }
             }
             case FOLLOW -> npc.follow(player.m_20148_());

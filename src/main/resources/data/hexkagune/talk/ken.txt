@@ -174,7 +174,7 @@ scene friend_bored_walk
 who: friend
 mood: bored happy
 say: I've been inside all day. Would you walk with me? I think better when I'm moving.
-> Let's walk. | +2 follow
+> Let's walk. | +2
   - Thanks. ...You can talk, or not. Either's fine.
 > Where to? | +1
   - Anywhere with trees. Trees don't ask questions.
@@ -234,7 +234,7 @@ who: friend
 mood: hungry
 when: night ghoul
 say: I'm hungry. I don't like hunting. I'd rather find someone who's already... gone. Would you come with me? I don't like going alone.
-> Go with him. | +2 follow
+> Go with him. | +2
   - Thank you. Stay close. If anyone sees us, let me talk.
 > I'll share what I have. | +3
   - You'd... share? With me? ...Thank you. Really.
@@ -333,7 +333,7 @@ who: close
 mood: happy bored hungry
 when: night
 say: There are Doves around tonight. Would you let me walk you home? I won't be in the way. I'd just feel better.
-> Walk with me. | +2 follow
+> Walk with me. | +2
   - Thank you. Stay on my left. If anything happens, run. I'll catch up.
 > I can protect myself. | +1
   - I know you can. Let me be there anyway. For me.
@@ -346,7 +346,7 @@ who: friend
 when: night
 mood: happy bored
 say: It's a quiet night. Would you walk with me? I like the city when it's asleep. It feels like no one can be hurt.
-> Walk with him. | +2 follow
+> Walk with him. | +2
   - Thank you. ...Listen. You can hear the river from here.
 > Is it safe? | +1
   - With me? I'll make sure it is.
@@ -433,9 +433,9 @@ who: together
 mood: happy clingy
 when: day
 say: Would you walk with me? Nowhere in particular. I just want to be somewhere with you that isn't here.
-> Walk with him. | +2 follow hand
+> Walk with him. | +2 hand
   - Thank you. ...Hold on. Your hand's cold now. I'll warm it.
-> Somewhere with books? | +2 giggle follow
+> Somewhere with books? | +2 giggle
   - You know me. There's a little shop by the river. Come on.
 > I'm busy today. | -1
   - That's alright. Tomorrow, maybe.
@@ -605,7 +605,7 @@ mood: lonely clingy
 say: Stay tonight? Not for anything. Just... the apartment is very quiet without you.
 > Stay with him. | +3 cling
   - Thank you. ...I'll make coffee. You can sleep. I'll watch the door.
-> Come with me instead. | +2 follow
+> Come with me instead. | +2
   - Anywhere. I'll come anywhere.
 > I can't tonight. | -1
   - Of course. Tomorrow?
@@ -627,7 +627,7 @@ scene couple_clingy_follow
 who: together
 mood: clingy
 say: Where are you going? Can I come? I won't get in the way. I'll carry things.
-> Come along. | +2 follow
+> Come along. | +2
   - Thank you. Give me the heavy things.
 > Hold my hand on the way. | +3 hand
   - Of course. ...Your hand fits mine. I read about that in a book once. I thought it was nonsense.
@@ -702,7 +702,7 @@ who: together
 mood: hungry
 when: night
 say: I have to eat tonight. I hate it. Would you come with me? I don't like you to see it. I like being alone with it less.
-> Come with him. | +2 follow
+> Come with him. | +2
   - Stay behind me. If anything goes wrong, run. Please.
 > I'll wait here. | +1 stay
   - Okay. I'll be quick. I'll come straight back.
@@ -759,7 +759,7 @@ who: together
 mood: affectionate happy
 when: night !rain
 say: Come up to the roof with me? The stars are out. I want to tell you the stories behind them. The ones I made up.
-> Go to the roof. | +3 follow
+> Go to the roof. | +3
   - That one's a man who waited a thousand years. That one's the woman he waited for. ...That's us. Sorry. I'm sentimental.
 > Tell me your stories. | +3 cling
   - Lean here. That one there, the bright one— it's yours. I decided.
@@ -779,7 +779,7 @@ say: Listen to the rain. It sounds like applause for nothing. I like it. I like 
   - *he wraps a blanket round you both* ...This is all I ever wanted, you know. This.
 > Read together. | +2 read
   - You read yours, I'll read mine. If I sigh, it's a good part. If I cry, it's a great part.
-> Walk in the rain. | +2 follow
+> Walk in the rain. | +2
   - In the rain? ...Okay. Take my coat. Don't argue.
 > I've got to go. | -1
   - Of course. Take the umbrella. Please.
@@ -1054,7 +1054,7 @@ scene couple_bored
 who: together
 mood: bored happy
 say: Would you like to do something today? Anything. A walk, a book, a fight. I'll do anything you want.
-> Go for a walk. | +2 follow
+> Go for a walk. | +2
   - Thank you. Somewhere with trees. Trees are quiet.
 > Spar with me. | +2 crack
   - I'll be gentle. ...You won't be. Okay.
@@ -1299,7 +1299,7 @@ prompt: Let's go for coffee.
 who: together
 when: day
 say: A coffee date? ...Yes. I know a place. Small, quiet, the owner never talks. Perfect for us.
-> Let's go. | +2 follow
+> Let's go. | +2
   - Come on. I'll order for you. I know exactly what you like.
 > Make it here instead. | +2 sip
   - Even better. Sit. Two minutes.
@@ -1387,7 +1387,7 @@ who: friend together
 say: Read. Walk. Make coffee for people who don't expect it. Sometimes I sit in a park and just watch people be happy.
 > That's lovely. | +2
   - Is it? I always thought it was a little sad. You make it sound lovely.
-> Come do something with me. | +2 follow
+> Come do something with me. | +2
   - I'd like that. Anything. You pick.
 > That's it? | 0 laugh
   - That's it. I'm very simple. I like it that way.
@@ -2287,7 +2287,7 @@ say: I know. I know it was. *He rubs his wrist.* I think I knew right away. It s
   - I don't know. I'm sorry. Maybe I'll know after a walk. Alone, if that's okay.
 page price
 say: Make it up to me? *He blinks, surprised anyone would offer.* ...Walk with me a while? No talking about it. Just walking.
-> Let's walk. | +3 mend follow
+> Let's walk. | +3 mend
   - *He falls in beside you, close enough that your arms brush.* ...This is nice. This is enough.
 > Can I just say sorry instead? | +1 mend bow
   - Of course. *He smiles.* Sorry is plenty. The walk was for me, really.

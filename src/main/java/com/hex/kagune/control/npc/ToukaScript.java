@@ -140,7 +140,7 @@ final class ToukaScript extends CompanionScript {
             case TEASE -> new EtoTalk.Reply(one(seed, "Say that again and I'll kick you into next week.", "You think you're funny. You're not. ...You're a little funny.",
                 "Shut up. ...Shut UP.", "Ugh. Why do I like you."), 1, EtoTalk.Effect.NONE, EtoGesture.HUFF);
             case INSULT -> NpcBonds.clamp(c.regard() + EtoRules.INSULT) <= NpcBonds.ENEMY
-                ? new EtoTalk.Reply("Okay. You want to die. I can do that.", EtoRules.INSULT, EtoTalk.Effect.ANGER)
+                ? new EtoTalk.Reply("Okay. We're done. Don't talk to me again.", EtoRules.INSULT, EtoTalk.Effect.ANGER)
                 : new EtoTalk.Reply(voice == EtoVoice.CLAIMED ? EtoLines.fill(c, "Charming. {partner}'s going to hear about this. Get lost.")
                 : one(seed, "Get out before I kick you out.", "Wow. Okay. Leave."), EtoRules.INSULT, EtoTalk.Effect.CLOSE, EtoGesture.HUFF);
             case BACK -> new EtoTalk.Reply(EtoLines.fill(c, voice.pick(seed, s("Anything else? No? Good."), s("What else."), s("Something else?"), null,

@@ -534,7 +534,7 @@ public final class EtoTalk {
             case TEASE -> new Reply(EtoLines.one(seed, "I'm not grumpy. I'm literary.", "Say that again and I'll bite you. ...That wasn't a no.",
                 "You're lucky you're cute.", "Oh, you think you're funny. You're a little funny."), 1, Effect.NONE, EtoGesture.POUT);
             case INSULT -> NpcBonds.clamp(c.regard() + EtoRules.INSULT) <= NpcBonds.ENEMY
-                ? new Reply("Oh, you want to play rough? Fine. Let's play.", EtoRules.INSULT, Effect.ANGER)
+                ? new Reply("Oh, you want to play rough? ...No. You're not worth the ink. Out. We're done talking.", EtoRules.INSULT, Effect.ANGER)
                 : new Reply(voice == EtoVoice.CLAIMED ? EtoLines.fill(c, "Charming. {partner} will hear about this. Out.")
                 : "Wow. Rude. Get out of my library before I shelve you.", EtoRules.INSULT, Effect.CLOSE);
             case BACK -> new Reply(EtoLines.fill(c, voice.pick(seed, new String[] {"Anything else? Make it quick."}, new String[] {"Anything else?"},
